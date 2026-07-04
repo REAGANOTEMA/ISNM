@@ -12,6 +12,7 @@
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/error_handler.php';
 require_once __DIR__ . '/auth-service.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -28,6 +29,21 @@ if (session_status() === PHP_SESSION_NONE) {
 // CSRF token generation for auth forms
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Verify critical database connections are available
+if (($_GET['action'] ?? '') === 'check_student' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if at least the primary databases are available
+    $students_conn = @getStudentsConnection();
+    $staff_conn = @getStaffConnection();
+    
+    if (!$students_conn || !$staff_conn) {
+        // Show database error page with diagnostics
+        ErrorHandler::renderDatabaseUnavailableError();
+    }
+    
+    if ($students_conn) $students_conn->close();
+    if ($staff_conn) $staff_conn->close();
 }
 
 $auth_service = new AuthenticationService();
