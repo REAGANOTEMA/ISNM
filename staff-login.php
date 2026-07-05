@@ -182,9 +182,14 @@ body{
 .login-bg{
   position:fixed;inset:0;z-index:0;
   background:url('images/classroom-photo-certificates-in-nurses-and-diploma.jpeg') center/cover no-repeat;
-  opacity:0.08;transform:scale(1.05);
+  opacity:0.55;transform:scale(1.05);
   animation:bgParallax 35s ease-in-out infinite alternate;
 }
+.bg-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(10,14,26,0.75) 0%,rgba(10,14,26,0.45) 40%,rgba(10,14,26,0.5) 100%);
+}
+.glass-tint{background:linear-gradient(160deg,rgba(10,14,26,0.25) 0%,rgba(17,24,39,0.35) 50%,rgba(10,14,26,0.3) 100%)}
 @keyframes bgParallax{0%{transform:scale(1.05) translateX(0)}100%{transform:scale(1.1) translateX(-20px)}}
 /* ── LEFT PANEL ── */
 .login-left{
@@ -588,7 +593,7 @@ body{
 }
 @media(max-width:900px){
   body{flex-direction:column;overflow-y:auto}
-  .login-bg{transform:none;animation:none;opacity:0.06}
+  .login-bg{transform:none;animation:none;opacity:0.5}
   .login-left{width:100%;min-height:auto;padding:40px 24px 16px}
   .login-right{width:100%;min-height:auto;padding:16px 24px 40px}
   .hero-content{max-width:100%}
@@ -644,6 +649,7 @@ body{
 <div class="orb orb-2"></div>
 <div class="orb orb-3"></div>
 <div class="login-bg"></div>
+<div class="bg-overlay"></div>
 <div class="login-left">
   <div class="hero-content">
     <div class="hero-badge"><i class="fas fa-crown"></i> &nbsp; Staff Portal</div>

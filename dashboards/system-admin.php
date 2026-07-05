@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/global_search.php';
 $ctx = bootstrapStaffDashboard(['system admin']);
 $conn = $ctx['staff'];
 $studentsConn = $ctx['students'];
@@ -31,6 +32,12 @@ if ($r5) while ($row = $r5->fetch_assoc()) $errorLogs[] = $row;
 $cacheCount = 0;
 $r6 = $conn->query("SELECT COUNT(*) c FROM cache_management");
 if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
+
+// Global search AJAX handler
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
+    globalStudentSearchHandler($conn, $studentsConn);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,9 +55,13 @@ if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
-    <div class="content-header">
-        <h1><i class="fas fa-cogs"></i> System Administration</h1>
+    <div class="content-header d-flex justify-content-between align-items-center">
+        <h1 class="mb-0"><i class="fas fa-cogs"></i> System Administration</h1>
+        <button class="btn btn-sm btn-3d btn-3d-blue" onclick="openGlobalSearch()" title="Search students (Ctrl+K)">
+          <i class="fas fa-search"></i> Global Search <small style="opacity:0.7">Ctrl+K</small>
+        </button>
     </div>
+    <?php renderGlobalSearchBar($conn, $studentsConn); ?>
 
     <nav class="sec-nav">
         <a href="system-admin.php" class="<?= !$view ? 'active' : '' ?>"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>

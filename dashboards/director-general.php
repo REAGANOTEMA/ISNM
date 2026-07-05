@@ -16,6 +16,7 @@ require_once __DIR__ . '/../includes/approval_center.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
 require_once __DIR__ . '/../includes/dashboard_analytics.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
+require_once __DIR__ . '/../includes/global_search.php';
 
 $ctx          = bootstrapStaffDashboard(['director general', 'ceo', 'system admin']);
 $auth_service = $ctx['auth'];
@@ -262,6 +263,12 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
         </div>
     </div>
     <?php
+}
+
+// ── Global search handler ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
+    globalStudentSearchHandler($conn, $studentsConn);
+    exit;
 }
 
 // ── News Management POST handlers ──
@@ -902,6 +909,16 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
 </div>
 <?php unset($_SESSION['error']); endif; ?>
+
+<div class="d-flex justify-content-between align-items-center mb-3" style="margin-top:-4px;">
+  <div>
+    <h4 class="fw-bold mb-0" style="color:#0f172a;"><i class="fas fa-university me-2" style="color:#e2b714;"></i>Director General</h4>
+  </div>
+  <button class="btn btn-sm btn-3d btn-3d-blue" onclick="openGlobalSearch()" title="Search students (Ctrl+K)">
+    <i class="fas fa-search"></i> Global Search <small style="opacity:0.7">Ctrl+K</small>
+  </button>
+</div>
+<?php renderGlobalSearchBar($conn, $studentsConn); ?>
 
 <!-- ═══ DYNAMIC PAGE LOADING ═══ -->
 <?php

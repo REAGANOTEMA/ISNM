@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
+require_once __DIR__ . '/../includes/global_search.php';
 $ctx = bootstrapStaffDashboard(['academic registrar', 'registrar', 'director academics', 'director general']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
@@ -424,6 +425,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         } else $_SESSION['error'] = 'Student ID and facility required.';
         redirectBack('clinical-placement');
     }
+    if ($action === 'global_stu_search') {
+        globalStudentSearchHandler($staff, $students);
+        exit;
+    }
 }
 
 $ajaxAction = $_GET['ajax'] ?? '';
@@ -788,6 +793,14 @@ $sectionTitles = [
   <?php if (!empty($_SESSION['error'])): ?>
   <div class="alert alert-danger py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
   <?php endif; ?>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0" style="color:#1a237e;"><i class="fas fa-graduation-cap me-2"></i>Academic Registrar Dashboard</h4>
+    <button class="btn btn-sm btn-3d btn-3d-blue" onclick="openGlobalSearch()" title="Search students (Ctrl+K)">
+      <i class="fas fa-search"></i> Global Search <small style="opacity:0.7">Ctrl+K</small>
+    </button>
+  </div>
+  <?php renderGlobalSearchBar($staff, $students); ?>
 
   <div class="main content-section dashboard-section active" id="content" data-section="dashboard">
     <div class="stats-grid">

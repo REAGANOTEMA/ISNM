@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/payroll_functions.php';
 
-$ctx = bootstrapStaffDashboard(['school bursar','bursar']);
+$ctx = bootstrapStaffDashboard(['school bursar','bursar','finance','hr','hr manager','director of finance','director general','ceo']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
@@ -115,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $bn    = (float)$staff_conn->query("SELECT COALESCE(SUM(amount),0) c FROM payroll_bonuses WHERE staff_id=$sid AND month='$period'")->fetch_assoc()['c'];
                 $dd    = (float)$staff_conn->query("SELECT COALESCE(SUM(amount),0) c FROM payroll_deductions WHERE staff_id=$sid AND month='$period'")->fetch_assoc()['c'];
                 $gross = $base + $alw + $ot + $bn;
-                $paye  = payCalculatePAYE($gross);
-                $nssf_c = payCalculateNSSF($base);
+                $paye  = calculatePAYE($gross);
+                $nssf_c = calculateNSSF($base);
                 $net   = $gross - $paye - $nssf_c['employee'] - $dd;
                 $ins = $staff_conn->prepare("INSERT INTO payroll_details (payroll_run_id, staff_id, basic_salary, total_allowances, overtime_pay, bonuses, gross_pay, paye_tax, nssf_employee, nssf_employer, other_deductions, net_pay) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE gross_pay=VALUES(gross_pay), net_pay=VALUES(net_pay)");
                 if ($ins) { $ins->bind_param('iidddddddddd', $rid, $sid, $base, $alw, $ot, $bn, $gross, $paye, $nssf_c['employee'], $nssf_c['employer'], $dd, $net); $ins->execute(); }
@@ -127,14 +127,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         header('Location: bursar-payroll.php?tab=run'); exit;
     }
 
-    // 8. Approve Run
+    // 8. Approval Chain: levels ordered HR → PayrollOfficer → Bursar → DirectorFinance → CEO
+    $approvalChain = ['HR','PayrollOfficer','Bursar','DirectorFinance','CEO'];
+    $userRoleLevel = match (strtolower($_SESSION['role'] ?? '')) {
+        'hr','hr manager' => 'HR',
+        'payroll','payroll officer' => 'PayrollOfficer',
+        'bursar','school bursar','finance' => 'Bursar',
+        'director of finance','director finance','director general','deputy director' => 'DirectorFinance',
+        'ceo','principal' => 'CEO',
+        default => null
+    };
+
     if ($action === 'approve_run') {
         $rid   = (int)($_POST['run_id'] ?? 0);
-        $level = trim($_POST['approval_level'] ?? 'Bursar');
-        $stmt = $staff_conn->prepare("INSERT INTO payroll_approvals (payroll_run_id, level, status, approved_by) VALUES (?,?,'approved',?) ON DUPLICATE KEY UPDATE status='approved', approved_by=VALUES(approved_by), updated_at=NOW()");
-        if ($stmt) { $stmt->bind_param('isi', $rid, $level, $user_id); $stmt->execute(); }
-        $staff_conn->query("UPDATE payroll_runs SET status='approved', approved_by=$user_id, approved_at=NOW() WHERE id=$rid");
+        $level = trim($_POST['approval_level'] ?? '');
+        $comments = trim($_POST['comments'] ?? '');
+        if (!$level) { $_SESSION['error'] = 'No approval level specified.'; header('Location: bursar-payroll.php?tab=approvals'); exit; }
+        $levelIdx = array_search($level, $approvalChain);
+        if ($levelIdx === false) { $_SESSION['error'] = "Invalid approval level: $level"; header('Location: bursar-payroll.php?tab=approvals'); exit; }
+        // Check all prior levels are approved
+        for ($i = 0; $i < $levelIdx; $i++) {
+            $prev = $staff_conn->query("SELECT status FROM payroll_approvals WHERE payroll_run_id=$rid AND level='{$approvalChain[$i]}'")->fetch_assoc();
+            if (!$prev || $prev['status'] !== 'approved') {
+                $_SESSION['error'] = "Cannot approve at $level level — prior level {$approvalChain[$i]} has not approved yet.";
+                header('Location: bursar-payroll.php?tab=approvals'); exit;
+            }
+        }
+        $stmt = $staff_conn->prepare("INSERT INTO payroll_approvals (payroll_run_id, level, status, approved_by, comments) VALUES (?,?,'approved',?,?) ON DUPLICATE KEY UPDATE status='approved', approved_by=VALUES(approved_by), comments=VALUES(comments), updated_at=NOW()");
+        if ($stmt) { $stmt->bind_param('isis', $rid, $level, $user_id, $comments); $stmt->execute(); }
+        // If all levels now approved, mark run as approved
+        $totalLevels = count($approvalChain);
+        $approvedCount = $staff_conn->query("SELECT COUNT(*) c FROM payroll_approvals WHERE payroll_run_id=$rid AND status='approved'")->fetch_assoc()['c'];
+        if ((int)$approvedCount >= $totalLevels) {
+            $staff_conn->query("UPDATE payroll_runs SET status='approved', approved_by=$user_id, approved_at=NOW() WHERE id=$rid");
+        } else {
+            $staff_conn->query("UPDATE payroll_runs SET status='processing' WHERE id=$rid");
+        }
         $_SESSION['success']="Payroll run #$rid approved at $level level.";
+        header('Location: bursar-payroll.php?tab=approvals'); exit;
+    }
+
+    if ($action === 'reject_run') {
+        $rid   = (int)($_POST['run_id'] ?? 0);
+        $level = trim($_POST['approval_level'] ?? '');
+        $comments = trim($_POST['comments'] ?? '');
+        if ($level) {
+            $stmt = $staff_conn->prepare("INSERT INTO payroll_approvals (payroll_run_id, level, status, approved_by, comments) VALUES (?,?,'rejected',?,?) ON DUPLICATE KEY UPDATE status='rejected', approved_by=VALUES(approved_by), comments=VALUES(comments), updated_at=NOW()");
+            if ($stmt) { $stmt->bind_param('isis', $rid, $level, $user_id, $comments); $stmt->execute(); }
+            $staff_conn->query("UPDATE payroll_runs SET status='draft' WHERE id=$rid");
+            $_SESSION['success']="Payroll run #$rid rejected at $level level.";
+        }
         header('Location: bursar-payroll.php?tab=approvals'); exit;
     }
 
@@ -612,40 +654,91 @@ if ($staff_conn) {
     <!-- ── APPROVALS ── -->
     <?php if ($tab === 'approvals'): ?>
     <div class="row g-4">
-        <div class="col-md-4">
-            <div class="cc"><div class="ch"><i class="fas fa-check me-2"></i>Approve Payroll Run</div>
+        <div class="col-md-5">
+            <div class="cc"><div class="ch"><i class="fas fa-check-double me-2"></i>Approval Actions</div>
                 <div class="p-3">
+                    <?php if ($userRoleLevel): ?>
+                    <div class="alert alert-info py-2 px-3 mb-3 small"><i class="fas fa-user-shield me-1"></i>Your level: <strong><?=$userRoleLevel?></strong></div>
+                    <?php else: ?>
+                    <div class="alert alert-warning py-2 px-3 mb-3 small"><i class="fas fa-exclamation-triangle me-1"></i>Your role does not match any approval level.</div>
+                    <?php endif; ?>
                     <form method="POST">
                         <div class="mb-2"><label class="small fw-medium">Payroll Run *</label>
                             <select name="run_id" class="form-control fc" required>
-                                <option value="">-- Select --</option>
-                                <?php foreach ($payroll_runs as $r) echo '<option value="'.$r['id'].'">#'.$r['id'].' — '.htmlspecialchars($r['period']).' ('.($r['status']??'draft').')</option>'; ?>
+                                <option value="">-- Select Run --</option>
+                                <?php foreach ($payroll_runs as $r): $st = $r['status'] ?? 'draft'; ?>
+                                    <option value="<?=$r['id']?>">#<?=$r['id']?> — <?=htmlspecialchars($r['period'])?> (<?=$st?>)</option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-2"><label class="small fw-medium">Approval Level *</label>
                             <select name="approval_level" class="form-control fc" required>
-                                <option value="Bursar">Bursar</option>
-                                <option value="DirectorFinance">Director Finance</option>
+                                <?php foreach ($approvalChain as $lvl): ?>
+                                    <option value="<?=$lvl?>" <?=$lvl===$userRoleLevel?'selected':''?>><?=$lvl?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
-                        <button type="submit" name="action" value="approve_run" class="btn bb w-100"><i class="fas fa-check-double me-1"></i>Approve</button>
+                        <div class="mb-2"><label class="small fw-medium">Comments (optional)</label>
+                            <textarea name="comments" class="form-control fc" rows="2" placeholder="Approval notes..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="approve_run" class="btn btn-success flex-fill"><i class="fas fa-check me-1"></i>Approve</button>
+                            <button type="submit" name="action" value="reject_run" class="btn btn-danger flex-fill"><i class="fas fa-times me-1"></i>Reject</button>
+                        </div>
                     </form>
+                    <hr class="my-3">
+                    <h6 class="small fw-bold mb-2">Approval Chain</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        <?php foreach ($approvalChain as $i => $lvl): ?>
+                            <span class="badge bg-secondary" style="font-size:11px"><?=$lvl?></span>
+                            <?php if ($i < count($approvalChain)-1): ?><span class="text-muted" style="font-size:10px">→</span><?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
-            <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Approval History</div>
+        <div class="col-md-7">
+            <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Approval Status by Run</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Run #</th><th>Level</th><th>Status</th><th>Approved By</th><th>Date</th></tr></thead>
+                    <thead><tr><th>Run #</th><th>Chain Progress</th><th>Overall Status</th></tr></thead>
+                    <tbody><?php
+                    $runsWithApprovals = $staff_conn->query("SELECT pr.*, pa3.level last_level, pa3.status last_status FROM payroll_runs pr LEFT JOIN payroll_approvals pa3 ON pa3.payroll_run_id=pr.id AND pa3.updated_at=(SELECT MAX(pa4.updated_at) FROM payroll_approvals pa4 WHERE pa4.payroll_run_id=pr.id) ORDER BY pr.created_at DESC LIMIT 15")->fetch_all(MYSQLI_ASSOC);
+                    foreach ($runsWithApprovals as $r): ?>
+                        <tr>
+                            <td><code>#<?=$r['id']?></code> <small class="text-muted"><?=htmlspecialchars($r['period'])?></small></td>
+                            <td>
+                                <div class="d-flex gap-1 align-items-center" style="flex-wrap:wrap">
+                                <?php foreach ($approvalChain as $lvl):
+                                    $pa = $staff_conn->query("SELECT status FROM payroll_approvals WHERE payroll_run_id={$r['id']} AND level='$lvl'")->fetch_assoc();
+                                    $cls = 'secondary'; $ico = 'fa-clock';
+                                    if ($pa) {
+                                        if ($pa['status'] === 'approved') { $cls = 'success'; $ico = 'fa-check-circle'; }
+                                        elseif ($pa['status'] === 'rejected') { $cls = 'danger'; $ico = 'fa-times-circle'; }
+                                        else { $cls = 'warning'; $ico = 'fa-hourglass-half'; }
+                                    }
+                                    ?>
+                                    <span class="badge bg-<?=$cls?>" title="<?=$lvl?>: <?=$pa['status']??'pending'?>" style="font-size:10px"><i class="fas <?=$ico?> me-1"></i><?=$lvl?></span>
+                                <?php endforeach; ?>
+                                </div>
+                            </td>
+                            <td><?= payStatusBadge($r['status']) ?></td>
+                        </tr>
+                    <?php endforeach; if (empty($runsWithApprovals)): ?><tr><td colspan="3" class="text-center text-muted py-3">No payroll runs yet.</td></tr><?php endif; ?></tbody>
+                </table></div>
+                <hr>
+                <h6 class="small fw-bold px-3 pt-2">Approval History</h6>
+                <div class="table-responsive"><table class="table tb mb-0">
+                    <thead><tr><th>Run #</th><th>Level</th><th>Status</th><th>By</th><th>Comments</th><th>Date</th></tr></thead>
                     <tbody><?php foreach ($approvals as $a): ?>
                         <tr>
                             <td><code>#<?= $a['payroll_run_id'] ?></code></td>
                             <td><span class="badge bg-secondary"><?= htmlspecialchars($a['level']) ?></span></td>
                             <td><?= payStatusBadge($a['status'] ?? 'pending') ?></td>
                             <td><small><?= htmlspecialchars($a['approver_name'] ?? '-') ?></small></td>
+                            <td><small class="text-muted"><?= htmlspecialchars($a['comments'] ?? '-') ?></small></td>
                             <td><small><?= htmlspecialchars($a['updated_at'] ?? '') ?></small></td>
                         </tr>
-                    <?php endforeach; if (empty($approvals)): ?><tr><td colspan="5" class="text-center text-muted py-3">No approvals yet.</td></tr><?php endif; ?></tbody>
+                    <?php endforeach; if (empty($approvals)): ?><tr><td colspan="6" class="text-center text-muted py-3">No approvals yet.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>

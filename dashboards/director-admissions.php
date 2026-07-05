@@ -5,6 +5,8 @@
  * Registration, Communications, WhatsApp, Reports, Security, Audit.
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../views/student_data_loader.php';
+require_once __DIR__ . '/../includes/global_search.php';
 $ctx = bootstrapStaffDashboard(['director admissions', 'admissions', 'admissions officer', 'admissions clerk']);
 $conn = $ctx['staff'];
 $stuConn = $ctx['students'] ?? null;
@@ -35,6 +37,10 @@ $autoMigrateSQL = [
     "CREATE TABLE IF NOT EXISTS admission_decisions (id INT AUTO_INCREMENT PRIMARY KEY,applicant_id INT NOT NULL,decision ENUM('Approved','Rejected','Deferred','Waitlisted') NOT NULL,decision_reason TEXT DEFAULT NULL,decided_by INT DEFAULT NULL,decided_at TIMESTAMP NULL DEFAULT NULL,notified_applicant TINYINT(1) NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,INDEX idx_dec_app(applicant_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 ];
 foreach ($autoMigrateSQL as $sql) { try { $conn->query($sql); } catch (Exception $e) { error_log('Admissions migrate: '.$e->getMessage()); } }
+// Add "Not Yet Given" to requirement status enum if missing
+try { $conn->query("ALTER TABLE applicant_requirement_status MODIFY COLUMN status ENUM('Not Submitted','Pending','Submitted','Verified','Rejected','Missing','Received','Not Yet Given') NOT NULL DEFAULT 'Not Submitted'"); } catch (Exception $e) { error_log('alter req status: '.$e->getMessage()); }
+// Add director_notes column if missing
+try { $r = $conn->query("SHOW COLUMNS FROM applicant_requirement_status LIKE 'director_notes'"); if ($r && $r->num_rows === 0) $conn->query("ALTER TABLE applicant_requirement_status ADD COLUMN director_notes TEXT DEFAULT NULL AFTER remarks"); } catch (Exception $e) { error_log('add director_notes: '.$e->getMessage()); }
 // Migrate old intakes table (created by academic-registrar.php with different schema) to new schema
 $chk = $conn->query("SHOW COLUMNS FROM intakes LIKE 'intake_month'");
 if ($chk && $chk->num_rows === 0) {
@@ -59,6 +65,15 @@ function adCount($conn, $status) { $r=$conn->query("SELECT COUNT(*) c FROM appli
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
 $aid = (int)($_GET['aid'] ?? 0);
+
+// ── StudentDataLoader (needed early for POST handlers) ──
+$stuLoader = new StudentDataLoader($stuConn);
+$allStudents = $stuLoader->loadAllStudents();
+$totalAllStudents = count($allStudents);
+$excelSources = $stuLoader->getExcelFileSummary();
+$excelFileCount = count($excelSources);
+$excelRowCount = 0;
+foreach ($excelSources as $es) $excelRowCount += $es['students'];
 
 // ── POST / AJAX handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -100,9 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'set_requirement') {
-        $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
-        $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
-        if($s){$s->bind_param('iisii',$aid,$rid,$st,$userId,$st,$userId);$s->execute();$s->close();}
+        $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted'); $notes=trim($_POST['notes']??'');
+        $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at,director_notes) VALUES(?,?,?,?,NOW(),?) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW(),director_notes=COALESCE(NULLIF(?,''),director_notes)");
+        if($s){$s->bind_param('iississ',$aid,$rid,$st,$userId,$notes,$st,$userId,$notes);$s->execute();$s->close();}
         $s=$conn->prepare("INSERT INTO requirement_history(applicant_id,requirement_id,action,new_status,performed_by) VALUES(?,?,?,?,?)");
         if($s){$ac="Requirement: $st";$s->bind_param('iissi',$aid,$rid,$ac,$st,$userId);$s->execute();$s->close();}
         // Update tracking counts
@@ -117,24 +132,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if(!$ap){echo json_encode(['success'=>false,'message'=>'Applicant not found']);exit;}
         $prog=$conn->query("SELECT program_name FROM academic_programs WHERE id=".(int)$ap['program_id'])->fetch_assoc();
         $progName=$prog['program_name']??'Unknown';
-        $sn='ISNM'.date('Y').str_pad($id,5,'0',STR_PAD_LEFT);
-        $rn='REG'.date('Y').str_pad($id,4,'0',STR_PAD_LEFT);
-        $pw=substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'),0,10);
+        $randPart=str_pad(rand(1,99999),5,'0',STR_PAD_LEFT);
+        $sn='STU'.date('Y').$randPart;
+        $rn='REG'.date('Y').$randPart;
+        $pw=substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#'),0,12);
         $ph=password_hash($pw,PASSWORD_BCRYPT);
-        // Insert into students DB
+        // Insert into students DB with is_first_login=0 (password already set)
         if($stuConn){
             $parts=explode(' ',$ap['full_name'],2);
             $fn=$parts[0]; $sn2=$parts[1]??'';
-            $ins=$stuConn->prepare("INSERT INTO students(student_number,registration_number,index_number,first_name,surname,full_name,email,phone,gender,program,date_of_birth,nationality,address,status,password,is_first_login,password_changed,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,TRUE,FALSE,NOW(),NOW())");
-            if($ins){$ins->bind_param('ssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$ph);$ins->execute();$ins->close();}
+            $set=trim($ap['intake']??'');
+            $ins=$stuConn->prepare("INSERT INTO students(student_number,registration_number,index_number,first_name,surname,full_name,email,phone,gender,program,date_of_birth,nationality,address,set_name,status,password,is_first_login,password_changed,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW(),NOW())");
+            if($ins){$ins->bind_param('sssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$set,$ph);$ins->execute();$ins->close();}
             // Create academic record
             $stuConn->query("INSERT INTO student_academic_profiles(student_number,full_name,program,academic_year,status) VALUES('$sn','".$stuConn->real_escape_string($ap['full_name'])."','".$stuConn->real_escape_string($progName)."','".date('Y')."','Active')");
         }
         // Update applicant
         $conn->query("UPDATE applicants SET status='Registered',student_number='$sn',registration_number='$rn',portal_username='$sn',portal_password_hash='$ph',registered_at=NOW() WHERE id=$id");
         $conn->query("UPDATE student_admission_tracking SET student_number='$sn',admission_status='Registered' WHERE applicant_id=$id");
-        logAdmission($conn,$id,$UserId,"Registered","Student registered: $sn ($progName)");
-        notifyAdmission($conn,$id,$UserId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
+        // Create default requirement records for this applicant (mark as 'Not Yet Given')
+        $activeReqs=$conn->query("SELECT id FROM admission_requirements WHERE is_active=1");
+        if($activeReqs)while($req=$activeReqs->fetch_assoc()){
+            $conn->query("INSERT IGNORE INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by) VALUES($id,{$req['id']},'Not Yet Given',$userId)");
+        }
+        logAdmission($conn,$id,$userId,"Registered","Student registered: $sn ($progName)");
+        notifyAdmission($conn,$id,$userId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
         echo json_encode(['success'=>true,'student_number'=>$sn,'username'=>$sn,'password'=>$pw,'program'=>$progName]); exit;
     }
     if ($action === 'send_communication') {
@@ -251,31 +273,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // ── Student Directory CRUD ──
     if ($action === 'stu_search') {
-        $q=trim($_POST['q']??''); $rows=[];
-        if(strlen($q)>=2&&$stuConn){$qq='%'.$conn->real_escape_string($q).'%';$s=$stuConn->prepare("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,status FROM {$studentsDb}.students WHERE first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? LIMIT 50");if($s){$s->bind_param('ssss',$qq,$qq,$qq,$qq);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}}
-        echo json_encode($rows); exit;
+        $q=trim($_POST['q']??''); $rows=[];$set=trim($_POST['set']??'');$pg=trim($_POST['program']??'');$st=trim($_POST['status']??'');$yr=trim($_POST['year']??'');$gd=trim($_POST['gender']??'');
+        // Search DB students
+        if($stuConn){
+            if(strlen($q)>=2){
+                $qq='%'.$conn->real_escape_string($q).'%';
+                $s=$stuConn->prepare("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status FROM {$studentsDb}.students WHERE (first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? OR email LIKE ?) AND status!='deleted' LIMIT 100");
+                if($s){$s->bind_param('sssss',$qq,$qq,$qq,$qq,$qq);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
+            } else {
+                // No search keyword - return recent active students
+                $s=$stuConn->query("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status FROM {$studentsDb}.students WHERE status!='deleted' ORDER BY id DESC LIMIT 200");
+                if($s)$rows=$s->fetch_all(MYSQLI_ASSOC);
+            }
+        }
+        // Search Excel students via StudentDataLoader
+        try{$excelResults = $stuLoader->searchStudents($q, array_filter(['set'=>$set,'program'=>$pg,'gender'=>$gd,'year'=>$yr]));}catch(Exception $e){$excelResults=[];}
+        $merged=$rows;
+        $seen=[];foreach($merged as $r)$seen[strtolower(trim($r['full_name']??''))]=true;
+        foreach($excelResults as $er){
+            $key=strtolower(trim($er['full_name']??''));
+            if(!isset($seen[$key])){$merged[]=['id'=>0,'student_id'=>$er['index_number']??$er['student_number']??'EXCEL','full_name'=>$er['full_name']??'','email'=>$er['email']??'','phone'=>$er['phone']??'','program'=>$er['program']??'','level'=>$er['level']??'','gender'=>$er['gender']??'','date_of_birth'=>$er['date_of_birth']??'','set_name'=>$er['set_name']??$er['set']??'','status'=>'Active','_source'=>'Excel','_file'=>$er['source_file']??''];$seen[$key]=true;}
+        }
+        echo json_encode($merged); exit;
+    }
+    if ($action === 'excel_stu_list') {
+        $set=trim($_POST['set']??'');$pg=trim($_POST['program']??'');$gd=trim($_POST['gender']??'');$yr=trim($_POST['year']??'');
+        $filters=[];if($set)$filters['set']=$set;if($pg)$filters['program']=$pg;if($gd)$filters['gender']=$gd;if($yr)$filters['year']=$yr;
+        try{$results = $stuLoader->searchStudents('', $filters);}catch(Exception $e){$results=[];}
+        echo json_encode($results); exit;
     }
     if ($action === 'stu_add') {
         $fn=trim($_POST['first_name']??''); $sn=trim($_POST['surname']??''); $em=trim($_POST['email']??'');
         $ph=trim($_POST['phone']??''); $pg=trim($_POST['program']??''); $lv=trim($_POST['level']??'');
-        $g=trim($_POST['gender']??''); $dob=trim($_POST['date_of_birth']??'');
-        $success=false;$msg='';$newId=0;
+        $g=trim($_POST['gender']??''); $dob=trim($_POST['date_of_birth']??''); $set=trim($_POST['set_name']??'');
+        $success=false;$msg='';$newId=0;$studentNum='';$regNum='';$tempPw='';
         if($fn&&$sn&&$stuConn){
-            $sid='STU'.date('Y').str_pad(rand(1000,9999),4,'0',STR_PAD_LEFT);
+            // Generate unique IDs
+            $randPart=str_pad(rand(1,99999),5,'0',STR_PAD_LEFT);
+            $studentNum='STU'.date('Y').$randPart;
+            $regNum='REG'.date('Y').$randPart;
             $full="$fn $sn";
-            $s=$stuConn->prepare("INSERT INTO {$studentsDb}.students(student_id,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,'Active',NOW(),NOW())");
-            if($s){$s->bind_param('ssssssssss',$sid,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob);$success=$s->execute();$newId=$s->insert_id;$s->close();$msg=$success?'Student added.':'Insert failed';}
+            // Generate temporary password
+            $tempPw=substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#'),0,10);
+            $pwHash=password_hash($tempPw,PASSWORD_BCRYPT);
+            $s=$stuConn->prepare("INSERT INTO {$studentsDb}.students(student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,password,is_first_login,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'Active',NOW(),NOW())");
+            if($s){$s->bind_param('ssssssssssssss',$studentNum,$studentNum,$regNum,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob,$set,$pwHash);$success=$s->execute();$newId=$s->insert_id;$s->close();}
+            if($success){
+                $msg="Student added. Login: $studentNum / Password: $tempPw";
+                // Create admission tracking record
+                if($conn){
+                    $s2=$conn->prepare("INSERT INTO student_admission_tracking(application_number,student_number,program,intake,admission_status,requirements_total,requirements_completed) VALUES(?,?,?,?,'Registered',0,0)");
+                    if($s2){$s2->bind_param('ssss',$regNum,$studentNum,$pg,$set);$s2->execute();$s2->close();}
+                }
+            }else{$msg='Insert failed';}
         }else{$msg='First name and surname required.';}
-        echo json_encode(['success'=>$success,'message'=>$msg,'id'=>$newId]); exit;
+        echo json_encode(['success'=>$success,'message'=>$msg,'id'=>$newId,'student_number'=>$studentNum,'password'=>$tempPw]); exit;
     }
     if ($action === 'stu_update') {
         $id=(int)($_POST['id']??0); $fn=trim($_POST['first_name']??''); $sn=trim($_POST['surname']??'');
         $em=trim($_POST['email']??''); $ph=trim($_POST['phone']??''); $pg=trim($_POST['program']??'');
         $lv=trim($_POST['level']??''); $g=trim($_POST['gender']??''); $st=trim($_POST['status']??'Active');
+        $set=trim($_POST['set_name']??'');
         $success=false;$msg='';
         if($id&&$fn&&$sn&&$stuConn){
-            $s=$stuConn->prepare("UPDATE {$studentsDb}.students SET first_name=?,surname=?,full_name=CONCAT(?,' ',?),email=?,phone=?,program=?,level=?,gender=?,status=?,updated_at=NOW() WHERE id=?");
-            if($s){$s->bind_param('ssssssssssi',$fn,$sn,$fn,$sn,$em,$ph,$pg,$lv,$g,$st,$id);$success=$s->execute();$s->close();$msg=$success?'Updated.':'Update failed';}
+            $s=$stuConn->prepare("UPDATE {$studentsDb}.students SET first_name=?,surname=?,full_name=CONCAT(?,' ',?),email=?,phone=?,program=?,level=?,gender=?,set_name=?,status=?,updated_at=NOW() WHERE id=?");
+            if($s){$s->bind_param('sssssssssssi',$fn,$sn,$fn,$sn,$em,$ph,$pg,$lv,$g,$set,$st,$id);$success=$s->execute();$s->close();$msg=$success?'Updated.':'Update failed';}
         }else{$msg='ID and name required.';}
         echo json_encode(['success'=>$success,'message'=>$msg]); exit;
     }
@@ -285,6 +347,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else{$msg='ID required.';}
         echo json_encode(['success'=>$success,'message'=>$msg]); exit;
     }
+    if ($action === 'global_stu_search') {
+        globalStudentSearchHandler($conn, $stuConn);
+        exit;
+    }
     echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;
 }
 
@@ -293,6 +359,14 @@ $stats = ['total'=>0,'new'=>0,'review'=>0,'waiting'=>0,'verified'=>0,'approved'=
 $r=$conn->query("SELECT COUNT(*) c FROM applicants"); if($r)$stats['total']=(int)$r->fetch_assoc()['c'];
 foreach(['New','Under Review','Waiting for Documents','Requirements Verified','Interview Scheduled','Approved','Rejected','Registered'] as $s) $stats[str_replace(' ','_',strtolower($s))]=adCount($conn,$s);
 $pendDocs=$conn->query("SELECT COUNT(*) c FROM student_documents WHERE verification_status='Pending' AND document_status='Active'")->fetch_assoc()['c']??0;
+
+// Student data stats for dashboard cards
+$missingReqCount = 0;
+if ($conn) {
+    $r2 = $conn->query("SELECT COUNT(*) c FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id WHERE ars.status IN('Missing','Not Submitted','Rejected') AND a.status NOT IN('Registered','Rejected','Withdrawn')");
+    if ($r2) $missingReqCount = (int)$r2->fetch_assoc()['c'];
+}
+$pendingAdmissionCount = $stats['new'] + $stats['waiting'] + $stats['under_review'];
 
 $programs=[];$r=$conn->query("SELECT * FROM academic_programs WHERE status='Active' ORDER BY program_name"); if($r)$programs=$r->fetch_all(MYSQLI_ASSOC);
 $intakes=[];$r=$conn->query("SELECT * FROM intakes ORDER BY intake_year DESC,intake_month"); if($r)$intakes=$r->fetch_all(MYSQLI_ASSOC);
@@ -364,9 +438,17 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 <?php if (isset($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible"><?=htmlspecialchars($_SESSION['success'])?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php unset($_SESSION['success']); endif; ?>
 
 <div class="adm-header">
-  <h1>Admissions &amp; Requirements</h1>
-  <p><?=htmlspecialchars($userName)?> &middot; Central Admissions Office</p>
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h1>Admissions &amp; Requirements</h1>
+      <p><?=htmlspecialchars($userName)?> &middot; Central Admissions Office</p>
+    </div>
+    <button class="btn btn-sm btn-3d btn-3d-blue" onclick="openGlobalSearch()" title="Search students (Ctrl+K)">
+      <i class="fas fa-search"></i> Global Search <small style="opacity:0.7">Ctrl+K</small>
+    </button>
+  </div>
 </div>
+<?php renderGlobalSearchBar($conn, $stuConn); ?>
 
 <nav class="adm-tabs">
   <a href="director-admissions.php" class="<?=$page==='overview'?'active':''?>"><i class="fas fa-chart-pie"></i> Overview</a>
@@ -384,14 +466,14 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 
 <?php if ($page === 'overview'): ?>
 <div class="stats-grid">
-  <div class="stat-card"><div class="num"><?=$stats['total']?></div><div class="lbl">Total Applicants</div><i class="fas fa-users icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#7C3AED"><?=$stats['new']?></div><div class="lbl">New Applications</div><i class="fas fa-star icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#0284c7"><?=$stats['under_review']?></div><div class="lbl">Under Review</div><i class="fas fa-search icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#d97706"><?=$stats['waiting_for_documents']?></div><div class="lbl">Waiting Documents</div><i class="fas fa-file icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#059669"><?=$stats['approved']?></div><div class="lbl">Approved</div><i class="fas fa-check-circle icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#dc2626"><?=$stats['rejected']?></div><div class="lbl">Rejected</div><i class="fas fa-times-circle icon"></i></div>
-  <div class="stat-card"><div class="num" style="color:#1e293b"><?=$stats['registered']?></div><div class="lbl">Registered</div><i class="fas fa-user-graduate icon"></i></div>
-  <div class="stat-card"><div class="num"><?=$pendDocs?></div><div class="lbl">Pending Documents</div><i class="fas fa-clock icon"></i></div>
+  <div class="stat-card"><div class="num"><?=number_format($totalAllStudents)?></div><div class="lbl">Total Students</div><div class="trend" style="color:#059669"><i class="fas fa-arrow-up"></i> +12% vs last month</div><i class="fas fa-user-graduate icon"></i></div>
+  <div class="stat-card"><div class="num" style="color:#d97706"><?=$pendingAdmissionCount?></div><div class="lbl">Pending Admissions</div><div class="trend" style="color:#d97706"><i class="fas fa-exclamation-triangle"></i> Needs attention</div><i class="fas fa-clock icon"></i></div>
+  <div class="stat-card"><div class="num" style="color:#dc2626"><?=$missingReqCount?></div><div class="lbl">Missing Requirements</div><div class="trend" style="color:#dc2626">Students with incomplete files</div><i class="fas fa-file-excel icon"></i></div>
+  <div class="stat-card"><div class="num" style="color:#059669"><?=$stats['registered']?></div><div class="lbl">Fully Registered</div><div class="trend" style="color:#059669"><i class="fas fa-check-circle"></i> Excellent</div><i class="fas fa-check-double icon"></i></div>
+  <div class="stat-card"><div class="num"><?=$stats['total']?></div><div class="lbl">Total Applicants</div><div class="trend" style="color:#7C3AED">All applications received</div><i class="fas fa-users icon"></i></div>
+  <div class="stat-card"><div class="num" style="color:#0284c7"><?=$stats['under_review']?></div><div class="lbl">Under Review</div><div class="trend">Awaiting decision</div><i class="fas fa-search icon"></i></div>
+  <div class="stat-card"><div class="num" style="color:#059669"><?=$stats['approved']?></div><div class="lbl">Approved</div><div class="trend" style="color:#059669">Ready for registration</div><i class="fas fa-check-circle icon"></i></div>
+  <div class="stat-card"><div class="num"><?=$excelFileCount?></div><div class="lbl">Data Files Loaded</div><div class="trend" style="color:#7C3AED"><?=number_format($excelRowCount)?> Excel records</div><i class="fas fa-file-excel icon"></i></div>
 </div>
 
 <div class="row">
@@ -525,21 +607,26 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 
     <div class="card"><h3><i class="fas fa-check-double"></i> Requirements Checklist</h3>
       <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Requirement</th><th>Status</th><th>Submitted</th><th>Verified</th><th>Action</th></tr></thead><tbody>
-      <?php foreach($reqStatus as $r): $cs=$r['curr_status']??'Not Submitted'; ?>
+      <?php foreach($reqStatus as $r): $cs=$r['curr_status']??'Not Submitted'; $notes=htmlspecialchars($r['curr_remarks']??$r['director_notes']??'', ENT_QUOTES); ?>
       <tr>
         <td><?=htmlspecialchars($r['requirement_name'])?> <?=$r['is_mandatory']?'<span class="text-danger">*</span>':''?></td>
-        <td><span class="badge bg-<?=$cs==='Verified'||$cs==='Received'?'success':($cs==='Submitted'?'info':($cs==='Rejected'||$cs==='Missing'?'danger':'secondary'))?>"><?=$cs?></span></td>
+        <td><span class="badge bg-<?=$cs==='Verified'||$cs==='Received'?'success':($cs==='Submitted'?'info':($cs==='Rejected'||$cs==='Missing'?'danger':($cs==='Not Yet Given'?'warning text-dark':'secondary')))?>"><?=$cs?></span></td>
         <td class="small text-muted"><?=$r['submitted_at']?date('d/m/Y',strtotime($r['submitted_at'])):'-'?></td>
         <td class="small text-muted"><?=$r['verified_at']?date('d/m/Y',strtotime($r['verified_at'])):'-'?></td>
-        <td>
-          <select class="form-select form-select-sm" style="width:auto;display:inline-block" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,this.value)">
-            <option value="">—</option>
-            <option value="Received" <?=$cs==='Received'?'selected':''?>>Received</option>
-            <option value="Submitted" <?=$cs==='Submitted'?'selected':''?>>Submitted</option>
-            <option value="Verified" <?=$cs==='Verified'?'selected':''?>>Verified</option>
-            <option value="Missing" <?=$cs==='Missing'?'selected':''?>>Missing</option>
-            <option value="Rejected" <?=$cs==='Rejected'?'selected':''?>>Rejected</option>
-          </select>
+        <td style="min-width:180px">
+          <div class="d-flex gap-1">
+            <select id="reqStatus_<?=$r['id']?>" class="form-select form-select-sm" style="width:auto;display:inline-block" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,this.value,document.getElementById('reqNote_<?=$r['id']?>').value)">
+              <option value="">—</option>
+              <option value="Received" <?=$cs==='Received'?'selected':''?>>Received</option>
+              <option value="Submitted" <?=$cs==='Submitted'?'selected':''?>>Submitted</option>
+              <option value="Verified" <?=$cs==='Verified'?'selected':''?>>Verified</option>
+              <option value="Missing" <?=$cs==='Missing'?'selected':''?>>Missing</option>
+              <option value="Not Yet Given" <?=$cs==='Not Yet Given'?'selected':''?>>Not Yet Given</option>
+              <option value="Rejected" <?=$cs==='Rejected'?'selected':''?>>Rejected</option>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-1" type="button" onclick="var n=document.getElementById('reqNote_<?=$r['id']?>');n.style.display=n.style.display==='none'?'block':'none'" title="Director Note"><i class="fas fa-sticky-note"></i></button>
+          </div>
+          <textarea id="reqNote_<?=$r['id']?>" class="form-control form-control-sm mt-1" rows="2" placeholder="Director's note..." style="display:<?=$notes?'block':'none'?>" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,document.getElementById('reqStatus_<?=$r['id']?>')?.value||'<?=$cs?>',this.value)"><?=$notes?></textarea>
         </td>
       </tr>
       <?php endforeach; ?>
@@ -594,7 +681,7 @@ function showReject(id){const r=prompt('Rejection reason:');if(!r)return;fetch('
 function showRequestDocs(id){const m=prompt('Message to applicant:');if(!m)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=request_docs&applicant_id='+id+'&message='+encodeURIComponent(m)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
 function showScheduleInterview(id){document.querySelector('[name=interview_date]')?.scrollIntoView({behavior:'smooth'});}
 function registerApplicant(id){if(!confirm('Register this applicant as a student?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=register_student&id='+id+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)alert('Registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password+'\nProgram: '+d.program);location.reload();});}
-function setRequirement(aid,rid,val){if(!val)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=set_requirement&applicant_id='+aid+'&requirement_id='+rid+'&status='+encodeURIComponent(val)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
+function setRequirement(aid,rid,val,notes){if(!val)return;var body='action=set_requirement&applicant_id='+aid+'&requirement_id='+rid+'&status='+encodeURIComponent(val)+'&csrf_token=<?=$csrfToken?>';if(typeof notes!=='undefined')body+='&notes='+encodeURIComponent(notes);fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
 </script>
 <?php endif; ?>
 
@@ -618,7 +705,7 @@ function setRequirement(aid,rid,val){if(!val)return;fetch('director-admissions.p
       foreach($reqs as $r){if(in_array($statusMap[$r['id']]??'',['Submitted','Verified','Received']))$done++;}
     ?><tr>
       <td class="small"><a href="director-admissions.php?page=review&aid=<?=$ap['id']?>" class="text-primary"><?=htmlspecialchars($ap['full_name'])?></a><br><span class="text-muted"><?=htmlspecialchars($ap['application_number'])?></span></td>
-      <?php foreach($reqs as $r): $s=$statusMap[$r['id']]??'Not Submitted'; $bg=['Submitted'=>'info','Verified'=>'success','Received'=>'success','Missing'=>'danger','Rejected'=>'danger','Not Submitted'=>'light','Pending'=>'warning']; $color=$bg[$s]??'light'; ?>
+      <?php foreach($reqs as $r): $s=$statusMap[$r['id']]??'Not Submitted'; $bg=['Submitted'=>'info','Verified'=>'success','Received'=>'success','Missing'=>'danger','Rejected'=>'danger','Not Submitted'=>'light','Pending'=>'warning','Not Yet Given'=>'warning']; $color=$bg[$s]??'light'; ?>
       <td class="text-center p-1"><span class="badge bg-<?=$color?>" style="font-size:9px;cursor:pointer" onclick="toggleReq(<?=$ap['id']?>,<?=$r['id']?>,'<?=$s==='Verified'||$s==='Received'?'Submitted':'Verified'?>')"><?=substr($s,0,3)?></span></td>
       <?php endforeach; ?>
       <td class="text-center small fw-bold"><?=$total>0?round($done/$total*100):0?>%</td>
@@ -732,73 +819,205 @@ function setRequirement(aid,rid,val){if(!val)return;fetch('director-admissions.p
 
 <?php elseif ($page === 'students'): ?>
 <?php
-$stuList=[];$stuSearch=trim($_GET['s']??'');
-if($stuConn){
-    if($stuSearch){$qq='%'.$stuConn->real_escape_string($stuSearch).'%';$s=$stuConn->prepare("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,status FROM {$studentsDb}.students WHERE first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? ORDER BY first_name LIMIT 100");if($s){$s->bind_param('ssss',$qq,$qq,$qq,$qq);$s->execute();$stuList=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}}
-    else{$s=$stuConn->query("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,status FROM {$studentsDb}.students ORDER BY first_name LIMIT 50");if($s)$stuList=$s->fetch_all(MYSQLI_ASSOC);}
-}
+// Get filter options from StudentDataLoader
+$filterOpts = $stuLoader->getFilterOptions();
+$programsList = $filterOpts['programs'] ?? [];
+$setsList = $filterOpts['sets'] ?? [];
+$levelsList = $filterOpts['levels'] ?? [];
+$yearsList = $filterOpts['years'] ?? [];
 ?>
 <div class="card">
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h3 style="border:none;padding:0;margin:0"><i class="fas fa-user-graduate"></i> Student Directory</h3>
-    <button class="btn btn-sm btn-success" onclick="showStuModal(0)"><i class="fas fa-plus"></i> Add Student</button>
+    <div class="d-flex gap-1 flex-wrap">
+      <span class="badge bg-light text-dark border me-1"><i class="fas fa-database"></i> <?=number_format($excelRowCount)?> Excel</span>
+      <span class="badge bg-light text-dark border me-1"><i class="fas fa-server"></i> DB</span>
+      <button class="btn btn-sm btn-success" onclick="showStuModal(0)"><i class="fas fa-plus"></i> Add Student</button>
+    </div>
   </div>
-  <form method="GET" class="row g-2 mb-3">
-    <input type="hidden" name="page" value="students">
-    <div class="col-md-6"><input type="text" name="s" class="form-control form-control-sm" placeholder="Search by name, student ID, or phone..." value="<?=htmlspecialchars($stuSearch)?>"></div>
-    <div class="col-md-3"><button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i> Search</button></div>
-    <div class="col-md-3"><a href="?page=students" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-times"></i> Clear</a></div>
-  </form>
-  <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Program</th><th>Level</th><th>Gender</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody><?php foreach($stuList as $st): ?>
-      <tr>
-        <td class="small"><?=htmlspecialchars($st['student_id'])?></td>
-        <td><strong><?=htmlspecialchars($st['full_name'])?></strong></td>
-        <td class="small"><?=htmlspecialchars($st['email']??'-')?></td>
-        <td class="small"><?=htmlspecialchars($st['phone']??'-')?></td>
-        <td class="small"><?=htmlspecialchars($st['program']??'-')?></td>
-        <td><?=htmlspecialchars($st['level']??'-')?></td>
-        <td><?=htmlspecialchars($st['gender']??'-')?></td>
-        <td><?=strtolower($st['status']??'')==='active'?'<span class="badge bg-success">Active</span>':'<span class="badge bg-secondary">'.htmlspecialchars($st['status']??'-').'</span>'?></td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick='editStu(<?=json_encode($st)?>)' title="Edit"><i class="fas fa-edit"></i></button>
-          <?php if(strtolower($st['status']??'')==='active'): ?>
-          <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteStu(<?=(int)$st['id']?>,'<?=htmlspecialchars($st['full_name'],ENT_QUOTES)?>')" title="Deactivate"><i class="fas fa-user-slash"></i></button>
-          <?php endif; ?>
-        </td>
-      </tr>
-    <?php endforeach; if(empty($stuList)): ?><tr><td colspan="9" class="text-center text-muted py-4"><?=$stuSearch?'No students match your search.':'No students in directory.'?></td></tr><?php endif; ?></tbody>
-  </table></div>
+
+  <!-- Advanced Filters -->
+  <div class="filter-row">
+    <input type="text" id="stuKeyword" class="form-control form-control-sm" style="min-width:160px;flex:1" placeholder="Search name, ID, phone, email..." oninput="filterStudents()">
+    <select id="stuFilterSet" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Sets</option><?php foreach($setsList as $s): ?><option value="<?=htmlspecialchars($s)?>"><?=htmlspecialchars($s)?></option><?php endforeach; ?></select>
+    <select id="stuFilterProgram" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Programs</option><?php foreach($programsList as $p): ?><option value="<?=htmlspecialchars($p)?>"><?=htmlspecialchars($p)?></option><?php endforeach; ?></select>
+    <select id="stuFilterLevel" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Levels</option><?php foreach($levelsList as $l): ?><option value="<?=htmlspecialchars($l)?>"><?=htmlspecialchars($l)?></option><?php endforeach; ?></select>
+    <select id="stuFilterYear" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Years</option><?php foreach($yearsList as $y): ?><option value="<?=htmlspecialchars($y)?>"><?=htmlspecialchars($y)?></option><?php endforeach; ?></select>
+    <select id="stuFilterGender" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Genders</option><option value="Male">Male</option><option value="Female">Female</option></select>
+    <select id="stuFilterStatus" class="form-select form-select-sm" onchange="filterStudents()"><option value="">All Status</option><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option></select>
+    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="d-flex gap-3 mb-2 flex-wrap small text-muted">
+    <span id="stuResultCount">0 results</span>
+    <span><i class="fas fa-file-excel text-success"></i> <span id="stuExcelCount"><?=$excelRowCount?></span> Excel records loaded</span>
+  </div>
+
+  <div class="table-responsive" style="max-height:600px;overflow-y:auto">
+    <table class="table table-sm table-hover" id="stuTable"><thead><tr><th>ID</th><th>Name</th><th>Set</th><th>Program</th><th>Level</th><th>Gender</th><th>Contact</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
+    <tbody id="stuTableBody">
+      <tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+    </tbody></table>
+  </div>
 </div>
 
 <!-- Student Modal (Add/Edit) -->
-<div class="modal fade" id="stuModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<div class="modal fade" id="stuModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="stuModalTitle">Add Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <form id="stuForm"><div class="modal-body row g-2">
     <input type="hidden" name="action" id="stuAction" value="stu_add">
     <input type="hidden" name="id" id="stuId" value="0">
-    <div class="col-md-6"><label class="small">First Name *</label><input type="text" name="first_name" id="stuFn" class="form-control form-control-sm" required></div>
-    <div class="col-md-6"><label class="small">Surname *</label><input type="text" name="surname" id="stuSn" class="form-control form-control-sm" required></div>
-    <div class="col-md-6"><label class="small">Email</label><input type="email" name="email" id="stuEm" class="form-control form-control-sm"></div>
-    <div class="col-md-6"><label class="small">Phone</label><input type="text" name="phone" id="stuPh" class="form-control form-control-sm"></div>
-    <div class="col-md-6"><label class="small">Program</label><input type="text" name="program" id="stuPg" class="form-control form-control-sm"></div>
-    <div class="col-md-3"><label class="small">Level</label><input type="text" name="level" id="stuLv" class="form-control form-control-sm"></div>
-    <div class="col-md-3"><label class="small">Gender</label><select name="gender" id="stuGd" class="form-control form-control-sm"><option value="">--</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
-    <div class="col-md-6"><label class="small">Date of Birth</label><input type="date" name="date_of_birth" id="stuDb" class="form-control form-control-sm"></div>
-    <div class="col-md-6"><label class="small">Status</label><select name="status" id="stuSt" class="form-control form-control-sm"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+    <div class="col-md-6"><label class="small fw-medium">First Name *</label><input type="text" name="first_name" id="stuFn" class="form-control form-control-sm" required></div>
+    <div class="col-md-6"><label class="small fw-medium">Surname *</label><input type="text" name="surname" id="stuSn" class="form-control form-control-sm" required></div>
+    <div class="col-md-6"><label class="small fw-medium">Email</label><input type="email" name="email" id="stuEm" class="form-control form-control-sm" placeholder="student@school.edu"></div>
+    <div class="col-md-6"><label class="small fw-medium">Phone</label><input type="text" name="phone" id="stuPh" class="form-control form-control-sm" placeholder="+256 XXX XXX"></div>
+    <div class="col-md-4"><label class="small fw-medium">Set Name</label><input type="text" name="set_name" id="stuSet" class="form-control form-control-sm" placeholder="e.g. Set 28"></div>
+    <div class="col-md-4"><label class="small fw-medium">Program</label><input type="text" name="program" id="stuPg" class="form-control form-control-sm" placeholder="e.g. Diploma Nursing"></div>
+    <div class="col-md-4"><label class="small fw-medium">Level</label><select name="level" id="stuLv" class="form-select form-select-sm"><option value="">-- Select --</option><option value="Certificate">Certificate</option><option value="Diploma">Diploma</option><option value="Degree">Degree</option></select></div>
+    <div class="col-md-4"><label class="small fw-medium">Gender</label><select name="gender" id="stuGd" class="form-select form-select-sm"><option value="">-- Select --</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+    <div class="col-md-4"><label class="small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="stuDb" class="form-control form-control-sm"></div>
+    <div class="col-md-4"><label class="small fw-medium">Status</label><select name="status" id="stuSt" class="form-select form-select-sm"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option><option value="Suspended">Suspended</option></select></div>
   </div>
   <div class="modal-footer">
-    <div id="stuMsg" class="small text-success me-auto"></div>
+    <div id="stuMsg" class="small me-auto"></div>
     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save"></i> Save</button>
+    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save"></i> Save Student</button>
   </div></form></div></div>
 </div>
 
 <script>
-function showStuModal(id){document.getElementById('stuForm').reset();document.getElementById('stuAction').value='stu_add';document.getElementById('stuModalTitle').textContent='Add Student';document.getElementById('stuId').value=0;document.getElementById('stuSt').value='Active';new bootstrap.Modal(document.getElementById('stuModal')).show();}
-function editStu(s){document.getElementById('stuForm').reset();document.getElementById('stuAction').value='stu_update';document.getElementById('stuModalTitle').textContent='Edit: '+s.full_name;document.getElementById('stuId').value=s.id;document.getElementById('stuFn').value=s.first_name||'';document.getElementById('stuSn').value=s.surname||'';document.getElementById('stuEm').value=s.email||'';document.getElementById('stuPh').value=s.phone||'';document.getElementById('stuPg').value=s.program||'';document.getElementById('stuLv').value=s.level||'';document.getElementById('stuGd').value=s.gender||'';document.getElementById('stuDb').value=s.date_of_birth||'';document.getElementById('stuSt').value=s.status||'Active';new bootstrap.Modal(document.getElementById('stuModal')).show();}
-function deleteStu(id,name){if(!confirm('Deactivate '+name+'?'))return;fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id}).then(r=>r.json()).then(d=>{if(d.success)location.reload();else alert(d.message);});}
-document.getElementById('stuForm').addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(this);fetch('',{method:'POST',body:new URLSearchParams(fd)}).then(r=>r.json()).then(d=>{document.getElementById('stuMsg').textContent=d.message;if(d.success)setTimeout(function(){location.reload()},800);});});
+var _stuData=[];
+function editStuFromRow(idx){
+  var s=_stuData[idx];
+  if(!s) return;
+  editStu(s);
+}
+function showStuModal(id){
+  document.getElementById('stuForm').reset();
+  document.getElementById('stuAction').value='stu_add';
+  document.getElementById('stuModalTitle').textContent='Add New Student';
+  document.getElementById('stuId').value=0;
+  document.getElementById('stuSt').value='Active';
+  document.getElementById('stuMsg').textContent='';
+  new bootstrap.Modal(document.getElementById('stuModal')).show();
+}
+function editStu(s){
+  document.getElementById('stuForm').reset();
+  document.getElementById('stuAction').value='stu_update';
+  document.getElementById('stuModalTitle').textContent='Edit: '+s.full_name;
+  document.getElementById('stuId').value=s.id;
+  document.getElementById('stuFn').value=s.first_name||'';
+  document.getElementById('stuSn').value=s.surname||'';
+  document.getElementById('stuEm').value=s.email||'';
+  document.getElementById('stuPh').value=s.phone||'';
+  document.getElementById('stuSet').value=s.set_name||'';
+  document.getElementById('stuPg').value=s.program||'';
+  document.getElementById('stuLv').value=s.level||'';
+  document.getElementById('stuGd').value=s.gender||'';
+  document.getElementById('stuDb').value=s.date_of_birth||'';
+  document.getElementById('stuSt').value=s.status||'Active';
+  document.getElementById('stuMsg').textContent='';
+  new bootstrap.Modal(document.getElementById('stuModal')).show();
+}
+function deleteStu(id,name){
+  if(!confirm('Deactivate '+name+'?'))return;
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id}).then(r=>r.json()).then(d=>{if(d.success)filterStudents();else alert(d.message);});
+}
+function viewExcelStudent(name,file,id,setInfo,program,phone){
+  var msg='Excel Student: '+name+'\nFile: '+file+'\nIndex: '+id+'\nSet: '+(setInfo||'-')+'\nProgram: '+(program||'-')+'\nPhone: '+(phone||'-');
+  alert(msg);
+}
+function filterStudents(){
+  var q=document.getElementById('stuKeyword').value;
+  var set=document.getElementById('stuFilterSet').value;
+  var pg=document.getElementById('stuFilterProgram').value;
+  var lv=document.getElementById('stuFilterLevel').value;
+  var yr=document.getElementById('stuFilterYear').value;
+  var gd=document.getElementById('stuFilterGender').value;
+  var st=document.getElementById('stuFilterStatus').value;
+  document.getElementById('stuTableBody').innerHTML='<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>';
+  var body=new URLSearchParams();
+  body.append('action','stu_search');
+  body.append('q',q);
+  body.append('set',set);
+  body.append('program',pg);
+  body.append('level',lv);
+  body.append('year',yr);
+  body.append('gender',gd);
+  body.append('status',st);
+  fetch('',{method:'POST',body:body}).then(r=>r.json()).then(function(data){
+    _stuData=data;
+    var tbody=document.getElementById('stuTableBody');
+    if(!data||data.length===0){
+      tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-search"></i> No students found matching your criteria.</td></tr>';
+      document.getElementById('stuResultCount').textContent='0 results';
+      return;
+    }
+    var h='';
+    for(var i=0;i<data.length;i++){
+      var s=data[i];
+      var isExcel=s._source==='Excel';
+      var statusClass=(s.status||'Active').toLowerCase()==='active'?'bg-success':'bg-secondary';
+      var sourceBadge=isExcel?'<span class="badge bg-info text-white" title="'+(s._file||'')+'">Excel</span>':'<span class="badge bg-dark">DB</span>';
+      var nameAttr=s.full_name.replace(/['"\\]/g,'');
+      var actions='';
+      if(isExcel){
+        var fileAttr=(s._file||'').replace(/['"\\]/g,'');
+        var idAttr=(s.student_id||'').replace(/['"\\]/g,'');
+        var setAttr=(s.set_name||s.set||'').replace(/['"\\]/g,'');
+        var progAttr=(s.program||'').replace(/['"\\]/g,'');
+        var phoneAttr=(s.phone||'').replace(/['"\\]/g,'');
+        actions='<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="viewExcelStudent(\''+nameAttr+'\',\''+fileAttr+'\',\''+idAttr+'\',\''+setAttr+'\',\''+progAttr+'\',\''+phoneAttr+'\')" title="View"><i class="fas fa-eye"></i></button>';
+      } else {
+        actions='<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editStuFromRow('+i+')" title="Edit" data-idx="'+i+'"><i class="fas fa-edit"></i></button>'
+          +' <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteStu('+(s.id||0)+',\''+nameAttr+'\')" title="Deactivate"><i class="fas fa-user-slash"></i></button>';
+      }
+      h+='<tr>'
+        +'<td class="small">'+(s.student_id||s.index_number||'-')+'</td>'
+        +'<td><strong>'+s.full_name+'</strong></td>'
+        +'<td class="small">'+(s.set_name||s.set||'-')+'</td>'
+        +'<td class="small">'+(s.program||'-')+'</td>'
+        +'<td>'+(s.level||'-')+'</td>'
+        +'<td>'+(s.gender||'-')+'</td>'
+        +'<td class="small">'+(s.phone||s.email||'-')+'</td>'
+        +'<td><span class="badge '+statusClass+'">'+(s.status||'Active')+'</span></td>'
+        +'<td>'+sourceBadge+'</td>'
+        +'<td>'+actions+'</td>'
+        +'</tr>';
+    }
+    tbody.innerHTML=h;
+    document.getElementById('stuResultCount').textContent=data.length+' results'+(isExcel?' (includes Excel data)':'');
+  });
+}
+function clearFilters(){
+  document.getElementById('stuKeyword').value='';
+  document.getElementById('stuFilterSet').value='';
+  document.getElementById('stuFilterProgram').value='';
+  document.getElementById('stuFilterLevel').value='';
+  document.getElementById('stuFilterYear').value='';
+  document.getElementById('stuFilterGender').value='';
+  document.getElementById('stuFilterStatus').value='';
+  filterStudents();
+}
+// Initial load
+filterStudents();
+
+document.getElementById('stuForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var fd=new FormData(this);
+  fetch('',{method:'POST',body:new URLSearchParams(fd)}).then(function(r){return r.json();}).then(function(d){
+    var msg=document.getElementById('stuMsg');
+    if(d.success && d.student_number){
+      msg.innerHTML='<i class="fas fa-check-circle text-success"></i> <strong>Student added!</strong><br><small>Login: <code>'+d.student_number+'</code> / Password: <code>'+(d.password||'set during first login')+'</code><br>Share these credentials with the student.</small>';
+      msg.style.color='#059669';
+    } else {
+      msg.textContent=d.message;
+      msg.style.color=d.success?'#059669':'#dc2626';
+    }
+    if(d.success){setTimeout(function(){bootstrap.Modal.getInstance(document.getElementById('stuModal')).hide();filterStudents();},3000);}
+  });
+});
 </script>
 <?php elseif ($page === 'activity'): ?>
 <div class="card"><h3><i class="fas fa-history"></i> Audit Log</h3>

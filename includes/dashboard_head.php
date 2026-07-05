@@ -142,6 +142,8 @@ window.onerror = function(msg, url) {
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- 3D Buttons System -->
+<link href="<?= $rootPath ?>/css/3d-buttons.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Base — normalized foundation (resolves cross-file conflicts) -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-base.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Layout -->

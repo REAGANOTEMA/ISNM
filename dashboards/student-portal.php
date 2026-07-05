@@ -92,6 +92,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         header("Location: student-portal.php?page=profile");
         exit();
     }
+    if ($action === 'remove_photo') {
+        $stmt = $studentsDb->prepare("UPDATE students SET profile_picture = NULL WHERE id = ?");
+        if ($stmt) { $stmt->bind_param("i", $student_id); $stmt->execute(); $stmt->close(); }
+        $_SESSION['success'] = 'Profile photo removed.';
+        header("Location: student-portal.php?page=profile");
+        exit();
+    }
     if ($action === 'submit_request') {
         $req_type = trim($_POST['request_type'] ?? '');
         $reason = trim($_POST['reason'] ?? '');
@@ -184,10 +191,17 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 .sp-tab.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
 .sp-empty{text-align:center;padding:40px;color:#94a3b8}
 .sp-empty i{font-size:2.5rem;margin-bottom:12px;display:block}
-.sp-profile-card{text-align:center;padding:24px}
-.sp-profile-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:3px solid #e2e8f0}
+.sp-profile-card{text-align:center;padding:24px;position:relative}
+.sp-profile-card .sp-photo-wrapper{position:relative;display:inline-block}
+.sp-profile-card .sp-photo-wrapper img{width:110px;height:110px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:3px solid #e2e8f0;transition:border-color .2s}
 .sp-profile-card h4{font-size:1.1rem;margin-bottom:4px}
 .sp-profile-card p{font-size:.82rem;color:#64748b}
+.sp-remove-photo-form{position:absolute;top:-2px;right:-4px;margin:0}
+.sp-btn-remove-photo{width:28px;height:28px;border-radius:50%;border:2px solid #fecaca;background:#fef2f2;color:#dc2626;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
+.sp-btn-remove-photo:hover{background:#fee2e2;border-color:#fca5a5}
+.sp-upload-zone{position:relative;border:2px dashed #cbd5e1;border-radius:10px;padding:16px 12px;text-align:center;transition:all .2s;background:#f8fafc}
+.sp-upload-zone.dragover{border-color:#3b82f6;background:#eff6ff}
+.sp-upload-zone.has-file{border-color:#059669;background:#f0fdf4}
 .sp-timeline{position:relative;padding-left:24px}
 .sp-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#e2e8f0}
 .sp-timeline-item{position:relative;padding-bottom:20px}
@@ -234,6 +248,8 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <a class="nav-item <?= $page==='clinical'?'active':'' ?>" href="?page=clinical"><i class="fas fa-hospital"></i>Clinical Placement</a>
 <a class="nav-item <?= $page==='logbook'?'active':'' ?>" href="?page=logbook"><i class="fas fa-book-open"></i>Logbook</a>
 <a class="nav-item <?= $page==='competency'?'active':'' ?>" href="?page=competency"><i class="fas fa-star"></i>Competencies</a>
+<div class="nav-section">Admission</div>
+<a class="nav-item <?= $page==='requirements'?'active':'' ?>" href="?page=requirements"><i class="fas fa-check-double"></i>Requirements</a>
 <div class="nav-section">Student Life</div>
 <a class="nav-item <?= $page==='discipline'?'active':'' ?>" href="?page=discipline"><i class="fas fa-gavel"></i>Discipline</a>
 <a class="nav-item <?= $page==='finances'?'active':'' ?>" href="?page=finances"><i class="fas fa-money-bill"></i>Finances</a>
@@ -292,12 +308,38 @@ if ($page === 'dashboard'):
         $gr = $studentsDb->query("SELECT gpa FROM student_academic_records WHERE student_id=$student_id ORDER BY id DESC LIMIT 1");
         if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['gpa'];
     }
+    // Admission requirements status from staff DB
+    $admissionStatus = 'Not Set';
+    $requirements = [];
+    $directorNotes = [];
+    $reqTotal = 0; $reqCompleted = 0;
+    if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
+        $studentNum = $student['student_number'] ?? $student['registration_number'] ?? '';
+        // Find applicant record by student_number or registration_number
+        $appQ = $staffDb->query("SELECT id FROM applicants WHERE student_number='".$staffDb->real_escape_string($studentNum)."' OR registration_number='".$staffDb->real_escape_string($studentNum)."' LIMIT 1");
+        if ($appQ && $appQ->num_rows > 0) {
+            $appRow = $appQ->fetch_assoc();
+            $appId = (int)$appRow['id'];
+            // Get admission status
+            $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$appId LIMIT 1");
+            if ($trackQ && $trackQ->num_rows > 0) { $admissionStatus = $trackQ->fetch_assoc()['admission_status']; }
+            // Get requirements with director notes
+            $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$appId AND ar.is_active=1 ORDER BY ar.display_order");
+            if ($reqQ) { while ($r = $reqQ->fetch_assoc()) { $requirements[] = $r; if (!empty($r['director_notes'])) $directorNotes[] = ['req'=>$r['requirement_name'], 'note'=>$r['director_notes']]; } }
+            $reqTotal = count($requirements);
+            $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
+        }
+    }
 ?>
 <div class="sp-stats">
 <div class="sp-stat"><div class="icon" style="background:#dbeafe;color:#3b82f6"><i class="fas fa-graduation-cap"></i></div><h3><?= $current_year ?></h3><p>Year of Study</p></div>
 <div class="sp-stat"><div class="icon" style="background:#d1fae5;color:#059669"><i class="fas fa-chart-line"></i></div><h3><?= number_format($gpa, 2) ?></h3><p>GPA</p></div>
 <div class="sp-stat"><div class="icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-clipboard-check"></i></div><h3><?= number_format($attendance_pct, 1) ?>%</h3><p>Attendance</p></div>
 <div class="sp-stat"><div class="icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-money-bill"></i></div><h3>UGX <?= number_format($fee_balance) ?></h3><p>Fee Balance</p></div>
+<?php if ($reqTotal > 0): ?>
+<div class="sp-stat"><div class="icon" style="background:#ede9fe;color:#7C3AED"><i class="fas fa-check-double"></i></div><h3><?= $reqCompleted ?>/<?= $reqTotal ?></h3><p>Requirements Met</p></div>
+<div class="sp-stat"><div class="icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-clipboard-list"></i></div><h3><?= htmlspecialchars($admissionStatus) ?></h3><p>Admission Status</p></div>
+<?php endif; ?>
 </div>
 <div class="sp-grid-2">
 <div class="sp-card">
@@ -309,6 +351,7 @@ if ($page === 'dashboard'):
 <tr><td style="color:#64748b">Year / Level</td><td>Year <?= $current_year ?> · <?= htmlspecialchars($level) ?></td></tr>
 <tr><td style="color:#64748b">Set</td><td><?= htmlspecialchars($set_name) ?></td></tr>
 <tr><td style="color:#64748b">Status</td><td><span class="sp-badge sp-badge-<?= $student_status==='Active'?'success':'warning' ?>"><?= htmlspecialchars($student_status) ?></span></td></tr>
+<?php if ($admissionStatus !== 'Not Set'): ?><tr><td style="color:#64748b">Admission</td><td><span class="sp-badge sp-badge-<?= $admissionStatus==='Registered'?'success':'warning' ?>"><?= htmlspecialchars($admissionStatus) ?></span></td></tr><?php endif; ?>
 </table>
 </div>
 <div class="sp-card">
@@ -344,6 +387,73 @@ if (empty($notifs)) {
 </div>
 </div>
 
+<?php if (!empty($requirements)): ?>
+<div class="sp-card">
+<h4><i class="fas fa-check-double me-2"></i>Admission Requirements Status</h4>
+<div class="sp-progress" style="margin-bottom:16px"><div class="sp-progress-bar" style="width:<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%"></div></div>
+<p style="font-size:.82rem;color:#64748b;margin-bottom:12px"><?= $reqCompleted ?> of <?= $reqTotal ?> requirements completed &middot; Admission: <strong><?= htmlspecialchars($admissionStatus) ?></strong></p>
+<table class="sp-table">
+<thead><tr><th>Requirement</th><th>Status</th><th>Updated</th></tr></thead>
+<tbody>
+<?php foreach ($requirements as $req): $s = $req['status'] ?? 'Not Submitted'; ?>
+<tr>
+<td><?= htmlspecialchars($req['requirement_name']) ?></td>
+<td><span class="sp-badge sp-badge-<?= in_array($s,['Verified','Received'])?'success':(in_array($s,['Submitted'])?'info':(in_array($s,['Rejected','Missing'])?'danger':($s==='Not Yet Given'?'warning':'secondary'))) ?>"><?= htmlspecialchars($s) ?></span></td>
+<td><?= $req['updated_at'] ? date('M j, Y', strtotime($req['updated_at'])) : '-' ?></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($directorNotes)): ?>
+<div class="sp-card">
+<h4><i class="fas fa-sticky-note me-2"></i>Director's Remarks</h4>
+<?php foreach ($directorNotes as $dn): ?>
+<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;border-left:3px solid #7C3AED">
+<p style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px"><?= htmlspecialchars($dn['req']) ?></p>
+<p style="font-size:.85rem;color:#1e293b"><?= nl2br(htmlspecialchars($dn['note'])) ?></p>
+</div>
+<?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php
+// ════════════════════════════════════════════════
+// REQUIREMENTS
+// ════════════════════════════════════════════════
+elseif ($page === 'requirements'):
+?>
+<div class="sp-card">
+<h4><i class="fas fa-check-double me-2"></i>Admission Requirements</h4>
+<p style="color:#64748b;margin-bottom:16px">Track your admission requirements status. Director remarks are shown for each requirement.</p>
+<?php if (empty($requirements)): ?>
+<div class="sp-empty"><i class="fas fa-file-alt"></i><p>No requirement records found for your account.</p></div>
+<?php else: ?>
+<div class="sp-progress" style="margin-bottom:20px"><div class="sp-progress-bar" style="width:<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%"></div></div>
+<p style="font-size:.85rem;color:#64748b;margin-bottom:16px"><?= $reqCompleted ?> of <?= $reqTotal ?> requirements completed (<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%)</p>
+<table class="sp-table">
+<thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Last Updated</th><th>Director's Note</th></tr></thead>
+<tbody>
+<?php $i = 0; foreach ($requirements as $req): $i++; $s = $req['status'] ?? 'Not Submitted'; ?>
+<tr>
+<td><?= $i ?></td>
+<td><?= htmlspecialchars($req['requirement_name']) ?></td>
+<td><span class="sp-badge sp-badge-<?= in_array($s,['Verified','Received'])?'success':(in_array($s,['Submitted'])?'info':(in_array($s,['Rejected','Missing'])?'danger':($s==='Not Yet Given'?'warning':'secondary'))) ?>"><?= htmlspecialchars($s) ?></span></td>
+<td><?= $req['updated_at'] ? date('M j, Y', strtotime($req['updated_at'])) : '-' ?></td>
+<td><?= !empty($req['director_notes']) ? nl2br(htmlspecialchars(substr($req['director_notes'],0,200))) : '<span style="color:#94a3b8">—</span>' ?></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+<?php endif; ?>
+</div>
+<div class="sp-card">
+<h4><i class="fas fa-info-circle me-2"></i>Admission Status</h4>
+<p><strong>Current Status:</strong> <span class="sp-badge sp-badge-<?= $admissionStatus==='Registered'?'success':'warning' ?>"><?= htmlspecialchars($admissionStatus) ?></span></p>
+<p style="color:#64748b;margin-top:8px;font-size:.85rem">Your admission status reflects the current stage of your application process. Contact the Admissions Office for any questions.</p>
+</div>
 <?php
 // ════════════════════════════════════════════════
 // 2. PROFILE
@@ -357,14 +467,31 @@ elseif ($page === 'profile'):
 ?>
 <div class="sp-grid-2">
 <div class="sp-card sp-profile-card">
-<img src="<?= $profile_picture ? '../'.$profile_picture : 'https://ui-avatars.com/api/?name='.urlencode($full_name).'&size=100&background=3b82f6&color=fff' ?>" alt="Photo">
+<div class="sp-photo-wrapper">
+  <img id="profilePhotoPreview" src="<?= $profile_picture ? '../'.$profile_picture : 'https://ui-avatars.com/api/?name='.urlencode($full_name).'&size=100&background=3b82f6&color=fff' ?>" alt="Photo">
+  <?php if ($profile_picture): ?>
+  <form method="POST" class="sp-remove-photo-form" onsubmit="return confirm('Remove your profile photo?')">
+    <input type="hidden" name="action" value="remove_photo">
+    <button type="submit" class="sp-btn-remove-photo" title="Remove photo"><i class="fas fa-times"></i></button>
+  </form>
+  <?php endif; ?>
+</div>
 <h4><?= htmlspecialchars($full_name) ?></h4>
 <p><?= htmlspecialchars($student_number) ?></p>
 <p style="margin-top:4px"><span class="sp-badge sp-badge-<?= $student_status==='Active'?'success':'warning' ?>"><?= htmlspecialchars($student_status) ?></span></p>
 <form method="POST" enctype="multipart/form-data" style="margin-top:16px">
 <input type="hidden" name="action" value="upload_photo">
-<input type="file" name="profile_photo" accept="image/*" class="sp-form-group" style="margin-bottom:8px">
-<button type="submit" class="sp-btn sp-btn-primary" style="width:100%"><i class="fas fa-upload"></i>Upload Photo</button>
+<div class="sp-upload-zone" id="uploadZone">
+  <i class="fas fa-cloud-upload-alt" style="font-size:28px;color:#94a3b8"></i>
+  <p style="font-size:13px;color:#64748b;margin:4px 0">Drag & drop or click to upload</p>
+  <p style="font-size:11px;color:#94a3b8">JPG, PNG, GIF, WebP &bull; Max 5MB</p>
+  <input type="file" name="profile_photo" id="profilePhotoInput" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+</div>
+<div id="uploadPreview" style="display:none;margin-top:8px;text-align:center">
+  <img id="candidateImg" style="max-width:100%;max-height:120px;border-radius:8px;border:2px solid #e2e8f0">
+  <p style="font-size:11px;color:#64748b;margin-top:4px">Click "Save Photo" to confirm</p>
+</div>
+<button type="submit" id="uploadBtn" class="sp-btn sp-btn-primary" style="width:100%;margin-top:8px" disabled><i class="fas fa-upload"></i>Save Photo</button>
 </form>
 </div>
 <div class="sp-card">
@@ -1167,5 +1294,56 @@ elseif ($page === 'timetable'):
 
 <?php endif; ?>
 </main>
+<script>
+// Profile photo upload preview + drag-drop
+(function() {
+  var zone = document.getElementById('uploadZone');
+  var input = document.getElementById('profilePhotoInput');
+  var preview = document.getElementById('uploadPreview');
+  var candidateImg = document.getElementById('candidateImg');
+  var uploadBtn = document.getElementById('uploadBtn');
+  var currentImg = document.querySelector('.sp-photo-wrapper img');
+
+  if (!zone || !input) return;
+
+  // Drag events
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      input.files = e.dataTransfer.files;
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  // Click to select
+  input.addEventListener('change', function() {
+    if (this.files.length > 0) handleFile(this.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.type.match('image.*')) {
+      alert('Please select an image file (JPG, PNG, GIF, or WebP).');
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large. Maximum size is 5MB.');
+      input.value = '';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      candidateImg.src = e.target.result;
+      preview.style.display = 'block';
+      zone.classList.add('has-file');
+      uploadBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+})();
+</script>
 </body>
 </html>

@@ -627,14 +627,14 @@ if ($login_success) { unset($_SESSION['success']); }
 
         <div class="form-group">
           <label class="form-label" for="stu-index">
-            <i class="fas fa-id-card" style="margin-right: 6px; color: var(--primary);"></i>Index Number
+            <i class="fas fa-id-card" style="margin-right: 6px; color: var(--primary);"></i>Student / Index Number
           </label>
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-id-card"></i></span>
             <input id="stu-index" name="index_number" class="form-control" type="text" required 
-                   placeholder="U001/CM/056/16" autocomplete="username">
+                   placeholder="e.g. STU202600001 or U001/CM/056/16" autocomplete="username">
           </div>
-          <div class="form-text">Format: UXXX/CC/XXX/XX</div>
+          <div class="form-text">Enter your student number or UNMEB index number</div>
         </div>
 
         <div id="first-login-fields" class="first-login-section" style="display: none;">
@@ -679,7 +679,7 @@ if ($login_success) { unset($_SESSION['success']); }
             </button>
             <div class="input-highlight"></div>
           </div>
-          <div class="form-text" id="password-hint">First time? Leave blank and we'll verify your details.</div>
+          <div class="form-text" id="password-hint">First time? Leave blank and enter your name + phone to verify.</div>
         </div>
 
         <button type="submit" class="btn-3d btn-yellow btn-3d-block" id="btn-submit">
@@ -695,10 +695,11 @@ if ($login_success) { unset($_SESSION['success']); }
         <p style="margin-bottom: 0; font-size: 0.78rem;">Your session is secure and encrypted.</p>
       </div>
 
-      <div class="link-row">
+    <div class="link-row">
+        <a href="student-forgot-password.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-key"></i> Forgot Password</a>
         <a href="organogram.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
         <a href="index.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-home"></i> Homepage</a>
-      </div>
+    </div>
     </div>
   </div>
 </div>
