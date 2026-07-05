@@ -7,41 +7,55 @@
 if (function_exists('getSidebarGroups')) return;
 
 function getSidebarGroups(string $role): array {
+    $roleKey = normalizeRoleKeySidebar($role);
+    $execRoles = ['director_general','director_ict','director_academics','director_finance',
+                  'director_admissions','principal','deputy_principal','academic_registrar'];
+    $isExec = in_array($roleKey, $execRoles);
+
     $g = [];
-    // ── MAIN ──
-    $g['MAIN'] = [
-        ['label' => 'Dashboard',    'icon' => 'fas fa-chart-pie',  'page' => 'home'],
-        ['label' => 'Overview',     'icon' => 'fas fa-home',       'page' => 'overview'],
-        ['label' => 'Analytics',    'icon' => 'fas fa-chart-line', 'page' => 'analytics'],
-    ];
+
+    // ── MAIN (exec roles only; others get their dashboard via OPERATIONS) ──
+    if ($isExec) {
+        $g['MAIN'] = [
+            ['label' => 'Dashboard',    'icon' => 'fas fa-chart-pie',  'page' => 'home'],
+            ['label' => 'Overview',     'icon' => 'fas fa-home',       'page' => 'overview'],
+            ['label' => 'Analytics',    'icon' => 'fas fa-chart-line', 'page' => 'analytics'],
+        ];
+    }
 
     // ── OPERATIONS (role-specific) ──
     $g['OPERATIONS'] = getRoleOperations($role);
 
-    // ── MANAGEMENT ──
-    $g['MANAGEMENT'] = [
-        ['label' => 'Approvals',    'icon' => 'fas fa-check-double', 'page' => 'approvals'],
-        ['label' => 'Tasks',        'icon' => 'fas fa-tasks',       'page' => 'tasks'],
-        ['label' => 'Schedules',    'icon' => 'fas fa-calendar-alt', 'page' => 'schedules'],
-    ];
+    // ── MANAGEMENT (exec roles only) ──
+    if ($isExec) {
+        $g['MANAGEMENT'] = [
+            ['label' => 'Approvals',    'icon' => 'fas fa-check-double', 'page' => 'approvals'],
+            ['label' => 'Tasks',        'icon' => 'fas fa-tasks',       'page' => 'tasks'],
+            ['label' => 'Schedules',    'icon' => 'fas fa-calendar-alt', 'page' => 'schedules'],
+        ];
+    }
 
-    // ── REPORTS ──
-    $g['REPORTS'] = [
-        ['label' => 'Daily Reports',   'icon' => 'fas fa-calendar-day',  'page' => 'reports-daily'],
-        ['label' => 'Monthly Reports', 'icon' => 'fas fa-calendar-alt',  'page' => 'reports-monthly'],
-        ['label' => 'Annual Reports',  'icon' => 'fas fa-calendar-check','page' => 'reports-annual'],
-        ['label' => 'Exports',         'icon' => 'fas fa-file-export',   'page' => 'exports'],
-        ['label' => 'Print Center',    'icon' => 'fas fa-print',         'page' => 'print'],
-    ];
+    // ── REPORTS (exec roles only; others get Reports inside OPERATIONS) ──
+    if ($isExec) {
+        $g['REPORTS'] = [
+            ['label' => 'Daily Reports',   'icon' => 'fas fa-calendar-day',  'page' => 'reports-daily'],
+            ['label' => 'Monthly Reports', 'icon' => 'fas fa-calendar-alt',  'page' => 'reports-monthly'],
+            ['label' => 'Annual Reports',  'icon' => 'fas fa-calendar-check','page' => 'reports-annual'],
+            ['label' => 'Exports',         'icon' => 'fas fa-file-export',   'page' => 'exports'],
+            ['label' => 'Print Center',    'icon' => 'fas fa-print',         'page' => 'print'],
+        ];
+    }
 
-    // ── COMMUNICATION ──
-    $g['COMMUNICATION'] = [
-        ['label' => 'Notifications', 'icon' => 'fas fa-bell',       'page' => 'notifications'],
-        ['label' => 'Messages',      'icon' => 'fas fa-envelope',   'page' => 'messages'],
-        ['label' => 'Announcements', 'icon' => 'fas fa-bullhorn',   'page' => 'announcements'],
-    ];
+    // ── COMMUNICATION (exec roles only; others get Messages/Announcements inside OPERATIONS) ──
+    if ($isExec) {
+        $g['COMMUNICATION'] = [
+            ['label' => 'Notifications', 'icon' => 'fas fa-bell',       'page' => 'notifications'],
+            ['label' => 'Messages',      'icon' => 'fas fa-envelope',   'page' => 'messages'],
+            ['label' => 'Announcements', 'icon' => 'fas fa-bullhorn',   'page' => 'announcements'],
+        ];
+    }
 
-    // ── ACCOUNT ──
+    // ── ACCOUNT (everyone) ──
     $g['ACCOUNT'] = [
         ['label' => 'Profile',         'icon' => 'fas fa-user-circle', 'page' => 'profile'],
         ['label' => 'Preferences',     'icon' => 'fas fa-cog',         'page' => 'preferences'],

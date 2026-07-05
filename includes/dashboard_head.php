@@ -218,39 +218,40 @@ window.onerror = function(msg, url) {
 (function() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   if (document.querySelector('meta[name="push-sw-registered"]')) return;
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
   var meta = document.createElement('meta'); meta.name = 'push-sw-registered'; meta.content = '1'; document.head.appendChild(meta);
 
   navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(function(reg) {
-    console.log('[SW] Registered:', reg.scope);
+      console.log('[SW] Registered:', reg.scope);
 
-    function subscribeUser() {
-      reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array('BMr-6T5vZJ5hY2X8fG3kL9pQ0rS1uV4wX7yZ6aB3cD4eF5gH6iJ7kL8mN9oP0qR1sT2uV3wX4yZ5')
-      }).then(function(sub) {
-        var data = new URLSearchParams();
-        data.append('endpoint', sub.endpoint);
-        data.append('auth_key', arrayBufferToBase64(sub.getKey('auth')));
-        data.append('p256dh_key', arrayBufferToBase64(sub.getKey('p256dh')));
-        data.append('device_type', /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
-        fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data, credentials: 'same-origin' }).catch(function(){});
-      }).catch(function(err) { console.warn('[SW] Subscribe failed:', err); });
-    }
+      function subscribeUser() {
+        reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array('BMr-6T5vZJ5hY2X8fG3kL9pQ0rS1uV4wX7yZ6aB3cD4eF5gH6iJ7kL8mN9oP0qR1sT2uV3wX4yZ5')
+        }).then(function(sub) {
+          var data = new URLSearchParams();
+          data.append('endpoint', sub.endpoint);
+          data.append('auth_key', arrayBufferToBase64(sub.getKey('auth')));
+          data.append('p256dh_key', arrayBufferToBase64(sub.getKey('p256dh')));
+          data.append('device_type', /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
+          fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data, credentials: 'same-origin' }).catch(function(){});
+        }).catch(function(err) { console.warn('[SW] Subscribe failed:', err); });
+      }
 
-    if (Notification.permission === 'granted') { subscribeUser(); }
-    else if (Notification.permission !== 'denied') {
-      Notification.requestPermission().then(function(p) { if (p === 'granted') subscribeUser(); });
-    }
+      if (Notification.permission === 'granted') { subscribeUser(); }
+      else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(function(p) { if (p === 'granted') subscribeUser(); });
+      }
 
-    reg.onupdatefound = function() {
-      var installing = reg.installing;
-      installing.onstatechange = function() {
-        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log('[SW] Updated');
-        }
+      reg.onupdatefound = function() {
+        var installing = reg.installing;
+        installing.onstatechange = function() {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('[SW] Updated');
+          }
+        };
       };
-    };
-  }).catch(function(err) { console.warn('[SW] Registration failed:', err); });
+    }).catch(function(){});
 
   function urlBase64ToUint8Array(base64) {
     var padding = '='.repeat((4 - base64.length % 4) % 4);
@@ -350,14 +351,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-/* ── Loading Progress Bar ── */
+/* ── Loading Progress Bar (deferred until body exists) ── */
 (function(){
     'use strict';
-    var bar = document.createElement('div');
-    bar.className = 'isnm-loading-bar';
-    document.body.appendChild(bar);
-    var timer;
+    var bar, timer;
+    function initBar() {
+        if (!document.body) { setTimeout(initBar, 30); return; }
+        bar = document.createElement('div');
+        bar.className = 'isnm-loading-bar';
+        document.body.appendChild(bar);
+    }
     function startLoad(instant) {
+        if (!bar) return;
         clearInterval(timer); bar.style.opacity = '1';
         bar.style.width = instant ? '70%' : '30%';
         if (instant) return;
@@ -367,21 +372,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     }
     function finishLoad() {
+        if (!bar) return;
         clearInterval(timer);
         bar.style.width = '100%';
         setTimeout(function(){ bar.style.opacity = '0'; setTimeout(function(){ bar.style.width = '0%'; }, 300); }, 300);
     }
+    initBar();
     window.ISNM_loadingBar = { start: startLoad, done: finishLoad };
-    // Auto-trigger for links and forms
     document.addEventListener('click', function(e){
         var link = e.target.closest('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"])');
-        if (link && link.href && link.href.indexOf(window.location.host) > -1) {
-            startLoad(false);
-        }
+        if (link && link.href && link.href.indexOf(window.location.host) > -1) startLoad(false);
     });
-    // Override form submissions
     document.addEventListener('submit', function(){ startLoad(false); });
-    // Auto-finish on page load
     if (document.readyState === 'complete') finishLoad();
     else window.addEventListener('load', finishLoad);
 })();
@@ -389,39 +391,48 @@ document.addEventListener('DOMContentLoaded', function() {
 /* ── Scroll-to-top Button ── */
 (function(){
     'use strict';
-    var btn = document.createElement('button');
-    btn.className = 'isnm-scroll-top';
-    btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-    btn.setAttribute('aria-label', 'Scroll to top');
-    document.body.appendChild(btn);
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-        if (!ticking) { requestAnimationFrame(function() {
-            btn.classList.toggle('show', window.scrollY > 400);
-            ticking = false;
-        }); ticking = true; }
-    });
-    btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    var btn;
+    function initScrollBtn() {
+        if (!document.body) { setTimeout(initScrollBtn, 30); return; }
+        btn = document.createElement('button');
+        btn.className = 'isnm-scroll-top';
+        btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        btn.setAttribute('aria-label', 'Scroll to top');
+        document.body.appendChild(btn);
+        var ticking = false;
+        window.addEventListener('scroll', function(){
+            if (!ticking) { requestAnimationFrame(function() {
+                if (btn) btn.classList.toggle('show', window.scrollY > 400);
+                ticking = false;
+            }); ticking = true; }
+        });
+        btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    }
+    initScrollBtn();
 })();
 
 /* ── Keyboard Shortcuts ── */
 (function(){
     'use strict';
-    var toast = document.createElement('div');
-    toast.className = 'isnm-shortcut-toast';
-    toast.innerHTML = '<strong>Keyboard Shortcuts</strong><hr>\
+    var toast;
+    function initShortcuts() {
+        if (!document.body) { setTimeout(initShortcuts, 30); return; }
+        toast = document.createElement('div');
+        toast.className = 'isnm-shortcut-toast';
+        toast.innerHTML = '<strong>Keyboard Shortcuts</strong><hr>\
 <kbd>?</kbd> Show this help\
 <span style="float:right"><kbd>s</kbd> Search</span><br>\
 <kbd>h</kbd> Home\
 <span style="float:right"><kbd>q</kbd> Quick actions</span><br>\
 <kbd>n</kbd> Notifications\
 <span style="float:right"><kbd>Esc</kbd> Close</span>';
-    document.body.appendChild(toast);
+        }
     var toastTimer;
     function showHelp() {
+        if (!toast) return;
         clearTimeout(toastTimer);
         toast.classList.add('show');
-        toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 4000);
+        toastTimer = setTimeout(function(){ if (toast) toast.classList.remove('show'); }, 4000);
     }
     document.addEventListener('keydown', function(e){
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
@@ -436,8 +447,9 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'n': case 'N': e.preventDefault();
                 var notif = document.querySelector('.ent-header-btn[data-notif], .notification-btn, .notif-link');
                 if (notif) notif.click(); break;
-            case 'Escape': toast.classList.remove('show'); break;
+            case 'Escape': if (toast) toast.classList.remove('show'); break;
         }
     });
+    initShortcuts();
 })();
 </script>

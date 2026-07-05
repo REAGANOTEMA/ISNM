@@ -89,6 +89,23 @@ $migrations = [
         `category` VARCHAR(100),
         `notes` TEXT,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `$staff_db`.`secretary_correspondence` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `type` ENUM('incoming','outgoing') NOT NULL DEFAULT 'outgoing',
+        `subject` VARCHAR(255) NOT NULL,
+        `content` TEXT,
+        `recipient_name` VARCHAR(255),
+        `recipient_email` VARCHAR(255),
+        `recipient_phone` VARCHAR(50),
+        `category` VARCHAR(100),
+        `status` ENUM('draft','sent','received','archived') DEFAULT 'draft',
+        `reference_number` VARCHAR(100),
+        `attachment_path` VARCHAR(500),
+        `sent_date` DATE,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 ];
 foreach ($migrations as $sql) { @$conn->query($sql); }
@@ -667,6 +684,13 @@ if (isset($_REQUEST['ajax'])) {
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Request saved'; }
             break;
 
+        case 'delete_request':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_requests` WHERE id=? AND user_id=?");
+            $stmt->bind_param('ii', $id, $user_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Request deleted'; }
+            break;
+
         case 'get_announcements':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_announcements` WHERE user_id = ? ORDER BY publish_date DESC");
             $stmt->bind_param('i', $user_id);
@@ -693,6 +717,13 @@ if (isset($_REQUEST['ajax'])) {
                 $stmt->bind_param('issss', $user_id, $title, $content, $audience, $pub_date);
             }
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Announcement saved'; }
+            break;
+
+        case 'delete_announcement':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_announcements` WHERE id=? AND user_id=?");
+            $stmt->bind_param('ii', $id, $user_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Announcement deleted'; }
             break;
 
         case 'get_contacts':
@@ -723,6 +754,55 @@ if (isset($_REQUEST['ajax'])) {
                 $stmt->bind_param('issssss', $user_id, $name, $email, $phone, $org, $cat, $notes);
             }
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Contact saved'; }
+            break;
+
+        case 'delete_contact':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_contacts` WHERE id=? AND user_id=?");
+            $stmt->bind_param('ii', $id, $user_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Contact deleted'; }
+            break;
+
+        case 'get_correspondence':
+            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_correspondence` WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $items = [];
+            while ($row = $result->fetch_assoc()) { $items[] = $row; }
+            $response['success'] = true;
+            $response['correspondence'] = $items;
+            break;
+
+        case 'save_correspondence':
+            $type = $_POST['type'] ?? 'outgoing';
+            $subject = trim($_POST['subject'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+            $recipient_name = trim($_POST['recipient_name'] ?? '');
+            $recipient_email = trim($_POST['recipient_email'] ?? '');
+            $recipient_phone = trim($_POST['recipient_phone'] ?? '');
+            $category = trim($_POST['category'] ?? 'general');
+            $status = $_POST['status'] ?? 'draft';
+            $ref = trim($_POST['reference_number'] ?? '');
+            $sent_date = $_POST['sent_date'] ?? date('Y-m-d');
+            if (!$subject) { $response['message'] = 'Subject is required'; break; }
+            $id = (int)($_POST['id'] ?? 0);
+            if ($id) {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_correspondence` SET type=?, subject=?, content=?, recipient_name=?, recipient_email=?, recipient_phone=?, category=?, status=?, reference_number=?, sent_date=? WHERE id=? AND user_id=?");
+                $stmt->bind_param('ssssssssssii', $type, $subject, $content, $recipient_name, $recipient_email, $recipient_phone, $category, $status, $ref, $sent_date, $id, $user_id);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_correspondence` (user_id, type, subject, content, recipient_name, recipient_email, recipient_phone, category, status, reference_number, sent_date) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('issssssssss', $user_id, $type, $subject, $content, $recipient_name, $recipient_email, $recipient_phone, $category, $status, $ref, $sent_date);
+            }
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Correspondence saved'; }
+            else { $response['message'] = 'Failed: ' . $conn->error; }
+            break;
+
+        case 'delete_correspondence':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_correspondence` WHERE id=? AND user_id=?");
+            $stmt->bind_param('ii', $id, $user_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
             break;
 
         case 'get_dashboard_stats':
@@ -809,6 +889,7 @@ $page = $_REQUEST['page'] ?? 'home';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="page-content">
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; renderDashboardTopbar($pageTitle); ?>
 <div class="content-area">
 <?php if ($page === 'home'): ?>
@@ -1274,6 +1355,45 @@ if ($edit_id) {
     </div>
 </div></div></div>
 
+<?php elseif ($page === 'correspondence'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Correspondence</h5>
+        <button class="btn btn-isnm btn-sm" onclick="showCorrModal()"><i class="fas fa-plus me-1"></i>New Record</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0">
+            <thead><tr><th>Ref #</th><th>Subject</th><th>Type</th><th>Recipient</th><th>Category</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="corrBody"></tbody>
+        </table>
+    </div>
+</div>
+<div class="modal fade" id="corrModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="corrModalTitle">New Correspondence</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="corrForm" onsubmit="return saveCorrespondence(event)">
+            <input type="hidden" name="id" id="corr_id">
+            <div class="row g-2">
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Type</label><select class="form-select" name="type" id="corr_type"><option value="outgoing">Outgoing</option><option value="incoming">Incoming</option></select></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Status</label><select class="form-select" name="status" id="corr_status"><option value="draft">Draft</option><option value="sent">Sent</option><option value="received">Received</option><option value="archived">Archived</option></select></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Category</label><select class="form-select" name="category" id="corr_category"><option value="general">General</option><option value="official">Official</option><option value="academic">Academic</option><option value="financial">Financial</option><option value="disciplinary">Disciplinary</option></select></div>
+            </div>
+            <div class="mb-3"><label class="form-label fw-bold">Subject *</label><input type="text" class="form-control" name="subject" id="corr_subject" required></div>
+            <div class="mb-3"><label class="form-label fw-bold">Content</label><textarea class="form-control" name="content" id="corr_content" rows="3"></textarea></div>
+            <div class="row g-2">
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Recipient Name</label><input type="text" class="form-control" name="recipient_name" id="corr_recipient_name"></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Recipient Email</label><input type="email" class="form-control" name="recipient_email" id="corr_recipient_email"></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Recipient Phone</label><input type="tel" class="form-control" name="recipient_phone" id="corr_recipient_phone"></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Reference Number</label><input type="text" class="form-control" name="reference_number" id="corr_ref" placeholder="Auto-generated if empty"></div>
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Date</label><input type="date" class="form-control" name="sent_date" id="corr_date" value="<?= date('Y-m-d') ?>"></div>
+            </div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div></div></div>
+
 <?php elseif ($page === 'requests'): ?>
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1381,9 +1501,11 @@ if ($edit_id) {
     </div>
     <div id="incompleteList" class="mt-3"></div>
 </div>
+<?php else: ?>
+<script>window.location.replace('?page=home');</script>
 <?php endif; ?>
     </div>
-</div>
+</div><!-- /page-content -->
 <div class="modal fade" id="uploadDocModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="fas fa-upload me-2"></i>Upload Document</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
@@ -1449,23 +1571,33 @@ function sendMessage(e){e.preventDefault();const fd=new FormData(document.getEle
 function markRead(id){ajax('mark_message_read','POST',{id}).then(()=>loadMessages())}
 if(document.getElementById('msgBody'))loadMessages();
 
-function loadRequests(){ajax('get_requests','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('reqBody');if(!tb)return;tb.innerHTML=d.requests.map(r=>`<tr><td>${esc(r.request_type)}</td><td><small>${esc((r.description||'').substring(0,60))}</small></td><td><span class="badge bg-${r.priority==='high'?'danger':r.priority==='medium'?'warning':'secondary'}">${r.priority}</span></td><td><span class="badge bg-${r.status==='resolved'?'success':r.status==='rejected'?'danger':r.status==='in_progress'?'info':'warning'}">${r.status}</span></td><td><small>${r.created_at}</small></td><td><button class="btn btn-sm btn-outline-warning" onclick='editRequest(${JSON.stringify(r).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button></td></tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted">No requests</td></tr>'})}
+function loadRequests(){ajax('get_requests','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('reqBody');if(!tb)return;tb.innerHTML=d.requests.map(r=>`<tr><td>${esc(r.request_type)}</td><td><small>${esc((r.description||'').substring(0,60))}</small></td><td><span class="badge bg-${r.priority==='high'?'danger':r.priority==='medium'?'warning':'secondary'}">${r.priority}</span></td><td><span class="badge bg-${r.status==='resolved'?'success':r.status==='rejected'?'danger':r.status==='in_progress'?'info':'warning'}">${r.status}</span></td><td><small>${r.created_at}</small></td><td><button class="btn btn-sm btn-outline-warning" onclick='editRequest(${JSON.stringify(r).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteRequest(${r.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted">No requests</td></tr>'})}
+function deleteRequest(id){if(!confirm('Delete this request?'))return;ajax('delete_request','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadRequests()}else showMsg(d.message,'danger')})}
 function showReqModal(r){document.getElementById('req_id').value=r?.id||'';document.getElementById('req_type').value=r?.request_type||'';document.getElementById('req_desc').value=r?.description||'';document.getElementById('req_priority').value=r?.priority||'medium';new bootstrap.Modal(document.getElementById('reqModal')).show()}
 function editRequest(r){showReqModal(r)}
 function saveRequest(e){e.preventDefault();const fd=new FormData(document.getElementById('reqForm'));ajax('save_request','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('reqModal')).hide();showMsg(d.message);loadRequests()}else showMsg(d.message,'danger')});return false}
 if(document.getElementById('reqBody'))loadRequests();
 
-function loadAnnouncements(){ajax('get_announcements','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('annBody');if(!tb)return;tb.innerHTML=d.announcements.map(a=>`<tr><td>${esc(a.title)}</td><td><small>${esc((a.content||'').substring(0,80))}</small></td><td><span class="badge bg-info">${a.target_audience}</span></td><td>${a.publish_date}</td><td><button class="btn btn-sm btn-outline-warning" onclick='editAnnouncement(${JSON.stringify(a).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button></td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted">No announcements</td></tr>'})}
+function loadAnnouncements(){ajax('get_announcements','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('annBody');if(!tb)return;tb.innerHTML=d.announcements.map(a=>`<tr><td>${esc(a.title)}</td><td><small>${esc((a.content||'').substring(0,80))}</small></td><td><span class="badge bg-info">${a.target_audience}</span></td><td>${a.publish_date}</td><td><button class="btn btn-sm btn-outline-warning" onclick='editAnnouncement(${JSON.stringify(a).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement(${a.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted">No announcements</td></tr>'})}
+function deleteAnnouncement(id){if(!confirm('Delete this announcement?'))return;ajax('delete_announcement','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadAnnouncements()}else showMsg(d.message,'danger')})}
 function showAnnouncementModal(a){document.getElementById('ann_id').value=a?.id||'';document.getElementById('ann_title').value=a?.title||'';document.getElementById('ann_content').value=a?.content||'';document.getElementById('ann_audience').value=a?.target_audience||'all';document.getElementById('ann_date').value=a?.publish_date||'';new bootstrap.Modal(document.getElementById('annModal')).show()}
 function editAnnouncement(a){showAnnouncementModal(a)}
 function saveAnnouncement(e){e.preventDefault();const fd=new FormData(document.getElementById('annForm'));ajax('save_announcement','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('annModal')).hide();showMsg(d.message);loadAnnouncements()}else showMsg(d.message,'danger')});return false}
 if(document.getElementById('annBody'))loadAnnouncements();
 
-function loadContacts(){ajax('get_contacts','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('contBody');if(!tb)return;tb.innerHTML=d.contacts.map(c=>`<tr><td>${esc(c.contact_name)}</td><td>${esc(c.contact_email||'')}</td><td>${esc(c.contact_phone||'')}</td><td>${esc(c.organization||'')}</td><td>${esc(c.category||'')}</td><td><button class="btn btn-sm btn-outline-warning" onclick='editContact(${JSON.stringify(c).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button></td></tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted">No contacts</td></tr>'})}
+function loadContacts(){ajax('get_contacts','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('contBody');if(!tb)return;tb.innerHTML=d.contacts.map(c=>`<tr><td>${esc(c.contact_name)}</td><td>${esc(c.contact_email||'')}</td><td>${esc(c.contact_phone||'')}</td><td>${esc(c.organization||'')}</td><td>${esc(c.category||'')}</td><td><button class="btn btn-sm btn-outline-warning" onclick='editContact(${JSON.stringify(c).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteContact(${c.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted">No contacts</td></tr>'})}
+function deleteContact(id){if(!confirm('Delete this contact?'))return;ajax('delete_contact','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadContacts()}else showMsg(d.message,'danger')})}
 function showContactModal(c){document.getElementById('cont_id').value=c?.id||'';document.getElementById('cont_name').value=c?.contact_name||'';document.getElementById('cont_email').value=c?.contact_email||'';document.getElementById('cont_phone').value=c?.contact_phone||'';document.getElementById('cont_org').value=c?.organization||'';document.getElementById('cont_cat').value=c?.category||'';document.getElementById('cont_notes').value=c?.notes||'';new bootstrap.Modal(document.getElementById('contModal')).show()}
 function editContact(c){showContactModal(c)}
 function saveContact(e){e.preventDefault();const fd=new FormData(document.getElementById('contForm'));ajax('save_contact','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('contModal')).hide();showMsg(d.message);loadContacts()}else showMsg(d.message,'danger')});return false}
 if(document.getElementById('contBody'))loadContacts();
+
+function loadCorrespondence(){ajax('get_correspondence','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('corrBody');if(!tb)return;tb.innerHTML=d.correspondence.map(c=>`<tr><td><small>${esc(c.reference_number||'-')}</small></td><td><strong>${esc(c.subject)}</strong></td><td><span class="badge bg-${c.type==='incoming'?'info':'primary'}">${c.type}</span></td><td><small>${esc(c.recipient_name||'-')}</small></td><td><span class="badge bg-secondary">${esc(c.category)}</span></td><td><span class="badge bg-${c.status==='sent'?'success':c.status==='received'?'info':c.status==='archived'?'dark':'warning'}">${c.status}</span></td><td><small>${c.sent_date||c.created_at}</small></td><td><button class="btn btn-sm btn-outline-warning" onclick='editCorrespondence(${JSON.stringify(c).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteCorrespondence(${c.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center text-muted">No correspondence records</td></tr>'})}
+function showCorrModal(c){document.getElementById('corrModalTitle').textContent=c?'Edit Correspondence':'New Correspondence';document.getElementById('corr_id').value=c?.id||'';document.getElementById('corr_type').value=c?.type||'outgoing';document.getElementById('corr_status').value=c?.status||'draft';document.getElementById('corr_category').value=c?.category||'general';document.getElementById('corr_subject').value=c?.subject||'';document.getElementById('corr_content').value=c?.content||'';document.getElementById('corr_recipient_name').value=c?.recipient_name||'';document.getElementById('corr_recipient_email').value=c?.recipient_email||'';document.getElementById('corr_recipient_phone').value=c?.recipient_phone||'';document.getElementById('corr_ref').value=c?.reference_number||'CORR-'+Date.now();document.getElementById('corr_date').value=c?.sent_date||new Date().toISOString().split('T')[0];new bootstrap.Modal(document.getElementById('corrModal')).show()}
+function editCorrespondence(c){showCorrModal(c)}
+function saveCorrespondence(e){e.preventDefault();const fd=new FormData(document.getElementById('corrForm'));ajax('save_correspondence','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('corrModal')).hide();showMsg(d.message);loadCorrespondence()}else showMsg(d.message,'danger')});return false}
+function deleteCorrespondence(id){if(!confirm('Delete this record?'))return;ajax('delete_correspondence','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadCorrespondence()}})}
+if(document.getElementById('corrBody'))loadCorrespondence();
 </script>
 </body>
 </html>
