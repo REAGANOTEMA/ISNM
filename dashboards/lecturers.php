@@ -163,18 +163,23 @@ if ($conn) {
 
 // Determine active section from ?page= parameter
 $pageToSection = [
-    'home'         => 'overview',
-    'overview'     => 'overview',
-    'my-courses'   => 'courses',
-    'timetable'    => 'timetable',
-    'attendance'   => 'attendance',
-    'cat-marks'    => 'cat-marks',
-    'exam-marks'   => 'exam-marks',
-    'materials'    => 'materials',
-    'results'      => 'results',
-    'reports'      => 'reports',
-    'lesson-plans' => 'lesson-plans',
-    'assignments'  => 'assignments',
+    'home'           => 'overview',
+    'overview'       => 'overview',
+    'my-courses'     => 'courses',
+    'timetable'      => 'schedule',
+    'attendance'     => 'attendance',
+    'cat-marks'      => 'cat-marks',
+    'exam-marks'     => 'exam-marks',
+    'materials'      => 'resources',
+    'results'        => 'results',
+    'reports'        => 'reports',
+    'lesson-plans'   => 'lesson-plans',
+    'assignments'    => 'assignments',
+    'students'       => 'students',
+    'assessments'    => 'assessments',
+    'grades'         => 'grades',
+    'communications' => 'communications',
+    'student-records'=> 'student-records',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';

@@ -13,6 +13,211 @@ if ($staff_conn) $staff_conn->set_charset("utf8mb4");
 
 $tab = $_GET['tab'] ?? 'overview';
 
+// ── Auto-migration: create payroll tables if not exist ──
+if ($staff_conn) {
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_employees (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL UNIQUE,
+        bank_name VARCHAR(200) DEFAULT '',
+        bank_account VARCHAR(200) DEFAULT '',
+        tax_identification VARCHAR(100) DEFAULT '',
+        nssf_number VARCHAR(100) DEFAULT '',
+        salary_type VARCHAR(50) DEFAULT 'monthly',
+        basic_salary DECIMAL(15,2) DEFAULT 0.00,
+        salary_grade VARCHAR(50) DEFAULT '',
+        housing_allowance DECIMAL(12,2) DEFAULT 0.00,
+        transport_allowance DECIMAL(12,2) DEFAULT 0.00,
+        status VARCHAR(20) DEFAULT 'active',
+        created_by INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_allowances (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        allowance_type VARCHAR(200) NOT NULL,
+        amount DECIMAL(15,2) DEFAULT 0.00,
+        month VARCHAR(7) DEFAULT NULL,
+        created_by INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id), KEY idx_month (month)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_deductions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        deduction_type VARCHAR(200) NOT NULL,
+        amount DECIMAL(15,2) DEFAULT 0.00,
+        month VARCHAR(7) DEFAULT NULL,
+        created_by INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id), KEY idx_month (month)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_overtime (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        hours DECIMAL(8,2) DEFAULT 0.00,
+        rate DECIMAL(12,2) DEFAULT 0.00,
+        total_pay DECIMAL(15,2) DEFAULT 0.00,
+        month VARCHAR(7) DEFAULT NULL,
+        approved_by INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id), KEY idx_month (month)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_bonuses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        bonus_type VARCHAR(200) NOT NULL,
+        amount DECIMAL(15,2) DEFAULT 0.00,
+        month VARCHAR(7) DEFAULT NULL,
+        created_by INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id), KEY idx_month (month)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_runs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        period VARCHAR(7) NOT NULL,
+        description TEXT,
+        start_date DATE DEFAULT NULL,
+        end_date DATE DEFAULT NULL,
+        run_date DATE DEFAULT NULL,
+        total_gross DECIMAL(15,2) DEFAULT 0.00,
+        total_paye DECIMAL(15,2) DEFAULT 0.00,
+        total_nssf DECIMAL(15,2) DEFAULT 0.00,
+        total_deductions DECIMAL(15,2) DEFAULT 0.00,
+        total_net DECIMAL(15,2) DEFAULT 0.00,
+        status VARCHAR(50) DEFAULT 'draft',
+        created_by INT DEFAULT 0,
+        approved_by INT DEFAULT 0,
+        approved_at DATETIME DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_period (period)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_details (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        payroll_run_id INT NOT NULL,
+        staff_id INT NOT NULL,
+        basic_salary DECIMAL(15,2) DEFAULT 0.00,
+        housing_allowance DECIMAL(12,2) DEFAULT 0.00,
+        transport_allowance DECIMAL(12,2) DEFAULT 0.00,
+        total_allowances DECIMAL(15,2) DEFAULT 0.00,
+        overtime_pay DECIMAL(15,2) DEFAULT 0.00,
+        bonuses DECIMAL(15,2) DEFAULT 0.00,
+        gross_pay DECIMAL(15,2) DEFAULT 0.00,
+        paye_tax DECIMAL(15,2) DEFAULT 0.00,
+        nssf_employee DECIMAL(12,2) DEFAULT 0.00,
+        nssf_employer DECIMAL(12,2) DEFAULT 0.00,
+        other_deductions DECIMAL(15,2) DEFAULT 0.00,
+        net_pay DECIMAL(15,2) DEFAULT 0.00,
+        payment_method VARCHAR(50) DEFAULT '',
+        payment_reference VARCHAR(100) DEFAULT '',
+        payment_status VARCHAR(20) DEFAULT 'pending',
+        status VARCHAR(20) DEFAULT 'calculated',
+        payment_date DATE DEFAULT NULL,
+        KEY idx_run (payroll_run_id), KEY idx_staff (staff_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payslips (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        payslip_number VARCHAR(100) UNIQUE,
+        salary_month VARCHAR(7) DEFAULT NULL,
+        basic_salary DECIMAL(15,2) DEFAULT 0.00,
+        allowances DECIMAL(15,2) DEFAULT 0.00,
+        gross_salary DECIMAL(15,2) DEFAULT 0.00,
+        deductions DECIMAL(15,2) DEFAULT 0.00,
+        net_salary DECIMAL(15,2) DEFAULT 0.00,
+        payroll_run_id INT DEFAULT 0,
+        payroll_detail_id INT DEFAULT 0,
+        payment_ref VARCHAR(100) DEFAULT '',
+        payment_method VARCHAR(50) DEFAULT '',
+        payment_date DATE DEFAULT NULL,
+        status VARCHAR(20) DEFAULT 'generated',
+        generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id), KEY idx_run (payroll_run_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS payroll_approvals (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        payroll_run_id INT NOT NULL,
+        level VARCHAR(50) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        approved_by INT DEFAULT 0,
+        comments TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_run_level (payroll_run_id, level),
+        KEY idx_run (payroll_run_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS leave_types (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        leave_type_name VARCHAR(200) NOT NULL,
+        days_entitled INT DEFAULT 21,
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("INSERT IGNORE INTO leave_types (leave_type_name, days_entitled) VALUES ('Annual Leave',21),('Sick Leave',14),('Study Leave',30),('Maternity Leave',60),('Paternity Leave',10),('Compassionate Leave',7),('Unpaid Leave',0)");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS leave_balances (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        leave_type_id INT NOT NULL,
+        days_taken INT DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_staff_leave (staff_id, leave_type_id),
+        KEY idx_staff (staff_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS chart_of_accounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(20) NOT NULL UNIQUE,
+        name VARCHAR(200) NOT NULL,
+        type VARCHAR(50) DEFAULT '',
+        is_active TINYINT(1) DEFAULT 1
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("INSERT IGNORE INTO chart_of_accounts (code, name, type) VALUES
+        ('1000','Cash','Asset'),('1100','Bank Accounts','Asset'),('1200','Accounts Receivable','Asset'),
+        ('2000','Accounts Payable','Liability'),('2100','Salary Payable','Liability'),
+        ('3000','Retained Earnings','Equity'),
+        ('4000','Tuition Revenue','Revenue'),('4100','Registration Fees','Revenue'),
+        ('5000','Salaries Expense','Expense'),('5100','Utilities Expense','Expense'),
+        ('5200','Office Supplies','Expense'),('5300','Travel Expense','Expense')");
+}
+
+// ── Handle Delete Actions ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'delete_allowance') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_allowances WHERE id=$id"); $_SESSION['success']='Allowance deleted.'; }
+        header('Location: bursar-payroll.php?tab=allowances'); exit;
+    }
+    if ($action === 'delete_deduction') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_deductions WHERE id=$id"); $_SESSION['success']='Deduction deleted.'; }
+        header('Location: bursar-payroll.php?tab=deductions'); exit;
+    }
+    if ($action === 'delete_overtime') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_overtime WHERE id=$id"); $_SESSION['success']='Overtime record deleted.'; }
+        header('Location: bursar-payroll.php?tab=overtime'); exit;
+    }
+    if ($action === 'delete_bonus') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_bonuses WHERE id=$id"); $_SESSION['success']='Bonus deleted.'; }
+        header('Location: bursar-payroll.php?tab=bonuses'); exit;
+    }
+    if ($action === 'delete_run') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_details WHERE payroll_run_id=$id"); $staff_conn->query("DELETE FROM payroll_approvals WHERE payroll_run_id=$id"); $staff_conn->query("DELETE FROM payslips WHERE payroll_run_id=$id"); $staff_conn->query("DELETE FROM payroll_runs WHERE id=$id"); $_SESSION['success']='Payroll run deleted.'; }
+        header('Location: bursar-payroll.php?tab=run'); exit;
+    }
+    if ($action === 'delete_employee') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("DELETE FROM payroll_employees WHERE id=$id"); $_SESSION['success']='Employee payroll profile deleted.'; }
+        header('Location: bursar-payroll.php?tab=employees'); exit;
+    }
+    if ($action === 'void_payslip') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $staff_conn->query("UPDATE payslips SET status='void' WHERE id=$id"); $_SESSION['success']='Payslip voided.'; }
+        header('Location: bursar-payroll.php?tab=payslips'); exit;
+    }
+}
+
 // ── POST Handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     $action = $_POST['action'] ?? '';
@@ -129,14 +334,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     // 8. Approval Chain: levels ordered HR → PayrollOfficer → Bursar → DirectorFinance → CEO
     $approvalChain = ['HR','PayrollOfficer','Bursar','DirectorFinance','CEO'];
-    $userRoleLevel = match (strtolower($_SESSION['role'] ?? '')) {
-        'hr','hr manager' => 'HR',
-        'payroll','payroll officer' => 'PayrollOfficer',
-        'bursar','school bursar','finance' => 'Bursar',
-        'director of finance','director finance','director general','deputy director' => 'DirectorFinance',
-        'ceo','principal' => 'CEO',
-        default => null
-    };
+    $userRoleLevel = null;
+    $roleLower = strtolower($_SESSION['role'] ?? '');
+    if (in_array($roleLower, ['hr','hr manager'])) $userRoleLevel = 'HR';
+    elseif (in_array($roleLower, ['payroll','payroll officer'])) $userRoleLevel = 'PayrollOfficer';
+    elseif (in_array($roleLower, ['bursar','school bursar','finance'])) $userRoleLevel = 'Bursar';
+    elseif (in_array($roleLower, ['director of finance','director finance','director general','deputy director'])) $userRoleLevel = 'DirectorFinance';
+    elseif (in_array($roleLower, ['ceo','principal'])) $userRoleLevel = 'CEO';
 
     if ($action === 'approve_run') {
         $rid   = (int)($_POST['run_id'] ?? 0);
@@ -240,16 +444,16 @@ if ($staff_conn) {
     $stats['active_runs'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM payroll_runs WHERE status IN ('draft','approved')")->fetch_assoc()['c'] ?? 0);
 
     $r = $staff_conn->query("SELECT pe.*, s.full_name, s.staff_id, d.department_name FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id LEFT JOIN staff_departments d ON s.department_id = d.id ORDER BY s.full_name");
-    if ($r) $payroll_employees = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $payroll_employees[] = $row; }
 
     $r = $staff_conn->query("SELECT pr.*, cr.full_name as created_name, ap.full_name as approved_name FROM payroll_runs pr LEFT JOIN staff cr ON pr.created_by = cr.id LEFT JOIN staff ap ON pr.approved_by = ap.id ORDER BY pr.created_at DESC");
-    if ($r) $payroll_runs = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $payroll_runs[] = $row; }
 
     $r = $staff_conn->query("SELECT ps.*, s.full_name FROM payslips ps JOIN staff s ON ps.staff_id = s.id ORDER BY ps.generated_date DESC LIMIT 100");
-    if ($r) $payslips_list = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $payslips_list[] = $row; }
 
     $r = $staff_conn->query("SELECT pa.*, s.full_name as approver_name FROM payroll_approvals pa LEFT JOIN staff s ON pa.approved_by = s.id ORDER BY pa.updated_at DESC LIMIT 50");
-    if ($r) $approvals = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $approvals[] = $row; }
 }
 ?>
 <!DOCTYPE html>
@@ -273,7 +477,16 @@ if ($staff_conn) {
 .bursar-payroll .bb{background:var(--bs-primary);color:#fff;border-radius:8px;font-size:13px;font-weight:500;padding:8px 20px}
 .bursar-payroll .bb:hover{background:var(--bs-primary-dark);color:#fff}
 .bursar-payroll .badge-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.bursar-payroll .btn-action{padding:2px 8px;font-size:11px;border-radius:4px}
+.bursar-payroll .print-hide{@media print{display:none!important}}
+.bursar-payroll .btn-print-header{background:#1a237e;color:#fff;border-radius:8px;font-size:13px;padding:8px 20px}
+.bursar-payroll .btn-print-header:hover{background:#0d1442;color:#fff}
+@media print{body.bursar-payroll .sidebar,body.bursar-payroll .topbar,body.bursar-payroll .nav-tabs,body.bursar-payroll .btn-print-header,body.bursar-payroll .alert,.bursar-payroll .print-hide{display:none!important}body.bursar-payroll .ma{margin-left:0!important;padding:10px!important}body.bursar-payroll .cc{border:1px solid #ccc!important;page-break-inside:avoid}}
 </style>
+<script>
+function printPayrollTab(){window.print()}
+function confirmDelete(msg,frm){if(confirm(msg))frm.submit()}
+</script>
 </head>
 <body class="bursar-payroll">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
@@ -284,7 +497,10 @@ if ($staff_conn) {
             <h2 class="mb-1" style="color:var(--bs-primary)"><i class="fas fa-money-check-alt me-2"></i>Bursar Payroll</h2>
             <p class="text-muted mb-0 small">Comprehensive payroll management — link with HR, calculate, approve & pay</p>
         </div>
-        <a href="school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+        <div class="d-flex gap-2">
+            <button onclick="printPayrollTab()" class="btn-print-header btn btn-sm"><i class="fas fa-print me-1"></i>Print</button>
+            <a href="school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
     </div>
 
     <?php if ($msg = $_SESSION['success'] ?? ''): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($msg) ?></div><?php unset($_SESSION['success']); endif; ?>
@@ -379,7 +595,7 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Payroll Employees (Linked to HR Master)</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Staff</th><th>Department</th><th>Basic Salary</th><th>Type</th><th>Grade</th><th>Bank</th><th>TIN / NSSF</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Department</th><th>Basic Salary</th><th>Type</th><th>Grade</th><th>Bank</th><th>TIN / NSSF</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php foreach ($payroll_employees as $e): ?>
                         <tr>
                             <td><small><?= htmlspecialchars($e['full_name'] ?? '') ?></small></td>
@@ -389,8 +605,9 @@ if ($staff_conn) {
                             <td><small><?= htmlspecialchars($e['salary_grade'] ?? '-') ?></small></td>
                             <td><small class="text-muted"><?= htmlspecialchars($e['bank_name'] ?? '-') ?></small></td>
                             <td><small><?= htmlspecialchars($e['tax_identification'] ?? '-') ?> / <?= htmlspecialchars($e['nssf_number'] ?? '-') ?></small></td>
+                            <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_employee"><input type="hidden" name="id" value="<?=$e['id']?>"><button type="button" onclick="confirmDelete('Remove this employee from payroll?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
                         </tr>
-                    <?php endforeach; if (empty($payroll_employees)): ?><tr><td colspan="7" class="text-center text-muted py-3">No employees in payroll yet. Add profiles from the form.</td></tr><?php endif; ?></tbody>
+                    <?php endforeach; if (empty($payroll_employees)): ?><tr><td colspan="8" class="text-center text-muted py-3">No employees in payroll yet. Add profiles from the form.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -427,11 +644,13 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Allowances</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php $r = $staff_conn->query("SELECT pa.*, s.full_name FROM payroll_allowances pa JOIN staff s ON pa.staff_id = s.id ORDER BY pa.created_at DESC LIMIT 100");
                     if ($r) while ($a = $r->fetch_assoc()): ?>
-                        <tr><td><small><?= htmlspecialchars($a['full_name']) ?></small></td><td><?= htmlspecialchars($a['allowance_type']) ?></td><td><strong>UGX <?= number_format($a['amount']) ?></strong></td><td><small><?= htmlspecialchars($a['month']) ?></small></td></tr>
-                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="4" class="text-center text-muted py-3">No allowances recorded.</td></tr><?php endif; ?></tbody>
+                        <tr><td><small><?= htmlspecialchars($a['full_name']) ?></small></td><td><?= htmlspecialchars($a['allowance_type']) ?></td><td><strong>UGX <?= number_format($a['amount']) ?></strong></td><td><small><?= htmlspecialchars($a['month']) ?></small></td>
+                        <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_allowance"><input type="hidden" name="id" value="<?=$a['id']?>"><button type="button" onclick="confirmDelete('Delete this allowance?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
+                        </tr>
+                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="5" class="text-center text-muted py-3">No allowances recorded.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -468,11 +687,13 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Non-Statutory Deductions</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php $r = $staff_conn->query("SELECT pd.*, s.full_name FROM payroll_deductions pd JOIN staff s ON pd.staff_id = s.id ORDER BY pd.created_at DESC LIMIT 100");
                     if ($r) while ($d = $r->fetch_assoc()): ?>
-                        <tr><td><small><?= htmlspecialchars($d['full_name']) ?></small></td><td><?= htmlspecialchars($d['deduction_type']) ?></td><td><strong class="text-danger">-UGX <?= number_format($d['amount']) ?></strong></td><td><small><?= htmlspecialchars($d['month']) ?></small></td></tr>
-                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="4" class="text-center text-muted py-3">No deductions recorded.</td></tr><?php endif; ?></tbody>
+                        <tr><td><small><?= htmlspecialchars($d['full_name']) ?></small></td><td><?= htmlspecialchars($d['deduction_type']) ?></td><td><strong class="text-danger">-UGX <?= number_format($d['amount']) ?></strong></td><td><small><?= htmlspecialchars($d['month']) ?></small></td>
+                        <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_deduction"><input type="hidden" name="id" value="<?=$d['id']?>"><button type="button" onclick="confirmDelete('Delete this deduction?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
+                        </tr>
+                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="5" class="text-center text-muted py-3">No deductions recorded.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -505,11 +726,13 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Overtime Records</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Staff</th><th>Hours</th><th>Rate</th><th>Total Pay</th><th>Approved By</th><th>Month</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Hours</th><th>Rate</th><th>Total Pay</th><th>Approved By</th><th>Month</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php $r = $staff_conn->query("SELECT po.*, s.full_name, ap.full_name as approver FROM payroll_overtime po JOIN staff s ON po.staff_id = s.id LEFT JOIN staff ap ON po.approved_by = ap.id ORDER BY po.created_at DESC LIMIT 100");
                     if ($r) while ($o = $r->fetch_assoc()): ?>
-                        <tr><td><small><?= htmlspecialchars($o['full_name']) ?></small></td><td><?= $o['hours'] ?></td><td>UGX <?= number_format($o['rate']) ?></td><td><strong>UGX <?= number_format($o['total_pay']) ?></strong></td><td><small><?= htmlspecialchars($o['approver'] ?? '-') ?></small></td><td><small><?= htmlspecialchars($o['month']) ?></small></td></tr>
-                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="6" class="text-center text-muted py-3">No overtime records.</td></tr><?php endif; ?></tbody>
+                        <tr><td><small><?= htmlspecialchars($o['full_name']) ?></small></td><td><?= $o['hours'] ?></td><td>UGX <?= number_format($o['rate']) ?></td><td><strong>UGX <?= number_format($o['total_pay']) ?></strong></td><td><small><?= htmlspecialchars($o['approver'] ?? '-') ?></small></td><td><small><?= htmlspecialchars($o['month']) ?></small></td>
+                        <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_overtime"><input type="hidden" name="id" value="<?=$o['id']?>"><button type="button" onclick="confirmDelete('Delete this overtime record?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
+                        </tr>
+                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="7" class="text-center text-muted py-3">No overtime records.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -546,11 +769,13 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Bonuses & Incentives</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Type</th><th>Amount</th><th>Month</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php $r = $staff_conn->query("SELECT pb.*, s.full_name FROM payroll_bonuses pb JOIN staff s ON pb.staff_id = s.id ORDER BY pb.created_at DESC LIMIT 100");
                     if ($r) while ($b = $r->fetch_assoc()): ?>
-                        <tr><td><small><?= htmlspecialchars($b['full_name']) ?></small></td><td><?= htmlspecialchars($b['bonus_type']) ?></td><td><strong class="text-success">UGX <?= number_format($b['amount']) ?></strong></td><td><small><?= htmlspecialchars($b['month']) ?></small></td></tr>
-                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="4" class="text-center text-muted py-3">No bonuses recorded.</td></tr><?php endif; ?></tbody>
+                        <tr><td><small><?= htmlspecialchars($b['full_name']) ?></small></td><td><?= htmlspecialchars($b['bonus_type']) ?></td><td><strong class="text-success">UGX <?= number_format($b['amount']) ?></strong></td><td><small><?= htmlspecialchars($b['month']) ?></small></td>
+                        <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_bonus"><input type="hidden" name="id" value="<?=$b['id']?>"><button type="button" onclick="confirmDelete('Delete this bonus?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
+                        </tr>
+                    <?php endwhile; if (!$r || $r->num_rows === 0): ?><tr><td colspan="5" class="text-center text-muted py-3">No bonuses recorded.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -592,7 +817,7 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Payroll Runs</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Run</th><th>Period</th><th>Start</th><th>End</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Status</th><th>Created</th></tr></thead>
+                    <thead><tr><th>Run</th><th>Period</th><th>Start</th><th>End</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Status</th><th>Created</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php foreach ($payroll_runs as $r): ?>
                         <tr>
                             <td><code>#<?= $r['id'] ?></code></td>
@@ -604,8 +829,9 @@ if ($staff_conn) {
                             <td><strong>UGX <?= number_format($r['total_net']??0) ?></strong></td>
                             <td><?= payStatusBadge($r['status'] ?? 'draft') ?></td>
                             <td><small><?= htmlspecialchars($r['created_name'] ?? '') ?></small></td>
+                            <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="delete_run"><input type="hidden" name="id" value="<?=$r['id']?>"><button type="button" onclick="confirmDelete('Delete payroll run #<?=$r['id']?> and all its details?',this.form)" class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button></form></td>
                         </tr>
-                    <?php endforeach; if (empty($payroll_runs)): ?><tr><td colspan="9" class="text-center text-muted py-3">No payroll runs yet.</td></tr><?php endif; ?></tbody>
+                    <?php endforeach; if (empty($payroll_runs)): ?><tr><td colspan="10" class="text-center text-muted py-3">No payroll runs yet.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -633,7 +859,7 @@ if ($staff_conn) {
         <div class="col-md-8">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Generated Payslips</div>
                 <div class="table-responsive"><table class="table tb mb-0">
-                    <thead><tr><th>Ref</th><th>Staff</th><th>Period</th><th>Basic</th><th>Gross</th><th>Net</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Ref</th><th>Staff</th><th>Period</th><th>Basic</th><th>Gross</th><th>Net</th><th>Status</th><th class="print-hide">Action</th></tr></thead>
                     <tbody><?php foreach ($payslips_list as $ps): ?>
                         <tr>
                             <td><code><?= htmlspecialchars($ps['payslip_number']) ?></code></td>
@@ -643,8 +869,9 @@ if ($staff_conn) {
                             <td>UGX <?= number_format($ps['gross_salary']??0) ?></td>
                             <td><strong>UGX <?= number_format($ps['net_salary']??0) ?></strong></td>
                             <td><?= payStatusBadge($ps['status'] ?? 'generated') ?></td>
+                            <td class="print-hide"><form method="POST" style="display:inline"><input type="hidden" name="action" value="void_payslip"><input type="hidden" name="id" value="<?=$ps['id']?>"><button type="button" onclick="confirmDelete('Void this payslip?',this.form)" class="btn btn-sm btn-outline-warning btn-action"><i class="fas fa-ban"></i></button></form></td>
                         </tr>
-                    <?php endforeach; if (empty($payslips_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No payslips generated.</td></tr><?php endif; ?></tbody>
+                    <?php endforeach; if (empty($payslips_list)): ?><tr><td colspan="8" class="text-center text-muted py-3">No payslips generated.</td></tr><?php endif; ?></tbody>
                 </table></div>
             </div>
         </div>
@@ -702,7 +929,7 @@ if ($staff_conn) {
                 <div class="table-responsive"><table class="table tb mb-0">
                     <thead><tr><th>Run #</th><th>Chain Progress</th><th>Overall Status</th></tr></thead>
                     <tbody><?php
-                    $runsWithApprovals = $staff_conn->query("SELECT pr.*, pa3.level last_level, pa3.status last_status FROM payroll_runs pr LEFT JOIN payroll_approvals pa3 ON pa3.payroll_run_id=pr.id AND pa3.updated_at=(SELECT MAX(pa4.updated_at) FROM payroll_approvals pa4 WHERE pa4.payroll_run_id=pr.id) ORDER BY pr.created_at DESC LIMIT 15")->fetch_all(MYSQLI_ASSOC);
+                    $runsWithApprovals = []; $rtmp = $staff_conn->query("SELECT pr.*, pa3.level last_level, pa3.status last_status FROM payroll_runs pr LEFT JOIN payroll_approvals pa3 ON pa3.payroll_run_id=pr.id AND pa3.updated_at=(SELECT MAX(pa4.updated_at) FROM payroll_approvals pa4 WHERE pa4.payroll_run_id=pr.id) ORDER BY pr.created_at DESC LIMIT 15"); if ($rtmp) while ($row = $rtmp->fetch_assoc()) { $runsWithApprovals[] = $row; }
                     foreach ($runsWithApprovals as $r): ?>
                         <tr>
                             <td><code>#<?=$r['id']?></code> <small class="text-muted"><?=htmlspecialchars($r['period'])?></small></td>
@@ -796,10 +1023,10 @@ if ($staff_conn) {
     <?php
     $leaveTypes = [];
     $r = $staff_conn->query("SELECT id, leave_type_name, days_entitled FROM leave_types WHERE is_active=1 ORDER BY leave_type_name");
-    if ($r) $leaveTypes = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $leaveTypes[] = $row; }
     $leaveBalances = [];
     $r = $staff_conn->query("SELECT lb.*, s.full_name, lt.leave_type_name, lt.days_entitled FROM leave_balances lb JOIN staff s ON lb.staff_id=s.id JOIN leave_types lt ON lb.leave_type_id=lt.id ORDER BY s.full_name");
-    if ($r) $leaveBalances = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) while ($row = $r->fetch_assoc()) { $leaveBalances[] = $row; }
     ?>
     <div class="row g-4">
         <div class="col-md-4">
@@ -860,14 +1087,14 @@ if ($staff_conn) {
             $sid = (int)$stmtStudent['id'];
             // Fee assignments / tracking
             $r = $students_conn->query("SELECT * FROM {$studentsDb}.student_fee_tracking WHERE student_id=$sid ORDER BY academic_year DESC, semester");
-            if ($r) $stmtFees = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) while ($row = $r->fetch_assoc()) { $stmtFees[] = $row; }
             if (empty($stmtFees)) {
                 $r = $students_conn->query("SELECT * FROM {$studentsDb}.student_fees WHERE student_id=$sid ORDER BY created_at DESC");
-                if ($r) $stmtFees = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) while ($row = $r->fetch_assoc()) { $stmtFees[] = $row; }
             }
             // Payments
             $r = $students_conn->query("SELECT * FROM {$studentsDb}.payments WHERE student_id=$sid AND status='Completed' ORDER BY payment_date DESC LIMIT 50");
-            if ($r) $stmtPayments = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) while ($row = $r->fetch_assoc()) { $stmtPayments[] = $row; }
             // Totals
             foreach ($stmtFees as $f) {
                 $stmtTotals['total_fees'] += (float)($f['amount']??0);
