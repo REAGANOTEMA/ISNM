@@ -20,6 +20,30 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 $userRole = $_SESSION['role'] ?? '';
 $isSuper = $auth->hasFullInstitutionAccess($userRole);
 
+// ── Auto-create bursar account if missing ──
+$bursarEmail = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
+$bursarPass  = 'bursar@isnm';
+$roleId = null;
+$r = $staffConn->query("SELECT id FROM staff_roles WHERE role_name = 'School Bursar'");
+if ($r && $row = $r->fetch_assoc()) {
+    $roleId = $row['id'];
+} else {
+    $staffConn->query("INSERT INTO staff_roles (role_name, dashboard_path) VALUES ('School Bursar', 'dashboards/school-bursar.php')");
+    $roleId = $staffConn->insert_id;
+}
+$bursarName  = 'School Bursar';
+$bursarPhone = '0782990403';
+$hash = password_hash($bursarPass, PASSWORD_DEFAULT);
+$chk = $staffConn->prepare("SELECT id FROM staff WHERE email = ?");
+$chk->bind_param("s", $bursarEmail);
+$chk->execute();
+if (!$chk->get_result()->fetch_assoc()) {
+    $ins = $staffConn->prepare("INSERT INTO staff (full_name, email, phone, password, role_id, position, department, status) VALUES (?, ?, ?, ?, ?, 'School Bursar', 'Finance', 'Active')");
+    $ins->bind_param("ssssi", $bursarName, $bursarEmail, $bursarPhone, $hash, $roleId);
+    $ins->execute();
+}
+$chk->close();
+
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
 

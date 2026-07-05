@@ -209,6 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('courses');
     }
     if ($action === 'register_student') {
+        if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
         $fn = trim($_POST['first_name'] ?? ''); $ln = trim($_POST['last_name'] ?? '');
         $gen = trim($_POST['gender'] ?? 'Other');
         $program = trim($_POST['program'] ?? ''); $level = intval($_POST['level'] ?? 1);
@@ -228,6 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('student-records');
     }
     if ($action === 'transfer_student') {
+        if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
         $sid = intval($_POST['student_id'] ?? 0); $newProgram = trim($_POST['new_program'] ?? '');
         $newLevel = intval($_POST['new_level'] ?? 1); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid && $newProgram) {
@@ -242,6 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('student-records');
     }
     if ($action === 'defer_student') {
+        if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
         $sid = intval($_POST['student_id'] ?? 0); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid) {
             $stmt = $students->prepare("UPDATE students SET status = 'Deferred' WHERE id = ?");
@@ -252,6 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('student-records');
     }
     if ($action === 'withdraw_student') {
+        if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
         $sid = intval($_POST['student_id'] ?? 0); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid) {
             $stmt = $students->prepare("UPDATE students SET status = 'Withdrawn' WHERE id = ?");
@@ -262,6 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('student-records');
     }
     if ($action === 'readmit_student') {
+        if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
         $sid = intval($_POST['student_id'] ?? 0); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid) {
             $stmt = $students->prepare("UPDATE students SET status = 'Active' WHERE id = ?");
