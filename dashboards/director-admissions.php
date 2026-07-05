@@ -50,8 +50,42 @@ if ($chk && $chk->num_rows === 0) {
     $conn->query("ALTER TABLE intakes ADD COLUMN application_deadline DATE DEFAULT NULL AFTER application_start");
     $conn->query("ALTER TABLE intakes MODIFY status ENUM('Open','Closed','Upcoming') NOT NULL DEFAULT 'Upcoming'");
 }
-// Seed defaults
-$r = $conn->query("SELECT COUNT(*) c FROM admission_requirements"); if ($r && (int)$r->fetch_assoc()['c']===0) { $conn->query("INSERT IGNORE INTO admission_requirements(requirement_name,type,display_order,is_mandatory) VALUES ('Academic Certificates','Document',1,1),('Result Slips','Document',2,1),('National ID','ID',3,1),('Passport Photos','Photo',4,1),('Birth Certificate','Document',5,1),('Recommendation Letter','Document',6,1),('Medical Examination Form','Form',7,1),('Previous School Transcript','Document',8,0),('Letter of Sponsorship','Document',9,0)"); }
+// Seed defaults with exact 8 document requirements + 20 supply items
+$r = $conn->query("SELECT COUNT(*) c FROM admission_requirements"); if ($r && (int)$r->fetch_assoc()['c']===0) { 
+    // 8 Document Requirements (remove Proof of Payment and Interview Letter)
+    $conn->query("INSERT IGNORE INTO admission_requirements(requirement_name,type,display_order,is_mandatory) VALUES 
+        ('Completed Application Form','Document',1,1),
+        ('A-Level Certificate (UACE)','Document',2,1),
+        ('O-Level Certificate (UCE)','Document',3,1),
+        ('Birth Certificate','Document',4,1),
+        ('Passport Photos (4)','Photo',5,1),
+        ('National ID Copy','Document',6,1),
+        ('Medical Report','Document',7,1),
+        ('Recommendation Letter (LC1)','Document',8,1),
+        
+        // 20 Supply Items
+        ('Surgical Gloves','Other',9,0),
+        ('Examination Gloves','Other',10,0),
+        ('Photocopying Ream','Other',11,0),
+        ('Ruled Paper Reams','Other',12,0),
+        ('Omo','Other',13,0),
+        ('Toilet Papers','Other',14,0),
+        ('Compound brooms','Other',15,0),
+        ('Soft brooms','Other',16,0),
+        ('Rake','Other',17,0),
+        ('Cobweb brush','Other',18,0),
+        ('Scrubbing Brush','Other',19,0),
+        ('Squeezer','Other',20,0),
+        ('Toilet Brush','Other',21,0),
+        ('JIK','Other',22,0),
+        ('Vim','Other',23,0),
+        ('Mops','Other',24,0),
+        ('Sanitizer','Other',25,0),
+        ('Liquid Soap','Other',26,0),
+        ('Face Masks','Other',27,0),
+        ('Heavy duty Gloves','Other',28,0)
+    "); 
+}
 $r = $conn->query("SELECT COUNT(*) c FROM intakes"); if ($r && (int)$r->fetch_assoc()['c']===0) { $conn->query("INSERT IGNORE INTO intakes(intake_name,intake_month,intake_year,application_start,application_deadline,status) VALUES ('January 2026','January',2026,'2025-09-01','2026-01-15','Open'),('May 2026','May',2026,'2026-01-01','2026-05-15','Upcoming'),('August 2026','August',2026,'2026-04-01','2026-08-15','Upcoming')"); }
 // Sync programs from students DB
 if ($stuConn) { $conn->query("INSERT IGNORE INTO academic_programs(program_code,program_name,program_type,duration_years) SELECT CONCAT('PGM-',p.id),p.program_name,p.program_type,p.duration_years FROM $studentsDb.programs p WHERE p.is_active=1 AND NOT EXISTS(SELECT 1 FROM academic_programs ap WHERE ap.program_name=p.program_name COLLATE utf8mb4_general_ci LIMIT 1)"); }
@@ -122,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($s){$ac="Requirement: $st";$s->bind_param('iissi',$aid,$rid,$ac,$st,$userId);$s->execute();$s->close();}
         // Update tracking counts
         $tr=$conn->query("SELECT COUNT(*) tot FROM admission_requirements WHERE is_active=1")->fetch_assoc()['tot'];
-        $cr=$conn->query("SELECT COUNT(*) c FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received')")->fetch_assoc()['c'];
+        $cr=$conn->query("SELECT COUNT(*) c FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received','Not Yet Given')")->fetch_assoc()['c'];
         $conn->query("UPDATE student_admission_tracking SET requirements_total=$tr,requirements_completed=$cr WHERE applicant_id=$aid");
         echo json_encode(['success'=>true]); exit;
     }
@@ -158,6 +192,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         logAdmission($conn,$id,$userId,"Registered","Student registered: $sn ($progName)");
         notifyAdmission($conn,$id,$userId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
         echo json_encode(['success'=>true,'student_number'=>$sn,'username'=>$sn,'password'=>$pw,'program'=>$progName]); exit;
+    }
+    
+    // New action: Update applicant details
+    if ($action === 'update_applicant') {
+        $id=(int)($_POST['id']??0);
+        $fields = ['full_name','gender','date_of_birth','nationality','district','religion','email','phone','program_id','intake','guardian_name','guardian_phone','emergency_contact_name','emergency_contact_phone'];
+        $sets = [];
+        $params = [];
+        $types = '';
+        
+        foreach ($fields as $f) {
+            if (isset($_POST[$f])) {
+                $sets[] = "`$f` = ?";
+                $params[] = $_POST[$f];
+                $types .= 's';
+            }
+        }
+        
+        if (empty($sets)) {
+            echo json_encode(['success'=>false,'message'=>'No fields to update']); exit;
+        }
+        
+        $params[] = $id;
+        $types .= 'i';
+        $sql = "UPDATE applicants SET " . implode(', ', $sets) . " WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            if ($stmt->execute()) {
+                logAdmission($conn,$id,$userId,"Updated","Applicant details updated");
+                echo json_encode(['success'=>true,'message'=>'Applicant updated']);
+            } else {
+                echo json_encode(['success'=>false,'message'=>'Update failed: '.$conn->error]);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['success'=>false,'message'=>'Prepare failed']);
+        }
+        exit;
+    }
+    
+    // New action: Delete applicant
+    if ($action === 'delete_applicant') {
+        $id=(int)($_POST['id']??0);
+        if (!$id) {
+            echo json_encode(['success'=>false,'message'=>'Invalid ID']); exit;
+        }
+        
+        // Get applicant info for logging
+        $app = $conn->query("SELECT full_name, application_number FROM applicants WHERE id=$id")->fetch_assoc();
+        
+        // Delete related records
+        $conn->query("DELETE FROM applicant_requirement_status WHERE applicant_id=$id");
+        $conn->query("DELETE FROM student_documents WHERE applicant_id=$id");
+        $conn->query("DELETE FROM admission_activity_logs WHERE applicant_id=$id");
+        $conn->query("DELETE FROM admission_notifications WHERE applicant_id=$id");
+        $conn->query("DELETE FROM admission_communications WHERE applicant_id=$id");
+        $conn->query("DELETE FROM admission_interviews WHERE applicant_id=$id");
+        $conn->query("DELETE FROM admission_decisions WHERE applicant_id=$id");
+        
+        // Delete from tracking
+        if ($app && isset($app['application_number'])) {
+            $conn->query("DELETE FROM student_admission_tracking WHERE application_number='".$conn->real_escape_string($app['application_number'])."'");
+        }
+        
+        // Finally delete applicant
+        if ($conn->query("DELETE FROM applicants WHERE id=$id")) {
+            logAdmission($conn,$id,$userId,"Deleted","Applicant deleted: ".($app['full_name']??'')." (".($app['application_number']??'').")");
+            echo json_encode(['success'=>true,'message'=>'Applicant deleted']);
+        } else {
+            echo json_encode(['success'=>false,'message'=>'Delete failed']);
+        }
+        exit;
     }
     if ($action === 'send_communication') {
         $aid=(int)($_POST['applicant_id']??0); $type=trim($_POST['comm_type']??'Portal'); $subj=trim($_POST['subject']??''); $msg=trim($_POST['message']??'');
@@ -255,6 +362,169 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'get_notifications') {
         $s=$conn->prepare("SELECT n.*,a.full_name as app_name FROM admission_notifications n LEFT JOIN applicants a ON n.applicant_id=a.id WHERE (n.user_id=? OR n.user_id IS NULL) ORDER BY n.created_at DESC LIMIT 20"); $rows=[];
         if($s){$s->bind_param('i',$userId);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+    }
+    
+    if ($action === 'get_bulk_requirement_status') {
+        $appIds = json_decode($_POST['applicant_ids'] ?? '[]', true);
+        if (empty($appIds)) { echo json_encode([]); exit; }
+        
+        $placeholders = implode(',', array_fill(0, count($appIds), '?'));
+        $types = str_repeat('i', count($appIds));
+        
+        $s = $conn->prepare("SELECT applicant_id, requirement_id, status FROM applicant_requirement_status WHERE applicant_id IN ($placeholders)");
+        if ($s) {
+            $s->bind_param($types, ...$appIds);
+            $s->execute();
+            $result = $s->get_result();
+            $statusData = [];
+            while ($row = $result->fetch_assoc()) {
+                if (!isset($statusData[$row['applicant_id']])) {
+                    $statusData[$row['applicant_id']] = [];
+                }
+                $statusData[$row['applicant_id']][$row['requirement_id']] = $row['status'];
+            }
+            $s->close();
+            echo json_encode($statusData);
+        } else {
+            echo json_encode([]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_set_requirements') {
+        $updates = json_decode($_POST['updates'] ?? '[]', true);
+        $status = trim($_POST['status'] ?? 'Submitted');
+        
+        if (empty($updates)) {
+            echo json_encode(['success'=>false,'message'=>'No updates provided']); exit;
+        }
+        
+        $successCount = 0;
+        foreach ($updates as $update) {
+            $aid = (int)($update['appId'] ?? 0);
+            $rid = (int)($update['reqId'] ?? 0);
+            
+            if ($aid && $rid) {
+                $s = $conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
+                if ($s) {
+                    $s->bind_param('iissis', $aid, $rid, $status, $userId, $status, $userId);
+                    if ($s->execute()) $successCount++;
+                    $s->close();
+                }
+            }
+        }
+        
+        echo json_encode(['success'=>true,'updated'=>$successCount,'total'=>count($updates)]);
+        exit;
+    }
+    
+    if ($action === 'export_requirements_csv') {
+        $search = trim($_POST['search'] ?? '');
+        $status = trim($_POST['status'] ?? '');
+        $program_id = (int)($_POST['program_id'] ?? 0);
+        $intake = trim($_POST['intake'] ?? '');
+        
+        $where = "WHERE 1=1";
+        $params = [];
+        $types = '';
+        
+        if ($search) {
+            $where .= " AND (a.full_name LIKE ? OR a.application_number LIKE ? OR a.email LIKE ? OR a.phone LIKE ?)";
+            $s = "%$search%";
+            $params = array_merge($params, [$s, $s, $s, $s]);
+            $types .= 'ssss';
+        }
+        if ($status) {
+            $where .= " AND a.status = ?";
+            $params[] = $status;
+            $types .= 's';
+        }
+        if ($program_id) {
+            $where .= " AND a.program_id = ?";
+            $params[] = $program_id;
+            $types .= 'i';
+        }
+        if ($intake) {
+            $where .= " AND a.intake = ?";
+            $params[] = $intake;
+            $types .= 's';
+        }
+        
+        // Get all requirements for headers
+        $reqs = $conn->query("SELECT id, requirement_name FROM admission_requirements WHERE is_active=1 ORDER BY display_order");
+        $requirementHeaders = [];
+        $reqIds = [];
+        while ($req = $reqs->fetch_assoc()) {
+            $requirementHeaders[] = $req['requirement_name'];
+            $reqIds[] = $req['id'];
+        }
+        
+        // Get applicants
+        $sql = "SELECT a.id, a.application_number, a.full_name, a.email, a.phone, a.program_id, a.intake, a.status, ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id $where ORDER BY a.full_name";
+        $stmt = $conn->prepare($sql);
+        if ($params) $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="requirements_export_'.date('Ymd_His').'.csv"');
+        
+        $output = fopen('php://output', 'w');
+        
+        // Write headers
+        $headers = ['Application #', 'Full Name', 'Email', 'Phone', 'Program', 'Intake', 'Status'];
+        $headers = array_merge($headers, $requirementHeaders, ['% Complete']);
+        fputcsv($output, $headers);
+        
+        // Write data
+        while ($row = $result->fetch_assoc()) {
+            $data = [
+                $row['application_number'],
+                $row['full_name'],
+                $row['email'],
+                $row['phone'],
+                $row['program_name'],
+                $row['intake'],
+                $row['status']
+            ];
+            
+            // Get requirement status for this applicant
+            $reqStatus = [];
+            $reqStmt = $conn->prepare("SELECT requirement_id, status FROM applicant_requirement_status WHERE applicant_id=?");
+            $reqStmt->bind_param('i', $row['id']);
+            $reqStmt->execute();
+            $reqResult = $reqStmt->get_result();
+            while ($rs = $reqResult->fetch_assoc()) {
+                $reqStatus[$rs['requirement_id']] = $rs['status'];
+            }
+            $reqStmt->close();
+            
+            // Add requirement statuses in order
+            $completed = 0;
+            $totalMandatory = 0;
+            foreach ($reqIds as $reqId) {
+                $status = $reqStatus[$reqId] ?? 'Not Submitted';
+                $data[] = $status;
+                
+                // Check if this is a mandatory requirement
+                $isMandatory = true; // Default to true for simplicity
+                if ($isMandatory) {
+                    $totalMandatory++;
+                    if (in_array($status, ['Submitted','Verified','Received'])) {
+                        $completed++;
+                    }
+                }
+            }
+            
+            // Add completion percentage
+            $percentage = $totalMandatory > 0 ? round(($completed / $totalMandatory) * 100) : 0;
+            $data[] = $percentage . '%';
+            
+            fputcsv($output, $data);
+        }
+        
+        fclose($output);
+        exit;
     }
     if ($action === 'mark_read') {
         $nid=(int)($_POST['notification_id']??0); $conn->query("UPDATE admission_notifications SET is_read=1 WHERE id=$nid"); echo json_encode(['success'=>true]); exit;
@@ -551,8 +821,10 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
   <div class="col-md-8">
     <div class="card">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h3 style="border:none;padding:0;margin:0"><i class="fas fa-user"></i> <?=htmlspecialchars($app['full_name'])?></h3>
+        <h3 style="border:none;padding:0;margin:0"><i class="fas fa-user"></i> <span id="applicantNameDisplay"><?=htmlspecialchars($app['full_name'])?></span></h3>
         <div class="d-flex gap-1 flex-wrap">
+          <button class="btn btn-sm btn-outline-primary" onclick="editApplicantDetails(<?=$aid?>)"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteApplicant(<?=$aid?>,'<?=htmlspecialchars(addslashes($app['full_name']))?>')"><i class="fas fa-trash"></i> Delete</button>
           <button class="btn btn-sm btn-primary" onclick="updateStatus(<?=$aid?>,'Under Review')"><i class="fas fa-search"></i> Review</button>
           <button class="btn btn-sm btn-warning" onclick="showRequestDocs(<?=$aid?>)"><i class="fas fa-file"></i> Request Docs</button>
           <button class="btn btn-sm btn-info text-white" onclick="showScheduleInterview(<?=$aid?>)"><i class="fas fa-calendar"></i> Interview</button>
@@ -570,23 +842,23 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
       <div class="row">
         <div class="col-md-6">
           <div class="profile-section"><h4>Personal Information</h4>
-            <div class="info-grid">
-              <div class="info-item"><div class="label">Full Name</div><div class="value"><?=htmlspecialchars($app['full_name'])?></div></div>
-              <div class="info-item"><div class="label">Gender</div><div class="value"><?=htmlspecialchars($app['gender']??'-')?></div></div>
-              <div class="info-item"><div class="label">Date of Birth</div><div class="value"><?=htmlspecialchars($app['date_of_birth']??'-')?></div></div>
-              <div class="info-item"><div class="label">Nationality</div><div class="value"><?=htmlspecialchars($app['nationality']??'Ugandan')?></div></div>
-              <div class="info-item"><div class="label">District</div><div class="value"><?=htmlspecialchars($app['district']??'-')?></div></div>
-              <div class="info-item"><div class="label">Religion</div><div class="value"><?=htmlspecialchars($app['religion']??'-')?></div></div>
+            <div class="info-grid" id="personalInfoGrid">
+              <div class="info-item"><div class="label">Full Name</div><div class="value" id="fullNameValue"><?=htmlspecialchars($app['full_name'])?></div></div>
+              <div class="info-item"><div class="label">Gender</div><div class="value" id="genderValue"><?=htmlspecialchars($app['gender']??'-')?></div></div>
+              <div class="info-item"><div class="label">Date of Birth</div><div class="value" id="dobValue"><?=htmlspecialchars($app['date_of_birth']??'-')?></div></div>
+              <div class="info-item"><div class="label">Nationality</div><div class="value" id="nationalityValue"><?=htmlspecialchars($app['nationality']??'Ugandan')?></div></div>
+              <div class="info-item"><div class="label">District</div><div class="value" id="districtValue"><?=htmlspecialchars($app['district']??'-')?></div></div>
+              <div class="info-item"><div class="label">Religion</div><div class="value" id="religionValue"><?=htmlspecialchars($app['religion']??'-')?></div></div>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="profile-section"><h4>Contact &amp; Program</h4>
-            <div class="info-grid">
-              <div class="info-item"><div class="label">Email</div><div class="value"><?=htmlspecialchars($app['email']??'-')?></div></div>
-              <div class="info-item"><div class="label">Phone</div><div class="value"><?=htmlspecialchars($app['phone']??'-')?></div></div>
-              <div class="info-item"><div class="label">Program</div><div class="value"><?=htmlspecialchars($app['program_name']??'-')?></div></div>
-              <div class="info-item"><div class="label">Intake</div><div class="value"><?=htmlspecialchars($app['intake']??'-')?></div></div>
+            <div class="info-grid" id="contactInfoGrid">
+              <div class="info-item"><div class="label">Email</div><div class="value" id="emailValue"><?=htmlspecialchars($app['email']??'-')?></div></div>
+              <div class="info-item"><div class="label">Phone</div><div class="value" id="phoneValue"><?=htmlspecialchars($app['phone']??'-')?></div></div>
+              <div class="info-item"><div class="label">Program</div><div class="value" id="programValue"><?=htmlspecialchars($app['program_name']??'-')?></div></div>
+              <div class="info-item"><div class="label">Intake</div><div class="value" id="intakeValue"><?=htmlspecialchars($app['intake']??'-')?></div></div>
               <div class="info-item"><div class="label">Application #</div><div class="value"><?=htmlspecialchars($app['application_number'])?></div></div>
               <div class="info-item"><div class="label">Source</div><div class="value"><?=htmlspecialchars($app['application_source']??'Online')?></div></div>
             </div>
@@ -595,10 +867,10 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
       </div>
       <?php if($app['guardian_name']): ?>
       <div class="profile-section"><h4>Guardian / Emergency</h4>
-        <div class="info-grid">
-          <div class="info-item"><div class="label">Guardian</div><div class="value"><?=htmlspecialchars($app['guardian_name'])?> (<?=htmlspecialchars($app['guardian_relationship']??'')?>)</div></div>
-          <div class="info-item"><div class="label">Guardian Phone</div><div class="value"><?=htmlspecialchars($app['guardian_phone']??'-')?></div></div>
-          <div class="info-item"><div class="label">Emergency Contact</div><div class="value"><?=htmlspecialchars($app['emergency_contact_name']??'-')?> (<?=htmlspecialchars($app['emergency_contact_phone']??'-')?>)</div></div>
+        <div class="info-grid" id="guardianInfoGrid">
+          <div class="info-item"><div class="label">Guardian</div><div class="value" id="guardianNameValue"><?=htmlspecialchars($app['guardian_name'])?> (<?=htmlspecialchars($app['guardian_relationship']??'')?>)</div></div>
+          <div class="info-item"><div class="label">Guardian Phone</div><div class="value" id="guardianPhoneValue"><?=htmlspecialchars($app['guardian_phone']??'-')?></div></div>
+          <div class="info-item"><div class="label">Emergency Contact</div><div class="value" id="emergencyContactValue"><?=htmlspecialchars($app['emergency_contact_name']??'-')?> (<?=htmlspecialchars($app['emergency_contact_phone']??'-')?>)</div></div>
         </div>
       </div>
       <?php endif; ?>
@@ -675,45 +947,513 @@ function sendComm(e,f){e.preventDefault();const fd=new FormData(f);fd.append('ac
 fetch('director-admissions.php',{method:'POST',body:new URLSearchParams(fd)}).then(r=>r.json()).then(d=>{if(d.success){alert('Sent!');loadComm();f.reset();}});}
 function scheduleInterview(e,f){e.preventDefault();const fd=new FormData(f);fd.append('action','schedule_interview');fd.append('csrf_token','<?=$csrfToken?>');
 fetch('director-admissions.php',{method:'POST',body:new URLSearchParams(fd)}).then(r=>r.json()).then(d=>{if(d.success){alert('Interview scheduled!');location.reload();}});}
-function updateStatus(id,st){if(!confirm('Change status to '+st+'?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=update_status&id='+id+'&status='+encodeURIComponent(st)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
-function approveApplicant(id){if(!confirm('Approve this application?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=approve&id='+id+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
-function showReject(id){const r=prompt('Rejection reason:');if(!r)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=reject&id='+id+'&reason='+encodeURIComponent(r)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
-function showRequestDocs(id){const m=prompt('Message to applicant:');if(!m)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=request_docs&applicant_id='+id+'&message='+encodeURIComponent(m)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
+function updateStatus(id,st){if(!confirm('Change status to '+st+'?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=update_status&id='+id+'&status='+encodeURIComponent(st)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success){showToast('Status updated to '+st,'success');location.reload();}else{showToast('Update failed','danger');}});}
+function approveApplicant(id){if(!confirm('Approve this application?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=approve&id='+id+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success){showToast('Application approved','success');location.reload();}else{showToast('Approval failed','danger');}});}
+function showReject(id){const r=prompt('Rejection reason:');if(!r)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=reject&id='+id+'&reason='+encodeURIComponent(r)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success){showToast('Application rejected','success');location.reload();}else{showToast('Rejection failed','danger');}});}
+function showRequestDocs(id){const m=prompt('Message to applicant:');if(!m)return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=request_docs&applicant_id='+id+'&message='+encodeURIComponent(m)+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success){showToast('Document request sent','success');location.reload();}else{showToast('Request failed','danger');}});}
 function showScheduleInterview(id){document.querySelector('[name=interview_date]')?.scrollIntoView({behavior:'smooth'});}
-function registerApplicant(id){if(!confirm('Register this applicant as a student?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=register_student&id='+id+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success)alert('Registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password+'\nProgram: '+d.program);location.reload();});}
-function setRequirement(aid,rid,val,notes){if(!val)return;var body='action=set_requirement&applicant_id='+aid+'&requirement_id='+rid+'&status='+encodeURIComponent(val)+'&csrf_token=<?=$csrfToken?>';if(typeof notes!=='undefined')body+='&notes='+encodeURIComponent(notes);fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
+function registerApplicant(id){if(!confirm('Register this applicant as a student?'))return;fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=register_student&id='+id+'&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{if(d.success){showToast('Student registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password+'\nProgram: '+d.program,'success');location.reload();}else{showToast('Registration failed','danger');}});}
+function setRequirement(aid,rid,val,notes){if(!val)return;var body='action=set_requirement&applicant_id='+aid+'&requirement_id='+rid+'&status='+encodeURIComponent(val)+'&csrf_token=<?=$csrfToken?>';if(typeof notes!=='undefined')body+='&notes='+encodeURIComponent(notes);fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(r=>r.json()).then(d=>{if(d.success){showToast('Requirement updated to '+val,'success');}else{showToast('Update failed','danger');}});}
+
+// Edit applicant functionality
+function editApplicantDetails(id) {
+    // Convert display fields to editable inputs
+    const fields = [
+        {id: 'fullNameValue', name: 'full_name', type: 'text'},
+        {id: 'genderValue', name: 'gender', type: 'select', options: ['Male','Female','Other']},
+        {id: 'dobValue', name: 'date_of_birth', type: 'date'},
+        {id: 'nationalityValue', name: 'nationality', type: 'text'},
+        {id: 'districtValue', name: 'district', type: 'text'},
+        {id: 'religionValue', name: 'religion', type: 'text'},
+        {id: 'emailValue', name: 'email', type: 'email'},
+        {id: 'phoneValue', name: 'phone', type: 'tel'},
+        {id: 'guardianNameValue', name: 'guardian_name', type: 'text'},
+        {id: 'guardianPhoneValue', name: 'guardian_phone', type: 'tel'},
+        {id: 'emergencyContactValue', name: 'emergency_contact_name', type: 'text'}
+    ];
+    
+    fields.forEach(field => {
+        const element = document.getElementById(field.id);
+        if (element) {
+            const currentValue = element.textContent.trim();
+            let inputHtml = '';
+            
+            if (field.type === 'select') {
+                inputHtml = `<select class="form-control form-control-sm" id="edit_${field.name}">`;
+                field.options.forEach(opt => {
+                    inputHtml += `<option value="${opt}" ${currentValue === opt ? 'selected' : ''}>${opt}</option>`;
+                });
+                inputHtml += `</select>`;
+            } else {
+                inputHtml = `<input type="${field.type}" class="form-control form-control-sm" id="edit_${field.name}" value="${currentValue}">`;
+            }
+            
+            element.innerHTML = inputHtml;
+        }
+    });
+    
+    // Add save/cancel buttons
+    const actionDiv = document.createElement('div');
+    actionDiv.className = 'mt-3 d-flex gap-2';
+    actionDiv.innerHTML = `
+        <button class="btn btn-sm btn-success" onclick="saveApplicantDetails(${id})"><i class="fas fa-save"></i> Save Changes</button>
+        <button class="btn btn-sm btn-secondary" onclick="cancelEditApplicant()"><i class="fas fa-times"></i> Cancel</button>
+    `;
+    
+    const personalInfoGrid = document.getElementById('personalInfoGrid');
+    personalInfoGrid.parentNode.insertBefore(actionDiv, personalInfoGrid.nextSibling);
+}
+
+function saveApplicantDetails(id) {
+    const fields = ['full_name','gender','date_of_birth','nationality','district','religion','email','phone','guardian_name','guardian_phone','emergency_contact_name'];
+    const data = {id: id};
+    
+    fields.forEach(field => {
+        const input = document.getElementById(`edit_${field}`);
+        if (input) {
+            data[field] = input.value;
+        }
+    });
+    
+    const body = new URLSearchParams();
+    body.append('action', 'update_applicant');
+    Object.keys(data).forEach(key => {
+        body.append(key, data[key]);
+    });
+    body.append('csrf_token', CSRF);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            showToast('Applicant details updated', 'success');
+            location.reload();
+        } else {
+            showToast(result.message || 'Update failed', 'danger');
+        }
+    });
+}
+
+function cancelEditApplicant() {
+    location.reload();
+}
+
+function deleteApplicant(id, name) {
+    if (!confirm(`Are you sure you want to delete applicant "${name}"? This action cannot be undone.`)) return;
+    
+    const body = new URLSearchParams();
+    body.append('action', 'delete_applicant');
+    body.append('id', id);
+    body.append('csrf_token', CSRF);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            showToast('Applicant deleted', 'success');
+            // Redirect to applicants list after 1 second
+            setTimeout(() => {
+                window.location.href = 'director-admissions.php?page=applicants';
+            }, 1000);
+        } else {
+            showToast(result.message || 'Delete failed', 'danger');
+        }
+    });
+}
 </script>
 <?php endif; ?>
 
 <?php elseif ($page === 'requirements'): ?>
 <div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal — All Applicants</h3>
-  <p class="text-muted small mb-3">Matrix view: each row is an applicant, each column is a requirement. Click to toggle status.</p>
+  <p class="text-muted small mb-3">Matrix view: each row is an applicant, each column is a requirement. Click to toggle status. Checkboxes for bulk marking.</p>
+  
+  <!-- Advanced Filters -->
   <div class="filter-row">
-    <select class="form-select form-select-sm" id="reqFilterStatus"><option value="all">All</option><option value="New">New</option><option value="Waiting for Documents">Waiting</option><option value="Approved">Approved</option><option value="Registered">Registered</option></select>
+    <input type="text" class="form-control form-control-sm" id="reqSearch" placeholder="Search name, ID, phone..." style="min-width:200px">
+    <select class="form-select form-select-sm" id="reqFilterStatus"><option value="all">All Status</option><option value="New">New</option><option value="Under Review">Under Review</option><option value="Waiting for Documents">Waiting</option><option value="Requirements Verified">Requirements Verified</option><option value="Approved">Approved</option><option value="Registered">Registered</option><option value="Rejected">Rejected</option></select>
     <select class="form-select form-select-sm" id="reqFilterProgram"><option value="all">All Programs</option><?php foreach($programs as $p): ?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach; ?></select>
+    <select class="form-select form-select-sm" id="reqFilterIntake"><option value="all">All Intakes</option><?php foreach($intakes as $i): ?><option value="<?=htmlspecialchars($i['intake_name'])?>"><?=htmlspecialchars($i['intake_name'])?></option><?php endforeach; ?></select>
+    <button class="btn btn-sm btn-primary" onclick="loadRequirementsPortal()"><i class="fas fa-search"></i> Search</button>
+    <button class="btn btn-sm btn-outline-secondary" onclick="clearReqFilters()"><i class="fas fa-times"></i> Clear</button>
   </div>
+  
+  <!-- Bulk Actions -->
+  <div class="d-flex gap-2 mb-3 align-items-center">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="selectAllReqs" onchange="toggleAllRequirements(this.checked)">
+      <label class="form-check-label small" for="selectAllReqs">Select All</label>
+    </div>
+    <select class="form-select form-select-sm" id="bulkStatus" style="width:150px">
+      <option value="">Bulk Mark As...</option>
+      <option value="Verified">Verified</option>
+      <option value="Submitted">Submitted</option>
+      <option value="Missing">Missing</option>
+      <option value="Not Yet Given">Not Yet Given</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+    <button class="btn btn-sm btn-success" onclick="bulkUpdateRequirements()"><i class="fas fa-check"></i> Apply</button>
+    <div class="ms-auto">
+      <button class="btn btn-sm btn-outline-info" onclick="exportRequirementsCSV()"><i class="fas fa-download"></i> Export CSV</button>
+    </div>
+  </div>
+  
   <div class="table-responsive" style="max-height:600px;overflow-y:auto" id="reqPortalTable">
-    <?php
-    $reqs=$requirements;
-    $apps=$conn->query("SELECT a.id,a.full_name,a.application_number,a.status,a.program_id,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id ORDER BY a.created_at DESC LIMIT 100");
-    if($apps&&$apps->num_rows>0): ?>
-    <table class="table table-sm table-bordered"><thead><tr><th style="position:sticky;top:0;background:#fff;z-index:2">Applicant</th><?php foreach($reqs as $r): ?><th style="position:sticky;top:0;background:#fff;z-index:2;writing-mode:vertical-lr;font-size:10px;height:120px;white-space:nowrap;padding:4px"><?=htmlspecialchars(substr($r['requirement_name'],0,20))?></th><?php endforeach; ?><th style="position:sticky;top:0;background:#fff;z-index:2">%</th></tr></thead><tbody>
-    <?php while($ap=$apps->fetch_assoc()): 
-      $ars=$conn->query("SELECT requirement_id,status FROM applicant_requirement_status WHERE applicant_id=".$ap['id']);
-      $statusMap=[];while($s=$ars->fetch_assoc())$statusMap[$s['requirement_id']]=$s['status'];
-      $done=0;$total=count($reqs);
-      foreach($reqs as $r){if(in_array($statusMap[$r['id']]??'',['Submitted','Verified','Received']))$done++;}
-    ?><tr>
-      <td class="small"><a href="director-admissions.php?page=review&aid=<?=$ap['id']?>" class="text-primary"><?=htmlspecialchars($ap['full_name'])?></a><br><span class="text-muted"><?=htmlspecialchars($ap['application_number'])?></span></td>
-      <?php foreach($reqs as $r): $s=$statusMap[$r['id']]??'Not Submitted'; $bg=['Submitted'=>'info','Verified'=>'success','Received'=>'success','Missing'=>'danger','Rejected'=>'danger','Not Submitted'=>'light','Pending'=>'warning','Not Yet Given'=>'warning']; $color=$bg[$s]??'light'; ?>
-      <td class="text-center p-1"><span class="badge bg-<?=$color?>" style="font-size:9px;cursor:pointer" onclick="toggleReq(<?=$ap['id']?>,<?=$r['id']?>,'<?=$s==='Verified'||$s==='Received'?'Submitted':'Verified'?>')"><?=substr($s,0,3)?></span></td>
-      <?php endforeach; ?>
-      <td class="text-center small fw-bold"><?=$total>0?round($done/$total*100):0?>%</td>
-    </tr><?php endwhile; ?>
-    </tbody></table>
-    <?php else: ?><p class="text-muted text-center py-4">No applicants yet.</p><?php endif; ?>
+    <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements portal...</div>
   </div>
+  
+  <div class="mt-3 small text-muted" id="reqStats"></div>
 </div>
+
+<script>
+let allRequirements = <?= json_encode($requirements) ?>;
+let selectedReqs = {};
+
+function loadRequirementsPortal() {
+    const search = document.getElementById('reqSearch').value;
+    const status = document.getElementById('reqFilterStatus').value;
+    const program = document.getElementById('reqFilterProgram').value;
+    const intake = document.getElementById('reqFilterIntake').value;
+    
+    const body = new URLSearchParams();
+    body.append('action', 'filter_applicants');
+    body.append('search', search);
+    body.append('status', status === 'all' ? '' : status);
+    body.append('program_id', program === 'all' ? '' : program);
+    body.append('intake', intake === 'all' ? '' : intake);
+    body.append('limit', 100);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.json())
+    .then(applicants => {
+        if (!applicants || applicants.length === 0) {
+            document.getElementById('reqPortalTable').innerHTML = '<p class="text-muted text-center py-4">No applicants found matching your criteria.</p>';
+            document.getElementById('reqStats').innerHTML = '0 applicants';
+            return;
+        }
+        
+        // Get requirement status for all applicants in batch
+        const appIds = applicants.map(a => a.id);
+        const body2 = new URLSearchParams();
+        body2.append('action', 'get_bulk_requirement_status');
+        body2.append('applicant_ids', JSON.stringify(appIds));
+        
+        fetch('director-admissions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: body2
+        })
+        .then(r => r.json())
+        .then(statusData => {
+            renderRequirementsTable(applicants, statusData);
+        })
+        .catch(err => {
+            // Fallback: load individually
+            renderRequirementsTable(applicants, {});
+        });
+    });
+}
+
+function renderRequirementsTable(applicants, statusData) {
+    let html = '<table class="table table-sm table-bordered table-hover">';
+    
+    // Header row
+    html += '<thead><tr>';
+    html += '<th style="position:sticky;top:0;background:#fff;z-index:3;min-width:180px">Applicant</th>';
+    
+    allRequirements.forEach((req, idx) => {
+        const isMandatory = req.is_mandatory == 1;
+        const shortName = req.requirement_name.length > 15 ? req.requirement_name.substring(0,15)+'...' : req.requirement_name;
+        html += `<th style="position:sticky;top:0;background:#fff;z-index:3;font-size:10px;white-space:nowrap;padding:4px;min-width:60px;text-align:center" title="${req.requirement_name}">`;
+        html += `<div class="d-flex flex-column align-items-center">`;
+        html += `<span>${shortName}</span>`;
+        if (isMandatory) html += '<span class="text-danger small">*</span>';
+        html += `</div></th>`;
+    });
+    
+    html += '<th style="position:sticky;top:0;background:#fff;z-index:3;min-width:60px">%</th>';
+    html += '</tr></thead><tbody>';
+    
+    // Data rows
+    applicants.forEach(app => {
+        const appStatus = statusData[app.id] || {};
+        let completed = 0;
+        let totalMandatory = 0;
+        
+        html += `<tr>`;
+        html += `<td class="small">`;
+        html += `<div class="d-flex align-items-center gap-1">`;
+        html += `<input type="checkbox" class="form-check-input req-app-check" data-app-id="${app.id}" onchange="toggleAppRequirements(${app.id}, this.checked)">`;
+        html += `<a href="director-admissions.php?page=review&aid=${app.id}" class="text-primary text-decoration-none">${escapeHtml(app.full_name)}</a>`;
+        html += `</div>`;
+        html += `<div class="text-muted">${escapeHtml(app.application_number || '')}</div>`;
+        html += `<div><small class="badge bg-${getStatusColor(app.status)}">${app.status}</small></div>`;
+        html += `</td>`;
+        
+        allRequirements.forEach(req => {
+            const isMandatory = req.is_mandatory == 1;
+            if (isMandatory) totalMandatory++;
+            
+            const status = appStatus[req.id] || 'Not Submitted';
+            const isCompleted = ['Submitted','Verified','Received'].includes(status);
+            if (isCompleted && isMandatory) completed++;
+            
+            const statusColors = {
+                'Verified': 'success',
+                'Received': 'success',
+                'Submitted': 'info',
+                'Missing': 'danger',
+                'Rejected': 'danger',
+                'Not Yet Given': 'warning text-dark',
+                'Not Submitted': 'secondary'
+            };
+            
+            const colorClass = statusColors[status] || 'secondary';
+            const shortStatus = status.substring(0,3);
+            
+            html += `<td class="text-center p-1 align-middle" style="min-width:60px">`;
+            html += `<div class="d-flex flex-column align-items-center gap-1">`;
+            html += `<input type="checkbox" class="form-check-input req-item-check" data-app-id="${app.id}" data-req-id="${req.id}" ${isCompleted ? 'checked' : ''} onchange="toggleRequirementCheck(${app.id}, ${req.id}, this.checked)">`;
+            html += `<span class="badge bg-${colorClass} small" style="font-size:9px;cursor:pointer" onclick="showQuickStatusModal(${app.id}, ${req.id}, '${status}')">${shortStatus}</span>`;
+            html += `</div>`;
+            html += `</td>`;
+        });
+        
+        const percentage = totalMandatory > 0 ? Math.round((completed / totalMandatory) * 100) : 0;
+        const progressColor = percentage >= 100 ? 'success' : percentage >= 50 ? 'warning' : 'danger';
+        
+        html += `<td class="text-center align-middle">`;
+        html += `<div class="progress" style="height:8px;width:60px;margin:0 auto">`;
+        html += `<div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${percentage}%" title="${percentage}% complete"></div>`;
+        html += `</div>`;
+        html += `<small class="d-block mt-1">${percentage}%</small>`;
+        html += `</td>`;
+        
+        html += `</tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById('reqPortalTable').innerHTML = html;
+    document.getElementById('reqStats').innerHTML = `${applicants.length} applicants displayed`;
+    
+    // Initialize selectedReqs
+    selectedReqs = {};
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'New': 'primary',
+        'Under Review': 'info',
+        'Waiting for Documents': 'warning',
+        'Requirements Verified': 'success',
+        'Approved': 'success',
+        'Registered': 'dark',
+        'Rejected': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toggleAllRequirements(checked) {
+    document.querySelectorAll('.req-app-check').forEach(cb => {
+        cb.checked = checked;
+        const appId = cb.dataset.appId;
+        toggleAppRequirements(appId, checked);
+    });
+}
+
+function toggleAppRequirements(appId, checked) {
+    document.querySelectorAll(`.req-item-check[data-app-id="${appId}"]`).forEach(cb => {
+        cb.checked = checked;
+        const reqId = cb.dataset.reqId;
+        toggleRequirementCheck(appId, reqId, checked);
+    });
+}
+
+function toggleRequirementCheck(appId, reqId, checked) {
+    if (!selectedReqs[appId]) selectedReqs[appId] = {};
+    selectedReqs[appId][reqId] = checked;
+}
+
+function bulkUpdateRequirements() {
+    const status = document.getElementById('bulkStatus').value;
+    if (!status) {
+        alert('Please select a status to apply');
+        return;
+    }
+    
+    const updates = [];
+    for (const appId in selectedReqs) {
+        for (const reqId in selectedReqs[appId]) {
+            if (selectedReqs[appId][reqId]) {
+                updates.push({appId, reqId});
+            }
+        }
+    }
+    
+    if (updates.length === 0) {
+        alert('No requirements selected');
+        return;
+    }
+    
+    if (!confirm(`Apply "${status}" to ${updates.length} selected requirement(s)?`)) return;
+    
+    const body = new URLSearchParams();
+    body.append('action', 'bulk_set_requirements');
+    body.append('updates', JSON.stringify(updates));
+    body.append('status', status);
+    body.append('csrf_token', CSRF);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`Updated ${updates.length} requirement(s) to "${status}"`, 'success');
+            loadRequirementsPortal();
+            selectedReqs = {};
+            document.getElementById('bulkStatus').value = '';
+            document.getElementById('selectAllReqs').checked = false;
+        } else {
+            showToast(data.message || 'Update failed', 'danger');
+        }
+    });
+}
+
+function showQuickStatusModal(appId, reqId, currentStatus) {
+    const req = allRequirements.find(r => r.id == reqId);
+    if (!req) return;
+    
+    const modalHtml = `
+        <div class="modal fade" id="quickStatusModal">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title">Update Requirement</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small"><strong>${req.requirement_name}</strong></p>
+                        <select class="form-select form-select-sm mb-2" id="quickStatusSelect">
+                            <option value="Verified" ${currentStatus === 'Verified' ? 'selected' : ''}>Verified</option>
+                            <option value="Submitted" ${currentStatus === 'Submitted' ? 'selected' : ''}>Submitted</option>
+                            <option value="Missing" ${currentStatus === 'Missing' ? 'selected' : ''}>Missing</option>
+                            <option value="Not Yet Given" ${currentStatus === 'Not Yet Given' ? 'selected' : ''}>Not Yet Given</option>
+                            <option value="Rejected" ${currentStatus === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                            <option value="Not Submitted" ${currentStatus === 'Not Submitted' ? 'selected' : ''}>Not Submitted</option>
+                        </select>
+                        <textarea class="form-control form-control-sm" id="quickStatusNotes" rows="2" placeholder="Director's notes (optional)"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="updateQuickStatus(${appId}, ${reqId})">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('quickStatusModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add new modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('quickStatusModal'));
+    modal.show();
+}
+
+function updateQuickStatus(appId, reqId) {
+    const status = document.getElementById('quickStatusSelect').value;
+    const notes = document.getElementById('quickStatusNotes').value;
+    
+    const body = new URLSearchParams();
+    body.append('action', 'set_requirement');
+    body.append('applicant_id', appId);
+    body.append('requirement_id', reqId);
+    body.append('status', status);
+    body.append('notes', notes);
+    body.append('csrf_token', CSRF);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Requirement updated', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('quickStatusModal')).hide();
+            loadRequirementsPortal();
+        } else {
+            showToast('Update failed', 'danger');
+        }
+    });
+}
+
+function clearReqFilters() {
+    document.getElementById('reqSearch').value = '';
+    document.getElementById('reqFilterStatus').value = 'all';
+    document.getElementById('reqFilterProgram').value = 'all';
+    document.getElementById('reqFilterIntake').value = 'all';
+    loadRequirementsPortal();
+}
+
+function exportRequirementsCSV() {
+    const search = document.getElementById('reqSearch').value;
+    const status = document.getElementById('reqFilterStatus').value;
+    const program = document.getElementById('reqFilterProgram').value;
+    const intake = document.getElementById('reqFilterIntake').value;
+    
+    const body = new URLSearchParams();
+    body.append('action', 'export_requirements_csv');
+    body.append('search', search);
+    body.append('status', status === 'all' ? '' : status);
+    body.append('program_id', program === 'all' ? '' : program);
+    body.append('intake', intake === 'all' ? '' : intake);
+    body.append('csrf_token', CSRF);
+    
+    fetch('director-admissions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body
+    })
+    .then(r => r.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `requirements_export_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    });
+}
+
+// Initialize
+loadRequirementsPortal();
+</script>
 
 <?php elseif ($page === 'analytics'): ?>
 <div class="stats-grid">
@@ -1037,6 +1777,41 @@ document.getElementById('stuForm').addEventListener('submit',function(e){
 const CSRF='<?=$csrfToken?>';
 function postData(data){data.csrf_token=CSRF;return fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data)}).then(r=>r.json());}
 
+// Toast notification function
+function showToast(message, type='info') {
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message.replace(/\n/g, '<br>')}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    
+    container.insertAdjacentHTML('beforeend', toastHtml);
+    const toastEl = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastEl, {delay: 5000});
+    toast.show();
+    
+    // Remove toast after it's hidden
+    toastEl.addEventListener('hidden.bs.toast', function() {
+        this.remove();
+    });
+}
+
 // ── Overview Charts ──
 <?php if($page==='overview'): ?>
 postData({action:'dashboard_stats'}).then(d=>{
@@ -1069,7 +1844,7 @@ function filterApps(){
 <?php endif; ?>
 
 // ── Requirements portal toggle ──
-function toggleReq(aid,rid,st){postData({action:'set_requirement',applicant_id:aid,requirement_id:rid,status:st}).then(d=>{if(d.success)location.reload();});}
+function toggleReq(aid,rid,st){postData({action:'set_requirement',applicant_id:aid,requirement_id:rid,status:st}).then(d=>{if(d.success){showToast('Requirement updated','success');loadRequirementsPortal();}else{showToast('Update failed','danger');}});}
 
 // ── Website submissions ──
 <?php if($page==='submissions'): ?>
@@ -1108,8 +1883,8 @@ function loadReport(){
 loadReport();
 <?php endif; ?>
 
-function exportCSV(type){postData({action:'export_csv',export_type:type});setTimeout(()=>location.reload(),500);}
-function doRegister(){const sel=document.getElementById('regSelect');if(!sel||!sel.value)return alert('Select an approved applicant.');if(!confirm('Register this applicant?'))return;postData({action:'register_student',id:sel.value}).then(d=>{if(d.success)alert('Registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password);location.reload();});}
+function exportCSV(type){postData({action:'export_csv',export_type:type});showToast('Exporting CSV...','info');}
+function doRegister(){const sel=document.getElementById('regSelect');if(!sel||!sel.value)return alert('Select an approved applicant.');if(!confirm('Register this applicant?'))return;postData({action:'register_student',id:sel.value}).then(d=>{if(d.success){showToast('Student registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password,'success');location.reload();}else{showToast('Registration failed','danger');}});}
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body></html>
