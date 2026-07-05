@@ -483,8 +483,22 @@ function openCommunicationModal() {
 .main, .main-content, .dashboard-main,
 .main-wrap, .page-wrap {
   margin-left: var(--sidebar-w, 270px);
-  padding: 0 !important;
+  padding: 0;
   min-height: 100vh;
+}
+/* Single source of padding truth (content-section provides inner spacing) */
+@media (max-width: 768px) {
+  .main, .main-content, .dashboard-main,
+  .main-wrap, .page-wrap {
+    margin-left: 0 !important;
+    padding: 16px !important;
+  }
+}
+@media (max-width: 576px) {
+  .main, .main-content, .dashboard-main,
+  .main-wrap, .page-wrap {
+    padding: 12px !important;
+  }
 }
 .dashboard-content {
   padding: 0 !important;

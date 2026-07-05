@@ -272,7 +272,7 @@ window.onerror = function(msg, url) {
 <style>
 /* ── Dashboard Responsive Fixes (unified with dashboard-mobile.css) ── */
 @media (max-width: 768px) {
-  .main-content, .dashboard-main { margin-left: 0 !important; padding: 14px !important; }
+  .main-content, .dashboard-main { margin-left: 0 !important; }
   .dashboard-header { padding: 0 14px 0 64px !important; }
   .dashboard-header h1 { font-size: 1rem !important; }
   .dashboard-header p { display: none !important; }
@@ -287,7 +287,6 @@ window.onerror = function(msg, url) {
   input, select, textarea { font-size: 16px !important; }
 }
 @media (max-width: 576px) {
-  .main-content, .dashboard-main { padding: 8px !important; }
   .dashboard-header { padding: 0 10px 0 56px !important; }
   .dashboard-header h1 { font-size: 0.9rem !important; }
   h1 { font-size: 1.2rem !important; }
