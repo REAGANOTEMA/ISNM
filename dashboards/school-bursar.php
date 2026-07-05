@@ -20,29 +20,27 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 $userRole = $_SESSION['role'] ?? '';
 $isSuper = $auth->hasFullInstitutionAccess($userRole);
 
-// ── Auto-create bursar account if missing ──
-$bursarEmail = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-$bursarPass  = 'bursar@isnm';
-$roleId = null;
-$r = $staffConn->query("SELECT id FROM staff_roles WHERE role_name = 'School Bursar'");
-if ($r && $row = $r->fetch_assoc()) {
-    $roleId = $row['id'];
-} else {
-    $staffConn->query("INSERT INTO staff_roles (role_name, dashboard_path) VALUES ('School Bursar', 'dashboards/school-bursar.php')");
-    $roleId = $staffConn->insert_id;
+// ── Auto-create bursar account on first load ──
+if ($staffConn) {
+    $staffConn->query("CREATE TABLE IF NOT EXISTS staff_roles (id INT AUTO_INCREMENT PRIMARY KEY, role_name VARCHAR(100) NOT NULL UNIQUE, role_description TEXT, role_level INT DEFAULT 5, dashboard_path VARCHAR(255), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staffConn->query("INSERT IGNORE INTO staff_roles (role_name, dashboard_path) VALUES ('School Bursar', 'dashboards/school-bursar.php')");
+    $rs = $staffConn->query("SELECT id FROM staff_roles WHERE role_name = 'School Bursar'");
+    if ($rs && $row = $rs->fetch_assoc()) {
+        $roleId = (int)$row['id'];
+        $chk = $staffConn->prepare("SELECT id FROM staff WHERE email = ?");
+        $bursarEmail = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
+        $chk->bind_param("s", $bursarEmail);
+        $chk->execute();
+        if (!$chk->get_result()->fetch_assoc()) {
+            $hash = password_hash('bursar@isnm', PASSWORD_DEFAULT);
+            $ins = $staffConn->prepare("INSERT IGNORE INTO staff (full_name, email, password, role_id, position, department, status) VALUES (?, ?, ?, ?, 'School Bursar', 'Finance', 'Active')");
+            $n = 'School Bursar';
+            $ins->bind_param("sssi", $n, $bursarEmail, $hash, $roleId);
+            $ins->execute();
+        }
+        $chk->close();
+    }
 }
-$bursarName  = 'School Bursar';
-$bursarPhone = '0782990403';
-$hash = password_hash($bursarPass, PASSWORD_DEFAULT);
-$chk = $staffConn->prepare("SELECT id FROM staff WHERE email = ?");
-$chk->bind_param("s", $bursarEmail);
-$chk->execute();
-if (!$chk->get_result()->fetch_assoc()) {
-    $ins = $staffConn->prepare("INSERT INTO staff (full_name, email, phone, password, role_id, position, department, status) VALUES (?, ?, ?, ?, ?, 'School Bursar', 'Finance', 'Active')");
-    $ins->bind_param("ssssi", $bursarName, $bursarEmail, $bursarPhone, $hash, $roleId);
-    $ins->execute();
-}
-$chk->close();
 
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
@@ -71,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$gwResult['success']) { $status = 'Pending'; $gatewayMsg = ' (mobile money request sent, awaiting confirmation)'; }
                 $ref = $ref ?: ($gwResult['transaction_id'] ?? '');
             }
-            $method = match (strtolower($method)) { 'mobile_money' => 'Mobile Money', 'bank_deposit'|'bank'|'bank_transfer' => 'Bank Transfer', 'cash' => 'Cash', 'cheque' => 'Cheque', 'card' => 'Card', default => 'Cash' };
+            $mlc = strtolower($method); $method = in_array($mlc, ['mobile_money','mobile']) ? 'Mobile Money' : (in_array($mlc, ['bank','bank_deposit','bank_transfer']) ? 'Bank Transfer' : (in_array($mlc, ['cash']) ? 'Cash' : (in_array($mlc, ['cheque']) ? 'Cheque' : (in_array($mlc, ['card']) ? 'Card' : 'Cash'))));
             $stmt = $stuConn->prepare("INSERT INTO payments (payment_reference, student_id, amount_received, payment_method, transaction_ref, slip_number, payment_date, status, received_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
             if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); $stmt->execute(); $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; }
         }
@@ -262,28 +260,28 @@ $pendingVerification = [];
 
 if ($stuConn) {
     $sl = $stuConn->query("SELECT id, student_number, first_name, last_name, program, status FROM students ORDER BY first_name LIMIT 200");
-    if ($sl) $studentsList = $sl->fetch_all(MYSQLI_ASSOC);
+    if ($sl) while ($r = $sl->fetch_assoc()) { $studentsList[] = $r; }
     $pm = $stuConn->query("SELECT p.*, p.amount_received as amount, CONCAT(s.first_name,' ',s.last_name) as student_name FROM payments p JOIN students s ON p.student_id=s.id ORDER BY p.created_at DESC LIMIT 50");
-    if ($pm) $payments = $pm->fetch_all(MYSQLI_ASSOC);
+    if ($pm) while ($r = $pm->fetch_assoc()) { $payments[] = $r; }
     $fs = $stuConn->query("SELECT * FROM fee_structures WHERE is_active=1 ORDER BY fee_name");
-    if ($fs) $feeStructures = $fs->fetch_all(MYSQLI_ASSOC);
+    if ($fs) while ($r = $fs->fetch_assoc()) { $feeStructures[] = $r; }
     $fa = $stuConn->query("SELECT fa.*, CONCAT(s.first_name,' ',s.last_name) as student_name FROM fee_adjustments fa JOIN students s ON fa.student_id=s.id ORDER BY fa.created_at DESC LIMIT 30");
-    if ($fa) $feeAdjustments = $fa->fetch_all(MYSQLI_ASSOC);
+    if ($fa) while ($r = $fa->fetch_assoc()) { $feeAdjustments[] = $r; }
     $pv = $stuConn->query("SELECT p.*, p.amount_received as amount, CONCAT(s.first_name,' ',s.last_name) as student_name FROM payments p JOIN students s ON p.student_id=s.id WHERE p.status='Pending' OR p.status='Completed' ORDER BY p.created_at DESC LIMIT 20");
-    if ($pv) $pendingVerification = $pv->fetch_all(MYSQLI_ASSOC);
+    if ($pv) while ($r = $pv->fetch_assoc()) { $pendingVerification[] = $r; }
     $sf = $stuConn->query("SELECT sfe.*, CONCAT(s.first_name,' ',s.last_name) as student_name, sfe.amount as total_fees, (sfe.amount - COALESCE(sfe.paid_amount,0)) as balance FROM student_fees sfe JOIN students s ON sfe.student_id=s.id ORDER BY balance DESC LIMIT 30");
-    if ($sf) $studentFees = $sf->fetch_all(MYSQLI_ASSOC);
+    if ($sf) while ($r = $sf->fetch_assoc()) { $studentFees[] = $r; }
 }
 
 if ($staffConn) {
     $ex = $staffConn->query("SELECT * FROM expenses ORDER BY created_at DESC LIMIT 30");
-    if ($ex) $expenses = $ex->fetch_all(MYSQLI_ASSOC);
+    if ($ex) while ($r = $ex->fetch_assoc()) { $expenses[] = $r; }
     $bd = ($stuConn ?? $staffConn)->query("SELECT * FROM budgets ORDER BY created_at DESC LIMIT 20");
-    if ($bd) $budgets = $bd->fetch_all(MYSQLI_ASSOC);
+    if ($bd) while ($r = $bd->fetch_assoc()) { $budgets[] = $r; }
     $pr = $staffConn->query("SELECT * FROM payroll_runs ORDER BY created_at DESC LIMIT 20");
-    if ($pr) $payrollRuns = $pr->fetch_all(MYSQLI_ASSOC);
+    if ($pr) while ($r = $pr->fetch_assoc()) { $payrollRuns[] = $r; }
     $br = $staffConn->query("SELECT * FROM bank_reconciliation ORDER BY created_at DESC LIMIT 20");
-    if ($br) $bankReconciliations = $br->fetch_all(MYSQLI_ASSOC);
+    if ($br) while ($r = $br->fetch_assoc()) { $bankReconciliations[] = $r; }
 }
 
 // Stats
@@ -541,7 +539,7 @@ $pageTitle = 'Bursar Dashboard';
       <td><?=number_format($p['total_paye']??$p['total_deductions']??0)?></td>
       <td><?=number_format($p['total_nssf']??0)?></td>
       <td><strong><?=number_format($p['total_net']??0)?></strong></td>
-      <td><?php if ($staffConn): $rid=$p['id']; ?><div class="d-flex gap-1" style="flex-wrap:wrap;min-width:160px"><?php foreach ($approvalChain as $lvl): $pa=$staffConn->query("SELECT status FROM payroll_approvals WHERE payroll_run_id=$rid AND level='$lvl'")->fetch_assoc(); $cls='secondary'; if($pa){if($pa['status']==='approved'){$cls='success'}elseif($pa['status']==='rejected'){$cls='danger'}else{$cls='warning'}} ?><span class="badge bg-<?=$cls?>" style="font-size:9px"><?=$lvl[0]?></span><?php endforeach; ?></div><?php else: ?><span class="text-muted small">-</span><?php endif; ?></td>
+      <td><?php if ($staffConn) { $rid=$p['id']; echo '<div class="d-flex gap-1" style="flex-wrap:wrap;min-width:160px">'; foreach ($approvalChain as $lvl) { $lvlEsc = $staffConn->real_escape_string($lvl); $pa = $staffConn->query("SELECT status FROM payroll_approvals WHERE payroll_run_id=$rid AND level='$lvlEsc'")->fetch_assoc(); $cls='secondary'; if ($pa) { $cls = $pa['status']==='approved' ? 'success' : ($pa['status']==='rejected' ? 'danger' : 'warning'); } echo '<span class="badge bg-'.$cls.'" style="font-size:9px">'.$lvl[0].'</span>'; } echo '</div>'; } else { echo '<span class="text-muted small">-</span>'; } ?></td>
       <td><span class="badge bg-<?=in_array($p['status'],['processed','completed','paid','approved'])?'success':($p['status']==='processing'?'info':'warning')?>"><?=htmlspecialchars($p['status'])?></span></td>
       <td><?=htmlspecialchars($p['run_date']??$p['start_date']??$p['created_at']??'')?></td>
     </tr><?php endforeach; if (empty($payrollRuns)): ?><tr><td colspan="8" class="text-muted text-center">No payroll runs yet.</td></tr><?php endif; ?>
