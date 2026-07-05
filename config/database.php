@@ -173,6 +173,7 @@ if (!function_exists('isnm_mysqli_connect')) {
         $credentials = [
             ['user' => $user, 'pass' => $pass, 'db' => $db],
             ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db],
+            ['user' => 'root', 'pass' => '',          'db' => $db],
         ];
 
         $errors = [];
@@ -181,19 +182,26 @@ if (!function_exists('isnm_mysqli_connect')) {
             $p = $cred['pass'];
             $d = $cred['db'];
             foreach ($attempts as $att) {
-                $conn = @new mysqli($att['host'], $u, $p, $d, $att['port']);
-                if (!$conn->connect_error) {
-                    $conn->set_charset($charset);
-                    return $conn;
+                try {
+                    $conn = @new mysqli($att['host'], $u, $p, $d, $att['port']);
+                    if ($conn && !$conn->connect_error) {
+                        $conn->set_charset($charset);
+                        return $conn;
+                    }
+                    $err = ($conn && $conn->connect_error) ? $conn->connect_error : 'Connection failed';
+                    if ($conn && is_object($conn)) {
+                        try { $conn->close(); } catch (Throwable $e) {}
+                    }
+                    $conn = null;
+                    if (stripos($err, 'access denied') !== false || stripos($err, 'unknown database') !== false) {
+                        $errors[] = "{$att['host']}:{$att['port']} user=$u db=$d => $err";
+                        break;
+                    }
+                    $errors[] = "{$att['host']}:{$att['port']} => $err";
+                } catch (Throwable $e) {
+                    $errors[] = "{$att['host']}:{$att['port']} => " . $e->getMessage();
+                    $conn = null;
                 }
-                $err = $conn->connect_error;
-                if (is_object($conn)) { $conn->close(); }
-                $conn = null;
-                if (stripos($err, 'access denied') !== false || stripos($err, 'unknown database') !== false) {
-                    $errors[] = "{$att['host']}:{$att['port']} user=$u db=$d => $err";
-                    break;
-                }
-                $errors[] = "{$att['host']}:{$att['port']} => $err";
             }
         }
 

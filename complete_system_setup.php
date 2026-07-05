@@ -177,14 +177,14 @@ class CompleteSystemSetup {
                 // Update existing
                 $row = $checkResult->fetch_assoc();
                 $id = $row['id'];
-                $password_hash = password_hash($creds['password'], PASSWORD_BCRYPT);
+                $password = password($creds['password'], PASSWORD_BCRYPT);
                 
                 $stmt = $staffConn->prepare(
-                    "UPDATE staff SET password_hash = ?, full_name = ?, position = ?, department = ?, role = ?, status = 'active' WHERE id = ?"
+                    "UPDATE staff SET password = ?, full_name = ?, position = ?, department = ?, role = ?, status = 'active' WHERE id = ?"
                 );
                 
                 if ($stmt) {
-                    $stmt->bind_param('sssssi', $password_hash, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $id);
+                    $stmt->bind_param('sssssi', $password, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $id);
                     if ($stmt->execute()) {
                         if ($this->verbose) {
                             $this->log("Updated: $email", 'SUCCESS');
@@ -198,17 +198,17 @@ class CompleteSystemSetup {
                 }
             } else {
                 // Insert new
-                $password_hash = password_hash($creds['password'], PASSWORD_BCRYPT);
+                $password = password($creds['password'], PASSWORD_BCRYPT);
                 $status = 'active';
                 $login_attempts = 0;
                 
                 $stmt = $staffConn->prepare(
-                    "INSERT INTO staff (email, password_hash, full_name, position, department, role, status, login_attempts, created_at) 
+                    "INSERT INTO staff (email, password, full_name, position, department, role, status, login_attempts, created_at) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
                 );
                 
                 if ($stmt) {
-                    $stmt->bind_param('sssssssi', $email, $password_hash, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $status, $login_attempts);
+                    $stmt->bind_param('sssssssi', $email, $password, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $status, $login_attempts);
                     if ($stmt->execute()) {
                         if ($this->verbose) {
                             $this->log("Inserted: $email", 'SUCCESS');
