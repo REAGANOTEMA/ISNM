@@ -56,66 +56,53 @@ class DatabaseConnection {
     public static function getConnection($database) {
         $database = self::resolveDatabaseName($database);
         if (!isset(self::$connections[$database])) {
+            $oldLevel = error_reporting(0);
+
             $configs = self::getConfigs();
             $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
             
-            $host = ($cfg['host'] === 'localhost' ? '127.0.0.1' : $cfg['host']);
             $username = $cfg['username'];
             $password = $cfg['password'];
             $port = $cfg['port'] ?? 3306;
-            
-            // Try configured port first, then common fallbacks
-            $ports = array_values(array_unique(array_filter([$port, 3307, 3306])));
-            
-            $lastError = null;
 
-            // Hosting fallback credentials (used when .env is missing)
+            $hosts = array_values(array_unique(array_filter([$cfg['host'], 'localhost', '127.0.0.1'])));
+            $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+
+            // Hosting fallback credentials (used when .env missing/overridden)
             $knownCreds = [
                 'igangaschoolofl_staffs_db'   => ['user'=>'igangaschoolofl_staffs_db',  'pass'=>'AgKzJjZZnT5q58jCahs8'],
                 'igangaschoolofl_students_db' => ['user'=>'igangaschoolofl_students_db','pass'=>'hbkKdmMHUfHTHuxWKPRf'],
                 'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db', 'pass'=>'AaCH75gXpekcFQj5wPZn'],
                 'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',         'pass'=>'HHCrQVjr6QNKzSEVtx9J'],
             ];
-            $credSet = [];
+            $credSet = [['user' => $username, 'pass' => $password]];
             if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
-                $credSet[] = $knownCreds[$database];
+                array_unshift($credSet, $knownCreds[$database]);
             }
-            // Try the .env/user credentials, then fallback
-            foreach ($credSet as $fallback) {
-                foreach ($ports as $tryPort) {
-                    try {
-                        $conn = @new mysqli($host, $fallback['user'], $fallback['pass'], $database, $tryPort);
+
+            foreach ($credSet as $cred) {
+                $u = $cred['user'];
+                $p = $cred['pass'];
+                foreach ($hosts as $h) {
+                    foreach ($ports as $pt) {
+                        $pt = (int)$pt;
+                        $conn = @new mysqli($h, $u, $p, $database, $pt);
                         if ($conn && !$conn->connect_error) {
                             $conn->set_charset($cfg['charset']);
                             self::$connections[$database] = $conn;
-                            break 2;
+                            error_reporting($oldLevel);
+                            return self::$connections[$database];
                         }
                         if ($conn) $conn->close();
-                    } catch (Exception $e) {}
-                }
-            }
-
-            foreach ($ports as $tryPort) {
-                try {
-                    $conn = @new mysqli($host, $username, $password, $database, $tryPort);
-                    if ($conn->connect_error) {
-                        $lastError = $conn->connect_error;
-                        continue;
+                        $conn = null;
                     }
-                    $conn->set_charset($cfg['charset']);
-                    self::$connections[$database] = $conn;
-                    error_log("Successfully connected to {$database} database");
-                    break;
-                } catch (Exception $e) {
-                    $lastError = $e->getMessage();
                 }
             }
             
-            if (!isset(self::$connections[$database])) {
-                $err = "Connection to {$database} failed on {$host}:{$port} - " . ($lastError ?? 'unknown');
-                error_log("Database connection error: " . $err);
-                throw new Exception($err);
-            }
+            error_reporting($oldLevel);
+            $err = "Connection to {$database} failed - no viable credentials";
+            error_log("Database connection error: " . $err);
+            throw new Exception($err);
         }
         
         return self::$connections[$database];

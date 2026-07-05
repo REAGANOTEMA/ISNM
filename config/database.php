@@ -52,8 +52,13 @@ if (!function_exists('isnm_load_env')) {
 }
 
 isnm_load_env(__DIR__ . '/../.env');
-// Load .env.local if it exists (local dev override — NOT uploaded to hosting)
-if (is_file(__DIR__ . '/../.env.local')) {
+// Load .env.local ONLY on localhost dev — never on production hosting
+$isLocalDev = (isset($_SERVER['HTTP_HOST']) && (
+    strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
+    strpos($_SERVER['HTTP_HOST'], '::1') !== false
+)) || (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
+if ($isLocalDev && is_file(__DIR__ . '/../.env.local')) {
     isnm_load_env(__DIR__ . '/../.env.local');
 }
 
@@ -160,15 +165,7 @@ if (!defined('ICT_DB_CHARSET')) {
 if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
         mysqli_report(MYSQLI_REPORT_OFF);
-
-        $attempts = [];
-        $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
-        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
-        foreach ($hosts as $h) {
-            foreach ($ports as $p) {
-                $attempts[] = ['host' => $h, 'port' => (int)$p];
-            }
-        }
+        $oldLevel = error_reporting(0);
 
         $knownCreds = [
             'igangaschoolofl_staffs_db'    => ['user'=>'igangaschoolofl_staffs_db',    'pass'=>'AgKzJjZZnT5q58jCahs8'],
@@ -176,44 +173,42 @@ if (!function_exists('isnm_mysqli_connect')) {
             'igangaschoolofl_website_db'   => ['user'=>'igangaschoolofl_website_db',   'pass'=>'AaCH75gXpekcFQj5wPZn'],
             'igangaschoolofl_ict'          => ['user'=>'igangaschoolofl_ict',           'pass'=>'HHCrQVjr6QNKzSEVtx9J'],
         ];
-        $credentials = [
-            ['user' => $user, 'pass' => $pass, 'db' => $db],
-        ];
-        // Fallback: try hosting credentials for this database (works without .env)
+        $credSet = [['user' => $user, 'pass' => $pass, 'db' => $db]];
+        // Try hosting credentials FIRST (reverse order so they're tried before root/empty)
         if (isset($knownCreds[$db]) && $knownCreds[$db]['user'] !== $user) {
-            $credentials[] = $knownCreds[$db] + ['db' => $db];
+            array_unshift($credSet, $knownCreds[$db] + ['db' => $db]);
         }
 
+        $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
+        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+
         $errors = [];
-        foreach ($credentials as $cred) {
+        foreach ($credSet as $cred) {
             $u = $cred['user'];
             $p = $cred['pass'];
             $d = $cred['db'];
-            foreach ($attempts as $att) {
-                try {
-                    $conn = @new mysqli($att['host'], $u, $p, $d, $att['port']);
+            foreach ($hosts as $h) {
+                $accessDenied = false;
+                foreach ($ports as $pt) {
+                    $pt = (int)$pt;
+                    $conn = @new mysqli($h, $u, $p, $d, $pt);
                     if ($conn && !$conn->connect_error) {
                         $conn->set_charset($charset);
+                        error_reporting($oldLevel);
                         return $conn;
                     }
-                    $err = ($conn && $conn->connect_error) ? $conn->connect_error : 'Connection failed';
-                    if ($conn && is_object($conn)) {
-                        try { $conn->close(); } catch (Throwable $e) {}
+                    if ($conn) {
+                        if (stripos($conn->connect_error, 'access denied') !== false) $accessDenied = true;
+                        $conn->close();
                     }
-                    $conn = null;
-                    if (stripos($err, 'access denied') !== false || stripos($err, 'unknown database') !== false) {
-                        $errors[] = "{$att['host']}:{$att['port']} user=$u db=$d => $err";
-                        break;
-                    }
-                    $errors[] = "{$att['host']}:{$att['port']} => $err";
-                } catch (Throwable $e) {
-                    $errors[] = "{$att['host']}:{$att['port']} => " . $e->getMessage();
                     $conn = null;
                 }
+                if ($accessDenied) break;
             }
         }
 
-        $msg = $label . ' DB Error: ' . implode(' | ', $errors);
+        error_reporting($oldLevel);
+        $msg = $label . ' DB Error: no connection could be established';
         error_log($msg);
         $GLOBALS['isnm_last_db_error'] = $msg;
         return null;
