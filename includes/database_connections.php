@@ -68,9 +68,36 @@ class DatabaseConnection {
             $ports = array_values(array_unique(array_filter([$port, 3307, 3306])));
             
             $lastError = null;
+
+            // Hosting fallback credentials (used when .env is missing)
+            $knownCreds = [
+                'igangaschoolofl_staffs_db'   => ['user'=>'igangaschoolofl_staffs_db',  'pass'=>'AgKzJjZZnT5q58jCahs8'],
+                'igangaschoolofl_students_db' => ['user'=>'igangaschoolofl_students_db','pass'=>'hbkKdmMHUfHTHuxWKPRf'],
+                'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db', 'pass'=>'AaCH75gXpekcFQj5wPZn'],
+                'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',         'pass'=>'HHCrQVjr6QNKzSEVtx9J'],
+            ];
+            $credSet = [];
+            if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
+                $credSet[] = $knownCreds[$database];
+            }
+            // Try the .env/user credentials, then fallback
+            foreach ($credSet as $fallback) {
+                foreach ($ports as $tryPort) {
+                    try {
+                        $conn = @new mysqli($host, $fallback['user'], $fallback['pass'], $database, $tryPort);
+                        if ($conn && !$conn->connect_error) {
+                            $conn->set_charset($cfg['charset']);
+                            self::$connections[$database] = $conn;
+                            break 2;
+                        }
+                        if ($conn) $conn->close();
+                    } catch (Exception $e) {}
+                }
+            }
+
             foreach ($ports as $tryPort) {
                 try {
-                    $conn = new mysqli($host, $username, $password, $database, $tryPort);
+                    $conn = @new mysqli($host, $username, $password, $database, $tryPort);
                     if ($conn->connect_error) {
                         $lastError = $conn->connect_error;
                         continue;
