@@ -15,41 +15,56 @@ $swScope    = empty($scopeParts) ? '/' : '/' . implode('/', $scopeParts) . '/';
 // Cache-busting version — bump on every deploy
 $v = '2.2.1';
 
-// Profile image URL for dashboard header avatars (falls back to username.png)
+/**
+ * Profile image URL for dashboard header avatars (falls back to username.png).
+ * Performance: avoid repeated DB/file existence checks by caching computed URL in session.
+ */
 $profileImageUrl = $rootPath . '/images/username.png';
-$userType = $_SESSION['type'] ?? '';
-if (!empty($_SESSION['user_id'])) {
-    if ($userType === 'student') {
-        try {
-            $studentConn = getStudentsConnection();
-            if ($studentConn) {
-                $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
-                $q->bind_param('i', (int)$_SESSION['user_id']);
-                $q->execute();
-                $photoRow = $q->get_result()->fetch_assoc();
-                $q->close();
-                if ($photoRow) {
-                    $photoFile = '';
-                    if (!empty($photoRow['profile_picture'])) $photoFile = $photoRow['profile_picture'];
-                    elseif (!empty($photoRow['passport_photo'])) $photoFile = $photoRow['passport_photo'];
-                    if ($photoFile) {
-                        $checkPath = __DIR__ . '/../studentUploads/profile_images/' . $photoFile;
-                        if (file_exists($checkPath)) {
-                            $profileImageUrl = $rootPath . '/studentUploads/profile_images/' . $photoFile . '?v=' . time();
+
+// If cached from a previous dashboard request, reuse it.
+if (!empty($_SESSION['dashboard_profile_image_url'])) {
+    $profileImageUrl = $_SESSION['dashboard_profile_image_url'];
+} else {
+    $userType = $_SESSION['type'] ?? '';
+    if (!empty($_SESSION['user_id'])) {
+        if ($userType === 'student') {
+            try {
+                $studentConn = getStudentsConnection();
+                if ($studentConn) {
+                    $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
+                    $q->bind_param('i', (int)$_SESSION['user_id']);
+                    $q->execute();
+                    $photoRow = $q->get_result()->fetch_assoc();
+                    $q->close();
+
+                    if ($photoRow) {
+                        $photoFile = '';
+                        if (!empty($photoRow['profile_picture'])) $photoFile = $photoRow['profile_picture'];
+                        elseif (!empty($photoRow['passport_photo'])) $photoFile = $photoRow['passport_photo'];
+
+                        if ($photoFile) {
+                            $checkPath = __DIR__ . '/../studentUploads/profile_images/' . $photoFile;
+                            if (file_exists($checkPath)) {
+                                // include cache-buster param to reflect actual file
+                                $profileImageUrl = $rootPath . '/studentUploads/profile_images/' . $photoFile . '?v=' . time();
+                            }
                         }
                     }
                 }
-            }
-        } catch (Exception $e) {}
-    } else {
-        $pf = __DIR__ . '/profile_settings.php';
-        if (file_exists($pf)) {
-            include_once $pf;
-            if (function_exists('getStaffProfileImageUrl')) {
-                $url = getStaffProfileImageUrl((int)$_SESSION['user_id']);
-                if ($url) $profileImageUrl = $url;
+            } catch (Exception $e) {}
+        } else {
+            $pf = __DIR__ . '/profile_settings.php';
+            if (file_exists($pf)) {
+                include_once $pf;
+                if (function_exists('getStaffProfileImageUrl')) {
+                    $url = getStaffProfileImageUrl((int)$_SESSION['user_id']);
+                    if ($url) $profileImageUrl = $url;
+                }
             }
         }
+
+        // Cache computed URL for subsequent dashboard_head includes.
+        $_SESSION['dashboard_profile_image_url'] = $profileImageUrl;
     }
 }
 ?>

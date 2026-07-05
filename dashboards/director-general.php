@@ -1590,23 +1590,96 @@ document.addEventListener('DOMContentLoaded', function() {
     case 'news-management': ?>
 <div id="news-management" class="content-section dashboard-section active" data-section="news-management">
   <?php
-  // Fetch news for this section
+  // Fetch news for this section (cached)
   $dgNewsList = [];
-  if ($conn) {
-    $nr = $conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT 50");
-    if ($nr) while ($row = $nr->fetch_assoc()) $dgNewsList[] = $row;
-  }
-  // Fetch view stats
   $dgNewsViews = [];
-  if ($staffConn = getStaffConnection()) {
-    $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
-    if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
-    $staffConn->close();
+  $dgLastViewByNewsId = [];
+  $dgTotalViews = 0;
+  $dgPublishedCount = 0;
+  $dgDraftCount = 0;
+  $dgArchivedCount = 0;
+
+  $dgNewsCacheKey = 'dg_news_mgmt_v1';
+  $dgNewsUseCache = function_exists('getCacheData') && function_exists('setCacheData');
+
+  $dgNewsCached = $dgNewsUseCache ? getCacheData($dgNewsCacheKey) : null;
+  if ($dgNewsCached) {
+      $dgNewsList = $dgNewsCached['dgNewsList'] ?? [];
+      $dgNewsViews = $dgNewsCached['dgNewsViews'] ?? [];
+      $dgLastViewByNewsId = $dgNewsCached['dgLastViewByNewsId'] ?? [];
+      $dgTotalViews = $dgNewsCached['dgTotalViews'] ?? array_sum($dgNewsViews);
+      $dgPublishedCount = $dgNewsCached['dgPublishedCount'] ?? 0;
+      $dgDraftCount = $dgNewsCached['dgDraftCount'] ?? 0;
+      $dgArchivedCount = $dgNewsCached['dgArchivedCount'] ?? 0;
+
+      // Fallback: if cache missed last-view details, recompute last-view batch for current top views.
+      if (empty($dgLastViewByNewsId) && !empty($dgNewsViews)) {
+          $newsIds = array_map('intval', array_keys($dgNewsViews));
+          $newsIds = array_values(array_filter($newsIds, fn($x) => $x > 0));
+
+          if (!empty($newsIds)) {
+              $in = implode(',', $newsIds);
+
+              if ($staffConn = getStaffConnection()) {
+                  $lvq = $staffConn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
+                  if ($lvq) {
+                      while ($row = $lvq->fetch_assoc()) {
+                          $dgLastViewByNewsId[(int)$row['news_id']] = $row['v'] ?? '';
+                      }
+                      $lvq->close();
+                  }
+                  $staffConn->close();
+              }
+          }
+      }
+  } else {
+      if ($conn) {
+        $nr = $conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT 50");
+        if ($nr) while ($row = $nr->fetch_assoc()) $dgNewsList[] = $row;
+      }
+
+      // Fetch view stats (top 20 by views count)
+      if ($staffConn = getStaffConnection()) {
+        $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
+        if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
+        $staffConn->close();
+      }
+
+      $dgTotalViews = array_sum($dgNewsViews);
+      $dgPublishedCount = count(array_filter($dgNewsList, fn($x) => ($x['status'] ?? null) === 'published'));
+      $dgDraftCount = count(array_filter($dgNewsList, fn($x) => ($x['status'] ?? null) === 'draft'));
+      $dgArchivedCount = count(array_filter($dgNewsList, fn($x) => ($x['status'] ?? null) === 'archived'));
+
+      // Batch "last viewed" lookup for top engaged articles
+      $dgLastViewByNewsId = [];
+      if ($staffConn = getStaffConnection()) {
+          $newsIds = array_map('intval', array_keys($dgNewsViews));
+          $newsIds = array_values(array_filter($newsIds, fn($x) => $x > 0));
+          if (!empty($newsIds)) {
+              $in = implode(',', $newsIds);
+              $lvq = $staffConn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
+              if ($lvq) {
+                  while ($row = $lvq->fetch_assoc()) {
+                      $dgLastViewByNewsId[(int)$row['news_id']] = $row['v'] ?? '';
+                  }
+                  $lvq->close();
+              }
+          }
+          $staffConn->close();
+      }
+
+      if ($dgNewsUseCache) {
+          setCacheData($dgNewsCacheKey, [
+              'dgNewsList' => $dgNewsList,
+              'dgNewsViews' => $dgNewsViews,
+              'dgLastViewByNewsId' => $dgLastViewByNewsId,
+              'dgTotalViews' => $dgTotalViews,
+              'dgPublishedCount' => $dgPublishedCount,
+              'dgDraftCount' => $dgDraftCount,
+              'dgArchivedCount' => $dgArchivedCount,
+          ], '+3 minutes');
+      }
   }
-  $dgTotalViews = array_sum($dgNewsViews);
-  $dgPublishedCount = count(array_filter($dgNewsList, fn($x) => $x['status'] === 'published'));
-  $dgDraftCount = count(array_filter($dgNewsList, fn($x) => $x['status'] === 'draft'));
-  $dgArchivedCount = count(array_filter($dgNewsList, fn($x) => $x['status'] === 'archived'));
   ?>
   <div class="section-card">
     <?php dgToolbar('News Management', 'fa-newspaper', $dgPublishedCount . ' published', 'bg-success'); ?>
@@ -1652,16 +1725,40 @@ document.addEventListener('DOMContentLoaded', function() {
         <tbody>
           <?php
           $rank = 0;
+
+          // O(1) article lookup (avoid current(array_filter(...)) for every row)
+          $articleById = [];
+          foreach ($dgNewsList as $a) {
+            if (!empty($a['id'])) $articleById[(int)$a['id']] = $a;
+          }
+
+          // Batch "last viewed" lookup (avoid N+1 queries)
+          $lastViewByNewsId = [];
           $viewConn = getStaffConnection();
+          if ($viewConn) {
+            $newsIds = array_map('intval', array_keys($dgNewsViews));
+            $newsIds = array_values(array_filter($newsIds, fn($x) => $x > 0));
+
+            if (!empty($newsIds)) {
+              $in = implode(',', $newsIds);
+              $lvq = $viewConn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
+              if ($lvq) {
+                while ($row = $lvq->fetch_assoc()) {
+                  $lastViewByNewsId[(int)$row['news_id']] = $row['v'] ?? '';
+                }
+                $lvq->close();
+              }
+            }
+            $viewConn->close();
+          }
+
           foreach ($dgNewsViews as $nid => $cnt):
             $rank++;
-            $article = current(array_filter($dgNewsList, fn($x) => $x['id'] == $nid));
+            $nidInt = (int)$nid;
+            $article = $articleById[$nidInt] ?? null;
             if (!$article) continue;
-            $lastView = '';
-            if ($viewConn) {
-              $lv = $viewConn->query("SELECT MAX(viewed_at) v FROM news_views WHERE news_id=$nid");
-              if ($lv) { $row = $lv->fetch_assoc(); $lastView = $row['v'] ?? ''; $lv->close(); }
-            }
+
+            $lastView = $lastViewByNewsId[$nidInt] ?? '';
           ?>
           <tr>
             <td class="text-muted"><?= $rank ?></td>
@@ -1669,9 +1766,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><span class="badge bg-primary rounded-pill"><?= $cnt ?></span></td>
             <td class="text-muted"><?= $lastView ? date('M j, Y H:i', strtotime($lastView)) : '-' ?></td>
           </tr>
-          <?php endforeach;
-          if ($viewConn) $viewConn->close();
-          ?>
+          <?php endforeach; ?>
         </tbody>
       </table>
     </div>

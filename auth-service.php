@@ -446,6 +446,30 @@ class AuthenticationService {
         $_SESSION['can_access_all'] = $this->hasFullInstitutionAccess($user['role'] ?? '');
         $_SESSION['dashboard_path'] = $this->getDashboardRoute($user['role'] ?? '');
 
+        // RBAC identity alignment: provide role_id for module handler/registry
+        $_SESSION['role_id'] = null;
+        if (!empty($user['role']) && $user['type'] === 'staff') {
+            try {
+                $conn = getStaffConnection();
+                if ($conn) {
+                    $roleName = $this->resolveOrganogramPosition($user['role']);
+                    $s = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
+                    if ($s) {
+                        $s->bind_param('s', $roleName);
+                        $s->execute();
+                        $row = $s->get_result()->fetch_assoc();
+                        $s->close();
+                        if (!empty($row['id'])) {
+                            $_SESSION['role_id'] = (int)$row['id'];
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // Keep session valid even if role_id can't be resolved
+                error_log('RBAC role_id resolve failed: ' . $e->getMessage());
+            }
+        }
+
         if ($user['type'] === 'staff') {
             try {
                 $conn = getStaffConnection();

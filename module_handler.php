@@ -40,10 +40,28 @@ if (!$roleId && isset($_SESSION['role'])) {
     $roleId = $roleMap[$_SESSION['role']] ?? 0;
 }
 
-// Validate request
+/**
+ * Validate request
+ */
 if (empty($action)) {
-    echo json_encode(['error' => 'Missing action parameter']);
+    echo json_encode(['success' => false, 'error' => 'Missing action parameter']);
     exit;
+}
+
+// CSRF protection for state-changing actions
+$stateChangingActions = ['create', 'update', 'delete'];
+if (in_array($action, $stateChangingActions, true)) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $csrfSessionToken = $_SESSION['csrf_token'] ?? '';
+    $csrfRequestToken = $_POST['csrf_token'] ?? $_REQUEST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+
+    if (empty($csrfSessionToken) || empty($csrfRequestToken) || !hash_equals($csrfSessionToken, $csrfRequestToken)) {
+        echo json_encode(['success' => false, 'error' => 'CSRF validation failed', 'code' => 419]);
+        exit;
+    }
 }
 
 $registry = getModuleRegistry();
