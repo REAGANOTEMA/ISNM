@@ -142,6 +142,33 @@ if ($staff) {
     }
 }
 
+// ── Seed starter data if tables are empty ──
+if ($staff) {
+    $r = $staff->query("SELECT COUNT(*) c FROM grade_scales");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO grade_scales (grade_letter, grade_point, min_percentage, max_percentage) VALUES ('A',4.00,80,100),('B+',3.70,75,79.99),('B',3.30,70,74.99),('C+',3.00,65,69.99),('C',2.70,60,64.99),('D+',2.30,55,59.99),('D',2.00,50,54.99),('F',0.00,0,49.99)");
+    }
+    $r = $staff->query("SELECT COUNT(*) c FROM gpa_settings");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO gpa_settings (setting_key, setting_value, description) VALUES ('gpa_max','4.00','Maximum GPA'),('pass_mark','50','Minimum passing percentage'),('auto_gpa','1','Auto-calculate GPA')");
+    }
+    $r = $staff->query("SELECT COUNT(*) c FROM academic_calendar");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO academic_calendar (academic_year, start_date, end_date, is_current, status) VALUES ('2026','2026-02-01','2026-12-31',1,'Active')");
+        $staff->query("INSERT IGNORE INTO semesters (academic_year, semester_name, start_date, end_date, is_current, status) VALUES ('2026','First Semester','2026-02-01','2026-06-30',1,'Active'),('2026','Second Semester','2026-08-01','2026-12-31',0,'Active')");
+    }
+    $r = $staff->query("SELECT COUNT(*) c FROM academic_programs");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO academic_programs (program_code, program_name, program_type, department, duration_years) VALUES ('DIP-NUR','Diploma in Nursing','Diploma','Nursing',3),('DIP-MID','Diploma in Midwifery','Diploma','Midwifery',3),('CERT-EN','Certificate in Enrolled Nursing','Certificate','Nursing',2),('CERT-MID','Certificate in Midwifery','Certificate','Midwifery',2)");
+        $staff->query("INSERT IGNORE INTO academic_course_catalog (course_code, course_title, credits, program_code, year_of_study, semester) VALUES ('NUR101','Anatomy & Physiology I',3,'DIP-NUR',1,'First Semester'),('NUR102','Fundamentals of Nursing',4,'DIP-NUR',1,'First Semester'),('NUR103','Microbiology',2,'DIP-NUR',1,'First Semester'),('MEF101','Maternal and Child Health',3,'DIP-NUR',1,'First Semester'),('COM101','Communication Skills',2,'DIP-NUR',1,'First Semester')");
+    }
+    $r = $staff->query("SELECT COUNT(*) c FROM transcript_templates");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO transcript_templates (template_name, template_html, orientation, is_default, status) VALUES ('Standard Transcript','<h3 class=\"text-center\">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h3><p class=\"text-center\">ACADEMIC TRANSCRIPT</p>','portrait',1,'Active')");
+        $staff->query("INSERT IGNORE INTO certificate_templates (template_name, template_html, orientation, is_default, status) VALUES ('Standard Certificate','<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h4>CERTIFICATE</h4>','landscape',1,'Active')");
+    }
+}
+
 $redirectSection = $_POST['_section'] ?? '';
 function redirectBack($hash = '') {
     $section = $GLOBALS['redirectSection'];
@@ -1047,6 +1074,21 @@ function archiveDoc(type, id) {
 }
 
 function escJs(str) { if (!str) return ''; return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+/* ── Auto-inject CSRF token into all POST forms ── */
+(function() {
+    var csrf = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
+    if (!csrf) return;
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(f) {
+            if (!f.querySelector('input[name="csrf_token"]')) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden'; inp.name = 'csrf_token'; inp.value = csrf;
+                f.appendChild(inp);
+            }
+        });
+    });
+})();
 
 document.querySelectorAll('form').forEach(function(form) {
     form.addEventListener('submit', function() {
