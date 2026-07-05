@@ -372,14 +372,63 @@ switch ($action) {
 
             unset($_SESSION['staff_login_allowed'], $_SESSION['staff_login_position']);
 
-            // If a redirect URL was requested, go there instead of default dashboard
+            // If a redirect URL was requested, go there instead of default dashboard (SAFE ALLOWLIST)
             if (!empty($_SESSION['login_redirect_url'])) {
-                $target = $_SESSION['login_redirect_url'];
+                $target = (string)$_SESSION['login_redirect_url'];
                 unset($_SESSION['login_redirect_url']);
                 $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
-                $parsed = parse_url($target);
-                $sameOrigin = (!$parsed || !isset($parsed['host']) || $parsed['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($target, '://') === false;
-                header('Location: ' . ($sameOrigin ? $target : $dashboard));
+
+                // Only allow internal relative paths we explicitly recognize
+                $allowed = [
+                    'dashboard.php',
+                    'staff-login.php',
+                    'student-login.php',
+                    'student-password-setup.php',
+                    'dashboards/student.php',
+                    'dashboards/director-general.php',
+                    'dashboards/system-admin.php',
+                    'dashboards/director-admissions.php',
+                    'dashboards/ceo.php',
+                    'dashboards/director-academics.php',
+                    'dashboards/director-finance.php',
+                    'dashboards/director-ict.php',
+                    'dashboards/school-principal.php',
+                    'dashboards/deputy-principal.php',
+                    'dashboards/academic-registrar.php',
+                    'dashboards/school-bursar.php',
+                    'dashboards/school-secretary.php',
+                    'dashboards/hr-manager.php',
+                    'dashboards/school-librarian.php',
+                    'dashboards/head-nursing.php',
+                    'dashboards/head-midwifery.php',
+                    'dashboards/senior-lecturers.php',
+                    'dashboards/lecturers.php',
+                    'dashboards/matrons.php',
+                    'dashboards/wardens.php',
+                    'dashboards/security.php',
+                    'dashboards/storekeeper.php',
+                    'dashboards/drivers.php',
+                    'dashboards/sickbay.php',
+                    'dashboards/guild-president.php',
+                    'dashboards/skills-lab.php',
+                    'dashboards/computer_lab.php',
+                ];
+
+                // Normalize target to just the path segment (strip query/fragment)
+                $normalized = $target;
+                $normalized = strtok($normalized, "?#");
+
+                // Forbid traversal and absolute URLs
+                if (strpos($normalized, '..') !== false || strpos($normalized, '://') !== false || strlen($normalized) === 0) {
+                    $normalized = '';
+                }
+
+                // Allow only known safe internal routes
+                if ($normalized && in_array($normalized, $allowed, true)) {
+                    header('Location: ' . $normalized);
+                } else {
+                    header('Location: ' . $dashboard);
+                }
                 exit();
             }
 
