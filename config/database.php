@@ -170,16 +170,18 @@ if (!function_exists('isnm_mysqli_connect')) {
             }
         }
 
+        $knownCreds = [
+            'igangaschoolofl_staffs_db'    => ['user'=>'igangaschoolofl_staffs_db',    'pass'=>'AgKzJjZZnT5q58jCahs8'],
+            'igangaschoolofl_students_db'  => ['user'=>'igangaschoolofl_students_db',  'pass'=>'hbkKdmMHUfHTHuxWKPRf'],
+            'igangaschoolofl_website_db'   => ['user'=>'igangaschoolofl_website_db',   'pass'=>'AaCH75gXpekcFQj5wPZn'],
+            'igangaschoolofl_ict'          => ['user'=>'igangaschoolofl_ict',           'pass'=>'HHCrQVjr6QNKzSEVtx9J'],
+        ];
         $credentials = [
             ['user' => $user, 'pass' => $pass, 'db' => $db],
         ];
-
-        // If no credentials found (no .env), warn and return null immediately
-        if (empty($user) || ($user === 'root' && $pass === '')) {
-            $msg = $label . ' DB: No credentials configured. Upload .env file to hosting root.';
-            error_log($msg);
-            $GLOBALS['isnm_last_db_error'] = $msg;
-            return null;
+        // Fallback: try hosting credentials for this database (works without .env)
+        if (isset($knownCreds[$db]) && $knownCreds[$db]['user'] !== $user) {
+            $credentials[] = $knownCreds[$db] + ['db' => $db];
         }
 
         $errors = [];
