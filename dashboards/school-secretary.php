@@ -106,9 +106,74 @@ $migrations = [
         `sent_date` DATE,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `$staff_db`.`secretary_meeting_agenda` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `meeting_id` INT NOT NULL,
+        `topic` VARCHAR(500) NOT NULL,
+        `presenter` VARCHAR(255),
+        `duration_minutes` INT DEFAULT 0,
+        `display_order` INT DEFAULT 0,
+        `notes` TEXT,
+        `status` ENUM('pending','discussed','deferred','cancelled') DEFAULT 'pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `$staff_db`.`secretary_meeting_action_items` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `meeting_id` INT NOT NULL,
+        `agenda_id` INT DEFAULT NULL,
+        `action` TEXT NOT NULL,
+        `assigned_to` VARCHAR(255),
+        `assigned_to_id` INT DEFAULT NULL,
+        `due_date` DATE,
+        `priority` ENUM('low','medium','high','critical') DEFAULT 'medium',
+        `status` ENUM('open','in_progress','completed','overdue') DEFAULT 'open',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `completed_at` TIMESTAMP NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `$staff_db`.`secretary_official_documents` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `doc_type` ENUM('letter','memo','circular','notice','report','minutes','certificate','form','proposal','other') DEFAULT 'letter',
+        `title` VARCHAR(500) NOT NULL,
+        `reference_number` VARCHAR(100),
+        `subject` VARCHAR(500),
+        `content` LONGTEXT,
+        `department` VARCHAR(255),
+        `category` VARCHAR(100),
+        `status` ENUM('draft','review','approved','published','archived','rejected') DEFAULT 'draft',
+        `priority` ENUM('low','medium','high','urgent') DEFAULT 'medium',
+        `recipient_name` VARCHAR(255),
+        `recipient_organization` VARCHAR(255),
+        `file_path` VARCHAR(500),
+        `file_name` VARCHAR(255),
+        `file_size` INT DEFAULT 0,
+        `mime_type` VARCHAR(100),
+        `is_confidential` TINYINT(1) DEFAULT 0,
+        `reviewed_by` INT DEFAULT NULL,
+        `reviewed_at` TIMESTAMP NULL,
+        `approved_by` INT DEFAULT NULL,
+        `approved_at` TIMESTAMP NULL,
+        `published_by` INT DEFAULT NULL,
+        `published_at` TIMESTAMP NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 ];
 foreach ($migrations as $sql) { @$conn->query($sql); }
+
+// Add minutes and outcome columns to secretary_meetings if not exist
+$meetingCols = $conn->query("SHOW COLUMNS FROM `$staff_db`.`secretary_meetings` LIKE 'minutes'");
+if ($meetingCols && $meetingCols->num_rows === 0) {
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `minutes` TEXT AFTER `attendees`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `outcome` TEXT AFTER `minutes`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `meeting_type` VARCHAR(100) DEFAULT 'general' AFTER `location`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `venue` VARCHAR(255) AFTER `location`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `is_recurring` TINYINT(1) DEFAULT 0 AFTER `status`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `recurrence_pattern` VARCHAR(50) AFTER `is_recurring`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `organizer` VARCHAR(255) AFTER `attendees`");
+    @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `reminder_sent` TINYINT(1) DEFAULT 0 AFTER `recurrence_pattern`");
+}
 
 if ($students_conn) {
     $student_migrations = [
@@ -591,12 +656,18 @@ if (isset($_REQUEST['ajax'])) {
             break;
 
         case 'get_meetings':
-            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? ORDER BY meeting_date DESC");
+            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? ORDER BY meeting_date DESC, meeting_time DESC");
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
             $result = $stmt->get_result();
             $items = [];
-            while ($row = $result->fetch_assoc()) { $items[] = $row; }
+            while ($row = $result->fetch_assoc()) {
+                $ag = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id=" . $row['id']);
+                $row['agenda_count'] = $ag ? (int)$ag->fetch_assoc()['cnt'] : 0;
+                $ai = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id=" . $row['id'] . " AND status='open'");
+                $row['open_actions'] = $ai ? (int)$ai->fetch_assoc()['cnt'] : 0;
+                $items[] = $row;
+            }
             $response['success'] = true;
             $response['meetings'] = $items;
             break;
@@ -608,25 +679,137 @@ if (isset($_REQUEST['ajax'])) {
             $time = $_POST['meeting_time'] ?? '';
             $duration = (int)($_POST['duration_minutes'] ?? 60);
             $location = trim($_POST['location'] ?? '');
+            $venue = trim($_POST['venue'] ?? $location);
             $attendees = trim($_POST['attendees'] ?? '');
+            $organizer = trim($_POST['organizer'] ?? '');
+            $meeting_type = $_POST['meeting_type'] ?? 'general';
+            $minutes = trim($_POST['minutes'] ?? '');
+            $outcome = trim($_POST['outcome'] ?? '');
             $status = $_POST['status'] ?? 'scheduled';
+            $is_recurring = (int)($_POST['is_recurring'] ?? 0);
+            $recurrence_pattern = $_POST['recurrence_pattern'] ?? '';
             if (!$title || !$date || !$time) { $response['message'] = 'Missing fields'; break; }
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
-                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meetings` SET title=?, description=?, meeting_date=?, meeting_time=?, duration_minutes=?, location=?, attendees=?, status=? WHERE id=? AND user_id=?");
-                $stmt->bind_param('sssissssii', $title, $desc, $date, $time, $duration, $location, $attendees, $status, $id, $user_id);
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meetings` SET title=?, description=?, meeting_date=?, meeting_time=?, duration_minutes=?, location=?, venue=?, meeting_type=?, attendees=?, organizer=?, minutes=?, outcome=?, status=?, is_recurring=?, recurrence_pattern=? WHERE id=? AND user_id=?");
+                $stmt->bind_param('ssssissssssssissi', $title, $desc, $date, $time, $duration, $location, $venue, $meeting_type, $attendees, $organizer, $minutes, $outcome, $status, $is_recurring, $recurrence_pattern, $id, $user_id);
             } else {
-                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_meetings` (user_id, title, description, meeting_date, meeting_time, duration_minutes, location, attendees, status) VALUES (?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('isssisssi', $user_id, $title, $desc, $date, $time, $duration, $location, $attendees, $status);
+                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_meetings` (user_id, title, description, meeting_date, meeting_time, duration_minutes, location, venue, meeting_type, attendees, organizer, minutes, outcome, status, is_recurring, recurrence_pattern) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('isssisssssssssis', $user_id, $title, $desc, $date, $time, $duration, $location, $venue, $meeting_type, $attendees, $organizer, $minutes, $outcome, $status, $is_recurring, $recurrence_pattern);
             }
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Meeting saved'; }
             break;
 
         case 'delete_meeting':
             $id = (int)($_POST['id'] ?? 0);
+            $conn->query("DELETE FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id=$id");
+            $conn->query("DELETE FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id=$id");
             $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meetings` WHERE id=? AND user_id=?");
             $stmt->bind_param('ii', $id, $user_id);
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
+            break;
+
+        case 'get_meeting_agenda':
+            $meeting_id = (int)($_REQUEST['meeting_id'] ?? 0);
+            if (!$meeting_id) { $response['message'] = 'Invalid meeting'; break; }
+            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id = ? ORDER BY display_order ASC");
+            $stmt->bind_param('i', $meeting_id);
+            $stmt->execute();
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $response['success'] = true;
+            $response['agenda'] = $items;
+            break;
+
+        case 'save_meeting_agenda_item':
+            $meeting_id = (int)($_POST['meeting_id'] ?? 0);
+            $topic = trim($_POST['topic'] ?? '');
+            $presenter = trim($_POST['presenter'] ?? '');
+            $duration = (int)($_POST['duration_minutes'] ?? 0);
+            $order = (int)($_POST['display_order'] ?? 0);
+            $notes = trim($_POST['notes'] ?? '');
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$meeting_id || !$topic) { $response['message'] = 'Missing fields'; break; }
+            if ($id) {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meeting_agenda` SET topic=?, presenter=?, duration_minutes=?, display_order=?, notes=? WHERE id=? AND meeting_id=?");
+                $stmt->bind_param('ssiisii', $topic, $presenter, $duration, $order, $notes, $id, $meeting_id);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_meeting_agenda` (meeting_id, topic, presenter, duration_minutes, display_order, notes) VALUES (?,?,?,?,?,?)");
+                $stmt->bind_param('issiis', $meeting_id, $topic, $presenter, $duration, $order, $notes);
+            }
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Agenda item saved'; }
+            break;
+
+        case 'delete_meeting_agenda_item':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meeting_agenda` WHERE id=?");
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
+            break;
+
+        case 'get_meeting_action_items':
+            $meeting_id = (int)($_REQUEST['meeting_id'] ?? 0);
+            if (!$meeting_id) { $response['message'] = 'Invalid meeting'; break; }
+            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id = ? ORDER BY priority DESC, due_date ASC");
+            $stmt->bind_param('i', $meeting_id);
+            $stmt->execute();
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $response['success'] = true;
+            $response['action_items'] = $items;
+            break;
+
+        case 'save_meeting_action_item':
+            $meeting_id = (int)($_POST['meeting_id'] ?? 0);
+            $agenda_id = (int)($_POST['agenda_id'] ?? 0);
+            $action = trim($_POST['action'] ?? '');
+            $assigned_to = trim($_POST['assigned_to'] ?? '');
+            $assigned_to_id = (int)($_POST['assigned_to_id'] ?? 0);
+            $due_date = $_POST['due_date'] ?? '';
+            $priority = $_POST['priority'] ?? 'medium';
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$meeting_id || !$action) { $response['message'] = 'Missing fields'; break; }
+            if ($id) {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meeting_action_items` SET agenda_id=?, action=?, assigned_to=?, assigned_to_id=?, due_date=?, priority=? WHERE id=? AND meeting_id=?");
+                $stmt->bind_param('ississii', $agenda_id, $action, $assigned_to, $assigned_to_id, $due_date, $priority, $id, $meeting_id);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_meeting_action_items` (meeting_id, agenda_id, action, assigned_to, assigned_to_id, due_date, priority) VALUES (?,?,?,?,?,?,?)");
+                $stmt->bind_param('iississ', $meeting_id, $agenda_id, $action, $assigned_to, $assigned_to_id, $due_date, $priority);
+            }
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Action item saved'; }
+            break;
+
+        case 'complete_meeting_action_item':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meeting_action_items` SET status='completed', completed_at=NOW() WHERE id=?");
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Marked complete'; }
+            break;
+
+        case 'delete_meeting_action_item':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meeting_action_items` WHERE id=?");
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
+            break;
+
+        case 'get_meeting_calendar_data':
+            $month = (int)($_REQUEST['month'] ?? (int)date('m'));
+            $year = (int)($_REQUEST['year'] ?? (int)date('Y'));
+            $start = "$year-$month-01";
+            $end = date('Y-m-t', strtotime($start));
+            $stmt = $conn->prepare("SELECT id, title, meeting_date, meeting_time, status, location, venue, duration_minutes FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? AND meeting_date BETWEEN ? AND ? ORDER BY meeting_date ASC, meeting_time ASC");
+            $stmt->bind_param('iss', $user_id, $start, $end);
+            $stmt->execute();
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $response['success'] = true;
+            $response['meetings'] = $items;
+            break;
+
+        case 'get_staff_list':
+            $r = $conn->query("SELECT id, full_name, email, phone, department FROM `$staff_db`.`staffs` WHERE status='Active' ORDER BY full_name ASC");
+            $staff = [];
+            while ($row = $r->fetch_assoc()) { $staff[] = $row; }
+            $response['success'] = true;
+            $response['staff'] = $staff;
             break;
 
         case 'get_messages':
@@ -805,6 +988,97 @@ if (isset($_REQUEST['ajax'])) {
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
             break;
 
+        case 'get_official_documents':
+            $type = $_REQUEST['type'] ?? '';
+            $status = $_REQUEST['status'] ?? '';
+            $dept = $_REQUEST['department'] ?? '';
+            $search = trim($_REQUEST['search'] ?? '');
+            $where = "WHERE user_id = ?";
+            $params = [$user_id];
+            $types = 'i';
+            if ($type) { $where .= " AND doc_type = ?"; $params[] = $type; $types .= 's'; }
+            if ($status) { $where .= " AND status = ?"; $params[] = $status; $types .= 's'; }
+            if ($dept) { $where .= " AND department = ?"; $params[] = $dept; $types .= 's'; }
+            if ($search) { $where .= " AND (title LIKE ? OR reference_number LIKE ? OR subject LIKE ?)"; $s = "%$search%"; $params = array_merge($params, [$s, $s, $s]); $types .= 'sss'; }
+            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_official_documents` $where ORDER BY created_at DESC");
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $response['success'] = true;
+            $response['documents'] = $items;
+            break;
+
+        case 'save_official_document':
+            $doc_type = $_POST['doc_type'] ?? 'letter';
+            $title = trim($_POST['title'] ?? '');
+            $subject = trim($_POST['subject'] ?? '');
+            $reference_number = trim($_POST['reference_number'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+            $department = trim($_POST['department'] ?? '');
+            $category = trim($_POST['category'] ?? '');
+            $status = $_POST['status'] ?? 'draft';
+            $priority = $_POST['priority'] ?? 'medium';
+            $recipient_name = trim($_POST['recipient_name'] ?? '');
+            $recipient_organization = trim($_POST['recipient_organization'] ?? '');
+            $is_confidential = (int)($_POST['is_confidential'] ?? 0);
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$title) { $response['message'] = 'Title is required'; break; }
+            if ($id) {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET doc_type=?, title=?, subject=?, reference_number=?, content=?, department=?, category=?, status=?, priority=?, recipient_name=?, recipient_organization=?, is_confidential=? WHERE id=? AND user_id=?");
+                $stmt->bind_param('sssssssssssii', $doc_type, $title, $subject, $reference_number, $content, $department, $category, $status, $priority, $recipient_name, $recipient_organization, $is_confidential, $id, $user_id);
+            } else {
+                if (!$reference_number) { $reference_number = 'DOC-' . date('Ymd') . '-' . str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT); }
+                $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_official_documents` (user_id, doc_type, title, subject, reference_number, content, department, category, status, priority, recipient_name, recipient_organization, is_confidential) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('isssssssssssi', $user_id, $doc_type, $title, $subject, $reference_number, $content, $department, $category, $status, $priority, $recipient_name, $recipient_organization, $is_confidential);
+            }
+            if ($stmt->execute()) {
+                if (!$id && $status === 'published') {
+                    $doc_id = $id ?: $conn->insert_id;
+                    $conn->query("UPDATE `$staff_db`.`secretary_official_documents` SET published_by=$user_id, published_at=NOW() WHERE id=$doc_id");
+                }
+                if (!$id && ($status === 'approved' || $status === 'review')) {
+                    $doc_id = $id ?: $conn->insert_id;
+                    $conn->query("UPDATE `$staff_db`.`secretary_official_documents` SET " . ($status === 'review' ? 'reviewed_by' : 'approved_by') . "=$user_id, " . ($status === 'review' ? 'reviewed_at' : 'approved_at') . "=NOW() WHERE id=$doc_id");
+                }
+                $response['success'] = true;
+                $response['message'] = 'Document saved';
+                if (!$id) { $response['reference_number'] = $reference_number; }
+            } else { $response['message'] = 'Failed: ' . $conn->error; }
+            break;
+
+        case 'publish_official_document':
+            $id = (int)($_POST['id'] ?? 0);
+            $new_status = $_POST['status'] ?? 'published';
+            $valid = ['published','archived','rejected'];
+            if (!in_array($new_status, $valid)) { $new_status = 'published'; }
+            $col = $new_status === 'published' ? 'published_by,published_at' : ($new_status === 'archived' ? '' : '');
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET status=?" . ($col ? ",$col=NOW()" : "") . " WHERE id=? AND user_id=?");
+            if ($col) { $stmt->bind_param('sii', $new_status, $id, $user_id); }
+            else { $stmt->bind_param('sii', $new_status, $id, $user_id); }
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Document ' . $new_status; }
+            break;
+
+        case 'delete_official_document':
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_official_documents` WHERE id=? AND user_id=?");
+            $stmt->bind_param('ii', $id, $user_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
+            break;
+
+        case 'get_document_stats':
+            $stats = [];
+            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id");
+            $stats['total'] = (int)$r->fetch_assoc()['cnt'];
+            $r = @$conn->query("SELECT status, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id GROUP BY status");
+            $stats['by_status'] = []; while ($row = $r->fetch_assoc()) { $stats['by_status'][$row['status']] = (int)$row['cnt']; }
+            $r = @$conn->query("SELECT doc_type, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id GROUP BY doc_type ORDER BY cnt DESC");
+            $stats['by_type'] = []; while ($row = $r->fetch_assoc()) { $stats['by_type'][] = $row; }
+            $r = @$conn->query("SELECT department, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id AND department!='' GROUP BY department ORDER BY cnt DESC");
+            $stats['by_department'] = []; while ($row = $r->fetch_assoc()) { $stats['by_department'][] = $row; }
+            $response['success'] = true;
+            $response['stats'] = $stats;
+            break;
+
         case 'get_dashboard_stats':
             $stats = [];
             $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants`");
@@ -885,6 +1159,15 @@ $page = $_REQUEST['page'] ?? 'home';
 .btn-isnm-outline:hover{background:var(--isnm-navy);color:#fff}
 .modal-header{background:var(--isnm-navy);color:#fff}
 .modal-header .btn-close{filter:brightness(0) invert(1)}
+.nav-tabs .nav-link{font-size:13px;padding:8px 16px}
+.nav-tabs .nav-link.active{font-weight:600;border-bottom:2px solid var(--isnm-navy)}
+.bg-xs{font-size:9px;padding:1px 4px;border-radius:3px}
+#meetingCalendar td{vertical-align:top;font-size:12px;cursor:default}
+#meetingCalendar td:hover{background:#f0f4ff}
+#meetingCalendar .badge{cursor:pointer;transition:opacity .2s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+#meetingCalendar .badge:hover{opacity:.8}
+.table-card table th{white-space:nowrap}
+pre{white-space:pre-wrap;word-wrap:break-word}
 </style>
 </head>
 <body>
@@ -1292,43 +1575,169 @@ if ($edit_id) {
 
 <?php elseif ($page === 'meetings'): ?>
 <div class="section-card">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="mb-0"><i class="fas fa-handshake me-2 text-primary"></i>Meetings</h5>
-        <button class="btn btn-isnm btn-sm" onclick="showMeetingModal()"><i class="fas fa-plus me-1"></i>New Meeting</button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleCalView()"><i class="fas fa-calendar-alt me-1"></i><span id="calToggleLabel">Calendar</span></button>
+            <button class="btn btn-isnm btn-sm" onclick="showMeetingModal()"><i class="fas fa-plus me-1"></i>New Meeting</button>
+        </div>
     </div>
-    <div class="table-responsive">
-        <table class="table table-hover table-striped mb-0">
-            <thead><tr><th>Title</th><th>Date</th><th>Time</th><th>Duration</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="meetBody"></tbody>
-        </table>
+    <ul class="nav nav-tabs mb-3" id="meetingTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" id="listTab" data-bs-toggle="tab" data-bs-target="#meetingListView" type="button">List View</button></li>
+        <li class="nav-item"><button class="nav-link" id="calTab" data-bs-toggle="tab" data-bs-target="#meetingCalView" type="button">Calendar</button></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="meetingListView">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead><tr><th>Title</th><th>Date</th><th>Time</th><th>Duration</th><th>Location</th><th>Agenda</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="meetBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="meetingCalView">
+            <div id="meetingCalendar" class="p-2"></div>
+        </div>
     </div>
 </div>
-<div class="modal fade" id="meetModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<div id="meetingDetailPanel" class="section-card mt-3" style="display:none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Meeting Details</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="closeMeetingDetail()"><i class="fas fa-times"></i></button>
+    </div>
+    <ul class="nav nav-tabs mb-3" id="detailTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" id="dtlInfoTab" data-bs-toggle="tab" data-bs-target="#dtlInfo" type="button">Info</button></li>
+        <li class="nav-item"><button class="nav-link" id="dtlAgendaTab" data-bs-toggle="tab" data-bs-target="#dtlAgenda" type="button">Agenda</button></li>
+        <li class="nav-item"><button class="nav-link" id="dtlActionsTab" data-bs-toggle="tab" data-bs-target="#dtlActions" type="button">Action Items</button></li>
+        <li class="nav-item"><button class="nav-link" id="dtlMinutesTab" data-bs-toggle="tab" data-bs-target="#dtlMinutes" type="button">Minutes</button></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="dtlInfo"></div>
+        <div class="tab-pane fade" id="dtlAgenda"></div>
+        <div class="tab-pane fade" id="dtlActions"></div>
+        <div class="tab-pane fade" id="dtlMinutes"></div>
+    </div>
+</div>
+<div class="modal fade" id="meetModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title" id="meetModalTitle">New Meeting</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
         <form id="meetForm" onsubmit="return saveMeeting(event)">
             <input type="hidden" name="id" id="meet_id">
-            <div class="mb-3"><label class="form-label fw-bold">Title *</label><input type="text" class="form-control" name="title" id="meet_title" required></div>
+            <div class="row g-2">
+                <div class="col-8 mb-3"><label class="form-label fw-bold">Title *</label><input type="text" class="form-control" name="title" id="meet_title" required></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Type</label><select class="form-select" name="meeting_type" id="meet_type"><option value="general">General</option><option value="staff">Staff</option><option value="departmental">Departmental</option><option value="committee">Committee</option><option value="board">Board</option><option value="emergency">Emergency</option><option value="one_on_one">One-on-One</option></select></div>
+            </div>
             <div class="mb-3"><label class="form-label fw-bold">Description</label><textarea class="form-control" name="description" id="meet_desc" rows="2"></textarea></div>
             <div class="row g-2">
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Date *</label><input type="date" class="form-control" name="meeting_date" id="meet_date" required></div>
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Time *</label><input type="time" class="form-control" name="meeting_time" id="meet_time" required></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Date *</label><input type="date" class="form-control" name="meeting_date" id="meet_date" required></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Time *</label><input type="time" class="form-control" name="meeting_time" id="meet_time" required></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Duration (min)</label><input type="number" class="form-control" name="duration_minutes" id="meet_duration" value="60"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Status</label><select class="form-select" name="status" id="meet_status"><option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
             </div>
             <div class="row g-2">
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Duration (min)</label><input type="number" class="form-control" name="duration_minutes" id="meet_duration" value="60"></div>
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Location</label><input type="text" class="form-control" name="location" id="meet_location"></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Location</label><input type="text" class="form-control" name="location" id="meet_location"></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Venue</label><input type="text" class="form-control" name="venue" id="meet_venue" placeholder="Room/Hall"></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Organizer</label><input type="text" class="form-control" name="organizer" id="meet_organizer" value="<?= htmlspecialchars($user_name) ?>"></div>
             </div>
-            <div class="mb-3"><label class="form-label fw-bold">Attendees</label><input type="text" class="form-control" name="attendees" id="meet_attendees" placeholder="Comma separated"></div>
-            <div class="mb-3"><label class="form-label fw-bold">Status</label><select class="form-select" name="status" id="meet_status"><option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+            <div class="mb-3"><label class="form-label fw-bold">Attendees</label><div class="input-group"><input type="text" class="form-control" name="attendees" id="meet_attendees" placeholder="Type names or select from staff"><button class="btn btn-outline-secondary" type="button" onclick="showStaffPicker('meet_attendees')"><i class="fas fa-user-plus"></i></button></div></div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="is_recurring" id="meet_recurring" value="1"> Recurring meeting</label></div>
+                <div class="col-6 mb-3" id="recurrenceField" style="display:none"><label class="form-label fw-bold">Pattern</label><select class="form-select" name="recurrence_pattern" id="meet_recurrence"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="biweekly">Bi-Weekly</option><option value="monthly">Monthly</option></select></div>
+            </div>
+            <div class="mb-3 d-none" id="meetMinutesField"><label class="form-label fw-bold">Minutes / Outcome</label><textarea class="form-control" name="minutes" id="meet_minutes" rows="4" placeholder="Record meeting minutes, decisions, and key points"></textarea></div>
             <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
         </form>
     </div>
 </div></div></div>
+<div class="modal fade" id="staffPickerModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Select Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="text" class="form-control mb-2" id="staffSearch" placeholder="Search staff..." oninput="filterStaffList()">
+        <div id="staffList" class="list-group" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-isnm" onclick="addSelectedStaff()"><i class="fas fa-check me-1"></i>Add Selected</button></div>
+</div></div></div>
+<div class="modal fade" id="agendaItemModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="agItemTitle">Agenda Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="agendaForm" onsubmit="return saveAgendaItem(event)">
+            <input type="hidden" name="id" id="ag_item_id">
+            <input type="hidden" name="meeting_id" id="ag_meeting_id">
+            <div class="mb-3"><label class="form-label fw-bold">Topic *</label><input type="text" class="form-control" name="topic" id="ag_topic" required></div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Presenter</label><input type="text" class="form-control" name="presenter" id="ag_presenter"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Duration (min)</label><input type="number" class="form-control" name="duration_minutes" id="ag_duration" value="10"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Order</label><input type="number" class="form-control" name="display_order" id="ag_order" value="0"></div>
+            </div>
+            <div class="mb-3"><label class="form-label fw-bold">Notes</label><textarea class="form-control" name="notes" id="ag_notes" rows="2"></textarea></div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div></div></div>
+<div class="modal fade" id="actionItemModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="aiItemTitle">Action Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="actionForm" onsubmit="return saveActionItem(event)">
+            <input type="hidden" name="id" id="ai_item_id">
+            <input type="hidden" name="meeting_id" id="ai_meeting_id">
+            <input type="hidden" name="assigned_to_id" id="ai_assigned_id">
+            <div class="mb-3"><label class="form-label fw-bold">Action *</label><textarea class="form-control" name="action" id="ai_action" rows="2" required></textarea></div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Assigned To</label><div class="input-group"><input type="text" class="form-control" name="assigned_to" id="ai_assigned" placeholder="Person responsible"><button class="btn btn-outline-secondary" type="button" onclick="showStaffPicker('ai_assigned','ai_assigned_id')"><i class="fas fa-user-plus"></i></button></div></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Due Date</label><input type="date" class="form-control" name="due_date" id="ai_due"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Priority</label><select class="form-select" name="priority" id="ai_priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+            </div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div></div></div>
+
 <?php elseif ($page === 'documents'): ?>
 <div class="section-card">
-    <h5 class="mb-3"><i class="fas fa-file-alt me-2 text-primary"></i>Documents</h5>
-    <p class="text-muted">Manage student documents from the <a href="?page=student_records">Student Records</a> page by selecting a student profile.</p>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>Official Documents</h5>
+        <button class="btn btn-isnm btn-sm" onclick="showDocModal()"><i class="fas fa-plus me-1"></i>New Document</button>
+    </div>
+    <div class="row g-2 mb-3">
+        <div class="col-auto"><select class="form-select form-select-sm" id="docTypeFilter" onchange="loadDocuments()"><option value="">All Types</option><option value="letter">Letter</option><option value="memo">Memo</option><option value="circular">Circular</option><option value="notice">Notice</option><option value="report">Report</option><option value="minutes">Minutes</option><option value="certificate">Certificate</option><option value="form">Form</option><option value="proposal">Proposal</option><option value="other">Other</option></select></div>
+        <div class="col-auto"><select class="form-select form-select-sm" id="docStatusFilter" onchange="loadDocuments()"><option value="">All Status</option><option value="draft">Draft</option><option value="review">In Review</option><option value="approved">Approved</option><option value="published">Published</option><option value="archived">Archived</option></select></div>
+        <div class="col-auto"><input type="text" class="form-control form-control-sm" id="docSearch" placeholder="Search by title, ref..." onkeyup="if(event.key==='Enter')loadDocuments()"></div>
+        <div class="col-auto"><button class="btn btn-sm btn-outline-primary" onclick="loadDocuments()"><i class="fas fa-search"></i></button></div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0">
+            <thead><tr><th>Ref #</th><th>Title</th><th>Type</th><th>Department</th><th>Status</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="docBody"></tbody>
+        </table>
+    </div>
 </div>
+<div class="modal fade" id="docModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="docModalTitle">New Document</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="docForm" onsubmit="return saveDocument(event)">
+            <input type="hidden" name="id" id="doc_id">
+            <div class="row g-2">
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Type *</label><select class="form-select" name="doc_type" id="doc_type"><option value="letter">Letter</option><option value="memo">Memo</option><option value="circular">Circular</option><option value="notice">Notice</option><option value="report">Report</option><option value="minutes">Minutes</option><option value="certificate">Certificate</option><option value="form">Form</option><option value="proposal">Proposal</option><option value="other">Other</option></select></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Status</label><select class="form-select" name="status" id="doc_status"><option value="draft">Draft</option><option value="review">In Review</option><option value="approved">Approved</option><option value="published">Published</option></select></div>
+                <div class="col-4 mb-3"><label class="form-label fw-bold">Priority</label><select class="form-select" name="priority" id="doc_priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+            </div>
+            <div class="mb-3"><label class="form-label fw-bold">Title *</label><input type="text" class="form-control" name="title" id="doc_title" required></div>
+            <div class="mb-3"><label class="form-label fw-bold">Subject</label><input type="text" class="form-control" name="subject" id="doc_subject"></div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Reference Number</label><input type="text" class="form-control" name="reference_number" id="doc_ref" placeholder="Auto-generated if empty"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Department</label><input type="text" class="form-control" name="department" id="doc_dept" placeholder="e.g. Academic"></div>
+                <div class="col-3 mb-3"><label class="form-label fw-bold">Category</label><input type="text" class="form-control" name="category" id="doc_cat" placeholder="e.g. Policy"></div>
+            </div>
+            <div class="mb-3"><label class="form-label fw-bold">Content</label><textarea class="form-control" name="content" id="doc_content" rows="8" style="font-family:monospace"></textarea></div>
+            <div class="row g-2">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Recipient Name</label><input type="text" class="form-control" name="recipient_name" id="doc_recipient_name"></div>
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Recipient Organization</label><input type="text" class="form-control" name="recipient_organization" id="doc_recipient_org"></div>
+            </div>
+            <div class="mb-3"><label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="is_confidential" id="doc_confidential" value="1"> Confidential document</label></div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div></div></div>
 
 <?php elseif ($page === 'comms'): ?>
 <div class="section-card">
@@ -1559,12 +1968,40 @@ function saveAppointment(e){e.preventDefault();const fd=new FormData(document.ge
 function deleteAppointment(id){if(!confirm('Delete?'))return;ajax('delete_appointment','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadAppointments()}})}
 if(document.getElementById('apptBody'))loadAppointments();
 
-function loadMeetings(){ajax('get_meetings','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('meetBody');if(!tb)return;tb.innerHTML=d.meetings.map(m=>`<tr><td>${esc(m.title)}</td><td>${m.meeting_date}</td><td>${m.meeting_time}</td><td>${m.duration_minutes}min</td><td>${esc(m.location||'')}</td><td><span class="badge bg-${m.status==='completed'?'success':m.status==='cancelled'?'danger':m.status==='in_progress'?'warning':'info'}">${m.status}</span></td><td><button class="btn btn-sm btn-outline-warning" onclick='editMeeting(${JSON.stringify(m).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteMeeting(${m.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="7" class="text-center text-muted">No meetings</td></tr>'})}
-function showMeetingModal(m){document.getElementById('meetModalTitle').textContent=m?'Edit Meeting':'New Meeting';document.getElementById('meet_id').value=m?.id||'';document.getElementById('meet_title').value=m?.title||'';document.getElementById('meet_desc').value=m?.description||'';document.getElementById('meet_date').value=m?.meeting_date||'';document.getElementById('meet_time').value=m?.meeting_time||'';document.getElementById('meet_duration').value=m?.duration_minutes||60;document.getElementById('meet_location').value=m?.location||'';document.getElementById('meet_attendees').value=m?.attendees||'';document.getElementById('meet_status').value=m?.status||'scheduled';new bootstrap.Modal(document.getElementById('meetModal')).show()}
+var currentMeetingId = 0;
+function loadMeetings(){ajax('get_meetings','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('meetBody');if(!tb)return;tb.innerHTML=d.meetings.map(m=>`<tr class="${m.id===currentMeetingId?'table-active':''}" style="cursor:pointer"><td><a href="#" onclick="event.preventDefault();showMeetingDetail(${m.id})" class="text-decoration-none fw-bold">${esc(m.title)}</a></td><td>${m.meeting_date}</td><td>${m.meeting_time}</td><td>${m.duration_minutes}min</td><td>${esc(m.venue||m.location||'')}</td><td><small>${m.agenda_count||0} items</small></td><td><span class="badge bg-${m.status==='completed'?'success':m.status==='cancelled'?'danger':m.status==='in_progress'?'warning':'info'}">${m.status}</span></td><td><button class="btn btn-sm btn-outline-warning" onclick='event.stopPropagation();editMeeting(${JSON.stringify(m).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteMeeting(${m.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center text-muted">No meetings</td></tr>'});renderMeetingCalendar()}
+function showMeetingModal(m){document.getElementById('meetModalTitle').textContent=m?'Edit Meeting':'New Meeting';document.getElementById('meet_id').value=m?.id||'';document.getElementById('meet_title').value=m?.title||'';document.getElementById('meet_type').value=m?.meeting_type||'general';document.getElementById('meet_desc').value=m?.description||'';document.getElementById('meet_date').value=m?.meeting_date||'';document.getElementById('meet_time').value=m?.meeting_time||'';document.getElementById('meet_duration').value=m?.duration_minutes||60;document.getElementById('meet_location').value=m?.location||'';document.getElementById('meet_venue').value=m?.venue||'';document.getElementById('meet_organizer').value=m?.organizer||'<?= htmlspecialchars($user_name) ?>';document.getElementById('meet_attendees').value=m?.attendees||'';document.getElementById('meet_status').value=m?.status||'scheduled';document.getElementById('meet_recurring').checked=m?.is_recurring==1;document.getElementById('meet_recurrence').value=m?.recurrence_pattern||'weekly';document.getElementById('recurrenceField').style.display=m?.is_recurring?'block':'none';document.getElementById('meetMinutesField').classList.toggle('d-none',m?.status!=='completed'&&m?.status!=='in_progress');document.getElementById('meet_minutes').value=m?.minutes||'';new bootstrap.Modal(document.getElementById('meetModal')).show()}
 function editMeeting(m){showMeetingModal(m)}
 function saveMeeting(e){e.preventDefault();const fd=new FormData(document.getElementById('meetForm'));ajax('save_meeting','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('meetModal')).hide();showMsg(d.message);loadMeetings()}else showMsg(d.message,'danger')});return false}
-function deleteMeeting(id){if(!confirm('Delete?'))return;ajax('delete_meeting','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadMeetings()}})}
+function deleteMeeting(id){if(!confirm('Delete this meeting?'))return;ajax('delete_meeting','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadMeetings();if(currentMeetingId===id){document.getElementById('meetingDetailPanel').style.display='none';currentMeetingId=0}}})}
+document.getElementById('meet_recurring').addEventListener('change',function(){document.getElementById('recurrenceField').style.display=this.checked?'block':'none'});
+document.getElementById('meet_status').addEventListener('change',function(){document.getElementById('meetMinutesField').classList.toggle('d-none',this.value!=='completed'&&this.value!=='in_progress')});
 if(document.getElementById('meetBody'))loadMeetings();
+
+function showMeetingDetail(id){currentMeetingId=id;document.getElementById('meetingDetailPanel').style.display='block';loadMeetingInfo(id);loadMeetingAgenda(id);loadMeetingActionItems(id);loadMeetingMinutes(id);document.querySelector('#detailTabs button[data-bs-target="#dtlInfo"]').click()}
+function closeMeetingDetail(){document.getElementById('meetingDetailPanel').style.display='none';currentMeetingId=0;loadMeetings()}
+function loadMeetingInfo(id){ajax('get_meetings','GET').then(d=>{if(!d.success)return;const m=d.meetings.find(x=>x.id==id);if(!m)return;document.getElementById('dtlInfo').innerHTML=`<div class="p-3"><div class="row g-3"><div class="col-md-6"><table class="table table-sm table-borderless mb-0"><tr><td class="text-muted" style="width:35%">Title</td><td><strong>${esc(m.title)}</strong></td></tr><tr><td class="text-muted">Type</td><td>${esc(m.meeting_type||'General')}</td></tr><tr><td class="text-muted">Date</td><td>${m.meeting_date} at ${m.meeting_time}</td></tr><tr><td class="text-muted">Duration</td><td>${m.duration_minutes} minutes</td></tr><tr><td class="text-muted">Location</td><td>${esc(m.venue||m.location||'-')}</td></tr></table></div><div class="col-md-6"><table class="table table-sm table-borderless mb-0"><tr><td class="text-muted" style="width:35%">Organizer</td><td>${esc(m.organizer||'<?= htmlspecialchars($user_name) ?>')}</td></tr><tr><td class="text-muted">Attendees</td><td>${esc(m.attendees||'None specified')}</td></tr><tr><td class="text-muted">Status</td><td><span class="badge bg-${m.status==='completed'?'success':m.status==='cancelled'?'danger':m.status==='in_progress'?'warning':'info'}">${m.status}</span></td></tr><tr><td class="text-muted">Recurring</td><td>${m.is_recurring?'Yes ('+esc(m.recurrence_pattern||'')+')':'No'}</td></tr></table></div></div>${m.description?`<div class="mt-3"><h6>Description</h6><p class="text-muted">${esc(m.description)}</p></div>`:''}</div>`})}
+function loadMeetingAgenda(id){ajax('get_meeting_agenda','GET',{meeting_id:id}).then(d=>{if(!d.success)return;let html='<div class="p-3"><div class="d-flex justify-content-between mb-2"><h6>Agenda Items</h6><button class="btn btn-sm btn-isnm" onclick="showAgendaItemModal('+id+')"><i class="fas fa-plus"></i> Add Item</button></div>';if(!d.agenda||!d.agenda.length){html+='<p class="text-muted">No agenda items yet</p>'}else{html+='<table class="table table-sm table-hover"><thead><tr><th>#</th><th>Topic</th><th>Presenter</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>';d.agenda.forEach((a,i)=>{html+=`<tr><td>${a.display_order||i+1}</td><td>${esc(a.topic)}</td><td>${esc(a.presenter||'-')}</td><td>${a.duration_minutes||'-'}min</td><td><span class="badge bg-${a.status==='discussed'?'success':a.status==='deferred'?'warning':'secondary'}">${a.status}</span></td><td><button class="btn btn-sm btn-outline-warning" onclick='editAgendaItem(${JSON.stringify(a).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteAgendaItem(${a.id})"><i class="fas fa-trash"></i></button></td></tr>`});html+='</tbody></table>'};html+='</div>';document.getElementById('dtlAgenda').innerHTML=html})}
+function showAgendaItemModal(mid,item){document.getElementById('agItemTitle').textContent=item?'Edit Agenda Item':'New Agenda Item';document.getElementById('ag_item_id').value=item?.id||'';document.getElementById('ag_meeting_id').value=mid;document.getElementById('ag_topic').value=item?.topic||'';document.getElementById('ag_presenter').value=item?.presenter||'';document.getElementById('ag_duration').value=item?.duration_minutes||10;document.getElementById('ag_order').value=item?.display_order||0;document.getElementById('ag_notes').value=item?.notes||'';new bootstrap.Modal(document.getElementById('agendaItemModal')).show()}
+function editAgendaItem(item){showAgendaItemModal(item.meeting_id,item)}
+function saveAgendaItem(e){e.preventDefault();const fd=new FormData(document.getElementById('agendaForm'));ajax('save_meeting_agenda_item','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('agendaItemModal')).hide();showMsg(d.message);loadMeetingAgenda(currentMeetingId)}else showMsg(d.message,'danger')});return false}
+function deleteAgendaItem(id){if(!confirm('Delete this agenda item?'))return;ajax('delete_meeting_agenda_item','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadMeetingAgenda(currentMeetingId)}})}
+function loadMeetingActionItems(id){ajax('get_meeting_action_items','GET',{meeting_id:id}).then(d=>{if(!d.success)return;let html='<div class="p-3"><div class="d-flex justify-content-between mb-2"><h6>Action Items</h6><button class="btn btn-sm btn-isnm" onclick="showActionItemModal('+id+')"><i class="fas fa-plus"></i> Add Action</button></div>';if(!d.action_items||!d.action_items.length){html+='<p class="text-muted">No action items yet</p>'}else{html+='<table class="table table-sm table-hover"><thead><tr><th>Action</th><th>Assigned To</th><th>Due</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead><tbody>';d.action_items.forEach(a=>{html+=`<tr class="${a.status==='completed'?'table-success':''}"><td>${esc(a.action)}</td><td>${esc(a.assigned_to||'-')}</td><td>${a.due_date||'-'}</td><td><span class="badge bg-${a.priority==='critical'?'danger':a.priority==='high'?'warning':'info'}">${a.priority}</span></td><td><span class="badge bg-${a.status==='completed'?'success':a.status==='in_progress'?'warning':'secondary'}">${a.status}</span></td><td>${a.status!=='completed'?`<button class="btn btn-sm btn-outline-success" onclick="completeActionItem(${a.id})"><i class="fas fa-check"></i></button> `:''}<button class="btn btn-sm btn-outline-warning" onclick='editActionItem(${JSON.stringify(a).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteActionItem(${a.id})"><i class="fas fa-trash"></i></button></td></tr>`});html+='</tbody></table>'};html+='</div>';document.getElementById('dtlActions').innerHTML=html})}
+function showActionItemModal(mid,item){document.getElementById('aiItemTitle').textContent=item?'Edit Action Item':'New Action Item';document.getElementById('ai_item_id').value=item?.id||'';document.getElementById('ai_meeting_id').value=mid;document.getElementById('ai_action').value=item?.action||'';document.getElementById('ai_assigned').value=item?.assigned_to||'';document.getElementById('ai_assigned_id').value=item?.assigned_to_id||'';document.getElementById('ai_due').value=item?.due_date||'';document.getElementById('ai_priority').value=item?.priority||'medium';new bootstrap.Modal(document.getElementById('actionItemModal')).show()}
+function editActionItem(item){showActionItemModal(item.meeting_id,item)}
+function saveActionItem(e){e.preventDefault();const fd=new FormData(document.getElementById('actionForm'));ajax('save_meeting_action_item','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('actionItemModal')).hide();showMsg(d.message);loadMeetingActionItems(currentMeetingId)}else showMsg(d.message,'danger')});return false}
+function completeActionItem(id){ajax('complete_meeting_action_item','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadMeetingActionItems(currentMeetingId)}})}
+function deleteActionItem(id){if(!confirm('Delete this action item?'))return;ajax('delete_meeting_action_item','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadMeetingActionItems(currentMeetingId)}})}
+function loadMeetingMinutes(id){ajax('get_meetings','GET').then(d=>{if(!d.success)return;const m=d.meetings.find(x=>x.id==id);if(!m)return;document.getElementById('dtlMinutes').innerHTML=`<div class="p-3"><div class="d-flex justify-content-between mb-2"><h6>Meeting Minutes</h6>${m.status==='completed'||m.status==='in_progress'?`<button class="btn btn-sm btn-isnm" onclick="editMeeting(${JSON.stringify(m).replace(/'/g,"\\'")})"><i class="fas fa-edit me-1"></i>Edit Minutes</button>`:''}</div>${m.minutes?`<div class="p-3 bg-light rounded"><pre style="white-space:pre-wrap;font-family:inherit">${esc(m.minutes)}</pre></div>`:'<p class="text-muted">No minutes recorded yet.'+(m.status==='completed'||m.status==='in_progress'?' Click edit to add minutes.':'')+'</p>'}${m.outcome?`<div class="mt-3"><h6>Outcome</h6><div class="p-3 bg-light rounded"><pre style="white-space:pre-wrap;font-family:inherit">${esc(m.outcome)}</pre></div></div>`:''}</div>`})}
+function renderMeetingCalendar(){ajax('get_meeting_calendar_data','GET',{month:new Date().getMonth()+1,year:new Date().getFullYear()}).then(d=>{if(!d.success)return;const cal=document.getElementById('meetingCalendar');if(!cal)return;let html='<div class="d-flex justify-content-between align-items-center mb-2"><button class="btn btn-sm btn-outline-secondary" onclick="changeCalMonth(-1)"><i class="fas fa-chevron-left"></i></button><strong id="calMonthLabel">'+new Date().toLocaleString('default',{month:'long',year:'numeric'})+'</strong><button class="btn btn-sm btn-outline-secondary" onclick="changeCalMonth(1)"><i class="fas fa-chevron-right"></i></button></div><table class="table table-bordered text-center"><thead><tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr></thead><tbody>';var today=new Date();var firstDay=new Date(today.getFullYear(),today.getMonth(),1);var lastDay=new Date(today.getFullYear(),today.getMonth()+1,0);var startPad=firstDay.getDay();var daysInMonth=lastDay.getDate();var day=1;for(var w=0;w<6;w++){html+='<tr>';for(var d=0;d<7;d++){if((w===0&&d<startPad)||day>daysInMonth){html+='<td class="text-muted" style="height:70px;vertical-align:top;font-size:11px">&nbsp;</td>'}else{var dayMeetings=d.meetings.filter(function(m){var md=new Date(m.meeting_date);return md.getDate()===day&&md.getMonth()===today.getMonth()&&md.getFullYear()===today.getFullYear()});var cls=(day===today.getDate())?'bg-light fw-bold':'';html+='<td class="'+cls+'" style="height:70px;vertical-align:top;font-size:11px"><div>'+day+'</div>';dayMeetings.forEach(function(m){html+='<div class="badge bg-'+{scheduled:'info',in_progress:'warning',completed:'success',cancelled:'danger'}[m.status]+' bg-xs" style="font-size:9px;cursor:pointer;display:block;margin:1px 0" onclick="showMeetingDetail('+m.id+')">'+esc(m.title.substring(0,15))+'</div>'});html+='</td>';day++}}html+='</tr>';if(day>daysInMonth)break}html+='</tbody></table>';cal.innerHTML=html})}
+var calMonthOffset=0;
+function changeCalMonth(delta){calMonthOffset+=delta;var d=new Date();d.setMonth(d.getMonth()+calMonthOffset);ajax('get_meeting_calendar_data','GET',{month:d.getMonth()+1,year:d.getFullYear()}).then(res=>{if(!res.success)return;var cal=document.getElementById('meetingCalendar');if(!cal)return;document.getElementById('calMonthLabel').textContent=d.toLocaleString('default',{month:'long',year:'numeric'});var firstDay=new Date(d.getFullYear(),d.getMonth(),1);var lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);var startPad=firstDay.getDay();var daysInMonth=lastDay.getDate();var day=1;var html='<div class="d-flex justify-content-between align-items-center mb-2"><button class="btn btn-sm btn-outline-secondary" onclick="changeCalMonth(-1)"><i class="fas fa-chevron-left"></i></button><strong>'+d.toLocaleString('default',{month:'long',year:'numeric'})+'</strong><button class="btn btn-sm btn-outline-secondary" onclick="changeCalMonth(1)"><i class="fas fa-chevron-right"></i></button></div><table class="table table-bordered text-center"><thead><tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr></thead><tbody>';var dayNum=1;for(var w=0;w<6;w++){html+='<tr>';for(var dd=0;dd<7;dd++){if((w===0&&dd<startPad)||dayNum>daysInMonth){html+='<td class="text-muted" style="height:70px;vertical-align:top;font-size:11px">&nbsp;</td>'}else{var dayMeetings=res.meetings.filter(function(m){var md=new Date(m.meeting_date);return md.getDate()===dayNum&&md.getMonth()===d.getMonth()&&md.getFullYear()===d.getFullYear()});html+='<td style="height:70px;vertical-align:top;font-size:11px"><div>'+(dayNum)+'</div>';dayMeetings.forEach(function(m){html+='<div class="badge bg-'+{scheduled:'info',in_progress:'warning',completed:'success',cancelled:'danger'}[m.status]+' bg-xs" style="font-size:9px;cursor:pointer;display:block;margin:1px 0" onclick="showMeetingDetail('+m.id+')">'+esc(m.title.substring(0,15))+'</div>'});html+='</td>';dayNum++}}html+='</tr>';if(dayNum>daysInMonth)break}html+='</tbody></table>';cal.innerHTML=html})}
+function toggleCalView(){var calTab=document.getElementById('calTab');if(calTab)calTab.click()}
+var selectedStaff=[];
+function showStaffPicker(inputId,idField){var modal=new bootstrap.Modal(document.getElementById('staffPickerModal'));modal.show();document.getElementById('staffPickerModal').dataset.inputId=inputId;document.getElementById('staffPickerModal').dataset.idField=idField||'';loadStaffList()}
+function loadStaffList(){ajax('get_staff_list','GET').then(d=>{if(!d.success)return;var el=document.getElementById('staffList');el.innerHTML=d.staff.map(s=>`<div class="list-group-item list-group-item-action d-flex align-items-center gap-2"><input type="checkbox" class="form-check-input staff-check" value="${esc(s.full_name)}" data-id="${s.id}"><div><strong>${esc(s.full_name)}</strong><br><small class="text-muted">${esc(s.department||'')} | ${esc(s.email||'')}</small></div></div>`).join('')})}
+function filterStaffList(){var q=document.getElementById('staffSearch').value.toLowerCase();document.querySelectorAll('#staffList .list-group-item').forEach(function(el){el.style.display=el.textContent.toLowerCase().includes(q)?'':'none'})}
+function addSelectedStaff(){var checked=document.querySelectorAll('.staff-check:checked');var names=[];var ids=[];checked.forEach(function(cb){names.push(cb.value);ids.push(cb.dataset.id)});var inputId=document.getElementById('staffPickerModal').dataset.inputId;var idField=document.getElementById('staffPickerModal').dataset.idField;var input=document.getElementById(inputId);if(input){var existing=input.value?input.value.split(',').map(function(s){return s.trim()}):[];names.forEach(function(n){if(!existing.includes(n))existing.push(n)});input.value=existing.join(', ')}if(idField){document.getElementById(idField).value=ids.join(',')}bootstrap.Modal.getInstance(document.getElementById('staffPickerModal')).hide()}
 function loadMessages(){ajax('get_messages','GET').then(d=>{if(!d.success)return;const tb=document.getElementById('msgBody');if(!tb)return;tb.innerHTML=d.messages.map(m=>`<tr class="${m.is_read?'':'table-primary'}"><td>${esc(m.sender_name||'User #'+m.sender_id)}</td><td>${esc(m.subject||'No Subject')}</td><td><small>${esc((m.message||'').substring(0,80))}${(m.message||'').length>80?'...':''}</small></td><td><small>${m.created_at}</small></td><td>${m.is_read?'<span class="badge bg-secondary">Read</span>':'<span class="badge bg-primary">New</span>'}</td><td>${!m.is_read?`<button class="btn btn-sm btn-outline-success" onclick="markRead(${m.id})"><i class="fas fa-check"></i></button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted">No messages</td></tr>'})}
 function showMsgModal(){new bootstrap.Modal(document.getElementById('msgModal')).show()}
 function sendMessage(e){e.preventDefault();const fd=new FormData(document.getElementById('msgForm'));ajax('send_message','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('msgModal')).hide();showMsg(d.message);loadMessages();document.getElementById('msgForm').reset()}else showMsg(d.message,'danger')});return false}
@@ -1598,6 +2035,12 @@ function editCorrespondence(c){showCorrModal(c)}
 function saveCorrespondence(e){e.preventDefault();const fd=new FormData(document.getElementById('corrForm'));ajax('save_correspondence','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('corrModal')).hide();showMsg(d.message);loadCorrespondence()}else showMsg(d.message,'danger')});return false}
 function deleteCorrespondence(id){if(!confirm('Delete this record?'))return;ajax('delete_correspondence','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadCorrespondence()}})}
 if(document.getElementById('corrBody'))loadCorrespondence();
-</script>
-</body>
-</html>
+
+function loadDocuments(){var t=document.getElementById('docTypeFilter')?.value||'';var s=document.getElementById('docStatusFilter')?.value||'';var q=document.getElementById('docSearch')?.value||'';ajax('get_official_documents','GET',{type:t,status:s,search:q}).then(d=>{if(!d.success)return;const tb=document.getElementById('docBody');if(!tb)return;tb.innerHTML=d.documents.map(doc=>`<tr><td><small class="text-muted">${esc(doc.reference_number||'-')}</small></td><td><strong>${esc(doc.title)}</strong>${doc.subject?`<br><small class="text-muted">${esc(doc.subject)}</small>`:''}</td><td><span class="badge bg-secondary">${esc(doc.doc_type)}</span></td><td><small>${esc(doc.department||'-')}</small></td><td><span class="badge bg-${doc.status==='published'?'success':doc.status==='approved'?'primary':doc.status==='review'?'warning':doc.status==='archived'?'dark':'secondary'}">${doc.status}</span></td><td><span class="badge bg-${doc.priority==='urgent'?'danger':doc.priority==='high'?'warning':'info'}">${doc.priority}</span></td><td><small>${doc.published_at||doc.created_at||''}</small></td><td><button class="btn btn-sm btn-outline-info" onclick="viewDocument(${JSON.stringify(doc).replace(/'/g,"\\'")})"><i class="fas fa-eye"></i></button> ${doc.status==='draft'||doc.status==='review'?`<button class="btn btn-sm btn-outline-success" onclick="publishDocument(${doc.id},'published')"><i class="fas fa-check"></i></button> `:''}${doc.status==='published'?`<button class="btn btn-sm btn-outline-secondary" onclick="publishDocument(${doc.id},'archived')"><i class="fas fa-archive"></i></button> `:''}<button class="btn btn-sm btn-outline-warning" onclick='editDocument(${JSON.stringify(doc).replace(/'/g,"\\'")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument(${doc.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center text-muted">No documents found</td></tr>'})}
+function showDocModal(doc){document.getElementById('docModalTitle').textContent=doc?'Edit Document':'New Document';document.getElementById('doc_id').value=doc?.id||'';document.getElementById('doc_type').value=doc?.doc_type||'letter';document.getElementById('doc_status').value=doc?.status||'draft';document.getElementById('doc_priority').value=doc?.priority||'medium';document.getElementById('doc_title').value=doc?.title||'';document.getElementById('doc_subject').value=doc?.subject||'';document.getElementById('doc_ref').value=doc?.reference_number||'';document.getElementById('doc_dept').value=doc?.department||'';document.getElementById('doc_cat').value=doc?.category||'';document.getElementById('doc_content').value=doc?.content||'';document.getElementById('doc_recipient_name').value=doc?.recipient_name||'';document.getElementById('doc_recipient_org').value=doc?.recipient_organization||'';document.getElementById('doc_confidential').checked=doc?.is_confidential==1;new bootstrap.Modal(document.getElementById('docModal')).show()}
+function editDocument(doc){showDocModal(doc)}
+function saveDocument(e){e.preventDefault();const fd=new FormData(document.getElementById('docForm'));ajax('save_official_document','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('docModal')).hide();showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')});return false}
+function viewDocument(doc){var win=window.open('','_blank');win.document.write('<!DOCTYPE html><html><head><title>'+esc(doc.title)+'</title><style>body{font-family:serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.6}.header{text-align:center;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:25px}.ref{font-size:12px;color:#666}.meta{margin:20px 0}.content{margin:20px 0;white-space:pre-wrap}.footer{margin-top:40px;border-top:1px solid #ccc;padding-top:15px;font-size:12px;color:#666}@media print{body{margin:0}}</style></head><body>');win.document.write('<div class="header"><h2>'+esc(doc.title)+'</h2>'+(doc.subject?'<p><em>'+esc(doc.subject)+'</em></p>':'')+'<div class="ref">Ref: '+(doc.reference_number||'-')+'</div></div>');win.document.write('<div class="meta"><table style="width:100%"><tr><td><strong>Type:</strong> '+esc(doc.doc_type)+'</td><td><strong>Status:</strong> '+doc.status+'</td><td><strong>Date:</strong> '+(doc.published_at||doc.created_at||'')+'</td></tr>'+(doc.department?'<tr><td><strong>Department:</strong> '+esc(doc.department)+'</td><td><strong>Category:</strong> '+esc(doc.category||'-')+'</td><td><strong>Priority:</strong> '+doc.priority+'</td></tr>':'')+'</table></div>');win.document.write('<hr>');if(doc.recipient_name){win.document.write('<div class="meta"><strong>To:</strong> '+esc(doc.recipient_name)+(doc.recipient_organization?'<br>'+esc(doc.recipient_organization):'')+'</div>')}win.document.write('<div class="content">'+esc(doc.content||'No content')+'</div>');win.document.write('<div class="footer"><p>Generated by ISNM Secretary Document Management</p></div>');win.document.write('</body></html>');win.document.close();win.print()}
+function publishDocument(id,status){if(!confirm('Set this document to '+status+'?'))return;ajax('publish_official_document','POST',{id:id,status:status}).then(d=>{if(d.success){showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')})}
+function deleteDocument(id){if(!confirm('Delete this document permanently?'))return;ajax('delete_official_document','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')})}
+if(document.getElementById('docBody')){loadDocuments();ajax('get_document_stats','GET').then(d=>{if(d.success){var s=d.stats;var el=document.querySelector('.section-card .row.g-2.mb-3');if(el&&s){var info='<div class="col-12"><small class="text-muted">Total: '+s.total+' | ';if(s.by_status){info+=Object.entries(s.by_status).map(function(e){return e[0]+': '+e[1]}).join(' | ')}info+='</small></div>';el.insertAdjacentHTML('beforebegin','<div class="row g-2 mb-2">'+info+'</div>')}}})}

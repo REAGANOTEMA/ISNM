@@ -764,3 +764,23 @@ Stack trace:
 [05-Jul-2026 10:52:01 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
 [05-Jul-2026 10:52:01 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
 [05-Jul-2026 10:52:01 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[05-Jul-2026 11:18:50 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'igangaschoolofl_staffs_db'@'localhost' (using password: YES) in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:52 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:52 Africa/Kampala] Database connection error: Connection to igangaschoolofl_staffs_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:52 Africa/Kampala] Connection test failed for igangaschoolofl_staffs_db: Connection to igangaschoolofl_staffs_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:52 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'igangaschoolofl_students_db'@'localhost' (using password: YES) in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:54 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:54 Africa/Kampala] Database connection error: Connection to igangaschoolofl_students_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:54 Africa/Kampala] Connection test failed for igangaschoolofl_students_db: Connection to igangaschoolofl_students_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:54 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: YES) in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:56 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:56 Africa/Kampala] Database connection error: Connection to igangaschoolofl_website_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:56 Africa/Kampala] Connection test failed for igangaschoolofl_website_db: Connection to igangaschoolofl_website_db failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:56 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: YES) in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:58 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 73
+[05-Jul-2026 11:18:58 Africa/Kampala] Database connection error: Connection to igangaschoolofl_ict failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:58 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Connection to igangaschoolofl_ict failed on 127.0.0.1:3306 - No connection could be made because the target machine actively refused it
+[05-Jul-2026 11:18:58 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_staffs_db database
+[05-Jul-2026 11:18:58 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
+[05-Jul-2026 11:18:58 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
+[05-Jul-2026 11:18:58 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
