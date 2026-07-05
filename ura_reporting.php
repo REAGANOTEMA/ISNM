@@ -134,12 +134,16 @@ body{background:#f0f2f5;font-family:'Segoe UI',sans-serif;padding:30px}
 <body>
 <div class="container">
 <div class="d-flex justify-content-between align-items-center mb-4">
-<h2>URA Tax Reporting Portal</h2>
-<a href="dashboards/school-bursar.php?page=ura" class="btn btn-outline-secondary btn-sm">Back to Bursar Dashboard</a>
+<h2><img src="images/ura.png" alt="URA" style="height:32px;width:auto;margin-right:10px;vertical-align:middle" onerror="this.style.display='none'"> URA Tax Reporting Portal</h2>
+<div class="d-flex gap-2">
+  <a href="?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
+  <a href="?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
+  <a href="dashboards/school-bursar.php?page=ura" class="btn btn-outline-secondary btn-sm">Back to Bursar</a>
+</div>
 </div>
 <div class="row">
 <div class="col-md-4">
-<div class="card"><div class="card-header bg-primary text-white">VAT Return</div>
+<div class="card"><div class="card-header bg-primary text-white"><img src="images/ura.png" alt="" style="height:18px;width:auto;margin-right:6px;filter:brightness(0) invert(1)" onerror="this.style.display='none'">VAT Return</div>
 <div class="card-body">
 <form method="get"><input type="hidden" name="generate" value="1"><input type="hidden" name="type" value="vat">
 <div class="mb-2"><label class="form-label">Month</label><select name="month" class="form-select"><?php for($m=1;$m<=12;$m++): ?><option value="<?=$m?>" <?=$m==date('n')?'selected':''?>><?=date('F',mktime(0,0,0,$m,1))?></option><?php endfor; ?></select></div>
@@ -148,7 +152,7 @@ body{background:#f0f2f5;font-family:'Segoe UI',sans-serif;padding:30px}
 </div></div>
 </div>
 <div class="col-md-4">
-<div class="card"><div class="card-header bg-success text-white">Withholding Tax</div>
+<div class="card"><div class="card-header bg-success text-white"><img src="images/ura.png" alt="" style="height:18px;width:auto;margin-right:6px;filter:brightness(0) invert(1)" onerror="this.style.display='none'">Withholding Tax</div>
 <div class="card-body">
 <form method="get"><input type="hidden" name="generate" value="1"><input type="hidden" name="type" value="wht">
 <div class="mb-2"><label class="form-label">Month</label><select name="month" class="form-select"><?php for($m=1;$m<=12;$m++): ?><option value="<?=$m?>" <?=$m==date('n')?'selected':''?>><?=date('F',mktime(0,0,0,$m,1))?></option><?php endfor; ?></select></div>
@@ -157,7 +161,7 @@ body{background:#f0f2f5;font-family:'Segoe UI',sans-serif;padding:30px}
 </div></div>
 </div>
 <div class="col-md-4">
-<div class="card"><div class="card-header bg-warning text-dark">Annual Report</div>
+<div class="card"><div class="card-header bg-warning text-dark"><img src="images/ura.png" alt="" style="height:18px;width:auto;margin-right:6px" onerror="this.style.display='none'">Annual Report</div>
 <div class="card-body">
 <form method="get"><input type="hidden" name="generate" value="1"><input type="hidden" name="type" value="annual">
 <div class="mb-2"><label class="form-label">Year</label><select name="year" class="form-select"><?php for($y=date('Y');$y>=2024;$y--): ?><option value="<?=$y?>" <?=$y==date('Y')?'selected':''?>><?=$y?></option><?php endfor; ?></select></div>

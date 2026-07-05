@@ -142,24 +142,33 @@ if (isset($_REQUEST['ajax'])) {
             $program_name = $_POST['program'] ?? '';
             $intake = $_POST['intake'] ?? 'January';
             $admission_date = $_POST['admission_date'] ?? date('Y-m-d');
+            $nationality = trim($_POST['nationality'] ?? 'Ugandan');
+            $emergency_contact = trim($_POST['emergency_contact'] ?? '');
+            $emergency_phone = trim($_POST['emergency_phone'] ?? '');
             if (!$full_name || !$gender || !$program_name || !$intake) {
                 $response['message'] = 'Required fields are missing.';
                 break;
             }
             $app_number = 'APP-' . date('Y') . '-' . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $temp_password = bin2hex(random_bytes(4));
+            $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
             $status = 'New Applicant';
             $prog_id = 0;
             $pr = $conn->query("SELECT id FROM `$staff_db`.`academic_programs` WHERE program_name='" . $conn->real_escape_string($program_name) . "' LIMIT 1");
             if ($pr && $pr->num_rows > 0) { $prog_id = (int)$pr->fetch_assoc()['id']; }
-            $ins = $conn->prepare("INSERT INTO `$staff_db`.`applicants` (full_name, other_names, date_of_birth, gender, phone, email, address, guardian_name, guardian_phone, application_number, program_id, intake, admission_date, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $ins->bind_param('ssssssssssssss', $full_name, $other_names, $dob, $gender, $phone, $email, $address, $guardian_name, $guardian_phone, $app_number, $prog_id, $intake, $admission_date, $status);
-            if ($ins->execute()) {
+            $conn->begin_transaction();
+            try {
+                $ins = $conn->prepare("INSERT INTO `$staff_db`.`applicants` (full_name, other_names, date_of_birth, gender, phone, email, address, guardian_name, guardian_phone, application_number, program_id, intake, admission_date, nationality, emergency_contact, emergency_phone, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $ins->bind_param('sssssssssssssssss', $full_name, $other_names, $dob, $gender, $phone, $email, $address, $guardian_name, $guardian_phone, $app_number, $prog_id, $intake, $admission_date, $nationality, $emergency_contact, $emergency_phone, $status);
+                $ins->execute();
                 $applicant_id = $conn->insert_id;
                 $rc = 0;
                 $ck = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
                 $track = $conn->prepare("INSERT INTO `$staff_db`.`student_admission_tracking` (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
-                $track->bind_param('ssssssii', $app_number, $full_name, $program_name, $intake, $admission_date, $status, $rc, $rc);
+                $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, $admission_date, $status, 0, $rc);
                 $track->execute();
                 $reqs = $conn->query("SELECT id FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($reqs) {
@@ -169,11 +178,12 @@ if (isset($_REQUEST['ajax'])) {
                 }
                 if ($students_conn) {
                     $parts = explode(' ', $full_name);
-                    $surname = $parts[0] ?? $full_name;
-                    $last_name = end($parts);
+                    $first_name = $parts[0] ?? $full_name;
+                    $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
+                    $last_name = $parts[1] ?? $surname;
                     $year = 1; $level = 'Year 1';
-                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, first_name, surname, last_name, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-                    $s_ins->bind_param('sssssssssssissssssss', $app_number, $full_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, 'Active');
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, last_name, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                    $s_ins->bind_param('sssssssssssissssssssssss', $student_number, $reg_number, $first_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $hashed_password);
                     $s_ins->execute();
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {
@@ -182,11 +192,16 @@ if (isset($_REQUEST['ajax'])) {
                         $prof->execute();
                     }
                 }
+                $conn->commit();
                 $response['success'] = true;
-                $response['message'] = 'Student registered successfully! Number: ' . $app_number;
-                $response['student_number'] = $app_number;
-            } else {
-                $response['message'] = 'Registration failed: ' . $conn->error;
+                $response['message'] = 'Student registered successfully!';
+                $response['student_number'] = $student_number;
+                $response['reg_number'] = $reg_number;
+                $response['portal_username'] = $student_number;
+                $response['portal_password'] = $temp_password;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $response['message'] = 'Registration failed: ' . $e->getMessage();
             }
             break;
 
@@ -909,9 +924,12 @@ $page = $_REQUEST['page'] ?? 'home';
             <div class="col-md-4"><label class="form-label fw-bold">Gender <span class="text-danger">*</span></label><select class="form-select" name="gender" required><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Phone</label><input type="tel" class="form-control" name="phone" placeholder="+256..."></div>
             <div class="col-md-4"><label class="form-label fw-bold">Email</label><input type="email" class="form-control" name="email"></div>
-            <div class="col-md-6"><label class="form-label fw-bold">Address</label><input type="text" class="form-control" name="address"></div>
-            <div class="col-md-3"><label class="form-label fw-bold">Guardian Name</label><input type="text" class="form-control" name="guardian_name"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Nationality</label><input type="text" class="form-control" name="nationality" value="Ugandan"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Address</label><input type="text" class="form-control" name="address" placeholder="Home address"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Guardian Name</label><input type="text" class="form-control" name="guardian_name"></div>
             <div class="col-md-3"><label class="form-label fw-bold">Guardian Phone</label><input type="tel" class="form-control" name="guardian_phone"></div>
+            <div class="col-md-3"><label class="form-label fw-bold">Emergency Contact</label><input type="text" class="form-control" name="emergency_contact" placeholder="Emergency person"></div>
+            <div class="col-md-2"><label class="form-label fw-bold">Emergency Phone</label><input type="tel" class="form-control" name="emergency_phone"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Program <span class="text-danger">*</span></label><select class="form-select" name="program" required><option value="">Select Program</option><?php foreach ($programs as $p): ?><option value="<?= $p ?>"><?= $p ?></option><?php endforeach; ?></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Intake <span class="text-danger">*</span></label><select class="form-select" name="intake" required><option value="">Select Intake</option><?php foreach ($intakes as $i): ?><option value="<?= $i ?>"><?= $i ?></option><?php endforeach; ?></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Admission Date</label><input type="date" class="form-control" name="admission_date" value="<?= date('Y-m-d') ?>"></div>
@@ -920,7 +938,7 @@ $page = $_REQUEST['page'] ?? 'home';
             <button type="submit" class="btn btn-isnm" id="registerBtn"><i class="fas fa-save me-1"></i>Register Student</button>
             <button type="reset" class="btn btn-isnm-outline"><i class="fas fa-undo me-1"></i>Reset</button>
         </div>
-        <div id="registerMsg" class="mt-3" style="display:none"></div>
+        <div id="regResult" class="mt-3" style="display:none"></div>
     </form>
 </div>
 <?php elseif ($page === 'student_records'): ?>
@@ -1389,7 +1407,7 @@ function esc(s){if(!s)return'';const d=document.createElement('div');d.textConte
 function exportCSV(){const s=document.getElementById('srSearch')?.value||'';const st=document.getElementById('srStatus')?.value||'';const pr=document.getElementById('srProgram')?.value||'';const url=new URL(BASE,window.location.origin);url.searchParams.set('ajax','export_students_csv');if(s)url.searchParams.set('search',s);if(st)url.searchParams.set('status',st);if(pr)url.searchParams.set('program',pr);window.location.href=url.toString()}
 if(document.getElementById('recentStudents')){ajax('search_students','GET',{search:'',page:1}).then(d=>{if(d.success){const tb=document.getElementById('recentStudents');tb.innerHTML=d.students.slice(0,8).map(s=>`<tr><td><small>${esc(s.student_number||'')}</small></td><td>${esc(s.full_name)}</td><td><small>${esc(s.program||'')}</small></td><td><span class="badge-status badge-${s.status||'new'}">${(s.status||'new').replace(/_/g,' ')}</span></td><td><small>${s.created_at||''}</small></td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted">No students registered yet</td></tr>'}})}
 
-function registerStudent(e){e.preventDefault();const fd=new FormData(document.getElementById('registerForm'));const btn=document.getElementById('registerBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Registering...';ajax('register_student','POST',fd).then(d=>{btn.disabled=false;btn.innerHTML='<i class="fas fa-save me-1"></i>Register Student';const msg=document.getElementById('registerMsg');msg.style.display='block';if(d.success){msg.className='alert alert-success';msg.innerHTML='<i class="fas fa-check-circle me-1"></i>'+d.message;document.getElementById('registerForm').reset()}else{msg.className='alert alert-danger';msg.innerHTML='<i class="fas fa-exclamation-circle me-1"></i>'+d.message}});return false}
+function registerStudent(e){e.preventDefault();const fd=new FormData(document.getElementById('registerForm'));const btn=document.getElementById('registerBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Registering...';ajax('register_student','POST',fd).then(d=>{btn.disabled=false;btn.innerHTML='<i class="fas fa-save me-1"></i>Register Student';if(d.success){document.getElementById('regResult').style.display='block';document.getElementById('regResult').className='alert alert-success';document.getElementById('regResult').innerHTML='<strong><i class="fas fa-check-circle me-1"></i>Student Registered!</strong><hr class="my-2"><div class="small"><div><strong>Student No:</strong> '+d.student_number+'</div><div><strong>Reg No:</strong> '+d.reg_number+'</div><div><strong>Portal Username:</strong> '+d.portal_username+'</div><div><strong>Portal Password:</strong> '+d.portal_password+'</div><div class="mt-2 text-muted"><i class="fas fa-info-circle"></i> Share credentials with student. They can login at <strong>student-login.php</strong></div></div>';document.getElementById('registerForm').reset()}else{document.getElementById('regResult').style.display='block';document.getElementById('regResult').className='alert alert-danger';document.getElementById('regResult').innerHTML='<i class="fas fa-exclamation-circle me-1"></i>'+d.message}});return false}
 
 let srPage=1;
 function searchStudentsRecords(p){srPage=p||1;const s=document.getElementById('srSearch')?.value||'';const st=document.getElementById('srStatus')?.value||'';const pr=document.getElementById('srProgram')?.value||'';const it=document.getElementById('srIntake')?.value||'';ajax('search_students','GET',{search:s,status:st,program:pr,intake:it,page:srPage}).then(d=>{if(!d.success)return;const tb=document.getElementById('recordsBody');if(!tb)return;tb.innerHTML=d.students.map((s,i)=>`<tr><td>${(d.page-1)*d.per_page+i+1}</td><td><small>${esc(s.student_number||'')}</small></td><td><a href="?page=student_profile&id=${s.id}" class="text-decoration-none fw-bold">${esc(s.full_name)}</a></td><td><small>${esc(s.program||'')}</small></td><td><small>${esc(s.intake_period||'')}</small></td><td><span class="badge-status badge-${s.status||'new'}">${(s.status||'new').replace(/_/g,' ')}</span></td><td><div class="progress-req" style="width:100px"><div class="progress-req-bar" style="width:${s.req_total?Math.round(s.req_complete/s.req_total*100):0}%"></div></div><small class="text-muted">${s.req_complete||0}/${s.req_total||0}</small></td><td><a href="?page=student_profile&id=${s.id}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a> <a href="?page=student_edit&id=${s.id}" class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></a> <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${s.id},'${esc(s.full_name)}')"><i class="fas fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center text-muted py-4">No students found</td></tr>';document.getElementById('recordsInfo').textContent=`Showing ${d.students.length} of ${d.total} students`;const pg=document.getElementById('recordsPagination');pg.innerHTML='';for(let p2=1;p2<=d.total_pages;p2++){pg.innerHTML+=`<li class="page-item ${p2===d.page?'active':''}"><a class="page-link" href="#" onclick="searchStudentsRecords(${p2});return false">${p2}</a></li>`}})}

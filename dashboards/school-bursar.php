@@ -317,7 +317,7 @@ $pageTitle = 'Bursar Dashboard';
   <a href="school-bursar.php?page=ledger" class="<?=$page==='ledger'?'active':''?>">Ledger</a>
   <a href="school-bursar.php?page=inventory" class="<?=$page==='inventory'?'active':''?>">Inventory</a>
   <a href="school-bursar.php?page=communications" class="<?=$page==='communications'?'active':''?>">Comms</a>
-  <a href="school-bursar.php?page=ura" class="<?=$page==='ura'?'active':''?>">URA Tax</a>
+  <a href="school-bursar.php?page=ura" class="<?=$page==='ura'?'active':''?>"><img src="../images/ura.png" alt="" style="height:14px;width:auto;margin-right:4px" onerror="this.style.display='none'">URA Tax</a>
 </nav>
 
 <?php if ($page === 'overview'): ?>
@@ -649,22 +649,27 @@ $pageTitle = 'Bursar Dashboard';
 </div>
 
 <?php elseif ($page === 'ura'): ?>
+<?php $ura_logo = '../images/ura.png'; $ura_logo_abs = __DIR__ . '/../images/ura.png'; ?>
 <div class="row">
   <div class="col-md-4">
-    <div class="brs-card"><h3>Add Tax Record</h3>
+    <div class="brs-card d-flex align-items-center gap-3 mb-3" style="background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff;border:none">
+      <?php if (file_exists($ura_logo_abs)): ?><img src="<?=$ura_logo?>" alt="URA" style="height:50px;width:auto;filter:brightness(0) invert(1);"><?php else: ?><i class="fas fa-university fa-2x"></i><?php endif; ?>
+      <div><h3 style="margin:0;color:#fff;font-size:16px;border:none;padding:0">Uganda Revenue Authority</h3><p style="margin:0;opacity:.8;font-size:12px">Tax Compliance &amp; Reporting</p></div>
+    </div>
+    <div class="brs-card"><h3><i class="fas fa-plus-circle me-1"></i> Add Tax Record</h3>
     <form method="post"><input type="hidden" name="action" value="add_tax_record">
       <div class="mb-2"><select class="form-select form-select-sm" name="tax_type"><option value="withholding">Withholding Tax</option><option value="vat">VAT</option></select></div>
-      <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
+      <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount (UGX)" step="0.01" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="tax_period" placeholder="Period (e.g. 2026-07)" value="<?=date('Y-m')?>"></div>
       <div class="mb-2"><input type="date" class="form-control form-control-sm" name="tax_date" value="<?=date('Y-m-d')?>"></div>
-      <button class="btn btn-sm btn-primary">Add Record</button>
+      <button class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i>Add Record</button>
     </form></div>
   </div>
   <div class="col-md-8">
-    <div class="brs-card"><h3>URA Tax Reporting</h3>
+    <div class="brs-card"><h3><img src="<?=$ura_logo?>" alt="URA" style="height:22px;width:auto;margin-right:8px;vertical-align:middle" onerror="this.style.display='none'"> URA Tax Compliance Dashboard</h3>
     <div class="row">
       <div class="col-md-6">
-        <h4 class="fs-6">Withholding Tax</h4>
+        <h4 class="fs-6"><i class="fas fa-percent text-success me-1"></i> Withholding Tax</h4>
         <?php $wht = $staffConn ? $staffConn->query("SELECT * FROM bursar_withholding_tax ORDER BY tax_date DESC LIMIT 10") : null; if ($wht && $wht->num_rows > 0): ?>
         <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Amount</th><th>Status</th></tr></thead><tbody>
         <?php while ($w = $wht->fetch_assoc()): ?><tr><td><?=htmlspecialchars($w['tax_date']??$w['period']??'')?></td><td><?=number_format($w['wht_amount']??$w['gross_amount']??0)?></td><td><?=htmlspecialchars($w['status']??'-')?></td></tr><?php endwhile; ?>
@@ -672,7 +677,7 @@ $pageTitle = 'Bursar Dashboard';
         <?php else: ?><p class="text-muted small">No withholding tax records.</p><?php endif; ?>
       </div>
       <div class="col-md-6">
-        <h4 class="fs-6">VAT Reports</h4>
+        <h4 class="fs-6"><i class="fas fa-chart-pie text-primary me-1"></i> VAT Reports</h4>
         <?php $vat = $staffConn ? $staffConn->query("SELECT * FROM bursar_vat_reports ORDER BY created_at DESC LIMIT 10") : null; if ($vat && $vat->num_rows > 0): ?>
         <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Net</th><th>Status</th></tr></thead><tbody>
         <?php while ($v = $vat->fetch_assoc()): ?><tr><td><?=htmlspecialchars($v['period_start']??$v['period_end']??'')?></td><td><?=number_format($v['net_vat']??$v['output_vat']??0)?></td><td><?=htmlspecialchars($v['status']??'-')?></td></tr><?php endwhile; ?>
@@ -680,7 +685,11 @@ $pageTitle = 'Bursar Dashboard';
         <?php else: ?><p class="text-muted small">No VAT records.</p><?php endif; ?>
       </div>
     </div>
-    <p class="small mt-2"><a href="ura_reporting.php" class="btn btn-sm btn-outline-primary">Full URA Reporting Portal</a></p>
+    <div class="d-flex gap-2 mt-3">
+      <a href="ura_reporting.php" class="btn btn-sm btn-primary"><img src="<?=$ura_logo?>" alt="" style="height:14px;width:auto;margin-right:6px" onerror="this.style.display='none'">Full URA Reporting Portal</a>
+      <a href="ura_reporting.php?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
+      <a href="ura_reporting.php?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
+    </div>
     </div>
   </div>
 </div>
