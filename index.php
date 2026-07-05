@@ -77,16 +77,19 @@ include_once 'shared/_header.php';
         </div>
         
         <div class="cta-buttons">
-          <a href="application.php" class="btn-cinematic btn-primary">
+          <a href="application.php" class="btn-3d btn-yellow">
+            <span class="shine"></span>
             <i class="fas fa-graduation-cap"></i>
             <span>Apply Now</span>
           </a>
-          <a href="student-login.php" class="btn-cinematic btn-secondary">
+          <a href="student-login.php" class="btn-3d btn-blue">
+            <span class="shine"></span>
             <i class="fas fa-user-graduate"></i>
             <span>Student Portal</span>
           </a>
-          <a href="about.php" class="btn-cinematic btn-outline">
-            <i class="fas fa-play-circle"></i>
+          <a href="about.php" class="btn-3d btn-glass">
+            <span class="shine"></span>
+            <i class="fas fa-info-circle"></i>
             <span>Learn More</span>
           </a>
         </div>
@@ -151,7 +154,10 @@ include_once 'shared/_header.php';
                 <li>Skills laboratory training</li>
                 <li>Community health exposure</li>
               </ul>
-              <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
+              <a href="programs.php" class="btn-3d btn-blue btn-3d-sm">
+                <span class="shine"></span>
+                <i class="fas fa-arrow-right"></i> Learn More
+              </a>
             </div>
           </div>
           <div class="col-lg-6">
@@ -166,7 +172,10 @@ include_once 'shared/_header.php';
                 <li>Delivery room practice</li>
                 <li>Postnatal care expertise</li>
               </ul>
-              <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
+              <a href="programs.php" class="btn-3d btn-blue btn-3d-sm">
+                <span class="shine"></span>
+                <i class="fas fa-arrow-right"></i> Learn More
+              </a>
             </div>
           </div>
           <div class="col-lg-6">
@@ -181,7 +190,10 @@ include_once 'shared/_header.php';
                 <li>Leadership training</li>
                 <li>Research methodology</li>
               </ul>
-              <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
+              <a href="programs.php" class="btn-3d btn-blue btn-3d-sm">
+                <span class="shine"></span>
+                <i class="fas fa-arrow-right"></i> Learn More
+              </a>
             </div>
           </div>
           <div class="col-lg-6">
@@ -196,7 +208,10 @@ include_once 'shared/_header.php';
                 <li>High-risk pregnancy management</li>
                 <li>Neonatal care specialization</li>
               </ul>
-              <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
+              <a href="programs.php" class="btn-3d btn-blue btn-3d-sm">
+                <span class="shine"></span>
+                <i class="fas fa-arrow-right"></i> Learn More
+              </a>
             </div>
           </div>
         </div>
@@ -234,8 +249,14 @@ include_once 'shared/_header.php';
                 </div>
               </div>
               <div class="d-flex gap-3 mt-4 flex-wrap">
-                <a href="about.php" class="btn btn-primary"><i class="fas fa-info-circle me-2"></i>Learn More About Us</a>
-                <a href="volunteer.php" class="btn btn-volunteer"><i class="fas fa-hands-helping me-2"></i>Volunteer With Us</a>
+                <a href="about.php" class="btn-3d btn-green">
+                  <span class="shine"></span>
+                  <i class="fas fa-info-circle me-2"></i>Learn More About Us
+                </a>
+                <a href="volunteer.php" class="btn-3d btn-chocolate">
+                  <span class="shine"></span>
+                  <i class="fas fa-hands-helping me-2"></i>Volunteer With Us
+                </a>
               </div>
             </div>
           </div>
@@ -330,7 +351,10 @@ include_once 'shared/_header.php';
                 <h5><a href="news.php?id=<?= (int)$item['id'] ?>"><?= htmlspecialchars($item['title']) ?></a></h5>
                 <p class="excerpt"><?= htmlspecialchars(mb_strimwidth(strip_tags($item['excerpt'] ?? ''), 0, 120, '...')) ?></p>
                 <div class="mt-2">
-                  <a href="news.php?id=<?= (int)$item['id'] ?>" class="btn btn-sm btn-outline-primary">Read More</a>
+                  <a href="news.php?id=<?= (int)$item['id'] ?>" class="btn-3d btn-blue btn-3d-sm">
+                    <span class="shine"></span>
+                    <i class="fas fa-arrow-right"></i> Read More
+                  </a>
                 </div>
               </div>
             </div>
@@ -349,7 +373,10 @@ include_once 'shared/_header.php';
           <?php endif; ?>
         </div>
         <div class="text-center mt-4">
-          <a href="news.php" class="btn btn-primary btn-lg"><i class="fas fa-newspaper me-2"></i>View All News</a>
+          <a href="news.php" class="btn-3d btn-green btn-3d-lg">
+            <span class="shine"></span>
+            <i class="fas fa-newspaper me-2"></i>View All News
+          </a>
         </div>
       </div>
     </section>
@@ -360,10 +387,12 @@ include_once 'shared/_header.php';
         <h2 class="mb-4">Ready to Start Your Healthcare Journey?</h2>
         <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
         <div class="cta-buttons">
-          <a href="application.php" class="btn btn-light btn-lg me-3">
+          <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3">
+            <span class="shine"></span>
             <i class="fas fa-paper-plane"></i> Apply Online
           </a>
-          <a href="contact.php" class="btn btn-outline-light btn-lg">
+          <a href="contact.php" class="btn-3d btn-glass btn-3d-lg">
+            <span class="shine"></span>
             <i class="fas fa-phone"></i> Contact Us
           </a>
         </div>

@@ -169,7 +169,8 @@
                 </div>
 
                 <div class="form-footer text-center">
-                  <button type="submit" class="submit-btn">
+                  <button type="submit" class="btn-3d btn-yellow btn-3d-block">
+                    <span class="shine"></span>
                     <i class="fas fa-paper-plane me-2"></i>
                     <span>Send Message</span>
                   </button>
@@ -316,7 +317,8 @@
                 </div>
               </div>
               <div class="directions-btn">
-                <a href="https://www.google.com/maps/place/Iganga+School+of+Nursing+%26+Midwifery/@0.5918431,33.4516861,17z/data=!3m1!4b1!4m6!3m5!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!8m2!3d0.5918377!4d33.454261!16s%2Fg%2F11b5ys19t0?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-directions">
+                <a href="https://www.google.com/maps/place/Iganga+School+of+Nursing+%26+Midwifery/@0.5918431,33.4516861,17z/data=!3m1!4b1!4m6!3m5!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!8m2!3d0.5918377!4d33.454261!16s%2Fg%2F11b5ys19t0?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-3d btn-green">
+                  <span class="shine"></span>
                   <i class="fas fa-directions me-2"></i>
                   <span>Get Directions</span>
                 </a>
@@ -400,10 +402,12 @@
       <h2 class="mb-4">Ready to Join ISNM?</h2>
       <p class="lead mb-4">Apply now or support our mission to train the next generation of healthcare professionals</p>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="application.php" class="btn btn-light btn-lg px-5">
+        <a href="application.php" class="btn-3d btn-blue btn-3d-lg px-5">
+          <span class="shine"></span>
           <i class="fas fa-paper-plane me-2"></i> Apply Now
         </a>
-        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+        <a href="donation.php" class="btn-3d btn-glass btn-3d-lg px-5">
+          <span class="shine"></span>
           <i class="fas fa-hand-holding-heart me-2"></i> Support Us
         </a>
       </div>

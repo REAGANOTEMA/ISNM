@@ -119,7 +119,7 @@
                 <h4>Time Commitment</h4>
                 <p>Flexible , 4-8 hours per week during clinical placements</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('Clinical Instructor')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('Clinical Instructor')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@
                 <h4>Time Commitment</h4>
                 <p>1-2 lectures per month (2-4 hours each)</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('Guest Lecturer')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('Guest Lecturer')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -181,7 +181,7 @@
                 <h4>Time Commitment</h4>
                 <p>Flexible , 4-6 hours per week</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('IT Support')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('IT Support')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -212,7 +212,7 @@
                 <h4>Time Commitment</h4>
                 <p>Flexible , 8-12 hours per week</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('Administrative Assistant')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('Administrative Assistant')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -243,7 +243,7 @@
                 <h4>Time Commitment</h4>
                 <p>Event-based , 4-8 hours per screening event</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('Health Screening')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('Health Screening')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -274,7 +274,7 @@
                 <h4>Time Commitment</h4>
                 <p>Flexible , 6-10 hours per week</p>
                 
-                <button class="btn btn-primary" onclick="applyVolunteer('Library Assistant')">Apply Now</button>
+                <button class="btn-3d btn-green" onclick="applyVolunteer('Library Assistant')"><span class="shine"></span>Apply Now</button>
               </div>
             </div>
           </div>
@@ -427,8 +427,8 @@
                     </div>
                   </div>
                   <div class="col-12 text-center">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                      <i class="fas fa-paper-plane"></i> Submit Application
+                    <button type="submit" class="btn-3d btn-yellow btn-3d-lg">
+                      <span class="shine"></span><i class="fas fa-paper-plane"></i> Submit Application
                     </button>
                   </div>
                 </div>
@@ -493,11 +493,11 @@
       <h2 class="mb-4">Support Our Mission</h2>
       <p class="lead mb-4">Your contribution helps us train the next generation of healthcare professionals</p>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="donation.php" class="btn btn-light btn-lg px-5">
-          <i class="fas fa-hand-holding-heart me-2"></i> Make a Donation
+        <a href="donation.php" class="btn-3d btn-blue btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-hand-holding-heart me-2"></i> Make a Donation
         </a>
-        <a href="application.php" class="btn btn-outline-light btn-lg px-5">
-          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        <a href="application.php" class="btn-3d btn-glass btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-paper-plane me-2"></i> Apply Now
         </a>
       </div>
     </div>

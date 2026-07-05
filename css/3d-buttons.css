@@ -1,0 +1,77 @@
+/* ══════════════════════════════════════════════════════════════════
+   ISNM 3D Premium Button System — Yellow · Blue · Green · Chocolate · Red
+   Include: <link rel="stylesheet" href="css/3d-buttons.css">
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --btn-yellow-from:#FFD700;--btn-yellow-mid:#F0C000;--btn-yellow-to:#DAA520;--btn-yellow-shadow:#B8960F;
+  --btn-blue-from:#1E88E5;--btn-blue-mid:#1565C0;--btn-blue-to:#0D47A1;--btn-blue-shadow:#0A3A7A;
+  --btn-green-from:#2ECC71;--btn-green-mid:#27AE60;--btn-green-to:#1A8C4A;--btn-green-shadow:#147A3E;
+  --btn-chocolate-from:#D2691E;--btn-chocolate-mid:#A0522D;--btn-chocolate-to:#8B4513;--btn-chocolate-shadow:#6B3410;
+  --btn-red-from:#E74C3C;--btn-red-mid:#C62828;--btn-red-to:#B71C1C;--btn-red-shadow:#8F1414;
+  --btn-3d-radius:14px;--btn-3d-radius-sm:12px;
+  --btn-3d-depth:6px;--btn-3d-depth-sm:4px;
+}
+.btn-3d{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:16px 28px;border:none;border-radius:var(--btn-3d-radius);
+  font-family:'Rajdhani','Poppins',-apple-system,sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transform-style:preserve-3d;will-change:transform;line-height:1.2;
+}
+.btn-3d::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;border-radius:inherit;z-index:0;pointer-events:none}
+.btn-3d span,.btn-3d i{position:relative;z-index:1}
+.btn-3d .shine{
+  position:absolute;top:0;left:-80%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),rgba(255,255,255,0.12),rgba(255,255,255,0.08),transparent);
+  transform:skewX(-22deg);pointer-events:none;animation:btnShine 4s ease-in-out infinite;z-index:0;
+}
+@keyframes btnShine{0%{left:-80%}50%{left:150%}100%{left:-80%}}
+/* ── Yellow ── */
+.btn-yellow{background:linear-gradient(180deg,var(--btn-yellow-from) 0%,var(--btn-yellow-mid) 40%,var(--btn-yellow-to) 100%);color:#1a1a2e;box-shadow:0 var(--btn-3d-depth) 0 var(--btn-yellow-shadow),0 8px 20px rgba(255,215,0,0.3),0 12px 30px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.4)}
+.btn-yellow:hover{transform:translateY(calc(var(--btn-3d-depth)*-1));box-shadow:0 calc(var(--btn-3d-depth)+3px) 0 var(--btn-yellow-shadow),0 12px 30px rgba(255,215,0,0.4),0 18px 45px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.5)}
+.btn-yellow:active{transform:translateY(3px);box-shadow:0 3px 0 var(--btn-yellow-shadow),0 4px 12px rgba(255,215,0,0.2),inset 0 2px 8px rgba(0,0,0,0.1)}
+/* ── Blue ── */
+.btn-blue{background:linear-gradient(180deg,var(--btn-blue-from) 0%,var(--btn-blue-mid) 40%,var(--btn-blue-to) 100%);color:#fff;box-shadow:0 var(--btn-3d-depth) 0 var(--btn-blue-shadow),0 8px 20px rgba(30,136,229,0.3),0 12px 30px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.25)}
+.btn-blue:hover{transform:translateY(calc(var(--btn-3d-depth)*-1));box-shadow:0 calc(var(--btn-3d-depth)+3px) 0 var(--btn-blue-shadow),0 12px 30px rgba(30,136,229,0.4),0 18px 45px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.35)}
+.btn-blue:active{transform:translateY(3px);box-shadow:0 3px 0 var(--btn-blue-shadow),0 4px 12px rgba(30,136,229,0.2),inset 0 2px 8px rgba(0,0,0,0.1)}
+/* ── Green ── */
+.btn-green{background:linear-gradient(180deg,var(--btn-green-from) 0%,var(--btn-green-mid) 40%,var(--btn-green-to) 100%);color:#fff;box-shadow:0 var(--btn-3d-depth) 0 var(--btn-green-shadow),0 8px 20px rgba(46,204,113,0.3),0 12px 30px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.25)}
+.btn-green:hover{transform:translateY(calc(var(--btn-3d-depth)*-1));box-shadow:0 calc(var(--btn-3d-depth)+3px) 0 var(--btn-green-shadow),0 12px 30px rgba(46,204,113,0.4),0 18px 45px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.35)}
+.btn-green:active{transform:translateY(3px);box-shadow:0 3px 0 var(--btn-green-shadow),0 4px 12px rgba(46,204,113,0.2),inset 0 2px 8px rgba(0,0,0,0.1)}
+/* ── Chocolate ── */
+.btn-chocolate{background:linear-gradient(180deg,var(--btn-chocolate-from) 0%,var(--btn-chocolate-mid) 40%,var(--btn-chocolate-to) 100%);color:#fff;box-shadow:0 var(--btn-3d-depth) 0 var(--btn-chocolate-shadow),0 8px 20px rgba(210,105,30,0.3),0 12px 30px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.2)}
+.btn-chocolate:hover{transform:translateY(calc(var(--btn-3d-depth)*-1));box-shadow:0 calc(var(--btn-3d-depth)+3px) 0 var(--btn-chocolate-shadow),0 12px 30px rgba(210,105,30,0.4),0 18px 45px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.3)}
+.btn-chocolate:active{transform:translateY(3px);box-shadow:0 3px 0 var(--btn-chocolate-shadow),0 4px 12px rgba(210,105,30,0.2),inset 0 2px 8px rgba(0,0,0,0.1)}
+/* ── Red ── */
+.btn-red{background:linear-gradient(180deg,var(--btn-red-from) 0%,var(--btn-red-mid) 40%,var(--btn-red-to) 100%);color:#fff;box-shadow:0 var(--btn-3d-depth) 0 var(--btn-red-shadow),0 8px 20px rgba(231,76,60,0.3),0 12px 30px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.2)}
+.btn-red:hover{transform:translateY(calc(var(--btn-3d-depth)*-1));box-shadow:0 calc(var(--btn-3d-depth)+3px) 0 var(--btn-red-shadow),0 12px 30px rgba(231,76,60,0.4),0 18px 45px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.3)}
+.btn-red:active{transform:translateY(3px);box-shadow:0 3px 0 var(--btn-red-shadow),0 4px 12px rgba(231,76,60,0.2),inset 0 2px 8px rgba(0,0,0,0.1)}
+/* ── Sizes ── */
+.btn-3d-sm{padding:12px 20px;font-size:12px;border-radius:var(--btn-3d-radius-sm);gap:8px;--btn-3d-depth:var(--btn-3d-depth-sm)}
+.btn-3d-lg{padding:20px 36px;font-size:16px;border-radius:16px;gap:12px;--btn-3d-depth:8px}
+.btn-3d-block{width:100%}
+/* ── Loading ── */
+.btn-3d .spinner{
+  display:none;width:20px;height:20px;
+  border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;
+  border-radius:50%;animation:btnSpin 0.6s linear infinite;
+}
+.btn-3d.loading .spinner{display:inline-block}
+.btn-3d.loading .btn-text{opacity:0.7}
+.btn-3d.loading{pointer-events:none;transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,0.1),0 4px 10px rgba(0,0,0,0.1)}
+@keyframes btnSpin{to{transform:rotate(360deg)}}
+/* ── Glass / subtle 3D for nav / secondary buttons ── */
+.btn-glass{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 26px;border:none;border-radius:var(--btn-3d-radius);
+  font-family:'Rajdhani','Poppins',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:all 0.3s;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);
+  box-shadow:0 4px 15px rgba(0,0,0,0.1),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.btn-glass:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.15)}
+.btn-glass:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(0,0,0,0.1),inset 0 2px 6px rgba(0,0,0,0.08)}

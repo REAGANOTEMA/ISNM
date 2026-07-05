@@ -63,8 +63,8 @@
                 <p>Students gain hands on experience at major hospitals including Iganga, Bugiri, Busolwe, Tororo, Masafu, and Mbale Regional Referral hospitals.</p>
                 
                 <div class="program-actions">
-                  <a href="application.php" class="btn btn-primary">Apply Now</a>
-                  <a href="contact.php" class="btn btn-outline-primary">Learn More</a>
+                  <a href="application.php" class="btn-3d btn-green"><span class="shine"></span>Apply Now</a>
+                  <a href="contact.php" class="btn-3d btn-blue btn-3d-sm"><span class="shine"></span>Learn More</a>
                 </div>
               </div>
             </div>
@@ -109,8 +109,8 @@
                 <p>Extensive hands-on training in delivery rooms and maternity wards at partner hospitals, ensuring students gain practical experience in real delivery situations.</p>
                 
                 <div class="program-actions">
-                  <a href="application.php" class="btn btn-primary">Apply Now</a>
-                  <a href="contact.php" class="btn btn-outline-primary">Learn More</a>
+                  <a href="application.php" class="btn-3d btn-green"><span class="shine"></span>Apply Now</a>
+                  <a href="contact.php" class="btn-3d btn-blue btn-3d-sm"><span class="shine"></span>Learn More</a>
                 </div>
               </div>
             </div>
@@ -155,8 +155,8 @@
                 <p>Graduates can work as senior nurses, nursing officers, nurse managers, and pursue further education to become nurse educators or advanced practice nurses.</p>
                 
                 <div class="program-actions">
-                  <a href="application.php" class="btn btn-primary">Apply Now</a>
-                  <a href="contact.php" class="btn btn-outline-primary">Learn More</a>
+                  <a href="application.php" class="btn-3d btn-green"><span class="shine"></span>Apply Now</a>
+                  <a href="contact.php" class="btn-3d btn-blue btn-3d-sm"><span class="shine"></span>Learn More</a>
                 </div>
               </div>
             </div>
@@ -201,8 +201,8 @@
                 <p>Graduates can work as senior midwives, maternity ward managers, reproductive health specialists, and pursue roles in healthcare policy and administration.</p>
                 
                 <div class="program-actions">
-                  <a href="application.php" class="btn btn-primary">Apply Now</a>
-                  <a href="contact.php" class="btn btn-outline-primary">Learn More</a>
+                  <a href="application.php" class="btn-3d btn-green"><span class="shine"></span>Apply Now</a>
+                  <a href="contact.php" class="btn-3d btn-blue btn-3d-sm"><span class="shine"></span>Learn More</a>
                 </div>
               </div>
             </div>
@@ -382,11 +382,11 @@
       <h2 class="mb-4">Take the Next Step in Your Healthcare Career</h2>
       <p class="lead mb-4">Apply now or support our mission to train healthcare professionals</p>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="application.php" class="btn btn-light btn-lg px-5">
-          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        <a href="application.php" class="btn-3d btn-yellow btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-paper-plane me-2"></i> Apply Now
         </a>
-        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
-          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
+        <a href="donation.php" class="btn-3d btn-glass btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-hand-holding-heart me-2"></i> Support Us
         </a>
       </div>
     </div>

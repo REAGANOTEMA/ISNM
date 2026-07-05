@@ -800,8 +800,8 @@
 
                 <!-- Submit Button -->
                 <div class="form-section text-center">
-                  <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-paper-plane"></i> Submit Application
+                  <button type="submit" class="btn-3d btn-yellow btn-3d-lg">
+                    <i class="fas fa-paper-plane"></i> Submit Application<span class="shine"></span>
                   </button>
                   <div class="mt-3">
                     <small class="text-muted">

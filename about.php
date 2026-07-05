@@ -458,11 +458,11 @@
       <h2 class="mb-4">Start Your Healthcare Journey Today</h2>
       <p class="lead mb-4">Join Iganga School of Nursing and Midwifery and become a healthcare professional</p>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="application.php" class="btn btn-light btn-lg px-5">
-          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        <a href="application.php" class="btn-3d btn-yellow btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-paper-plane me-2"></i> Apply Now
         </a>
-        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
-          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
+        <a href="donation.php" class="btn-3d btn-glass btn-3d-lg px-5">
+          <span class="shine"></span><i class="fas fa-hand-holding-heart me-2"></i> Support Us
         </a>
       </div>
     </div>

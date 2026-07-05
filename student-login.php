@@ -36,6 +36,7 @@ if ($login_success) { unset($_SESSION['success']); }
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Login | ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
+  <link rel="stylesheet" href="css/3d-buttons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -681,7 +682,8 @@ if ($login_success) { unset($_SESSION['success']); }
           <div class="form-text" id="password-hint">First time? Leave blank and we'll verify your details.</div>
         </div>
 
-        <button type="submit" class="btn-login" id="btn-submit">
+        <button type="submit" class="btn-3d btn-yellow btn-3d-block" id="btn-submit">
+          <span class="shine"></span>
           <span class="spinner-layer"></span>
           <span class="btn-text"><i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal</span>
         </button>
@@ -694,8 +696,8 @@ if ($login_success) { unset($_SESSION['success']); }
       </div>
 
       <div class="link-row">
-        <a href="organogram.php"><i class="fas fa-arrow-left"></i> Staff login</a>
-        <a href="index.php"><i class="fas fa-home"></i> Homepage</a>
+        <a href="organogram.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
+        <a href="index.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-home"></i> Homepage</a>
       </div>
     </div>
   </div>

@@ -127,6 +127,7 @@ function handlePasswordReset() {
     <title>Staff Password Reset | ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/3d-buttons.css">
     <link rel="icon" type="image/x-icon" href="images/school-logo.png">
     <style>
         :root {
@@ -334,8 +335,8 @@ function handlePasswordReset() {
                                placeholder="Enter your staff email" required autocomplete="email">
                     </div>
                     
-                    <button type="submit" class="btn-reset">
-                        <i class="fas fa-key me-2"></i>Request Password Reset
+                    <button type="submit" class="btn-3d btn-blue btn-3d-block">
+                        <i class="fas fa-key me-2"></i>Request Password Reset<span class="shine"></span>
                     </button>
                 </form>
             <?php else: ?>
@@ -365,8 +366,8 @@ function handlePasswordReset() {
                                placeholder="Confirm new password" required minlength="8">
                     </div>
                     
-                    <button type="submit" class="btn-reset">
-                        <i class="fas fa-lock me-2"></i>Reset Password
+                    <button type="submit" class="btn-3d btn-blue btn-3d-block">
+                        <i class="fas fa-lock me-2"></i>Reset Password<span class="shine"></span>
                     </button>
                 </form>
             <?php endif; ?>

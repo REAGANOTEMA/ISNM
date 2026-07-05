@@ -99,6 +99,7 @@ $pageTitle = 'Staff Portal';
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/includes/dashboard_head.php'; ?>
+<link rel="stylesheet" href="css/3d-buttons.css">
 <style>
 :root { --sp-primary: #1E3A8A; }
 .sp-content{margin-left:270px;padding:24px;min-height:100vh;background:#f8fafc}
@@ -176,7 +177,7 @@ $pageTitle = 'Staff Portal';
   <div class="col-md-6"><label class="form-label">Relationship</label><input class="form-control" name="next_of_kin_relationship" value="<?=htmlspecialchars($staff['next_of_kin_relationship']??'')?>"></div>
   <div class="col-md-6"><label class="form-label">Emergency Contact</label><input class="form-control" name="emergency_contact_name" value="<?=htmlspecialchars($staff['emergency_contact_name']??'')?>"></div>
   <div class="col-md-6"><label class="form-label">Emergency Phone</label><input class="form-control" name="emergency_contact_phone" value="<?=htmlspecialchars($staff['emergency_contact_phone']??'')?>"></div>
-  <div class="col-12"><button class="btn btn-primary">Update Profile</button></div>
+  <div class="col-12"><button class="btn-3d btn-green">Update Profile<span class="shine"></span></button></div>
 </form></div>
 <?php elseif ($page === 'leave'): ?>
 <div class="row">
@@ -189,7 +190,7 @@ $pageTitle = 'Staff Portal';
       <div class="mb-3"><label class="form-label">Start Date</label><input type="date" class="form-control" name="start_date" required></div>
       <div class="mb-3"><label class="form-label">End Date</label><input type="date" class="form-control" name="end_date" required></div>
       <div class="mb-3"><label class="form-label">Reason</label><textarea class="form-control" name="reason" rows="3"></textarea></div>
-      <button class="btn btn-primary">Submit Application</button>
+      <button class="btn-3d btn-green">Submit Application<span class="shine"></span></button>
     </form></div>
   </div>
   <div class="col-md-7">

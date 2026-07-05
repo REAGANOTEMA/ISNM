@@ -32,6 +32,9 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="icon" type="image/png" sizes="32x32" href="images/school-logo.png">
   <link rel="icon" type="image/png" sizes="16x16" href="images/school-logo.png">
     
+  <!-- 3D Buttons CSS -->
+  <link rel="stylesheet" href="css/3d-buttons.css">
+
   <!-- Preconnect for faster CDN resource loading -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">

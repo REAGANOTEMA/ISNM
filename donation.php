@@ -107,7 +107,7 @@
                 <li><span class="amount">UGX 500,000</span><span class="amount-desc">Supports library resources</span></li>
                 <li><span class="amount">UGX 1,000,000</span><span class="amount-desc">Funds technology upgrades</span></li>
               </ul>
-              <button class="btn btn-primary" onclick="showDonationForm('one-time')">Donate Now</button>
+              <button class="btn-3d btn-yellow" onclick="showDonationForm('one-time')"><span class="shine"></span>Donate Now</button>
             </div>
           </div>
           
@@ -124,7 +124,7 @@
                 <li><span class="amount">UGX 100,000<span class="period">/month</span></span><span class="amount-desc">Technology maintenance</span></li>
                 <li><span class="amount">UGX 200,000<span class="period">/month</span></span><span class="amount-desc">Scholarship fund</span></li>
               </ul>
-              <button class="btn btn-primary" onclick="showDonationForm('monthly')">Give Monthly</button>
+              <button class="btn-3d btn-yellow" onclick="showDonationForm('monthly')"><span class="shine"></span>Give Monthly</button>
             </div>
           </div>
           
@@ -141,7 +141,7 @@
                 <li><span class="amount">UGX 2,000,000</span><span class="amount-desc">Full semester</span></li>
                 <li><span class="amount highlight">UGX 4,000,000</span><span class="amount-desc">Full year scholarship</span></li>
               </ul>
-              <button class="btn btn-primary" onclick="showDonationForm('scholarship')">Fund Scholarship</button>
+              <button class="btn-3d btn-yellow" onclick="showDonationForm('scholarship')"><span class="shine"></span>Fund Scholarship</button>
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@
                   </div>
                   <span class="progress-percentage">30% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'library')">Support This Project</button>
+                <button class="btn-3d btn-blue btn-3d-sm" onclick="showDonationForm('project', 'library')"><span class="shine"></span>Support This Project</button>
               </div>
             </div>
           </div>
@@ -200,7 +200,7 @@
                   </div>
                   <span class="progress-percentage">27% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'computer-lab')">Support This Project</button>
+                <button class="btn-3d btn-blue btn-3d-sm" onclick="showDonationForm('project', 'computer-lab')"><span class="shine"></span>Support This Project</button>
               </div>
             </div>
           </div>
@@ -223,7 +223,7 @@
                   </div>
                   <span class="progress-percentage">12.5% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'skills-lab')">Support This Project</button>
+                <button class="btn-3d btn-blue btn-3d-sm" onclick="showDonationForm('project', 'skills-lab')"><span class="shine"></span>Support This Project</button>
               </div>
             </div>
           </div>
@@ -246,7 +246,7 @@
                   </div>
                   <span class="progress-percentage">25% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'hostel')">Support This Project</button>
+                <button class="btn-3d btn-blue btn-3d-sm" onclick="showDonationForm('project', 'hostel')"><span class="shine"></span>Support This Project</button>
               </div>
             </div>
           </div>
@@ -458,9 +458,9 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="processDonation()">
-              <i class="fas fa-lock me-2"></i>Process Donation
+            <button type="button" class="btn-3d btn-glass" data-bs-dismiss="modal"><span class="shine"></span>Cancel</button>
+            <button type="button" class="btn-3d btn-yellow" onclick="processDonation()">
+              <i class="fas fa-lock me-2"></i><span class="shine"></span>Process Donation
             </button>
           </div>
         </div>
