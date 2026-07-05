@@ -172,9 +172,15 @@ if (!function_exists('isnm_mysqli_connect')) {
 
         $credentials = [
             ['user' => $user, 'pass' => $pass, 'db' => $db],
-            ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db],
-            ['user' => 'root', 'pass' => '',          'db' => $db],
         ];
+
+        // If no credentials found (no .env), warn and return null immediately
+        if (empty($user) || ($user === 'root' && $pass === '')) {
+            $msg = $label . ' DB: No credentials configured. Upload .env file to hosting root.';
+            error_log($msg);
+            $GLOBALS['isnm_last_db_error'] = $msg;
+            return null;
+        }
 
         $errors = [];
         foreach ($credentials as $cred) {

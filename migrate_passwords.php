@@ -21,10 +21,26 @@ echo "<h1>ISNM Production Setup</h1>";
 require_once __DIR__ . '/config/database.php';
 
 $conn = getStaffConnection();
+
+// Fallback: if .env wasn't uploaded, connect directly with hosting credentials
 if (!$conn) {
-    $err = $GLOBALS['isnm_last_db_error'] ?? 'Unknown';
-    die("<p class='fail'>FATAL: Cannot connect to staff database: $err</p>");
+    echo "<p class='info'>Trying direct connection...</p>";
+    $directCreds = [
+        ['host'=>'localhost','user'=>'igangaschoolofl_staffs_db','pass'=>'AgKzJjZZnT5q58jCahs8','db'=>'igangaschoolofl_staffs_db','port'=>3306],
+        ['host'=>'localhost','user'=>'igangaschoolofl_staffs_db','pass'=>'AgKzJjZZnT5q58jCahs8','db'=>'igangaschoolofl_staffs_db','port'=>3307],
+        ['host'=>'127.0.0.1','user'=>'igangaschoolofl_staffs_db','pass'=>'AgKzJjZZnT5q58jCahs8','db'=>'igangaschoolofl_staffs_db','port'=>3306],
+        ['host'=>'127.0.0.1','user'=>'igangaschoolofl_staffs_db','pass'=>'AgKzJjZZnT5q58jCahs8','db'=>'igangaschoolofl_staffs_db','port'=>3307],
+    ];
+    foreach ($directCreds as $c) {
+        $conn = @new mysqli($c['host'], $c['user'], $c['pass'], $c['db'], $c['port']);
+        if ($conn && !$conn->connect_error) { break; }
+        if ($conn) { $conn->close(); $conn = null; }
+    }
 }
+if (!$conn) {
+    die("<p class='fail'>FATAL: Cannot connect to staff database. Upload .env first or check credentials.</p>");
+}
+$conn->set_charset('utf8mb4');
 echo "<p class='ok'>Connected to staff database successfully.</p>";
 
 // ══════════════════════════════════════════════════════════════
