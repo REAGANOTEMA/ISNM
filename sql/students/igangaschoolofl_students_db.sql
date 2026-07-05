@@ -17,6 +17,39 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `academic_programs`
+--
+
+DROP TABLE IF EXISTS `academic_programs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `academic_programs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `program_code` varchar(20) NOT NULL,
+  `program_name` varchar(255) NOT NULL,
+  `program_type` enum('Certificate','Diploma','Degree','Short Course') NOT NULL DEFAULT 'Diploma',
+  `department` varchar(100) DEFAULT NULL,
+  `duration_years` decimal(3,1) NOT NULL DEFAULT 2.0,
+  `total_fee` decimal(14,2) NOT NULL DEFAULT 0.00,
+  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `program_code` (`program_code`),
+  KEY `idx_prog_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `academic_programs`
+--
+
+LOCK TABLES `academic_programs` WRITE;
+/*!40000 ALTER TABLE `academic_programs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `academic_programs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `academic_registrar_activity_log`
 --
 
@@ -38,6 +71,201 @@ CREATE TABLE `academic_registrar_activity_log` (
 LOCK TABLES `academic_registrar_activity_log` WRITE;
 /*!40000 ALTER TABLE `academic_registrar_activity_log` DISABLE KEYS */;
 /*!40000 ALTER TABLE `academic_registrar_activity_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_activity_logs`
+--
+
+DROP TABLE IF EXISTS `admission_activity_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_activity_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_log_app` (`applicant_id`),
+  KEY `idx_log_user` (`user_id`),
+  KEY `idx_log_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_activity_logs`
+--
+
+LOCK TABLES `admission_activity_logs` WRITE;
+/*!40000 ALTER TABLE `admission_activity_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_activity_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_communications`
+--
+
+DROP TABLE IF EXISTS `admission_communications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_communications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `sender_id` int(11) DEFAULT NULL,
+  `communication_type` enum('Email','SMS','Portal','WhatsApp','Internal Note') NOT NULL DEFAULT 'Portal',
+  `subject` varchar(255) DEFAULT NULL,
+  `message` text NOT NULL,
+  `status` enum('Sent','Delivered','Read','Failed') DEFAULT 'Sent',
+  `sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_com_app` (`applicant_id`),
+  KEY `idx_com_type` (`communication_type`),
+  CONSTRAINT `admission_communications_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_communications`
+--
+
+LOCK TABLES `admission_communications` WRITE;
+/*!40000 ALTER TABLE `admission_communications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_communications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_decisions`
+--
+
+DROP TABLE IF EXISTS `admission_decisions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_decisions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `decision` enum('Approved','Rejected','Deferred','Waitlisted') NOT NULL,
+  `decision_reason` text DEFAULT NULL,
+  `decided_by` int(11) DEFAULT NULL,
+  `decided_at` timestamp NULL DEFAULT NULL,
+  `notified_applicant` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_dec_app` (`applicant_id`),
+  CONSTRAINT `admission_decisions_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_decisions`
+--
+
+LOCK TABLES `admission_decisions` WRITE;
+/*!40000 ALTER TABLE `admission_decisions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_decisions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_interviews`
+--
+
+DROP TABLE IF EXISTS `admission_interviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_interviews` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `interviewer_id` int(11) DEFAULT NULL,
+  `interview_date` datetime NOT NULL,
+  `interview_mode` enum('In-Person','Online','Phone') NOT NULL DEFAULT 'In-Person',
+  `interview_link` varchar(500) DEFAULT NULL,
+  `interview_score` decimal(5,2) DEFAULT NULL,
+  `interview_outcome` enum('Pass','Fail','Pending','Reschedule') DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `recommendation` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_int_app` (`applicant_id`),
+  KEY `idx_int_date` (`interview_date`),
+  CONSTRAINT `admission_interviews_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_interviews`
+--
+
+LOCK TABLES `admission_interviews` WRITE;
+/*!40000 ALTER TABLE `admission_interviews` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_interviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_notifications`
+--
+
+DROP TABLE IF EXISTS `admission_notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `type` enum('info','success','warning','danger') NOT NULL DEFAULT 'info',
+  `title` varchar(255) NOT NULL,
+  `message` text DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `link` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_n_app` (`applicant_id`),
+  KEY `idx_n_user` (`user_id`),
+  KEY `idx_n_read` (`is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_notifications`
+--
+
+LOCK TABLES `admission_notifications` WRITE;
+/*!40000 ALTER TABLE `admission_notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_requirements`
+--
+
+DROP TABLE IF EXISTS `admission_requirements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_requirements` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `requirement_name` varchar(255) NOT NULL,
+  `type` enum('Document','Certificate','ID','Photo','Form','Other') NOT NULL DEFAULT 'Document',
+  `display_order` int(11) NOT NULL DEFAULT 0,
+  `is_mandatory` tinyint(1) NOT NULL DEFAULT 1,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_req_active` (`is_active`),
+  KEY `idx_req_order` (`display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_requirements`
+--
+
+LOCK TABLES `admission_requirements` WRITE;
+/*!40000 ALTER TABLE `admission_requirements` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_requirements` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -68,6 +296,121 @@ LOCK TABLES `announcements` WRITE;
 /*!40000 ALTER TABLE `announcements` DISABLE KEYS */;
 INSERT INTO `announcements` VALUES (0,'Welcome to New Academic Year 2024/2025','We welcome all students and staff to the new academic year. Registration is now open for all programs. Please complete your registration before the deadline.','All','High',5,'2025-03-31',1,'2026-07-03 04:38:06'),(0,'Semester 1 Examination Schedule Released','The examination timetable for Semester 1 has been released. All students should check their examination dates and venues. Examinations begin on 10th December 2024.','All','High',7,'2025-01-15',1,'2026-07-03 04:38:06'),(0,'Clinical Placement Guidelines','All Diploma Year 2 and Year 3 students scheduled for clinical placements must attend the orientation session on Friday 15th November 2024. Bring your clinical gear.','','Normal',3,'2025-01-31',1,'2026-07-03 04:38:06'),(0,'Staff Training Workshop','All staff members are invited to a capacity building workshop on ICT Skills for Education on 20th November 2024. Attendance is mandatory.','Staff','Normal',23,'2025-01-15',1,'2026-07-03 04:38:06'),(0,'Fee Payment Deadline Reminder','Students with outstanding fees are reminded that the deadline for Semester 1 fee payment is 30th September 2024. Defaulters will not be allowed to sit for examinations.','','Urgent',25,'2024-10-31',1,'2026-07-03 04:38:06'),(0,'Library Hours Extended During Exams','The library will extend its operating hours during the examination period. The library will now be open from 7:00 AM to 9:00 PM on weekdays.','All','',10,'2025-01-15',1,'2026-07-03 04:38:06'),(0,'Health and Safety Protocols','All students and staff are reminded to follow the health and safety protocols at all times. Hand washing stations are available at all entry points.','All','Normal',5,'2025-06-30',1,'2026-07-03 04:38:06'),(0,'Sports Week Activities','The annual sports week will be held from 18th to 22nd November 2024. All students are encouraged to participate. Registration at the Guild Office.','','',21,'2025-01-31',1,'2026-07-03 04:38:06'),(0,'Nursing Council Registration Update','Final year students are reminded to complete their Nursing and Midwifery Council registration. The deadline has been extended to 31st January 2025.','','High',7,'2025-02-28',1,'2026-07-03 04:38:06'),(0,'Holiday Notice - Christmas Break','The institution will close for Christmas break on 20th December 2024 and reopen on 6th January 2025. Merry Christmas and Happy New Year!','All','',5,'2025-01-31',1,'2026-07-03 04:38:06'),(0,'Welcome to New Academic Year 2024/2025','We welcome all students and staff to the new academic year. Registration is now open for all programs. Please complete your registration before the deadline.','All','High',5,'2025-03-31',1,'2026-07-03 04:51:14'),(0,'Semester 1 Examination Schedule Released','The examination timetable for Semester 1 has been released. All students should check their examination dates and venues. Examinations begin on 10th December 2024.','All','High',7,'2025-01-15',1,'2026-07-03 04:51:14'),(0,'Clinical Placement Guidelines','All Diploma Year 2 and Year 3 students scheduled for clinical placements must attend the orientation session on Friday 15th November 2024. Bring your clinical gear.','','Normal',3,'2025-01-31',1,'2026-07-03 04:51:14'),(0,'Staff Training Workshop','All staff members are invited to a capacity building workshop on ICT Skills for Education on 20th November 2024. Attendance is mandatory.','Staff','Normal',23,'2025-01-15',1,'2026-07-03 04:51:14'),(0,'Fee Payment Deadline Reminder','Students with outstanding fees are reminded that the deadline for Semester 1 fee payment is 30th September 2024. Defaulters will not be allowed to sit for examinations.','','Urgent',25,'2024-10-31',1,'2026-07-03 04:51:14'),(0,'Library Hours Extended During Exams','The library will extend its operating hours during the examination period. The library will now be open from 7:00 AM to 9:00 PM on weekdays.','All','',10,'2025-01-15',1,'2026-07-03 04:51:14'),(0,'Health and Safety Protocols','All students and staff are reminded to follow the health and safety protocols at all times. Hand washing stations are available at all entry points.','All','Normal',5,'2025-06-30',1,'2026-07-03 04:51:14'),(0,'Sports Week Activities','The annual sports week will be held from 18th to 22nd November 2024. All students are encouraged to participate. Registration at the Guild Office.','','',21,'2025-01-31',1,'2026-07-03 04:51:14'),(0,'Nursing Council Registration Update','Final year students are reminded to complete their Nursing and Midwifery Council registration. The deadline has been extended to 31st January 2025.','','High',7,'2025-02-28',1,'2026-07-03 04:51:14'),(0,'Holiday Notice - Christmas Break','The institution will close for Christmas break on 20th December 2024 and reopen on 6th January 2025. Merry Christmas and Happy New Year!','All','',5,'2025-01-31',1,'2026-07-03 04:51:14');
 /*!40000 ALTER TABLE `announcements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `applicant_requirement_status`
+--
+
+DROP TABLE IF EXISTS `applicant_requirement_status`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applicant_requirement_status` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `requirement_id` int(11) NOT NULL,
+  `status` enum('Not Submitted','Pending','Submitted','Verified','Rejected','Missing','Received','Not Yet Given') NOT NULL DEFAULT 'Not Submitted',
+  `remarks` text DEFAULT NULL COMMENT 'System/admin remarks',
+  `director_notes` text DEFAULT NULL COMMENT 'Admission Director private notes',
+  `submitted_by` int(11) DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `verified_by` int(11) DEFAULT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_app_req` (`applicant_id`,`requirement_id`),
+  KEY `idx_ars_status` (`status`),
+  KEY `requirement_id` (`requirement_id`),
+  CONSTRAINT `applicant_requirement_status_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `applicant_requirement_status_ibfk_2` FOREIGN KEY (`requirement_id`) REFERENCES `admission_requirements` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `applicant_requirement_status`
+--
+
+LOCK TABLES `applicant_requirement_status` WRITE;
+/*!40000 ALTER TABLE `applicant_requirement_status` DISABLE KEYS */;
+/*!40000 ALTER TABLE `applicant_requirement_status` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `applicants`
+--
+
+DROP TABLE IF EXISTS `applicants`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applicants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `application_number` varchar(30) NOT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `registration_number` varchar(50) DEFAULT NULL,
+  `portal_username` varchar(100) DEFAULT NULL,
+  `portal_password_hash` varchar(255) DEFAULT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  `middle_name` varchar(100) DEFAULT NULL,
+  `surname` varchar(100) DEFAULT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `alternative_phone` varchar(20) DEFAULT NULL,
+  `nationality` varchar(100) DEFAULT 'Ugandan',
+  `district` varchar(100) DEFAULT NULL,
+  `county` varchar(100) DEFAULT NULL,
+  `religion` varchar(50) DEFAULT NULL,
+  `marital_status` enum('Single','Married','Divorced','Widowed') DEFAULT 'Single',
+  `address` text DEFAULT NULL,
+  `photo_path` varchar(500) DEFAULT NULL,
+  `program_id` int(11) DEFAULT NULL,
+  `intake` varchar(50) DEFAULT NULL,
+  `intake_id` int(11) DEFAULT NULL,
+  `application_source` enum('Online','Manual','Walk-in','Referral','Other') DEFAULT 'Online',
+  `status` enum('New','Under Review','Waiting for Documents','Requirements Verified','Interview Scheduled','Approved','Rejected','Registered','Withdrawn') NOT NULL DEFAULT 'New',
+  `rejection_reason` text DEFAULT NULL,
+  `previous_education` text DEFAULT NULL,
+  `previous_institution` varchar(255) DEFAULT NULL,
+  `previous_qualification` varchar(255) DEFAULT NULL,
+  `guardian_name` varchar(200) DEFAULT NULL,
+  `guardian_phone` varchar(20) DEFAULT NULL,
+  `guardian_email` varchar(100) DEFAULT NULL,
+  `guardian_relationship` varchar(50) DEFAULT NULL,
+  `emergency_contact_name` varchar(100) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `registered_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_number` (`application_number`),
+  UNIQUE KEY `student_number` (`student_number`),
+  KEY `idx_app_status` (`status`),
+  KEY `idx_app_program` (`program_id`),
+  KEY `idx_app_intake` (`intake`),
+  KEY `idx_app_name` (`full_name`),
+  KEY `idx_app_phone` (`phone`),
+  KEY `idx_app_email` (`email`),
+  KEY `idx_app_created` (`created_at`),
+  KEY `intake_id` (`intake_id`),
+  CONSTRAINT `applicants_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `academic_programs` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `applicants_ibfk_2` FOREIGN KEY (`intake_id`) REFERENCES `intakes` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `applicants`
+--
+
+LOCK TABLES `applicants` WRITE;
+/*!40000 ALTER TABLE `applicants` DISABLE KEYS */;
+/*!40000 ALTER TABLE `applicants` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -891,6 +1234,46 @@ LOCK TABLES `communication_log` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `complaint_submissions`
+--
+
+DROP TABLE IF EXISTS `complaint_submissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `complaint_submissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `complainant_name` varchar(255) NOT NULL,
+  `complainant_email` varchar(255) NOT NULL,
+  `complainant_phone` varchar(20) DEFAULT NULL,
+  `subject` varchar(255) NOT NULL,
+  `description` longtext NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `severity` varchar(50) DEFAULT 'medium' COMMENT 'low, medium, high, urgent',
+  `status` varchar(50) DEFAULT 'filed' COMMENT 'filed, acknowledged, investigating, resolved, closed',
+  `assigned_to` int(11) DEFAULT NULL,
+  `resolution` longtext DEFAULT NULL,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_email` (`complainant_email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_severity` (`severity`),
+  KEY `idx_department` (`department`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `complaint_submissions`
+--
+
+LOCK TABLES `complaint_submissions` WRITE;
+/*!40000 ALTER TABLE `complaint_submissions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `complaint_submissions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `compliance_alerts`
 --
 
@@ -1674,6 +2057,44 @@ LOCK TABLES `fee_structures` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `feedback_submissions`
+--
+
+DROP TABLE IF EXISTS `feedback_submissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `feedback_submissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `rating` int(11) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `feedback` longtext NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'received',
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_rating` (`rating`),
+  KEY `idx_category` (`category`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `feedback_submissions`
+--
+
+LOCK TABLES `feedback_submissions` WRITE;
+/*!40000 ALTER TABLE `feedback_submissions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `feedback_submissions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `finance_assets`
 --
 
@@ -1877,6 +2298,42 @@ CREATE TABLE `financial_reports` (
 LOCK TABLES `financial_reports` WRITE;
 /*!40000 ALTER TABLE `financial_reports` DISABLE KEYS */;
 /*!40000 ALTER TABLE `financial_reports` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `form_submissions`
+--
+
+DROP TABLE IF EXISTS `form_submissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `form_submissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `form_type` varchar(50) NOT NULL COMMENT 'application, contact, feedback, complaint, volunteer',
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `message` longtext DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'pending' COMMENT 'pending, read, responded, closed',
+  `assigned_to` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_type` (`form_type`),
+  KEY `idx_email` (`email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `form_submissions`
+--
+
+LOCK TABLES `form_submissions` WRITE;
+/*!40000 ALTER TABLE `form_submissions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `form_submissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -2112,6 +2569,37 @@ CREATE TABLE `institutional_kpis` (
 LOCK TABLES `institutional_kpis` WRITE;
 /*!40000 ALTER TABLE `institutional_kpis` DISABLE KEYS */;
 /*!40000 ALTER TABLE `institutional_kpis` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `intakes`
+--
+
+DROP TABLE IF EXISTS `intakes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `intakes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `intake_name` varchar(100) NOT NULL,
+  `intake_month` varchar(20) NOT NULL,
+  `intake_year` year(4) NOT NULL,
+  `application_start` date DEFAULT NULL,
+  `application_deadline` date DEFAULT NULL,
+  `status` enum('Open','Closed','Upcoming') NOT NULL DEFAULT 'Upcoming',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_intake` (`intake_month`,`intake_year`),
+  KEY `idx_intake_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `intakes`
+--
+
+LOCK TABLES `intakes` WRITE;
+/*!40000 ALTER TABLE `intakes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `intakes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -3376,6 +3864,39 @@ LOCK TABLES `request_tracking` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `requirement_history`
+--
+
+DROP TABLE IF EXISTS `requirement_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `requirement_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `requirement_id` int(11) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `previous_status` varchar(50) DEFAULT NULL,
+  `new_status` varchar(50) DEFAULT NULL,
+  `performed_by` int(11) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_rh_app` (`applicant_id`),
+  KEY `idx_rh_action` (`action`),
+  CONSTRAINT `requirement_history_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `requirement_history`
+--
+
+LOCK TABLES `requirement_history` WRITE;
+/*!40000 ALTER TABLE `requirement_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `requirement_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `risk_register`
 --
 
@@ -3533,6 +4054,68 @@ LOCK TABLES `sponsorships` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `staff`
+--
+
+DROP TABLE IF EXISTS `staff`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `staff` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(255) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `role_id` int(11) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_staff_role` (`role_id`),
+  KEY `idx_staff_email` (`email`),
+  CONSTRAINT `staff_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `staff_roles` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `staff`
+--
+
+LOCK TABLES `staff` WRITE;
+/*!40000 ALTER TABLE `staff` DISABLE KEYS */;
+/*!40000 ALTER TABLE `staff` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `staff_roles`
+--
+
+DROP TABLE IF EXISTS `staff_roles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `staff_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `role_name` (`role_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `staff_roles`
+--
+
+LOCK TABLES `staff_roles` WRITE;
+/*!40000 ALTER TABLE `staff_roles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `staff_roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `staff_salaries`
 --
 
@@ -3623,6 +4206,41 @@ LOCK TABLES `strategic_plans` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `student_academic_profiles`
+--
+
+DROP TABLE IF EXISTS `student_academic_profiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `student_academic_profiles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_number` varchar(50) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `academic_year` year(4) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `status` enum('Active','Completed','Dropped','Transferred') NOT NULL DEFAULT 'Active',
+  `gpa` decimal(4,2) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_sap_student` (`student_number`),
+  KEY `idx_sap_year` (`academic_year`),
+  KEY `idx_sap_program` (`program`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `student_academic_profiles`
+--
+
+LOCK TABLES `student_academic_profiles` WRITE;
+/*!40000 ALTER TABLE `student_academic_profiles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_academic_profiles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `student_academic_records`
 --
 
@@ -3655,6 +4273,49 @@ LOCK TABLES `student_academic_records` WRITE;
 /*!40000 ALTER TABLE `student_academic_records` DISABLE KEYS */;
 INSERT INTO `student_academic_records` VALUES (0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',67.73,4.0,3.05,2.88,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',63.05,4.0,2.52,3.77,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',83.82,4.0,3.50,3.32,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',60.72,4.0,3.84,3.14,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.97,4.0,3.27,3.48,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',86.91,4.0,2.77,3.83,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',92.35,4.0,3.04,3.07,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.26,4.0,2.98,3.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',83.28,4.0,3.42,3.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',64.76,4.0,2.68,2.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',86.90,4.0,3.56,3.30,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',60.79,4.0,3.30,3.40,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',70.91,4.0,2.67,3.64,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.07,4.0,3.13,2.89,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',85.71,4.0,2.78,2.50,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',69.05,4.0,3.69,2.94,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',82.79,4.0,2.72,2.52,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',62.61,4.0,3.20,2.72,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',69.36,4.0,2.74,2.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',84.20,4.0,2.74,3.99,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',74.84,4.0,3.18,2.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',71.25,4.0,3.08,2.65,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',75.29,4.0,3.85,3.03,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',73.69,4.0,3.65,3.73,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',77.70,4.0,3.81,2.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',61.17,4.0,2.85,2.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',67.75,4.0,3.87,3.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',87.15,4.0,2.82,2.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',91.30,4.0,2.74,3.17,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',78.21,4.0,4.00,3.44,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',76.26,4.0,3.64,3.39,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.27,4.0,2.50,2.79,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.67,4.0,3.99,3.18,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',83.69,4.0,3.53,3.47,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',62.91,4.0,3.42,3.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',82.36,4.0,3.29,3.91,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',93.51,4.0,3.47,3.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.36,4.0,3.91,3.74,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',62.17,4.0,3.03,3.40,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.15,4.0,3.87,3.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',89.61,4.0,3.09,3.63,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.72,4.0,3.21,3.16,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',82.44,4.0,3.22,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',72.86,4.0,3.49,3.02,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.77,4.0,2.52,2.72,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',97.16,4.0,3.44,3.04,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',79.86,4.0,3.60,2.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',61.97,4.0,2.62,2.90,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',96.02,4.0,3.41,3.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.73,4.0,3.02,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',84.62,4.0,3.62,3.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',91.84,4.0,3.80,3.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',81.34,4.0,2.99,2.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',75.76,4.0,3.43,3.86,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',88.05,4.0,3.18,2.73,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.00,4.0,3.81,3.22,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',81.95,4.0,3.02,2.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.95,4.0,3.99,2.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',80.46,4.0,3.77,3.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',80.26,4.0,3.72,3.33,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',99.34,4.0,3.89,3.54,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',72.34,4.0,3.27,3.44,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.37,4.0,3.95,3.06,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.05,4.0,2.93,3.34,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',97.63,4.0,3.91,3.80,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.49,4.0,2.92,3.25,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',93.10,4.0,2.71,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',95.07,4.0,2.87,3.42,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',89.27,4.0,3.58,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',60.34,4.0,3.28,3.34,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',68.72,4.0,2.95,3.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',83.42,4.0,2.92,3.45,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',89.66,4.0,3.59,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',95.42,4.0,3.97,2.86,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',74.62,4.0,3.88,3.24,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',61.86,4.0,2.68,3.19,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',75.10,4.0,2.54,2.51,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',89.92,4.0,3.82,2.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',80.61,4.0,3.60,2.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',87.95,4.0,2.88,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',74.89,4.0,2.62,2.94,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',70.51,4.0,3.67,2.65,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',69.45,4.0,3.30,3.94,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',89.69,4.0,3.29,3.14,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',74.61,4.0,2.87,2.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.58,4.0,2.64,3.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',94.93,4.0,3.56,3.85,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',68.96,4.0,3.95,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',64.40,4.0,3.68,3.41,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',83.97,4.0,3.91,3.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.49,4.0,2.62,3.37,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',78.69,4.0,3.12,3.51,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',93.16,4.0,2.81,3.30,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',66.11,4.0,3.67,3.15,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',95.92,4.0,3.95,2.72,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.81,4.0,3.67,3.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.21,4.0,3.28,3.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',73.23,4.0,3.48,2.93,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',76.66,4.0,3.58,3.04,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',63.29,4.0,3.27,2.99,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',69.61,4.0,3.52,3.51,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',87.52,4.0,3.11,3.97,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',79.25,4.0,3.02,2.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',74.57,4.0,3.20,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',99.55,4.0,3.62,3.64,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',83.44,4.0,2.81,2.91,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',98.42,4.0,3.30,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',66.40,4.0,3.76,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',84.96,4.0,3.00,3.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',70.20,4.0,3.27,3.70,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',96.41,4.0,2.75,2.64,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',83.67,4.0,2.55,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',68.64,4.0,3.15,3.30,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.01,4.0,3.56,2.61,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',81.61,4.0,3.27,3.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',71.22,4.0,3.80,3.22,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',82.98,4.0,3.20,3.41,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',74.11,4.0,3.79,2.86,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',76.46,4.0,2.76,3.47,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.07,4.0,3.82,3.41,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',62.97,4.0,2.86,3.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',74.64,4.0,3.36,3.65,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',95.99,4.0,3.65,2.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',67.71,4.0,2.55,3.37,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',70.63,4.0,3.89,3.76,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',81.78,4.0,3.23,3.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',67.98,4.0,3.17,3.46,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',72.82,4.0,2.59,3.03,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',91.66,4.0,2.87,3.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',79.89,4.0,3.42,3.37,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',72.60,4.0,2.66,3.38,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',72.26,4.0,3.54,3.32,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',84.47,4.0,2.66,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B+',68.02,4.0,2.63,3.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',99.14,4.0,2.81,2.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',73.83,4.0,3.88,3.33,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',94.70,4.0,2.81,3.13,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',67.21,4.0,3.16,3.46,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',83.99,4.0,2.92,3.41,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',92.32,4.0,3.76,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',77.30,4.0,2.66,2.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',94.31,4.0,3.29,2.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.73,4.0,3.78,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',68.90,4.0,2.77,2.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',87.72,4.0,3.11,3.91,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',85.75,4.0,3.61,3.64,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',87.44,4.0,3.47,2.76,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',66.57,4.0,2.51,3.31,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','A',91.10,4.0,3.77,3.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Fundamentals of Nursing I','CNN101','B',89.76,4.0,3.45,3.93,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',74.97,3.0,3.00,3.33,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',63.80,3.0,2.84,3.77,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',71.26,3.0,3.57,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',95.45,3.0,2.84,3.23,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',68.30,3.0,3.76,3.39,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',74.69,3.0,3.33,3.48,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',66.80,3.0,3.95,2.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.46,3.0,3.54,3.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',94.03,3.0,3.60,2.65,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',71.94,3.0,3.29,3.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',63.31,3.0,3.84,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.65,3.0,3.23,3.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',72.58,3.0,3.90,3.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',89.07,3.0,2.97,3.08,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',92.18,3.0,2.57,3.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',62.51,3.0,3.44,3.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',74.91,3.0,3.01,3.38,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',91.00,3.0,2.73,3.18,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',86.31,3.0,3.81,3.11,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',92.39,3.0,3.75,3.59,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',98.46,3.0,3.10,2.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.05,3.0,3.43,3.15,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',69.16,3.0,2.85,3.21,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',96.13,3.0,3.29,3.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',75.33,3.0,2.61,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',95.43,3.0,3.53,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',90.69,3.0,3.07,3.39,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',76.08,3.0,3.25,2.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',90.50,3.0,2.57,3.90,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',97.22,3.0,2.51,2.88,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',69.74,3.0,2.59,3.37,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',93.88,3.0,2.62,3.80,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',96.78,3.0,2.63,3.53,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',77.44,3.0,3.72,3.63,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',73.81,3.0,3.65,3.70,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',62.79,3.0,2.90,2.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',99.31,3.0,2.92,3.16,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',78.42,3.0,2.86,3.73,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',75.27,3.0,3.71,3.85,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',63.37,3.0,3.16,3.93,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',73.84,3.0,3.11,4.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',94.42,3.0,3.98,3.04,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',65.53,3.0,2.73,3.05,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.99,3.0,3.29,3.20,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',75.35,3.0,3.47,2.61,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',97.45,3.0,3.08,2.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',60.42,3.0,3.42,2.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',90.17,3.0,3.46,3.89,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',94.61,3.0,2.70,2.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.07,3.0,3.32,3.44,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',84.06,3.0,3.28,3.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',77.75,3.0,2.72,3.09,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',80.42,3.0,3.90,2.72,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',65.61,3.0,3.94,3.05,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',89.17,3.0,3.62,3.32,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',91.61,3.0,3.24,2.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',86.14,3.0,3.05,3.83,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',97.64,3.0,3.62,3.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',95.14,3.0,3.13,3.21,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',69.29,3.0,3.74,3.18,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',79.19,3.0,2.65,2.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.25,3.0,3.42,3.90,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',75.89,3.0,3.20,2.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',79.60,3.0,2.83,3.42,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',70.78,3.0,2.62,3.38,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',91.18,3.0,3.65,3.26,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',67.68,3.0,2.88,3.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',84.62,3.0,3.77,3.06,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',83.47,3.0,3.86,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',85.42,3.0,3.90,3.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',80.87,3.0,3.62,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',78.15,3.0,3.25,2.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',71.78,3.0,3.15,2.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',70.28,3.0,2.69,3.79,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',63.44,3.0,3.44,3.80,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.25,3.0,2.72,3.42,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',70.19,3.0,3.13,3.01,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',65.66,3.0,3.12,3.46,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',95.67,3.0,3.36,2.77,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',84.12,3.0,3.55,3.53,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.33,3.0,3.74,3.18,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',84.86,3.0,3.57,3.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',99.61,3.0,3.51,3.07,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',72.50,3.0,3.84,3.27,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',60.05,3.0,2.91,3.06,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',81.11,3.0,2.84,3.32,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',97.10,3.0,3.68,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',93.36,3.0,3.65,3.01,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',97.38,3.0,3.25,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',99.41,3.0,3.83,3.22,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',69.93,3.0,2.54,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',75.54,3.0,2.78,3.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',99.47,3.0,3.11,2.59,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',98.38,3.0,2.61,3.22,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',84.95,3.0,3.75,2.96,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',88.66,3.0,2.70,3.26,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',74.57,3.0,3.04,3.57,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',73.31,3.0,2.76,3.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',85.17,3.0,3.39,2.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',95.67,3.0,3.36,2.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',96.71,3.0,3.50,3.36,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.99,3.0,2.95,3.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',91.49,3.0,3.42,3.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',83.28,3.0,3.50,3.38,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',94.33,3.0,3.29,2.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',69.33,3.0,2.70,3.97,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',79.37,3.0,3.96,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',91.67,3.0,3.01,2.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',98.03,3.0,2.51,2.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',98.03,3.0,2.58,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',62.80,3.0,3.68,3.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',77.49,3.0,2.65,2.76,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',73.54,3.0,3.97,3.82,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.92,3.0,2.79,3.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.11,3.0,3.41,3.05,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',60.13,3.0,3.96,3.77,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',63.96,3.0,3.26,2.86,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',86.08,3.0,2.86,2.85,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',84.79,3.0,3.55,3.48,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',77.89,3.0,3.86,2.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',96.07,3.0,3.98,2.82,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',74.87,3.0,2.54,2.51,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',92.85,3.0,2.80,3.29,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',93.22,3.0,3.09,3.24,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',78.94,3.0,3.71,3.41,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',71.40,3.0,3.34,3.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',88.05,3.0,3.12,3.96,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',66.43,3.0,3.94,2.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',72.50,3.0,3.44,2.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',69.05,3.0,3.58,3.90,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',86.75,3.0,3.80,2.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',60.84,3.0,2.68,3.31,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',60.62,3.0,2.65,3.20,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B+',71.58,3.0,3.18,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',60.11,3.0,2.64,3.17,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',79.97,3.0,3.38,3.17,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',99.61,3.0,3.33,3.70,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',69.47,3.0,2.81,2.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',98.14,3.0,3.73,2.85,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',96.01,3.0,3.00,3.97,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',81.32,3.0,3.97,2.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',96.12,3.0,3.75,3.19,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',82.78,3.0,3.22,3.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',89.13,3.0,2.65,3.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',89.12,3.0,3.41,3.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',88.83,3.0,2.84,3.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','B',81.06,3.0,3.82,3.74,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',98.57,3.0,3.03,3.83,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',65.53,3.0,3.42,3.49,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Anatomy & Physiology I','CNN102','A',73.37,3.0,2.92,3.09,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',87.59,3.0,2.84,2.60,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',62.18,3.0,2.98,3.15,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',68.94,3.0,3.69,2.96,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',75.13,3.0,3.44,3.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',87.15,3.0,2.90,2.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',69.13,3.0,2.95,3.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',63.61,3.0,3.30,3.10,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',89.25,3.0,3.25,2.98,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',72.90,3.0,2.57,2.88,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',98.61,3.0,2.84,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',82.83,3.0,3.26,3.74,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',83.37,3.0,2.62,3.48,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',83.67,3.0,3.36,2.63,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',75.23,3.0,3.57,3.14,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',88.43,3.0,3.33,3.47,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',96.08,3.0,3.71,2.97,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',83.07,3.0,3.21,3.44,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',90.11,3.0,3.37,3.47,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',80.51,3.0,2.64,3.88,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',96.69,3.0,3.36,2.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',62.40,3.0,3.47,2.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',78.12,3.0,3.24,2.68,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',78.48,3.0,3.78,3.81,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',74.98,3.0,3.22,2.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',60.21,3.0,2.67,3.33,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',77.50,3.0,3.90,3.02,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',84.99,3.0,2.99,3.64,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',94.41,3.0,3.72,3.23,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',77.93,3.0,2.95,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',63.93,3.0,3.60,3.07,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',74.01,3.0,3.48,2.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',79.84,3.0,3.79,3.72,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',99.38,3.0,3.20,3.08,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',78.62,3.0,3.63,3.06,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',96.60,3.0,3.63,2.53,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',64.38,3.0,2.57,3.88,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',78.50,3.0,3.97,3.28,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',90.95,3.0,3.79,3.99,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',96.02,3.0,3.06,2.76,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',66.98,3.0,3.49,3.65,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',97.40,3.0,2.71,3.84,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',92.08,3.0,2.84,3.60,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',87.88,3.0,3.32,3.48,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',66.14,3.0,3.85,2.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',68.95,3.0,3.59,3.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',73.56,3.0,3.63,3.62,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',64.62,3.0,2.75,3.23,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',67.84,3.0,2.78,3.02,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',90.53,3.0,2.85,3.80,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',86.24,3.0,2.98,3.46,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',73.50,3.0,2.63,3.12,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',91.17,3.0,3.23,2.66,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',87.28,3.0,3.25,3.17,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',75.55,3.0,3.55,3.02,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',62.32,3.0,3.15,4.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',76.92,3.0,2.60,2.59,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',77.52,3.0,2.70,3.04,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',94.29,3.0,2.69,2.60,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',81.22,3.0,3.72,3.24,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',90.78,3.0,2.76,3.35,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',92.92,3.0,2.80,3.32,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',71.09,3.0,3.43,2.91,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',86.94,3.0,3.81,3.02,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',80.47,3.0,3.74,3.39,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',88.48,3.0,2.59,2.75,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',91.49,3.0,3.94,3.17,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',74.64,3.0,3.71,3.93,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',91.53,3.0,3.93,3.12,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',98.94,3.0,3.62,3.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',81.33,3.0,2.95,3.83,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',61.59,3.0,3.37,3.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',96.39,3.0,2.66,3.71,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',63.18,3.0,2.95,2.92,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',82.50,3.0,3.06,2.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',78.66,3.0,3.88,2.79,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',87.25,3.0,2.54,2.61,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',72.10,3.0,3.39,2.60,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',81.72,3.0,2.60,3.58,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',90.33,3.0,3.47,3.91,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',63.50,3.0,2.63,2.77,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',83.72,3.0,2.63,3.50,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',70.33,3.0,3.15,3.11,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',74.68,3.0,3.53,3.00,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',99.79,3.0,2.77,3.87,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B',66.47,3.0,3.16,3.55,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',91.74,3.0,3.01,2.96,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',88.56,3.0,3.98,3.69,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','B+',73.60,3.0,3.51,3.03,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',83.87,3.0,3.69,2.78,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',64.98,3.0,2.52,3.56,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',74.06,3.0,2.91,2.94,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',78.94,3.0,3.02,2.99,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',96.65,3.0,3.77,3.22,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',97.14,3.0,2.52,2.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',71.49,3.0,2.69,3.67,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',71.67,3.0,3.81,3.24,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',91.46,3.0,3.05,3.23,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',64.89,3.0,3.50,3.95,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',70.66,3.0,3.75,3.05,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14'),(0,0,'Semester 1','2024/2025','Community Health Nursing I','CNN103','A',81.61,3.0,3.58,3.97,'Pass','2026-07-03 04:51:14','2026-07-03 04:51:14');
 /*!40000 ALTER TABLE `student_academic_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `student_admission_tracking`
+--
+
+DROP TABLE IF EXISTS `student_admission_tracking`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `student_admission_tracking` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_number` varchar(50) DEFAULT NULL,
+  `application_number` varchar(30) NOT NULL,
+  `applicant_id` int(11) DEFAULT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `intake` varchar(50) DEFAULT NULL,
+  `admission_date` date DEFAULT NULL,
+  `admission_status` enum('Pending','Under Review','Requirements Pending','Approved','Rejected','Registered') NOT NULL DEFAULT 'Pending',
+  `requirements_total` int(11) NOT NULL DEFAULT 0,
+  `requirements_completed` int(11) NOT NULL DEFAULT 0,
+  `documents_uploaded` int(11) NOT NULL DEFAULT 0,
+  `interview_scheduled` tinyint(1) NOT NULL DEFAULT 0,
+  `interview_date` datetime DEFAULT NULL,
+  `interview_notes` text DEFAULT NULL,
+  `communication_count` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_track_app` (`application_number`),
+  KEY `idx_track_status` (`admission_status`),
+  KEY `idx_track_student` (`student_number`),
+  KEY `applicant_id` (`applicant_id`),
+  CONSTRAINT `student_admission_tracking_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `student_admission_tracking`
+--
+
+LOCK TABLES `student_admission_tracking` WRITE;
+/*!40000 ALTER TABLE `student_admission_tracking` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_admission_tracking` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -3827,6 +4488,44 @@ CREATE TABLE `student_discipline_records` (
 LOCK TABLES `student_discipline_records` WRITE;
 /*!40000 ALTER TABLE `student_discipline_records` DISABLE KEYS */;
 /*!40000 ALTER TABLE `student_discipline_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `student_documents`
+--
+
+DROP TABLE IF EXISTS `student_documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `student_documents` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `requirement_id` int(11) DEFAULT NULL,
+  `document_name` varchar(255) NOT NULL,
+  `document_type` varchar(100) DEFAULT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `file_mime` varchar(100) DEFAULT NULL,
+  `verification_status` enum('Pending','Verified','Rejected') NOT NULL DEFAULT 'Pending',
+  `verification_remarks` text DEFAULT NULL,
+  `verified_by` int(11) DEFAULT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `document_status` enum('Active','Deleted') NOT NULL DEFAULT 'Active',
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_doc_app` (`applicant_id`),
+  KEY `idx_doc_ver` (`verification_status`),
+  CONSTRAINT `student_documents_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `student_documents`
+--
+
+LOCK TABLES `student_documents` WRITE;
+/*!40000 ALTER TABLE `student_documents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -4780,6 +5479,82 @@ LOCK TABLES `view_student_grouping` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `volunteer_applications`
+--
+
+DROP TABLE IF EXISTS `volunteer_applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `volunteer_applications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(100) NOT NULL,
+  `surname` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `skills` longtext DEFAULT NULL,
+  `availability` longtext DEFAULT NULL,
+  `motivation` longtext DEFAULT NULL,
+  `experience` longtext DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'pending' COMMENT 'pending, reviewed, accepted, rejected, interviewed',
+  `reviewed_by` int(11) DEFAULT NULL,
+  `review_date` timestamp NULL DEFAULT NULL,
+  `decision` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `volunteer_applications`
+--
+
+LOCK TABLES `volunteer_applications` WRITE;
+/*!40000 ALTER TABLE `volunteer_applications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `volunteer_applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `website_announcements`
+--
+
+DROP TABLE IF EXISTS `website_announcements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `website_announcements` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `content` longtext NOT NULL,
+  `category` varchar(100) DEFAULT NULL COMMENT 'General, Academic, Administrative, Event, etc.',
+  `author` varchar(255) DEFAULT NULL COMMENT 'Director or staff name',
+  `image_url` varchar(500) DEFAULT NULL,
+  `featured` tinyint(1) DEFAULT 0 COMMENT 'Show on homepage',
+  `status` varchar(50) DEFAULT 'published' COMMENT 'draft, published, archived',
+  `views` int(11) DEFAULT 0,
+  `published_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_featured` (`featured`),
+  KEY `idx_category` (`category`),
+  KEY `idx_published` (`published_at`),
+  FULLTEXT KEY `idx_search` (`title`,`content`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `website_announcements`
+--
+
+LOCK TABLES `website_announcements` WRITE;
+/*!40000 ALTER TABLE `website_announcements` DISABLE KEYS */;
+/*!40000 ALTER TABLE `website_announcements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping events for database 'igangaschoolofl_students_db'
 --
 
@@ -4805,6 +5580,79 @@ BEGIN
         SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
         PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `MigratePayroll` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
+DELIMITER ;;
+CREATE DEFINER=`igangaschoolofl__iq8pceee4-m-wnDL2NXS9rg9R7iAKa3p`@`localhost` PROCEDURE `MigratePayroll`()
+BEGIN
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
+        ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_nssf') THEN
+        ALTER TABLE `payroll_runs` ADD COLUMN `total_nssf` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_paye`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='run_date') THEN
+        ALTER TABLE `payroll_runs` ADD COLUMN `run_date` DATE DEFAULT NULL AFTER `end_date`;
+    END IF;
+    -- Extend status enum
+    ALTER TABLE `payroll_runs` MODIFY COLUMN `status` ENUM('draft','approved','processed','paid','completed','processing') DEFAULT 'draft';
+
+    -- payroll_details: add housing_allowance, transport_allowance
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='housing_allowance') THEN
+        ALTER TABLE `payroll_details` ADD COLUMN `housing_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `basic_salary`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='transport_allowance') THEN
+        ALTER TABLE `payroll_details` ADD COLUMN `transport_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `housing_allowance`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='`status`') THEN
+        ALTER TABLE `payroll_details` ADD COLUMN `status` VARCHAR(20) DEFAULT 'calculated' AFTER `payment_status`;
+    END IF;
+
+    -- payroll_employees: add allowance columns
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_employees' AND COLUMN_NAME='housing_allowance') THEN
+        ALTER TABLE `payroll_employees` ADD COLUMN `housing_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `basic_salary`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_employees' AND COLUMN_NAME='transport_allowance') THEN
+        ALTER TABLE `payroll_employees` ADD COLUMN `transport_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `housing_allowance`;
+    END IF;
+
+    -- salary_structures: add staff_id FK
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='salary_structures' AND COLUMN_NAME='staff_id') THEN
+        ALTER TABLE `salary_structures` ADD COLUMN `staff_id` INT(11) DEFAULT NULL AFTER `id`;
+        ALTER TABLE `salary_structures` ADD INDEX `idx_ss_staff_id` (`staff_id`);
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='salary_structures' AND COLUMN_NAME='housing_allowance') THEN
+        ALTER TABLE `salary_structures` ADD COLUMN `housing_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `base_salary`;
+    END IF;
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='salary_structures' AND COLUMN_NAME='transport_allowance') THEN
+        ALTER TABLE `salary_structures` ADD COLUMN `transport_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `housing_allowance`;
+    END IF;
+
+    -- bursar_vat_reports: add created_at
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bursar_vat_reports' AND COLUMN_NAME='created_at') THEN
+        ALTER TABLE `bursar_vat_reports` ADD COLUMN `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER `status`;
+    END IF;
+
+    -- bursar_withholding_tax: add period column
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bursar_withholding_tax' AND COLUMN_NAME='period') THEN
+        ALTER TABLE `bursar_withholding_tax` ADD COLUMN `period` VARCHAR(20) DEFAULT NULL AFTER `tax_date`;
+    END IF;
+
+    -- payroll_approvals: extend level enum to include CEO, add comments support
+    ALTER TABLE `payroll_approvals` MODIFY COLUMN `level` ENUM('HR','PayrollOfficer','Bursar','DirectorFinance','CEO') NOT NULL;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -4857,4 +5705,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-03  7:03:18
+-- Dump completed on 2026-07-05 16:56:22

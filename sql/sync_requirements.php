@@ -17,9 +17,12 @@ echo "Syncing admission requirements...\n";
 $conn->query("DELETE FROM admission_requirements");
 echo "Cleared existing requirements\n";
 
-// Insert the exact 8 document requirements + 20 supply items
+/**
+ * SECRETARY ADMISSION CHECKLIST SYNC
+ * Required checklist items only (8 documents).
+ * Proof of Payment + Interview have been intentionally omitted.
+ */
 $requirements = [
-    // 8 Document Requirements
     ['Completed Application Form', 'Document', 1, 1],
     ['A-Level Certificate (UACE)', 'Document', 2, 1],
     ['O-Level Certificate (UCE)', 'Document', 3, 1],
@@ -28,32 +31,14 @@ $requirements = [
     ['National ID Copy', 'Document', 6, 1],
     ['Medical Report', 'Document', 7, 1],
     ['Recommendation Letter (LC1)', 'Document', 8, 1],
-    
-    // 20 Supply Items
-    ['Surgical Gloves', 'Other', 9, 0],
-    ['Examination Gloves', 'Other', 10, 0],
-    ['Photocopying Ream', 'Other', 11, 0],
-    ['Ruled Paper Reams', 'Other', 12, 0],
-    ['Omo', 'Other', 13, 0],
-    ['Toilet Papers', 'Other', 14, 0],
-    ['Compound brooms', 'Other', 15, 0],
-    ['Soft brooms', 'Other', 16, 0],
-    ['Rake', 'Other', 17, 0],
-    ['Cobweb brush', 'Other', 18, 0],
-    ['Scrubbing Brush', 'Other', 19, 0],
-    ['Squeezer', 'Other', 20, 0],
-    ['Toilet Brush', 'Other', 21, 0],
-    ['JIK', 'Other', 22, 0],
-    ['Vim', 'Other', 23, 0],
-    ['Mops', 'Other', 24, 0],
-    ['Sanitizer', 'Other', 25, 0],
-    ['Liquid Soap', 'Other', 26, 0],
-    ['Face Masks', 'Other', 27, 0],
-    ['Heavy duty Gloves', 'Other', 28, 0]
 ];
 
-$stmt = $conn->prepare("INSERT INTO admission_requirements (requirement_name, type, display_order, is_mandatory, is_active) VALUES (?, ?, ?, ?, 1)");
-$stmt->bind_param("ssii", $name, $type, $order, $mandatory);
+$stmt = $conn->prepare(
+    "INSERT INTO admission_requirements (requirement_name, type, display_order, is_mandatory, is_active)
+     VALUES (?, ?, ?, ?, ?)"
+);
+$stmt->bind_param("ssiii", $name, $type, $order, $mandatory, $isActive);
+$isActive = 1;
 
 $inserted = 0;
 foreach ($requirements as $req) {
@@ -71,6 +56,7 @@ $stmt->close();
 echo "\nDone. Inserted $inserted requirements.\n";
 echo "\nRequirements have been synced with:\n";
 echo "- 8 Document Requirements (mandatory)\n";
-echo "- 20 Supply Items (optional)\n";
+echo "- (No supply items included)\n";
 echo "\nNote: Proof of Payment and Interview Letter have been removed as requested.\n";
 ?>
+
