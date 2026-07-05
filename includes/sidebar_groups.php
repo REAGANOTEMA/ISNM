@@ -14,13 +14,13 @@ function getSidebarGroups(string $role): array {
 
     $g = [];
 
-    // ── MAIN (exec roles only; others get their dashboard via OPERATIONS) ──
+    // ── MAIN ──
+    $g['MAIN'] = [
+        ['label' => 'Dashboard', 'icon' => 'fas fa-chart-pie', 'page' => 'home'],
+    ];
     if ($isExec) {
-        $g['MAIN'] = [
-            ['label' => 'Dashboard',    'icon' => 'fas fa-chart-pie',  'page' => 'home'],
-            ['label' => 'Overview',     'icon' => 'fas fa-home',       'page' => 'overview'],
-            ['label' => 'Analytics',    'icon' => 'fas fa-chart-line', 'page' => 'analytics'],
-        ];
+        $g['MAIN'][] = ['label' => 'Overview',  'icon' => 'fas fa-home',      'page' => 'overview'];
+        $g['MAIN'][] = ['label' => 'Analytics', 'icon' => 'fas fa-chart-line','page' => 'analytics'];
     }
 
     // ── OPERATIONS (role-specific) ──

@@ -3,35 +3,36 @@
  * Migration Script: School Secretary Module Tables
  * Creates all required tables for the enhanced School Secretary dashboard.
  * Run this script once after deployment or when adding new secretary modules.
+ *
+ * Usage from CLI:    php db_migrate_secretary_tables.php
+ * Usage from browser: https://yourdomain.com/db_migrate_secretary_tables.php
  */
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "igangaschoolofl_staffs_db";
-
-// Also try to detect the database name from config
+// Load database config from .env
 $configPath = __DIR__ . '/config/database.php';
 if (file_exists($configPath)) {
     require_once $configPath;
-    if (defined('STAFF_DB_NAME')) {
-        $dbname = STAFF_DB_NAME;
-    }
 }
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Read credentials from config constants or fall back to defaults
+$db_host   = defined('STAFF_DB_HOST') ? STAFF_DB_HOST : 'localhost';
+$db_user   = defined('STAFF_DB_USER') ? STAFF_DB_USER : 'root';
+$db_pass   = defined('STAFF_DB_PASS') ? STAFF_DB_PASS : '';
+$db_name   = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$db_port   = defined('STAFF_DB_PORT') ? STAFF_DB_PORT : 3306;
+
+$conn = @new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
 
 if ($conn->connect_error) {
-    // Fallback to default ISNM database
-    $conn = new mysqli($servername, $username, $password, 'ISNM');
+    // Try connecting without selecting a database, then create it
+    $conn = @new mysqli($db_host, $db_user, $db_pass, '', $db_port);
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
-    // Create tables in ISNM database with staff_db prefix
-    $conn->query("CREATE DATABASE IF NOT EXISTS `igangaschoolofl_staffs_db`");
-    $conn = new mysqli($servername, $username, $password, 'igangaschoolofl_staffs_db');
-    if ($conn->connect_error) {
-        die("Could not create/create staff database.");
+    $conn->query("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    $conn->select_db($db_name);
+    if ($conn->error) {
+        die("Could not create/select database '$db_name': " . $conn->error);
     }
 }
 

@@ -692,7 +692,7 @@ if (isset($_REQUEST['ajax'])) {
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
                 $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_meetings` SET title=?, description=?, meeting_date=?, meeting_time=?, duration_minutes=?, location=?, venue=?, meeting_type=?, attendees=?, organizer=?, minutes=?, outcome=?, status=?, is_recurring=?, recurrence_pattern=? WHERE id=? AND user_id=?");
-                $stmt->bind_param('ssssissssssssissi', $title, $desc, $date, $time, $duration, $location, $venue, $meeting_type, $attendees, $organizer, $minutes, $outcome, $status, $is_recurring, $recurrence_pattern, $id, $user_id);
+                $stmt->bind_param('ssssissssssssiisi', $title, $desc, $date, $time, $duration, $location, $venue, $meeting_type, $attendees, $organizer, $minutes, $outcome, $status, $is_recurring, $recurrence_pattern, $id, $user_id);
             } else {
                 $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_meetings` (user_id, title, description, meeting_date, meeting_time, duration_minutes, location, venue, meeting_type, attendees, organizer, minutes, outcome, status, is_recurring, recurrence_pattern) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 $stmt->bind_param('isssisssssssssis', $user_id, $title, $desc, $date, $time, $duration, $location, $venue, $meeting_type, $attendees, $organizer, $minutes, $outcome, $status, $is_recurring, $recurrence_pattern);
@@ -715,7 +715,7 @@ if (isset($_REQUEST['ajax'])) {
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id = ? ORDER BY display_order ASC");
             $stmt->bind_param('i', $meeting_id);
             $stmt->execute();
-            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['agenda'] = $items;
             break;
@@ -752,7 +752,7 @@ if (isset($_REQUEST['ajax'])) {
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id = ? ORDER BY priority DESC, due_date ASC");
             $stmt->bind_param('i', $meeting_id);
             $stmt->execute();
-            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['action_items'] = $items;
             break;
@@ -799,7 +799,7 @@ if (isset($_REQUEST['ajax'])) {
             $stmt = $conn->prepare("SELECT id, title, meeting_date, meeting_time, status, location, venue, duration_minutes FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? AND meeting_date BETWEEN ? AND ? ORDER BY meeting_date ASC, meeting_time ASC");
             $stmt->bind_param('iss', $user_id, $start, $end);
             $stmt->execute();
-            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['meetings'] = $items;
             break;
@@ -1003,7 +1003,7 @@ if (isset($_REQUEST['ajax'])) {
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_official_documents` $where ORDER BY created_at DESC");
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['documents'] = $items;
             break;
@@ -1025,7 +1025,7 @@ if (isset($_REQUEST['ajax'])) {
             if (!$title) { $response['message'] = 'Title is required'; break; }
             if ($id) {
                 $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET doc_type=?, title=?, subject=?, reference_number=?, content=?, department=?, category=?, status=?, priority=?, recipient_name=?, recipient_organization=?, is_confidential=? WHERE id=? AND user_id=?");
-                $stmt->bind_param('sssssssssssii', $doc_type, $title, $subject, $reference_number, $content, $department, $category, $status, $priority, $recipient_name, $recipient_organization, $is_confidential, $id, $user_id);
+                $stmt->bind_param('sssssssssssiii', $doc_type, $title, $subject, $reference_number, $content, $department, $category, $status, $priority, $recipient_name, $recipient_organization, $is_confidential, $id, $user_id);
             } else {
                 if (!$reference_number) { $reference_number = 'DOC-' . date('Ymd') . '-' . str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT); }
                 $stmt = $conn->prepare("INSERT INTO `$staff_db`.`secretary_official_documents` (user_id, doc_type, title, subject, reference_number, content, department, category, status, priority, recipient_name, recipient_organization, is_confidential) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -1051,10 +1051,13 @@ if (isset($_REQUEST['ajax'])) {
             $new_status = $_POST['status'] ?? 'published';
             $valid = ['published','archived','rejected'];
             if (!in_array($new_status, $valid)) { $new_status = 'published'; }
-            $col = $new_status === 'published' ? 'published_by,published_at' : ($new_status === 'archived' ? '' : '');
-            $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET status=?" . ($col ? ",$col=NOW()" : "") . " WHERE id=? AND user_id=?");
-            if ($col) { $stmt->bind_param('sii', $new_status, $id, $user_id); }
-            else { $stmt->bind_param('sii', $new_status, $id, $user_id); }
+            if ($new_status === 'published') {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET status=?, published_by=?, published_at=NOW() WHERE id=? AND user_id=?");
+                $stmt->bind_param('siii', $new_status, $user_id, $id, $user_id);
+            } else {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET status=? WHERE id=? AND user_id=?");
+                $stmt->bind_param('sii', $new_status, $id, $user_id);
+            }
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Document ' . $new_status; }
             break;
 
