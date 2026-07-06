@@ -105,7 +105,7 @@ if ($staff_conn) {
 $ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security'];
 $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
-$tab = $_GET['tab'] ?? 'dashboard';
+$tab = $_GET['tab'] ?? 'overview';
 $ictIcon = 'fa-laptop-code';
 $ictRole = 'Director ICT';
 $ictSubtitle = 'Information & Communication Technology – System Administration & Infrastructure Oversight';

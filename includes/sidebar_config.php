@@ -295,6 +295,7 @@ function getAllSidebarConfigs(): array {
                 'fee_structure' => ['label' => 'Fee Structure', 'icon' => 'fas fa-tags', 'link' => 'dashboards/fee-structure.php'],
                 'bank' => ['label' => 'Bank Reconciliation', 'icon' => 'fas fa-university', 'link' => 'dashboards/bank-reconciliation.php'],
                 'reports' => ['label' => 'Financial Reports', 'icon' => 'fas fa-chart-pie', 'link' => 'dashboards/bursar-reports.php'],
+                'proof_of_payments' => ['label' => 'Proof of Payments', 'icon' => 'fas fa-receipt', 'link' => 'dashboards/proof-of-payments.php'],
             ],
         ],
 
@@ -333,6 +334,7 @@ function getAllSidebarConfigs(): array {
                 'disciplinary' => ['label' => 'Disciplinary', 'icon' => 'fas fa-gavel', 'link' => 'dashboards/staff-disciplinary.php'],
                 'payroll' => ['label' => 'Payroll', 'icon' => 'fas fa-wallet', 'link' => 'dashboards/bursar-payroll.php'],
                 'reports' => ['label' => 'HR Reports', 'icon' => 'fas fa-file-alt', 'link' => 'dashboards/hr-manager.php?view=reports'],
+                'contracts' => ['label' => 'Contracts', 'icon' => 'fas fa-file-signature', 'link' => 'dashboards/contracts-management.php'],
             ],
         ],
 

@@ -95,23 +95,6 @@ class Student {
     /**
      * Update student record
      */
-        try {
-            $query = "SELECT * FROM students WHERE registration_number = ? AND status != 'deleted'";
-            $stmt = executePrepared($this->conn, $query, 's', [$regNumber]);
-            $result = $stmt->get_result();
-            $student = $result->fetch_assoc();
-            $stmt->close();
-            
-            return ['success' => true, 'student' => $student];
-            
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-    
-    /**
-     * Update student record
-     */
     public function update($id, $data) {
         try {
             $query = "UPDATE students SET full_name = ?, national_student_id_number = ?, 

@@ -15,7 +15,7 @@
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-require_once __DIR__ . '/module_registry.php';
+require_once __DIR__ . '/includes/module_registry.php';
 
 header('Content-Type: application/json');
 
