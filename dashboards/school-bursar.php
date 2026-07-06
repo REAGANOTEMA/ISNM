@@ -492,7 +492,7 @@ $pageTitle = 'Bursar Dashboard';
   <div class="d-flex justify-content-between align-items-center">
     <div><h3 style="margin:0;color:#fff;border:none;padding:0">Payroll Management</h3><p style="margin:2px 0 0;opacity:.85;font-size:13px">Full payroll with PAYE/NSSF calculations, payslips, and approval workflow</p></div>
     <div class="d-flex gap-2 flex-wrap">
-      <a href="../payroll.php" class="btn btn-sm" style="background:#fff;color:#059669;font-weight:600;border-radius:8px;padding:8px 20px;text-decoration:none"><i class="fas fa-external-link-alt me-1"></i>Comprehensive Payroll</a>
+      <a href="payroll.php" class="btn btn-sm" style="background:#fff;color:#059669;font-weight:600;border-radius:8px;padding:8px 20px;text-decoration:none"><i class="fas fa-external-link-alt me-1"></i>Comprehensive Payroll</a>
       <a href="bursar-payroll.php" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:500;border-radius:8px;padding:8px 20px;text-decoration:none"><i class="fas fa-calculator me-1"></i>Bursar Payroll</a>
     </div>
   </div>
@@ -688,9 +688,9 @@ $pageTitle = 'Bursar Dashboard';
       </div>
     </div>
     <div class="d-flex gap-2 mt-3">
-      <a href="../ura_reporting.php" class="btn btn-sm btn-primary"><img src="<?=$ura_logo?>" alt="" style="height:14px;width:auto;margin-right:6px" onerror="this.style.display='none'">Full URA Reporting Portal</a>
-      <a href="../ura_reporting.php?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
-      <a href="../ura_reporting.php?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
+      <a href="ura_reporting.php" class="btn btn-sm btn-primary"><img src="<?=$ura_logo?>" alt="" style="height:14px;width:auto;margin-right:6px" onerror="this.style.display='none'">Full URA Reporting Portal</a>
+      <a href="ura_reporting.php?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
+      <a href="ura_reporting.php?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
     </div>
     </div>
   </div>

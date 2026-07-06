@@ -1076,15 +1076,15 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                     <?php else: ?>
                     <p class="text-muted small">No news items found</p>
                     <?php endif; ?>
-                    <p class="mt-2 small text-muted"><i class="fas fa-info-circle me-1"></i>Manage website content in <a href="../news.php" target="_blank">News & Updates</a> | <a href="website-pages.php" target="_blank">Website Pages</a></p>
+                    <p class="mt-2 small text-muted"><i class="fas fa-info-circle me-1"></i>Manage website content in <a href="../news.php" target="_blank">News & Updates</a> | <a href="../website-pages.php" target="_blank">Website Pages</a></p>
                 </div>
             </div>
             <div class="col-md-5">
                 <div class="section-card">
                     <h2><i class="fas fa-download me-2 text-info"></i>Downloads & Resources</h2>
                     <div class="d-grid gap-2">
-                        <a href="student-downloads.php" class="btn btn-sm btn-outline-primary text-start"><i class="fas fa-download me-2"></i>Student Downloads</a>
-                        <a href="document_management.php" class="btn btn-sm btn-outline-info text-start"><i class="fas fa-folder me-2"></i>Document Management</a>
+                        <a href="../student-downloads.php" class="btn btn-sm btn-outline-primary text-start"><i class="fas fa-download me-2"></i>Student Downloads</a>
+                        <a href="../document_management.php" class="btn btn-sm btn-outline-info text-start"><i class="fas fa-folder me-2"></i>Document Management</a>
                         <a href="../index.php" class="btn btn-sm btn-outline-secondary text-start"><i class="fas fa-home me-2"></i>Portal Home</a>
                     </div>
                 </div>
@@ -1099,7 +1099,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
                 <div class="section-card">
                     <h2><i class="fas fa-cog me-2 text-secondary"></i>Settings</h2>
-                    <p class="small text-muted">Configure website banners, portal settings, and homepage in <a href="website-pages.php">Website Pages</a>.</p>
+                    <p class="small text-muted">Configure website banners, portal settings, and homepage in <a href="../website-pages.php">Website Pages</a>.</p>
                 </div>
             </div>
         </div>

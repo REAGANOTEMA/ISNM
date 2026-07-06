@@ -26,10 +26,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Defer CSRF token generation for POST requests until after the CSRF check
-// to avoid regenerating the token before verification (prevents session-mismatch on hosting
-// environments where session files may be ephemeral). For GET requests, eagerly create it.
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' && empty($_SESSION['csrf_token'])) {
+// CSRF token generation for auth forms
+if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
@@ -234,29 +232,27 @@ if ($action === 'logout') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    session_write_close();
     header('Location: staff-login.php');
     exit();
 }
 
 // CSRF verification on all POST actions
 $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-$stored = $_SESSION['csrf_token'] ?? '';
-if ($stored !== '' && !hash_equals($stored, $token)) {
+if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
     // Regenerate CSRF token so the refreshed page has a valid one
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
     // Determine which login page to redirect back to
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
     if (strpos($referrer, 'student-login.php') !== false) {
+        session_write_close();
         header('Location: student-login.php');
     } else {
+        session_write_close();
         header('Location: staff-login.php');
     }
     exit();
-}
-// Ensure CSRF token exists for fresh sessions (hosting may have lost session file)
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -264,9 +260,6 @@ switch ($action) {
 
     // ── Staff / organogram login ────────────────────────────────────
     case 'staff_login':
-        // Clear stale redirect to prevent session-based redirect loops
-        unset($_SESSION['login_redirect_url'], $_SESSION['requested_position']);
-
         $email    = trim($_POST['email']    ?? '');
         $password = (string)($_POST['password'] ?? ''); // raw — no trim, no sanitize
         $requested_position = trim($_POST['requested_position'] ?? '');
@@ -291,6 +284,7 @@ switch ($action) {
 
         if ($email === '' || $password === '') {
             $_SESSION['error'] = 'Email and password are required.';
+            session_write_close();
             header('Location: staff-login.php');
             exit();
         }
@@ -434,10 +428,11 @@ switch ($action) {
                 }
 
                 // Allow only known safe internal routes
-                session_write_close();
                 if ($normalized && in_array($normalized, $allowed, true)) {
+                    session_write_close();
                     header('Location: ' . $normalized);
                 } else {
+                    session_write_close();
                     header('Location: ' . $dashboard);
                 }
                 exit();
@@ -461,6 +456,7 @@ switch ($action) {
             if (!empty($params)) {
                 $redirectUrl .= '?' . implode('&', $params);
             }
+            session_write_close();
             header("Location: $redirectUrl");
         }
         exit();
@@ -491,6 +487,7 @@ switch ($action) {
 
     default:
         $_SESSION['error'] = 'Invalid action.';
+        session_write_close();
         header('Location: index.php');
         exit();
 }
@@ -520,15 +517,18 @@ function handleStudentLogin() {
             ];
             unset($_SESSION['student_login_allowed']);
             $_SESSION['success'] = 'Details verified. Please set your student portal password.';
+            session_write_close();
             header('Location: student-password-setup.php');
         } else {
             $auth_service->createSecureSession($res['user']);
             unset($_SESSION['student_login_allowed']);
             $_SESSION['success'] = 'Welcome, ' . $res['user']['full_name'];
+            session_write_close();
             header('Location: dashboards/student.php');
         }
     } else {
         $_SESSION['error'] = $res['message'];
+        session_write_close();
         header('Location: student-login.php');
     }
     exit();
@@ -543,6 +543,7 @@ function handleStudentSetPassword() {
     $pending = $_SESSION['pending_student_auth'] ?? null;
     if (!$pending || empty($pending['student_id'])) {
         $_SESSION['error'] = 'Student verification session expired. Please login again.';
+        session_write_close();
         header('Location: student-login.php');
         exit();
     }
@@ -552,12 +553,14 @@ function handleStudentSetPassword() {
 
     if (trim($password) === '' || trim($confirm_password) === '') {
         $_SESSION['error'] = 'Please enter and confirm your new password.';
+        session_write_close();
         header('Location: student-password-setup.php');
         exit();
     }
 
     if ($password !== $confirm_password) {
         $_SESSION['error'] = 'Passwords do not match.';
+        session_write_close();
         header('Location: student-password-setup.php');
         exit();
     }
@@ -565,6 +568,7 @@ function handleStudentSetPassword() {
     $result = $auth_service->setStudentPassword((int)$pending['student_id'], $password);
     if (!$result['success']) {
         $_SESSION['error'] = $result['message'];
+        session_write_close();
         header('Location: student-password-setup.php');
         exit();
     }
@@ -572,6 +576,7 @@ function handleStudentSetPassword() {
     $student = $auth_service->getStudentById((int)$pending['student_id']);
     if (!$student) {
         $_SESSION['error'] = 'Unable to load student after password setup. Please login again.';
+        session_write_close();
         header('Location: student-login.php');
         exit();
     }
@@ -588,6 +593,7 @@ function handleStudentSetPassword() {
     unset($_SESSION['pending_student_auth']);
     unset($_SESSION['student_login_allowed']);
     $_SESSION['success'] = 'Password created successfully. You are now logged in.';
+    session_write_close();
     header('Location: dashboards/student.php');
     exit();
 }
@@ -596,6 +602,7 @@ function handleCreateStudent() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
+        session_write_close();
         header('Location: staff-login.php'); exit();
     }
     $data = [
@@ -614,6 +621,7 @@ function handleCreateStudent() {
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
     $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    session_write_close();
     header('Location: ' . $safeRef);
     exit();
 }
@@ -622,6 +630,7 @@ function handleCreateStaff() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
+        session_write_close();
         header('Location: staff-login.php'); exit();
     }
     $data = [
@@ -638,6 +647,7 @@ function handleCreateStaff() {
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
     $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    session_write_close();
     header('Location: ' . $safeRef);
     exit();
 }
@@ -650,6 +660,7 @@ function handleLogout() {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
+    session_write_close();
     header('Location: staff-login.php');
     exit();
 }
