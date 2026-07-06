@@ -103,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cnt = $staff->query("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE invoice_number LIKE '$prefix%'");
                 $num = $cnt ? ((int)$cnt->fetch_assoc()['c'] + 1) : 1;
                 $inv_no = $prefix . str_pad($num, 5, '0', STR_PAD_LEFT);
-                $stmt = $staff->prepare("INSERT INTO student_fee_accounts (student_id, academic_year, semester, invoice_number, total_fees, amount_paid, balance, due_date, description, status) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, 'unpaid')");
-                if ($stmt) { $stmt->bind_param('ssssdds', $student_id, $academic_year, $semester, $inv_no, $total_fees, $total_fees, $due_date, $description); $stmt->execute() ? $_SESSION['success'] = "Invoice $inv_no created for ".currency($total_fees) : $_SESSION['error'] = $stmt->error; $stmt->close(); }
+                $stmt = $staff->prepare("INSERT INTO student_fee_accounts (student_id, invoice_number, total_fees, amount_paid, balance, due_date, academic_year, semester, status) VALUES (?, ?, ?, 0, ?, ?, ?, ?, 'unpaid')");
+                if ($stmt) { $stmt->bind_param('ssddsss', $student_id, $inv_no, $total_fees, $total_fees, $due_date, $academic_year, $semester); $stmt->execute() ? $_SESSION['success'] = "Invoice $inv_no created for ".currency($total_fees) : $_SESSION['error'] = $stmt->error; $stmt->close(); }
             }
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
         header("Location: $redirect"); exit;
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $total = (float)$acc['total_fees'];
                     $discount_amount = $discount_type === 'percentage' ? ($total * $discount_value / 100) : $discount_value;
                     $new_balance = max(0, (float)$acc['balance'] - $discount_amount);
-                    $staff->query("UPDATE student_fee_accounts SET balance = $new_balance, total_fees = total_fees - $discount_amount, discounts = COALESCE(discounts,0) + $discount_amount WHERE id = " . intval($account_id));
+                    $staff->query("UPDATE student_fee_accounts SET balance = $new_balance, total_fees = total_fees - $discount_amount WHERE id = " . intval($account_id));
                     $stmt = $staff->prepare("INSERT INTO bursar_discounts (fee_account_id, discount_type, discount_value, discount_amount, reason, applied_by, applied_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
                     if ($stmt) { $uid = (int)($user['id'] ?? 0); $stmt->bind_param('isddsi', $account_id, $discount_type, $discount_value, $discount_amount, $reason, $uid); $stmt->execute(); $stmt->close(); }
                     $_SESSION['success'] = 'Discount of '.currency($discount_amount).' applied.';

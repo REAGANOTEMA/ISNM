@@ -79,11 +79,17 @@ function normalizeRoleKey(string $role): string {
         'computer lab' => 'computer_lab',
         'computer_lab' => 'computer_lab',
         'computer laboratory' => 'computer_lab',
+        'computer lab manager' => 'computer_lab',
+        'computer laboratory manager' => 'computer_lab',
         'skills lab' => 'skills_lab',
         'skills_lab' => 'skills_lab',
         'skills laboratory' => 'skills_lab',
+        'skills lab manager' => 'skills_lab',
+        'skills lab technician' => 'skills_lab',
+        'skills laboratory manager' => 'skills_lab',
         'sickbay nurse' => 'sick_bay',
         'sickbay' => 'sick_bay',
+        'sick_bay' => 'sick_bay',
         'guild president' => 'guild',
         'guild' => 'guild',
         'student' => 'student',
@@ -624,11 +630,11 @@ function getAllSidebarConfigs(): array {
         // Default staff (fallback)
         // ═══════════════════════════════════════════════
         'staff_default' => [
-            'brand' => 'Staff Dashboard',
+            'brand' => 'Staff Portal',
             'brand_icon' => 'fas fa-user',
-            'dashboard_link' => 'dashboards/school-principal.php',
+            'dashboard_link' => 'dashboards/non-teaching-staff.php',
             'modules' => [
-                'dashboard' => ['label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt', 'link' => 'dashboards/school-principal.php'],
+                'dashboard' => ['label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt', 'link' => 'dashboards/non-teaching-staff.php'],
                 'profile' => ['label' => 'My Profile', 'icon' => 'fas fa-user', 'link' => 'dashboards/staff_profile_management.php'],
                 'messages' => ['label' => 'Messages', 'icon' => 'fas fa-envelope', 'link' => 'dashboards/portal-messages.php'],
                 'notifications' => ['label' => 'Notifications', 'icon' => 'fas fa-bell', 'link' => 'dashboards/notifications.php'],

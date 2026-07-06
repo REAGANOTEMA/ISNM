@@ -181,8 +181,8 @@ if (!function_exists('logFinancialActivity')) {
         $conn = getStaffConnection();
         $stmt = $conn->prepare("
             INSERT INTO staff_activity_log 
-            (staff_id, activity_type, activity_description, module_accessed, record_id, ip_address, user_agent) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
         
         $user_id = $_SESSION['user_id'] ?? 0;
@@ -191,7 +191,7 @@ if (!function_exists('logFinancialActivity')) {
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
-        $stmt->bind_param("isssiss", $user_id, $action_type, $description, $module, $record_id, $ip_address, $user_agent);
+        $stmt->bind_param("isssss", $user_id, $action_type, $description, $module, $ip_address, $user_agent);
         $stmt->execute();
     }
 }

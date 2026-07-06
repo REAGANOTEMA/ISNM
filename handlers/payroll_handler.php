@@ -28,18 +28,17 @@ try {
             $paymentMethod = $_POST['payment_method'] ?? 'bank';
             $bankName = $_POST['bank_name'] ?? '';
             $bankAccount = $_POST['bank_account_number'] ?? '';
-            $mobileMoney = $_POST['mobile_money_number'] ?? '';
             $tin = $_POST['tin'] ?? '';
             $nssfNumber = $_POST['nssf_number'] ?? '';
-            $nationalId = $_POST['national_id'] ?? '';
+            $hireDate = $_POST['hire_date'] ?? null;
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
 
-            $stmt = $pconn->prepare("INSERT INTO payroll_employees (staff_id, employment_type, payment_method, bank_name, bank_account_number, mobile_money_number, tin, nssf_number, national_id, monthly_salary, annual_salary, payroll_status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)");
+            $stmt = $pconn->prepare("INSERT INTO payroll_employees (staff_id, bank_name, bank_account, tax_identification, nssf_number, salary_type, basic_salary, hire_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $annualSal = $monthlySalary * 12;
-            $stmt->bind_param('isssssssddi', $staffIdParam, $employmentType, $paymentMethod, $bankName, $bankAccount, $mobileMoney, $tin, $nssfNumber, $nationalId, $monthlySalary, $annualSal, $staffId);
+            $salaryType = ($employmentType === 'annual') ? 'annual' : 'monthly';
+            $stmt->bind_param('isssssds', $staffIdParam, $bankName, $bankAccount, $tin, $nssfNumber, $salaryType, $monthlySalary, $hireDate);
             if (!$stmt->execute()) throw new Exception('Execute failed: ' . $stmt->error);
             $newId = $stmt->insert_id;
             $stmt->close();
@@ -53,20 +52,18 @@ try {
             $profileId = (int)($_POST['profile_id'] ?? 0);
             $monthlySalary = (float)($_POST['monthly_salary'] ?? 0);
             $employmentType = $_POST['employment_type'] ?? 'permanent';
-            $paymentMethod = $_POST['payment_method'] ?? 'bank';
             $bankName = $_POST['bank_name'] ?? '';
             $bankAccount = $_POST['bank_account_number'] ?? '';
-            $mobileMoney = $_POST['mobile_money_number'] ?? '';
             $tin = $_POST['tin'] ?? '';
             $nssfNumber = $_POST['nssf_number'] ?? '';
             $payrollStatus = $_POST['payroll_status'] ?? 'active';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $stmt = $pconn->prepare("UPDATE payroll_employees SET employment_type=?, monthly_salary=?, annual_salary=?, payment_method=?, bank_name=?, bank_account_number=?, mobile_money_number=?, tin=?, nssf_number=?, payroll_status=? WHERE id=?");
+            $stmt = $pconn->prepare("UPDATE payroll_employees SET bank_name=?, bank_account=?, tax_identification=?, nssf_number=?, salary_type=?, basic_salary=?, status=? WHERE id=?");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $annualSal = $monthlySalary * 12;
-            $stmt->bind_param('sdssssssssi', $employmentType, $monthlySalary, $annualSal, $paymentMethod, $bankName, $bankAccount, $mobileMoney, $tin, $nssfNumber, $payrollStatus, $profileId);
+            $salaryType = ($employmentType === 'annual') ? 'annual' : 'monthly';
+            $stmt->bind_param('sssssdsi', $bankName, $bankAccount, $tin, $nssfNumber, $salaryType, $monthlySalary, $payrollStatus, $profileId);
             if (!$stmt->execute()) throw new Exception('Execute failed: ' . $stmt->error);
             $stmt->close();
             $pconn->close();
@@ -138,28 +135,29 @@ try {
 
         // ── Overtime ──
         case 'add_overtime':
-            $peId = (int)($_POST['payroll_employee_id'] ?? 0);
+            $staffIdParam = (int)($_POST['payroll_employee_id'] ?? $_POST['staff_id'] ?? 0);
             $hours = (float)($_POST['hours_worked'] ?? 0);
             $type = $_POST['overtime_type'] ?? 'normal';
-            $date = $_POST['overtime_date'] ?? date('Y-m-d');
-            $desc = $_POST['description'] ?? '';
+            $month = $_POST['overtime_date'] ?? date('Y-m');
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
 
-            $empStmt = $pconn->prepare("SELECT hourly_rate FROM payroll_employees WHERE id=?");
-            $empStmt->bind_param('i', $peId);
+            $empStmt = $pconn->prepare("SELECT basic_salary FROM payroll_employees WHERE staff_id=?");
+            $empStmt->bind_param('i', $staffIdParam);
             $empStmt->execute();
             $empRow = $empStmt->get_result()->fetch_assoc();
             $empStmt->close();
-            $hourlyRate = (float)($empRow['hourly_rate'] ?? 0);
+            $basicSalary = (float)($empRow['basic_salary'] ?? 0);
+            $hourlyRate = ($basicSalary > 0) ? $basicSalary / 160 : 0;
 
             $rates = ['normal' => 1.5, 'weekend' => 2.0, 'holiday' => 2.5, 'night' => 2.0];
             $multiplier = $rates[$type] ?? 1.5;
+            $totalPay = $hours * $hourlyRate * $multiplier;
 
-            $stmt = $pconn->prepare("INSERT INTO payroll_overtime (payroll_employee_id, overtime_type, hours_worked, rate_multiplier, hourly_rate, overtime_date, description, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+            $stmt = $pconn->prepare("INSERT INTO payroll_overtime (staff_id, hours, rate, total_pay, month, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $stmt->bind_param('isiddssi', $peId, $type, $hours, $multiplier, $hourlyRate, $date, $desc, $staffId);
+            $stmt->bind_param('idddsi', $staffIdParam, $hours, $hourlyRate, $totalPay, $month, $staffId);
             $stmt->execute() ? $_SESSION['success'] = 'Overtime recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
             $stmt->close();
             $pconn->close();
@@ -439,22 +437,17 @@ try {
             $endDate = trim($_POST['end_date'] ?? '');
             $reason = trim($_POST['reason'] ?? '');
             if ($staffIdReq && $leaveTypeId && $startDate && $endDate) {
-                $stmt = $payrollConn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+                $stmt = $payrollConn->prepare("INSERT INTO staff_leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
                 if ($stmt) {
                     $stmt->bind_param("iisss", $staffIdReq, $leaveTypeId, $startDate, $endDate, $reason);
-                    $stmt->execute();
-                    $stmt->close();
-                    $_SESSION['success'] = 'Leave request submitted.';
-                } else {
-                    $stmt2 = $payrollConn->prepare("INSERT INTO staff_leave (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, 'Leave', ?, ?, ?, 'pending')");
-                    if ($stmt2) {
-                        $stmt2->bind_param("isss", $staffIdReq, $startDate, $endDate, $reason);
-                        $stmt2->execute();
-                        $stmt2->close();
+                    if ($stmt->execute()) {
                         $_SESSION['success'] = 'Leave request submitted.';
                     } else {
-                        $_SESSION['error'] = 'Failed to submit leave request.';
+                        $_SESSION['error'] = 'Failed to submit leave request: ' . $stmt->error;
                     }
+                    $stmt->close();
+                } else {
+                    $_SESSION['error'] = 'Failed to prepare leave request.';
                 }
             } else {
                 $_SESSION['error'] = 'Please fill all required fields.';
@@ -465,20 +458,14 @@ try {
         case 'approve_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
-                $stmt = $payrollConn->prepare("UPDATE leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
+                $stmt = $payrollConn->prepare("UPDATE staff_leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
                     $stmt->execute();
                     $stmt->close();
                     $_SESSION['success'] = 'Leave request approved.';
                 } else {
-                    $stmt2 = $payrollConn->prepare("UPDATE staff_leave SET status='approved' WHERE id=? AND status='pending'");
-                    if ($stmt2) {
-                        $stmt2->bind_param("i", $leaveId);
-                        $stmt2->execute();
-                        $stmt2->close();
-                        $_SESSION['success'] = 'Leave request approved.';
-                    }
+                    $_SESSION['error'] = 'Could not approve leave request.';
                 }
             }
             break;
@@ -487,20 +474,14 @@ try {
         case 'reject_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
-                $stmt = $payrollConn->prepare("UPDATE leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
+                $stmt = $payrollConn->prepare("UPDATE staff_leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
                     $stmt->execute();
                     $stmt->close();
                     $_SESSION['success'] = 'Leave request rejected.';
                 } else {
-                    $stmt2 = $payrollConn->prepare("UPDATE staff_leave SET status='rejected' WHERE id=? AND status='pending'");
-                    if ($stmt2) {
-                        $stmt2->bind_param("i", $leaveId);
-                        $stmt2->execute();
-                        $stmt2->close();
-                        $_SESSION['success'] = 'Leave request rejected.';
-                    }
+                    $_SESSION['error'] = 'Could not reject leave request.';
                 }
             }
             break;

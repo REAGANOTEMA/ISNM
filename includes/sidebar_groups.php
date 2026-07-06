@@ -8,7 +8,7 @@ if (function_exists('getSidebarGroups')) return;
 
 function getSidebarGroups(string $role): array {
     $roleKey = normalizeRoleKeySidebar($role);
-    $execRoles = ['director_general','director_ict','director_academics','director_finance',
+    $execRoles = ['director_general','ceo','director_ict','director_academics','director_finance',
                   'director_admissions','principal','deputy_principal','academic_registrar'];
     $isExec = in_array($roleKey, $execRoles);
 
@@ -326,6 +326,45 @@ function getRoleOperations(string $role): array {
             ['label' => 'Communications',       'icon'=>'fas fa-comments',     'page'=>'communications'],
             ['label' => 'URA Tax',              'icon'=>'fas fa-calculator',   'page'=>'ura'],
         ],
+        'ceo' => [
+            ['label' => 'Executive Dashboard',  'icon'=>'fas fa-tachometer-alt',   'page'=>'executive-dashboard'],
+            ['label' => 'Strategic Overview',   'icon'=>'fas fa-chart-line',       'page'=>'strategic'],
+            ['label' => 'Institution Stats',    'icon'=>'fas fa-university',       'page'=>'institution-stats'],
+            ['label' => 'Directorate Oversight','icon'=>'fas fa-user-tie',         'page'=>'directorate'],
+            ['label' => 'Quality Assurance',    'icon'=>'fas fa-shield-alt',       'page'=>'quality'],
+            ['label' => 'Audit Trail',          'icon'=>'fas fa-clipboard-check',  'page'=>'audit'],
+            ['label' => 'Executive Reports',    'icon'=>'fas fa-file-alt',         'page'=>'reports'],
+            ['label' => 'System Settings',      'icon'=>'fas fa-cog',              'page'=>'settings'],
+        ],
+        'non_teaching' => [
+            ['label' => 'Dashboard',            'icon'=>'fas fa-home',             'page'=>'home'],
+            ['label' => 'My Attendance',        'icon'=>'fas fa-calendar-check',   'page'=>'attendance'],
+            ['label' => 'Leave Management',     'icon'=>'fas fa-calendar-alt',     'page'=>'leave'],
+            ['label' => 'My Profile',           'icon'=>'fas fa-id-card',          'page'=>'profile'],
+            ['label' => 'Messages',             'icon'=>'fas fa-envelope',         'page'=>'messages'],
+            ['label' => 'Notifications',        'icon'=>'fas fa-bell',             'page'=>'notifications'],
+        ],
+        'student' => [
+            ['label' => 'Dashboard',            'icon'=>'fas fa-tachometer-alt',   'page'=>'dashboard'],
+            ['label' => 'My Timetable',         'icon'=>'fas fa-calendar-alt',     'page'=>'timetable'],
+            ['label' => 'Examinations',         'icon'=>'fas fa-pencil-alt',       'page'=>'exams'],
+            ['label' => 'My Progress',          'icon'=>'fas fa-chart-line',       'page'=>'progress'],
+            ['label' => 'Fee Payments',         'icon'=>'fas fa-money-bill',       'page'=>'fees'],
+            ['label' => 'Receipts',             'icon'=>'fas fa-receipt',          'page'=>'receipts'],
+            ['label' => 'Library',              'icon'=>'fas fa-book',             'page'=>'library'],
+            ['label' => 'Workspace',            'icon'=>'fas fa-folder-open',      'page'=>'workspace'],
+            ['label' => 'Bus Tracking',         'icon'=>'fas fa-bus',              'page'=>'bus'],
+            ['label' => 'Change Password',      'icon'=>'fas fa-key',              'page'=>'password'],
+        ],
+        'system_admin' => [
+            ['label' => 'Dashboard',            'icon'=>'fas fa-tachometer-alt',   'page'=>'dashboard'],
+            ['label' => 'User Management',      'icon'=>'fas fa-users-cog',        'page'=>'users'],
+            ['label' => 'Roles & Permissions',  'icon'=>'fas fa-shield-alt',       'page'=>'roles'],
+            ['label' => 'System Backup',        'icon'=>'fas fa-database',         'page'=>'backup'],
+            ['label' => 'Audit Logs',           'icon'=>'fas fa-clipboard-list',   'page'=>'audit'],
+            ['label' => 'System Settings',      'icon'=>'fas fa-cog',              'page'=>'settings'],
+            ['label' => 'Recycle Bin',          'icon'=>'fas fa-trash-restore',    'page'=>'recycle'],
+        ],
         'sickbay' => [
             ['label' => 'Patient Records',      'icon'=>'fas fa-heartbeat',    'page'=>'patients'],
             ['label' => 'Appointments',         'icon'=>'fas fa-calendar',     'page'=>'appointments'],
@@ -341,7 +380,7 @@ function getRoleOperations(string $role): array {
 function normalizeRoleKeySidebar(string $role): string {
     $m = strtolower(trim($role));
     $map = [
-        'director general' => 'director_general', 'ceo' => 'director_general',
+        'director general' => 'director_general', 'ceo' => 'ceo',
         'director ict' => 'director_ict', 'director academics' => 'director_academics',
         'director admissions' => 'director_admissions', 'director finance' => 'director_finance',
         'school principal' => 'principal', 'deputy principal' => 'deputy_principal',
@@ -356,12 +395,14 @@ function normalizeRoleKeySidebar(string $role): string {
         'driver' => 'drivers', 'drivers' => 'drivers',
         'security' => 'security', 'security officer' => 'security',
         'storekeeper' => 'store', 'store keeper' => 'store',
-        'computer lab' => 'computer_lab', 'computer lab manager' => 'computer_lab',
-        'skills lab' => 'skills_lab', 'skills lab manager' => 'skills_lab',
+        'computer lab' => 'computer_lab', 'computer lab manager' => 'computer_lab', 'computer laboratory' => 'computer_lab',
+        'skills lab' => 'skills_lab', 'skills lab manager' => 'skills_lab', 'skills lab technician' => 'skills_lab', 'skills laboratory' => 'skills_lab',
         'guild president' => 'guild',
         'school bursar' => 'bursar', 'bursar' => 'bursar',
-        'director finance' => 'director_finance',
-        'sickbay' => 'sickbay', 'sickbay nurse' => 'sickbay',
+        'sickbay' => 'sickbay', 'sickbay nurse' => 'sickbay', 'sick_bay' => 'sickbay',
+        'non-teaching' => 'non_teaching', 'non-teaching-staff' => 'non_teaching', 'non teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching', 'non_teaching' => 'non_teaching',
+        'system admin' => 'system_admin', 'system-admin' => 'system_admin', 'system_admin' => 'system_admin',
+        'student' => 'student', 'students' => 'student',
     ];
     return $map[$m] ?? 'lecturer';
 }

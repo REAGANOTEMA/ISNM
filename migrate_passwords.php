@@ -121,7 +121,7 @@ echo "<h2>Step 3: staff_roles table</h2>";
 $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `role_name` VARCHAR(100) NOT NULL,
-    `role_description` TEXT,
+    `description` TEXT,
     `role_level` VARCHAR(50) DEFAULT 'staff',
     `dashboard_path` VARCHAR(255) DEFAULT NULL,
     `permissions` JSON DEFAULT NULL,
@@ -176,7 +176,7 @@ $roles = [
     [39,'Computer Lab','Computer lab','staff','dashboards/computer_lab.php'],
     [40,'Skills Lab','Skills lab','staff','dashboards/skills-lab.php'],
 ];
-$ins = $conn->prepare("INSERT INTO staff_roles (id,role_name,role_description,role_level,dashboard_path) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE role_name=VALUES(role_name),dashboard_path=VALUES(dashboard_path)");
+$ins = $conn->prepare("INSERT INTO staff_roles (id,role_name,description,role_level,dashboard_path) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE role_name=VALUES(role_name),dashboard_path=VALUES(dashboard_path)");
 $n = 0;
 foreach ($roles as $r) {
     $ins->bind_param('issss', $r[0],$r[1],$r[2],$r[3],$r[4]);

@@ -177,14 +177,28 @@ class CompleteSystemSetup {
                 // Update existing
                 $row = $checkResult->fetch_assoc();
                 $id = $row['id'];
-                $password = password($creds['password'], PASSWORD_BCRYPT);
+                $password = password_hash($creds['password'], PASSWORD_BCRYPT);
+                
+                // Look up role_id from staff_roles
+                $role_id_val = null;
+                $rq = $staffConn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
+                if ($rq) {
+                    $roleName = $creds['position'];
+                    $rq->bind_param('s', $roleName);
+                    $rq->execute();
+                    $rqResult = $rq->get_result();
+                    if ($rqResult && $rqResult->num_rows > 0) {
+                        $role_id_val = (int)$rqResult->fetch_assoc()['id'];
+                    }
+                    $rq->close();
+                }
                 
                 $stmt = $staffConn->prepare(
-                    "UPDATE staff SET password = ?, full_name = ?, position = ?, department = ?, role = ?, status = 'active' WHERE id = ?"
+                    "UPDATE staff SET password = ?, full_name = ?, position = ?, department = ?, role_id = ?, status = 'active' WHERE id = ?"
                 );
                 
                 if ($stmt) {
-                    $stmt->bind_param('sssssi', $password, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $id);
+                    $stmt->bind_param('sssssi', $password, $creds['full_name'], $creds['position'], $creds['department'], $role_id_val, $id);
                     if ($stmt->execute()) {
                         if ($this->verbose) {
                             $this->log("Updated: $email", 'SUCCESS');
@@ -198,17 +212,31 @@ class CompleteSystemSetup {
                 }
             } else {
                 // Insert new
-                $password = password($creds['password'], PASSWORD_BCRYPT);
+                $password = password_hash($creds['password'], PASSWORD_BCRYPT);
                 $status = 'active';
                 $login_attempts = 0;
                 
+                // Look up role_id from staff_roles
+                $role_id_val = null;
+                $rq = $staffConn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
+                if ($rq) {
+                    $roleName = $creds['position'];
+                    $rq->bind_param('s', $roleName);
+                    $rq->execute();
+                    $rqResult = $rq->get_result();
+                    if ($rqResult && $rqResult->num_rows > 0) {
+                        $role_id_val = (int)$rqResult->fetch_assoc()['id'];
+                    }
+                    $rq->close();
+                }
+                
                 $stmt = $staffConn->prepare(
-                    "INSERT INTO staff (email, password, full_name, position, department, role, status, login_attempts, created_at) 
+                    "INSERT INTO staff (email, password, full_name, position, department, role_id, status, login_attempts, created_at) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
                 );
                 
                 if ($stmt) {
-                    $stmt->bind_param('sssssssi', $email, $password, $creds['full_name'], $creds['position'], $creds['department'], $creds['role'], $status, $login_attempts);
+                    $stmt->bind_param('sssssssi', $email, $password, $creds['full_name'], $creds['position'], $creds['department'], $role_id_val, $status, $login_attempts);
                     if ($stmt->execute()) {
                         if ($this->verbose) {
                             $this->log("Inserted: $email", 'SUCCESS');

@@ -58,7 +58,7 @@ foreach ($roles as $roleName) {
     if ($row = $res->fetch_assoc()) {
         $roleIds[$roleName] = (int)$row['id'];
     } else {
-        $stmt2 = $conn->prepare("INSERT INTO staff_roles (role_name, role_description, dashboard_path) VALUES (?, ?, ?)");
+        $stmt2 = $conn->prepare("INSERT INTO staff_roles (role_name, description, dashboard_path) VALUES (?, ?, ?)");
         $desc = $roleName . ' role for ISNM ERP';
         $dash = '';
         $stmt2->bind_param('sss', $roleName, $desc, $dash);
