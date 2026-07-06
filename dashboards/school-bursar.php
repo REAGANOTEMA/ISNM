@@ -20,29 +20,7 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 $userRole = $_SESSION['role'] ?? '';
 $isSuper = $auth->hasFullInstitutionAccess($userRole);
 
-// ── Auto-create bursar account on first load ──
-if ($staffConn) {
-    $staffConn->query("CREATE TABLE IF NOT EXISTS staff_roles (id INT AUTO_INCREMENT PRIMARY KEY, role_name VARCHAR(100) NOT NULL UNIQUE, role_description TEXT, role_level INT DEFAULT 5, dashboard_path VARCHAR(255), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $staffConn->query("INSERT IGNORE INTO staff_roles (role_name, dashboard_path) VALUES ('School Bursar', 'dashboards/school-bursar.php')");
-    $rs = $staffConn->query("SELECT id FROM staff_roles WHERE role_name = 'School Bursar'");
-    if ($rs && $row = $rs->fetch_assoc()) {
-        $roleId = (int)$row['id'];
-        $chk = $staffConn->prepare("SELECT id FROM staff WHERE email = ?");
-        $bursarEmail = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-        $chk->bind_param("s", $bursarEmail);
-        $chk->execute();
-        if (!$chk->get_result()->fetch_assoc()) {
-            $plainpw = bin2hex(random_bytes(8));
-            $hash = password_hash($plainpw, PASSWORD_DEFAULT);
-            $ins = $staffConn->prepare("INSERT IGNORE INTO staff (full_name, email, password, role_id, position, department, status) VALUES (?, ?, ?, ?, 'School Bursar', 'Finance', 'Active')");
-            $n = 'School Bursar';
-            $ins->bind_param("sssi", $n, $bursarEmail, $hash, $roleId);
-            $ins->execute();
-            $_SESSION['info'] = "Default bursar account created. Temporary password: $plainpw";
-        }
-        $chk->close();
-    }
-}
+// Account is created via the SQL setup script (setup_accounts.sql)
 
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
