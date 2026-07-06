@@ -257,6 +257,9 @@ switch ($action) {
 
     // ── Staff / organogram login ────────────────────────────────────
     case 'staff_login':
+        // Clear stale redirect to prevent session-based redirect loops
+        unset($_SESSION['login_redirect_url'], $_SESSION['requested_position']);
+
         $email    = trim($_POST['email']    ?? '');
         $password = (string)($_POST['password'] ?? ''); // raw — no trim, no sanitize
         $requested_position = trim($_POST['requested_position'] ?? '');
