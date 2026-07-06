@@ -49,7 +49,7 @@ if ($conn) {
     try {
         $result = $conn->query("SELECT * FROM security_incidents ORDER BY incident_date DESC, id DESC LIMIT 100");
         if ($result) { while ($row = $result->fetch_assoc()) { $all_incidents[] = $row; } }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Recent incidents for overview ──
@@ -61,7 +61,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_patrols ORDER BY start_time DESC LIMIT 100");
         if ($r) $all_patrols = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Active patrols for overview ──
@@ -70,7 +70,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.officer_id=s.id WHERE DATE(sp.start_time)=CURDATE() ORDER BY sp.start_time DESC LIMIT 10");
         if ($r) $active_patrols = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: All visitors ──
@@ -79,7 +79,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_visitors ORDER BY check_in_time DESC LIMIT 100");
         if ($r) $all_visitors = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Today's visitors for overview ──
@@ -91,7 +91,7 @@ if ($conn) {
         if ($r) $today_visitors = $r->fetch_all(MYSQLI_ASSOC);
         $rq = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE DATE(check_in_time) = CURDATE()");
         if ($rq) $visitor_count = (int) $rq->fetch_row()[0];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Emergency contacts ──
@@ -100,7 +100,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_emergency_contacts WHERE is_active=1 ORDER BY contact_type");
         if ($r) $emergency_contacts = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Equipment due ──
@@ -109,7 +109,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_equipment WHERE status!='Retired' AND (next_maintenance_date <= CURDATE() OR next_maintenance_date IS NULL) ORDER BY next_maintenance_date ASC LIMIT 5");
         if ($r) $equipment_due = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
 // ── Data: Staff list for patrol form ──
@@ -118,7 +118,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT id, full_name FROM staff WHERE status='Active' ORDER BY full_name");
         if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

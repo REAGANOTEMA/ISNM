@@ -38,7 +38,7 @@ function getMyApprovalRequests($conn = null, $limit = 10) {
             while ($row = $result->fetch_assoc()) $requests[] = $row;
             $stmt->close();
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('dept_approval getRequests: ' . $e->getMessage()); }
     return $requests;
 }
 }
@@ -85,7 +85,7 @@ function renderDepartmentApprovalModal() {
         try {
             $r = $conn->query("SELECT DISTINCT category FROM igangaschoolofl_staffs_db.approval_workflows WHERE is_active=1 ORDER BY category");
             if ($r) while ($row = $r->fetch_assoc()) $categories[] = $row['category'];
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dept_approval process: ' . $e->getMessage()); }
     }
     if (empty($categories)) $categories = ['General Administration','Human Resources','Finance','ICT','Academic','Admissions','Library','Store & Assets'];
     ?>

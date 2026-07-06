@@ -245,7 +245,7 @@ if ($conn) {
             $welfare_stats['resolved'] = (int)($row['resolved_c'] ?? 0);
             $welfare_stats['closed'] = (int)($row['closed_c'] ?? 0);
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('matrons context: ' . $e->getMessage()); }
 }
 
 $cases = [];
@@ -257,7 +257,7 @@ if ($conn) {
                 $cases[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('matrons context: ' . $e->getMessage()); }
 }
 
 $actions_by_case = [];
@@ -288,7 +288,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('matrons context: ' . $e->getMessage()); }
 }
 
 // Store data for requisitions

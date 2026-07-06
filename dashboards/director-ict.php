@@ -99,7 +99,7 @@ if ($staff_conn) {
     try {
         $r = $staff_conn->query("SELECT ar.*, ws.workflow_name, ws.category FROM {$staff_db}.approval_requests ar LEFT JOIN {$staff_db}.approval_workflows ws ON ar.workflow_id = ws.id WHERE ar.status = 'Active' AND (ws.category = 'ICT' OR ws.category IS NULL) ORDER BY FIELD(ar.priority,'Critical','High','Medium','Normal'), ar.created_at DESC LIMIT 15");
         if ($r) while ($row = $r->fetch_assoc()) $pending_approval_requests[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 }
 
 $ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security'];

@@ -172,7 +172,7 @@ if ($dg_cached) {
 }
 
 $recent_students = [];
-try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
+try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) { error_log('director-general context: ' . $e->getMessage()); }
 
 // ── DG page routing ──
 // Map ?page=xxx to internal section names

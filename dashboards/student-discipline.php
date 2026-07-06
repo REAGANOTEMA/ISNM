@@ -25,7 +25,7 @@ if ($studentsDb) {
         if ($r) $warningCases = (int)$r->fetch_assoc()['c'];
         $r = $studentsDb->query("SELECT d.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline d LEFT JOIN students s ON d.student_id=s.id ORDER BY d.created_at DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('student-discipline context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

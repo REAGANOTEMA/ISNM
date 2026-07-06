@@ -51,7 +51,7 @@ if ($studentNumber && $studentsDb) {
             $totalPaid += (float)($inv['amount_paid'] ?? 0);
         }
         $balanceInfo = ['total_billed' => $totalBilled, 'total_paid' => $totalPaid, 'balance' => $totalBilled - $totalPaid];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('student-fees context: ' . $e->getMessage()); }
 }
 
 $fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname'] ?? '') . ' ' . ($studentInfo['first_name'] ?? '')) : 'Student';
@@ -295,7 +295,7 @@ try {
     $stmt->execute();
     $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('student-fees context: ' . $e->getMessage()); }
 ?>
 <?php if (count($receipts) > 0): ?>
         <div class="table-responsive"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>Receipt #</th><th>Date</th><th>Payment Ref</th><th>Amount</th><th>Method</th><th class="no-print">Actions</th></tr></thead><tbody>

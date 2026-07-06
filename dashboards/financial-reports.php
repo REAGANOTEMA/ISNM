@@ -66,7 +66,7 @@ if ($ajax) {
                     $r = $staff->query("SELECT COALESCE(SUM(net_pay),0) AS t FROM bursar_payroll WHERE DATE(pay_date) BETWEEN '$from' AND '$to'");
                     if ($r) $spent = (float)$r->fetch_assoc()['t'];
                 }
-            } catch (Exception $e) {}
+            } catch (Exception $e) { error_log('financial-reports context: ' . $e->getMessage()); }
             $remaining = max(0, $cat['budgeted'] - $spent);
             $pct = $cat['budgeted'] > 0 ? round(($spent / $cat['budgeted']) * 100, 1) : 0;
             $result['rows'][] = [$cat['name'], currency($cat['budgeted']), currency($spent), currency($remaining), $pct . '%'];
@@ -89,7 +89,7 @@ if ($ajax) {
             try {
                 $r = $staff->query("SELECT COALESCE(SUM(amount),0) AS t FROM expenditures WHERE department='" . $staff->real_escape_string($d['name']) . "' AND DATE(expense_date) BETWEEN '$from' AND '$to'");
                 if ($r) $actual = (float)$r->fetch_assoc()['t'];
-            } catch (Exception $e) {}
+            } catch (Exception $e) { error_log('financial-reports context: ' . $e->getMessage()); }
             $variance = $d['budget'] - $actual;
             $status = $variance >= 0 ? 'On Track' : 'Over Budget';
             $result['rows'][] = [$d['name'], currency($d['budget']), currency($actual), currency($variance), $status];
@@ -135,7 +135,7 @@ try {
         $r = $staff->query("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE YEAR(created_at)=YEAR(CURDATE())"); if ($r) $total_invoices = (int)$r->fetch_assoc()['c'];
         if ($ytd_revenue + $total_outstanding > 0) $collection_rate = round(($ytd_revenue / ($ytd_revenue + $total_outstanding)) * 100, 1);
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('financial-reports context: ' . $e->getMessage()); }
 
 $pageTitle = 'Financial Reports & Analytics';
 ?><!DOCTYPE html>

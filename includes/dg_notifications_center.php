@@ -224,7 +224,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications announcements: ' . $e->getMessage()); }
     }
 
     // ── 4. student_applications (website_db) ──
@@ -250,7 +250,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications applications: ' . $e->getMessage()); }
     }
 
     // ── 5. contact_submissions (website_db) ──
@@ -275,7 +275,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications contacts: ' . $e->getMessage()); }
     }
 
     // ── 6. volunteer_applications (website_db) ──
@@ -300,7 +300,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications volunteers: ' . $e->getMessage()); }
     }
 
     // ── 7. donations (website_db) ──
@@ -325,7 +325,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications donations: ' . $e->getMessage()); }
     }
 
     // ── 8. notifications table (staffs_db) ──
@@ -364,7 +364,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications staffNotif: ' . $e->getMessage()); }
     }
 
     // ── 9. notifications table (website_db) ──
@@ -403,7 +403,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications webNotif: ' . $e->getMessage()); }
     }
 
     // ── 10. alerts (staffs_db) — active alerts ──
@@ -434,7 +434,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications alerts: ' . $e->getMessage()); }
     }
 
     // ── 11. student_notifications (students_db) — recent student-facing notifications ──
@@ -458,7 +458,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                     ];
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dg_notifications studentNotif: ' . $e->getMessage()); }
     }
 
     // ── Sort by created_at DESC ──

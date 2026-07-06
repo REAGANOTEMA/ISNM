@@ -57,7 +57,7 @@ try {
         $r = $cpStaffConn->query("SELECT COUNT(*)c FROM staff_activity_log WHERE DATE(created_at) = CURDATE()");
         if ($r) $cpStats['recent_alerts'] = max($cpStats['recent_alerts'], (int)$r->fetch_assoc()['c']);
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('control_panel load: ' . $e->getMessage()); }
 
 $userPhoto = '../images/username.png';
 try {
@@ -68,7 +68,7 @@ try {
             $userPhoto = getStaffProfileImageUrl($uid);
         }
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('control_panel stats: ' . $e->getMessage()); }
 
 $instName = 'Iganga School of Nursing and Midwifery';
 $instLogo = '../images/school-logo.png';

@@ -103,7 +103,7 @@ if (!function_exists('processAutoDeductions')) {
                     $failStmt->bind_param('isidss', $subId, $studentId, $installNo, $amount, $dueDate, $reason);
                     $failStmt->execute();
                     $failStmt->close();
-                } catch (Exception $e2) {}
+                } catch (Exception $e2) { error_log('auto_deduction process: ' . $e2->getMessage()); }
             }
         }
 

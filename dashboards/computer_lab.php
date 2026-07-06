@@ -25,9 +25,9 @@ function lab_fetch_one($conn, $sql) {
 }
 
 $ict = null;
-try { $ict = getICTConnection(); } catch (Exception $e) {}
+try { $ict = getICTConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
 $students = null;
-try { $students = getStudentsConnection(); } catch (Exception $e) {}
+try { $students = getStudentsConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
 
 // Stats
 $total_computers   = lab_q($ict, "SELECT COUNT(*) FROM lab_computers WHERE status!='deleted'");

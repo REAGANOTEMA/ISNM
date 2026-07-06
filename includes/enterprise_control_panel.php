@@ -19,8 +19,8 @@ $cpUid  = (int)($_SESSION['user_id'] ?? 0);
 $cpConn = null;
 $cpStudentsConn = null;
 
-try { if (function_exists('getStaffConnection')) $cpConn = getStaffConnection(); } catch (Exception $e) {}
-try { if (function_exists('getStudentsConnection')) $cpStudentsConn = getStudentsConnection(); } catch (Exception $e) {}
+try { if (function_exists('getStaffConnection')) $cpConn = getStaffConnection(); } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
+try { if (function_exists('getStudentsConnection')) $cpStudentsConn = getStudentsConnection(); } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
 // Gather stats
 $cpStats = ['students' => 0, 'staff' => 0, 'approvals' => 0, 'tasks' => 0, 'events' => 0, 'notifs' => 0];
@@ -42,7 +42,7 @@ try {
         $r = $cpConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");
         if ($r) $cpStats['events'] = (int)$r->fetch_assoc()['c'];
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
 $cpDashboardUrl = $_SESSION['role_dashboard'] ?? '#';
 $cpInitial = strtoupper(substr($cpUser, 0, 1));

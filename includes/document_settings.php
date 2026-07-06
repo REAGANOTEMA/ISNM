@@ -59,7 +59,7 @@ function loadDocumentSettings() {
 
         $db->close();
     } catch (Exception $e) {
-        // Silently use defaults
+        error_log('document_settings load: ' . $e->getMessage());
     }
 
     $cache = $defaults;

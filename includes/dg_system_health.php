@@ -52,8 +52,8 @@ if ($staffDbConnected) {
 // Database Status
 $websiteConn = null;
 $ictConn = null;
-try { $websiteConn = function_exists('getWebsiteConnection') ? getWebsiteConnection() : null; } catch (Exception $e) {}
-try { $ictConn = function_exists('getICTConnection') ? getICTConnection() : null; } catch (Exception $e) {}
+try { $websiteConn = function_exists('getWebsiteConnection') ? getWebsiteConnection() : null; } catch (Exception $e) { error_log('dg_health check: ' . $e->getMessage()); }
+try { $ictConn = function_exists('getICTConnection') ? getICTConnection() : null; } catch (Exception $e) { error_log('dg_health check: ' . $e->getMessage()); }
 
 $dbStatuses = [
     'staffs_db'   => ['conn' => $staffDbConnected, 'label' => 'Staffs Database', 'icon' => 'fa-database'],

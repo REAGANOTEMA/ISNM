@@ -52,7 +52,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('non-teaching-staff context: ' . $e->getMessage()); }
 }
 ?>
 <?php

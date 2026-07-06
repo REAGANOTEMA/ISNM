@@ -158,9 +158,9 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('lecturers context: ' . $e->getMessage()); }
 }
-
+ 
 // Determine active section from ?page= parameter
 $pageToSection = [
     'home'           => 'overview',

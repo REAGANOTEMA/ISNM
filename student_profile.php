@@ -239,7 +239,7 @@ try {
         $academic_records[] = $row;
     }
 } catch (Exception $e) {
-    // Academic records table might not exist yet
+    error_log('student_profile context: ' . $e->getMessage());
 }
 
 // Get fee information (if table exists)
@@ -254,7 +254,7 @@ try {
         $fee_accounts[] = $row;
     }
 } catch (Exception $e) {
-    // Fee accounts table might not exist yet
+    error_log('student_profile context: ' . $e->getMessage());
 }
 
 // Get payment history (if table exists)
@@ -269,7 +269,7 @@ try {
         $payment_history[] = $row;
     }
 } catch (Exception $e) {
-    // Fee payments table might not exist yet
+    error_log('student_profile context: ' . $e->getMessage());
 }
 
 // Calculate total balance

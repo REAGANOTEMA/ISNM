@@ -161,7 +161,7 @@ try {
         $r = $staff->query("SELECT COALESCE(SUM(CASE WHEN transaction_type='receipt' THEN amount ELSE -amount END),0) AS bal FROM bursar_cashbook"); if ($r) $cashbook_balance = (float)$r->fetch_assoc()['bal'];
         $r = $staff->query("SELECT COUNT(*) AS c FROM bursar_chart_of_accounts WHERE status='active'"); if ($r) $accounts_count = (int)$r->fetch_assoc()['c'];
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('bursar-ledger context: ' . $e->getMessage()); }
 
 $pageTitle = 'Bursar - Ledger & Accounts';
 ?><!DOCTYPE html>

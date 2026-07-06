@@ -26,11 +26,11 @@ function getExecutiveStats($studentsConn, $staffConn) {
             try {
                 $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.institutional_alerts WHERE is_resolved = 0 AND priority = 'Critical'");
                 if ($r) $stats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
-            } catch (Exception $e) {}
+            } catch (Exception $e) { error_log('exec_overview loadCache: ' . $e->getMessage()); }
             try {
                 $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests WHERE status = 'Active'");
                 if ($r) $stats['pending_approvals'] = (int)$r->fetch_assoc()['c'];
-            } catch (Exception $e) {}
+            } catch (Exception $e) { error_log('exec_overview loadCache: ' . $e->getMessage()); }
         }
     } catch (Exception $e) { error_log('getExecutiveStats error: ' . $e->getMessage()); }
     return $stats;
@@ -56,7 +56,7 @@ function getDepartmentPerformance($staffConn) {
             ORDER BY sr.hierarchy_level ASC
         ");
         if ($result) while ($row = $result->fetch_assoc()) $depts[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('exec_overview deptPerf: ' . $e->getMessage()); }
     return $depts;
 }
 }

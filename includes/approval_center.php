@@ -32,7 +32,7 @@ function getApprovalCenterCounts($conn) {
         if ($r2) $counts['total'] = (int)$r2->fetch_assoc()['c'];
         $r3 = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Active' AND (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_actions WHERE request_id=approval_requests.id AND action_type='return')>0");
         if ($r3) $counts['returned'] = (int)$r3->fetch_assoc()['c'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('approval_center getPending: ' . $e->getMessage()); }
     return $counts;
 }
 }
@@ -124,7 +124,7 @@ function getApprovalCenterRequests($conn, $filters = []) {
             $result = $conn->query($sql);
             if ($result) while ($row = $result->fetch_assoc()) $requests[] = $row;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('approval_center process: ' . $e->getMessage()); }
     return $requests;
 }
 }

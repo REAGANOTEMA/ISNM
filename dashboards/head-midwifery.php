@@ -273,7 +273,7 @@ if ($ctx['students']) {
     try {
         $r = $ctx['students']->query("SELECT id, first_name, surname, program, level, status FROM students WHERE program LIKE '%Midwifery%' ORDER BY first_name LIMIT 50");
         if ($r) $midwifery_students = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
 
 // Get programs
@@ -282,7 +282,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM igangaschoolofl_students_db.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Midwifery%' AND status='Active'");
         if ($r) $programs_data = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
 
 // Get recent activities
@@ -295,7 +295,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
 ?>
 

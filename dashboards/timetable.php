@@ -28,7 +28,7 @@ if ($conn) {
             if (!isset($days[$d])) $days[$d] = [];
             $days[$d][] = $row;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('timetable context: ' . $e->getMessage()); }
 }
 $dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 ?>

@@ -192,23 +192,23 @@ try {
 
 // ── Fee structure list ──
 $fee_items = [];
-try { if ($staff) { $r = $staff->query("SELECT * FROM fee_structures ORDER BY category, item_name"); if ($r) while ($row = $r->fetch_assoc()) $fee_items[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT * FROM fee_structures ORDER BY category, item_name"); if ($r) while ($row = $r->fetch_assoc()) $fee_items[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 // ── Invoices list ──
 $invoices = [];
-try { if ($staff) { $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN `{$students_db}`.students s ON sfa.student_id = s.student_id ORDER BY sfa.created_at DESC LIMIT 100"); if ($r) while ($row = $r->fetch_assoc()) $invoices[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN `{$students_db}`.students s ON sfa.student_id = s.student_id ORDER BY sfa.created_at DESC LIMIT 100"); if ($r) while ($row = $r->fetch_assoc()) $invoices[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 // ── Scholarships ──
 $scholarships = [];
-try { if ($staff) { $r = $staff->query("SELECT * FROM bursar_scholarships ORDER BY scholarship_name"); if ($r) while ($row = $r->fetch_assoc()) $scholarships[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT * FROM bursar_scholarships ORDER BY scholarship_name"); if ($r) while ($row = $r->fetch_assoc()) $scholarships[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 // ── Penalties ──
 $penalties = [];
-try { if ($staff) { $r = $staff->query("SELECT * FROM bursar_penalty_config ORDER BY penalty_name"); if ($r) while ($row = $r->fetch_assoc()) $penalties[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT * FROM bursar_penalty_config ORDER BY penalty_name"); if ($r) while ($row = $r->fetch_assoc()) $penalties[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 // ── Sponsorships ──
 $sponsorships = [];
-try { if ($staff) { $r = $staff->query("SELECT bs.*, s.first_name, s.surname FROM bursar_sponsorships bs LEFT JOIN `{$students_db}`.students s ON bs.student_id = s.student_id ORDER BY bs.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $sponsorships[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT bs.*, s.first_name, s.surname FROM bursar_sponsorships bs LEFT JOIN `{$students_db}`.students s ON bs.student_id = s.student_id ORDER BY bs.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $sponsorships[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 // ── Discounts ──
 $discounts = [];

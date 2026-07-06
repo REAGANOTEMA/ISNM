@@ -227,7 +227,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC");
         if ($r) $all_welfare_cases = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $welfare_actions_map = [];
@@ -252,7 +252,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN igangaschoolofl_students_db.students s ON cs.student_id=s.id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
         if ($r) $today_counseling = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $all_discipline_cases = [];
@@ -260,7 +260,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC");
         if ($r) $all_discipline_cases = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $hostel_stats = [];
@@ -268,7 +268,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT hr.hostel_name, hr.total_beds, (SELECT COUNT(*) FROM hostel_allocations ha WHERE ha.hostel_room_id=hr.id AND ha.status='Active') as occupied FROM hostel_rooms hr GROUP BY hr.hostel_name");
         if ($r) $hostel_stats = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $upcoming_activities = [];
@@ -276,7 +276,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM student_activities WHERE activity_date >= CURDATE() ORDER BY activity_date LIMIT 3");
         if ($r) $upcoming_activities = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $recent_activities = [];
@@ -288,7 +288,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 $staff_list = [];
@@ -296,7 +296,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT id, CONCAT(first_name,' ',last_name) as full_name FROM staff ORDER BY first_name");
         if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
 // Store data for requisitions

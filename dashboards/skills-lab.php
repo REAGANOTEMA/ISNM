@@ -40,7 +40,7 @@ if ($view === 'equipment' && $ajax === 'get') {
                 $r = $db->query("SELECT * FROM lab_equipment ORDER BY equipment_name ASC");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -97,7 +97,7 @@ if ($view === 'checkouts' && $ajax === 'get') {
                 $r = $db->query("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -174,7 +174,7 @@ if ($view === 'sessions' && $ajax === 'get') {
                 $r = $db->query("SELECT * FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -233,7 +233,7 @@ if ($view === 'skills' && $ajax === 'get') {
                 $r = $db->query("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id ORDER BY d.demo_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -288,7 +288,7 @@ if ($view === 'consumables' && $ajax === 'get') {
                 $r = $db->query("SELECT * FROM lab_consumables ORDER BY item_name ASC");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -346,7 +346,7 @@ if ($view === 'attendance' && $ajax === 'get') {
                 $r = $db->query("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -367,7 +367,7 @@ if ($view === 'attendance' && $ajax === 'save') {
             $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
             $stmt->execute();
             $success++;
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     $stmt->close();
     echo json_encode(['success' => true, 'updated' => $success]); exit;
@@ -387,7 +387,7 @@ if ($view === 'attendance' && $ajax === 'sessions') {
         try {
             $r = $db->query("SELECT id, session_name, scheduled_date FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 50");
             if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode($rows); exit;
 }
@@ -410,7 +410,7 @@ if ($view === 'incidents' && $ajax === 'get') {
                 $r = $db->query("SELECT * FROM lab_incidents ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode(['data' => $rows]); exit;
 }
@@ -464,7 +464,7 @@ if ($view === 'home' && $ajax === 'stats') {
             $r = $db->query("SELECT COUNT(*) FROM lab_equipment WHERE status='maintenance'"); if ($r) $stats['pending_maintenance'] = (int)$r->fetch_row()[0];
             $r = $db->query("SELECT COUNT(*) FROM lab_consumables WHERE quantity <= min_stock_level"); if ($r) $stats['low_stock'] = (int)$r->fetch_row()[0];
             $r = $db->query("SELECT COUNT(*) FROM lab_incidents WHERE status IN ('open','investigating')"); if ($r) $stats['incidents'] = (int)$r->fetch_row()[0];
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode($stats); exit;
 }
@@ -481,7 +481,7 @@ if ($db) {
         $r = $db->query("SELECT COUNT(*) FROM lab_equipment WHERE status='maintenance'"); if ($r) $maintenance_count = (int)$r->fetch_row()[0];
         $r = $db->query("SELECT COUNT(*) FROM lab_consumables WHERE quantity <= min_stock_level"); if ($r) $low_stock_count = (int)$r->fetch_row()[0];
         $r = $db->query("SELECT COUNT(*) FROM lab_incidents WHERE status IN ('open','investigating')"); if ($r) $incident_count = (int)$r->fetch_row()[0];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
 }
 
 // Get students for dropdowns
@@ -490,7 +490,7 @@ if ($students) {
     try {
         $r = $students->query("SELECT id, admission_number, first_name, last_name FROM students WHERE status='Active' ORDER BY first_name ASC LIMIT 500");
         if ($r) $students_list = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

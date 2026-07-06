@@ -51,7 +51,7 @@ if (!empty($_SESSION['dashboard_profile_image_url'])) {
                         }
                     }
                 }
-            } catch (Exception $e) {}
+            } catch (Exception $e) { error_log('dashboard_head init: ' . $e->getMessage()); }
         } else {
             $pf = __DIR__ . '/profile_settings.php';
             if (file_exists($pf)) {

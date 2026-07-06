@@ -168,7 +168,7 @@ try {
 
 // ── Recent payments ──
 $recent_payments = [];
-try { if ($staff) { $r = $staff->query("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id ORDER BY fp.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $recent_payments[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id ORDER BY fp.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $recent_payments[] = $row; } } catch (Exception $e) { error_log('bursar-payments context: ' . $e->getMessage()); }
 
 $pageTitle = 'Bursar - Payment Processing';
 ?><!DOCTYPE html>

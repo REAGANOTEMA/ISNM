@@ -9,7 +9,7 @@ $profileSettingsFile = __DIR__ . '/profile_settings.php';
 if (file_exists($profileSettingsFile)) {
     try {
         include_once $profileSettingsFile;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('dashboard_footer stats: ' . $e->getMessage()); }
 }
 
 // Universal student quick-search on every dashboard
@@ -18,7 +18,7 @@ if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABL
     if (file_exists($sqsFile)) {
         try {
             include_once $sqsFile;
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_footer stats: ' . $e->getMessage()); }
     }
 }
 
@@ -46,7 +46,7 @@ try { require_once __DIR__ . '/dashboard_components.php'; } catch (Exception $e)
 
 // Shared Dashboard Toolbar — available to ALL dashboards
 $toolFile = __DIR__ . '/dashboard_toolbar.php';
-if (file_exists($toolFile)) { try { include_once $toolFile; } catch (Exception $e) {} }
+if (file_exists($toolFile)) { try { include_once $toolFile; } catch (Exception $e) { error_log('dashboard_footer stats: ' . $e->getMessage()); } }
 ?>
 <?php if (function_exists('renderProfileStyles')) renderProfileStyles(); ?>
 <!-- Bootstrap 5.3 JS -->

@@ -115,7 +115,7 @@ function getDataOwnership($roleId, $conn) {
             $rules[] = $row;
         }
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getInstitution: ' . $e->getMessage()); }
     return $rules;
 }
 }
@@ -249,7 +249,7 @@ function getAuditTrail($conn, $filters = [], $limit = 50, $offset = 0) {
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $rows[] = $row;
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework update: ' . $e->getMessage()); }
     return $rows;
 }
 }
@@ -328,7 +328,7 @@ function getDepartmentTargets($departmentCode, $fiscalYear, $conn) {
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $targets[] = $row;
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getDepartmentTargets: ' . $e->getMessage()); }
     return $targets;
 }
 }
@@ -379,7 +379,7 @@ function renderDirectorPerformanceCard($staffId, $roleId, $roleName, $conn) {
     try {
         $dq = $conn->prepare("SELECT department_code FROM igangaschoolofl_staffs_db.director_departments WHERE role_id = ? AND is_primary = 1 LIMIT 1");
         if ($dq) { $dq->bind_param('i', $roleId); $dq->execute(); $dr = $dq->get_result()->fetch_assoc(); $dq->close(); if ($dr) $deptCode = $dr['department_code']; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getDirectorPerformance: ' . $e->getMessage()); }
     $targets = $deptCode ? getDepartmentTargets($deptCode, date('Y'), $conn) : [];
     $ps = calculatePerformanceScore($targets);
     $html = '<div class="director-perf-card">';
@@ -453,7 +453,7 @@ function getAlerts($conn, $departmentCode = null, $limit = 20, $unresolvedOnly =
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $alerts[] = $row;
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getAlerts: ' . $e->getMessage()); }
     return $alerts;
 }
 }
@@ -511,7 +511,7 @@ function getAlertCounts($conn, $departmentCode = null) {
             $counts['total'] += (int)$row['cnt'];
         }
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getAlertCounts: ' . $e->getMessage()); }
     return $counts;
 }
 }
@@ -535,7 +535,7 @@ function getComplianceStatus($conn) {
                 $status['total'] += (int)$row['cnt'];
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getStatusCounts: ' . $e->getMessage()); }
     return $status;
 }
 }
@@ -564,7 +564,7 @@ function getTopRisks($conn, $limit = 5) {
         if ($result) {
             while ($row = $result->fetch_assoc()) $risks[] = $row;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getRiskHeatmap: ' . $e->getMessage()); }
     return $risks;
 }
 }
@@ -604,7 +604,7 @@ function getPendingApprovals($conn, $roleId = null, $limit = 20) {
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $approvals[] = $row;
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('inst_framework getPendingApprovals: ' . $e->getMessage()); }
     return $approvals;
 }
 }

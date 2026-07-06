@@ -42,7 +42,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT category, COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available FROM `{$students_db_name}`.library_books GROUP BY category ORDER BY category");
         if ($r) while ($row = $r->fetch_assoc()) $book_categories[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 // If no book categories from DB, show empty state
 if (empty($book_categories)) {
@@ -63,7 +63,7 @@ if ($conn) {
         if ($r) $renewed_today = (int)$r->fetch_assoc()['c'];
         $r = $conn->query("SELECT COUNT(*) as c FROM `{$students_db_name}`.library_borrowing WHERE due_date<CURDATE() AND return_status='Borrowed'");
         if ($r) $overdue_books = (int)$r->fetch_assoc()['c'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
 // Get recent transactions
@@ -72,7 +72,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT lb.id, CONCAT(s.first_name,' ',s.surname) as member_name, lb.member_id, lb.book_title, lb.borrow_date as transaction_date, lb.return_status as status, lb.due_date FROM `{$students_db_name}`.library_borrowing lb LEFT JOIN `{$students_db_name}`.students s ON lb.student_id=s.student_id ORDER BY lb.borrow_date DESC LIMIT 10");
         if ($r) $recent_transactions = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
 // Get member statistics
@@ -87,7 +87,7 @@ if ($conn) {
         if ($r) $member_faculty = (int)$r->fetch_assoc()['c'];
         $r = $conn->query("SELECT COUNT(*) as c FROM `{$students_db_name}`.library_members WHERE MONTH(registration_date)=MONTH(CURDATE()) AND YEAR(registration_date)=YEAR(CURDATE())");
         if ($r) $new_members_month = (int)$r->fetch_assoc()['c'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
 // Get recent member registrations
@@ -96,7 +96,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT lm.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM `{$students_db_name}`.library_members lm LEFT JOIN `{$students_db_name}`.students s ON lm.student_id=s.student_id ORDER BY lm.registration_date DESC LIMIT 5");
         if ($r) $recent_members = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
 // Get acquisitions
@@ -105,7 +105,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM `{$students_db_name}`.library_acquisitions ORDER BY acquisition_date DESC LIMIT 5");
         if ($r) $recent_acquisitions = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
 // Get recent activities
@@ -118,7 +118,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 ?>
 <?php

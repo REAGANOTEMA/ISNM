@@ -48,7 +48,7 @@ function renderStudentSetViewer($conn, array $options = []) {
 
             $r = $conn->query("SELECT DISTINCT level FROM students WHERE level IS NOT NULL AND level != '' ORDER BY level");
             if ($r) while ($row = $r->fetch_assoc()) $levels[] = $row['level'];
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('student_set_viewer load: ' . $e->getMessage()); }
     }
 
     // ── Build WHERE clause ──
@@ -136,7 +136,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                     $stmtLimit->close();
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('student_set_viewer query: ' . $e->getMessage()); }
     } else {
         $totalPages = 1;
     }
@@ -155,7 +155,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 if ($r) $viewStudent = $r->fetch_assoc();
                 $stmt->close();
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('student_set_viewer view: ' . $e->getMessage()); }
     }
 
     $totalPages   = max(1, intval(ceil($totalFiltered / $perPage)));

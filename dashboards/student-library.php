@@ -19,7 +19,7 @@ if ($staffDb) {
         $r = $staffDb->query("SELECT b.*, CASE WHEN br.id IS NOT NULL THEN 'Borrowed' ELSE COALESCE(b.status,'Available') END as current_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.status IN ('borrowed','overdue') ORDER BY b.title LIMIT 100");
         if (!$r) $r = $staffDb->query("SELECT id, title, author, isbn, category, status FROM library_books ORDER BY title LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) $books[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('student-library context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

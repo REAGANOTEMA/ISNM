@@ -321,58 +321,58 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT COUNT(*) FROM transport_trips WHERE DATE(departure_time) = CURDATE()");
         if ($r) { $row = $r->fetch_row(); $total_trips_today = (int)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COALESCE(SUM(student_count),0) FROM transport_trips WHERE DATE(departure_time) = CURDATE()");
         if ($r) { $row = $r->fetch_row(); $students_transport = (int)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COUNT(*) FROM transport_vehicles");
         if ($r) { $row = $r->fetch_row(); $total_vehicles = (int)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COUNT(*) FROM transport_routes WHERE status='active'");
         if ($r) { $row = $r->fetch_row(); $total_routes = (int)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COUNT(*) FROM transport_student_assignments WHERE status='active'");
         if ($r) { $row = $r->fetch_row(); $total_students = (int)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COALESCE(SUM(cost),0) FROM transport_fuel_log WHERE MONTH(fuel_date)=MONTH(CURDATE())");
         if ($r) { $row = $r->fetch_row(); $total_fuel_cost = (float)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 // Fetch all data for sections
 $vehicles = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT * FROM transport_vehicles ORDER BY vehicle_number"); if ($r) $vehicles = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT * FROM transport_vehicles ORDER BY vehicle_number"); if ($r) $vehicles = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 $routes = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT * FROM transport_routes ORDER BY route_name"); if ($r) $routes = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT * FROM transport_routes ORDER BY route_name"); if ($r) $routes = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 $trips = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT t.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') AS driver_name, COALESCE(req.full_name,'') AS requested_by_name FROM transport_trips t LEFT JOIN transport_vehicles tv ON t.vehicle_id=tv.id LEFT JOIN staff s ON t.driver_id=s.id LEFT JOIN staff req ON t.requested_by=req.id ORDER BY t.departure_time DESC"); if ($r) $trips = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT t.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') AS driver_name, COALESCE(req.full_name,'') AS requested_by_name FROM transport_trips t LEFT JOIN transport_vehicles tv ON t.vehicle_id=tv.id LEFT JOIN staff s ON t.driver_id=s.id LEFT JOIN staff req ON t.requested_by=req.id ORDER BY t.departure_time DESC"); if ($r) $trips = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 $student_assignments = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT sa.*, tr.route_name, tv.vehicle_number FROM transport_student_assignments sa LEFT JOIN transport_routes tr ON sa.route_id=tr.id LEFT JOIN transport_vehicles tv ON sa.vehicle_id=tv.id ORDER BY sa.student_name"); if ($r) $student_assignments = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT sa.*, tr.route_name, tv.vehicle_number FROM transport_student_assignments sa LEFT JOIN transport_routes tr ON sa.route_id=tr.id LEFT JOIN transport_vehicles tv ON sa.vehicle_id=tv.id ORDER BY sa.student_name"); if ($r) $student_assignments = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 $fuel_logs = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT f.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') AS driver_name FROM transport_fuel_log f LEFT JOIN transport_vehicles tv ON f.vehicle_id=tv.id LEFT JOIN staff s ON f.driver_id=s.id ORDER BY f.fuel_date DESC"); if ($r) $fuel_logs = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT f.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') AS driver_name FROM transport_fuel_log f LEFT JOIN transport_vehicles tv ON f.vehicle_id=tv.id LEFT JOIN staff s ON f.driver_id=s.id ORDER BY f.fuel_date DESC"); if ($r) $fuel_logs = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 $staff_list = [];
 if ($conn) {
-    try { $r = $conn->query("SELECT id, full_name FROM staff ORDER BY full_name"); if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) {}
+    try { $r = $conn->query("SELECT id, full_name FROM staff ORDER BY full_name"); if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC); } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 
 // Edit entities
@@ -409,7 +409,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT COALESCE(SUM(liters),0), COALESCE(SUM(cost),0) FROM transport_fuel_log");
         if ($r) { $row = $r->fetch_row(); $total_liters = (float)$row[0]; $total_cost = (float)$row[0]; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

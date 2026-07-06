@@ -190,6 +190,6 @@ function globalStudentSearchHandler($conn, $studentsDb) {
                 $seenDb[$key] = true;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('global_search query: ' . $e->getMessage()); }
     echo json_encode($results);
 }

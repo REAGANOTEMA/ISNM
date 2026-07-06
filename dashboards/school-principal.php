@@ -580,7 +580,7 @@ try {
     if ($passRate>=70) $healthScore+=20; elseif ($passRate>=50) $healthScore+=10;
     if ($welfareAlerts==0) $healthScore+=20; elseif ($welfareAlerts<=5) $healthScore+=10;
     if ($pendApprovals==0) $healthScore+=20; elseif ($pendApprovals<=10) $healthScore+=10;
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
 $recentNotices = []; $upcomingMts = []; $recentComms = [];
 try {
     if ($students) {
@@ -588,7 +588,7 @@ try {
         $r = $students->query("SELECT * FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() ORDER BY meeting_date ASC LIMIT 5"); if ($r) while ($a = $r->fetch_assoc()) $upcomingMts[] = $a;
     }
     if ($students) { $r = $students->query("SELECT subject, created_at FROM {$students_db}.communication_log ORDER BY created_at DESC LIMIT 5"); if ($r) while ($a = $r->fetch_assoc()) $recentComms[] = $a; }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
 ?>
 <div class="row g-3 mb-4">
 <div class="col-md-3 col-6"><div class="kpi-card primary"><div class="kpi-icon"><i class="fas fa-users"></i></div><div><div class="kpi-value"><?= number_format($totalStudents) ?></div><div class="kpi-label">Total Students</div></div></div></div>
@@ -1452,7 +1452,7 @@ document.addEventListener('DOMContentLoaded',loadCommSent);
 <div class="col-md-7">
 <div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Published Notices</div><div class="scb p-0">
 <?php
-try { if ($students) { $r = $students->query("SELECT * FROM {$students_db}.principal_notices ORDER BY created_at DESC LIMIT 20"); if ($r) while ($n = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold small">'.htmlspecialchars($n['title']).'</div><div class="time">'.htmlspecialchars($n['audience']??'All').' &middot; '.htmlspecialchars($n['created_at']).'</div></div>'; } } } catch (Exception $e) {}
+try { if ($students) { $r = $students->query("SELECT * FROM {$students_db}.principal_notices ORDER BY created_at DESC LIMIT 20"); if ($r) while ($n = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold small">'.htmlspecialchars($n['title']).'</div><div class="time">'.htmlspecialchars($n['audience']??'All').' &middot; '.htmlspecialchars($n['created_at']).'</div></div>'; } } } catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
 ?>
 </div></div>
 </div>
@@ -1474,7 +1474,7 @@ try { if ($students) { $r = $students->query("SELECT * FROM {$students_db}.princ
 <?php if ($view === 'announcements'): ?>
 <div class="scard"><div class="sch"><i class="fas fa-bullhorn me-2"></i>Announcements</div><div class="scb p-0">
 <?php
-try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 20"); if ($r) while ($a = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold">'.htmlspecialchars($a['title']).'</div><div class="small text-muted">'.htmlspecialchars(mb_substr($a['body']??'',0,200)).'</div><div class="time">'.htmlspecialchars($a['created_at']).'</div></div>'; } } } catch (Exception $e) {}
+try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 20"); if ($r) while ($a = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold">'.htmlspecialchars($a['title']).'</div><div class="small text-muted">'.htmlspecialchars(mb_substr($a['body']??'',0,200)).'</div><div class="time">'.htmlspecialchars($a['created_at']).'</div></div>'; } } } catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
 ?>
 </div></div>
 <?php endif; ?>

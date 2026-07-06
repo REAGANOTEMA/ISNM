@@ -519,7 +519,7 @@ if ($staff_conn) {
     try {
         $result = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
         if ($result) { while ($row = $result->fetch_assoc()) { $recent_activities[] = $row; } }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('sickbay context: ' . $e->getMessage()); }
 }
 
 $staff_on_duty = sb_q($staff_conn, "SELECT COUNT(*) FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id WHERE (s.department LIKE '%Sickbay%' OR s.department LIKE '%Health%' OR sr.role_name LIKE '%Sickbay%') AND s.status = 'Active'");

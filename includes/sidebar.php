@@ -57,7 +57,7 @@ if ($user_type === 'student') {
                 $profileImage = $rootPath_sb . '/' . $photoFile . '?v=' . time();
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('sidebar render: ' . $e->getMessage()); }
 } else {
     $profileFile = __DIR__ . '/profile_settings.php';
     if (file_exists($profileFile)) {

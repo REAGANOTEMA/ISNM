@@ -59,7 +59,7 @@ if ($staffDb) {
             $r = $staffDb->query("SELECT COALESCE(SUM(late_fee),0) total FROM library_borrowing WHERE (student_id=" . intval($userId) . " OR borrower_id=" . intval($userId) . ") AND fine_paid=0");
             if ($r) $myFines = (float)$r->fetch_row()[0];
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('student-library-portal context: ' . $e->getMessage()); }
 }
 ?>
 <!DOCTYPE html>

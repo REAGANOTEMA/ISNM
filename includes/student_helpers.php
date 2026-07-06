@@ -121,7 +121,7 @@ if (!function_exists('getStudentCount')) {
                 $r = $conn->query("SELECT COUNT(*) AS c FROM students WHERE status='Active'");
                 if ($r) return (int)($r->fetch_assoc()['c'] ?? 0);
             }
-        } catch (Throwable $e) {}
+        } catch (Throwable $e) { error_log('student_helpers getRecords: ' . $e->getMessage()); }
 
         // Fallback: count from files
         try {
@@ -131,7 +131,7 @@ if (!function_exists('getStudentCount')) {
                 $loader = new StudentDataLoader();
                 return count($loader->loadAllStudents());
             }
-        } catch (Throwable $e) {}
+        } catch (Throwable $e) { error_log('student_helpers fallback: ' . $e->getMessage()); }
 
         return 0;
     }

@@ -38,7 +38,7 @@ try {
             if ($url) $hProfileImage = $url;
         }
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('enterprise_header load: ' . $e->getMessage()); }
 
 $hDashboardUrl = $_SESSION['role_dashboard'] ?? '#';
 $hCurrentPage  = basename($_SERVER['PHP_SELF']);

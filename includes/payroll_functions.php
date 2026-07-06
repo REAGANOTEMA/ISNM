@@ -516,7 +516,7 @@ if (!function_exists('processPayrollRun')) {
             return $result;
         } catch (Exception $e) {
             if (isset($conn) && $conn) {
-                try { $conn->rollback(); $conn->close(); } catch (Exception $ignore) {}
+                try { $conn->rollback(); $conn->close(); } catch (Exception $ignore) { error_log('payroll_functions compute: ' . $ignore->getMessage()); }
             }
             error_log('processPayrollRun error: ' . $e->getMessage());
             $result['message'] = 'Internal error: ' . $e->getMessage();

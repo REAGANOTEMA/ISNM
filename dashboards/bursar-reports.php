@@ -102,7 +102,7 @@ try {
         $r = $staff->query("SELECT COALESCE(SUM(balance),0) AS t FROM student_fee_accounts WHERE status NOT IN ('fully_paid','cancelled')"); if ($r) $total_outstanding = (float)$r->fetch_assoc()['t'];
         $r = $staff->query("SELECT COUNT(*) AS c FROM student_fee_accounts"); if ($r) $total_invoices = (int)$r->fetch_assoc()['c'];
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('bursar-reports context: ' . $e->getMessage()); }
 
 $pageTitle = 'Bursar - Financial Reports';
 ?><!DOCTYPE html>

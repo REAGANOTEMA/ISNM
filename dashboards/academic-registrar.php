@@ -69,7 +69,7 @@ function logAudit($staff_conn, $user_id, $action, $entity_type, $entity_id, $des
             $stmt->execute();
             $stmt->close();
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('academic-registrar context: ' . $e->getMessage()); }
 }
 }
 
@@ -138,7 +138,7 @@ $autoMigrate = [
 ];
 if ($staff) {
     foreach ($autoMigrate as $ddl) {
-        try { $staff->query($ddl); } catch (Exception $e) {}
+        try { $staff->query($ddl); } catch (Exception $e) { error_log('academic-registrar context: ' . $e->getMessage()); }
     }
 }
 

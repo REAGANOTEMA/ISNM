@@ -61,9 +61,9 @@ if ($conn) {
         $levelR = $conn->query("SELECT DISTINCT level FROM students WHERE status != 'Deleted' ORDER BY level");
         $levels = [];
         if ($levelR) while ($l = $levelR->fetch_assoc()) $levels[] = $l['level'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('student-add context: ' . $e->getMessage()); }
 }
-
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if (!$conn) {

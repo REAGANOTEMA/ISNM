@@ -25,7 +25,7 @@ $elConn = null;
 // Get connections if available
 try {
     if (function_exists('getStaffConnection')) $elConn = getStaffConnection();
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('enterprise_layout render: ' . $e->getMessage()); }
 
 // Counts for header badges
 $elNotifCount = 0;
@@ -36,7 +36,7 @@ if ($elConn && $elUid) {
         $elNotifCount = getUnreadNotificationCount($elConn, $elUid);
         $elTaskCount = getPendingTaskCount($elConn, $elUid);
         $elApprovalCount = getPendingApprovalCount($elConn);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_layout render: ' . $e->getMessage()); }
 }
 
 // Profile image
@@ -50,7 +50,7 @@ try {
             if ($url) $elProfileImage = $url;
         }
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('enterprise_layout render: ' . $e->getMessage()); }
 
 $elDashboardUrl = $_SESSION['role_dashboard'] ?? '#';
 $elCurrentPage = basename($_SERVER['PHP_SELF']);
@@ -75,7 +75,7 @@ try {
         $sc = getStudentsConnection();
         if ($sc) { $r = $sc->query("SELECT COUNT(*)c FROM students WHERE status='Active'"); if ($r) $elStats['students'] = (int)$r->fetch_assoc()['c']; }
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('enterprise_layout render: ' . $e->getMessage()); }
 ?>
 <!DOCTYPE html>
 <html lang="en">

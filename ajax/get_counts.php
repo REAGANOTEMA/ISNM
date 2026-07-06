@@ -15,10 +15,10 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.institutional_alerts WHERE is_resolved = 0 AND priority = 'Critical'");
         if ($r) $data['critical_alerts'] = (int)$r->fetch_assoc()['c'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('get_counts context: ' . $e->getMessage()); }
     try {
         $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests WHERE status = 'Active'");
         if ($r) $data['pending_approvals'] = (int)$r->fetch_assoc()['c'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('get_counts context: ' . $e->getMessage()); }
 }
 echo json_encode($data);

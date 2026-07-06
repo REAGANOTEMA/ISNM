@@ -76,7 +76,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 $data['students']['trend'][] = $r ? (int)$r->fetch_assoc()['c'] : 0;
                 $stmt->close();
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics statQuery: ' . $e->getMessage()); }
     }
 
     // ── Staff ──
@@ -88,7 +88,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
             // Staff by department
             $r = $conn->query("SELECT COALESCE(department,'General') dept, COUNT(*) c FROM staff WHERE LOWER(status)='active' GROUP BY dept ORDER BY c DESC LIMIT 10");
             if ($r) while ($row = $r->fetch_assoc()) $data['staff']['by_department'][] = $row;
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics staff: ' . $e->getMessage()); }
     }
 
     // ── Finance ──
@@ -117,7 +117,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 if ($r) $exp = (float)$r->fetch_assoc()['v'];
                 $data['finance']['monthly'][] = ['month'=>date('M Y', strtotime("-$i months")), 'revenue'=>$rev, 'expenses'=>$exp];
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics finance: ' . $e->getMessage()); }
     }
 
     // ── Payment Methods ──
@@ -136,7 +136,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 $data['payment_methods']['labels'] = ['No Data'];
                 $data['payment_methods']['values'] = [0];
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics payments: ' . $e->getMessage()); }
     }
 
     // ── Attendance ──
@@ -151,7 +151,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
             }
             $data['attendance']['total'] = array_sum([$data['attendance']['present'],$data['attendance']['absent'],$data['attendance']['late'],$data['attendance']['on_leave']]);
             $data['attendance']['pct'] = $data['attendance']['total'] > 0 ? round(($data['attendance']['present'] / $data['attendance']['total']) * 100) : 0;
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics attendance: ' . $e->getMessage()); }
     }
 
     // ── Applications ──
@@ -164,7 +164,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications WHERE DATE_FORMAT(submitted_at,'%Y-%m')='$m'");
                 $data['applications']['trend'][] = $r ? (int)$r->fetch_assoc()['c'] : 0;
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('dashboard_analytics applications: ' . $e->getMessage()); }
     }
 
     // ── Health Score ──

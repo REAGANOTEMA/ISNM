@@ -17,7 +17,7 @@ function getWorkflows($conn, $activeOnly = true) {
         $sql .= " ORDER BY category, workflow_name";
         $result = $conn->query($sql);
         if ($result) { while ($row = $result->fetch_assoc()) $workflows[] = $row; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('approval_workflow init: ' . $e->getMessage()); }
     return $workflows;
 }
 }
@@ -34,7 +34,7 @@ function getWorkflowStages($workflowId, $conn) {
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $stages[] = $row;
         $stmt->close();
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('approval_workflow stages: ' . $e->getMessage()); }
     return $stages;
 }
 }

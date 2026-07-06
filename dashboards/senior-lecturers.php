@@ -140,7 +140,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT ca.*, c.course_name, c.course_code, c.credits, c.level, (SELECT COUNT(*) FROM student_course_registrations scr WHERE scr.course_id=ca.course_id AND scr.status='Active') as student_count FROM course_assignments ca LEFT JOIN courses c ON ca.course_id=c.id WHERE ca.lecturer_id=$user_id AND ca.status='Active'");
         if ($r) $assigned_courses_list = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get today's schedule from academic_timetable
@@ -149,7 +149,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT tt.*, c.course_name, c.course_code FROM academic_timetable tt LEFT JOIN courses c ON tt.course_id=c.id WHERE tt.lecturer_id=$user_id AND tt.day_of_week=DAYNAME(CURDATE()) AND tt.timetable_status='Published' ORDER BY tt.start_time");
         if ($r) $today_schedule = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get my students
@@ -158,7 +158,7 @@ if ($studentsConn) {
     try {
         $r = $studentsConn->query("SELECT scr.*, s.student_id, s.full_name, s.first_name, s.surname, s.program, c.course_name FROM student_course_registrations scr JOIN students s ON scr.student_id=s.id JOIN course_assignments ca ON scr.course_id=ca.course_id LEFT JOIN courses c ON scr.course_id=c.id WHERE ca.lecturer_id=$user_id AND scr.status='Active' LIMIT 30");
         if ($r) $my_students = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get recent assessments
@@ -167,7 +167,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT a.*, c.course_name FROM assessments a LEFT JOIN courses c ON a.course_id=c.id WHERE a.created_by=$user_id ORDER BY a.created_at DESC LIMIT 5");
         if ($r) $recent_assessments = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get grade distribution
@@ -177,7 +177,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT grade, COUNT(*) as c FROM academic_records WHERE lecturer_id=$user_id AND grade IS NOT NULL GROUP BY grade");
         if ($r) while ($row = $r->fetch_assoc()) { $g = strtoupper(trim($row['grade'])); if (isset($grade_distribution[$g])) $grade_distribution[$g] = (int)$row['c']; $total_grades += (int)$row['c']; }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get teaching resources
@@ -186,7 +186,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM teaching_resources WHERE lecturer_id=$user_id ORDER BY created_at DESC");
         if ($r) $teaching_resources = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get all teaching assessments for this lecturer
@@ -195,7 +195,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT ta.*, st.full_name as student_name FROM teaching_assessments ta LEFT JOIN students st ON ta.student_id=st.id WHERE ta.lecturer_id=$user_id ORDER BY ta.assessment_date DESC");
         if ($r) $all_assessments = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get teaching announcements
@@ -204,7 +204,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM teaching_announcements WHERE lecturer_id=$user_id ORDER BY created_at DESC");
         if ($r) $all_announcements = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get research projects
@@ -213,7 +213,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM research_projects WHERE principal_investigator=$user_id ORDER BY start_date DESC LIMIT 3");
         if ($r) $research_projects = $r->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Get recent activities
@@ -226,7 +226,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
 // Determine active section from ?page= parameter

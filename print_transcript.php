@@ -42,7 +42,7 @@ if (function_exists('getStudentsConnection')) {
 if (!$studentsDb) {
     try {
         $studentsDb = @new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('print_transcript context: ' . $e->getMessage()); }
 }
 
 // ---------------------------------------------------------------------------

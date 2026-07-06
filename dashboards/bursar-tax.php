@@ -120,7 +120,7 @@ try {
         $r = $staff->query("SELECT COUNT(*) AS c FROM bursar_tax_filings WHERE filing_status='pending'"); if ($r) $pending_filings = (int)$r->fetch_assoc()['c'];
         $r = $staff->query("SELECT COALESCE(SUM(wht_amount),0) AS t FROM bursar_withholding_tax WHERE status='active'"); if ($r) $total_wht = (float)$r->fetch_assoc()['t'];
     }
-} catch (Exception $e) {}
+} catch (Exception $e) { error_log('bursar-tax context: ' . $e->getMessage()); }
 
 $pageTitle = 'Bursar - URA/Tax Reporting';
 ?><!DOCTYPE html>

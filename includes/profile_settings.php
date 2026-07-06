@@ -143,7 +143,7 @@ if (!function_exists('getStaffProfileImageUrl')) {
                     }
                 }
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) { error_log('profile_settings load: ' . $e->getMessage()); }
         $urls[$staffId] = '../images/username.png';
         return '../images/username.png';
     }
@@ -194,7 +194,7 @@ function getStaffProfileData($staffId) {
                 }
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('profile_settings save: ' . $e->getMessage()); }
     return $data;
 }
 
