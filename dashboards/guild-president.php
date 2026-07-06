@@ -35,6 +35,28 @@ if ($studentsDb) {
     $r = $studentsDb->query("SELECT DISTINCT program FROM students WHERE program IS NOT NULL AND program != '' ORDER BY program");
     if ($r) while ($row = $r->fetch_assoc()) $programs[] = $row['program'];
 }
+
+// ── Data for sections ──
+$welfareCases = []; $welfareOpen = 0; $welfareResolved = 0; $counselingSessions = [];
+$upcomingEvents = []; $sportsEvents = []; $studentDiscipline = []; $disciplineOpen = 0;
+if ($staffDb) {
+    $r = $staffDb->query("SELECT wc.*, s.full_name as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 15");
+    if ($r) $welfareCases = $r->fetch_all(MYSQLI_ASSOC);
+    $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('open','in_progress')");
+    if ($r) $welfareOpen = (int)$r->fetch_assoc()['c'];
+    $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('resolved','closed')");
+    if ($r) $welfareResolved = (int)$r->fetch_assoc()['c'];
+    $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschoolofl_students_db.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
+    if ($r) $counselingSessions = $r->fetch_all(MYSQLI_ASSOC);
+    $r = $staffDb->query("SELECT * FROM calendar_events WHERE event_date >= CURDATE() AND is_active=1 ORDER BY event_date ASC LIMIT 10");
+    if ($r) $upcomingEvents = $r->fetch_all(MYSQLI_ASSOC);
+    $r = $staffDb->query("SELECT * FROM sports_events WHERE event_date >= NOW() ORDER BY event_date ASC LIMIT 10");
+    if ($r) $sportsEvents = $r->fetch_all(MYSQLI_ASSOC);
+    $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
+    if ($r) $studentDiscipline = $r->fetch_all(MYSQLI_ASSOC);
+    $r = $staffDb->query("SELECT COUNT(*) c FROM student_discipline_records WHERE status IN ('Pending','Open','Under Investigation')");
+    if ($r) $disciplineOpen = (int)$r->fetch_assoc()['c'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,20 +80,109 @@ if ($studentsDb) {
         <?php renderStudentSetViewer($studentsDb, ['title' => 'Student Records','icon' => 'fa-user-graduate','show_all' => true,'per_page' => 50,'show_statement_link' => false]); ?>
         <?php break;
     case 'welfare': ?>
-        <h1><i class="fas fa-heart"></i> Student Welfare</h1>
-        <p class="text-muted">Welfare management module.</p>
+        <div class="content-header"><h1><i class="fas fa-heart me-2"></i>Student Welfare</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Open Cases</h6><h3 class="text-warning"><?= $welfareOpen ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Resolved</h6><h3 class="text-success"><?= $welfareResolved ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Counseling Sessions</h6><h3 class="text-info"><?= count($counselingSessions) ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Discipline Cases</h6><h3 class="text-danger"><?= $disciplineOpen ?></h3></div></div></div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-notes-medical me-2"></i>Recent Welfare Cases</h5>
+                <?php if (empty($welfareCases)): ?><p class="text-muted text-center py-3">No welfare cases recorded.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>
+                <?php foreach ($welfareCases as $w): ?><tr><td><?= htmlspecialchars($w['student_name']??$w['student_id']??'-') ?></td><td><?= htmlspecialchars($w['case_type']??'-') ?></td><td><span class="badge bg-<?= in_array($w['status']??'',['resolved','closed'])?'success':(($w['status']??'')==='open'?'warning':'secondary') ?>"><?= htmlspecialchars($w['status']??'N/A') ?></span></td><td><?= htmlspecialchars($w['created_at']??'') ?></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+            </div></div></div>
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-comments me-2"></i>Recent Counseling Sessions</h5>
+                <?php if (empty($counselingSessions)): ?><p class="text-muted text-center py-3">No counseling sessions recorded.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Type</th><th>Date</th><th>Status</th></tr></thead><tbody>
+                <?php foreach ($counselingSessions as $cs): ?><tr><td><?= htmlspecialchars($cs['student_name']??$cs['student_id']??'-') ?></td><td><?= htmlspecialchars($cs['session_type']??'-') ?></td><td><?= htmlspecialchars($cs['session_date']??'') ?></td><td><span class="badge bg-<?= ($cs['status']??'')==='completed'?'success':'info' ?>"><?= htmlspecialchars($cs['status']??'Scheduled') ?></span></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+            </div></div></div>
+        </div>
         <?php break;
     case 'events': ?>
-        <h1><i class="fas fa-calendar-alt"></i> Events</h1>
-        <p class="text-muted">Student events management.</p>
+        <div class="content-header"><h1><i class="fas fa-calendar-alt me-2"></i>Events</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="row g-3">
+            <div class="col-md-7"><div class="card"><div class="card-body"><h5><i class="fas fa-calendar-day me-2"></i>Upcoming Events</h5>
+                <?php if (empty($upcomingEvents)): ?><p class="text-muted text-center py-3">No upcoming events scheduled.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>Type</th></tr></thead><tbody>
+                <?php foreach ($upcomingEvents as $e): ?><tr><td><strong><?= htmlspecialchars($e['title']) ?></strong></td><td><?= htmlspecialchars($e['event_date']) ?> <?= htmlspecialchars($e['start_time']??'') ?></td><td><?= htmlspecialchars($e['location']??'-') ?></td><td><span class="badge bg-info"><?= htmlspecialchars($e['event_type']??'General') ?></span></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+            </div></div></div>
+            <div class="col-md-5"><div class="card"><div class="card-body"><h5><i class="fas fa-futbol me-2"></i>Sports Events</h5>
+                <?php if (empty($sportsEvents)): ?><p class="text-muted text-center py-3">No upcoming sports events.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Event</th><th>Sport</th><th>Date</th></tr></thead><tbody>
+                <?php foreach ($sportsEvents as $se): ?><tr><td><?= htmlspecialchars($se['name']) ?></td><td><?= htmlspecialchars($se['sport_type']??'-') ?></td><td><?= htmlspecialchars($se['event_date']??'') ?></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+            </div></div></div>
+        </div>
         <?php break;
     case 'feedback': ?>
-        <h1><i class="fas fa-comment-dots"></i> Feedback</h1>
-        <p class="text-muted">Student feedback and suggestions.</p>
+        <div class="content-header"><h1><i class="fas fa-comment-dots me-2"></i>Student Feedback & Discipline</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-gavel me-2"></i>Recent Discipline Records</h5>
+                <?php if (empty($studentDiscipline)): ?><p class="text-muted text-center py-3">No discipline records found.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Offense</th><th>Status</th><th>Date</th></tr></thead><tbody>
+                <?php foreach ($studentDiscipline as $d): ?><tr><td><?= htmlspecialchars($d['student_name']??$d['student_id']??'-') ?></td><td><?= htmlspecialchars(mb_substr($d['offense']??$d['description']??$d['incident']??'',0,50)) ?></td><td><span class="badge bg-<?= ($d['status']??'')==='Resolved'?'success':'danger' ?>"><?= htmlspecialchars($d['status']??'Open') ?></span></td><td><?= htmlspecialchars($d['created_at']??$d['incident_date']??'') ?></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+                <p class="mt-2"><a href="student-discipline.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-external-link-alt me-1"></i>Manage Discipline</a></p>
+            </div></div></div>
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-lightbulb me-2"></i>Student Requests & Suggestions</h5>
+                <?php
+                $studentRequests = [];
+                if ($studentsDb) { $r = $studentsDb->query("SELECT * FROM student_requests ORDER BY created_at DESC LIMIT 10"); if ($r) $studentRequests = $r->fetch_all(MYSQLI_ASSOC); }
+                if (empty($studentRequests)): ?><p class="text-muted text-center py-3">No student requests yet.</p>
+                <?php else: ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Type</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead><tbody>
+                <?php foreach ($studentRequests as $sr): ?><tr><td><?= htmlspecialchars($sr['request_type']??$sr['type']??'-') ?></td><td><?= htmlspecialchars(mb_substr($sr['reason']??$sr['details']??'',0,50)) ?></td><td><span class="badge bg-<?= ($sr['status']??'')==='Approved'?'success':(($sr['status']??'')==='Pending'?'warning':'secondary') ?>"><?= htmlspecialchars($sr['status']??'Pending') ?></span></td><td><?= htmlspecialchars($sr['created_at']??'') ?></td></tr><?php endforeach; ?>
+                </tbody></table></div>
+                <?php endif; ?>
+                <p class="mt-2"><a href="student-requests-desk.php" class="btn btn-sm btn-outline-info"><i class="fas fa-external-link-alt me-1"></i>View All Requests</a></p>
+            </div></div></div>
+        </div>
         <?php break;
     case 'reports': ?>
-        <h1><i class="fas fa-file-alt"></i> Guild Reports</h1>
-        <p class="text-muted">Reports and analytics.</p>
+        <div class="content-header"><h1><i class="fas fa-file-alt me-2"></i>Guild Reports & Analytics</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="card text-center border-primary"><div class="card-body"><h6 class="text-primary">Total Students</h6><h3 class="text-primary"><?= $totalStudents ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center border-success"><div class="card-body"><h6 class="text-success">Active Students</h6><h3 class="text-success"><?= $activeStudents ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center border-warning"><div class="card-body"><h6 class="text-warning">Open Welfare Cases</h6><h3 class="text-warning"><?= $welfareOpen ?></h3></div></div></div>
+            <div class="col-md-3"><div class="card text-center border-info"><div class="card-body"><h6 class="text-info">Programs</h6><h3 class="text-info"><?= count($programs) ?></h3></div></div></div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-chart-pie me-2"></i>Summary</h5>
+                <table class="table table-sm"><tbody>
+                    <tr><td>Total Welfare Cases</td><td class="fw-bold"><?= $welfareOpen + $welfareResolved ?></td></tr>
+                    <tr><td>Resolved Cases</td><td class="fw-bold text-success"><?= $welfareResolved ?></td></tr>
+                    <tr><td>Open Cases</td><td class="fw-bold text-warning"><?= $welfareOpen ?></td></tr>
+                    <tr><td>Counseling Sessions</td><td class="fw-bold text-info"><?= count($counselingSessions) ?></td></tr>
+                    <tr><td>Upcoming Events</td><td class="fw-bold"><?= count($upcomingEvents) ?></td></tr>
+                    <tr><td>Sports Events</td><td class="fw-bold"><?= count($sportsEvents) ?></td></tr>
+                    <tr><td>Active Discipline Cases</td><td class="fw-bold text-danger"><?= $disciplineOpen ?></td></tr>
+                </tbody></table>
+            </div></div></div>
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-link me-2"></i>Quick Links</h5>
+                <div class="d-grid gap-2">
+                    <a href="student-management.php" class="btn btn-outline-primary"><i class="fas fa-user-graduate me-2"></i>Student Management</a>
+                    <a href="counseling-welfare.php" class="btn btn-outline-success"><i class="fas fa-heart me-2"></i>Counselling & Welfare</a>
+                    <a href="student-discipline.php" class="btn btn-outline-danger"><i class="fas fa-gavel me-2"></i>Student Discipline</a>
+                    <a href="student-requests-desk.php" class="btn btn-outline-info"><i class="fas fa-inbox me-2"></i>Student Requests</a>
+                    <a href="../student-directory.php" class="btn btn-outline-secondary"><i class="fas fa-address-book me-2"></i>Student Directory</a>
+                </div>
+            </div></div></div>
+        </div>
         <?php break;
     default: ?>
         <h1><i class="fas fa-crown"></i> Guild President Dashboard</h1>

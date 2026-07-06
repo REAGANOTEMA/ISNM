@@ -22,7 +22,7 @@ function sb_fetch($conn, $sql) {
     catch (Exception $e) { return []; }
 }
 
-$active_section = $_GET['section'] ?? 'dashboard';
+$active_section = $_GET['section'] ?? $_GET['page'] ?? 'dashboard';
 
 // Handle GET actions (AJAX)
 $action_get = $_GET['action'] ?? '';

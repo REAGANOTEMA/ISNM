@@ -121,6 +121,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         header("Location: student-portal.php?page=profile");
         exit();
     }
+    if ($action === 'change_password') {
+        $current = $_POST['current_password'] ?? '';
+        $new = $_POST['new_password'] ?? '';
+        $confirm = $_POST['confirm_password'] ?? '';
+        if ($new !== $confirm) { $_SESSION['error'] = 'Passwords do not match.'; header("Location: student-portal.php?page=password"); exit(); }
+        if (strlen($new) < 6) { $_SESSION['error'] = 'Password must be at least 6 characters.'; header("Location: student-portal.php?page=password"); exit(); }
+        $stmt = $studentsDb->prepare("SELECT password FROM students WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("i", $student_id); $stmt->execute(); $row = $stmt->get_result()->fetch_assoc(); $stmt->close();
+            $storedHash = $row['password'] ?? '';
+            if (password_verify($current, $storedHash) || $current === $storedHash) {
+                $newHash = password_hash($new, PASSWORD_DEFAULT);
+                $upd = $studentsDb->prepare("UPDATE students SET password=?, password_changed=1 WHERE id=?");
+                if ($upd) { $upd->bind_param("si", $newHash, $student_id); $upd->execute(); $upd->close(); }
+                $_SESSION['success'] = 'Password changed successfully.';
+            } else { $_SESSION['error'] = 'Current password is incorrect.'; }
+        }
+        header("Location: student-portal.php?page=password");
+        exit();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -233,34 +253,37 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <div class="brand">
 <img src="../images/school-logo.png" alt="ISNM">
 <h5><?= htmlspecialchars($full_name) ?></h5>
-<small><?= htmlspecialchars($student_number) ?> · <?= htmlspecialchars($program) ?></small>
+<small><?= htmlspecialchars($student_number) ?></small>
 </div>
 <nav class="nav-menu">
 <div class="nav-section">Main</div>
 <a class="nav-item <?= $page==='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="fas fa-th-large"></i>Dashboard</a>
-<a class="nav-item <?= $page==='profile'?'active':'' ?>" href="?page=profile"><i class="fas fa-user"></i>My Profile</a>
+<a class="nav-item <?= $page==='profile'?'active':'' ?>" href="?page=profile"><i class="fas fa-user-circle"></i>My Profile</a>
 <div class="nav-section">Academics</div>
-<a class="nav-item <?= $page==='academics'?'active':'' ?>" href="?page=academics"><i class="fas fa-graduation-cap"></i>Academic Record</a>
+<a class="nav-item <?= in_array($page,['academics','courses','results','attendance'])?'active':'' ?>" href="?page=academics"><i class="fas fa-graduation-cap"></i>Academic Record</a>
 <a class="nav-item <?= $page==='courses'?'active':'' ?>" href="?page=courses"><i class="fas fa-book"></i>Course Registration</a>
 <a class="nav-item <?= $page==='results'?'active':'' ?>" href="?page=results"><i class="fas fa-file-alt"></i>Results & Transcripts</a>
 <a class="nav-item <?= $page==='attendance'?'active':'' ?>" href="?page=attendance"><i class="fas fa-clipboard-check"></i>Attendance</a>
 <div class="nav-section">Clinical</div>
-<a class="nav-item <?= $page==='clinical'?'active':'' ?>" href="?page=clinical"><i class="fas fa-hospital"></i>Clinical Placement</a>
+<a class="nav-item <?= in_array($page,['clinical','logbook','competency'])?'active':'' ?>" href="?page=clinical"><i class="fas fa-hospital"></i>Clinical Placement</a>
 <a class="nav-item <?= $page==='logbook'?'active':'' ?>" href="?page=logbook"><i class="fas fa-book-open"></i>Logbook</a>
 <a class="nav-item <?= $page==='competency'?'active':'' ?>" href="?page=competency"><i class="fas fa-star"></i>Competencies</a>
 <div class="nav-section">Admission</div>
 <a class="nav-item <?= $page==='requirements'?'active':'' ?>" href="?page=requirements"><i class="fas fa-check-double"></i>Requirements</a>
 <div class="nav-section">Student Life</div>
-<a class="nav-item <?= $page==='discipline'?'active':'' ?>" href="?page=discipline"><i class="fas fa-gavel"></i>Discipline</a>
+<a class="nav-item <?= in_array($page,['discipline','finances','hostel','library'])?'active':'' ?>" href="?page=discipline"><i class="fas fa-gavel"></i>Discipline</a>
 <a class="nav-item <?= $page==='finances'?'active':'' ?>" href="?page=finances"><i class="fas fa-money-bill"></i>Finances</a>
 <a class="nav-item <?= $page==='hostel'?'active':'' ?>" href="?page=hostel"><i class="fas fa-home"></i>Hostel</a>
 <a class="nav-item <?= $page==='library'?'active':'' ?>" href="?page=library"><i class="fas fa-book-reader"></i>Library</a>
 <div class="nav-section">Communication</div>
-<a class="nav-item <?= $page==='notices'?'active':'' ?>" href="?page=notices"><i class="fas fa-bullhorn"></i>Announcements</a>
+<a class="nav-item <?= in_array($page,['notices','messages','requests'])?'active':'' ?>" href="?page=notices"><i class="fas fa-bullhorn"></i>Announcements</a>
 <a class="nav-item <?= $page==='messages'?'active':'' ?>" href="?page=messages"><i class="fas fa-envelope"></i>Messages</a>
 <a class="nav-item <?= $page==='requests'?'active':'' ?>" href="?page=requests"><i class="fas fa-paper-plane"></i>My Requests</a>
 <div class="nav-section">Schedule</div>
 <a class="nav-item <?= $page==='timetable'?'active':'' ?>" href="?page=timetable"><i class="fas fa-calendar-alt"></i>Timetable</a>
+<div class="nav-section">Account</div>
+<a class="nav-item <?= $page==='password'?'active':'' ?>" href="?page=password"><i class="fas fa-key"></i>Change Password</a>
+<a class="nav-item" href="../student-login.php?action=logout" onclick="return confirm('Are you sure you want to logout?')"><i class="fas fa-sign-out-alt"></i>Logout</a>
 </nav>
 </aside>
 
@@ -1292,6 +1315,16 @@ elseif ($page === 'timetable'):
 <?php endif; ?>
 </div>
 
+<?php elseif ($page === 'password'): ?>
+<div class="sp-card" style="max-width:500px;margin:0 auto">
+<h4><i class="fas fa-key me-2"></i>Change Password</h4>
+<form method="POST" action="?page=password">
+<div class="sp-form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" required></div>
+<div class="sp-form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" required minlength="6"></div>
+<div class="sp-form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" class="form-control" required minlength="6"></div>
+<button type="submit" name="action" value="change_password" class="sp-btn sp-btn-primary"><i class="fas fa-save me-1"></i>Update Password</button>
+</form>
+</div>
 <?php endif; ?>
 </main>
 <script>

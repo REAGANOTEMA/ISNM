@@ -732,6 +732,110 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         </section>
     </div>
 
+    <!-- Attendance -->
+    <section id="attendance" class="content-section dashboard-section section-card<?= $section==='attendance'?' active':'' ?>" data-section="attendance" style="<?= $section==='attendance'?'':'display:none' ?>">
+        <h2><i class="fas fa-calendar-check me-2"></i>Attendance Records</h2>
+        <?php
+        $attendanceRecords = [];
+        if ($studentsConn) {
+            $r = $studentsConn->query("SELECT sa.*, s.full_name, s.student_number FROM student_attendance sa JOIN students s ON sa.student_id=s.id WHERE sa.course_id IN (SELECT course_id FROM course_assignments WHERE lecturer_id=$user_id) ORDER BY sa.date DESC LIMIT 20");
+            if ($r) $attendanceRecords = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if (empty($attendanceRecords)): ?><p class="text-muted text-center py-3">No attendance records found for your courses.</p>
+        <?php else: ?>
+        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Date</th><th>Student</th><th>Status</th></tr></thead><tbody>
+        <?php foreach ($attendanceRecords as $a): ?><tr><td><?= htmlspecialchars($a['date']??'') ?></td><td><?= htmlspecialchars($a['full_name']??$a['student_number']??'') ?></td><td><span class="badge bg-<?= ($a['status']??'')==='Present'?'success':(($a['status']??'')==='Absent'?'danger':'warning') ?>"><?= htmlspecialchars($a['status']??'N/A') ?></span></td></tr><?php endforeach; ?>
+        </tbody></table></div>
+        <?php endif; ?>
+    </section>
+
+    <!-- CAT Marks -->
+    <section id="cat-marks" class="content-section dashboard-section section-card<?= $section==='cat-marks'?' active':'' ?>" data-section="cat-marks" style="<?= $section==='cat-marks'?'':'display:none' ?>">
+        <h2><i class="fas fa-pen me-2"></i>CAT Marks Entry</h2>
+        <?php
+        $catRecords = [];
+        if ($conn) {
+            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN igangaschoolofl_students_db.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
+            if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
+        <?php else: ?>
+        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
+        <?php foreach ($catRecords as $c): ?><tr><td><?= htmlspecialchars($c['student_name']??$c['student_id']??'-') ?></td><td><?= htmlspecialchars($c['course_code']??$c['course_name']??'-') ?></td><td><?= htmlspecialchars($c['marks']??$c['score']??$c['total_marks']??'-') ?></td><td><?= htmlspecialchars($c['grade']??'-') ?></td></tr><?php endforeach; ?>
+        </tbody></table></div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Exam Marks -->
+    <section id="exam-marks" class="content-section dashboard-section section-card<?= $section==='exam-marks'?' active':'' ?>" data-section="exam-marks" style="<?= $section==='exam-marks'?'':'display:none' ?>">
+        <h2><i class="fas fa-file-alt me-2"></i>Exam Marks</h2>
+        <?php
+        $examRecords = [];
+        if ($conn) {
+            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN igangaschoolofl_students_db.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
+            if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
+        <?php else: ?>
+        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
+        <?php foreach ($examRecords as $e): ?><tr><td><?= htmlspecialchars($e['student_name']??$e['student_id']??'-') ?></td><td><?= htmlspecialchars($e['course_code']??$e['course_name']??'-') ?></td><td><?= htmlspecialchars($e['marks']??$e['score']??$e['total_marks']??'-') ?></td><td><?= htmlspecialchars($e['grade']??'-') ?></td></tr><?php endforeach; ?>
+        </tbody></table></div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="content-section dashboard-section section-card<?= $section==='results'?' active':'' ?>" data-section="results" style="<?= $section==='results'?'':'display:none' ?>">
+        <h2><i class="fas fa-chart-bar me-2"></i>Student Results</h2>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Total Records</h6><h3><?= count($grade_distribution??[]) > 0 ? array_sum($grade_distribution) : 0 ?></h3></div></div></div>
+            <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Pass Rate</h6><h3 class="text-success"><?= $total_grades > 0 ? round(($grade_distribution['A']+$grade_distribution['B']+$grade_distribution['C'])/$total_grades*100) : 0 ?>%</h3></div></div></div>
+            <div class="col-md-4"><div class="card"><div class="card-body"><p class="mb-0 text-muted">View detailed results in <a href="exams-results.php">Exams & Results</a> module.</p></div></div></div>
+        </div>
+    </section>
+
+    <!-- Reports -->
+    <section id="reports" class="content-section dashboard-section section-card<?= $section==='reports'?' active':'' ?>" data-section="reports" style="<?= $section==='reports'?'':'display:none' ?>">
+        <h2><i class="fas fa-file-invoice me-2"></i>Reports Center</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5>Teaching Summary</h5><p>Courses: <?= $assigned_courses ?> | Students: <?= $total_students ?> | Pending Grades: <?= $pending_grades ?></p><a href="?page=overview" class="btn btn-sm btn-outline-primary">View Overview</a></div></div></div>
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5>Quick Actions</h5><a href="staff_transcript_generation.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-file-pdf me-1"></i>Transcripts</a><a href="staff_receipt_printing.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-print me-1"></i>Print</a></div></div></div>
+        </div>
+    </section>
+
+    <!-- Lesson Plans -->
+    <section id="lesson-plans" class="content-section dashboard-section section-card<?= $section==='lesson-plans'?' active':'' ?>" data-section="lesson-plans" style="<?= $section==='lesson-plans'?'':'display:none' ?>">
+        <h2><i class="fas fa-clipboard-list me-2"></i>Lesson Plans</h2>
+        <?php
+        $lessonPlans = [];
+        if ($conn) {
+            $r = $conn->query("SELECT * FROM lesson_plans WHERE lecturer_id=$user_id ORDER BY created_at DESC LIMIT 10");
+            if ($r) $lessonPlans = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if (empty($lessonPlans)): ?><p class="text-muted text-center py-3">No lesson plans created yet.</p>
+        <?php else: ?>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Date</th></tr></thead><tbody>
+        <?php foreach ($lessonPlans as $lp): ?><tr><td><?= htmlspecialchars($lp['title']??$lp['topic']??'-') ?></td><td><?= htmlspecialchars($lp['course_name']??$lp['course']??'-') ?></td><td><?= htmlspecialchars($lp['created_at']??'') ?></td></tr><?php endforeach; ?>
+        </tbody></table></div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Assignments -->
+    <section id="assignments" class="content-section dashboard-section section-card<?= $section==='assignments'?' active':'' ?>" data-section="assignments" style="<?= $section==='assignments'?'':'display:none' ?>">
+        <h2><i class="fas fa-tasks me-2"></i>Assignments</h2>
+        <?php
+        $assignments = [];
+        if ($conn) {
+            $r = $conn->query("SELECT * FROM assignments WHERE lecturer_id=$user_id ORDER BY created_at DESC LIMIT 10");
+            if ($r) $assignments = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if (empty($assignments)): ?><p class="text-muted text-center py-3">No assignments created yet.</p>
+        <?php else: ?>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Due Date</th><th>Status</th></tr></thead><tbody>
+        <?php foreach ($assignments as $as): ?><tr><td><?= htmlspecialchars($as['title']??'-') ?></td><td><?= htmlspecialchars($as['course_name']??$as['course_id']??'-') ?></td><td><?= htmlspecialchars($as['due_date']??$as['deadline']??'') ?></td><td><span class="badge bg-<?= ($as['status']??'')==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($as['status']??'Active') ?></span></td></tr><?php endforeach; ?>
+        </tbody></table></div>
+        <?php endif; ?>
+    </section>
+
     <!-- Modals -->
     <div class="modal fade" id="actionModal" tabindex="-1">
         <div class="modal-dialog modal-lg">

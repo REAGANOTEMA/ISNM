@@ -219,7 +219,7 @@ $transactions = [];
 $r = $staffConn->query("SELECT sit.*, si.item_name FROM store_inventory_transactions sit JOIN store_inventory si ON sit.item_id=si.id ORDER BY sit.created_at DESC LIMIT 50");
 if ($r) while ($row = $r->fetch_assoc()) $transactions[] = $row;
 
-$tab = $_GET['tab'] ?? 'dashboard';
+$tab = $_GET['tab'] ?? $_GET['page'] ?? 'dashboard';
 ?>
 <!DOCTYPE html>
 <html lang="en">
