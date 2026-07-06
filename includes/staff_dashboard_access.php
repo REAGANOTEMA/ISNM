@@ -52,10 +52,9 @@ if (!function_exists('bootstrapStaffDashboard')) {
             $auth_service = new AuthenticationService();
         }
 
-        // Compute correct relative path to staff-login.php
+        // Login is always ONE level above dashboards/ (at the project root)
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $dirDepth = substr_count(dirname($scriptName), '/');
-        $loginPath = $dirDepth > 1 ? str_repeat('../', $dirDepth - 1) . 'organogram.php' : 'organogram.php';
+        $loginPath = dirname($scriptName) !== '' && dirname($scriptName) !== '/' ? '../organogram.php' : 'organogram.php';
 
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
             session_write_close();
