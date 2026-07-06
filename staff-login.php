@@ -57,6 +57,7 @@ if ($auth_service->isAuthenticated()) {
                 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
                 $targetPath = parse_url($target, PHP_URL_PATH);
                 if ($targetPath && $targetPath !== $currentPath) {
+                    session_write_close();
                     header("Location: $target");
                     exit();
                 }
@@ -70,11 +71,13 @@ if ($auth_service->isAuthenticated()) {
                 }
                 unset($_SESSION['requested_position']);
             }
+            session_write_close();
             header("Location: $dashboard");
             exit();
         }
     }
     if (($_SESSION['type'] ?? '') === 'student') {
+        session_write_close();
         header('Location: dashboards/student.php');
         exit();
     }

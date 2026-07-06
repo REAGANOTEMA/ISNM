@@ -315,12 +315,6 @@ switch ($action) {
                 $auth_service->createSecureSession($result['user']);
             }
 
-            // Force password change for first login
-            if (!empty($result['user']['is_first_login'])) {
-                header('Location: staff-force-password-change.php');
-                exit();
-            }
-
             // Role-to-dashboard mapping
             $dashboardMap = [
                 'Director General'       => 'dashboards/director-general.php',

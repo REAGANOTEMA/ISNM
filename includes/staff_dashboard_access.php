@@ -58,42 +58,16 @@ if (!function_exists('bootstrapStaffDashboard')) {
         $loginPath = $dirDepth > 1 ? str_repeat('../', $dirDepth - 1) . 'organogram.php' : 'organogram.php';
 
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
-            $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-            header('Location: ' . $loginPath . ($redirect ? "?redirect=$redirect" : ''));
+            session_write_close();
+            header('Location: ' . $loginPath);
             exit();
         }
 
         // Session timeout enforcement
         if (!$auth_service->checkSessionValidity()) {
-            $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-            header('Location: ' . $loginPath . '?error=expired' . ($redirect ? "&redirect=$redirect" : ''));
+            session_write_close();
+            header('Location: ' . $loginPath . '?error=expired');
             exit();
-        }
-
-        // Force password change for first-login accounts
-        if (!empty($_SESSION['user_id'])) {
-            static $firstLoginChecked = false;
-            if (!$firstLoginChecked) {
-                $firstLoginChecked = true;
-                try {
-                    $flConn = getStaffConnection();
-                    if ($flConn) {
-                        $flStmt = $flConn->prepare("SELECT is_first_login FROM staff WHERE id = ? LIMIT 1");
-                        if ($flStmt) {
-                            $flStmt->bind_param('i', $_SESSION['user_id']);
-                            $flStmt->execute();
-                            $flRow = $flStmt->get_result()->fetch_assoc();
-                            $flStmt->close();
-                            if ($flRow && !empty($flRow['is_first_login'])) {
-                                $flConn->close();
-                                header('Location: ' . ($dirDepth > 1 ? str_repeat('../', $dirDepth - 1) : '') . 'staff-force-password-change.php');
-                                exit();
-                            }
-                        }
-                        $flConn->close();
-                    }
-                } catch (Exception $e) { error_log('staff_dashboard_access first_login: ' . $e->getMessage()); }
-            }
         }
 
         // ── Ensure CSRF token exists before validating ──
@@ -151,9 +125,8 @@ if (!function_exists('bootstrapStaffDashboard')) {
                 }
             }
             if (!$allowed) {
-                // User is authenticated but lacks role — send to their own dashboard, not login (avoids redirect loop)
                 $userDashboard = $auth_service->getDashboardRoute($role);
-                // getDashboardRoute returns e.g. "dashboards/foo.php" — prepend "../" because we're inside /dashboards/
+                session_write_close();
                 header('Location: ../' . ($userDashboard ?: 'index.php'));
                 exit();
             }
@@ -164,11 +137,10 @@ if (!function_exists('bootstrapStaffDashboard')) {
         if (!empty($_SESSION['logged_in_via_organogram']) && !empty($_SESSION['logged_in_via_position'])) {
             $requestedPos = $_SESSION['logged_in_via_position'];
             if (!$auth_service->positionMatchesRole($requestedPos, $role) && !$auth_service->hasFullInstitutionAccess($role)) {
-                // Mismatch: force user back to login
+                session_write_close();
                 header('Location: ../staff-login.php');
                 exit();
             }
-            // Clear the one-time flags so normal navigation does not require organogram each page
             unset($_SESSION['logged_in_via_organogram']);
             unset($_SESSION['logged_in_via_position']);
         }

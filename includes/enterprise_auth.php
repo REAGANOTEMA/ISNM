@@ -18,6 +18,7 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'staff') {
     $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+    session_write_close();
     header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
     exit();
 }

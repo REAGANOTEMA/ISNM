@@ -430,7 +430,6 @@ class AuthenticationService {
             }
             session_start();
         }
-        session_regenerate_id(true);
         $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
         $_SESSION['user_id']        = $user['id'];
         $_SESSION['email']          = $user['email'];
@@ -444,7 +443,6 @@ class AuthenticationService {
         $_SESSION['login_time']     = time();
         $_SESSION['last_activity']  = time();
         $_SESSION['session_locked'] = false;
-        $_SESSION['user_agent']     = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $_SESSION['can_access_all'] = $this->hasFullInstitutionAccess($user['role'] ?? '');
         $_SESSION['dashboard_path'] = $this->getDashboardRoute($user['role'] ?? '');
 
@@ -510,15 +508,6 @@ class AuthenticationService {
 
         // 1-hour absolute session timeout (destroy session entirely)
         if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 3600) {
-            $this->logout();
-            return false;
-        }
-
-        // User-Agent binding — detect session hijacking
-        $currentUA = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        $sessionUA = $_SESSION['user_agent'] ?? '';
-        if ($sessionUA !== '' && $currentUA !== '' && $sessionUA !== $currentUA) {
-            error_log('Session hijack detected: UA mismatch for user ' . ($_SESSION['user_id'] ?? 'unknown') . ' (stored: ' . substr($sessionUA, 0, 50) . '..., current: ' . substr($currentUA, 0, 50) . '...)');
             $this->logout();
             return false;
         }
