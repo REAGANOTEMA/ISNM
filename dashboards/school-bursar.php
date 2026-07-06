@@ -10,6 +10,42 @@ require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/payment_gateway.php';
 require_once __DIR__ . '/../includes/payroll_functions.php';
 
+/**
+ * TEMP DEBUG (REMOVE AFTER FIX)
+ * Logs session/cookie/security signals to diagnose redirect loop.
+ */
+try {
+    if (!defined('ISNM_SESSION_DEBUG_DONE')) {
+        define('ISNM_SESSION_DEBUG_DONE', true);
+
+        $logDir = __DIR__ . '/../logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0775, true);
+        }
+
+        $payload = [
+            'ts' => date('c'),
+            'session_logged_in' => $_SESSION['logged_in'] ?? null,
+            'session_type' => $_SESSION['type'] ?? null,
+            'session_user_id' => $_SESSION['user_id'] ?? null,
+            'session_role' => $_SESSION['role'] ?? null,
+            'https' => $_SERVER['HTTPS'] ?? null,
+            'http_x_forwarded_proto' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null,
+            'session_cookie_secure_ini' => ini_get('session.cookie_secure'),
+            'script' => $_SERVER['SCRIPT_NAME'] ?? null,
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? null,
+        ];
+
+        @file_put_contents(
+            $logDir . '/session_debug.log',
+            '[' . $payload['ts'] . '] ' . json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL,
+            FILE_APPEND
+        );
+    }
+} catch (Throwable $e) {
+    // ignore debug failures
+}
+
 $ctx = bootstrapStaffDashboard(['bursar', 'school bursar', 'finance', 'director finance', 'director general', 'ceo']);
 $auth = $ctx['auth'];
 $user = $ctx['user'];
