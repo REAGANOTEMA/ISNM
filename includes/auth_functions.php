@@ -389,13 +389,16 @@ function resetPassword($user_type, $identifier) {
         $token = bin2hex(random_bytes(32));
         $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
         
-        // Store reset token in database (you'd need a password_resets table for this)
-        // For now, just return success
+        // Store reset token
+        $uid = (int)($user['id'] ?? 0);
+        $uemail = $user['email'] ?? '';
+        $stmt = $conn->prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token=VALUES(token), expires_at=VALUES(expires_at), used_at=NULL");
+        if ($stmt) { $stmt->bind_param('isss', $uid, $uemail, $token, $expires); $stmt->execute(); $stmt->close(); }
         
         return [
             'success' => true,
-            'message' => 'Password reset instructions have been sent to your email.',
-            'user' => $user
+            'token' => $token,
+            'message' => 'Password reset instructions have been sent to your email.'
         ];
     } else {
         return ['success' => false, 'message' => 'User not found.'];

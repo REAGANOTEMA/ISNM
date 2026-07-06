@@ -32,11 +32,13 @@ if ($staffConn) {
         $chk->bind_param("s", $bursarEmail);
         $chk->execute();
         if (!$chk->get_result()->fetch_assoc()) {
-            $hash = password_hash('bursar@isnm', PASSWORD_DEFAULT);
+            $plainpw = bin2hex(random_bytes(8));
+            $hash = password_hash($plainpw, PASSWORD_DEFAULT);
             $ins = $staffConn->prepare("INSERT IGNORE INTO staff (full_name, email, password, role_id, position, department, status) VALUES (?, ?, ?, ?, 'School Bursar', 'Finance', 'Active')");
             $n = 'School Bursar';
             $ins->bind_param("sssi", $n, $bursarEmail, $hash, $roleId);
             $ins->execute();
+            $_SESSION['info'] = "Default bursar account created. Temporary password: $plainpw";
         }
         $chk->close();
     }

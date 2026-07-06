@@ -110,15 +110,16 @@ if (!function_exists('bootstrapStaffDashboard')) {
                         }
                         $sc->close();
                     }
-                } catch (Exception $e) {}
+                } catch (Exception $e) { error_log('staff_dashboard_access role refresh: ' . $e->getMessage()); }
             }
         }
 
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {
             $allowed = false;
-            $roleLower = strtolower(trim($role));
+            $roleLower = strtolower(trim(preg_replace('/[^a-z0-9]+/', ' ', $role)));
             foreach ($roleKeywords as $keyword) {
-                if ($keyword !== '' && strpos($roleLower, strtolower(trim($keyword))) !== false) {
+                $kw = strtolower(trim(preg_replace('/[^a-z0-9]+/', ' ', $keyword)));
+                if ($kw !== '' && strpos(" $roleLower ", " $kw ") !== false) {
                     $allowed = true;
                     break;
                 }

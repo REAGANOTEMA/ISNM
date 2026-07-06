@@ -305,29 +305,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode($rows); exit;
     }
     if ($action === 'reports_data') {
-        $from=$_POST['from']??date('Y-m-d',strtotime('-30 days'));$to=$_POST['to']??date('Y-m-d');
-        $r1=$conn->query("SELECT status,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN '$from' AND '$to' GROUP BY status");
-        $byStatus=[];if($r1)while($rw=$r1->fetch_assoc())$byStatus[$rw['status']]=(int)$rw['c'];
-        $r2=$conn->query("SELECT ap.program_name,COUNT(a.id) c FROM applicants a JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN '$from' AND '$to' GROUP BY a.program_id");
-        $byProgram=[];if($r2)while($rw=$r2->fetch_assoc())$byProgram[]=$rw;
-        $r3=$conn->query("SELECT intake,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN '$from' AND '$to' GROUP BY intake");
-        $byIntake=[];if($r3)while($rw=$r3->fetch_assoc())$byIntake[]=$rw;
-        $r4=$conn->query("SELECT gender,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN '$from' AND '$to' GROUP BY gender");
-        $byGender=[];if($r4)while($rw=$r4->fetch_assoc())$byGender[]=$rw;
-        $r5=$conn->query("SELECT nationality,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN '$from' AND '$to' GROUP BY nationality ORDER BY c DESC LIMIT 10");
-        $byNationality=[];if($r5)while($rw=$r5->fetch_assoc())$byNationality[]=$rw;
-        $r6=$conn->query("SELECT DATE(created_at) dt,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN '$from' AND '$to' GROUP BY DATE(created_at) ORDER BY dt");
-        $trend=[];if($r6)while($rw=$r6->fetch_assoc())$trend[]=$rw;
+        $from=date('Y-m-d',strtotime($_POST['from']??'-30 days'));$to=date('Y-m-d',strtotime($_POST['to']??'today'));
+        $rs=$conn->prepare("SELECT status,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY status");
+        $byStatus=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r1=$rs->get_result();while($rw=$r1->fetch_assoc())$byStatus[$rw['status']]=(int)$rw['c'];$rs->close();}
+        $rs=$conn->prepare("SELECT ap.program_name,COUNT(a.id) c FROM applicants a JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN ? AND ? GROUP BY a.program_id");
+        $byProgram=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r2=$rs->get_result();while($rw=$r2->fetch_assoc())$byProgram[]=$rw;$rs->close();}
+        $rs=$conn->prepare("SELECT intake,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY intake");
+        $byIntake=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r3=$rs->get_result();while($rw=$r3->fetch_assoc())$byIntake[]=$rw;$rs->close();}
+        $rs=$conn->prepare("SELECT gender,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY gender");
+        $byGender=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r4=$rs->get_result();while($rw=$r4->fetch_assoc())$byGender[]=$rw;$rs->close();}
+        $rs=$conn->prepare("SELECT nationality,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY nationality ORDER BY c DESC LIMIT 10");
+        $byNationality=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r5=$rs->get_result();while($rw=$r5->fetch_assoc())$byNationality[]=$rw;$rs->close();}
+        $rs=$conn->prepare("SELECT DATE(created_at) dt,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY DATE(created_at) ORDER BY dt");
+        $trend=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r6=$rs->get_result();while($rw=$r6->fetch_assoc())$trend[]=$rw;$rs->close();}
         echo json_encode(compact('byStatus','byProgram','byIntake','byGender','byNationality','trend')); exit;
     }
     if ($action === 'export_csv') {
-        $type=trim($_POST['export_type']??'applicants'); $from=$_POST['from']??date('Y-m-d',strtotime('-30 days')); $to=$_POST['to']??date('Y-m-d');
+        $type=trim($_POST['export_type']??'applicants'); $from=date('Y-m-d',strtotime($_POST['from']??'-30 days')); $to=date('Y-m-d',strtotime($_POST['to']??'today'));
         header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="admissions_'.date('Ymd').'.csv"');
         $out=fopen('php://output','w');
         if($type==='applicants'){
             fputcsv($out,['Application #','Full Name','Gender','Phone','Email','Program','Intake','Status','District','Nationality','Submitted']);
-            $r=$conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN '$from' AND '$to' ORDER BY a.created_at");
-            if($r)while($rw=$r->fetch_assoc())fputcsv($out,[$rw['application_number'],$rw['full_name'],$rw['gender'],$rw['phone'],$rw['email'],$rw['program_name'],$rw['intake'],$rw['status'],$rw['district'],$rw['nationality'],$rw['created_at']]);
+            $rs=$conn->prepare("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN ? AND ? ORDER BY a.created_at");
+            if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r=$rs->get_result();while($rw=$r->fetch_assoc())fputcsv($out,[$rw['application_number'],$rw['full_name'],$rw['gender'],$rw['phone'],$rw['email'],$rw['program_name'],$rw['intake'],$rw['status'],$rw['district'],$rw['nationality'],$rw['created_at']]);$rs->close();}
         }elseif($type==='requirements'){
             fputcsv($out,['Applicant','Requirement','Status','Submitted','Verified']);
             $r=$conn->query("SELECT a.full_name,ar.requirement_name,ars.status,ars.submitted_at,ars.verified_at FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id JOIN admission_requirements ar ON ars.requirement_id=ar.id ORDER BY a.full_name");

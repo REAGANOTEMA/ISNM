@@ -103,7 +103,7 @@ class StudentDataLoader {
     }
 
     private function loadFromExcelFiles() {
-        $all = [];
+        $grouped = [];
         $this->cachedFiles = [];
         foreach ($this->getExcelFiles() as $file) {
             $rows = $this->loadExcelFile($file);
@@ -112,9 +112,9 @@ class StudentDataLoader {
                 'name' => basename($file),
                 'students' => count($rows),
             ];
-            $all = array_merge($all, $rows);
+            $grouped[] = $rows;
         }
-        return $all;
+        return $grouped ? array_merge(...$grouped) : [];
     }
 
     private function loadExcelFile($filePath) {

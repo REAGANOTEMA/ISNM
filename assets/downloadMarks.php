@@ -105,47 +105,30 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                                         $totalMarks = $row['total_marks'];
                                         $passingMarks = $row['passing_marks'];
 
-                                        // Fetch students' marks for the exam
-                                        $query2 = 'SELECT `student_id`,`marks` FROM `marks` WHERE `exam_id` = ?';
+                                        // Fetch students' marks with names via JOIN
+                                        $query2 = 'SELECT m.`student_id`, m.`marks`, s.`fname`, s.`lname` FROM `marks` m JOIN `students` s ON m.student_id = s.id WHERE m.`exam_id` = ?';
                                         $stmt2 = mysqli_prepare($conn, $query2);
                                         mysqli_stmt_bind_param($stmt2, "s", $examId);
                                         mysqli_stmt_execute($stmt2);
                                         $result2 = mysqli_stmt_get_result($stmt2);
 
                                         if (mysqli_num_rows($result2) > 0) {
-                                            $studentsData = array(); // Array to hold student details
                             
                                             $count = 1;
                                             while ($marksRow = mysqli_fetch_assoc($result2)) {
-                                                $studentId = $marksRow['student_id'];
                                                 $obtainedMarks = $marksRow['marks'];
 
-                                                // Fetch student details
-                                                $query3 = 'SELECT `fname`, `lname` FROM `students` WHERE `id` = ?';
-                                                $stmt3 = mysqli_prepare($conn, $query3);
-                                                mysqli_stmt_bind_param($stmt3, "s", $studentId);
-                                                mysqli_stmt_execute($stmt3);
-                                                $result3 = mysqli_stmt_get_result($stmt3);
+                                                $passFail = ((int) ($obtainedMarks)) >= ((int) ($passingMarks)) ? "PASSED" : "FAIL";
 
-                                                if (mysqli_num_rows($result3) > 0) {
-                                                    $row3 = mysqli_fetch_assoc($result3);
+                                                $Name = $marksRow['fname'] . " " . $marksRow['lname'];
 
+                                                echo '<tr>
+                                                <td>' . $marksRow['student_id'] . '</td>
+                                                <td>' . ucfirst(strtolower($Name)) . '</td>
+                                                <td>' . $obtainedMarks . '&nbsp;/&nbsp;' . $totalMarks . '</td>
+                                                <td>'.$passFail.'</td>
+                                            </tr>';
 
-                                                    $passFail = ((int) ($obtainedMarks)) >= ((int) ($passingMarks)) ? "PASSED" : "FAIL";
-
-                                                    $Name = $row3['fname'] . " " . $row3['lname'];
-
-                                                     echo '<tr>
-                                                     <td>' . $studentId . '</td>
-                                                     <td>' . ucfirst(strtolower($Name)) . '</td>
-                                                     <td>' . $obtainedMarks . '&nbsp;/&nbsp;' . $totalMarks . '</td>
-                                                     <td>'.$passFail.'</td>
-                                                 </tr>';
-
-                                                } else {
-                                                    die("Something went wrong1");
-                                                }
-                                                mysqli_stmt_close($stmt3);
                                                 $count++;
                                             }
 

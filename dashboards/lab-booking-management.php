@@ -94,11 +94,15 @@ $bookings = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
 $time_slots = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'];
 $labs = ['Lab A', 'Lab B', 'Lab C', 'Lab D', 'Computer Lab 1', 'Computer Lab 2'];
 $availability = [];
+// Batch all lab/time availability in a single query instead of 54 individual queries
+$avail_rows = [];
+if ($ict_conn) {
+    $avail_result = $ict_conn->query("SELECT lab_assigned, time_slot, COUNT(*) as cnt FROM lab_bookings WHERE booking_date=CURDATE() AND status IN ('pending','confirmed') GROUP BY lab_assigned, time_slot");
+    if ($avail_result) { while ($row = $avail_result->fetch_assoc()) { $avail_rows[$row['lab_assigned']][$row['time_slot']] = true; } }
+}
 foreach ($labs as $lab) {
     foreach ($time_slots as $slot) {
-        $stmt = $ict_conn->prepare("SELECT COUNT(*) FROM lab_bookings WHERE lab_assigned=? AND time_slot=? AND booking_date=CURDATE() AND status IN ('pending','confirmed')");
-        if ($stmt) { $stmt->bind_param('ss', $lab, $slot); $stmt->execute(); $r = $stmt->get_result(); $row = $r ? $r->fetch_row() : [0]; $stmt->close(); } else $row = [0];
-        $availability[$lab][$slot] = ((int)$row[0] === 0);
+        $availability[$lab][$slot] = !isset($avail_rows[$lab][$slot]);
     }
 }
 

@@ -37,9 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $dob = $_POST['date_of_birth'] ?? '';
         if ($fn && $em) {
             $sid = 'STAFF'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
-            $hash = password_hash('isnm2026', PASSWORD_BCRYPT);
+            $plainpw = bin2hex(random_bytes(8));
+            $hash = password_hash($plainpw, PASSWORD_BCRYPT);
             $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,staff_category,gender,highest_qualification,nin,year_of_experience,date_of_birth,status,hire_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $_SESSION['success'] = "Staff $fn added. Default password: isnm2026"; }
+            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
         }
         header('Location: hr-manager.php?page=staff'); exit;
     }
