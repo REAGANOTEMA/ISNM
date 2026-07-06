@@ -26,8 +26,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// CSRF token generation for auth forms
-if (empty($_SESSION['csrf_token'])) {
+// Defer CSRF token generation for POST requests until after the CSRF check
+// to avoid regenerating the token before verification (prevents session-mismatch on hosting
+// environments where session files may be ephemeral). For GET requests, eagerly create it.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
@@ -238,7 +240,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // CSRF verification on all POST actions
 $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+$stored = $_SESSION['csrf_token'] ?? '';
+if ($stored !== '' && !hash_equals($stored, $token)) {
     // Regenerate CSRF token so the refreshed page has a valid one
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
@@ -250,6 +253,10 @@ if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
         header('Location: staff-login.php');
     }
     exit();
+}
+// Ensure CSRF token exists for fresh sessions (hosting may have lost session file)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
