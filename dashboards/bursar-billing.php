@@ -212,7 +212,7 @@ try { if ($staff) { $r = $staff->query("SELECT bs.*, s.first_name, s.surname FRO
 
 // ── Discounts ──
 $discounts = [];
-try { if ($staff) { $r = $staff->query("SELECT bd.*, sfa.student_id, sfa.invoice_number FROM bursar_discounts bd LEFT JOIN student_fee_accounts sfa ON bd.fee_account_id = sfa.id ORDER BY bd.applied_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $discounts[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT bd.*, sfa.student_id, sfa.invoice_number FROM bursar_discounts bd LEFT JOIN student_fee_accounts sfa ON bd.fee_account_id = sfa.id ORDER BY bd.applied_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $discounts[] = $row; } } catch (Exception $e) { error_log('bursar-billing context: ' . $e->getMessage()); }
 
 $pageTitle = 'Bursar - Billing & Fees';
 ?><!DOCTYPE html>

@@ -19,7 +19,7 @@ $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'ICT Director';
 $user_role = $_SESSION['role'] ?? '';
 $ict = null;
-try { $ict = getICTConnection(); } catch (Exception $e) {}
+try { $ict = getICTConnection(); } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
 
 function ict_q($conn, $sql) {

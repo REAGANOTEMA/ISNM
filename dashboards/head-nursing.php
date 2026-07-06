@@ -261,8 +261,10 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('head-nursing context: ' . $e->getMessage()); }
 }
+ 
+
 
 $flash_success = $_SESSION['success'] ?? '';
 $flash_error = $_SESSION['error'] ?? '';
