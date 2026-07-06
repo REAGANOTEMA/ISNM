@@ -64,7 +64,7 @@ switch ($action) {
 function timeAgoNotif($datetime) {
     if (empty($datetime)) return '';
     $now = new DateTime();
-    try { $ago = new DateTime($datetime); } catch (Exception $e) { return $datetime; }
+    try { $ago = new DateTime($datetime); } catch (Exception $e) { error_log('ajax_notifications timeago failed: ' . $e->getMessage()); return $datetime; }
     $diff = $now->diff($ago);
     if ($diff->y > 0) return $diff->y . 'y ago';
     if ($diff->m > 0) return $diff->m . 'mo ago';

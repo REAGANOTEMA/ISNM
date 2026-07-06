@@ -67,6 +67,7 @@ class Announcements {
             ];
             
         } catch (Exception $e) {
+            error_log('Announcements getAnnouncements: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -99,6 +100,7 @@ class Announcements {
             return ['success' => true, 'announcement_id' => $announcementId];
             
         } catch (Exception $e) {
+            error_log('Announcements createAnnouncement: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -131,6 +133,7 @@ class Announcements {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('Announcements updateAnnouncement: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -148,6 +151,7 @@ class Announcements {
             return ['success' => $affectedRows > 0];
             
         } catch (Exception $e) {
+            error_log('Announcements deleteAnnouncement: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -170,6 +174,7 @@ class Announcements {
             return ['success' => true, 'announcement' => $announcement];
             
         } catch (Exception $e) {
+            error_log('Announcements getAnnouncementById: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -214,6 +219,7 @@ class Announcements {
             ];
             
         } catch (Exception $e) {
+            error_log('Announcements getAllAnnouncements: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -251,6 +257,7 @@ class Announcements {
             return ['success' => true, 'statistics' => $stats];
             
         } catch (Exception $e) {
+            error_log('Announcements getStatistics: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

@@ -35,6 +35,7 @@ class StudentFinance {
             return ['success' => true, 'finance' => $finance];
             
         } catch (Exception $e) {
+            error_log('StudentFinance getStudentFinance: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -67,6 +68,7 @@ class StudentFinance {
             return ['success' => true, 'finance_id' => $financeId];
             
         } catch (Exception $e) {
+            error_log('StudentFinance createFinanceRecord: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -99,6 +101,7 @@ class StudentFinance {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('StudentFinance updateFinanceRecord: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -127,6 +130,7 @@ class StudentFinance {
             return ['success' => true, 'summary' => $summary];
             
         } catch (Exception $e) {
+            error_log('StudentFinance getFinanceSummary: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -209,6 +213,7 @@ class StudentFinance {
             ];
             
         } catch (Exception $e) {
+            error_log('StudentFinance getAllStudentsFinance: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

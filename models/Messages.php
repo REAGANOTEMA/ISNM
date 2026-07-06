@@ -65,6 +65,7 @@ class Messages {
             ];
             
         } catch (Exception $e) {
+            error_log('Messages getUserMessages: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -96,6 +97,7 @@ class Messages {
             return ['success' => true, 'message_id' => $messageId];
             
         } catch (Exception $e) {
+            error_log('Messages sendMessage: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -115,6 +117,7 @@ class Messages {
             return ['success' => $affectedRows > 0];
             
         } catch (Exception $e) {
+            error_log('Messages markAsRead: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -134,6 +137,7 @@ class Messages {
             return ['success' => $affectedRows > 0];
             
         } catch (Exception $e) {
+            error_log('Messages deleteMessage: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -154,6 +158,7 @@ class Messages {
             return ['success' => true, 'unread_count' => $unread];
             
         } catch (Exception $e) {
+            error_log('Messages getUnreadCount: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -189,6 +194,7 @@ class Messages {
             return ['success' => true, 'messages' => $messages];
             
         } catch (Exception $e) {
+            error_log('Messages getConversation: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -218,6 +224,7 @@ class Messages {
             return ['success' => true, 'users' => $users];
             
         } catch (Exception $e) {
+            error_log('Messages getAllUsers: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

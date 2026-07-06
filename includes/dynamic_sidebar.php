@@ -47,7 +47,7 @@ function renderDynamicSidebar(): void {
     try {
         $registry = getModuleRegistry();
         $sidebar = $registry->getSidebarForRole($roleId);
-    } catch (Exception $e) { return; }
+    } catch (Exception $e) { error_log('dynamic_sidebar: ' . $e->getMessage()); return; }
     if (empty($sidebar)) return;
 
     $userName = $_SESSION['full_name'] ?? 'User';

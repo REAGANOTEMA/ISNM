@@ -476,6 +476,7 @@ function emptyTrash($conn): bool {
         if (!$conn) return false;
         return $conn->query("DELETE FROM recycle_bin WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
     } catch (Exception $e) {
+        error_log('functions.php: ' . $e->getMessage());
         return false;
     }
 }

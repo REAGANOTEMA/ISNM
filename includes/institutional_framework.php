@@ -48,9 +48,12 @@ function getRoleHierarchyLevel($roleName, $conn) {
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         return $row ? (int)$row['hierarchy_level'] : 99;
-    } catch (Exception $e) {
+        } catch (Exception $e) {
+        error_log('institutional_framework getHierarchyLevel: ' . $e->getMessage());
         return 99;
     }
+
+
 }
 }
 
@@ -140,6 +143,7 @@ function canAccessData($roleId, $departmentCode, $dataCategory, $conn) {
         }
         return $row['access_level'];
     } catch (Exception $e) {
+        error_log('institutional_framework getAccessLevel: ' . $e->getMessage());
         return 'full';
     }
 }
@@ -165,9 +169,12 @@ function isDataOwner($roleId, $departmentCode, $dataCategory, $conn) {
             return $row2 ? true : false;
         }
         return false;
-    } catch (Exception $e) {
+        } catch (Exception $e) {
+        error_log('institutional_framework checkAccess: ' . $e->getMessage());
         return false;
     }
+
+
 }
 }
 
@@ -303,6 +310,7 @@ function getDirectorPerformance($staffId, $conn) {
         $stmt->close();
         return $row ?: null;
     } catch (Exception $e) {
+        error_log('institutional_framework getPriority: ' . $e->getMessage());
         return null;
     }
 }

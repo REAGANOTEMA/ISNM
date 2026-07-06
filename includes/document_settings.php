@@ -95,6 +95,7 @@ function saveDocumentSetting($key, $value) {
         $db->close();
         return true;
     } catch (Exception $e) {
+        error_log('document_settings: ' . $e->getMessage());
         return false;
     }
 }

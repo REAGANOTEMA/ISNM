@@ -12,7 +12,7 @@ $user_id = (int)($user['id'] ?? 0);
 function ci_fetch($conn, $sql) {
     if (!$conn) return [];
     try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
-    catch (Exception $e) { return []; }
+    catch (Exception $e) { error_log('chemical-inventory getChemicals: ' . $e->getMessage()); return []; }
 }
 
 $active_section = $_GET['section'] ?? 'dashboard';
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 function ci_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
-    catch (Exception $e) { return 0; }
+    catch (Exception $e) { error_log('chemical-inventory count: ' . $e->getMessage()); return 0; }
 }
 
 $total_chemicals = ci_q($staff_conn, "SELECT COUNT(*) FROM chemical_inventory");

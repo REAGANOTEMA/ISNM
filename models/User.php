@@ -39,6 +39,7 @@ class User {
             return ['success' => false, 'error' => 'Invalid username or password'];
             
         } catch (Exception $e) {
+            error_log('User authenticate: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Authentication failed: ' . $e->getMessage()];
         }
     }
@@ -70,8 +71,10 @@ class User {
             
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                error_log('User create: ' . $e->getMessage());
                 return ['success' => false, 'error' => 'Username already exists'];
             }
+            error_log('User create: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to create user: ' . $e->getMessage()];
         }
     }
@@ -97,6 +100,7 @@ class User {
             return ['success' => true, 'user' => $user];
             
         } catch (Exception $e) {
+            error_log('User getById: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -133,6 +137,7 @@ class User {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('User update: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to update user: ' . $e->getMessage()];
         }
     }
@@ -166,6 +171,7 @@ class User {
             return ['success' => true, 'users' => $users];
             
         } catch (Exception $e) {
+            error_log('User getAll: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to fetch users: ' . $e->getMessage()];
         }
     }
@@ -183,6 +189,7 @@ class User {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('User deactivate: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to deactivate user: ' . $e->getMessage()];
         }
     }
@@ -201,6 +208,7 @@ class User {
             return ['success' => true, 'roles' => $roles];
             
         } catch (Exception $e) {
+            error_log('User getRoles: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

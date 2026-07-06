@@ -70,6 +70,32 @@ if (!function_exists('bootstrapStaffDashboard')) {
             exit();
         }
 
+        // Force password change for first-login accounts
+        if (!empty($_SESSION['user_id'])) {
+            static $firstLoginChecked = false;
+            if (!$firstLoginChecked) {
+                $firstLoginChecked = true;
+                try {
+                    $flConn = getStaffConnection();
+                    if ($flConn) {
+                        $flStmt = $flConn->prepare("SELECT is_first_login FROM staff WHERE id = ? LIMIT 1");
+                        if ($flStmt) {
+                            $flStmt->bind_param('i', $_SESSION['user_id']);
+                            $flStmt->execute();
+                            $flRow = $flStmt->get_result()->fetch_assoc();
+                            $flStmt->close();
+                            if ($flRow && !empty($flRow['is_first_login'])) {
+                                $flConn->close();
+                                header('Location: ' . ($dirDepth > 1 ? str_repeat('../', $dirDepth - 1) : '') . 'staff-force-password-change.php');
+                                exit();
+                            }
+                        }
+                        $flConn->close();
+                    }
+                } catch (Exception $e) { error_log('staff_dashboard_access first_login: ' . $e->getMessage()); }
+            }
+        }
+
         // ── Ensure CSRF token exists before validating ──
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

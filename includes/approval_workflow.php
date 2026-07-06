@@ -89,7 +89,7 @@ function getUserHierarchyLevel($staffId, $conn) {
         $r = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         return $r ? (int)$r['hierarchy_level'] : 99;
-    } catch (Exception $e) { return 99; }
+    } catch (Exception $e) { error_log('approval_workflow: ' . $e->getMessage()); return 99; }
 }
 }
 

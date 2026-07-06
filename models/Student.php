@@ -46,8 +46,10 @@ class Student {
             
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                error_log('Student create: ' . $e->getMessage());
                 return ['success' => false, 'error' => 'Registration number already exists'];
             }
+            error_log('Student create: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to create student: ' . $e->getMessage()];
         }
     }
@@ -66,6 +68,7 @@ class Student {
             return ['success' => true, 'student' => $student];
             
         } catch (Exception $e) {
+            error_log('Student getById: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -74,6 +77,24 @@ class Student {
      * Get student by registration number
      */
     public function getByRegistrationNumber($regNumber) {
+        try {
+            $query = "SELECT * FROM students WHERE registration_number = ? AND status != 'deleted'";
+            $stmt = executePrepared($this->conn, $query, 's', [$regNumber]);
+            $result = $stmt->get_result();
+            $student = $result->fetch_assoc();
+            $stmt->close();
+            
+            return ['success' => true, 'student' => $student];
+            
+        } catch (Exception $e) {
+            error_log('Student getByRegistrationNumber: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Update student record
+     */
         try {
             $query = "SELECT * FROM students WHERE registration_number = ? AND status != 'deleted'";
             $stmt = executePrepared($this->conn, $query, 's', [$regNumber]);
@@ -127,6 +148,7 @@ class Student {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('Student update: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to update student: ' . $e->getMessage()];
         }
     }
@@ -144,6 +166,7 @@ class Student {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('Student softDelete: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to delete student: ' . $e->getMessage()];
         }
     }
@@ -220,6 +243,7 @@ class Student {
             ];
             
         } catch (Exception $e) {
+            error_log('Student getAll: ' . $e->getMessage());
             return ['success' => false, 'error' => 'Failed to fetch students: ' . $e->getMessage()];
         }
     }
@@ -238,6 +262,7 @@ class Student {
             return ['success' => true, 'courses' => array_column($courses, 'course')];
             
         } catch (Exception $e) {
+            error_log('Student getCourses: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -256,6 +281,7 @@ class Student {
             return ['success' => true, 'years' => array_column($years, 'year')];
             
         } catch (Exception $e) {
+            error_log('Student getYears: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -274,6 +300,7 @@ class Student {
             return ['success' => true, 'sets' => array_column($sets, 'set_name')];
             
         } catch (Exception $e) {
+            error_log('Student getSets: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -300,6 +327,7 @@ class Student {
             return ['success' => true, 'statistics' => $stats];
             
         } catch (Exception $e) {
+            error_log('Student getStatistics: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

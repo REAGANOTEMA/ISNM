@@ -35,6 +35,7 @@ class StudentDocuments {
             return ['success' => true, 'documents' => $documents];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments getStudentDocuments: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -67,6 +68,7 @@ class StudentDocuments {
             return ['success' => true, 'document_id' => $documentId];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments uploadDocument: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -84,6 +86,7 @@ class StudentDocuments {
             return ['success' => $affectedRows > 0, 'affected_rows' => $affectedRows];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments updateDocumentStatus: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -121,6 +124,7 @@ class StudentDocuments {
             return ['success' => false, 'error' => 'Failed to delete document'];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments deleteDocument: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -139,6 +143,7 @@ class StudentDocuments {
             return ['success' => true, 'types' => array_column($types, 'document_type')];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments getDocumentTypes: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -222,6 +227,7 @@ class StudentDocuments {
             ];
             
         } catch (Exception $e) {
+            error_log('StudentDocuments getAllStudentsDocuments: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

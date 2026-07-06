@@ -25,17 +25,17 @@ $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_d
 function ict_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
-    catch (Exception $e) { return 0; }
+    catch (Exception $e) { error_log('director-ict getCount: ' . $e->getMessage()); return 0; }
 }
 function ict_fetch($conn, $sql) {
     if (!$conn) return [];
     try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
-    catch (Exception $e) { return []; }
+    catch (Exception $e) { error_log('director-ict getList: ' . $e->getMessage()); return []; }
 }
 function ict_fetch_one($conn, $sql) {
     if (!$conn) return null;
     try { $r = $conn->query($sql); if (!$r) return null; return $r->fetch_assoc(); }
-    catch (Exception $e) { return null; }
+    catch (Exception $e) { error_log('director-ict getDetail: ' . $e->getMessage()); return null; }
 }
 
 // ── STATS ──

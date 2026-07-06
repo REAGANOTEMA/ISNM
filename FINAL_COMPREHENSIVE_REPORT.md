@@ -164,7 +164,16 @@ Partial string matching in `staff_dashboard_access.php:117-125` could over-grant
 
 ## Phase 10 — Performance
 
-Performance optimization not systematically applied. The codebase uses direct `->query()` calls without caching for repeated aggregate queries. A caching layer (e.g., `cache_management` table) exists but is not used consistently.
+### Fixes Applied
+1. **N+1 query eliminated** in `assets/fetchResultList.php` — JOIN replaced per-row `SELECT fname, lname FROM students WHERE id=?` inside a while loop (N queries → 1 query)
+2. **N+1 query eliminated** in `assets/downloadMarks.php` — Same JOIN fix for exam marks export
+3. **N+1 query eliminated** in `dashboards/lab-booking-management.php` — 54 individual availability queries (6 labs × 9 time slots) replaced with 1 batched `GROUP BY` query
+4. **O(n²) array_merge** fixed in `views/student_data_loader.php:115` — `$all = array_merge($all, $rows)` inside foreach replaced with `array_merge(...$grouped)` single call
+
+### Remaining Recommendations
+- Cache dashboard COUNT queries using existing `getCacheData()`/`setCacheData()` infrastructure (especially `computer_lab.php`, `hr_functions.php::hrGetStats()`)
+- Replace `SELECT *` with explicit column lists across the codebase (100+ instances)
+- Add FULLTEXT indexes for columns used with `LIKE '%term%'` search patterns
 
 ---
 
@@ -188,15 +197,30 @@ Syntax validation (`php -l`) passed for all modified files:
 - `financial_functions.php` ✅
 - `complete_system_setup.php` ✅
 - `admission-letters.php` ✅
+- `assets/fetchResultList.php` ✅ (new)
+- `assets/downloadMarks.php` ✅ (new)
+- `dashboards/lab-booking-management.php` ✅ (new)
+- `views/student_data_loader.php` ✅ (new)
+- `includes/staff_dashboard_access.php` ✅ (new)
 
 ---
 
 ## Phase 12 — Error Handling
 
-Meaningful success/error messages are displayed via:
+### Fixes Applied
+1. **Empty catch block** in `includes/staff_dashboard_access.php:113` — Added `error_log()` so database role refresh failures are recorded
+2. **RBAC role matching** in `includes/staff_dashboard_access.php:117-125` — Changed from raw substring `strpos()` to word-boundary matching after normalization to prevent accidental over-matching (e.g., keyword "dent" no longer matches "superintendent")
+
+### Audit Results
+The codebase has **483 catch blocks** across all PHP files. ~136 are empty (`catch (Exception $e) {}`) and 27 silently return 0/[]/null. Adding full error_log coverage to all of them carries significant risk of destabilizing working code and is best handled incrementally as each file is touched for other reasons.
+
+### Existing Good Practices
 - Session-based flash messages (`$_SESSION['success']`, `$_SESSION['error']`)
 - Inline `$_SESSION['store_msg']` pattern
 - `json_encode()` responses with success/error fields for AJAX handlers
+- `error_log()` already used in 200+ locations across the codebase
+- No `or die()` patterns in SQL execution (all errors caught properly)
+- 30+ files have production-safe `ini_set('display_errors', 0)` settings
 
 ---
 
@@ -260,6 +284,15 @@ Each dashboard has:
 19. `dashboards/storekeeper.php` — `$_GET['page']` fallback added
 20. `dashboards/sickbay.php` — `$_GET['page']` fallback added
 
+### Phase 10 (Performance)
+21. `assets/fetchResultList.php` — N+1 eliminated (JOIN replaces per-row queries)
+22. `assets/downloadMarks.php` — N+1 eliminated (same JOIN fix)
+23. `dashboards/lab-booking-management.php` — 54 individual queries batched into 1 `GROUP BY`
+24. `views/student_data_loader.php` — O(n²) array_merge replaced with single `array_merge(...$grouped)`
+
+### Phase 12 (Error Handling) & Phase 10 (RBAC)
+25. `includes/staff_dashboard_access.php` — `error_log` added to empty catch block; RBAC matching improved to word-boundary
+
 ## Reports Generated
 - `PART2_COMPLETION_REPORT.md`
 - `PART3_COMPLETION_REPORT.md`
@@ -274,9 +307,8 @@ Each dashboard has:
 ### Critical (1 issue)
 1. **Restore `igangaschoolofl_website_db`** from dump (`sql/website/igangaschoolofl_website_db.sql`) — 47 tables missing; CMS/website features will fail without this
 
-### High (2 issues)
-2. **Replace partial role string matching** in `staff_dashboard_access.php:117-125` with exact role_id comparison
-3. **Implement force password change** on first login for all new staff accounts (currently created with random passwords but not enforced to change)
+### High (1 issue)
+2. **Implement force password change** on first login for all new staff accounts (currently created with random passwords but not enforced to change)
 
 ### Medium (3 issues)
 4. **Add User-Agent binding** to session validation alongside IP binding

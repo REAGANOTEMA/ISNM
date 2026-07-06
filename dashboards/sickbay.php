@@ -13,13 +13,13 @@ $user_id = (int)($user['id'] ?? 0);
 function sb_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
-    catch (Exception $e) { return 0; }
+    catch (Exception $e) { error_log('sickbay getCount: ' . $e->getMessage()); return 0; }
 }
 
 function sb_fetch($conn, $sql) {
     if (!$conn) return [];
     try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
-    catch (Exception $e) { return []; }
+    catch (Exception $e) { error_log('sickbay getList: ' . $e->getMessage()); return []; }
 }
 
 $active_section = $_GET['section'] ?? $_GET['page'] ?? 'dashboard';
