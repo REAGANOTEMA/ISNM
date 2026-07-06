@@ -434,6 +434,7 @@ switch ($action) {
                 }
 
                 // Allow only known safe internal routes
+                session_write_close();
                 if ($normalized && in_array($normalized, $allowed, true)) {
                     header('Location: ' . $normalized);
                 } else {
@@ -443,6 +444,7 @@ switch ($action) {
             }
 
             $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
+            session_write_close();
             header('Location: ' . $dashboard);
             exit();
         } else {

@@ -413,7 +413,7 @@ function showStudentProfile(s) {
     html += '<tr><td>Course Codes</td><td>' + esc(s.course_codes) + '</td></tr>';
     html += '</tbody></table></div>';
     html += '<div class="tab-pane" id="tab-finance">';
-    html += '<p class="text-muted small">Financial records for this student. <a href="../school-bursar.php?student=' + urlenc(s.index_number || s.student_number) + '" target="_blank">View full fee statement &rarr;</a></p>';
+    html += '<p class="text-muted small">Financial records for this student. <a href="school-bursar.php?student=' + urlenc(s.index_number || s.student_number) + '" target="_blank">View full fee statement &rarr;</a></p>';
     html += '</div></div></div></div>';
     html += '<div class="mt-3 pt-3 border-top d-flex gap-2">';
     if (userPerms.canManageStudents) {

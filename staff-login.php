@@ -43,44 +43,8 @@ if ($requested_position) {
     $_SESSION['requested_position']  = $requested_position;
 }
 if ($auth_service->isAuthenticated()) {
-    if (($_SESSION['type'] ?? '') === 'staff') {
-        $sessionRole = $_SESSION['role'] ?? '';
-        $requestedPositionFromSession = $_SESSION['requested_position'] ?? '';
-        if (!empty($requestedPositionFromSession)
-            && !$auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
-        ) {
-            $auth_service->logout();
-        } else {
-            if (!empty($_SESSION['login_redirect_url'])) {
-                $target = $_SESSION['login_redirect_url'];
-                unset($_SESSION['login_redirect_url'], $_SESSION['requested_position']);
-                $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-                $targetPath = parse_url($target, PHP_URL_PATH);
-                if ($targetPath && $targetPath !== $currentPath) {
-                    session_write_close();
-                    header("Location: $target");
-                    exit();
-                }
-            }
-            $dashboard = $auth_service->getDashboardRoute($sessionRole);
-            if (!empty($requestedPositionFromSession)) {
-                $resolvedPosition = $auth_service->resolveOrganogramPosition($requestedPositionFromSession);
-                $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolvedPosition);
-                if ($requestedDashboard) {
-                    $dashboard = $requestedDashboard;
-                }
-                unset($_SESSION['requested_position']);
-            }
-            session_write_close();
-            header("Location: $dashboard");
-            exit();
-        }
-    }
-    if (($_SESSION['type'] ?? '') === 'student') {
-        session_write_close();
-        header('Location: dashboards/student.php');
-        exit();
-    }
+    // Use the dashboard path already stored in the session by createSecureSession()
+    $dashboard = $_SESSION['dashboard_path'] ?? 'dashboards/director-general.php';
 }
 $login_error   = $_SESSION['error']   ?? '';
 $login_success = $_SESSION['success'] ?? '';
@@ -700,6 +664,15 @@ body{
       <?php if ($login_success): ?>
         <div class="alert alert-success"><i class="fas fa-check-circle"></i><?=htmlspecialchars($login_success)?></div>
       <?php endif; ?>
+      <?php if ($auth_service->isAuthenticated()): ?>
+        <div style="text-align:center;padding:24px 0">
+          <p style="color:#6b7280;margin:0 0 12px">You are already logged in.</p>
+          <a href="<?= htmlspecialchars($dashboard ?: 'dashboards/director-general.php') ?>"
+             style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">
+            <i class="fas fa-tachometer-alt"></i> Continue to Dashboard
+          </a>
+        </div>
+      <?php else: ?>
       <form method="POST" action="auth-handler.php">
         <input type="hidden" name="action" value="staff_login">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
@@ -741,6 +714,7 @@ body{
           <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Sign In</span>
         </button>
       </form>
+      <?php endif; ?>
       <div class="divider"></div>
       <div class="quick-access">
         <a href="organogram.php" title="Organogram"><i class="fas fa-sitemap"></i></a>

@@ -14,11 +14,11 @@
  * - setSystemSetting($conn, $key, $value) : bool
  */
 
-// Auth guard — redirect to staff-login.php if not authenticated (no redirect param — prevents redirect loops)
+// Auth guard — show login page if not authenticated (no HTTP redirects — prevents redirect loops)
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'staff') {
     session_write_close();
-    header('Location: ../staff-login.php');
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Session Expired</title><style>body{font-family:sans-serif;background:#f8f9fa;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.card{background:#fff;border-radius:12px;padding:32px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.1)}a{color:#2563eb;font-weight:600}button{background:#2563eb;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:15px;cursor:pointer;margin-top:12px}button:hover{background:#1d4ed8}</style></head><body><div class="card"><h2>Session Expired</h2><p style="color:#6b7280;margin:8px 0 16px">Your session has expired or you are not logged in.</p><button onclick="window.location.href=\'../staff-login.php\'">Go to Login</button></div></body></html>';
     exit();
 }
 
