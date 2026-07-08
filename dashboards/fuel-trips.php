@@ -6,17 +6,15 @@ $user = $ctx['user'];
 
 $pageTitle = 'Fuel & Trip Management';
 
-$fuel = [];
-$r = $conn->query("SELECT f.*, v.vehicle_name FROM fuel_management f LEFT JOIN vehicles v ON f.vehicle_id=v.id ORDER BY f.fueling_date DESC LIMIT 100");
-if ($r) while ($row = $r->fetch_assoc()) $fuel[] = $row;
-
-$trips = [];
-$r2 = $conn->query("SELECT t.*, v.vehicle_name, s.full_name AS driver_name FROM trip_logs t LEFT JOIN vehicles v ON t.vehicle_id=v.id LEFT JOIN staff s ON t.driver_id=s.id ORDER BY t.trip_date DESC LIMIT 100");
-if ($r2) while ($row = $r2->fetch_assoc()) $trips[] = $row;
-
-$vehicles = [];
-$r3 = $conn->query("SELECT * FROM vehicles ORDER BY vehicle_name");
-if ($r3) while ($row = $r3->fetch_assoc()) $vehicles[] = $row;
+$fuel = []; $trips = []; $vehicles = [];
+if ($conn) {
+    $r = $conn->query("SELECT f.*, v.vehicle_name FROM fuel_management f LEFT JOIN vehicles v ON f.vehicle_id=v.id ORDER BY f.fueling_date DESC LIMIT 100");
+    if ($r) while ($row = $r->fetch_assoc()) $fuel[] = $row;
+    $r2 = $conn->query("SELECT t.*, v.vehicle_name, s.full_name AS driver_name FROM trip_logs t LEFT JOIN vehicles v ON t.vehicle_id=v.id LEFT JOIN staff s ON t.driver_id=s.id ORDER BY t.trip_date DESC LIMIT 100");
+    if ($r2) while ($row = $r2->fetch_assoc()) $trips[] = $row;
+    $r3 = $conn->query("SELECT * FROM vehicles ORDER BY vehicle_name");
+    if ($r3) while ($row = $r3->fetch_assoc()) $vehicles[] = $row;
+}
 
 $totalFuel = count($fuel);
 $totalTrips = count($trips);

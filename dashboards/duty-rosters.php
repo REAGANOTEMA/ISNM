@@ -7,12 +7,13 @@ $user = $ctx['user'];
 $pageTitle = 'Duty Rosters & Scheduling';
 
 $rosters = [];
-$r = $conn->query("SELECT * FROM duty_rosters ORDER BY roster_date DESC LIMIT 100");
-if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
-
-if (empty($rosters)) {
-    $r = $conn->query("SELECT * FROM duty_roster ORDER BY date DESC LIMIT 100");
+if ($conn) {
+    $r = $conn->query("SELECT * FROM duty_rosters ORDER BY roster_date DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
+    if (empty($rosters)) {
+        $r = $conn->query("SELECT * FROM duty_roster ORDER BY date DESC LIMIT 100");
+        if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
+    }
 }
 ?>
 <!DOCTYPE html>

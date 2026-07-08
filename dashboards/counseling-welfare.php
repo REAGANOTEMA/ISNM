@@ -4,13 +4,13 @@ $ctx = bootstrapStaffDashboard(['director', 'principal', 'deputy', 'matron', 'wa
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
-$sessions = [];
-$r = $conn->query("SELECT * FROM counseling_sessions ORDER BY session_date DESC LIMIT 100");
-if ($r) while ($row = $r->fetch_assoc()) $sessions[] = $row;
-
-$welfare = [];
-$r2 = $conn->query("SELECT * FROM student_welfare_cases ORDER BY created_at DESC LIMIT 100");
-if ($r2) while ($row = $r2->fetch_assoc()) $welfare[] = $row;
+$sessions = []; $welfare = [];
+if ($conn) {
+    $r = $conn->query("SELECT * FROM counseling_sessions ORDER BY session_date DESC LIMIT 100");
+    if ($r) while ($row = $r->fetch_assoc()) $sessions[] = $row;
+    $r2 = $conn->query("SELECT * FROM student_welfare_cases ORDER BY created_at DESC LIMIT 100");
+    if ($r2) while ($row = $r2->fetch_assoc()) $welfare[] = $row;
+}
 
 $pageTitle = 'Counseling & Student Welfare';
 ?>

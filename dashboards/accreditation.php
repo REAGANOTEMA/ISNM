@@ -5,7 +5,7 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
     if ($_POST['action'] === 'add_requirement') {
         $name = $_POST['name'];
         $desc = $_POST['description'] ?? '';
@@ -23,13 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-$requirements = [];
-$r = $conn->query("SELECT * FROM compliance_requirements ORDER BY created_at DESC LIMIT 50");
-if ($r) while ($row = $r->fetch_assoc()) $requirements[] = $row;
-
-$compliance = [];
-$r2 = $conn->query("SELECT * FROM compliance_tracking ORDER BY created_at DESC LIMIT 50");
-if ($r2) while ($row = $r2->fetch_assoc()) $compliance[] = $row;
+$requirements = []; $compliance = [];
+if ($conn) {
+    $r = $conn->query("SELECT * FROM compliance_requirements ORDER BY created_at DESC LIMIT 50");
+    if ($r) while ($row = $r->fetch_assoc()) $requirements[] = $row;
+    $r2 = $conn->query("SELECT * FROM compliance_tracking ORDER BY created_at DESC LIMIT 50");
+    if ($r2) while ($row = $r2->fetch_assoc()) $compliance[] = $row;
+}
 
 $pageTitle = 'Accreditation & Compliance';
 ?>

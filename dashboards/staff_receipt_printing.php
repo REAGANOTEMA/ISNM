@@ -27,7 +27,7 @@ if (!$can_generate_receipts) {
 }
 
 // Handle receipt generation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt']) && $conn) {
     $receipt_type = $_POST['receipt_type'] ?? 'Fee Payment';
     $student_id = $_POST['student_id'] ?? 0;
     $amount = $_POST['amount'] ?? 0;
@@ -84,20 +84,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) 
 }
 
 // Get receipt templates
-$templates_sql = "SELECT * FROM receipt_templates WHERE is_active = TRUE ORDER BY template_name";
-$templates_result = $conn->query($templates_sql);
-$templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : [];
+$templates = []; $receipts = [];
+if ($conn) {
+    $templates_sql = "SELECT * FROM receipt_templates WHERE is_active = TRUE ORDER BY template_name";
+    $templates_result = $conn->query($templates_sql);
+    $templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : [];
 
-// Get recent receipts
-$receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
-                 FROM generated_documents gd 
-                 JOIN staff s ON gd.generated_by = s.id 
-                 LEFT JOIN igangaschoolofl_students_db.students st ON gd.student_id = st.id 
-                 WHERE gd.document_type = 'Receipt' 
-                 ORDER BY gd.generation_date DESC 
-                 LIMIT 10";
-$receipts_result = $conn->query($receipts_sql);
-$receipts = ($receipts_result) ? $receipts_result->fetch_all(MYSQLI_ASSOC) : [];
+    // Get recent receipts
+    $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
+                     FROM generated_documents gd 
+                     JOIN staff s ON gd.generated_by = s.id 
+                     LEFT JOIN igangaschoolofl_students_db.students st ON gd.student_id = st.id 
+                     WHERE gd.document_type = 'Receipt' 
+                     ORDER BY gd.generation_date DESC 
+                     LIMIT 10";
+    $receipts_result = $conn->query($receipts_sql);
+    $receipts = ($receipts_result) ? $receipts_result->fetch_all(MYSQLI_ASSOC) : [];
+}
 ?>
 
 <!DOCTYPE html>

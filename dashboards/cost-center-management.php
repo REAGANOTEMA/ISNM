@@ -4,52 +4,53 @@ $ctx = bootstrapStaffDashboard(['bursar', 'finance', 'director', 'registrar', 's
 $conn = $ctx['students'];
 $user = $ctx['user'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'add' || $action === 'edit') {
-        $code = $_POST['cost_center_code'];
-        $name = $_POST['cost_center_name'];
-        $dept = $_POST['department'] ?? '';
-        $desc = $_POST['description'] ?? '';
-        if ($action === 'add') {
-            $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $code, $name, $dept, $desc);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success'] = "Cost center '$name' added.";
-        } else {
-            $id = (int)($_POST['id'] ?? 0);
-            $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
-            $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success'] = "Cost center '$name' updated.";
-        }
-        header('Location: cost-center-management.php'); exit;
-    }
-    if ($action === 'toggle') {
-        $id = (int)($_POST['id'] ?? 0);
-        $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success'] = 'Cost center status toggled.';
-        header('Location: cost-center-management.php'); exit;
-    }
-    if ($action === 'delete') {
-        $id = (int)($_POST['id'] ?? 0);
-        $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success'] = 'Cost center deleted.';
-        header('Location: cost-center-management.php'); exit;
-    }
-}
-
 $records = [];
-$r = $conn->query("SELECT * FROM cost_centers ORDER BY cost_center_code ASC");
-if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+if ($conn) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = $_POST['action'] ?? '';
+        if ($action === 'add' || $action === 'edit') {
+            $code = $_POST['cost_center_code'];
+            $name = $_POST['cost_center_name'];
+            $dept = $_POST['department'] ?? '';
+            $desc = $_POST['description'] ?? '';
+            if ($action === 'add') {
+                $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $code, $name, $dept, $desc);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = "Cost center '$name' added.";
+            } else {
+                $id = (int)($_POST['id'] ?? 0);
+                $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
+                $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = "Cost center '$name' updated.";
+            }
+            header('Location: cost-center-management.php'); exit;
+        }
+        if ($action === 'toggle') {
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Cost center status toggled.';
+            header('Location: cost-center-management.php'); exit;
+        }
+        if ($action === 'delete') {
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Cost center deleted.';
+            header('Location: cost-center-management.php'); exit;
+        }
+    }
+    $r = $conn->query("SELECT * FROM cost_centers ORDER BY cost_center_code ASC");
+    if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+}
 
 $total = count($records);
 $active = count(array_filter($records, fn($c) => $c['is_active']));

@@ -13,40 +13,40 @@ if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grade_scales` (id INT AUTO_INCREMENT PRIMARY KEY, grade_letter VARCHAR(5) NOT NULL, grade_point DECIMAL(4,2) DEFAULT 0.00, min_percentage DECIMAL(5,2) DEFAULT 0.00, max_percentage DECIMAL(5,2) DEFAULT 100.00, remark VARCHAR(200) DEFAULT '', created_by INT DEFAULT 0, status VARCHAR(50) DEFAULT 'Active', UNIQUE KEY uq_grade (grade_letter)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'add_scale' && ($_POST['grade'] ?? '')) {
-        $grade = trim($_POST['grade']);
-        $minScore = (float)($_POST['min_score'] ?? 0);
-        $maxScore = (float)($_POST['max_score'] ?? 100);
-        $gp = (float)($_POST['grade_point'] ?? 0);
-        $remark = trim($_POST['remark'] ?? '');
-        $stmt = $conn->prepare("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
-        if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $userId); $stmt->execute(); $stmt->close(); }
-        $_SESSION['success'] = "Grade scale '$grade' added.";
-        header('Location: grade-scales.php'); exit;
-    }
-    if ($action === 'delete_scale') {
-        $id = (int)($_POST['id'] ?? 0);
-        $stmt = $conn->prepare("DELETE FROM grade_scales WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
-        $_SESSION['success'] = 'Grade scale deleted.';
-        header('Location: grade-scales.php'); exit;
-    }
-}
-
-$search = trim($_GET['search'] ?? '');
 $scales = [];
-if ($search !== '') {
-    $like = "%$search%";
-    $stmt = $conn->prepare("SELECT * FROM grade_scales WHERE grade_letter LIKE ? OR remark LIKE ? ORDER BY min_percentage DESC");
-    if ($stmt) { $stmt->bind_param('ss', $like, $like); $r = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
-    else $r = null;
-} else {
-    $r = $conn->query("SELECT * FROM grade_scales WHERE 1=1 ORDER BY min_percentage DESC");
+if ($conn) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = $_POST['action'] ?? '';
+        if ($action === 'add_scale' && ($_POST['grade'] ?? '')) {
+            $grade = trim($_POST['grade']);
+            $minScore = (float)($_POST['min_score'] ?? 0);
+            $maxScore = (float)($_POST['max_score'] ?? 100);
+            $gp = (float)($_POST['grade_point'] ?? 0);
+            $remark = trim($_POST['remark'] ?? '');
+            $stmt = $conn->prepare("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
+            if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $userId); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = "Grade scale '$grade' added.";
+            header('Location: grade-scales.php'); exit;
+        }
+        if ($action === 'delete_scale') {
+            $id = (int)($_POST['id'] ?? 0);
+            $stmt = $conn->prepare("DELETE FROM grade_scales WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Grade scale deleted.';
+            header('Location: grade-scales.php'); exit;
+        }
+    }
+    $search = trim($_GET['search'] ?? '');
+    if ($search !== '') {
+        $like = "%$search%";
+        $stmt = $conn->prepare("SELECT * FROM grade_scales WHERE grade_letter LIKE ? OR remark LIKE ? ORDER BY min_percentage DESC");
+        if ($stmt) { $stmt->bind_param('ss', $like, $like); $r = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
+        else $r = null;
+    } else {
+        $r = $conn->query("SELECT * FROM grade_scales WHERE 1=1 ORDER BY min_percentage DESC");
+    }
+    if ($r) while ($row = $r->fetch_assoc()) $scales[] = $row;
 }
-if ($r) while ($row = $r->fetch_assoc()) $scales[] = $row;
-
 $pageTitle = 'Grade Scales & Grading System';
 ?>
 <!DOCTYPE html>

@@ -9,29 +9,21 @@ $user = $ctx['user'];
 $pageTitle = 'System Administration';
 $view = $_GET['view'] ?? '';
 
-$backups = [];
-$r = $conn->query("SELECT * FROM backup_management ORDER BY created_at DESC LIMIT 50");
-if ($r) while ($row = $r->fetch_assoc()) $backups[] = $row;
-
-$logs = [];
-$r2 = $conn->query("SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 50");
-if ($r2) while ($row = $r2->fetch_assoc()) $logs[] = $row;
-
-$sync = [];
-$r3 = $conn->query("SELECT * FROM data_sync_status ORDER BY last_sync DESC LIMIT 20");
-if ($r3) while ($row = $r3->fetch_assoc()) $sync[] = $row;
-
-$settings = [];
-$r4 = $conn->query("SELECT * FROM system_settings ORDER BY setting_name LIMIT 50");
-if ($r4) while ($row = $r4->fetch_assoc()) $settings[] = $row;
-
-$errorLogs = [];
-$r5 = $conn->query("SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 50");
-if ($r5) while ($row = $r5->fetch_assoc()) $errorLogs[] = $row;
-
-$cacheCount = 0;
-$r6 = $conn->query("SELECT COUNT(*) c FROM cache_management");
-if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
+$backups = []; $logs = []; $sync = []; $settings = []; $errorLogs = []; $cacheCount = 0;
+if ($conn) {
+    $r = $conn->query("SELECT * FROM backup_management ORDER BY created_at DESC LIMIT 50");
+    if ($r) while ($row = $r->fetch_assoc()) $backups[] = $row;
+    $r2 = $conn->query("SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 50");
+    if ($r2) while ($row = $r2->fetch_assoc()) $logs[] = $row;
+    $r3 = $conn->query("SELECT * FROM data_sync_status ORDER BY last_sync DESC LIMIT 20");
+    if ($r3) while ($row = $r3->fetch_assoc()) $sync[] = $row;
+    $r4 = $conn->query("SELECT * FROM system_settings ORDER BY setting_name LIMIT 50");
+    if ($r4) while ($row = $r4->fetch_assoc()) $settings[] = $row;
+    $r5 = $conn->query("SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 50");
+    if ($r5) while ($row = $r5->fetch_assoc()) $errorLogs[] = $row;
+    $r6 = $conn->query("SELECT COUNT(*) c FROM cache_management");
+    if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
+}
 
 // Global search AJAX handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {

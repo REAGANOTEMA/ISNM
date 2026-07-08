@@ -6,14 +6,13 @@ $user = $ctx['user'];
 
 $pageTitle = 'Visitor & Access Control';
 
-$visitors = [];
-$r = $conn->query("SELECT * FROM visitor_logs ORDER BY check_in_time DESC LIMIT 100");
-if ($r) while ($row = $r->fetch_assoc()) $visitors[] = $row;
-
-$accessLogs = [];
-$r2 = $conn->query("SELECT * FROM access_control_logs ORDER BY access_time DESC LIMIT 100");
-if ($r2) while ($row = $r2->fetch_assoc()) $accessLogs[] = $row;
-
+$visitors = []; $accessLogs = [];
+if ($conn) {
+    $r = $conn->query("SELECT * FROM visitor_logs ORDER BY check_in_time DESC LIMIT 100");
+    if ($r) while ($row = $r->fetch_assoc()) $visitors[] = $row;
+    $r2 = $conn->query("SELECT * FROM access_control_logs ORDER BY access_time DESC LIMIT 100");
+    if ($r2) while ($row = $r2->fetch_assoc()) $accessLogs[] = $row;
+}
 $loggedIn = count(array_filter($visitors, fn($v) => !($v['check_out_time'] ?? '')));
 $today = count(array_filter($visitors, fn($v) => substr($v['check_in_time'] ?? '', 0, 10) === date('Y-m-d')));
 ?>

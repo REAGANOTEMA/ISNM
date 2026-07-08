@@ -10,7 +10,7 @@ $userId = (int)($user['id'] ?? 0);
 $userName = $user['full_name'] ?? 'Store Keeper';
 
 // ── POST Handlers ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffConn) {
     $action = $_POST['action'];
 
     if (in_array($action, ['add_stock', 'remove_stock', 'adjust_stock'])) {
@@ -191,33 +191,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // ── Load Data ──
 $msg = $_SESSION['store_msg'] ?? null; unset($_SESSION['store_msg']);
 
-$categories = [];
-$r = $staffConn->query("SELECT id, category_name, description, status FROM store_categories ORDER BY category_name");
-if ($r) while ($row = $r->fetch_assoc()) $categories[] = $row;
-
-$inventory = [];
-$r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
-if ($r) while ($row = $r->fetch_assoc()) $inventory[] = $row;
-
-$lowStock = [];
-$r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.quantity <= si.reorder_level ORDER BY (si.quantity / NULLIF(si.reorder_level,0)) ASC LIMIT 20");
-if ($r) while ($row = $r->fetch_assoc()) $lowStock[] = $row;
-
-$expiringItems = [];
-$r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.expiry_date IS NOT NULL AND si.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 90 DAY) ORDER BY si.expiry_date ASC LIMIT 20");
-if ($r) while ($row = $r->fetch_assoc()) $expiringItems[] = $row;
-
-$pendingReqs = [];
-$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','pending_approval') ORDER BY FIELD(sr.status,'pending','pending_approval'), FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
-if ($r) while ($row = $r->fetch_assoc()) $pendingReqs[] = $row;
-
-$fulfilledReqs = [];
-$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('fulfilled','rejected') ORDER BY sr.updated_at DESC LIMIT 10");
-if ($r) while ($row = $r->fetch_assoc()) $fulfilledReqs[] = $row;
-
-$transactions = [];
-$r = $staffConn->query("SELECT sit.*, si.item_name FROM store_inventory_transactions sit JOIN store_inventory si ON sit.item_id=si.id ORDER BY sit.created_at DESC LIMIT 50");
-if ($r) while ($row = $r->fetch_assoc()) $transactions[] = $row;
+$categories = []; $inventory = []; $lowStock = []; $expiringItems = []; $pendingReqs = []; $fulfilledReqs = []; $transactions = [];
+if ($staffConn) {
+    $r = $staffConn->query("SELECT id, category_name, description, status FROM store_categories ORDER BY category_name");
+    if ($r) while ($row = $r->fetch_assoc()) $categories[] = $row;
+    $r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
+    if ($r) while ($row = $r->fetch_assoc()) $inventory[] = $row;
+    $r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.quantity <= si.reorder_level ORDER BY (si.quantity / NULLIF(si.reorder_level,0)) ASC LIMIT 20");
+    if ($r) while ($row = $r->fetch_assoc()) $lowStock[] = $row;
+    $r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.expiry_date IS NOT NULL AND si.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 90 DAY) ORDER BY si.expiry_date ASC LIMIT 20");
+    if ($r) while ($row = $r->fetch_assoc()) $expiringItems[] = $row;
+    $r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','pending_approval') ORDER BY FIELD(sr.status,'pending','pending_approval'), FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
+    if ($r) while ($row = $r->fetch_assoc()) $pendingReqs[] = $row;
+    $r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('fulfilled','rejected') ORDER BY sr.updated_at DESC LIMIT 10");
+    if ($r) while ($row = $r->fetch_assoc()) $fulfilledReqs[] = $row;
+    $r = $staffConn->query("SELECT sit.*, si.item_name FROM store_inventory_transactions sit JOIN store_inventory si ON sit.item_id=si.id ORDER BY sit.created_at DESC LIMIT 50");
+    if ($r) while ($row = $r->fetch_assoc()) $transactions[] = $row;
+}
 
 $tab = $_GET['tab'] ?? $_GET['page'] ?? 'dashboard';
 ?>

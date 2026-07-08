@@ -113,25 +113,27 @@ $assigned_courses = 0;
 $lectures_this_week = 0;
 $pending_grades = 0;
 
-try {
-    if ($studentsConn) {
-        $result = $studentsConn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
-        $app_result = $studentsConn->query("SELECT COUNT(*) as cnt FROM applications");
-        if ($app_result) $total_applications = (int)$app_result->fetch_assoc()['cnt'];
+if ($conn) {
+    try {
+        if ($studentsConn) {
+            $result = $studentsConn->query("SELECT COUNT(*) as cnt FROM students");
+            if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+            $app_result = $studentsConn->query("SELECT COUNT(*) as cnt FROM applications");
+            if ($app_result) $total_applications = (int)$app_result->fetch_assoc()['cnt'];
+        }
+        $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+        if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
+        $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status='Active'");
+        if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
+        $ca_result = $conn->query("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=" . (int)$user_id . " AND status='Active'");
+        if ($ca_result) $assigned_courses = (int)$ca_result->fetch_assoc()['cnt'];
+        $tt_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=" . (int)$user_id . " AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
+        if ($tt_result) $lectures_this_week = (int)$tt_result->fetch_assoc()['cnt'];
+        $ar_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND grade IS NULL");
+        if ($ar_result) $pending_grades = (int)$ar_result->fetch_assoc()['cnt'];
+    } catch (Exception $e) {
+        error_log('senior-lecturers stats: ' . $e->getMessage());
     }
-    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
-    if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
-    $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status='Active'");
-    if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
-    $ca_result = $conn->query("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=" . (int)$user_id . " AND status='Active'");
-    if ($ca_result) $assigned_courses = (int)$ca_result->fetch_assoc()['cnt'];
-    $tt_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=" . (int)$user_id . " AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
-    if ($tt_result) $lectures_this_week = (int)$tt_result->fetch_assoc()['cnt'];
-    $ar_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND grade IS NULL");
-    if ($ar_result) $pending_grades = (int)$ar_result->fetch_assoc()['cnt'];
-} catch (Exception $e) {
-    error_log('senior-lecturers stats: ' . $e->getMessage());
 }
 
 // Get assigned courses from course_assignments

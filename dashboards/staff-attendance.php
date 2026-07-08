@@ -1,9 +1,9 @@
 <?php
 $pageTitle = 'Staff Attendance';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
+$ctx = bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
+$conn = $ctx['staff'];
 require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
 
 // Handle check-in/check-out actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {

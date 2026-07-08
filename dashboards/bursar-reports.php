@@ -85,9 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'expor
 </head><body>';
     echo '<h2>ISNM Financial Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).' | Type: '.htmlspecialchars(ucfirst($type)).'</p>';
     echo '<p>Generated: '.date('d M Y H:i').'</p><table><thead><tr><th>#</th><th>Description</th><th>Amount</th></tr></thead><tbody>';
-    $q = $type === 'monthly' ? "SELECT DATE_FORMAT(payment_date,'%Y-%m') AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label" : "SELECT DATE(payment_date) AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label";
-    $r = $staff->query($q); $i = 1; $gt = 0;
-    if ($r) while ($row = $r->fetch_assoc()) { echo '<tr><td>'.$i++.'</td><td>'.htmlspecialchars($row['label']).' ('.$row['cnt'].' txns)</td><td class="text-end">'.number_format($row['tot'],0).'</td></tr>'; $gt += $row['tot']; }
+    $i = 1; $gt = 0;
+    if ($staff) {
+        $q = $type === 'monthly' ? "SELECT DATE_FORMAT(payment_date,'%Y-%m') AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label" : "SELECT DATE(payment_date) AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label";
+        $r = $staff->query($q);
+        if ($r) while ($row = $r->fetch_assoc()) { echo '<tr><td>'.$i++.'</td><td>'.htmlspecialchars($row['label']).' ('.$row['cnt'].' txns)</td><td class="text-end">'.number_format($row['tot'],0).'</td></tr>'; $gt += $row['tot']; }
+    }
     echo '<tr style="font-weight:bold"><td colspan="2">Total</td><td class="text-end">'.number_format($gt,0).'</td></tr>';
     echo '</tbody></table><p><em>End of report</em></p></body></html>';
     exit;

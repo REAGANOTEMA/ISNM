@@ -25,10 +25,12 @@ if ($ajax === 'search_student' && $sid) {
     header('Content-Type: application/json');
     $data = [];
     try {
-        $like = '%' . $sid . '%';
-        $q = "SELECT student_id, first_name, surname, program, level FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
-        $stmt = $students->prepare($q);
-        if ($stmt) { $stmt->bind_param('sss', $like, $like, $like); $stmt->execute(); $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) $data[] = $row; $stmt->close(); }
+        if ($students) {
+            $like = '%' . $sid . '%';
+            $q = "SELECT student_id, first_name, surname, program, level FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
+            $stmt = $students->prepare($q);
+            if ($stmt) { $stmt->bind_param('sss', $like, $like, $like); $stmt->execute(); $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) $data[] = $row; $stmt->close(); }
+        }
     } catch (Exception $e) { error_log('search: '.$e->getMessage()); }
     echo json_encode($data); exit;
 }
@@ -37,8 +39,10 @@ if ($ajax === 'get_balance' && $sid) {
     header('Content-Type: application/json');
     $bal = 0; $acc = 0;
     try {
-        $stmt = $staff->prepare("SELECT id, balance, total_fees, amount_paid, invoice_number FROM student_fee_accounts WHERE student_id = ? AND status NOT IN ('fully_paid','cancelled') ORDER BY id DESC LIMIT 1");
-        if ($stmt) { $stmt->bind_param('s', $sid); $stmt->execute(); $r = $stmt->get_result(); if ($row = $r->fetch_assoc()) { $bal = (float)$row['balance']; $acc = (int)$row['id']; } $stmt->close(); }
+        if ($staff) {
+            $stmt = $staff->prepare("SELECT id, balance, total_fees, amount_paid, invoice_number FROM student_fee_accounts WHERE student_id = ? AND status NOT IN ('fully_paid','cancelled') ORDER BY id DESC LIMIT 1");
+            if ($stmt) { $stmt->bind_param('s', $sid); $stmt->execute(); $r = $stmt->get_result(); if ($row = $r->fetch_assoc()) { $bal = (float)$row['balance']; $acc = (int)$row['id']; } $stmt->close(); }
+        }
     } catch (Exception $e) { error_log('balance: '.$e->getMessage()); }
     echo json_encode(['balance' => $bal, 'fee_account_id' => $acc]); exit;
 }
