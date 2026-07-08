@@ -186,29 +186,36 @@ if ($action === 'generate_transcript') {
     // Generate HTML
     $html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
     
-    // Store in database
-    $title = "Academic Transcript - ".($student['full_name']??'');
-    $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
-    $stmt4->bind_param("iss", $sid, $title, $html);
-    $stmt4->execute();
-    $doc_id = $staff_conn->insert_id;
-    $stmt4->close();
-    
-    // Also update registrar_transcripts
-    $course_val = $student['program']??'';
-    $academic_year = date('Y');
-    $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
-    $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
-    $stmt5->execute();
-    $stmt5->close();
-    
-    echo json_encode([
-        'success' => true,
-        'doc_id' => $doc_id,
-        'transcript_number' => $tnum,
-        'preview_url' => "ajax/registrar_documents_ajax.php?action=preview_document&doc_id=$doc_id",
-        'message' => 'Transcript generated successfully'
-    ]);
+    // Store in database (transactional)
+    $staff_conn->begin_transaction();
+    try {
+        $title = "Academic Transcript - ".($student['full_name']??'');
+        $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+        $stmt4->bind_param("iss", $sid, $title, $html);
+        $stmt4->execute();
+        $doc_id = $staff_conn->insert_id;
+        $stmt4->close();
+        
+        // Also update registrar_transcripts
+        $course_val = $student['program']??'';
+        $academic_year = date('Y');
+        $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
+        $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
+        $stmt5->execute();
+        $stmt5->close();
+        
+        $staff_conn->commit();
+        echo json_encode([
+            'success' => true,
+            'doc_id' => $doc_id,
+            'transcript_number' => $tnum,
+            'preview_url' => "ajax/registrar_documents_ajax.php?action=preview_document&doc_id=$doc_id",
+            'message' => 'Transcript generated successfully'
+        ]);
+    } catch (Exception $e) {
+        $staff_conn->rollback();
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -256,29 +263,36 @@ if ($action === 'generate_certificate') {
     // Generate HTML
     $html = generateProfessionalCertificate($student, $settings, $cert_type, $cnum, $class_of_award);
     
-    // Store in database
-    $title = "Certificate of $cert_type - ".($student['full_name']??'');
-    $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
-    $stmt3->bind_param("iss", $sid, $title, $html);
-    $stmt3->execute();
-    $doc_id = $staff_conn->insert_id;
-    $stmt3->close();
-    
-    // Also update registrar_certificates
-    $full_name_val = $student['full_name']??'';
-    $course_val = $student['program']??'';
-    $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
-    $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
-    $stmt4->execute();
-    $stmt4->close();
-    
-    echo json_encode([
-        'success' => true,
-        'doc_id' => $doc_id,
-        'certificate_number' => $cnum,
-        'preview_url' => "ajax/registrar_documents_ajax.php?action=preview_document&doc_id=$doc_id",
-        'message' => 'Certificate generated successfully'
-    ]);
+    // Store in database (transactional)
+    $staff_conn->begin_transaction();
+    try {
+        $title = "Certificate of $cert_type - ".($student['full_name']??'');
+        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+        $stmt3->bind_param("iss", $sid, $title, $html);
+        $stmt3->execute();
+        $doc_id = $staff_conn->insert_id;
+        $stmt3->close();
+        
+        // Also update registrar_certificates
+        $full_name_val = $student['full_name']??'';
+        $course_val = $student['program']??'';
+        $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
+        $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
+        $stmt4->execute();
+        $stmt4->close();
+        
+        $staff_conn->commit();
+        echo json_encode([
+            'success' => true,
+            'doc_id' => $doc_id,
+            'certificate_number' => $cnum,
+            'preview_url' => "ajax/registrar_documents_ajax.php?action=preview_document&doc_id=$doc_id",
+            'message' => 'Certificate generated successfully'
+        ]);
+    } catch (Exception $e) {
+        $staff_conn->rollback();
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -332,48 +346,55 @@ if ($action === 'auto_generate_all') {
     if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
     $stmt2->close();
     
-    $tnum = 'T'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
-    $t_html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
-    $title_t = "Academic Transcript - ".($student['full_name']??'');
-    $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
-    $stmt3->bind_param("iss", $sid, $title_t, $t_html);
-    $stmt3->execute();
-    $t_doc_id = $staff_conn->insert_id;
-    $stmt3->close();
-    
-    // Certificate
-    $class_of_award = '';
-    $stmt4 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
-    $stmt4->bind_param("i", $sid);
-    $stmt4->execute();
-    $gpa_r = $stmt4->get_result();
-    if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
-        $avg = floatval($gpa_row['avg_m'] ?? 0);
-        if ($avg >= 80) $class_of_award = 'First Class Honours';
-        elseif ($avg >= 70) $class_of_award = 'Second Class Upper Division';
-        elseif ($avg >= 60) $class_of_award = 'Second Class Lower Division';
-        elseif ($avg >= 50) $class_of_award = 'Pass';
-        else $class_of_award = 'Fail';
+    $staff_conn->begin_transaction();
+    try {
+        $tnum = 'T'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
+        $t_html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
+        $title_t = "Academic Transcript - ".($student['full_name']??'');
+        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+        $stmt3->bind_param("iss", $sid, $title_t, $t_html);
+        $stmt3->execute();
+        $t_doc_id = $staff_conn->insert_id;
+        $stmt3->close();
+        
+        // Certificate
+        $class_of_award = '';
+        $stmt4 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
+        $stmt4->bind_param("i", $sid);
+        $stmt4->execute();
+        $gpa_r = $stmt4->get_result();
+        if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
+            $avg = floatval($gpa_row['avg_m'] ?? 0);
+            if ($avg >= 80) $class_of_award = 'First Class Honours';
+            elseif ($avg >= 70) $class_of_award = 'Second Class Upper Division';
+            elseif ($avg >= 60) $class_of_award = 'Second Class Lower Division';
+            elseif ($avg >= 50) $class_of_award = 'Pass';
+            else $class_of_award = 'Fail';
+        }
+        $stmt4->close();
+        
+        $cnum = 'CERT'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
+        $c_html = generateProfessionalCertificate($student, $settings, 'Diploma', $cnum, $class_of_award);
+        $title_c = "Certificate - ".($student['full_name']??'');
+        $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+        $stmt5->bind_param("iss", $sid, $title_c, $c_html);
+        $stmt5->execute();
+        $c_doc_id = $staff_conn->insert_id;
+        $stmt5->close();
+        
+        $staff_conn->commit();
+        echo json_encode([
+            'success' => true,
+            'transcript_doc_id' => $t_doc_id,
+            'certificate_doc_id' => $c_doc_id,
+            'transcript_number' => $tnum,
+            'certificate_number' => $cnum,
+            'message' => 'Both transcript and certificate generated successfully'
+        ]);
+    } catch (Exception $e) {
+        $staff_conn->rollback();
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     }
-    $stmt4->close();
-    
-    $cnum = 'CERT'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
-    $c_html = generateProfessionalCertificate($student, $settings, 'Diploma', $cnum, $class_of_award);
-    $title_c = "Certificate - ".($student['full_name']??'');
-    $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
-    $stmt5->bind_param("iss", $sid, $title_c, $c_html);
-    $stmt5->execute();
-    $c_doc_id = $staff_conn->insert_id;
-    $stmt5->close();
-    
-    echo json_encode([
-        'success' => true,
-        'transcript_doc_id' => $t_doc_id,
-        'certificate_doc_id' => $c_doc_id,
-        'transcript_number' => $tnum,
-        'certificate_number' => $cnum,
-        'message' => 'Both transcript and certificate generated successfully'
-    ]);
     exit;
 }
 

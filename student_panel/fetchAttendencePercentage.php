@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
    $month = date('m');         
 
 
-        $presentquery = "SELECT COUNT(*) FROM `attendence` WHERE `student_id` = ? AND `attendence` = ?";
+        $presentquery = "SELECT COUNT(*) FROM `attendance` WHERE `student_id` = ? AND `attendance` = ?";
         $stmt2 = mysqli_prepare($conn, $presentquery);
         $temp = "1";
         mysqli_stmt_bind_param($stmt2, "ss", $id, $temp);
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         mysqli_stmt_close($stmt2);
 
 
-        $workingDaysQuery = "SELECT COUNT(DISTINCT DATE_FORMAT(`date`, '%Y-%m-%d')) FROM `attendence`;";
+        $workingDaysQuery = "SELECT COUNT(DISTINCT DATE_FORMAT(`date`, '%Y-%m-%d')) FROM `attendance`;";
         $stmt3 = mysqli_prepare($conn, $workingDaysQuery);
         mysqli_stmt_execute($stmt3);
         mysqli_stmt_bind_result($stmt3, $workingDays);

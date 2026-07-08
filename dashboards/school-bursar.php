@@ -127,9 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'run_payroll' && $staffConn) {
         $period = trim($_POST['period'] ?? date('Y-m'));
         $desc = trim($_POST['description'] ?? "Payroll $period");
-        $stmt = $staffConn->prepare("INSERT INTO payroll_runs (period, description, status, created_by) VALUES (?,?,'draft',?)");
-        if ($stmt) {
-            $stmt->bind_param('ssi', $period, $desc, $userId); $stmt->execute(); $runId = $stmt->insert_id;
+        $staffConn->begin_transaction();
+        try {
+            $stmt = $staffConn->prepare("INSERT INTO payroll_runs (period, description, status, created_by) VALUES (?,?,'draft',?)");
+            if (!$stmt) throw new Exception('Prepare failed: ' . $staffConn->error);
+            $stmt->bind_param('ssi', $period, $desc, $userId);
+            if (!$stmt->execute()) throw new Exception('Failed to create payroll run: ' . $stmt->error);
+            $runId = $stmt->insert_id;
+            $stmt->close();
+            
             $emps = $staffConn->query("SELECT pe.staff_id, pe.basic_salary FROM payroll_employees pe WHERE pe.status='active'");
             if ($emps) {
                 while ($emp = $emps->fetch_assoc()) {
@@ -141,12 +147,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $nssfEmpr = $nssfArr['employer'] ?? 0;
                     $net = $gross - $paye - $nssfEmp;
                     $det = $staffConn->prepare("INSERT INTO payroll_details (payroll_run_id, staff_id, basic_salary, gross_pay, paye_tax, nssf_employee, nssf_employer, other_deductions, net_pay) VALUES (?,?,?,?,?,?,?,?,?)");
-                    if ($det) { $det->bind_param('iiddddddd', $runId, $emp['staff_id'], $base, $gross, $paye, $nssfEmp, $nssfEmpr, 0.0, $net); $det->execute(); $det->close(); }
+                    if ($det) {
+                        $det->bind_param('iiddddddd', $runId, $emp['staff_id'], $base, $gross, $paye, $nssfEmp, $nssfEmpr, 0.0, $net);
+                        if (!$det->execute()) throw new Exception('Failed to insert payroll details for staff ' . $emp['staff_id'] . ': ' . $det->error);
+                        $det->close();
+                    }
                 }
             }
             $totals = $staffConn->query("SELECT COALESCE(SUM(gross_pay),0) tg, COALESCE(SUM(paye_tax + nssf_employee + other_deductions),0) td, COALESCE(SUM(net_pay),0) tnet FROM payroll_details WHERE payroll_run_id=$runId");
-            if ($totals) { $t = $totals->fetch_assoc(); $staffConn->query("UPDATE payroll_runs SET total_gross={$t['tg']}, total_deductions={$t['td']}, total_net={$t['tnet']}, status='processed' WHERE id=$runId"); }
+            if ($totals) {
+                $t = $totals->fetch_assoc();
+                if (!$staffConn->query("UPDATE payroll_runs SET total_gross={$t['tg']}, total_deductions={$t['td']}, total_net={$t['tnet']}, status='processed' WHERE id=$runId")) {
+                    throw new Exception('Failed to update payroll run totals: ' . $staffConn->error);
+                }
+            }
+            $staffConn->commit();
             $_SESSION['success'] = "Payroll $period processed — Gross: " . number_format($t['tg']??0) . " UGX, Net: " . number_format($t['tnet']??0) . " UGX";
+        } catch (Exception $e) {
+            $staffConn->rollback();
+            $_SESSION['error'] = 'Payroll processing failed: ' . $e->getMessage();
         }
         header('Location: school-bursar.php?page=payroll'); exit;
     }

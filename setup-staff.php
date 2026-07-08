@@ -6,7 +6,7 @@ require_once __DIR__ . '/auth-service.php';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ISNM — Staff Database Setup</title>
+<title>ISNM — Database Setup</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;color:#1e293b}
@@ -46,8 +46,8 @@ h1{font-size:1.5rem;margin-bottom:4px;color:#0f172a}
 </head>
 <body>
 <div class="container">
-<h1>ISNM — Staff Database Setup</h1>
-<p class="sub">Creates required tables and seeds staff accounts for authentication &amp; dashboard access.</p>
+<h1>ISNM — Full Database Setup</h1>
+<p class="sub">Creates required tables across all 4 databases and seeds initial data.</p>
 
 <?php
 $action = $_POST['action'] ?? '';
@@ -74,16 +74,25 @@ function runSetup(&$output) {
         }
     }
 
-    $conn = $dbs['Staff'];
-    if (!$conn) {
+    $staffConn = $dbs['Staff'];
+    if (!$staffConn) {
         logMsg($output, "ERROR: Cannot connect to staff database. Aborting.");
-        return ['success' => false, 'output' => $output, 'dbs' => $dbs, 'staff_roles_created' => false, 'staff_created' => false, 'staff_roles_seeded' => false, 'staff_seeded' => false, 'departments_created' => false, 'departments_seeded' => false, 'staff_count' => 0, 'role_count' => 0, 'dept_count' => 0];
+        return ['success' => false, 'output' => $output, 'dbs' => $dbs];
     }
 
-    // ── Step 2: Create staff_roles table ──
+    $ret = ['success' => true, 'output' => &$output, 'dbs' => $dbs];
+
+    // ─────────────────────────────────────────────
+    // STAFF DATABASE
+    // ─────────────────────────────────────────────
+    logMsg($output, "\n╔══════════════════════════════════════╗");
+    logMsg($output,   "║        STAFF DATABASE                ║");
+    logMsg($output,   "╚══════════════════════════════════════╝");
+
+    // staff_roles
     logMsg($output, "\n=== Creating staff_roles table ===");
     $staffRolesCreated = false;
-    $r1 = $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
+    $r1 = $staffConn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `role_name` varchar(100) NOT NULL,
         `role_description` text DEFAULT NULL,
@@ -95,17 +104,11 @@ function runSetup(&$output) {
         PRIMARY KEY (`id`),
         UNIQUE KEY `role_name` (`role_name`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
-    if ($r1) {
-        logMsg($output, "  ✓ staff_roles table ready");
-        $staffRolesCreated = true;
-    } else {
-        logMsg($output, "  ✗ Error: " . $conn->error);
-    }
+    if ($r1) { logMsg($output, "  ✓ staff_roles table ready"); $staffRolesCreated = true; }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
 
-    // ── Step 3: Seed staff_roles ──
     logMsg($output, "\n=== Seeding staff_roles ===");
-    $rolesSeeded = false;
-    $roleCount = 0;
+    $rolesSeeded = false; $roleCount = 0;
     if ($staffRolesCreated) {
         $roles = [
             ['Director General',                   1, 'dashboards/director-general.php'],
@@ -137,26 +140,22 @@ function runSetup(&$output) {
             ['Skills Lab Manager',                 4, 'dashboards/skills-lab.php'],
             ['Skills Lab Technician',              5, 'dashboards/skills-lab.php'],
         ];
-        $insRole = $conn->prepare("INSERT IGNORE INTO staff_roles (role_name, role_level, dashboard_path) VALUES (?, ?, ?)");
+        $insRole = $staffConn->prepare("INSERT IGNORE INTO staff_roles (role_name, role_level, dashboard_path) VALUES (?, ?, ?)");
         if ($insRole) {
             foreach ($roles as $r) {
                 $insRole->bind_param('sis', $r[0], $r[1], $r[2]);
-                if ($insRole->execute()) {
-                    if ($conn->affected_rows > 0) $roleCount++;
-                }
+                if ($insRole->execute()) { if ($staffConn->affected_rows > 0) $roleCount++; }
             }
             $insRole->close();
             $rolesSeeded = true;
             logMsg($output, "  ✓ $roleCount roles inserted");
-        } else {
-            logMsg($output, "  ✗ Prepare error: " . $conn->error);
-        }
+        } else { logMsg($output, "  ✗ Prepare error: " . $staffConn->error); }
     }
 
-    // ── Step 4: Create staff table ──
+    // staff table
     logMsg($output, "\n=== Creating staff table ===");
     $staffCreated = false;
-    $r2 = $conn->query("CREATE TABLE IF NOT EXISTS `staff` (
+    $r2 = $staffConn->query("CREATE TABLE IF NOT EXISTS `staff` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `staff_id` varchar(20) DEFAULT NULL,
         `full_name` varchar(150) NOT NULL,
@@ -205,17 +204,12 @@ function runSetup(&$output) {
         KEY `idx_staff_gender` (`gender`),
         KEY `idx_staff_category` (`staff_category`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
-    if ($r2) {
-        logMsg($output, "  ✓ staff table ready");
-        $staffCreated = true;
-    } else {
-        logMsg($output, "  ✗ Error: " . $conn->error);
-    }
+    if ($r2) { logMsg($output, "  ✓ staff table ready"); $staffCreated = true; }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
 
-    // ── Step 5: Seed staff accounts ──
+    // seed staff
     logMsg($output, "\n=== Seeding staff accounts ===");
-    $staffSeeded = false;
-    $staffCount = 0;
+    $staffSeeded = false; $staffCount = 0;
     if ($staffCreated) {
         $staffData = [
             ['directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', 'Director General',        'DorisJoy2026', 'Director General',   'DG-001',  'Director General',    'Executive'],
@@ -246,28 +240,20 @@ function runSetup(&$output) {
         ];
 
         $roleMap = [];
-        $rr = $conn->query("SELECT id, role_name FROM staff_roles");
+        $rr = $staffConn->query("SELECT id, role_name FROM staff_roles");
         while ($rw = $rr->fetch_assoc()) {
             $roleMap[strtolower(trim($rw['role_name']))] = $rw['id'];
         }
 
-        $ins = $conn->prepare("INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, is_first_login, password_changed, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', 0, 1, CURDATE())");
+        $ins = $staffConn->prepare("INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, is_first_login, password_changed, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', 0, 1, CURDATE())");
         if ($ins) {
             foreach ($staffData as $s) {
                 $roleKey = strtolower(trim($s[3]));
                 $rid = $roleMap[$roleKey] ?? null;
-                if (!$rid) {
-                    logMsg($output, "  ✗ No role_id for '{$s[3]}' — skipping {$s[0]}");
-                    continue;
-                }
+                if (!$rid) { logMsg($output, "  ✗ No role_id for '{$s[3]}' — skipping {$s[0]}"); continue; }
                 $hash = password_hash($s[2], PASSWORD_BCRYPT);
                 $ins->bind_param('ssssssi', $s[4], $s[1], $s[0], $hash, $s[5], $s[6], $rid);
-                if ($ins->execute()) {
-                    if ($conn->affected_rows > 0) {
-                        $staffCount++;
-                        logMsg($output, "  ✓ {$s[0]} → {$s[3]}");
-                    }
-                }
+                if ($ins->execute()) { if ($staffConn->affected_rows > 0) { $staffCount++; logMsg($output, "  ✓ {$s[0]} → {$s[3]}"); } }
             }
             $ins->close();
             $staffSeeded = true;
@@ -275,10 +261,10 @@ function runSetup(&$output) {
         }
     }
 
-    // ── Step 6: Create staff_departments table ──
+    // staff_departments
     logMsg($output, "\n=== Creating staff_departments table ===");
     $deptCreated = false;
-    $r3 = $conn->query("CREATE TABLE IF NOT EXISTS `staff_departments` (
+    $r3 = $staffConn->query("CREATE TABLE IF NOT EXISTS `staff_departments` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `department_name` varchar(150) NOT NULL,
         `department_code` varchar(20) DEFAULT NULL,
@@ -289,14 +275,9 @@ function runSetup(&$output) {
         UNIQUE KEY `department_name` (`department_name`),
         UNIQUE KEY `department_code` (`department_code`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
-    if ($r3) {
-        logMsg($output, "  ✓ staff_departments table ready");
-        $deptCreated = true;
-    } else {
-        logMsg($output, "  ✗ Error: " . $conn->error);
-    }
+    if ($r3) { logMsg($output, "  ✓ staff_departments table ready"); $deptCreated = true; }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
 
-    // ── Step 7: Seed departments ──
     logMsg($output, "\n=== Seeding departments ===");
     $deptCount = 0;
     if ($deptCreated) {
@@ -320,42 +301,389 @@ function runSetup(&$output) {
             ['Student Government',  'GOV',   5],
             ['Clinical',            'CLIN',  4],
         ];
-        $insDept = $conn->prepare("INSERT IGNORE INTO staff_departments (department_name, department_code, department_level) VALUES (?, ?, ?)");
+        $insDept = $staffConn->prepare("INSERT IGNORE INTO staff_departments (department_name, department_code, department_level) VALUES (?, ?, ?)");
         if ($insDept) {
             foreach ($departments as $d) {
                 $insDept->bind_param('ssi', $d[0], $d[1], $d[2]);
-                if ($insDept->execute()) {
-                    if ($conn->affected_rows > 0) $deptCount++;
-                }
+                if ($insDept->execute()) { if ($staffConn->affected_rows > 0) $deptCount++; }
             }
             $insDept->close();
             logMsg($output, "  ✓ $deptCount departments inserted");
         }
     }
 
-    $totalRoles = $conn->query("SELECT COUNT(*) c FROM staff_roles")->fetch_assoc()['c'] ?? 0;
-    $totalStaff = $conn->query("SELECT COUNT(*) c FROM staff")->fetch_assoc()['c'] ?? 0;
-    $totalDepts = $conn->query("SELECT COUNT(*) c FROM staff_departments")->fetch_assoc()['c'] ?? 0;
+    $ret['staff_roles_created'] = $staffRolesCreated;
+    $ret['staff_created'] = $staffCreated;
+    $ret['departments_created'] = $deptCreated;
+    $ret['staff_roles_seeded'] = $rolesSeeded;
+    $ret['staff_seeded'] = $staffSeeded;
+    $ret['departments_seeded'] = $deptCreated;
+    $ret['staff_count'] = $staffConn->query("SELECT COUNT(*) c FROM staff")->fetch_assoc()['c'] ?? 0;
+    $ret['role_count'] = $staffConn->query("SELECT COUNT(*) c FROM staff_roles")->fetch_assoc()['c'] ?? 0;
+    $ret['dept_count'] = $staffConn->query("SELECT COUNT(*) c FROM staff_departments")->fetch_assoc()['c'] ?? 0;
 
-    logMsg($output, "\n=== SETUP COMPLETE ===");
-    logMsg($output, "  staff_roles:    $totalRoles roles");
-    logMsg($output, "  staff:          $totalStaff accounts");
-    logMsg($output, "  departments:    $totalDepts departments");
+    // ─────────────────────────────────────────────
+    // STUDENTS DATABASE
+    // ─────────────────────────────────────────────
+    $stuConn = $dbs['Students'];
+    if ($stuConn) {
+        logMsg($output, "\n╔══════════════════════════════════════╗");
+        logMsg($output,   "║      STUDENTS DATABASE               ║");
+        logMsg($output,   "╚══════════════════════════════════════╝");
 
-    return [
-        'success' => true,
-        'output' => $output,
-        'dbs' => $dbs,
-        'staff_roles_created' => $staffRolesCreated,
-        'staff_created' => $staffCreated,
-        'staff_roles_seeded' => $rolesSeeded,
-        'staff_seeded' => $staffSeeded,
-        'departments_created' => $deptCreated,
-        'departments_seeded' => $deptCreated,
-        'staff_count' => $totalStaff,
-        'role_count' => $totalRoles,
-        'dept_count' => $totalDepts,
-    ];
+        // students
+        logMsg($output, "\n=== Creating students table ===");
+        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `students` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `student_number` varchar(50) NOT NULL,
+            `registration_number` varchar(50) DEFAULT NULL,
+            `national_student_id_number` varchar(50) DEFAULT NULL,
+            `index_number` varchar(50) DEFAULT NULL,
+            `first_name` varchar(100) NOT NULL,
+            `surname` varchar(100) NOT NULL,
+            `other_name` varchar(100) DEFAULT NULL,
+            `full_name` varchar(300) DEFAULT NULL,
+            `email` varchar(100) DEFAULT NULL,
+            `password` varchar(255) DEFAULT NULL,
+            `phone` varchar(20) DEFAULT NULL,
+            `mobile_number` varchar(20) DEFAULT NULL,
+            `program` varchar(100) DEFAULT NULL,
+            `course` varchar(100) DEFAULT NULL,
+            `current_year` int(11) DEFAULT NULL,
+            `year` int(11) DEFAULT NULL,
+            `level` varchar(50) DEFAULT NULL,
+            `set_name` varchar(50) DEFAULT NULL,
+            `current_semester` varchar(20) DEFAULT NULL,
+            `intake_date` date DEFAULT NULL,
+            `date_of_birth` date DEFAULT NULL,
+            `gender` enum('Male','Female','Other') DEFAULT 'Other',
+            `nationality` varchar(100) DEFAULT NULL,
+            `address` text DEFAULT NULL,
+            `emergency_contact_name` varchar(100) DEFAULT NULL,
+            `emergency_contact_phone` varchar(20) DEFAULT NULL,
+            `emergency_contact_email` varchar(100) DEFAULT NULL,
+            `guardian_name` varchar(200) DEFAULT NULL,
+            `guardian_phone` varchar(20) DEFAULT NULL,
+            `profile_picture` varchar(500) DEFAULT NULL,
+            `passport_photo` varchar(500) DEFAULT NULL,
+            `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') DEFAULT 'Active',
+            `last_login` timestamp NULL DEFAULT NULL,
+            `locked_until` timestamp NULL DEFAULT NULL,
+            `login_attempts` int(11) DEFAULT 0,
+            `password_changed` tinyint(1) DEFAULT 0,
+            `is_first_login` tinyint(1) DEFAULT 1,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `idx_stu_email` (`email`),
+            KEY `idx_stu_status` (`status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ students table ready"); $ret['students_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['students_created'] = false; }
+
+        // users (student login accounts)
+        logMsg($output, "\n=== Creating users table ===");
+        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `users` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `student_id` int(11) DEFAULT NULL,
+            `username` varchar(100) NOT NULL,
+            `password` varchar(255) NOT NULL,
+            `email` varchar(200) DEFAULT NULL,
+            `role` enum('student','admin') DEFAULT 'student',
+            `status` varchar(30) DEFAULT 'active',
+            `last_login` datetime DEFAULT NULL,
+            `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `username` (`username`),
+            KEY `student_id` (`student_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ users table ready"); $ret['users_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['users_created'] = false; }
+
+        // fee_structures
+        logMsg($output, "\n=== Creating fee_structures table ===");
+        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `fee_structures` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `fee_name` varchar(255) NOT NULL,
+            `fee_type` enum('Tuition','Registration','Library','Laboratory','Examination','Graduation','Other') NOT NULL,
+            `amount` decimal(10,2) NOT NULL,
+            `program_id` int(11) DEFAULT NULL,
+            `academic_year` varchar(20) DEFAULT NULL,
+            `semester` varchar(50) DEFAULT NULL,
+            `is_mandatory` tinyint(1) DEFAULT 1,
+            `due_date` date DEFAULT NULL,
+            `is_active` tinyint(1) DEFAULT 1,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ fee_structures table ready"); $ret['fee_structures_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['fee_structures_created'] = false; }
+
+        // payments
+        logMsg($output, "\n=== Creating payments table ===");
+        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `payments` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `payment_reference` varchar(50) NOT NULL,
+            `student_id` int(11) NOT NULL,
+            `invoice_id` int(11) DEFAULT NULL,
+            `amount_received` decimal(12,2) NOT NULL,
+            `payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other') DEFAULT 'Cash',
+            `payment_date` date DEFAULT curdate(),
+            `transaction_ref` varchar(100) DEFAULT NULL,
+            `slip_number` varchar(100) DEFAULT NULL,
+            `status` enum('Pending','Completed','Failed','Reversed') DEFAULT 'Completed',
+            `received_by` int(11) DEFAULT NULL,
+            `notes` text DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `idx_pay_student_date` (`student_id`,`payment_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ payments table ready"); $ret['payments_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['payments_created'] = false; }
+
+        // student_invoices
+        logMsg($output, "\n=== Creating student_invoices table ===");
+        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `student_invoices` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `invoice_number` varchar(50) NOT NULL,
+            `student_id` int(11) NOT NULL,
+            `fee_assignment_id` int(11) DEFAULT NULL,
+            `fee_type` varchar(100) NOT NULL,
+            `description` text DEFAULT NULL,
+            `total_amount` decimal(12,2) NOT NULL,
+            `discount_amount` decimal(12,2) DEFAULT 0.00,
+            `net_amount` decimal(12,2) GENERATED ALWAYS AS (`total_amount` - `discount_amount`) STORED,
+            `amount_paid` decimal(12,2) DEFAULT 0.00,
+            `balance` decimal(12,2) GENERATED ALWAYS AS (`net_amount` - `amount_paid`) STORED,
+            `status` enum('Draft','Pending','Partially Paid','Paid','Overdue','Cancelled','Waived') DEFAULT 'Pending',
+            `due_date` date DEFAULT NULL,
+            `issue_date` date DEFAULT curdate(),
+            `payment_method` varchar(50) DEFAULT NULL,
+            `created_by` int(11) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ student_invoices table ready"); $ret['student_invoices_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['student_invoices_created'] = false; }
+    } else {
+        logMsg($output, "  SKIPPED: Students database not connected");
+    }
+
+    // ─────────────────────────────────────────────
+    // WEBSITE DATABASE
+    // ─────────────────────────────────────────────
+    $webConn = $dbs['Website'];
+    if ($webConn) {
+        logMsg($output, "\n╔══════════════════════════════════════╗");
+        logMsg($output,   "║      WEBSITE DATABASE                ║");
+        logMsg($output,   "╚══════════════════════════════════════╝");
+
+        // notifications
+        logMsg($output, "\n=== Creating notifications table ===");
+        $r = $webConn->query("CREATE TABLE IF NOT EXISTS `notifications` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `staff_id` int(11) NOT NULL,
+            `type` varchar(50) NOT NULL COMMENT 'application, contact, feedback, complaint, system',
+            `title` varchar(255) NOT NULL,
+            `message` longtext NOT NULL,
+            `related_id` int(11) DEFAULT NULL,
+            `from_email` varchar(255) DEFAULT NULL,
+            `is_read` tinyint(1) DEFAULT 0,
+            `read_at` timestamp NULL DEFAULT NULL,
+            `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `idx_staff_unread` (`staff_id`,`is_read`),
+            KEY `idx_created` (`created_at`),
+            KEY `idx_type` (`type`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ notifications table ready"); $ret['notifications_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $webConn->error); $ret['notifications_created'] = false; }
+
+        // notification_reads
+        logMsg($output, "\n=== Creating notification_reads table ===");
+        $r = $webConn->query("CREATE TABLE IF NOT EXISTS `notification_reads` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `notification_id` int(11) NOT NULL,
+            `user_id` int(11) NOT NULL,
+            `user_type` enum('staff','student') DEFAULT 'staff',
+            `read_at` timestamp NULL DEFAULT current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `notif_user` (`notification_id`,`user_id`,`user_type`),
+            KEY `user_id` (`user_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ notification_reads table ready"); $ret['notification_reads_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $webConn->error); $ret['notification_reads_created'] = false; }
+
+        // news
+        logMsg($output, "\n=== Creating news table ===");
+        $r = $webConn->query("CREATE TABLE IF NOT EXISTS `news` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `title` varchar(255) NOT NULL,
+            `slug` varchar(255) NOT NULL,
+            `content` longtext DEFAULT NULL,
+            `excerpt` text DEFAULT NULL,
+            `featured_image` varchar(500) DEFAULT NULL,
+            `author_id` int(11) DEFAULT NULL,
+            `author_name` varchar(255) DEFAULT NULL,
+            `author_role` varchar(255) DEFAULT NULL,
+            `status` enum('draft','published','archived') DEFAULT 'draft',
+            `published_at` datetime DEFAULT NULL,
+            `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `idx_news_slug` (`slug`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        if ($r) { logMsg($output, "  ✓ news table ready"); $ret['news_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $webConn->error); $ret['news_created'] = false; }
+
+        // contact_submissions
+        logMsg($output, "\n=== Creating contact_submissions table ===");
+        $r = $webConn->query("CREATE TABLE IF NOT EXISTS `contact_submissions` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `first_name` varchar(100) NOT NULL,
+            `last_name` varchar(100) NOT NULL,
+            `email` varchar(255) NOT NULL,
+            `phone` varchar(50) NOT NULL,
+            `subject` varchar(100) NOT NULL,
+            `message` text NOT NULL,
+            `status` enum('unread','read','replied') DEFAULT 'unread',
+            `notified` tinyint(1) DEFAULT 0,
+            `replied_at` datetime DEFAULT NULL,
+            `replied_by` int(11) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ contact_submissions table ready"); $ret['contact_submissions_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $webConn->error); $ret['contact_submissions_created'] = false; }
+    } else {
+        logMsg($output, "  SKIPPED: Website database not connected");
+    }
+
+    // ─────────────────────────────────────────────
+    // ICT DATABASE
+    // ─────────────────────────────────────────────
+    $ictConn = $dbs['ICT'];
+    if ($ictConn) {
+        logMsg($output, "\n╔══════════════════════════════════════╗");
+        logMsg($output,   "║        ICT DATABASE                  ║");
+        logMsg($output,   "╚══════════════════════════════════════╝");
+
+        // ict_assets
+        logMsg($output, "\n=== Creating ict_assets table ===");
+        $r = $ictConn->query("CREATE TABLE IF NOT EXISTS `ict_assets` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `asset_number` varchar(100) NOT NULL,
+            `barcode` varchar(255) DEFAULT NULL,
+            `qr_code` varchar(255) DEFAULT NULL,
+            `serial_number` varchar(255) DEFAULT NULL,
+            `asset_name` varchar(200) NOT NULL,
+            `asset_type` enum('computer','printer','scanner','projector','network','server','ups','software','accessory','other') DEFAULT 'other',
+            `brand` varchar(100) DEFAULT NULL,
+            `model` varchar(100) DEFAULT NULL,
+            `category_id` int(11) DEFAULT NULL,
+            `purchase_date` date DEFAULT NULL,
+            `warranty_expiry` date DEFAULT NULL,
+            `current_status` enum('active','in_maintenance','retired','transferred') DEFAULT 'active',
+            `assigned_staff_id` int(11) DEFAULT NULL,
+            `assigned_department` varchar(200) DEFAULT NULL,
+            `current_location` varchar(255) DEFAULT NULL,
+            `purchase_cost` decimal(15,2) DEFAULT 0.00,
+            `notes` text DEFAULT NULL,
+            `created_by` int(11) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `asset_number` (`asset_number`),
+            KEY `asset_type` (`asset_type`),
+            KEY `current_status` (`current_status`),
+            KEY `assigned_staff_id` (`assigned_staff_id`),
+            KEY `warranty_expiry` (`warranty_expiry`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ ict_assets table ready"); $ret['ict_assets_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $ictConn->error); $ret['ict_assets_created'] = false; }
+
+        // computer_lab_bookings (mirrors lab_bookings)
+        logMsg($output, "\n=== Creating computer_lab_bookings table ===");
+        $r = $ictConn->query("CREATE TABLE IF NOT EXISTS `computer_lab_bookings` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `booking_reference` varchar(50) NOT NULL,
+            `course_name` varchar(100) NOT NULL,
+            `instructor_name` varchar(100) NOT NULL,
+            `instructor_email` varchar(100) DEFAULT NULL,
+            `booking_date` date NOT NULL,
+            `time_slot` varchar(50) NOT NULL,
+            `number_of_students` int(11) NOT NULL,
+            `purpose` text DEFAULT NULL,
+            `special_requirements` text DEFAULT NULL,
+            `status` enum('pending','confirmed','cancelled','completed') DEFAULT 'pending',
+            `approved_by` int(11) DEFAULT NULL,
+            `lab_assigned` varchar(100) DEFAULT NULL,
+            `lab_room_id` int(11) DEFAULT NULL,
+            `user_id` int(11) DEFAULT NULL,
+            `semester` varchar(20) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `idx_lb_date_status` (`booking_date`,`status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ computer_lab_bookings table ready"); $ret['computer_lab_bookings_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $ictConn->error); $ret['computer_lab_bookings_created'] = false; }
+
+        // lab_schedules
+        logMsg($output, "\n=== Creating lab_schedules table ===");
+        $r = $ictConn->query("CREATE TABLE IF NOT EXISTS `lab_schedules` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `lab_room_id` int(11) NOT NULL,
+            `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
+            `start_time` time NOT NULL,
+            `end_time` time NOT NULL,
+            `course_name` varchar(200) DEFAULT NULL,
+            `instructor_name` varchar(200) DEFAULT NULL,
+            `semester` varchar(20) DEFAULT NULL,
+            `is_active` tinyint(1) DEFAULT 1,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            KEY `lab_room_id` (`lab_room_id`),
+            KEY `day_of_week` (`day_of_week`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ lab_schedules table ready"); $ret['lab_schedules_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $ictConn->error); $ret['lab_schedules_created'] = false; }
+
+        // lab_rooms (needed for lab_schedules FK reference)
+        logMsg($output, "\n=== Creating lab_rooms table ===");
+        $r = $ictConn->query("CREATE TABLE IF NOT EXISTS `lab_rooms` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `room_name` varchar(100) NOT NULL,
+            `room_code` varchar(20) NOT NULL,
+            `capacity` int(11) NOT NULL DEFAULT 0,
+            `computer_count` int(11) NOT NULL DEFAULT 0,
+            `location` varchar(200) DEFAULT NULL,
+            `status` enum('active','inactive','maintenance') DEFAULT 'active',
+            `description` text DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT current_timestamp(),
+            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `room_code` (`room_code`),
+            KEY `status` (`status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if ($r) { logMsg($output, "  ✓ lab_rooms table ready"); $ret['lab_rooms_created'] = true; }
+        else { logMsg($output, "  ✗ Error: " . $ictConn->error); $ret['lab_rooms_created'] = false; }
+    } else {
+        logMsg($output, "  SKIPPED: ICT database not connected");
+    }
+
+    // ── Tally counts ──
+    logMsg($output, "\n╔══════════════════════════════════════╗");
+    logMsg($output,   "║        SETUP COMPLETE                ║");
+    logMsg($output,   "╚══════════════════════════════════════╝");
+
+    $ret['success'] = true;
+    return $ret;
 }
 
 if ($action === 'run_setup') {
@@ -365,18 +693,14 @@ if ($action === 'run_setup') {
 
 // Show current status
 $staffConn = getStaffConnection();
-$staffTables = [];
-$totalRoles = 0;
-$totalStaff = 0;
-$totalDepts = 0;
-$errors = [];
+$stuConn = getStudentsConnection();
+$webConn = getWebsiteConnection();
+$ictConn = getICTConnection();
+
+$staffTables = []; $totalRoles = 0; $totalStaff = 0; $totalDepts = 0;
 if ($staffConn) {
     $tables = $staffConn->query("SHOW TABLES");
-    if ($tables) {
-        while ($t = $tables->fetch_array()) {
-            $staffTables[] = $t[0];
-        }
-    }
+    if ($tables) { while ($t = $tables->fetch_array()) { $staffTables[] = $t[0]; } }
     $rr = $staffConn->query("SELECT COUNT(*) c FROM staff_roles");
     if ($rr) $totalRoles = $rr->fetch_assoc()['c'] ?? 0;
     $sr = $staffConn->query("SELECT COUNT(*) c FROM staff");
@@ -385,9 +709,40 @@ if ($staffConn) {
     if ($dr) $totalDepts = $dr->fetch_assoc()['c'] ?? 0;
 }
 
+$stuTables = [];
+if ($stuConn) {
+    $tables = $stuConn->query("SHOW TABLES");
+    if ($tables) { while ($t = $tables->fetch_array()) { $stuTables[] = $t[0]; } }
+}
+
+$webTables = [];
+if ($webConn) {
+    $tables = $webConn->query("SHOW TABLES");
+    if ($tables) { while ($t = $tables->fetch_array()) { $webTables[] = $t[0]; } }
+}
+
+$ictTables = [];
+if ($ictConn) {
+    $tables = $ictConn->query("SHOW TABLES");
+    if ($tables) { while ($t = $tables->fetch_array()) { $ictTables[] = $t[0]; } }
+}
+
 $hasStaffRoles = in_array('staff_roles', $staffTables);
 $hasStaff = in_array('staff', $staffTables);
 $hasDepts = in_array('staff_departments', $staffTables);
+$hasStudents = in_array('students', $stuTables);
+$hasUsers = in_array('users', $stuTables);
+$hasFeeStructures = in_array('fee_structures', $stuTables);
+$hasPayments = in_array('payments', $stuTables);
+$hasInvoices = in_array('student_invoices', $stuTables);
+$hasNotifications = in_array('notifications', $webTables);
+$hasNews = in_array('news', $webTables);
+$hasContactSubs = in_array('contact_submissions', $webTables);
+$hasIctAssets = in_array('ict_assets', $ictTables);
+$hasLabBookings = in_array('computer_lab_bookings', $ictTables);
+$hasLabSchedules = in_array('lab_schedules', $ictTables);
+$hasNotificationReads = in_array('notification_reads', $webTables);
+$hasLabRooms = in_array('lab_rooms', $ictTables);
 $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
 ?>
 
@@ -398,7 +753,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
     </div>
     <div class="card-body">
         <div class="db-grid">
-            <?php foreach (['Staff','Students','Website','ICT'] as $db): 
+            <?php foreach (['Staff','Students','Website','ICT'] as $db):
                 $con = $db === 'Staff' ? getStaffConnection() : ($db === 'Students' ? getStudentsConnection() : ($db === 'Website' ? getWebsiteConnection() : getICTConnection()));
             ?>
             <div class="db-item">
@@ -410,7 +765,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
     </div>
 </div>
 
-<!-- Tables Status -->
+<!-- Staff Database Tables -->
 <div class="card">
     <div class="card-header">
         <span>Staff Database Tables</span>
@@ -440,13 +795,92 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
     </div>
 </div>
 
-<!-- Login Credentials -->
+<!-- Students Database Tables -->
+<div class="card">
+    <div class="card-header">
+        <span>Students Database Tables</span>
+    </div>
+    <div class="card-body">
+        <div class="step <?= $hasStudents ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasStudents ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">students</div><div class="detail">Student biographical records</div></div>
+        </div>
+        <div class="step <?= $hasUsers ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasUsers ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">users</div><div class="detail">Student login accounts</div></div>
+        </div>
+        <div class="step <?= $hasFeeStructures ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasFeeStructures ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">fee_structures</div><div class="detail">Fee definitions per program</div></div>
+        </div>
+        <div class="step <?= $hasPayments ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasPayments ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">payments</div><div class="detail">Payment transactions</div></div>
+        </div>
+        <div class="step <?= $hasInvoices ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasInvoices ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">student_invoices</div><div class="detail">Student fee invoices</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Website Database Tables -->
+<div class="card">
+    <div class="card-header">
+        <span>Website Database Tables</span>
+    </div>
+    <div class="card-body">
+        <div class="step <?= $hasNotifications ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasNotifications ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">notifications</div><div class="detail">Staff notifications</div></div>
+        </div>
+        <div class="step <?= $hasNotificationReads ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasNotificationReads ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">notification_reads</div><div class="detail">Read tracking per user</div></div>
+        </div>
+        <div class="step <?= $hasNews ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasNews ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">news</div><div class="detail">News articles</div></div>
+        </div>
+        <div class="step <?= $hasContactSubs ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasContactSubs ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">contact_submissions</div><div class="detail">Website contact form entries</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ICT Database Tables -->
+<div class="card">
+    <div class="card-header">
+        <span>ICT Database Tables</span>
+    </div>
+    <div class="card-body">
+        <div class="step <?= $hasIctAssets ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasIctAssets ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">ict_assets</div><div class="detail">ICT equipment inventory</div></div>
+        </div>
+        <div class="step <?= $hasLabRooms ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasLabRooms ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">lab_rooms</div><div class="detail">Computer lab room definitions</div></div>
+        </div>
+        <div class="step <?= $hasLabBookings ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasLabBookings ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">computer_lab_bookings</div><div class="detail">Lab booking requests</div></div>
+        </div>
+        <div class="step <?= $hasLabSchedules ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasLabSchedules ? '✓' : '✗' ?></div>
+            <div class="info"><div class="title">lab_schedules</div><div class="detail">Recurring lab timetables</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Login Credentials -->
 <div class="card">
     <div class="card-header">
         <span>Staff Login Credentials</span>
     </div>
     <div class="card-body" style="font-size:0.85rem">
-        <?php if ($hasStaff && $totalStaff > 0): 
+        <?php if ($hasStaff && $totalStaff > 0):
             $staffList = $staffConn->query("SELECT s.email, s.full_name, sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id = sr.id ORDER BY sr.role_level, s.full_name");
         ?>
         <table style="width:100%;border-collapse:collapse">
@@ -456,7 +890,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
             <tr><td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['email']) ?></td>
                 <td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['full_name']) ?></td>
                 <td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['role_name']) ?></td>
-                <td style="padding:4px 8px;border-top:1px solid #e2e8f0;font-family:monospace"><?php 
+                <td style="padding:4px 8px;border-top:1px solid #e2e8f0;font-family:monospace"><?php
                     $pwMap = [
                         'directorgeneral' => 'DorisJoy2026', 'ceo' => 'Lovely2God', 'directoracademic' => 'Stephen123',
                         'finance' => 'DorisJoy2026', 'principal' => 'isnm2026', 'dep-principal' => 'Isnm2026',
@@ -483,17 +917,19 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
 <!-- Run Setup -->
 <div class="card">
     <div class="card-header">
-        <span>Run Setup</span>
+        <span>Run Full Database Setup</span>
     </div>
     <div class="card-body">
         <p style="font-size:0.9rem;color:#475569;margin-bottom:16px">
-            Creates the <strong>staff</strong>, <strong>staff_roles</strong>, and <strong>staff_departments</strong> tables,
-            then seeds all 28 roles and 25 staff accounts with their individual passwords.
+            Creates all required tables across <strong>Staff</strong>, <strong>Students</strong>,
+            <strong>Website</strong>, and <strong>ICT</strong> databases.
+            Seeds 28 staff roles, 25 staff accounts, and 18 departments.
+            All operations use <code>CREATE TABLE IF NOT EXISTS</code> and <code>INSERT IGNORE</code> — safe to re-run.
         </p>
         <form method="POST">
             <input type="hidden" name="action" value="run_setup">
             <button type="submit" class="btn btn-primary" <?= !$staffConn ? 'disabled' : '' ?>>
-                <?= $needsSetup ? 'Run Full Setup' : 'Re-run Setup (safe — uses INSERT IGNORE)' ?>
+                <?= $needsSetup ? 'Setup All Databases' : 'Re-run Setup (safe)' ?>
             </button>
         </form>
         <?php if (isset($results['output'])): ?>
@@ -501,7 +937,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
         <?php endif; ?>
         <?php if (isset($results['success']) && $results['success']): ?>
         <div style="background:#dcfce7;color:#16a34a;padding:12px 16px;border-radius:8px;margin-top:16px;font-weight:600">
-            ✓ Setup complete! You can now log in at <a href="staff-login.php" style="color:#2563eb">staff-login.php</a>
+            ✓ All databases setup complete! You can now log in at <a href="staff-login.php" style="color:#2563eb">staff-login.php</a>
         </div>
         <?php endif; ?>
     </div>

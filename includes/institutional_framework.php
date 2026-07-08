@@ -20,8 +20,8 @@ function getDirectorHierarchy($conn) {
             SELECT sr.id, sr.role_name, sr.role_level, sr.hierarchy_level, 
                    sr.reporting_to_role_id, sr.can_approve_level, sr.is_executive,
                    sr.dashboard_path, sr.role_description,
-                   (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.staff s WHERE s.role_id = sr.id AND s.status = 'Active') as staff_count
-            FROM igangaschoolofl_staffs_db.staff_roles sr
+                   (SELECT COUNT(*) FROM staff s WHERE s.role_id = sr.id AND s.status = 'Active') as staff_count
+            FROM staff_roles sr
             WHERE sr.hierarchy_level <= 10
             ORDER BY sr.hierarchy_level ASC, sr.role_name ASC
         ");
@@ -41,7 +41,7 @@ if (!function_exists('getRoleHierarchyLevel')) {
 function getRoleHierarchyLevel($roleName, $conn) {
     if (!$conn) return 99;
     try {
-        $stmt = $conn->prepare("SELECT hierarchy_level FROM igangaschoolofl_staffs_db.staff_roles WHERE role_name = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT hierarchy_level FROM staff_roles WHERE role_name = ? LIMIT 1");
         if (!$stmt) return 99;
         $stmt->bind_param('s', $roleName);
         $stmt->execute();
@@ -106,7 +106,7 @@ function getDataOwnership($roleId, $conn) {
     $rules = [];
     if (!$conn) return $rules;
     try {
-        $stmt = $conn->prepare("SELECT * FROM igangaschoolofl_staffs_db.data_ownership_rules WHERE role_id = ?");
+        $stmt = $conn->prepare("SELECT * FROM data_ownership_rules WHERE role_id = ?");
         if (!$stmt) return $rules;
         $stmt->bind_param('i', $roleId);
         $stmt->execute();
@@ -124,14 +124,14 @@ if (!function_exists('canAccessData')) {
 function canAccessData($roleId, $departmentCode, $dataCategory, $conn) {
     if (!$conn) return true;
     try {
-        $stmt = $conn->prepare("SELECT access_level FROM igangaschoolofl_staffs_db.data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT access_level FROM data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? LIMIT 1");
         if (!$stmt) return true;
         $stmt->bind_param('iss', $roleId, $departmentCode, $dataCategory);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$row) {
-            $stmt2 = $conn->prepare("SELECT access_level FROM igangaschoolofl_staffs_db.data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND access_level = 'full' LIMIT 1");
+            $stmt2 = $conn->prepare("SELECT access_level FROM data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND access_level = 'full' LIMIT 1");
             if ($stmt2) {
                 $stmt2->bind_param('i', $roleId);
                 $stmt2->execute();
@@ -153,14 +153,14 @@ if (!function_exists('isDataOwner')) {
 function isDataOwner($roleId, $departmentCode, $dataCategory, $conn) {
     if (!$conn) return false;
     try {
-        $stmt = $conn->prepare("SELECT is_owner FROM igangaschoolofl_staffs_db.data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? AND is_owner = 1 LIMIT 1");
+        $stmt = $conn->prepare("SELECT is_owner FROM data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? AND is_owner = 1 LIMIT 1");
         if (!$stmt) return false;
         $stmt->bind_param('iss', $roleId, $departmentCode, $dataCategory);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if ($row) return true;
-        $stmt2 = $conn->prepare("SELECT is_owner FROM igangaschoolofl_staffs_db.data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND is_owner = 1 LIMIT 1");
+        $stmt2 = $conn->prepare("SELECT is_owner FROM data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND is_owner = 1 LIMIT 1");
         if ($stmt2) {
             $stmt2->bind_param('i', $roleId);
             $stmt2->execute();
@@ -213,7 +213,7 @@ function recordAuditTrail($staffId, $action, $category, $description, $tableAffe
         $uri = $_SERVER['REQUEST_URI'] ?? '';
         $prevJson = $previousValues ? json_encode($previousValues) : null;
         $newJson = $newValues ? json_encode($newValues) : null;
-        $stmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.audit_trail (staff_id, staff_name, role_name, action, category, description, table_affected, record_id, record_identifier, previous_values, new_values, ip_address, user_agent, session_id, request_method, request_uri, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO audit_trail (staff_id, staff_name, role_name, action, category, description, table_affected, record_id, record_identifier, previous_values, new_values, ip_address, user_agent, session_id, request_method, request_uri, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         if (!$stmt) return false;
         $stmt->bind_param('issssssissssssss', $staffId, $staffName, $roleName, $action, $category, $description, $tableAffected, $recordId, $recordIdentifier, $prevJson, $newJson, $ip, $ua, $sessionId, $method, $uri);
         $r = $stmt->execute();
@@ -231,7 +231,7 @@ function getAuditTrail($conn, $filters = [], $limit = 50, $offset = 0) {
     $rows = [];
     if (!$conn) return $rows;
     try {
-        $sql = "SELECT * FROM igangaschoolofl_staffs_db.audit_trail WHERE 1=1";
+        $sql = "SELECT * FROM audit_trail WHERE 1=1";
         $params = [];
         $types = '';
         if (!empty($filters['staff_id'])) { $sql .= " AND staff_id = ?"; $params[] = $filters['staff_id']; $types .= 'i'; }
@@ -302,7 +302,7 @@ if (!function_exists('getDirectorPerformance')) {
 function getDirectorPerformance($staffId, $conn) {
     if (!$conn) return null;
     try {
-        $stmt = $conn->prepare("SELECT * FROM igangaschoolofl_staffs_db.director_performance_reviews WHERE staff_id = ? ORDER BY id DESC LIMIT 1");
+        $stmt = $conn->prepare("SELECT * FROM director_performance_reviews WHERE staff_id = ? ORDER BY id DESC LIMIT 1");
         if (!$stmt) return null;
         $stmt->bind_param('i', $staffId);
         $stmt->execute();
@@ -321,7 +321,7 @@ function getDepartmentTargets($departmentCode, $fiscalYear, $conn) {
     $targets = [];
     if (!$conn) return $targets;
     try {
-        $stmt = $conn->prepare("SELECT * FROM igangaschoolofl_staffs_db.department_targets WHERE department_code = ? AND (fiscal_year = ? OR fiscal_year = '') ORDER BY target_category, target_name");
+        $stmt = $conn->prepare("SELECT * FROM department_targets WHERE department_code = ? AND (fiscal_year = ? OR fiscal_year = '') ORDER BY target_category, target_name");
         if (!$stmt) return $targets;
         $stmt->bind_param('ss', $departmentCode, $fiscalYear);
         $stmt->execute();
@@ -377,7 +377,7 @@ function renderDirectorPerformanceCard($staffId, $roleId, $roleName, $conn) {
     $perf = getDirectorPerformance($staffId, $conn);
     $deptCode = '';
     try {
-        $dq = $conn->prepare("SELECT department_code FROM igangaschoolofl_staffs_db.director_departments WHERE role_id = ? AND is_primary = 1 LIMIT 1");
+        $dq = $conn->prepare("SELECT department_code FROM director_departments WHERE role_id = ? AND is_primary = 1 LIMIT 1");
         if ($dq) { $dq->bind_param('i', $roleId); $dq->execute(); $dr = $dq->get_result()->fetch_assoc(); $dq->close(); if ($dr) $deptCode = $dr['department_code']; }
     } catch (Exception $e) { error_log('inst_framework getDirectorPerformance: ' . $e->getMessage()); }
     $targets = $deptCode ? getDepartmentTargets($deptCode, date('Y'), $conn) : [];
@@ -421,7 +421,7 @@ function createAlert($title, $message, $type = 'info', $priority = 'Medium', $ca
     try {
         $typeMap = ['warning' => 'warning', 'danger' => 'danger', 'info' => 'info', 'success' => 'success', 'critical' => 'critical'];
         $aType = $typeMap[$type] ?? 'info';
-        $stmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.institutional_alerts (alert_title, alert_message, alert_type, priority, category, department_code, source_url, is_auto_generated, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO institutional_alerts (alert_title, alert_message, alert_type, priority, category, department_code, source_url, is_auto_generated, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         if (!$stmt) return false;
         $auto = $isAuto ? 1 : 0;
         $stmt->bind_param('sssssssi', $title, $message, $aType, $priority, $category, $departmentCode, $sourceUrl, $auto);
@@ -441,7 +441,7 @@ function getAlerts($conn, $departmentCode = null, $limit = 20, $unresolvedOnly =
     $alerts = [];
     if (!$conn) return $alerts;
     try {
-        $sql = "SELECT * FROM igangaschoolofl_staffs_db.institutional_alerts WHERE 1=1";
+        $sql = "SELECT * FROM institutional_alerts WHERE 1=1";
         if ($unresolvedOnly) $sql .= " AND is_resolved = 0";
         if ($departmentCode) $sql .= " AND (department_code = ? OR department_code IS NULL)";
         $sql .= " ORDER BY FIELD(priority,'Critical','High','Medium','Low') ASC, created_at DESC LIMIT ?";
@@ -497,7 +497,7 @@ function getAlertCounts($conn, $departmentCode = null) {
     $counts = ['critical' => 0, 'high' => 0, 'medium' => 0, 'low' => 0, 'total' => 0];
     if (!$conn) return $counts;
     try {
-        $sql = "SELECT priority, COUNT(*) as cnt FROM igangaschoolofl_staffs_db.institutional_alerts WHERE is_resolved = 0";
+        $sql = "SELECT priority, COUNT(*) as cnt FROM institutional_alerts WHERE is_resolved = 0";
         if ($departmentCode) $sql .= " AND (department_code = ? OR department_code IS NULL)";
         $sql .= " GROUP BY priority";
         $stmt = $conn->prepare($sql);
@@ -525,7 +525,7 @@ function getComplianceStatus($conn) {
     $status = ['compliant' => 0, 'non_compliant' => 0, 'overdue' => 0, 'in_progress' => 0, 'not_started' => 0, 'total' => 0];
     if (!$conn) return $status;
     try {
-        $result = $conn->query("SELECT status, COUNT(*) as cnt FROM igangaschoolofl_staffs_db.compliance_requirements GROUP BY status");
+        $result = $conn->query("SELECT status, COUNT(*) as cnt FROM compliance_requirements GROUP BY status");
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $s = strtolower(str_replace(' ', '_', $row['status']));
@@ -560,7 +560,7 @@ function getTopRisks($conn, $limit = 5) {
     $risks = [];
     if (!$conn) return $risks;
     try {
-        $result = $conn->query("SELECT * FROM igangaschoolofl_staffs_db.institutional_risks WHERE status NOT IN ('Closed','Mitigated') ORDER BY risk_score DESC LIMIT " . (int)$limit);
+        $result = $conn->query("SELECT * FROM institutional_risks WHERE status NOT IN ('Closed','Mitigated') ORDER BY risk_score DESC LIMIT " . (int)$limit);
         if ($result) {
             while ($row = $result->fetch_assoc()) $risks[] = $row;
         }
@@ -590,9 +590,9 @@ function getPendingApprovals($conn, $roleId = null, $limit = 20) {
     try {
         $sql = "SELECT ar.*, aw.workflow_name, aw.category as workflow_category, 
                        ast.stage_name as current_stage_name
-                FROM igangaschoolofl_staffs_db.approval_requests ar
-                JOIN igangaschoolofl_staffs_db.approval_workflows aw ON ar.workflow_id = aw.id
-                LEFT JOIN igangaschoolofl_staffs_db.approval_stages ast ON ar.current_stage_id = ast.id
+                FROM approval_requests ar
+                JOIN approval_workflows aw ON ar.workflow_id = aw.id
+                LEFT JOIN approval_stages ast ON ar.current_stage_id = ast.id
                 WHERE ar.status = 'Active'";
         if ($roleId) $sql .= " AND ast.assigned_role_id = ?";
         $sql .= " ORDER BY FIELD(ar.priority,'Critical','High','Medium','Low') ASC, ar.created_at DESC LIMIT ?";

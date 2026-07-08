@@ -60,19 +60,24 @@ function handleAddMarks() {
     // Calculate GPA contribution
     $gpa_contribution = $grade_points * $credits;
     
-    $sql = "INSERT INTO academic_records (student_id, academic_year, semester, year, course_code, course_name, course_type, credits, assessment_marks, exam_marks, total_marks, grade, grade_points, gpa_contribution, lecturer, entered_by, entry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssissisidddssdi", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
-    
-    if ($stmt->execute()) {
+    $conn->begin_transaction();
+    try {
+        $sql = "INSERT INTO academic_records (student_id, academic_year, semester, year, course_code, course_name, course_type, credits, assessment_marks, exam_marks, total_marks, grade, grade_points, gpa_contribution, lecturer, entered_by, entry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssissisidddssdi", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
+        $stmt->execute();
+        $stmt->close();
+
         // Update student's cumulative GPA
         updateStudentGPA($student_id, $academic_year, $semester);
         
+        $conn->commit();
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Marks Added', "Added marks for $student_id - $course_name", 'academic_records', $student_id);
         $_SESSION['success'] = "Marks added successfully!";
-    } else {
-        $_SESSION['error'] = "Error adding marks: " . $conn->error;
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['error'] = "Failed to save academic records: " . $e->getMessage();
     }
     
     header("Location: academic_records_management.php");
@@ -98,19 +103,24 @@ function handleUpdateMarks() {
     // Calculate new GPA contribution
     $gpa_contribution = $grade_points * $record['credits'];
     
-    $sql = "UPDATE academic_records SET assessment_marks = ?, exam_marks = ?, total_marks = ?, grade = ?, grade_points = ?, gpa_contribution = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("dddsddii", $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $_SESSION['user_id'], $record_id);
-    
-    if ($stmt->execute()) {
+    $conn->begin_transaction();
+    try {
+        $sql = "UPDATE academic_records SET assessment_marks = ?, exam_marks = ?, total_marks = ?, grade = ?, grade_points = ?, gpa_contribution = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("dddsddii", $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $_SESSION['user_id'], $record_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Update student's cumulative GPA
         updateStudentGPA($record['student_id'], $record['academic_year'], $record['semester']);
         
+        $conn->commit();
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Marks Updated', "Updated marks for record ID: $record_id", 'academic_records', $record['student_id']);
         $_SESSION['success'] = "Marks updated successfully!";
-    } else {
-        $_SESSION['error'] = "Error updating marks: " . $conn->error;
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['error'] = "Failed to update academic records: " . $e->getMessage();
     }
     
     header("Location: academic_records_management.php");
@@ -128,18 +138,23 @@ function handleDeleteMarks() {
     $record_result = executeQuery($get_record_sql, [$record_id], 'i');
     $record = $record_result[0];
     
-    $sql = "DELETE FROM academic_records WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $record_id);
-    
-    if ($stmt->execute()) {
+    $conn->begin_transaction();
+    try {
+        $sql = "DELETE FROM academic_records WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $record_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Update student's cumulative GPA
         updateStudentGPA($record['student_id'], $record['academic_year'], $record['semester']);
         
+        $conn->commit();
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Marks Deleted', "Deleted marks for record ID: $record_id", 'academic_records', $record['student_id']);
         $_SESSION['success'] = "Marks deleted successfully!";
-    } else {
-        $_SESSION['error'] = "Error deleting marks: " . $conn->error;
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['error'] = "Failed to delete academic records: " . $e->getMessage();
     }
     
     header("Location: academic_records_management.php");
@@ -198,7 +213,10 @@ function updateStudentGPA($student_id, $academic_year, $semester) {
     
     $stmt = $conn->prepare($summary_sql);
     $stmt->bind_param("sssddii", $student_id, $academic_year, $semester, $gpa, $position, $total_students, $total_credits);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to update academic summary: " . $stmt->error);
+    }
+    $stmt->close();
 }
 
 // Get filter parameters

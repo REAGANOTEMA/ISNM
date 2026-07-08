@@ -10,7 +10,8 @@ if (!$id) { header('Location: index.php'); exit; }
 $conn = DatabaseConnection::getStudentsConnection();
 $student = null;
 if ($conn) {
-    $r = $conn->query("SELECT * FROM students WHERE id = $id LIMIT 1");
+    $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+    if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else { $r = false; }
     if ($r) $student = $r->fetch_assoc();
 }
 if (!$student) { echo '<html><body><h2>Student not found</h2><a href="javascript:window.close()">Close</a></body></html>'; exit; }

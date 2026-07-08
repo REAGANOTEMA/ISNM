@@ -5,17 +5,13 @@
  * Uses a single DB connection (unlike phpMyAdmin's per-statement connections).
  */
 
-$host = 'localhost';
-$user = 'igangaschoolofl_staffs';
-$pass = ''; // ← FILL IN YOUR DATABASE PASSWORD
-$db   = 'igangaschoolofl_staffs_db';
-
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error . "\n");
+require_once __DIR__ . '/config/database.php';
+$conn = getStaffConnection();
+if (!$conn) {
+    die("ERROR: Cannot connect to staff database.\n");
 }
 
-echo "Connected to $db\n";
+echo "Connected to " . STAFF_DB_NAME . "\n";
 
 // 1. Delete all stages (avoids FK issues)
 $conn->query("DELETE FROM approval_stages");
@@ -29,14 +25,14 @@ echo "Duplicate workflows removed.\n";
 
 // 3. Drop existing indexes if present
 $idx1 = $conn->query("SELECT COUNT(*) AS c FROM information_schema.STATISTICS
-  WHERE TABLE_SCHEMA='$db' AND TABLE_NAME='approval_workflows' AND INDEX_NAME='uq_workflow_name'")->fetch_assoc()['c'];
+  WHERE TABLE_SCHEMA='" . STAFF_DB_NAME . "' AND TABLE_NAME='approval_workflows' AND INDEX_NAME='uq_workflow_name'")->fetch_assoc()['c'];
 if ($idx1 > 0) {
     $conn->query("DROP INDEX uq_workflow_name ON approval_workflows");
     echo "Dropped existing uq_workflow_name index.\n";
 }
 
 $idx2 = $conn->query("SELECT COUNT(*) AS c FROM information_schema.STATISTICS
-  WHERE TABLE_SCHEMA='$db' AND TABLE_NAME='approval_stages' AND INDEX_NAME='uq_workflow_stage_order'")->fetch_assoc()['c'];
+  WHERE TABLE_SCHEMA='" . STAFF_DB_NAME . "' AND TABLE_NAME='approval_stages' AND INDEX_NAME='uq_workflow_stage_order'")->fetch_assoc()['c'];
 if ($idx2 > 0) {
     $conn->query("DROP INDEX uq_workflow_stage_order ON approval_stages");
     echo "Dropped existing uq_workflow_stage_order index.\n";
@@ -88,7 +84,8 @@ $stmt2 = $conn->prepare("INSERT IGNORE INTO approval_stages (workflow_id, stage_
 foreach ($stagesData as $sd) {
     $wfName = $sd[0];
     $stageList = $sd[1];
-    $r = $conn->query("SELECT id FROM approval_workflows WHERE workflow_name = '$wfName' LIMIT 1");
+    $rStmt = $conn->prepare("SELECT id FROM approval_workflows WHERE workflow_name = ? LIMIT 1");
+    if ($rStmt) { $rStmt->bind_param('s', $wfName); $rStmt->execute(); $r = $rStmt->get_result(); $rStmt->close(); } else { $r = false; }
     $wfId = $r ? $r->fetch_assoc()['id'] : null;
     if (!$wfId) { echo "Warning: workflow '$wfName' not found, skipping stages.\n"; continue; }
     foreach ($stageList as $s) {

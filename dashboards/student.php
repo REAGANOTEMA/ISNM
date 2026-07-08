@@ -104,7 +104,7 @@ if (tableExists($studentsDb, 'payments')) {
 // Get live announcements for students
 $announcements = [];
 if (tableExists($studentsDb, 'announcements')) {
-    $ann_result = $studentsDb->query("SELECT a.*, COALESCE(s.full_name, CONCAT(s.first_name, ' ', s.surname)) AS posted_by_name FROM announcements a LEFT JOIN igangaschoolofl_staffs_db.staff s ON a.posted_by = s.id WHERE a.is_active = 1 AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expires_at IS NULL OR a.expires_at >= CURDATE()) ORDER BY a.priority DESC, a.created_at DESC LIMIT 5");
+    $ann_result = $studentsDb->query("SELECT a.*, COALESCE(s.full_name, CONCAT(s.first_name, ' ', s.surname)) AS posted_by_name FROM announcements a LEFT JOIN " . STAFF_DB_NAME . ".staff s ON a.posted_by = s.id WHERE a.is_active = 1 AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expires_at IS NULL OR a.expires_at >= CURDATE()) ORDER BY a.priority DESC, a.created_at DESC LIMIT 5");
     $announcements = ($ann_result) ? $ann_result->fetch_all(MYSQLI_ASSOC) : [];
 } elseif (tableExists($studentsDb, 'student_notifications')) {
     $ann_result = $studentsDb->query("SELECT id, title AS title, message AS content, type AS announcement_type, priority, created_at AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM student_notifications WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY created_at DESC LIMIT 5");

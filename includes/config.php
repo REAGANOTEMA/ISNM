@@ -4,20 +4,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-$host = STAFF_DB_HOST;
-$dbname = STAFF_DB_NAME;
-$username = STAFF_DB_USER;
-$password = STAFF_DB_PASS;
-
-mysqli_report(MYSQLI_REPORT_OFF);
-$conn = new mysqli($host, $username, $password, $dbname, STAFF_DB_PORT);
-
-if ($conn->connect_error) {
-    error_log('includes/config.php connection failed: ' . $conn->connect_error);
-    $conn = null;
-} elseif ($dbname !== '') {
-    $conn->set_charset(STAFF_DB_CHARSET);
-}
+$conn = getStaffConnection();
 
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
@@ -30,6 +17,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+if (!function_exists('executeQuery')) {
 function executeQuery($sql, $params = [], $types = '') {
     global $conn;
 
@@ -61,6 +49,7 @@ function executeQuery($sql, $params = [], $types = '') {
 
     $stmt->close();
     return $data;
+}
 }
 
 function sanitizeInput($input) {

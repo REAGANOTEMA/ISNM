@@ -168,10 +168,10 @@ if (!function_exists('isnm_mysqli_connect')) {
         $oldLevel = error_reporting(0);
 
         $knownCreds = [
-            'igangaschoolofl_staffs_db'    => ['user'=>'igangaschoolofl_staffs_db',    'pass'=>'AgKzJjZZnT5q58jCahs8'],
-            'igangaschoolofl_students_db'  => ['user'=>'igangaschoolofl_students_db',  'pass'=>'hbkKdmMHUfHTHuxWKPRf'],
-            'igangaschoolofl_website_db'   => ['user'=>'igangaschoolofl_website_db',   'pass'=>'AaCH75gXpekcFQj5wPZn'],
-            'igangaschoolofl_ict'          => ['user'=>'igangaschoolofl_ict',           'pass'=>'HHCrQVjr6QNKzSEVtx9J'],
+            'igangaschoolofl_staffs_db'    => ['user'=>'igangaschoolofl_staffs_db',    'pass'=>''],
+            'igangaschoolofl_students_db'  => ['user'=>'igangaschoolofl_students_db',  'pass'=>''],
+            'igangaschoolofl_website_db'   => ['user'=>'igangaschoolofl_website_db',   'pass'=>''],
+            'igangaschoolofl_ict'          => ['user'=>'igangaschoolofl_ict',           'pass'=>''],
         ];
         $credSet = [['user' => $user, 'pass' => $pass, 'db' => $db]];
         // Try hosting credentials FIRST (reverse order so they're tried before root/empty)

@@ -52,7 +52,10 @@ function generateUniqueId($prefix, $table, $field) {
         $unique_id = "$prefix/$year/$random";
         
         $check_sql = "SELECT COUNT(*) as count FROM $table WHERE $field = ?";
-        $check_result = executeQuery($check_sql, [$unique_id], 's');
+        $check_result = DatabaseConnection::executeQuery('staffs', $check_sql, [$unique_id], 's');
+        if (empty($check_result) || !isset($check_result[0]['count'])) {
+            return uniqid();
+        }
     } while ($check_result[0]['count'] > 0);
     
     return $unique_id;
@@ -151,7 +154,7 @@ function getClassPerformance($program, $year, $semester) {
             FROM academic_records 
             WHERE program = ? AND year = ? AND semester = ?";
     
-    $result = executeQuery($sql, [$program, $year, $semester], 'sis');
+    $result = DatabaseConnection::executeQuery('students', $sql, [$program, $year, $semester], 'sis');
     return $result[0] ?? null;
 }
 
@@ -162,7 +165,7 @@ function generateReportCard($student_id, $year, $semester) {
             JOIN students s ON ar.student_id = s.student_id 
             WHERE ar.student_id = ? AND ar.year = ? AND ar.semester = ?";
     
-    $result = executeQuery($sql, [$student_id, $year, $semester], 'sis');
+    $result = DatabaseConnection::executeQuery('students', $sql, [$student_id, $year, $semester], 'sis');
     return $result[0] ?? null;
 }
 
@@ -172,7 +175,7 @@ function checkFeeStatus($student_id, $academic_year) {
             WHERE student_id = ? AND academic_year = ? 
             ORDER BY year DESC, semester DESC";
     
-    $result = executeQuery($sql, [$student_id, $academic_year], 'ss');
+    $result = DatabaseConnection::executeQuery('students', $sql, [$student_id, $academic_year], 'ss');
     return $result;
 }
 
@@ -182,7 +185,10 @@ function generateReceiptNumber() {
     do {
         $receipt_no = 'RCP' . date('Y') . mt_rand(100000, 999999);
         $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE receipt_number = ?";
-        $check_result = executeQuery($check_sql, [$receipt_no], 's');
+        $check_result = DatabaseConnection::executeQuery('students', $check_sql, [$receipt_no], 's');
+        if (empty($check_result) || !isset($check_result[0]['count'])) {
+            return $receipt_no;
+        }
     } while ($check_result[0]['count'] > 0);
     
     return $receipt_no;
@@ -205,7 +211,7 @@ function calculateAttendance($student_id, $course_id, $semester) {
             FROM attendance 
             WHERE student_id = ? AND course_id = ? AND semester = ?";
     
-    $result = executeQuery($sql, [$student_id, $course_id, $semester], 'sis');
+    $result = DatabaseConnection::executeQuery('students', $sql, [$student_id, $course_id, $semester], 'sis');
     $data = $result[0] ?? null;
     
     if ($data && $data['total_sessions'] > 0) {
@@ -224,7 +230,7 @@ function getStudentTimetable($student_id, $semester) {
             AND t.semester = ? 
             ORDER BY t.day_of_week, t.start_time";
     
-    return executeQuery($sql, [$student_id, $semester], 'is');
+    return DatabaseConnection::executeQuery('students', $sql, [$student_id, $semester], 'is');
 }
 
 // Check graduation eligibility
@@ -233,12 +239,12 @@ function checkGraduationEligibility($student_id) {
             FROM academic_records 
             WHERE student_id = ? AND gpa IS NOT NULL";
     
-    $result = executeQuery($sql, [$student_id], 's');
+    $result = DatabaseConnection::executeQuery('students', $sql, [$student_id], 's');
     $data = $result[0] ?? null;
     
     if ($data) {
         $program_sql = "SELECT program FROM students WHERE student_id = ?";
-        $program_result = executeQuery($program_sql, [$student_id], 's');
+        $program_result = DatabaseConnection::executeQuery('students', $program_sql, [$student_id], 's');
         $program = $program_result[0]['program'] ?? '';
         
         $required_courses = getRequiredCourses($program);

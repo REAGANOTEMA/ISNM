@@ -171,27 +171,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rn='REG'.date('Y').$randPart;
         $pw=substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#'),0,12);
         $ph=password_hash($pw,PASSWORD_BCRYPT);
-        // Insert into students DB with is_first_login=0 (password already set)
-        if($stuConn){
-            $parts=explode(' ',$ap['full_name'],2);
-            $fn=$parts[0]; $sn2=$parts[1]??'';
-            $set=trim($ap['intake']??'');
-            $ins=$stuConn->prepare("INSERT INTO students(student_number,registration_number,index_number,first_name,surname,full_name,email,phone,gender,program,date_of_birth,nationality,address,set_name,status,password,is_first_login,password_changed,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW(),NOW())");
-            if($ins){$ins->bind_param('sssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$set,$ph);$ins->execute();$ins->close();}
-            // Create academic record
-            $stuConn->query("INSERT INTO student_academic_profiles(student_number,full_name,program,academic_year,status) VALUES('$sn','".$stuConn->real_escape_string($ap['full_name'])."','".$stuConn->real_escape_string($progName)."','".date('Y')."','Active')");
+        // Start transactions on both connections
+        if ($stuConn) $stuConn->begin_transaction();
+        $conn->begin_transaction();
+        try {
+            // Insert into students DB with is_first_login=0 (password already set)
+            if($stuConn){
+                $parts=explode(' ',$ap['full_name'],2);
+                $fn=$parts[0]; $sn2=$parts[1]??'';
+                $set=trim($ap['intake']??'');
+                $ins=$stuConn->prepare("INSERT INTO students(student_number,registration_number,index_number,first_name,surname,full_name,email,phone,gender,program,date_of_birth,nationality,address,set_name,status,password,is_first_login,password_changed,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW(),NOW())");
+                if($ins){$ins->bind_param('sssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$set,$ph);$ins->execute();$ins->close();}
+                // Create academic record
+                $acStmt = $stuConn->prepare("INSERT INTO student_academic_profiles(student_number,full_name,program,academic_year,status) VALUES(?,?,?,?,?)");
+                if($acStmt){$acStmt->bind_param('sssss',$sn,$ap['full_name'],$progName,date('Y'),'Active');$acStmt->execute();$acStmt->close();}
+            }
+            // Update applicant
+            $upd1 = $conn->prepare("UPDATE applicants SET status='Registered',student_number=?,registration_number=?,portal_username=?,portal_password_hash=?,registered_at=NOW() WHERE id=?");
+            $upd1->bind_param('ssssi',$sn,$rn,$sn,$ph,$id);
+            if(!$upd1->execute()) throw new Exception('Failed to update applicant: ' . $upd1->error);
+            $upd1->close();
+            $upd2 = $conn->prepare("UPDATE student_admission_tracking SET student_number=?,admission_status='Registered' WHERE applicant_id=?");
+            $upd2->bind_param('si',$sn,$id);
+            if(!$upd2->execute()) throw new Exception('Failed to update tracking: ' . $upd2->error);
+            $upd2->close();
+            // Create default requirement records for this applicant (mark as 'Not Yet Given')
+            $activeReqs=$conn->query("SELECT id FROM admission_requirements WHERE is_active=1");
+            if($activeReqs)while($req=$activeReqs->fetch_assoc()){
+                $insReq=$conn->prepare("INSERT IGNORE INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by) VALUES(?,?,?,?)");
+                $notYet='Not Yet Given';
+                $insReq->bind_param('iiss',$id,$req['id'],$notYet,$userId);
+                if(!$insReq->execute()) throw new Exception('Failed to create requirement record: ' . $insReq->error);
+                $insReq->close();
+            }
+            if ($stuConn) $stuConn->commit();
+            $conn->commit();
+            logAdmission($conn,$id,$userId,"Registered","Student registered: $sn ($progName)");
+            notifyAdmission($conn,$id,$userId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
+            echo json_encode(['success'=>true,'student_number'=>$sn,'username'=>$sn,'password'=>$pw,'program'=>$progName]);
+        } catch (Exception $e) {
+            if ($stuConn) $stuConn->rollback();
+            $conn->rollback();
+            echo json_encode(['success'=>false,'message'=>'Registration failed: ' . $e->getMessage()]);
         }
-        // Update applicant
-        $conn->query("UPDATE applicants SET status='Registered',student_number='$sn',registration_number='$rn',portal_username='$sn',portal_password_hash='$ph',registered_at=NOW() WHERE id=$id");
-        $conn->query("UPDATE student_admission_tracking SET student_number='$sn',admission_status='Registered' WHERE applicant_id=$id");
-        // Create default requirement records for this applicant (mark as 'Not Yet Given')
-        $activeReqs=$conn->query("SELECT id FROM admission_requirements WHERE is_active=1");
-        if($activeReqs)while($req=$activeReqs->fetch_assoc()){
-            $conn->query("INSERT IGNORE INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by) VALUES($id,{$req['id']},'Not Yet Given',$userId)");
-        }
-        logAdmission($conn,$id,$userId,"Registered","Student registered: $sn ($progName)");
-        notifyAdmission($conn,$id,$userId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
-        echo json_encode(['success'=>true,'student_number'=>$sn,'username'=>$sn,'password'=>$pw,'program'=>$progName]); exit;
+        exit;
     }
     
     // New action: Update applicant details

@@ -13,7 +13,7 @@ include('../assets/config.php');
             $month = date('m');         
 
            $id=$_SESSION['uid'];
-           $query="select * from attendence where (student_id='$id') AND (Month(`date`)='$month');";
+           $query="select * from attendance where (student_id='$id') AND (Month(`date`)='$month');";
           
 
            $result=$conn->query($query);
