@@ -43,8 +43,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
      * @return array{auth: AuthenticationService, staff: mysqli, students: mysqli, website: mysqli, user: array}
      */
     function bootstrapStaffDashboard(array $roleKeywords = []) {
-            session_start();
-        }
+        session_start();
 
         global $auth_service;
         if (!isset($auth_service) || !($auth_service instanceof AuthenticationService)) {
