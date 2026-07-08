@@ -18,6 +18,83 @@ if (!$conn) {
 
 echo "Connected to staff database.\n\n";
 
+// ── Step 0: Create tables if they do not exist ──
+$conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(100) NOT NULL,
+  `role_description` text DEFAULT NULL,
+  `role_level` int(11) DEFAULT 5,
+  `dashboard_path` varchar(255) DEFAULT NULL,
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `role_name` (`role_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+if ($conn->error) {
+    echo "  ✗ ERROR creating staff_roles table: " . $conn->error . "\n";
+} else {
+    echo "  ✓ staff_roles table ready\n";
+}
+
+$conn->query("CREATE TABLE IF NOT EXISTS `staff` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` varchar(20) DEFAULT NULL,
+  `full_name` varchar(150) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `marital_status` enum('Single','Married','Divorced','Widowed') DEFAULT 'Single',
+  `nationality` varchar(100) DEFAULT 'Ugandan',
+  `religion` varchar(100) DEFAULT NULL,
+  `nin` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `role_id` int(11) DEFAULT NULL,
+  `position` varchar(150) DEFAULT NULL,
+  `department` varchar(150) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'Active',
+  `hire_date` date DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  `login_attempts` int(11) DEFAULT 0,
+  `locked_until` datetime DEFAULT NULL,
+  `is_first_login` tinyint(1) DEFAULT 1,
+  `password_changed` tinyint(1) DEFAULT 0,
+  `profile_photo` varchar(255) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `next_of_kin_name` varchar(150) DEFAULT NULL,
+  `next_of_kin_phone` varchar(20) DEFAULT NULL,
+  `next_of_kin_relationship` varchar(50) DEFAULT NULL,
+  `next_of_kin_address` text DEFAULT NULL,
+  `emergency_contact_name` varchar(150) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
+  `highest_qualification` varchar(200) DEFAULT NULL,
+  `year_of_experience` int(11) DEFAULT 0,
+  `staff_category` enum('teaching','non-teaching','clinical','administrative') DEFAULT 'non-teaching',
+  `contract_end_date` date DEFAULT NULL,
+  `resignation_date` date DEFAULT NULL,
+  `resignation_reason` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role_id` (`role_id`),
+  KEY `idx_staff_email` (`email`),
+  KEY `idx_staff_status` (`status`),
+  KEY `idx_staff_role_status` (`role_id`,`status`),
+  KEY `idx_staff_nin` (`nin`),
+  KEY `idx_staff_gender` (`gender`),
+  KEY `idx_staff_category` (`staff_category`),
+  KEY `idx_staff_contract_end` (`contract_end_date`),
+  KEY `idx_staff_dob` (`date_of_birth`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+if ($conn->error) {
+    echo "  ✗ ERROR creating staff table: " . $conn->error . "\n";
+} else {
+    echo "  ✓ staff table ready\n";
+}
+echo "\n";
+
 // ── Step 1: Ensure ALL staff_roles exist ──
 $roles = [
     'Director General',
