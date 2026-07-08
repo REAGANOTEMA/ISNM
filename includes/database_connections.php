@@ -102,7 +102,7 @@ class DatabaseConnection {
             error_reporting($oldLevel);
             $err = "Connection to {$database} failed - no viable credentials";
             error_log("Database connection error: " . $err);
-            throw new Exception($err);
+            return null;
         }
         
         return self::$connections[$database];
