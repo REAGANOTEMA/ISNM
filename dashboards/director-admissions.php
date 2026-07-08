@@ -1147,6 +1147,7 @@ function loadRequirementsPortal() {
     
     const body = new URLSearchParams();
     body.append('action', 'filter_applicants');
+    body.append('csrf_token', CSRF);
     body.append('search', search);
     body.append('status', status === 'all' ? '' : status);
     body.append('program_id', program === 'all' ? '' : program);
@@ -1170,6 +1171,7 @@ function loadRequirementsPortal() {
         const appIds = applicants.map(a => a.id);
         const body2 = new URLSearchParams();
         body2.append('action', 'get_bulk_requirement_status');
+        body2.append('csrf_token', CSRF);
         body2.append('applicant_ids', JSON.stringify(appIds));
         
         fetch('director-admissions.php', {
@@ -1685,7 +1687,7 @@ function editStu(s){
 }
 function deleteStu(id,name){
   if(!confirm('Deactivate '+name+'?'))return;
-  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id}).then(r=>r.json()).then(d=>{if(d.success)filterStudents();else alert(d.message);});
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id+'&csrf_token='+encodeURIComponent(CSRF)}).then(r=>r.json()).then(d=>{if(d.success)filterStudents();else alert(d.message);});
 }
 function viewExcelStudent(name,file,id,setInfo,program,phone){
   var msg='Excel Student: '+name+'\nFile: '+file+'\nIndex: '+id+'\nSet: '+(setInfo||'-')+'\nProgram: '+(program||'-')+'\nPhone: '+(phone||'-');
@@ -1702,6 +1704,7 @@ function filterStudents(){
   document.getElementById('stuTableBody').innerHTML='<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>';
   var body=new URLSearchParams();
   body.append('action','stu_search');
+  body.append('csrf_token',CSRF);
   body.append('q',q);
   body.append('set',set);
   body.append('program',pg);
@@ -1769,6 +1772,7 @@ filterStudents();
 document.getElementById('stuForm').addEventListener('submit',function(e){
   e.preventDefault();
   var fd=new FormData(this);
+  fd.append('csrf_token',CSRF);
   fetch('',{method:'POST',body:new URLSearchParams(fd)}).then(function(r){return r.json();}).then(function(d){
     var msg=document.getElementById('stuMsg');
     if(d.success && d.student_number){
