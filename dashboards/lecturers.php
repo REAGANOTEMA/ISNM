@@ -9,6 +9,12 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
+if (stripos($userRole, 'Senior') !== false) {
+    session_write_close();
+    header('Location: senior-lecturers.php');
+    exit();
+}
+
 $studentsConn = $ctx['students'];
 
 $user_id = $_SESSION['user_id'] ?? 0;

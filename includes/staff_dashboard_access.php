@@ -115,15 +115,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
         }
 
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {
-            $allowed = false;
-            $roleLower = strtolower(trim(preg_replace('/[^a-z0-9]+/', ' ', $role)));
-            foreach ($roleKeywords as $keyword) {
-                $kw = strtolower(trim(preg_replace('/[^a-z0-9]+/', ' ', $keyword)));
-                if ($kw !== '' && strpos(" $roleLower ", " $kw ") !== false) {
-                    $allowed = true;
-                    break;
-                }
-            }
+            $allowed = $auth_service->roleMatchesKeywords($role, $roleKeywords);
             if (!$allowed) {
                 $userDashboard = $auth_service->getDashboardRoute($role);
                 $dashboardFile = $userDashboard ? basename($userDashboard) : '';

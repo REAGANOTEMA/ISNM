@@ -597,11 +597,63 @@ class AuthenticationService {
         return trim(preg_replace('/\s+/', ' ', strtolower(preg_replace('/[^a-z0-9]+/i', ' ', trim($value)))));
     }
 
+    /**
+     * Normalize and extract significant words from a role string.
+     * Strips common filler words (of, the, and, in, for, at, to, a, an, by, with, or)
+     * and returns a set of unique, meaningful words for flexible matching.
+     */
+    public function getRoleKeywords($value) {
+        $normalized = $this->normalizeRoleKey($value);
+        $words = explode(' ', $normalized);
+        $filler = ['of', 'the', 'and', 'in', 'for', 'at', 'to', 'a', 'an', 'by', 'with', 'or'];
+        $significant = array_diff($words, $filler);
+        return array_values(array_unique(array_filter($significant)));
+    }
+
+    /**
+     * Check if every word in $wordsA is fuzzy-matched in $wordsB.
+     * Fuzzy means: exact match OR one word is a substring of the other.
+     * This correctly handles: "lecturer" vs "lecturers", "driver" vs "drivers",
+     * "storekeeper" vs "store keeper" (via substring), "admin" vs "administrator".
+     */
+    private function wordsFuzzyMatch(array $wordsA, array $wordsB) {
+        foreach ($wordsA as $wa) {
+            $found = false;
+            foreach ($wordsB as $wb) {
+                if ($wa === $wb || strpos($wa, $wb) !== false || strpos($wb, $wa) !== false) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) return false;
+        }
+        return true;
+    }
+
     public function positionMatchesRole($requestedPosition, $userRole) {
-        $req  = $this->normalizeRoleKey($this->resolveOrganogramPosition($requestedPosition));
-        $role = $this->normalizeRoleKey($userRole);
-        if ($req === '' || $role === '') return false;
-        return strpos($role, $req) !== false || strpos($req, $role) !== false;
+        $reqWords  = $this->getRoleKeywords($this->resolveOrganogramPosition($requestedPosition));
+        $roleWords = $this->getRoleKeywords($userRole);
+        if (empty($reqWords) || empty($roleWords)) return false;
+        $allReqInRole = $this->wordsFuzzyMatch($reqWords, $roleWords);
+        $allRoleInReq = $this->wordsFuzzyMatch($roleWords, $reqWords);
+        return $allReqInRole || $allRoleInReq;
+    }
+
+    /**
+     * Check if a role is allowed by a list of role keywords.
+     * Uses fuzzy word matching (handles singular/plural, compound words).
+     */
+    public function roleMatchesKeywords($role, array $keywords) {
+        $roleWords = $this->getRoleKeywords($role);
+        if (empty($roleWords)) return false;
+        foreach ($keywords as $keyword) {
+            $kwWords = $this->getRoleKeywords($keyword);
+            if (empty($kwWords)) continue;
+            if ($this->wordsFuzzyMatch($kwWords, $roleWords)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getStaffEmailForRole($roleName) {
@@ -680,6 +732,8 @@ class AuthenticationService {
             'store keeper'                   => 'dashboards/storekeeper.php',
             'driver'                         => 'dashboards/drivers.php',
             'skills lab technician'          => 'dashboards/skills-lab.php',
+            'system administrator'           => 'dashboards/system-admin.php',
+            'system admin'                   => 'dashboards/system-admin.php',
         ];
         return $map[$key] ?? null;
     }
