@@ -734,6 +734,12 @@ class AuthenticationService {
             'skills lab technician'          => 'dashboards/skills-lab.php',
             'system administrator'           => 'dashboards/system-admin.php',
             'system admin'                   => 'dashboards/system-admin.php',
+            'events coordinator'             => 'dashboards/events-manager.php',
+            'events manager'                 => 'dashboards/events-manager.php',
+            'events'                         => 'dashboards/events-manager.php',
+            'alumni relations officer'       => 'dashboards/alumni-manager.php',
+            'alumni officer'                 => 'dashboards/alumni-manager.php',
+            'alumni'                         => 'dashboards/alumni-manager.php',
         ];
         return $map[$key] ?? null;
     }
@@ -777,7 +783,7 @@ class AuthenticationService {
     public function canSearchStudentProfiles($role) {
         if ($this->hasFullInstitutionAccess($role)) return true;
         $r = $this->normalizeRoleKey($role);
-        $allowed = ['director academics','director finance','director ict','computer department','ict officer','computer lab manager','skills lab manager','skills lab','school principal','deputy principal','academic registrar','hr manager','school secretary','school bursar','bursar','head nursing','head midwifery','head of nursing','head of midwifery','senior lecturers','lecturers','school librarian','matrons','wardens','sickbay','non teaching staff'];
+        $allowed = ['director academics','director finance','director ict','computer department','ict officer','computer lab manager','skills lab manager','skills lab','school principal','deputy principal','academic registrar','hr manager','school secretary','school bursar','bursar','head nursing','head midwifery','head of nursing','head of midwifery','senior lecturers','lecturers','school librarian','matrons','wardens','sickbay','non teaching staff','events coordinator','events manager','alumni relations officer','alumni officer'];
         return in_array($r, $allowed, true) || strpos($r, 'director') !== false || strpos($r, 'lecturer') !== false || strpos($r, 'registrar') !== false;
     }
 

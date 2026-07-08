@@ -923,6 +923,36 @@ include('shared/_header.php');
                         </div>
                     </div>
                 </div>
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-calendar-alt org-icon"></i>
+                        <div class="org-title">Events Coordinator</div>
+                        <div class="org-subtitle">Event Planning & Management</div>
+                        <a href="staff-login.php?position=Events%20Coordinator" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Events%20Coordinator'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-user-graduate org-icon"></i>
+                        <div class="org-title">Alumni Relations Officer</div>
+                        <div class="org-subtitle">Alumni Engagement & Records</div>
+                        <a href="staff-login.php?position=Alumni%20Relations%20Officer" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Alumni%20Relations%20Officer'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Academic Staff Level -->

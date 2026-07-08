@@ -139,6 +139,8 @@ function runSetup(&$output) {
             ['Computer Lab Manager',               4, 'dashboards/computer_lab.php'],
             ['Skills Lab Manager',                 4, 'dashboards/skills-lab.php'],
             ['Skills Lab Technician',              5, 'dashboards/skills-lab.php'],
+            ['Events Coordinator',                 4, 'dashboards/events-manager.php'],
+            ['Alumni Relations Officer',            4, 'dashboards/alumni-manager.php'],
         ];
         $insRole = $staffConn->prepare("INSERT IGNORE INTO staff_roles (role_name, role_level, dashboard_path) VALUES (?, ?, ?)");
         if ($insRole) {
@@ -237,6 +239,8 @@ function runSetup(&$output) {
             ['dannybict@igangaschoolofnursingandmidwifery.ac.ug',       'Director ICT',             'Lovely2God',   'Director ICT',       'ICT-001', 'Director ICT',        'ICT'],
             ['skills-lab@igangaschoolofnursingandmidwifery.ac.ug',       'Skills Lab Manager',       'Lovely2God',   'Skills Lab Manager', 'SKL-001', 'Skills Lab Manager',  'Skills Laboratory'],
             ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug',     'Computer Lab Manager',     'Techno123',    'Computer Lab Manager','CLB-001','Computer Lab Manager','ICT'],
+            ['events@igangaschoolofnursingandmidwifery.ac.ug',           'Events Coordinator',       'Eventful2026', 'Events Coordinator',  'EVT-001', 'Events Coordinator',  'Administration'],
+            ['alumni@igangaschoolofnursingandmidwifery.ac.ug',           'Alumni Relations Officer', 'Alumni2026',   'Alumni Relations Officer','ALU-001','Alumni Relations Officer','Administration'],
         ];
 
         $roleMap = [];
@@ -300,6 +304,8 @@ function runSetup(&$output) {
             ['Academic Registrar',  'REG',   3],
             ['Student Government',  'GOV',   5],
             ['Clinical',            'CLIN',  4],
+            ['Alumni Relations',     'ALUMNI', 4],
+            ['Events',              'EVENTS', 4],
         ];
         $insDept = $staffConn->prepare("INSERT IGNORE INTO staff_departments (department_name, department_code, department_level) VALUES (?, ?, ?)");
         if ($insDept) {
@@ -311,6 +317,99 @@ function runSetup(&$output) {
             logMsg($output, "  ✓ $deptCount departments inserted");
         }
     }
+
+    // events table
+    logMsg($output, "\n=== Creating events tables ===");
+    $eventsCreated = false;
+    $e1 = $staffConn->query("CREATE TABLE IF NOT EXISTS `events` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `title` varchar(255) NOT NULL, `description` text DEFAULT NULL,
+        `event_date` date NOT NULL, `event_time` time DEFAULT NULL, `end_date` date DEFAULT NULL, `end_time` time DEFAULT NULL,
+        `location` varchar(255) DEFAULT NULL, `category` varchar(100) DEFAULT 'General',
+        `event_type` enum('academic','cultural','sports','health','meeting','workshop','ceremony','other') DEFAULT 'other',
+        `organizer` varchar(200) DEFAULT NULL, `organizer_email` varchar(200) DEFAULT NULL,
+        `target_audience` varchar(255) DEFAULT NULL, `max_attendees` int(11) DEFAULT 0,
+        `cover_image` varchar(500) DEFAULT NULL, `status` enum('draft','published','cancelled','completed') DEFAULT 'draft',
+        `created_by` int(11) DEFAULT NULL, `created_at` timestamp NULL DEFAULT current_timestamp(),
+        `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+        PRIMARY KEY (`id`), KEY `idx_event_date` (`event_date`), KEY `idx_event_status` (`status`), KEY `idx_event_category` (`category`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($e1) { logMsg($output, "  ✓ events table ready"); $eventsCreated = true; }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $e2 = $staffConn->query("CREATE TABLE IF NOT EXISTS `event_attendees` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `event_id` int(11) NOT NULL, `full_name` varchar(200) NOT NULL,
+        `email` varchar(200) DEFAULT NULL, `phone` varchar(50) DEFAULT NULL, `organization` varchar(255) DEFAULT NULL,
+        `status` enum('registered','attended','cancelled','no_show') DEFAULT 'registered',
+        `registered_at` timestamp NULL DEFAULT current_timestamp(), `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`), KEY `event_id` (`event_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($e2) { logMsg($output, "  ✓ event_attendees table ready"); }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $e3 = $staffConn->query("CREATE TABLE IF NOT EXISTS `event_categories` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(100) NOT NULL, `description` text DEFAULT NULL,
+        `color` varchar(20) DEFAULT '#0d6efd', `is_active` tinyint(1) DEFAULT 1, `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`), UNIQUE KEY `name` (`name`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($e3) { logMsg($output, "  ✓ event_categories table ready"); }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $staffConn->query("INSERT IGNORE INTO event_categories (name, description, color) VALUES
+        ('General','General events','#0d6efd'),('Academic','Academic events','#198754'),('Cultural','Cultural events','#dc3545'),
+        ('Sports','Sports events','#ffc107'),('Health','Health events','#20c997'),('Workshop','Workshops','#6610f2'),
+        ('Meeting','Meetings','#fd7e14'),('Ceremony','Ceremonies','#d63384')");
+
+    // alumni tables
+    logMsg($output, "\n=== Creating alumni tables ===");
+    $alumniCreated = false;
+    $a1 = $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `student_id` varchar(50) DEFAULT NULL, `index_number` varchar(50) DEFAULT NULL,
+        `first_name` varchar(100) NOT NULL, `surname` varchar(100) NOT NULL, `other_name` varchar(100) DEFAULT NULL,
+        `full_name` varchar(300) DEFAULT NULL, `email` varchar(200) DEFAULT NULL, `phone` varchar(50) DEFAULT NULL,
+        `gender` enum('Male','Female','Other') DEFAULT 'Other', `date_of_birth` date DEFAULT NULL,
+        `nationality` varchar(100) DEFAULT 'Ugandan', `address` text DEFAULT NULL, `program` varchar(200) DEFAULT NULL,
+        `graduation_year` year(4) DEFAULT NULL, `graduation_class` varchar(50) DEFAULT NULL,
+        `current_employer` varchar(255) DEFAULT NULL, `current_position` varchar(255) DEFAULT NULL,
+        `employment_status` enum('employed','self-employed','unemployed','student','retired') DEFAULT 'employed',
+        `industry` varchar(200) DEFAULT NULL, `location_city` varchar(100) DEFAULT NULL,
+        `location_country` varchar(100) DEFAULT 'Uganda', `linkedin` varchar(500) DEFAULT NULL,
+        `bio` text DEFAULT NULL, `skills` text DEFAULT NULL, `interests` text DEFAULT NULL,
+        `membership_status` enum('active','inactive','lifetime') DEFAULT 'active',
+        `profile_photo` varchar(500) DEFAULT NULL, `emergency_contact` varchar(100) DEFAULT NULL,
+        `emergency_phone` varchar(50) DEFAULT NULL, `newsletter_optin` tinyint(1) DEFAULT 1,
+        `notes` text DEFAULT NULL, `created_by` int(11) DEFAULT NULL,
+        `created_at` timestamp NULL DEFAULT current_timestamp(), `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+        PRIMARY KEY (`id`), UNIQUE KEY `idx_alumni_email` (`email`),
+        KEY `idx_alumni_graduation` (`graduation_year`), KEY `idx_alumni_status` (`membership_status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($a1) { logMsg($output, "  ✓ alumni table ready"); $alumniCreated = true; }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $a2 = $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_contributions` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `alumni_id` int(11) NOT NULL,
+        `contribution_type` enum('donation','sponsorship','volunteer','mentorship','other') DEFAULT 'donation',
+        `amount` decimal(12,2) DEFAULT 0.00, `currency` varchar(3) DEFAULT 'UGX', `description` text DEFAULT NULL,
+        `contribution_date` date DEFAULT curdate(), `payment_method` varchar(50) DEFAULT NULL,
+        `transaction_ref` varchar(100) DEFAULT NULL, `acknowledged` tinyint(1) DEFAULT 0,
+        `acknowledged_by` int(11) DEFAULT NULL, `acknowledged_at` datetime DEFAULT NULL,
+        `created_by` int(11) DEFAULT NULL, `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`), KEY `alumni_id` (`alumni_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($a2) { logMsg($output, "  ✓ alumni_contributions table ready"); }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $a3 = $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_events` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `alumni_id` int(11) NOT NULL, `event_name` varchar(255) NOT NULL,
+        `event_date` date DEFAULT NULL, `attended` tinyint(1) DEFAULT 0, `notes` text DEFAULT NULL,
+        `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`), KEY `alumni_id` (`alumni_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($a3) { logMsg($output, "  ✓ alumni_events table ready"); }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
+    $a4 = $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_jobs` (
+        `id` int(11) NOT NULL AUTO_INCREMENT, `alumni_id` int(11) NOT NULL, `company` varchar(255) NOT NULL,
+        `position` varchar(255) NOT NULL, `start_date` date DEFAULT NULL, `end_date` date DEFAULT NULL,
+        `is_current` tinyint(1) DEFAULT 0, `description` text DEFAULT NULL,
+        `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`), KEY `alumni_id` (`alumni_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if ($a4) { logMsg($output, "  ✓ alumni_jobs table ready"); }
+    else { logMsg($output, "  ✗ Error: " . $staffConn->error); }
 
     $ret['staff_roles_created'] = $staffRolesCreated;
     $ret['staff_created'] = $staffCreated;
@@ -743,6 +842,8 @@ $hasLabBookings = in_array('computer_lab_bookings', $ictTables);
 $hasLabSchedules = in_array('lab_schedules', $ictTables);
 $hasNotificationReads = in_array('notification_reads', $webTables);
 $hasLabRooms = in_array('lab_rooms', $ictTables);
+$hasEvents = in_array('events', $staffTables);
+$hasAlumni = in_array('alumni', $staffTables);
 $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
 ?>
 
@@ -790,6 +891,20 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
             <div class="info">
                 <div class="title">staff_departments</div>
                 <div class="detail"><?= $totalDepts ?> department<?= $totalDepts !== 1 ? 's' : '' ?> defined</div>
+            </div>
+        </div>
+        <div class="step <?= $hasEvents ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasEvents ? '✓' : '✗' ?></div>
+            <div class="info">
+                <div class="title">events + attendees + categories</div>
+                <div class="detail">Events Management module tables</div>
+            </div>
+        </div>
+        <div class="step <?= $hasAlumni ? 'done' : 'fail' ?>">
+            <div class="icon"><?= $hasAlumni ? '✓' : '✗' ?></div>
+            <div class="info">
+                <div class="title">alumni + contributions + jobs + events</div>
+                <div class="detail">Alumni Management module tables</div>
             </div>
         </div>
     </div>
@@ -900,7 +1015,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
                         'warden' => 'Lovely2God', 'sickbay' => 'isnm2026', 'drivers' => 'isnm4life',
                         'security' => 'safty1st', 'store' => 'Isnm4life', 'guildpresident' => 'isnm4life',
                         'admissions' => '2268926931', 'dannybict' => 'Lovely2God', 'skills-lab' => 'Lovely2God',
-                        'computer-lab' => 'Techno123',
+                        'computer-lab' => 'Techno123', 'events' => 'Eventful2026', 'alumni' => 'Alumni2026',
                     ];
                     $local = substr($s['email'], 0, strpos($s['email'], '@'));
                     echo htmlspecialchars($pwMap[$local] ?? '—');
@@ -923,7 +1038,7 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
         <p style="font-size:0.9rem;color:#475569;margin-bottom:16px">
             Creates all required tables across <strong>Staff</strong>, <strong>Students</strong>,
             <strong>Website</strong>, and <strong>ICT</strong> databases.
-            Seeds 28 staff roles, 25 staff accounts, and 18 departments.
+            Seeds 30 staff roles, 27 staff accounts, and 20 departments.
             All operations use <code>CREATE TABLE IF NOT EXISTS</code> and <code>INSERT IGNORE</code> — safe to re-run.
         </p>
         <form method="POST">
