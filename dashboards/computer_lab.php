@@ -1276,8 +1276,24 @@ function deleteEquipment(id) {
     if (!confirm('Retire this equipment?')) return;
     $.post(LAB_HANDLER, { action: 'delete_equipment', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
-function editEquipment(id) { showAlert('Edit feature coming soon', 'info'); }
-function editSoftware(id) { showAlert('Edit feature coming soon', 'info'); }
+function editEquipment(id) {
+    const name = prompt('Equipment name:') || '';
+    if (!name) return;
+    const type = prompt('Type (computer/printer/scanner/other):') || '';
+    const brand = prompt('Brand:') || '';
+    const condition = prompt('Condition (excellent/good/fair/poor):') || 'good';
+    const status = prompt('Status (available/in_use/retired):') || 'available';
+    $.post(LAB_HANDLER, { action: 'edit_equipment', id, equipment_name: name, equipment_type: type, brand, model: '', serial_number: '', lab_room_id: 0, condition_status: condition, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+}
+function editSoftware(id) {
+    const name = prompt('Software name:') || '';
+    if (!name) return;
+    const ver = prompt('Version:') || '';
+    const license = prompt('License key:') || '';
+    const type = prompt('License type (opensource/commercial/academic):') || '';
+    const expiry = prompt('License expiry (YYYY-MM-DD) or leave blank:');
+    $.post(LAB_HANDLER, { action: 'edit_software', id, software_name: name, version: ver, license_key: license, license_type: type, license_expiry: expiry || null }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+}
 function deleteSoftware(id) {
     if (!confirm('Delete this software?')) return;
     $.post(LAB_HANDLER, { action: 'delete_software', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });

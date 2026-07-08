@@ -522,6 +522,21 @@ try {
             respond(true, 'Stock updated');
             break;
 
+        case 'edit_consumable':
+            $id = (int)($_POST['id'] ?? 0);
+            $name = $_POST['item_name'] ?? '';
+            $cat = $_POST['item_category'] ?? '';
+            $qty = (int)($_POST['quantity'] ?? 0);
+            $reorder = (int)($_POST['reorder_level'] ?? 0);
+            $cost = (float)($_POST['unit_cost'] ?? 0);
+            $supplier = $_POST['supplier'] ?? '';
+            if (!$id || !$name) throw new Exception('Item ID and name required');
+            $stmt = $ict->prepare("UPDATE lab_consumables SET item_name=?, item_category=?, quantity=?, reorder_level=?, unit_cost=?, supplier=? WHERE id=?");
+            $stmt->bind_param('ssiidsi', $name, $cat, $qty, $reorder, $cost, $supplier, $id);
+            $stmt->execute();
+            respond(true, 'Consumable updated');
+            break;
+
         case 'delete_consumable':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Item ID required');

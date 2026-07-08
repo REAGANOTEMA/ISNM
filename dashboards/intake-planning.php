@@ -1,13 +1,12 @@
 <?php
-// Redirect to consolidated Director Admissions dashboard
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['admissions', 'director']);
-header('Location: director-admissions.php?page=intake_planning');
-exit;
+$ctx = bootstrapStaffDashboard(['admissions', 'director', 'registrar', 'academic registrar', 'director general']);
+$conn = $ctx['staff'] ?? null;
+$studentsDb = $ctx['students'] ?? null;
 
 $intakes = [];
-if ($conn) {
-    $r = $conn->query("SELECT YEAR(admission_date) AS intake_year, program, COUNT(*) AS student_count FROM students GROUP BY YEAR(admission_date), program ORDER BY intake_year DESC, student_count DESC");
+if ($studentsDb) {
+    $r = $studentsDb->query("SELECT YEAR(admission_date) AS intake_year, program, COUNT(*) AS student_count FROM students GROUP BY YEAR(admission_date), program ORDER BY intake_year DESC, student_count DESC");
     if ($r) while ($row = $r->fetch_assoc()) $intakes[] = $row;
 }
 $programs = [];
