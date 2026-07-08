@@ -777,7 +777,7 @@ class AuthenticationService {
             return 'dashboards/director-admissions.php';
         }
 
-        return 'dashboards/director-general.php';
+        return 'dashboards/non-teaching-staff.php';
     }
 
     public function canSearchStudentProfiles($role) {

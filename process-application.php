@@ -40,6 +40,32 @@ function uploadFileIfPresent($fieldName, $allowedTypes, $maxSize, $uploadDir) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        $websiteDb = getWebsiteConnection();
+        if ($websiteDb) {
+            $websiteDb->query("CREATE TABLE IF NOT EXISTS student_applications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                application_number VARCHAR(50) NOT NULL,
+                first_name VARCHAR(100) NOT NULL,
+                surname VARCHAR(100) NOT NULL,
+                other_name VARCHAR(100) DEFAULT NULL,
+                date_of_birth DATE DEFAULT NULL,
+                gender VARCHAR(20) DEFAULT NULL,
+                nationality VARCHAR(100) DEFAULT 'Ugandan',
+                phone VARCHAR(20) DEFAULT NULL,
+                email VARCHAR(255) DEFAULT NULL,
+                address TEXT DEFAULT NULL,
+                program_applied VARCHAR(255) DEFAULT NULL,
+                previous_school VARCHAR(255) DEFAULT NULL,
+                uce_results VARCHAR(255) DEFAULT NULL,
+                uace_results VARCHAR(255) DEFAULT NULL,
+                status VARCHAR(50) DEFAULT 'Pending',
+                submitted_at DATETIME DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_status (status),
+                INDEX idx_submitted (submitted_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        }
         $applicationId = generateApplicationId();
         $level = sanitizeInput($_POST['levelApplying'] ?? '');
 

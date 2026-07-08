@@ -395,6 +395,24 @@ function getRoleOperations(string $role): array {
             ['label' => 'Audit Trail',          'icon'=>'fas fa-history',       'page'=>'audit'],
             ['label' => 'Settings',             'icon'=>'fas fa-cog',           'page'=>'settings'],
         ],
+        'events' => [
+            ['label' => 'Dashboard',            'icon'=>'fas fa-chart-pie',     'page'=>'overview'],
+            ['label' => 'Calendar',             'icon'=>'fas fa-calendar-alt',  'page'=>'calendar'],
+            ['label' => 'All Events',           'icon'=>'fas fa-calendar-day',  'page'=>'events'],
+            ['label' => 'Event Categories',     'icon'=>'fas fa-tags',          'page'=>'categories'],
+            ['label' => 'Attendees',            'icon'=>'fas fa-users',         'page'=>'attendees'],
+            ['label' => 'Reports',              'icon'=>'fas fa-file-alt',      'page'=>'reports'],
+            ['label' => 'Settings',             'icon'=>'fas fa-cog',           'page'=>'settings'],
+        ],
+        'alumni' => [
+            ['label' => 'Dashboard',            'icon'=>'fas fa-chart-pie',     'page'=>'overview'],
+            ['label' => 'Alumni Directory',     'icon'=>'fas fa-address-book',  'page'=>'alumni'],
+            ['label' => 'Contributions',        'icon'=>'fas fa-hand-holding-usd','page'=>'contributions'],
+            ['label' => 'Job Board',            'icon'=>'fas fa-briefcase',     'page'=>'jobs'],
+            ['label' => 'Alumni Events',        'icon'=>'fas fa-calendar-alt',  'page'=>'events'],
+            ['label' => 'Reports',              'icon'=>'fas fa-file-alt',      'page'=>'reports'],
+            ['label' => 'Settings',             'icon'=>'fas fa-cog',           'page'=>'settings'],
+        ],
     ];
 
     return $definitions[$roleKey] ?? $definitions['lecturer'];
@@ -426,8 +444,8 @@ function normalizeRoleKeySidebar(string $role): string {
         'non-teaching' => 'non_teaching', 'non-teaching-staff' => 'non_teaching', 'non teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching', 'non_teaching' => 'non_teaching',
         'system admin' => 'system_admin', 'system-admin' => 'system_admin', 'system_admin' => 'system_admin',
         'student' => 'student', 'students' => 'student',
-        'events coordinator' => 'director_general', 'events manager' => 'director_general',
-        'alumni relations officer' => 'director_general', 'alumni officer' => 'director_general',
+        'events coordinator' => 'events', 'events manager' => 'events',
+        'alumni relations officer' => 'alumni', 'alumni officer' => 'alumni',
     ];
     return $map[$m] ?? 'lecturer';
 }
