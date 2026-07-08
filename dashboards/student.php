@@ -5,7 +5,10 @@ require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_path', '/ISNM/');
+    session_start();
+}
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'student') {
     header('Location: ../student-login.php?error=student_access_required');
     exit;

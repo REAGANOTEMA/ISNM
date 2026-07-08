@@ -4,18 +4,19 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.use_strict_mode', 1);
-$https = false;
-if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
-    $https = true;
-}
-if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-    $https = in_array(strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']), ['https', 'wss'], true);
-}
-if ($https) {
-    ini_set('session.cookie_secure', 1);
-} else {
-    ini_set('session.cookie_secure', 0);
-}
+    ini_set('session.cookie_path', '/ISNM/');
+    $https = false;
+    if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
+        $https = true;
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $https = in_array(strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']), ['https', 'wss'], true);
+    }
+    if ($https) {
+        ini_set('session.cookie_secure', 1);
+    } else {
+        ini_set('session.cookie_secure', 0);
+    }
     session_start();
 }
 require_once __DIR__ . '/config/database.php';
@@ -59,15 +60,18 @@ if ($auth_service->isAuthenticated()) {
             && !$auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
         ) {
             $auth_service->logout();
-            session_start();
+            if (session_status() === PHP_SESSION_NONE) {
+                ini_set('session.cookie_path', '/ISNM/');
+                session_start();
+            }
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         } else {
             if (!empty($_SESSION['login_redirect_url'])) {
                 $target = $_SESSION['login_redirect_url'];
                 unset($_SESSION['login_redirect_url'], $_SESSION['requested_position']);
-                $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-                $targetPath = parse_url($target, PHP_URL_PATH);
-                if ($targetPath && $targetPath !== $currentPath) {
+                $currentFile = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '');
+                $targetFile = basename(parse_url($target, PHP_URL_PATH) ?: '');
+                if ($targetFile && $targetFile !== 'staff-login.php' && $targetFile !== $currentFile) {
                     session_write_close();
                     header("Location: $target");
                     exit();

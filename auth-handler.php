@@ -428,9 +428,15 @@ switch ($action) {
                     'dashboards/computer_lab.php',
                 ];
 
-                // Normalize target to just the path segment (strip query/fragment)
+                // Normalize target: strip base path, query, fragment
                 $normalized = $target;
                 $normalized = strtok($normalized, "?#");
+                // Strip leading /ISNM/ or any leading /path/ prefix
+                $basePath = dirname($_SERVER['SCRIPT_NAME']) ?: '';
+                if ($basePath !== '' && $basePath !== '/' && strpos($normalized, $basePath) === 0) {
+                    $normalized = substr($normalized, strlen($basePath));
+                }
+                $normalized = ltrim($normalized, '/');
 
                 // Forbid traversal and absolute URLs
                 if (strpos($normalized, '..') !== false || strpos($normalized, '://') !== false || strlen($normalized) === 0) {

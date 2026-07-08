@@ -43,7 +43,10 @@ if (!function_exists('bootstrapStaffDashboard')) {
      * @return array{auth: AuthenticationService, staff: mysqli, students: mysqli, website: mysqli, user: array}
      */
     function bootstrapStaffDashboard(array $roleKeywords = []) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.cookie_path', '/ISNM/');
+            session_start();
+        }
 
         global $auth_service;
         if (!isset($auth_service) || !($auth_service instanceof AuthenticationService)) {
@@ -123,7 +126,11 @@ if (!function_exists('bootstrapStaffDashboard')) {
             }
             if (!$allowed) {
                 $userDashboard = $auth_service->getDashboardRoute($role);
-                $dashboardFile = basename($userDashboard);
+                $dashboardFile = $userDashboard ? basename($userDashboard) : '';
+                $currentFile = basename($_SERVER['SCRIPT_NAME'] ?? '');
+                if ($dashboardFile === $currentFile) {
+                    $dashboardFile = 'index.php';
+                }
                 $redirectUrl = $dashboardFile ?: 'index.php';
                 session_write_close();
                 header('Location: ' . $redirectUrl);

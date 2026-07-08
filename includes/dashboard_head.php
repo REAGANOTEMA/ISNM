@@ -118,17 +118,17 @@ document.addEventListener('DOMContentLoaded', function() {
 if (!window._isnmErrorHandlerInstalled) {
     window._isnmErrorHandlerInstalled = true;
     window.addEventListener('unhandledrejection', function(e) {
-        var url = '';
         try {
-            if (e.reason && typeof e.reason === 'object') {
-                url = e.reason.url || '';
-            } else if (typeof e.reason === 'string') {
-                url = e.reason;
+            var r = e.reason;
+            if (!r || typeof r !== 'object') return;
+            var chk = r.url || '';
+            if (!chk && r.reqInfo) {
+                chk = (r.reqInfo.pathPrefix || '') + '/' + (r.reqInfo.path || '');
+            }
+            if (chk.indexOf('/writing/') > -1 || chk.indexOf('/generate/') > -1 || chk.indexOf('/site_integration/') > -1) {
+                e.preventDefault();
             }
         } catch(ex) {}
-        if (url.indexOf('/writing/') > -1 || url.indexOf('/generate/') > -1 || url.indexOf('/site_integration/') > -1) {
-            e.preventDefault();
-        }
     });
 }
 </script>
