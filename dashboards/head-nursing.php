@@ -10,6 +10,7 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Nursing';
 $user_id = (int)($user['id'] ?? 0);
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 // ── POST Handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
@@ -246,7 +247,7 @@ if ($conn) {
 $programs_data = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM igangaschoolofl_students_db.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Nursing%' AND status='Active'");
+        $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM {$students_db_name}.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Nursing%' AND status='Active'");
         if ($r) $programs_data = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('head-nursing context: ' . $e->getMessage()); }
 }

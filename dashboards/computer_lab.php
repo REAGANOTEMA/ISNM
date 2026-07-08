@@ -28,6 +28,7 @@ $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
 $students = null;
 try { $students = getStudentsConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 // Stats
 $total_computers   = lab_q($ict, "SELECT COUNT(*) FROM lab_computers WHERE status!='deleted'");
@@ -58,9 +59,9 @@ $print_jobs  = lab_fetch($ict, "SELECT * FROM printing_jobs ORDER BY created_at 
 $print_charges = lab_fetch($ict, "SELECT * FROM printing_charges WHERE is_active=1 ORDER BY print_type, paper_size");
 $consumables = lab_fetch($ict, "SELECT * FROM lab_consumables ORDER BY item_name");
 $checkouts   = lab_fetch($ict, "SELECT co.*, e.equipment_name, e.equipment_code FROM lab_equipment_checkout co LEFT JOIN lab_equipment e ON co.equipment_id=e.id WHERE co.status='checked_out' OR co.status='overdue' ORDER BY co.expected_return");
-$id_cards    = lab_fetch($ict, "SELECT c.*, s.full_name, s.student_number FROM student_id_cards c LEFT JOIN igangaschoolofl_students_db.students s ON c.student_id=s.id ORDER BY c.created_at DESC LIMIT 50");
-$card_replacements = lab_fetch($ict, "SELECT r.*, s.full_name FROM id_card_replacements r LEFT JOIN igangaschoolofl_students_db.students s ON r.student_id=s.id WHERE r.status='pending' ORDER BY r.created_at DESC");
-$attendances  = lab_fetch($ict, "SELECT a.*, s.full_name FROM lab_attendance a LEFT JOIN igangaschoolofl_students_db.students s ON a.student_id=s.id WHERE a.attendance_date >= CURDATE() ORDER BY a.created_at DESC LIMIT 30");
+$id_cards    = lab_fetch($ict, "SELECT c.*, s.full_name, s.student_number FROM student_id_cards c LEFT JOIN {$students_db_name}.students s ON c.student_id=s.id ORDER BY c.created_at DESC LIMIT 50");
+$card_replacements = lab_fetch($ict, "SELECT r.*, s.full_name FROM id_card_replacements r LEFT JOIN {$students_db_name}.students s ON r.student_id=s.id WHERE r.status='pending' ORDER BY r.created_at DESC");
+$attendances  = lab_fetch($ict, "SELECT a.*, s.full_name FROM lab_attendance a LEFT JOIN {$students_db_name}.students s ON a.student_id=s.id WHERE a.attendance_date >= CURDATE() ORDER BY a.created_at DESC LIMIT 30");
 $maintenance_logs = lab_fetch($ict, "SELECT ml.*, c.computer_name FROM maintenance_logs ml LEFT JOIN lab_computers c ON ml.computer_id=c.id ORDER BY ml.created_at DESC LIMIT 50");
 $installations = lab_fetch($ict, "SELECT si.*, sw.software_name, c.computer_name FROM software_installations si LEFT JOIN software_inventory sw ON si.software_id=sw.id LEFT JOIN lab_computers c ON si.computer_id=c.id ORDER BY si.created_at DESC LIMIT 30");
 $assignments  = lab_fetch($ict, "SELECT a.*, c.computer_name FROM lab_computer_assignments a LEFT JOIN lab_computers c ON a.computer_id=c.id WHERE a.status='active' ORDER BY a.assigned_date DESC");
@@ -294,7 +295,7 @@ $section = $_GET['section'] ?? 'dashboard';
 
                 <?php $previewCardId = (int)($_GET['card'] ?? 0);
                 if ($section === 'preview' && $previewCardId):
-                    $cardData = lab_fetch_one($ict, "SELECT c.*, s.full_name, s.student_number, s.registration_number, s.program, s.intake_date, s.passport_photo, s.profile_picture FROM student_id_cards c LEFT JOIN igangaschoolofl_students_db.students s ON c.student_id=s.id WHERE c.id=$previewCardId");
+                    $cardData = lab_fetch_one($ict, "SELECT c.*, s.full_name, s.student_number, s.registration_number, s.program, s.intake_date, s.passport_photo, s.profile_picture FROM student_id_cards c LEFT JOIN {$students_db_name}.students s ON c.student_id=s.id WHERE c.id=$previewCardId");
                     if ($cardData): $photo = $cardData['passport_photo'] ?: $cardData['profile_picture'] ?: $cardData['photo_path'] ?: ''; ?>
                 <div class="section-card text-center" id="idCardPreview">
                     <h2><i class="fas fa-eye me-2"></i>ID Card Preview</h2>

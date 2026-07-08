@@ -8,6 +8,7 @@ $studentsConn = $ctx['students'];
 $conn = $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 // ── AJAX endpoint for exam student list ────────────────
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['exam'])) {
@@ -15,7 +16,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['ex
     $examNumber = trim($_GET['exam']);
     $data = [];
     if ($conn && $examNumber) {
-        $stmt = $conn->prepare("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM examination_records er JOIN igangaschoolofl_students_db.students s ON er.student_id=s.id WHERE er.exam_number=? ORDER BY s.surname, s.first_name");
+        $stmt = $conn->prepare("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM examination_records er JOIN {$students_db_name}.students s ON er.student_id=s.id WHERE er.exam_number=? ORDER BY s.surname, s.first_name");
         if ($stmt) { $stmt->bind_param('s', $examNumber); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
     }
@@ -41,13 +42,13 @@ if ($conn) {
     if ($search !== '') { $where .= " AND (er.exam_number LIKE ? OR er.course_code LIKE ? OR cc.course_title LIKE ? OR er.exam_type LIKE ?)"; $like = "%$search%"; $params = array_merge($params, [$like, $like, $like, $like]); $types .= 'ssss'; }
     if ($filterType !== '') { $where .= " AND er.exam_type=?"; $params[] = $filterType; $types .= 's'; }
     if ($filterStatus !== '') { $where .= " AND er.grade_status=?"; $params[] = $filterStatus; $types .= 's'; }
-    $stmt = $conn->prepare("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM examination_records er LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
+    $stmt = $conn->prepare("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
     if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     if ($r) while ($row = $r->fetch_assoc()) $exams[] = $row;
 
     $cr = $conn->query("SELECT course_code, course_title FROM academic_course_catalog WHERE status='Active' ORDER BY course_code");
     if ($cr) while ($row = $cr->fetch_assoc()) $courses[] = $row;
-    $sr = $conn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number, student_number FROM igangaschoolofl_students_db.students WHERE status='Active' ORDER BY surname LIMIT 500");
+    $sr = $studentsConn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number, student_number FROM students WHERE status='Active' ORDER BY surname LIMIT 500");
     if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
 }
 

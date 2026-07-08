@@ -9,6 +9,7 @@ $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 $user_name = $user['full_name'] ?? '';
 
 $profileImageUrl = '../images/username.png';
@@ -780,7 +781,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $catRecords = [];
         if ($conn) {
-            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN igangaschoolofl_students_db.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
+            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
             if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC);
         }
         if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
@@ -797,7 +798,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $examRecords = [];
         if ($conn) {
-            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN igangaschoolofl_students_db.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
+            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
             if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC);
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>

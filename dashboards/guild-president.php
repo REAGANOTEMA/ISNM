@@ -10,6 +10,7 @@ $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'User';
 $user_role = $user['role'] ?? '';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 // ── Page routing ──
 $pageToSection = [
@@ -40,7 +41,7 @@ if ($studentsDb) {
 $welfareCases = []; $welfareOpen = 0; $welfareResolved = 0; $counselingSessions = [];
 $upcomingEvents = []; $sportsEvents = []; $studentDiscipline = []; $disciplineOpen = 0;
 if ($staffDb) {
-    $r = $staffDb->query("SELECT wc.*, s.full_name as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 15");
+    $r = $staffDb->query("SELECT wc.*, s.full_name as student_name FROM welfare_cases wc LEFT JOIN {$students_db_name}.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 15");
     if ($r) $welfareCases = $r->fetch_all(MYSQLI_ASSOC);
     $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('open','in_progress')");
     if ($r) $welfareOpen = (int)$r->fetch_assoc()['c'];

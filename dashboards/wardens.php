@@ -8,6 +8,7 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
