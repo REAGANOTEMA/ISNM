@@ -283,7 +283,12 @@ function createDatabaseBackup() {
         mkdir('backups', 0755, true);
     }
     
-    $command = "mysqldump --user=root --host=localhost isnm_school > $backup_file";
+    $host = defined('STAFF_DB_HOST') ? STAFF_DB_HOST : 'localhost';
+    $user = defined('STAFF_DB_USER') ? STAFF_DB_USER : 'root';
+    $pass = defined('STAFF_DB_PASS') ? STAFF_DB_PASS : '';
+    $db   = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'isnm_school';
+    
+    $command = sprintf('mysqldump --user=%s --host=%s --password=%s %s > %s', $user, $host, $pass, $db, $backup_file);
     exec($command);
     
     return file_exists($backup_file) ? $backup_file : false;
@@ -292,11 +297,12 @@ function createDatabaseBackup() {
 // System health check
 function systemHealthCheck() {
     $checks = [];
+    $conn = function_exists('getStaffConnection') ? getStaffConnection() : ($GLOBALS['conn'] ?? null);
     
     // Database connection
     $checks['database'] = [
-        'status' => $GLOBALS['conn']->ping() ? 'OK' : 'ERROR',
-        'message' => $GLOBALS['conn']->ping() ? 'Database connected' : 'Database connection failed'
+        'status' => $conn && $conn->ping() ? 'OK' : 'ERROR',
+        'message' => $conn && $conn->ping() ? 'Database connected' : 'Database connection failed'
     ];
     
     // Session status

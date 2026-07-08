@@ -364,7 +364,7 @@ if (!function_exists('userExistsByEmail')) {
 
 if (!function_exists('sanitizeInput')) {
     function sanitizeInput($input) {
-        return trim((string) $input);
+        return htmlspecialchars(trim((string) $input), ENT_QUOTES, 'UTF-8');
     }
 }
 

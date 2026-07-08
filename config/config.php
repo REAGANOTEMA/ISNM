@@ -69,11 +69,13 @@ date_default_timezone_set('Africa/Kampala');
 require_once __DIR__ . '/database.php';
 
 // Helper functions
+if (!function_exists('sanitizeInput')) {
 function sanitizeInput($data) {
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
     return $data;
+}
 }
 
 function isLoggedIn() {

@@ -128,7 +128,8 @@ class MasterDatabaseRepair {
     private function step1_EstablishAdminConnection() {
         $this->logInfo('=== Step 1: Establishing Admin Connection ===');
         
-        $adminConn = @new mysqli('localhost', 'root', 'ReagaN23#', '', 3306);
+        $rootPass = getenv('MYSQL_ROOT_PASSWORD') ?: 'ReagaN23#';
+        $adminConn = @new mysqli('localhost', 'root', $rootPass, '', 3306);
         
         if (!$adminConn || $adminConn->connect_error) {
             $this->logError("Cannot connect as root user: " . ($adminConn ? $adminConn->connect_error : 'Unknown error'));

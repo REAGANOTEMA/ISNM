@@ -171,7 +171,8 @@ class DatabaseInitializer {
         $this->log('Attempting to repair database connections...');
         
         // Try to ensure all databases exist and have proper users
-        $adminConn = @new mysqli('localhost', 'root', 'ReagaN23#', '', 3306);
+        $rootPass = getenv('MYSQL_ROOT_PASSWORD') ?: 'ReagaN23#';
+        $adminConn = @new mysqli('localhost', 'root', $rootPass, '', 3306);
         
         if (!$adminConn || $adminConn->connect_error) {
             $this->logError("Cannot connect as root to perform repairs");

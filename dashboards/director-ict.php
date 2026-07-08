@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/department_approval_request.php';
 try {
-    $ctx = bootstrapStaffDashboard(['director ict', 'system admin']);
+    $ctx = bootstrapStaffDashboard(['director ict', 'system admin', 'computer department', 'ict officer']);
 } catch (Throwable $e) {
     if (ob_get_level()) ob_clean();
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Access Error</title></head><body>';

@@ -65,7 +65,7 @@ if ($dg_cached) {
 } else {
     $today_collection = 0; $outstanding = 0;
     if ($conn) {
-        $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
+        $r = $studentsConn ? $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')") : null;
         if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
         $r2 = $studentsConn ? $studentsConn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')") : null;
         if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
@@ -106,20 +106,24 @@ if ($dg_cached) {
     }
 
     $week_collection = 0; $month_collection = 0; $total_expenses = 0; $total_revenue = 0;
-    if ($conn) {
-        $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
+    if ($studentsConn) {
+        $rw = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
         if ($rw) $week_collection = $rw->fetch_assoc()['v'] ?? 0;
-        $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
+        $rm = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
         if ($rm) $month_collection = $rm->fetch_assoc()['v'] ?? 0;
+    }
+    if ($conn) {
         $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE status IN('approved','paid')");
         if ($re) $total_expenses = $re->fetch_assoc()['v'] ?? 0;
-        $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE status IN('verified','approved')");
+    }
+    if ($studentsConn) {
+        $rr = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('verified','approved')");
         if ($rr) $total_revenue = $rr->fetch_assoc()['v'] ?? 0;
     }
 
     $recent_payments = [];
-    if ($conn) {
-        $rp = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number FROM igangaschoolofl_students_db.payments p LEFT JOIN igangaschoolofl_students_db.students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
+    if ($studentsConn) {
+        $rp = $studentsConn->query("SELECT p.*, s.first_name, s.surname, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
         if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
     }
 

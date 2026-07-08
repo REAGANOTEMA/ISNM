@@ -426,6 +426,8 @@ function normalizeRoleKeySidebar(string $role): string {
         'non-teaching' => 'non_teaching', 'non-teaching-staff' => 'non_teaching', 'non teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching', 'non_teaching' => 'non_teaching',
         'system admin' => 'system_admin', 'system-admin' => 'system_admin', 'system_admin' => 'system_admin',
         'student' => 'student', 'students' => 'student',
+        'events coordinator' => 'director_general', 'events manager' => 'director_general',
+        'alumni relations officer' => 'director_general', 'alumni officer' => 'director_general',
     ];
     return $map[$m] ?? 'lecturer';
 }

@@ -1,11 +1,10 @@
 <?php
 /**
- * Role-Based Sidebar Configuration for ISNM ERP.
- * Every role gets ONLY its own modules — no shared menu, no unrelated items.
- *
- * Usage in dashboard_head.php or dashboard_footer.php:
- *   $sidebar = getSidebarConfig($_SESSION['role'] ?? '');
- *   renderSidebar($sidebar);
+ * @deprecated This file is no longer used. The active sidebar system is
+ *   includes/sidebar.php → includes/sidebar_groups.php (static grouped sidebar)
+ *   includes/dynamic_sidebar.php  (DB-driven sidebar override)
+ * Kept for reference only. Will be removed in a future cleanup.
+ * Last used: never (dead code since inception).
  */
 if (function_exists('getSidebarConfig')) return;
 

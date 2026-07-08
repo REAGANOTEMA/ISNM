@@ -18,17 +18,24 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!function_exists('executeQuery')) {
-function executeQuery($sql, $params = [], $types = '') {
-    global $conn;
-
-    if (!$conn) {
-        return [];
+function executeQuery($database, $sql = '', $params = [], $types = '') {
+    if (empty($sql) && is_string($database)) {
+        $sql = $database;
+        $database = null;
     }
+    $conn = null;
+    if ($database) {
+        $map = ['staff'=>'getStaffConnection','students'=>'getStudentsConnection','website'=>'getWebsiteConnection','ict'=>'getICTConnection'];
+        $func = $map[$database] ?? null;
+        $conn = $func ? $func() : getStaffConnection();
+    } else {
+        global $conn;
+        if (!$conn) $conn = getStaffConnection();
+    }
+    if (!$conn) return [];
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        return [];
-    }
+    if (!$stmt) return [];
 
     if (!empty($params) && !empty($types)) {
         $stmt->bind_param($types, ...$params);
@@ -37,16 +44,10 @@ function executeQuery($sql, $params = [], $types = '') {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result === false) {
-        $stmt->close();
-        return [];
-    }
+    if ($result === false) { $stmt->close(); return []; }
 
     $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-
+    while ($row = $result->fetch_assoc()) { $data[] = $row; }
     $stmt->close();
     return $data;
 }

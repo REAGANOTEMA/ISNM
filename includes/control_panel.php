@@ -49,9 +49,11 @@ try {
         // Recent alerts (from notifications)
         $cpStats['recent_alerts'] = getUnreadNotificationCount($cpStaffConn, $cpUid);
 
-        // Today's events
+        // Today's events (from calendar_events or events table)
         $r = $cpStaffConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");
         if ($r) $cpStats['today_events'] = (int)$r->fetch_assoc()['c'];
+        $r2 = $cpStaffConn->query("SELECT COUNT(*)c FROM events WHERE event_date = CURDATE() AND status='published'");
+        if ($r2) $cpStats['today_events'] += (int)$r2->fetch_assoc()['c'];
 
         // Recent activity count
         $r = $cpStaffConn->query("SELECT COUNT(*)c FROM staff_activity_log WHERE DATE(created_at) = CURDATE()");

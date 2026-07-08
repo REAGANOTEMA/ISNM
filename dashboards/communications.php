@@ -236,6 +236,7 @@ function sendMessage() {
 
     var parentId = document.getElementById('composeParentId').value;
     if (parentId) fd.append('parent_id', parentId);
+    fd.append('csrf_token', window.CSRF_TOKEN);
 
     fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
@@ -258,6 +259,7 @@ function viewMessage(id, tab) {
     fd.append('action', 'read');
     fd.append('message_id', id);
     fd.append('user_id', CURRENT_USER_ID);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd });
 
     var container = document.getElementById('msgListContainer');
@@ -305,6 +307,7 @@ function viewMessage(id, tab) {
         fd2.append('recipient_id', CURRENT_USER_ID);
     }
     fd2.append('limit', '50');
+    fd2.append('csrf_token', window.CSRF_TOKEN);
     fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd2 })
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -344,6 +347,7 @@ function deleteMessage(id, box) {
     fd.append('message_id', id);
     fd.append('user_id', CURRENT_USER_ID);
     fd.append('box', box);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) location.reload(); else alert(d.error || 'Delete failed'); })

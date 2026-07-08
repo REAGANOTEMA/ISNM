@@ -38,6 +38,8 @@ function renderDynamicSidebar(): void {
         'Head of Department' => 12, 'HOD' => 12,
         'Clinical Placement Officer' => 8, 'Quality Assurance Officer' => 14,
         'Transport Officer' => 19, 'Nurse' => 18, 'Lab Technician' => 40,
+        'Events Coordinator' => 1, 'Events Manager' => 1,
+        'Alumni Relations Officer' => 1, 'Alumni Officer' => 1,
     ];
 
     $roleName = $_SESSION['role'] ?? '';
