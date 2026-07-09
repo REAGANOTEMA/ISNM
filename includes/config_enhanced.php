@@ -39,7 +39,7 @@ try {
         }
     }
     
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     error_log("Database initialization error: " . $e->getMessage());
 }
 

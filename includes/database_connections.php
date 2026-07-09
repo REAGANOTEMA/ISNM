@@ -93,7 +93,7 @@ class DatabaseConnection {
                             error_reporting($oldLevel);
                             return self::$connections[$database];
                         }
-                        if ($conn) $conn->close();
+                        if ($conn) { try { $conn->close(); } catch (\Throwable $_) { /* PHP 8+ throws on failed connections */ } }
                         $conn = null;
                     }
                 }
@@ -147,7 +147,7 @@ class DatabaseConnection {
             $conn = self::getConnection($database);
             $result = $conn->query("SELECT 1");
             return $result !== false;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Connection test failed for {$database}: " . $e->getMessage());
             return false;
         }
@@ -220,7 +220,7 @@ class DatabaseConnection {
             $stmt->close();
             
             return $insert_id;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Insert execution error in {$database}: " . $e->getMessage());
             return false;
         }
@@ -241,7 +241,7 @@ class DatabaseConnection {
             $stmt->close();
             
             return $affected_rows;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Update execution error in {$database}: " . $e->getMessage());
             return false;
         }
