@@ -2549,6 +2549,7 @@ function markMsgRead(id) {
   var fd = new FormData();
   fd.append('action', 'read');
   fd.append('message_id', id);
+  fd.append('csrf_token', window.CSRF_TOKEN || '');
   fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd });
   var el = document.querySelector('.msg-row[onclick*="' + id + '"]');
   if (el) el.classList.remove('unread');
@@ -2561,6 +2562,7 @@ function sendIndividualMsg(e){
   data.append('action', 'send');
   data.append('sender_id', <?= $user_id ?>);
   data.append('recipient_id', rid);
+  data.append('csrf_token', window.CSRF_TOKEN || '');
   var result = document.getElementById('msgResult');
   if (!result) return false;
   result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Sending...</span>';
@@ -2611,6 +2613,7 @@ function sendBroadcast(e){
     fd.append('subject', subject);
     fd.append('message', body);
     fd.append('priority', priority);
+    fd.append('csrf_token', window.CSRF_TOKEN || '');
     promises.push(
       fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
