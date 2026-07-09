@@ -159,7 +159,7 @@ function overrideApprovalActionHandler() {
             }
         };
         xhr.onerror = function() { alert("Network error submitting approval action."); };
-        xhr.send("request_id=" + requestId + "&action=" + action + "&comments=" + encodeURIComponent(comments));
+        xhr.send("request_id=" + requestId + "&action=" + action + "&comments=" + encodeURIComponent(comments) + "&csrf_token=" + encodeURIComponent(window.CSRF_TOKEN || ''));
     };
     </script>
     <?php

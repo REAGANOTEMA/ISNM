@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 function approvalAction(id,tbl,st){
     if(!confirm('Confirm '+st+'?'))return;
-    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments','');
+    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments','');fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});
 }
 </script>
@@ -1372,7 +1372,7 @@ $auditList = []; $r=$staff->query("SELECT * FROM staff_activity_log ORDER BY cre
 </div>
 <script>
 function createAuditFinding(){
-    var fd=new FormData();fd.append('finding_title',document.getElementById('afTitle').value);fd.append('description',document.getElementById('afDesc').value);fd.append('severity',document.getElementById('afSeverity').value);fd.append('department',document.getElementById('afDept').value);
+    var fd=new FormData();fd.append('finding_title',document.getElementById('afTitle').value);fd.append('description',document.getElementById('afDesc').value);fd.append('severity',document.getElementById('afSeverity').value);fd.append('department',document.getElementById('afDept').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_audit_finding',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('afMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Finding reported.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('afTitle').value='';document.getElementById('afDesc').value='';document.getElementById('afDept').value='';loadAuditFindings();}
@@ -1411,7 +1411,7 @@ document.addEventListener('DOMContentLoaded',function(){
 function updateFindingStatus(id,st){
     if(!st)return;
     if(!confirm('Update status to '+st+'?'))return;
-    var fd=new FormData();fd.append('id',id);fd.append('status',st);
+    var fd=new FormData();fd.append('id',id);fd.append('status',st);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=update_audit_status',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});
 }
 </script>
@@ -1482,7 +1482,7 @@ $regAlerts = []; $r=$staff->query("SELECT * FROM {$students_db}.compliance_alert
 </div>
 <script>
 function createRisk(){
-    var fd=new FormData();fd.append('risk_name',document.getElementById('riskName').value);fd.append('description',document.getElementById('riskDesc').value);fd.append('category',document.getElementById('riskCat').value);fd.append('likelihood',document.getElementById('riskLh').value);fd.append('impact',document.getElementById('riskImp').value);fd.append('mitigation',document.getElementById('riskMit').value);
+    var fd=new FormData();fd.append('risk_name',document.getElementById('riskName').value);fd.append('description',document.getElementById('riskDesc').value);fd.append('category',document.getElementById('riskCat').value);fd.append('likelihood',document.getElementById('riskLh').value);fd.append('impact',document.getElementById('riskImp').value);fd.append('mitigation',document.getElementById('riskMit').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_risk',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('riskMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Risk added.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('riskName').value='';document.getElementById('riskDesc').value='';document.getElementById('riskCat').value='';document.getElementById('riskMit').value='';loadRisks();}
@@ -1525,7 +1525,7 @@ document.addEventListener('DOMContentLoaded',loadRisks);
 </div>
 <script>
 function createCompAlert(){
-    var fd=new FormData();fd.append('alert_title',document.getElementById('caTitle').value);fd.append('description',document.getElementById('caDesc').value);fd.append('compliance_type',document.getElementById('caType').value);fd.append('severity',document.getElementById('caSev').value);
+    var fd=new FormData();fd.append('alert_title',document.getElementById('caTitle').value);fd.append('description',document.getElementById('caDesc').value);fd.append('compliance_type',document.getElementById('caType').value);fd.append('severity',document.getElementById('caSev').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_compliance_alert',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('caMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Alert created.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('caTitle').value='';document.getElementById('caDesc').value='';loadCompAlerts();}
@@ -1569,7 +1569,7 @@ document.addEventListener('DOMContentLoaded',loadCompAlerts);
 </div>
 <script>
 function createProcurement(){
-    var fd=new FormData();fd.append('title',document.getElementById('prTitle').value);fd.append('description',document.getElementById('prDesc').value);fd.append('amount',document.getElementById('prAmt').value);fd.append('department',document.getElementById('prDept').value);fd.append('supplier_name',document.getElementById('prSupp').value);
+    var fd=new FormData();fd.append('title',document.getElementById('prTitle').value);fd.append('description',document.getElementById('prDesc').value);fd.append('amount',document.getElementById('prAmt').value);fd.append('department',document.getElementById('prDept').value);fd.append('supplier_name',document.getElementById('prSupp').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_procurement',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('prMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Request created: '+esc(d.pr)+'</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('prTitle').value='';document.getElementById('prDesc').value='';document.getElementById('prAmt').value='';document.getElementById('prDept').value='';document.getElementById('prSupp').value='';loadProcurement();}
@@ -1641,7 +1641,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </div>
 <script>
 function recordSuppPayment(){
-    var fd=new FormData();fd.append('supplier_id',document.getElementById('spSupp').value);fd.append('amount',document.getElementById('spAmt').value);fd.append('payment_method',document.getElementById('spMethod').value);fd.append('payment_date',document.getElementById('spDate').value);fd.append('invoice_ref',document.getElementById('spInv').value);
+    var fd=new FormData();fd.append('supplier_id',document.getElementById('spSupp').value);fd.append('amount',document.getElementById('spAmt').value);fd.append('payment_method',document.getElementById('spMethod').value);fd.append('payment_date',document.getElementById('spDate').value);fd.append('invoice_ref',document.getElementById('spInv').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=record_supplier_payment',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('spMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Payment recorded: '+esc(d.ref)+'</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('spAmt').value='';document.getElementById('spInv').value='';loadSuppPayments();}
@@ -1712,7 +1712,7 @@ $outSupp = []; $r=$staff->query("SELECT s.supplier_name,COALESCE(SUM(sp.amount),
 </div>
 <script>
 function createAsset(){
-    var fd=new FormData();fd.append('asset_name',document.getElementById('asName').value);fd.append('asset_tag',document.getElementById('asTag').value);fd.append('category',document.getElementById('asCat').value);fd.append('purchase_price',document.getElementById('asPrice').value);fd.append('depreciation_rate',document.getElementById('asDep').value);fd.append('purchase_date',document.getElementById('asDate').value);fd.append('location',document.getElementById('asLoc').value);fd.append('assigned_to',document.getElementById('asAssign').value);
+    var fd=new FormData();fd.append('asset_name',document.getElementById('asName').value);fd.append('asset_tag',document.getElementById('asTag').value);fd.append('category',document.getElementById('asCat').value);fd.append('purchase_price',document.getElementById('asPrice').value);fd.append('depreciation_rate',document.getElementById('asDep').value);fd.append('purchase_date',document.getElementById('asDate').value);fd.append('location',document.getElementById('asLoc').value);fd.append('assigned_to',document.getElementById('asAssign').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_asset',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('asMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Asset added.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('asName').value='';document.getElementById('asTag').value='';document.getElementById('asPrice').value='';document.getElementById('asDep').value='';document.getElementById('asLoc').value='';document.getElementById('asAssign').value='';loadAssets();}
@@ -1793,7 +1793,7 @@ $depAssets = []; $r=$staff->query("SELECT * FROM {$students_db}.finance_assets W
 </div>
 <script>
 function createProject(){
-    var fd=new FormData();fd.append('project_name',document.getElementById('pjName').value);fd.append('budget',document.getElementById('pjBud').value);fd.append('project_code',document.getElementById('pjCode').value);fd.append('start_date',document.getElementById('pjStart').value);fd.append('end_date',document.getElementById('pjEnd').value);
+    var fd=new FormData();fd.append('project_name',document.getElementById('pjName').value);fd.append('budget',document.getElementById('pjBud').value);fd.append('project_code',document.getElementById('pjCode').value);fd.append('start_date',document.getElementById('pjStart').value);fd.append('end_date',document.getElementById('pjEnd').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=create_project',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('pjMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Project created: '+esc(d.code)+'</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('pjName').value='';document.getElementById('pjBud').value='';document.getElementById('pjCode').value='';document.getElementById('pjEnd').value='';loadProjects();}
@@ -1845,7 +1845,7 @@ $allProj = []; $r=$staff->query("SELECT * FROM {$students_db}.capital_projects O
 </div>
 <script>
 function sendFMsg(){
-    var fd=new FormData();fd.append('recipient_role',document.getElementById('fmRole').value);fd.append('subject',document.getElementById('fmSubj').value);fd.append('message',document.getElementById('fmMsg').value);
+    var fd=new FormData();fd.append('recipient_role',document.getElementById('fmRole').value);fd.append('subject',document.getElementById('fmSubj').value);fd.append('message',document.getElementById('fmMsg').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=send_finance_message',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('fmMsgDiv').innerHTML=d.success?'<div class="alert alert-success py-1 small">Message sent.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('fmSubj').value='';document.getElementById('fmMsg').value='';loadFMessages();}
@@ -1884,7 +1884,7 @@ document.addEventListener('DOMContentLoaded',loadFMessages);
 </div>
 <script>
 function pubNotice(){
-    var fd=new FormData();fd.append('title',document.getElementById('fnTitle').value);fd.append('content',document.getElementById('fnContent').value);fd.append('audience',document.getElementById('fnAud').value);
+    var fd=new FormData();fd.append('title',document.getElementById('fnTitle').value);fd.append('content',document.getElementById('fnContent').value);fd.append('audience',document.getElementById('fnAud').value);fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('director-finance.php?ajax=publish_finance_notice',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
         document.getElementById('fnMsgDiv').innerHTML=d.success?'<div class="alert alert-success py-1 small">Notice published.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
         if(d.success){document.getElementById('fnTitle').value='';document.getElementById('fnContent').value='';loadFNotices();}
@@ -1955,7 +1955,7 @@ document.addEventListener('DOMContentLoaded',function(){
 function approvalActionModal(id,tbl,st){
     var cmt=prompt('Enter comments for "'+st+'" action:');
     if(cmt===null)return;
-    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments',cmt||'');
+    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments',cmt||'');fd.append('csrf_token', window.CSRF_TOKEN);
     if(st==='escalated'){var dg=prompt('Escalate to (DG user ID):');if(!dg)return;fd.append('escalated_to',parseInt(dg)||0);}
     fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed: '+(d.error||'Unknown'));}).catch(function(){alert('Error');});
 }

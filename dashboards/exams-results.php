@@ -265,6 +265,7 @@ function saveMarks() {
     if (!form) return;
     let data = new FormData(form);
     data.append('action', 'enter_marks');
+    data.append('csrf_token', window.CSRF_TOKEN);
     fetch('exams-results.php', { method: 'POST', body: data })
     .then(() => { location.reload(); })
     .catch(() => { alert('Failed to save marks.'); });

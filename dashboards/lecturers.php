@@ -1043,6 +1043,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             var fd = new FormData();
             fd.append('action', 'delete_assessment');
             fd.append('assessment_id', id);
+            fd.append('csrf_token', window.CSRF_TOKEN);
             fetch('lecturers.php', { method: 'POST', body: fd })
                 .then(function(r){ return r.json(); })
                 .then(function(resp){
@@ -1056,6 +1057,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             var fd = new FormData();
             fd.append('action', 'delete_resource');
             fd.append('resource_id', id);
+            fd.append('csrf_token', window.CSRF_TOKEN);
             fetch('lecturers.php', { method: 'POST', body: fd })
                 .then(function(r){ return r.json(); })
                 .then(function(resp){
@@ -1079,6 +1081,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 if (!form || !form.checkValidity()) { form.reportValidity(); return; }
 
                 var fd = new FormData(form);
+                fd.append('csrf_token', window.CSRF_TOKEN);
                 var modalBody = document.getElementById('modalBody');
                 modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Saving...</p></div>';
 

@@ -869,6 +869,7 @@ function editEq(id) {
 function saveEq() {
     const f = document.getElementById('eqForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=equipment&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('eqModal')).hide(); loadEq(); showToast('Equipment saved','success'); }
@@ -933,6 +934,7 @@ function editCo(id) {
 function saveCo() {
     const f = document.getElementById('coForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=checkouts&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('coModal')).hide(); loadCo(); showToast('Saved','success'); }
@@ -984,6 +986,7 @@ function editSes(id) {
 function saveSes() {
     const f = document.getElementById('sesForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=sessions&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('sesModal')).hide(); loadSes(); showToast('Saved','success'); }
@@ -1034,6 +1037,7 @@ function editSk(id) {
 function saveSk() {
     const f = document.getElementById('skForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=skills&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('skModal')).hide(); loadSk(); showToast('Saved','success'); }
@@ -1076,6 +1080,7 @@ function editCon(id) {
 function saveCon() {
     const f = document.getElementById('conForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=consumables&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('conModal')).hide(); loadCon(); showToast('Saved','success'); }
@@ -1124,7 +1129,7 @@ function saveBatchAtt() {
     const dflt = document.getElementById('att-default-status').value;
     if (!sid || !raw) { alert('Session and at least one Student ID required'); return; }
     const students = raw.split('\n').map(s => s.trim()).filter(Boolean).map(sid => ({student_id: sid, attendance_status: dflt}));
-    fetch('?view=attendance&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session_id: sid, students})})
+    fetch('?view=attendance&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session_id: sid, students, csrf_token: window.CSRF_TOKEN})})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('attBatchModal')).hide(); loadAtt(); showToast(d.updated+' records saved','success'); }
             else showToast('Error','danger');
@@ -1168,6 +1173,7 @@ function editInc(id) {
 function saveInc() {
     const f = document.getElementById('incForm');
     const data = Object.fromEntries(new FormData(f));
+    data.csrf_token = window.CSRF_TOKEN;
     fetch('?view=incidents&ajax=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
         .then(r=>r.json()).then(d => {
             if (d.success) { bootstrap.Modal.getInstance(document.getElementById('incModal')).hide(); loadInc(); showToast('Saved','success'); }

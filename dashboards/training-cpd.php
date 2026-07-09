@@ -190,6 +190,7 @@ function updateEnrollment(id, currentStatus) {
 function deleteTraining(id) {
     if (!confirm('Delete this training and all enrollments?')) return;
     var fd = new FormData(); fd.append('action', 'delete_training'); fd.append('id', id);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -197,6 +198,7 @@ function deleteTraining(id) {
 }
 function submitAddTraining() {
     var fd = new FormData(document.getElementById('addTrainingForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -204,6 +206,7 @@ function submitAddTraining() {
 }
 function submitEnrollStaff() {
     var fd = new FormData(document.getElementById('enrollStaffForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -211,6 +214,7 @@ function submitEnrollStaff() {
 }
 function submitUpdateEnroll() {
     var fd = new FormData(document.getElementById('updateEnrollForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })

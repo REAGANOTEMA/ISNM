@@ -150,11 +150,14 @@
     </main>
 </div>
 
+<?php $csrfToken = htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>
 <script type="text/javascript">
+   var CSRF_TOKEN = '<?= $csrfToken ?>';
    $(document).ready(function(){
     $.ajax({
         url: "partials/bus-requests.php",
         method: "post",
+        data: { csrf_token: CSRF_TOKEN },
         success: function(data){
             $("#request").html(data);
         }
@@ -162,6 +165,7 @@
     $.ajax({
         url: "partials/load-bus.php",
         method: "post",
+        data: { csrf_token: CSRF_TOKEN },
         success: function(data){
             $("#request-accept").html(data);
         }
@@ -175,6 +179,7 @@
     // Create a FormData object to send data to the server
     var formData = new FormData();
     formData.append("val", val);
+    formData.append("csrf_token", CSRF_TOKEN);
 
     // Make a fetch request
     fetch("partials/search-bus.php", {

@@ -206,6 +206,7 @@ function deleteCase(id) {
     var fd = new FormData();
     fd.append('action', 'delete_case');
     fd.append('id', id);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -216,6 +217,7 @@ function deleteCase(id) {
 }
 function submitAddCase() {
     var fd = new FormData(document.getElementById('addCaseForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -226,6 +228,7 @@ function submitAddCase() {
 }
 function submitEditCase() {
     var fd = new FormData(document.getElementById('editCaseForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {

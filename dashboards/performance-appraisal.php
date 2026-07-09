@@ -194,6 +194,7 @@ function editAppraisal(id, score, rating, status, comments) {
 function deleteAppraisal(id) {
     if (!confirm('Delete this appraisal record?')) return;
     var fd = new FormData(); fd.append('action', 'delete_appraisal'); fd.append('id', id);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -201,6 +202,7 @@ function deleteAppraisal(id) {
 }
 function submitAddAppraisal() {
     var fd = new FormData(document.getElementById('addAppraisalForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -208,6 +210,7 @@ function submitAddAppraisal() {
 }
 function submitEditAppraisal() {
     var fd = new FormData(document.getElementById('editAppraisalForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })

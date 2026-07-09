@@ -605,7 +605,7 @@ function depAssignLecturer(){
     var cc = document.getElementById('alCourse').value; if(!cc){ alert('Select a course'); return; }
     var cn = document.getElementById('alCourseName').value || cc;
     var rm = document.getElementById('alClassroom').value || '';
-    var fd = new FormData(); fd.append('action','assign_lecturer'); fd.append('lecturer_id',lid); fd.append('course_code',cc); fd.append('course_name',cn); fd.append('classroom',rm);
+    var fd = new FormData(); fd.append('action','assign_lecturer'); fd.append('lecturer_id',lid); fd.append('course_code',cc); fd.append('course_name',cn); fd.append('classroom',rm); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php',{method:'POST',body:fd}).then(function(){ window.location.reload(); });
 }
 function depLoadAssignments(){
@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', depLoadAttendance);
 <script>
 function depSchedulePlacement(){
     var sid = document.getElementById('cpStudent').value; if(!sid){ alert('Select student'); return; }
-    var fd = new FormData(); fd.append('student_id',sid); fd.append('placement_site',document.getElementById('cpSite').value); fd.append('supervisor_name',document.getElementById('cpSupervisor').value); fd.append('start_date',document.getElementById('cpStart').value); fd.append('end_date',document.getElementById('cpEnd').value);
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('placement_site',document.getElementById('cpSite').value); fd.append('supervisor_name',document.getElementById('cpSupervisor').value); fd.append('start_date',document.getElementById('cpStart').value); fd.append('end_date',document.getElementById('cpEnd').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=schedule_placement&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('cpMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Placement created.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -730,7 +730,7 @@ function depLoadPlacements(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdatePlacementStatus(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_placement_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadPlacements(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
+function depUpdatePlacementStatus(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fd.append('csrf_token', window.CSRF_TOKEN); fetch('deputy-principal.php?view=update_placement_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadPlacements(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadPlacements);
 </script>
 
@@ -757,7 +757,7 @@ document.addEventListener('DOMContentLoaded', depLoadPlacements);
 <script>
 function depRecordWelfare(){
     var sid = document.getElementById('wfStudent').value; if(!sid){ alert('Select student'); return; }
-    var fd = new FormData(); fd.append('student_id',sid); fd.append('case_type',document.getElementById('wfType').value); fd.append('description',document.getElementById('wfDesc').value); fd.append('severity',document.getElementById('wfSev').value); fd.append('assigned_to',document.getElementById('wfAssigned').value);
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('case_type',document.getElementById('wfType').value); fd.append('description',document.getElementById('wfDesc').value); fd.append('severity',document.getElementById('wfSev').value); fd.append('assigned_to',document.getElementById('wfAssigned').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=record_welfare_case&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('wfMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Case recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -774,7 +774,7 @@ function depLoadWelfare(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateWelfare(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadWelfare(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
+function depUpdateWelfare(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fd.append('csrf_token', window.CSRF_TOKEN); fetch('deputy-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadWelfare(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadWelfare);
 </script>
 
@@ -800,7 +800,7 @@ document.addEventListener('DOMContentLoaded', depLoadWelfare);
 <script>
 function depRecordDiscipline(){
     var sid = document.getElementById('discStudent').value; if(!sid){ alert('Select student'); return; }
-    var fd = new FormData(); fd.append('student_id',sid); fd.append('offense',document.getElementById('discOffense').value); fd.append('hearing_date',document.getElementById('discHearing').value); fd.append('action_taken',document.getElementById('discAction').value);
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('offense',document.getElementById('discOffense').value); fd.append('hearing_date',document.getElementById('discHearing').value); fd.append('action_taken',document.getElementById('discAction').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=record_discipline&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('discMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -817,7 +817,7 @@ function depLoadDiscipline(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateDiscipline(id,st){ if(!st) return; var out=prompt('Outcome notes (optional):'); var fd=new FormData(); fd.append('id',id); fd.append('status',st); if(out) fd.append('outcome',out); fetch('deputy-principal.php?view=update_discipline_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadDiscipline(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
+function depUpdateDiscipline(id,st){ if(!st) return; var out=prompt('Outcome notes (optional):'); var fd=new FormData(); fd.append('id',id); fd.append('status',st); if(out) fd.append('outcome',out); fd.append('csrf_token', window.CSRF_TOKEN); fetch('deputy-principal.php?view=update_discipline_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadDiscipline(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadDiscipline);
 </script>
 
@@ -889,7 +889,7 @@ document.addEventListener('DOMContentLoaded', depLoadFollowups);
 </div>
 <script>
 function depRecordCompliance(){
-    var fd = new FormData(); fd.append('department',document.getElementById('compDept').value); fd.append('compliance_type',document.getElementById('compType').value); fd.append('status',document.getElementById('compStatus').value); fd.append('notes',document.getElementById('compNotes').value);
+    var fd = new FormData(); fd.append('department',document.getElementById('compDept').value); fd.append('compliance_type',document.getElementById('compType').value); fd.append('status',document.getElementById('compStatus').value); fd.append('notes',document.getElementById('compNotes').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=record_compliance&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('compMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -946,7 +946,7 @@ document.addEventListener('DOMContentLoaded', depLoadActivities);
 <script>
 function depCreateTask(){
     var tt = document.getElementById('tkTitle').value; if(!tt){ alert('Title required'); return; }
-    var fd = new FormData(); fd.append('task_title',tt); fd.append('description',document.getElementById('tkDesc').value); fd.append('priority',document.getElementById('tkPriority').value);
+    var fd = new FormData(); fd.append('task_title',tt); fd.append('description',document.getElementById('tkDesc').value); fd.append('priority',document.getElementById('tkPriority').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=create_task&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('tkMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Task created.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -963,7 +963,7 @@ function depLoadTasks(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateTask(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_task_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadTasks(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
+function depUpdateTask(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fd.append('csrf_token', window.CSRF_TOKEN); fetch('deputy-principal.php?view=update_task_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadTasks(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadTasks);
 </script>
 
@@ -986,7 +986,7 @@ function depLoadApprovals(){
 function depForwardApproval(id){
     var rec = prompt('Enter your recommendation/comments:');
     if(rec === null) return;
-    var fd = new FormData(); fd.append('id',id); fd.append('recommendation',rec);
+    var fd = new FormData(); fd.append('id',id); fd.append('recommendation',rec); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=forward_approval&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         if(d.success){ depLoadApprovals(); alert('Reviewed and forwarded to Principal for final approval.'); }
@@ -1021,7 +1021,7 @@ function depSendComm(){
     var rt = document.getElementById('commRecipient').value;
     var subj = document.getElementById('commSubject').value; var msg = document.getElementById('commBody').value;
     if(!subj || !msg){ alert('Subject and message required'); return; }
-    var fd = new FormData(); fd.append('recipient_role',rt); fd.append('subject',subj); fd.append('message',msg);
+    var fd = new FormData(); fd.append('recipient_role',rt); fd.append('subject',subj); fd.append('message',msg); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=send_communication_deputy&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('commMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Sent.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -1156,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', depLoadDeptReport);
 function depSubmitTeachingReview(){
     var lid = document.getElementById('tqLecturer').value; if(!lid){ alert('Select lecturer'); return; }
     var cc = document.getElementById('tqCourse').value; if(!cc){ alert('Select course'); return; }
-    var fd = new FormData(); fd.append('lecturer_id',lid); fd.append('review_date',document.getElementById('tqDate').value); fd.append('teaching_score',document.getElementById('tqScore').value); fd.append('course_code',cc); fd.append('feedback',document.getElementById('tqFeedback').value);
+    var fd = new FormData(); fd.append('lecturer_id',lid); fd.append('review_date',document.getElementById('tqDate').value); fd.append('teaching_score',document.getElementById('tqScore').value); fd.append('course_code',cc); fd.append('feedback',document.getElementById('tqFeedback').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=submit_teaching_review&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('tqMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Review submitted.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -1227,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', depLoadCompReview);
 </div>
 <script>
 function depRecordImprovement(){
-    var fd = new FormData(); fd.append('area',document.getElementById('impArea').value); fd.append('improvement_action',document.getElementById('impAction').value); fd.append('target_date',document.getElementById('impDate').value);
+    var fd = new FormData(); fd.append('area',document.getElementById('impArea').value); fd.append('improvement_action',document.getElementById('impAction').value); fd.append('target_date',document.getElementById('impDate').value); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=record_improvement&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){
         document.getElementById('impMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
@@ -1247,7 +1247,7 @@ function depLoadImprovement(){
 function depUpdateImpProgress(id){
     var pr = prompt('Progress % (0-100):'); if(pr === null) return;
     var st = prompt('Status (planned/in_progress/completed):');
-    var fd = new FormData(); fd.append('id',id); fd.append('progress',parseFloat(pr)||0); if(st) fd.append('status',st);
+    var fd = new FormData(); fd.append('id',id); fd.append('progress',parseFloat(pr)||0); if(st) fd.append('status',st); fd.append('csrf_token', window.CSRF_TOKEN);
     fetch('deputy-principal.php?view=update_improvement_progress&ajax=1',{method:'POST',body:fd})
     .then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadImprovement(); }).catch(function(e){ console.warn('[ISNM]', e); });
 }

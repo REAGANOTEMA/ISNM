@@ -361,7 +361,9 @@ checkAuth('Student');
 
 </body>
 
+<?php $csrfToken = htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>
 <script type="text/javascript">
+  var CSRF_TOKEN = '<?= $csrfToken ?>';
   document.getElementById("request")?.addEventListener("click", function(event) {
     var result = window.confirm("Do you really want to apply for bus service?");
     if (result) {
@@ -369,7 +371,8 @@ checkAuth('Student');
         
         var requestData = {
             student_id: studentId,
-            action: 'request_bus'
+            action: 'request_bus',
+            csrf_token: CSRF_TOKEN
         };
 
         fetch("../includes/ajax_student_request.php", {

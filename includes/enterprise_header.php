@@ -363,7 +363,9 @@ $hCurrentPage  = basename($_SERVER['PHP_SELF']);
     }
 
     window.markAllNotifsRead=function(){
-        fetch('../includes/ajax_notifications.php?action=mark_all_read',{method:'POST'})
+        var fd = new FormData();
+        fd.append('csrf_token', window.CSRF_TOKEN || '');
+        fetch('../includes/ajax_notifications.php?action=mark_all_read',{method:'POST',body:fd})
             .then(function(){loadNotifications();var b=document.querySelector('.ent-badge-danger');if(b)b.remove();});
     };
 

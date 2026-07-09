@@ -840,6 +840,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         if (!form) return;
         var data = new FormData(form);
         data.set('action', 'update');
+        data.append('csrf_token', window.CSRF_TOKEN || '');
         document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = true;
         document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         fetch('ajax/update_student.php', { method: 'POST', body: data })
@@ -865,6 +866,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         if (!confirm('Are you sure you want to delete this student? This action cannot be undone.')) return;
         var f = new FormData();
         f.set('action','delete'); f.set('id',id);
+        f.append('csrf_token', window.CSRF_TOKEN || '');
         fetch('ajax/update_student.php',{method:'POST',body:f})
         .then(function(r){return r.json()})
         .then(function(res){

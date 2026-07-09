@@ -185,6 +185,7 @@ function doCheckIn() {
     var fd = new FormData();
     fd.append('action', 'check_in');
     fd.append('staff_id', sid);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -199,6 +200,7 @@ function doCheckOut() {
     var fd = new FormData();
     fd.append('action', 'check_out');
     fd.append('staff_id', sid);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -214,6 +216,7 @@ function doMarkAbsent() {
     var fd = new FormData();
     fd.append('action', 'mark_absent');
     fd.append('staff_id', sid);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) {

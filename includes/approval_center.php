@@ -374,7 +374,7 @@ function renderApprovalCenterScripts() {
                 } catch(e) {}
             }
         };
-        xhr.send('action=get_requests&filter=' + filter);
+        xhr.send('action=get_requests&filter=' + filter + '&csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || ''));
     };
 
     window.searchApprovals = function() {
@@ -390,7 +390,7 @@ function renderApprovalCenterScripts() {
                 } catch(e) {}
             }
         };
-        xhr.send('action=get_requests&filter=' + currentFilter + '&search=' + encodeURIComponent(q));
+        xhr.send('action=get_requests&filter=' + currentFilter + '&search=' + encodeURIComponent(q) + '&csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || ''));
     };
 
     window.showConfirmModal = function(requestId, action) {
@@ -461,7 +461,7 @@ function renderApprovalCenterScripts() {
                     }
                 };
                 xhr.onerror = function() { alert('Network error. Please try again.'); confirmBtn.disabled = false; confirmBtn.textContent = document.getElementById('confirmModalTitle').textContent; };
-                xhr.send('request_id=' + currentActionRequestId + '&action=' + currentActionType + '&comments=' + encodeURIComponent(comment));
+                xhr.send('request_id=' + currentActionRequestId + '&action=' + currentActionType + '&comments=' + encodeURIComponent(comment) + '&csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || ''));
             });
         }
     });
@@ -478,7 +478,7 @@ function renderApprovalCenterScripts() {
                 } catch(e) { alert('Error loading request details.'); }
             }
         };
-        xhr.send('action=get_detail&id=' + requestId);
+        xhr.send('action=get_detail&id=' + requestId + '&csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || ''));
     };
 
     function populateDetailModal(data) {

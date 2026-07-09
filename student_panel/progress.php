@@ -5,7 +5,8 @@
   $id = $_SESSION['uid'];
 ?>
 
-<?php echo "<script>var id='{$id}'</script>"; ?>
+<?php $csrfToken = htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>
+<?php echo "<script>var id='{$id}'; var CSRF_TOKEN='{$csrfToken}';</script>"; ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +55,7 @@
             headers: {
                 "Content-Type": "application/json" // Specify content type as JSON
             },
-            body: JSON.stringify({ id: id }) // Convert data to JSON string
+            body: JSON.stringify({ id: id, csrf_token: CSRF_TOKEN }) // Convert data to JSON string
         })
         .then(response => response.json())
         .then(data => {

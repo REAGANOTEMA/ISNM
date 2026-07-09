@@ -784,7 +784,7 @@ candidates.forEach(function(s){h+='<tr><td>'+esc(s.surname)+', '+esc(s.first_nam
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function approveGrad(id){if(!confirm('Approve this student for graduation?'))return;var fd=new FormData();fd.append('student_id',id);fetch('school-principal.php?view=approve_graduation&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success){alert('Graduation approved.');loadGradReadiness();}else{alert('Failed.');}}).catch(function(e){ console.warn('[ISNM]', e); });}
+function approveGrad(id){if(!confirm('Approve this student for graduation?'))return;var fd=new FormData();fd.append('student_id',id);fd.append('csrf_token', window.CSRF_TOKEN);fetch('school-principal.php?view=approve_graduation&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success){alert('Graduation approved.');loadGradReadiness();}else{alert('Failed.');}}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadGradReadiness);
 </script>
 <?php endif; ?>
@@ -835,7 +835,7 @@ h+='<tr><td>'+esc(w.surname||'')+', '+esc(w.first_name||'')+'</td><td>'+esc(w.ca
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function updateWelfare(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadWelfareData();}).catch(function(e){ console.warn('[ISNM]', e); });}
+function updateWelfare(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fd.append('csrf_token', window.CSRF_TOKEN);fetch('school-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadWelfareData();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadWelfareData);
 </script>
 <?php endif; ?>
@@ -875,7 +875,7 @@ el.innerHTML=h;
 }
 processApproval = window.processApproval || function(id,src,action){
 var comments=prompt('Enter comments for this action:'); if(comments===null) comments='';
-var fd=new FormData();fd.append('id',id);fd.append('source',src);fd.append('action',action);fd.append('comments',comments);
+var fd=new FormData();fd.append('id',id);fd.append('source',src);fd.append('action',action);fd.append('comments',comments);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=submit_approval_action&ajax=1',{method:'POST',body:fd})
 .then(function(r){return r.json()}).then(function(d){if(d.success){if(typeof loadAppeals==='function')loadAppeals();if(typeof loadResultApprovals==='function')loadResultApprovals();if(typeof loadApprovals==='function')loadApprovals('all');alert('Action completed.');}else{alert('Action failed.');}}).catch(function(){alert('Error.');});
 };
@@ -969,7 +969,7 @@ document.addEventListener('DOMContentLoaded',loadDeptPerf);
 </div></div>
 <script>
 function submitAppraisal(){
-var fd=new FormData();fd.append('staff_id',document.getElementById('apprStaffId').value);fd.append('performance_score',document.getElementById('apprScore').value);fd.append('overall_rating',document.getElementById('apprRating').value);fd.append('strengths',document.getElementById('apprStrengths').value);fd.append('areas_improvement',document.getElementById('apprImprove').value);fd.append('review_date','<?= date('Y-m-d') ?>');
+var fd=new FormData();fd.append('staff_id',document.getElementById('apprStaffId').value);fd.append('performance_score',document.getElementById('apprScore').value);fd.append('overall_rating',document.getElementById('apprRating').value);fd.append('strengths',document.getElementById('apprStrengths').value);fd.append('areas_improvement',document.getElementById('apprImprove').value);fd.append('review_date','<?= date('Y-m-d') ?>');fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=submit_staff_appraisal&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('apprMsg').innerHTML=d.success?'<span class="text-success">Saved.</span>':'<span class="text-danger">'+(d.error||'Failed')+'</span>';
 if(d.success){document.getElementById('apprStaffId').value='';document.getElementById('apprScore').value='';document.getElementById('apprRating').value='';document.getElementById('apprStrengths').value='';document.getElementById('apprImprove').value='';loadAppraisals();}
@@ -1043,7 +1043,7 @@ document.addEventListener('DOMContentLoaded',function(){loadStratPlans();loadKPI
 </div>
 <script>
 function createStratPlan(){
-var fd=new FormData();fd.append('plan_name',document.getElementById('spName').value);fd.append('description',document.getElementById('spDesc').value);fd.append('start_date',document.getElementById('spStart').value);fd.append('end_date',document.getElementById('spEnd').value);
+var fd=new FormData();fd.append('plan_name',document.getElementById('spName').value);fd.append('description',document.getElementById('spDesc').value);fd.append('start_date',document.getElementById('spStart').value);fd.append('end_date',document.getElementById('spEnd').value);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=create_strategic_plan&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('spMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Plan created.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('spName').value='';document.getElementById('spDesc').value='';document.getElementById('spStart').value='';document.getElementById('spEnd').value='';loadStratFullList();}
@@ -1080,7 +1080,7 @@ document.addEventListener('DOMContentLoaded',loadStratFullList);
 </div>
 <script>
 function addKPI(){
-var fd=new FormData();fd.append('kpi_name',document.getElementById('kpiName').value);fd.append('kpi_category',document.getElementById('kpiCat').value);fd.append('target_value',document.getElementById('kpiTarget').value);fd.append('current_value',document.getElementById('kpiCurrent').value);fd.append('period',document.getElementById('kpiPeriod').value);fd.append('status',document.getElementById('kpiStatus').value);
+var fd=new FormData();fd.append('kpi_name',document.getElementById('kpiName').value);fd.append('kpi_category',document.getElementById('kpiCat').value);fd.append('target_value',document.getElementById('kpiTarget').value);fd.append('current_value',document.getElementById('kpiCurrent').value);fd.append('period',document.getElementById('kpiPeriod').value);fd.append('status',document.getElementById('kpiStatus').value);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=update_kpi&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('kpiMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">KPI added.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('kpiName').value='';document.getElementById('kpiTarget').value='';document.getElementById('kpiCurrent').value='';loadKPIFull();}
@@ -1118,7 +1118,7 @@ document.addEventListener('DOMContentLoaded',loadKPIFull);
 </div>
 <script>
 function createQAReview(){
-var fd=new FormData();fd.append('review_title',document.getElementById('qaTitle').value);fd.append('review_type',document.getElementById('qaType').value);fd.append('department',document.getElementById('qaDept').value);fd.append('score',document.getElementById('qaScore').value);fd.append('reviewer',document.getElementById('qaReviewer').value);fd.append('findings',document.getElementById('qaFindings').value);fd.append('recommendations',document.getElementById('qaRecs').value);
+var fd=new FormData();fd.append('review_title',document.getElementById('qaTitle').value);fd.append('review_type',document.getElementById('qaType').value);fd.append('department',document.getElementById('qaDept').value);fd.append('score',document.getElementById('qaScore').value);fd.append('reviewer',document.getElementById('qaReviewer').value);fd.append('findings',document.getElementById('qaFindings').value);fd.append('recommendations',document.getElementById('qaRecs').value);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=create_qa_review&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('qaMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Review saved.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('qaTitle').value='';document.getElementById('qaScore').value='';document.getElementById('qaFindings').value='';document.getElementById('qaRecs').value='';loadQAFull();}
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded',function(){loadApprovals('all');});
 </div>
 <script>
 function createPrincipalMeeting(){
-var fd=new FormData();fd.append('title',document.getElementById('pmtTitle').value);fd.append('meeting_type',document.getElementById('pmtType').value);fd.append('meeting_date',document.getElementById('pmtDate').value);fd.append('start_time',document.getElementById('pmtStart').value);fd.append('end_time',document.getElementById('pmtEnd').value);fd.append('location',document.getElementById('pmtLoc').value);fd.append('agenda',document.getElementById('pmtAgenda').value);fd.append('attendees',document.getElementById('pmtAttendees').value);
+var fd=new FormData();fd.append('title',document.getElementById('pmtTitle').value);fd.append('meeting_type',document.getElementById('pmtType').value);fd.append('meeting_date',document.getElementById('pmtDate').value);fd.append('start_time',document.getElementById('pmtStart').value);fd.append('end_time',document.getElementById('pmtEnd').value);fd.append('location',document.getElementById('pmtLoc').value);fd.append('agenda',document.getElementById('pmtAgenda').value);fd.append('attendees',document.getElementById('pmtAttendees').value);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=schedule_meeting&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('pmtMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Meeting scheduled.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('pmtTitle').value='';document.getElementById('pmtDate').value='';document.getElementById('pmtStart').value='';document.getElementById('pmtEnd').value='';document.getElementById('pmtLoc').value='';document.getElementById('pmtAgenda').value='';document.getElementById('pmtAttendees').value='';loadMeetings();}
@@ -1223,7 +1223,7 @@ if(!d||!d.meeting){alert('Not found');return;}var m=d.meeting;
 alert('Title: '+m.title+'\nDate: '+m.meeting_date+'\nTime: '+(m.start_time||'--')+' - '+(m.end_time||'--')+'\nLocation: '+(m.location||'--')+'\nType: '+(m.meeting_type||'')+'\nStatus: '+m.status+'\n\nAgenda:\n'+(m.agenda||'N/A'));
 }).catch(function(){alert('Failed.');});
 }
-function minutesPrompt(mid){var agenda=prompt('Agenda item:');if(agenda===null)return;var disc=prompt('Discussion:');var res=prompt('Resolution:');var act=prompt('Action items:');var fd=new FormData();fd.append('meeting_id',mid);fd.append('agenda_item',agenda||'');fd.append('discussion',disc||'');fd.append('resolution',res||'');fd.append('action_items',act||'');fetch('school-principal.php?view=save_meeting_minutes&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadMeetings();}).catch(function(e){ console.warn('[ISNM]', e); });}
+function minutesPrompt(mid){var agenda=prompt('Agenda item:');if(agenda===null)return;var disc=prompt('Discussion:');var res=prompt('Resolution:');var act=prompt('Action items:');var fd=new FormData();fd.append('meeting_id',mid);fd.append('agenda_item',agenda||'');fd.append('discussion',disc||'');fd.append('resolution',res||'');fd.append('action_items',act||'');fd.append('csrf_token', window.CSRF_TOKEN);fetch('school-principal.php?view=save_meeting_minutes&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadMeetings();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadMeetings);
 </script>
 <?php endif; ?>
@@ -1285,7 +1285,7 @@ d.forEach(function(a){h+='<tr><td class="small">'+esc(a.meeting_title||'')+'</td
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function updateAction(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_action_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadActions();}).catch(function(e){ console.warn('[ISNM]', e); });}
+function updateAction(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fd.append('csrf_token', window.CSRF_TOKEN);fetch('school-principal.php?view=update_action_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadActions();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadActions);
 </script>
 <?php endif; ?>
@@ -1420,7 +1420,7 @@ h+='</tbody></table>';el.innerHTML=h;
 </div>
 <script>
 function sendPrincipalComm(){
-var fd=new FormData();fd.append('recipient_role',document.getElementById('commRole').value);fd.append('subject',document.getElementById('commSubj').value);fd.append('message',document.getElementById('commMsg').value);
+var fd=new FormData();fd.append('recipient_role',document.getElementById('commRole').value);fd.append('subject',document.getElementById('commSubj').value);fd.append('message',document.getElementById('commMsg').value);fd.append('csrf_token', window.CSRF_TOKEN);
 fetch('school-principal.php?view=send_communication&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('commResult').innerHTML=d.success?'<div class="alert alert-success py-1 small">Sent.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('commSubj').value='';document.getElementById('commMsg').value='';loadCommSent();}

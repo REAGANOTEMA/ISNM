@@ -616,6 +616,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             var fd = new FormData();
             fd.append('action', 'delete_staff');
             fd.append('id', id);
+            fd.append('csrf_token', window.CSRF_TOKEN);
             fetch(window.location.href, { method: 'POST', body: fd })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
@@ -626,6 +627,7 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
         function submitAddStaff() {
             var fd = new FormData(document.getElementById('addStaffForm'));
+            fd.append('csrf_token', window.CSRF_TOKEN);
             fetch(window.location.href, { method: 'POST', body: fd })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
@@ -636,6 +638,7 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
         function submitEditStaff() {
             var fd = new FormData(document.getElementById('editStaffForm'));
+            fd.append('csrf_token', window.CSRF_TOKEN);
             fetch(window.location.href, { method: 'POST', body: fd })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {

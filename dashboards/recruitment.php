@@ -206,6 +206,7 @@ function deletePosition(id, title) {
     var fd = new FormData();
     fd.append('action', 'delete_position');
     fd.append('id', id);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
@@ -213,6 +214,7 @@ function deletePosition(id, title) {
 }
 function submitAddPosition() {
     var fd = new FormData(document.getElementById('addPositionForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
@@ -220,6 +222,7 @@ function submitAddPosition() {
 }
 function submitEditPosition() {
     var fd = new FormData(document.getElementById('editPositionForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })

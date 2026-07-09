@@ -758,6 +758,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     fd.append('priority', priority);
                     fd.append('expiry_date', expiry);
                     fd.append('status', 'published');
+                    fd.append('csrf_token', window.CSRF_TOKEN);
 
                     const modalBody = document.getElementById('modalBody');
                     modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';

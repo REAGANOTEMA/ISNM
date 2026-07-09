@@ -132,6 +132,7 @@ function showSubmitResignation() { new bootstrap.Modal(document.getElementById('
 function processResignation(id, status) {
     if (!confirm((status === 'approved' ? 'Approve' : 'Reject') + ' this resignation?')) return;
     var fd = new FormData(); fd.append('action', 'process_resignation'); fd.append('id', id); fd.append('status', status); fd.append('notes', 'Processed by admin');
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -140,6 +141,7 @@ function processResignation(id, status) {
 function deleteResignation(id) {
     if (!confirm('Delete this resignation record?')) return;
     var fd = new FormData(); fd.append('action', 'delete_resignation'); fd.append('id', id);
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
@@ -147,6 +149,7 @@ function deleteResignation(id) {
 }
 function submitResignation() {
     var fd = new FormData(document.getElementById('submitResigForm'));
+    fd.append('csrf_token', window.CSRF_TOKEN);
     fetch(window.location.href, { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
