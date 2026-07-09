@@ -1031,7 +1031,7 @@ function previewStudent(data) {
 
 function previewTranscript(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Transcript Preview</title><link rel="stylesheet" href="../assets/css/bootstrap.min.css"></head><body>');
+    w.document.write('<html><head><title>Transcript Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head><body>');
     fetch('academic-registrar.php?ajax=get_transcript_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })
         .then(function(html) {
@@ -1043,7 +1043,7 @@ function previewTranscript(studentId) {
 
 function previewCertificate(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Certificate Preview</title><link rel="stylesheet" href="../assets/css/bootstrap.min.css"></head><body>');
+    w.document.write('<html><head><title>Certificate Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head><body>');
     fetch('academic-registrar.php?ajax=get_certificate_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })
         .then(function(html) {

@@ -289,13 +289,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Alumni Management — ISNM</title>
-<link rel="stylesheet" href="../assets/css/bootstrap.min.css">
-<link rel="stylesheet" href="../assets/css/all.min.css">
-<link rel="stylesheet" href="../assets/css/datatables.min.css">
-<script src="../assets/js/jquery-3.6.0.min.js"></script>
-<script src="../assets/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/datatables.min.js"></script>
-<script src="../assets/js/sweetalert2.all.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 :root{--primary:#4a148c;--primary-light:#7b1fa2;--accent:#9c27b0;--bg-light:#f0f2f5;--card-shadow:0 2px 8px rgba(0,0,0,.08)}
 body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}

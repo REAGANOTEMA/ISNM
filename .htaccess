@@ -82,8 +82,8 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Set RewriteBase automatically (handles subdirectory installs like /ISNM/)
-    RewriteBase /
+    # RewriteBase is intentionally omitted — relative substitutions resolve
+    # to the .htaccess directory, supporting both root and subdirectory installs
 
     # Block Chrome extension paths that don't belong to ISNM (catches /writing/*, /site_integration/*, /generate/*)
     RewriteRule ^writing/ - [R=404,L,NC]
@@ -95,6 +95,9 @@
 
     # Route /api/* through api/index.php
     RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+
+    # Route /workflow/{page} → workflow/{page}.php
+    RewriteRule ^workflow/([^/.]+)/?$ workflow/$1.php [L,QSA]
 
     # Redirect /director and /director/ to overview
     RewriteRule ^director/?$ /director/overview [R=301,L]

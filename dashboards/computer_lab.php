@@ -302,7 +302,7 @@ $section = $_GET['section'] ?? 'dashboard';
                     <div class="id-card-preview mx-auto" id="printArea">
                         <div class="id-header"><img src="../images/school-logo.png" style="height:30px" onerror="this.style.display='none'"> IGANG A SCHOOL OF NURSING &amp; MIDWIFERY</div>
                         <div class="id-body">
-                            <img src="<?= htmlspecialchars($photo ? '../'.$photo : '../images/user-placeholder.png') ?>" class="id-photo" onerror="this.src='../images/user-placeholder.png'">
+                            <img src="<?= htmlspecialchars($photo ? '../'.$photo : '../images/default-avatar.png') ?>" class="id-photo" onerror="this.src='../images/default-avatar.png'">
                             <div class="id-info">
                                 <strong><?= htmlspecialchars($cardData['full_name'] ?? '') ?></strong>
                                 <small><?= htmlspecialchars($cardData['registration_number'] ?? '') ?></small><br>
