@@ -57,8 +57,9 @@ function renderGlobalSearchBar($staffDb = null, $studentsDb = null) {
 </style>
 
 <script>
-var _gsTimer = null;
+  var _gsTimer = null;
 var _gsCurrentRequest = null;
+var _gsCsrfToken = '<?= htmlspecialchars($_SESSION["csrf_token"] ?? "", ENT_QUOTES) ?>';
 
 function openGlobalSearch() {
   document.getElementById('globalSearchOverlay').classList.add('active');
@@ -110,7 +111,7 @@ function doGlobalSearch() {
     }
     resultsDiv.innerHTML = html;
   };
-  _gsCurrentRequest.send('action=global_stu_search&q=' + encodeURIComponent(q));
+  _gsCurrentRequest.send('action=global_stu_search&q=' + encodeURIComponent(q) + '&csrf_token=' + encodeURIComponent(_gsCsrfToken));
 }
 // Global search with debounce
 document.addEventListener('DOMContentLoaded', function() {

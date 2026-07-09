@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'send_communication') {
         $aid=(int)($_POST['applicant_id']??0); $type=trim($_POST['comm_type']??'Portal'); $subj=trim($_POST['subject']??''); $msg=trim($_POST['message']??'');
-        if($aid && $msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,?,?,?)");if($s){$s->bind_param('iisss',$aid,$userId,$type,$subj,$msg);$s->execute();$s->close();}logAdmission($conn,$aid,$UserId,"Communication: $type","Sent $type: $subj");}
+        if($aid && $msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,?,?,?)");if($s){$s->bind_param('iisss',$aid,$userId,$type,$subj,$msg);$s->execute();$s->close();}logAdmission($conn,$aid,$userId,"Communication: $type","Sent $type: $subj");}
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'schedule_interview') {
@@ -303,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aid=(int)($_POST['applicant_id']??0); $msg=trim($_POST['message']??'');
         $conn->query("UPDATE applicants SET status='Waiting for Documents' WHERE id=$aid");
         $conn->query("UPDATE student_admission_tracking SET admission_status='Requirements Pending' WHERE applicant_id=$aid");
-        if($msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,?,'Additional Documents Required',?)");if($s){$s->bind_param('iiss',$aid,$userId,$msg);$s->execute();$s->close();}}
+        if($msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,'Portal','Additional Documents Required',?)");if($s){$s->bind_param('iis',$aid,$userId,$msg);$s->execute();$s->close();}}
         logAdmission($conn,$aid,$userId,"Documents Requested","Requested: $msg"); notifyAdmission($conn,$aid,$userId,'warning','Documents Required',"Please submit: $msg",'staff-portal.php');
         echo json_encode(['success'=>true]); exit;
     }
@@ -659,7 +659,7 @@ if ($conn) {
     $r2 = $conn->query("SELECT COUNT(*) c FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id WHERE ars.status IN('Missing','Not Submitted','Rejected') AND a.status NOT IN('Registered','Rejected','Withdrawn')");
     if ($r2) $missingReqCount = (int)$r2->fetch_assoc()['c'];
 }
-$pendingAdmissionCount = $stats['new'] + $stats['waiting'] + $stats['under_review'];
+$pendingAdmissionCount = $stats['new'] + $stats['waiting_for_documents'] + $stats['under_review'];
 
 $programs=[];$r=$conn->query("SELECT * FROM academic_programs WHERE status='Active' ORDER BY program_name"); if($r)$programs=$r->fetch_all(MYSQLI_ASSOC);
 $intakes=[];$r=$conn->query("SELECT * FROM intakes ORDER BY intake_year DESC,intake_month"); if($r)$intakes=$r->fetch_all(MYSQLI_ASSOC);
@@ -1857,6 +1857,11 @@ postData({action:'reports_data',from:'<?=date('Y-m-d',strtotime('-14 days'))?>',
 // ── Applicant filter ──
 <?php if($page==='applicants'): ?>
 ['appSearch','filterStatus','filterProgram','filterIntake','filterGender'].forEach(id=>document.getElementById(id)?.addEventListener('change',filterApps));
+document.getElementById('appSearch')?.addEventListener('input',filterApps);
+function admStatusBadge(status){
+  const m={'New':'bg-primary','Under Review':'bg-info','Waiting for Documents':'bg-warning text-dark','Requirements Verified':'bg-success','Interview Scheduled':'bg-purple','Approved':'bg-success','Rejected':'bg-danger','Registered':'bg-dark','Withdrawn':'bg-secondary'};
+  return '<span class="badge '+(m[status]||'bg-secondary')+'">'+status+'</span>';
+}
 function filterApps(){
   const q=document.getElementById('appSearch').value;
   const st=document.getElementById('filterStatus').value;
@@ -1866,7 +1871,7 @@ function filterApps(){
   postData({action:'filter_applicants',search:q,status:st,program_id:pg,intake:in_,gender:gd,limit:200}).then(d=>{
     const tbody=document.getElementById('applicantTableBody');
     if(!d||d.length===0){tbody.innerHTML='<tr><td colspan="8" class="text-muted text-center py-4">No matching applicants.</td></tr>';return;}
-    tbody.innerHTML=d.map(a=>'<tr><td><span class="text-muted small">'+a.application_number+'</span></td><td><strong>'+a.full_name+'</strong></td><td><small>'+a.email+'<br>'+a.phone+'</small></td><td>'+(a.program_name||'-')+'</td><td>'+(a.intake||'-')+'</td><td><?=getStatusBadge("STATUS")?></td><td class="text-muted small">'+new Date(a.created_at).toLocaleDateString()+'</td><td><a href="director-admissions.php?page=review&aid='+a.id+'" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td></tr>'.replace('STATUS',a.status));
+    tbody.innerHTML=d.map(a=>'<tr><td><span class="text-muted small">'+a.application_number+'</span></td><td><strong>'+a.full_name+'</strong></td><td><small>'+a.email+'<br>'+a.phone+'</small></td><td>'+(a.program_name||'-')+'</td><td>'+(a.intake||'-')+'</td><td>'+admStatusBadge(a.status)+'</td><td class="text-muted small">'+new Date(a.created_at).toLocaleDateString()+'</td><td><a href="director-admissions.php?page=review&aid='+a.id+'" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td></tr>').join('');
   });
 }
 <?php endif; ?>
