@@ -727,6 +727,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; renderDashboardTopbar('Admissions Management'); ?>
 <div class="adm-content">
 <?php if (isset($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible"><?=htmlspecialchars($_SESSION['success'])?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php unset($_SESSION['success']); endif; ?>
 

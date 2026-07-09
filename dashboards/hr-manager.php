@@ -243,6 +243,7 @@ $pageTitle = 'HR Manager';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; renderDashboardTopbar('Human Resources Management'); ?>
 <div class="hr-content">
 <?php if (isset($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible"><?=htmlspecialchars($_SESSION['success'])?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php unset($_SESSION['success']); endif; ?>
 

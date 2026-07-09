@@ -843,3 +843,21 @@
     background-size: 100px 100px;
     animation: pattern 20s linear infinite;
 }
+
+/* Gentle CTA Pulse for Primary Action Buttons (Login, Apply, Donate, Contact) */
+@keyframes ctaPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+.cta-pulse {
+    animation: ctaPulse 3s ease-in-out infinite;
+}
+
+/* Reduced motion preference respected */
+@media (prefers-reduced-motion: reduce) {
+    .cta-pulse {
+        animation: none;
+    }
+}

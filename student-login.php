@@ -46,8 +46,8 @@ if ($login_success) { unset($_SESSION['success']); }
   <title>Student Login | ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link rel="stylesheet" href="css/3d-buttons.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <style>
@@ -595,6 +595,11 @@ if ($login_success) { unset($_SESSION['success']); }
 
 <div class="bg-particles" id="particles"></div>
 
+<div class="text-center mb-3">
+  <a href="index.php" class="text-decoration-none" style="color:#fff;font-size:0.9rem;opacity:0.8">
+    <i class="fas fa-arrow-left me-1"></i> Back to Home
+  </a>
+</div>
 <div class="login-wrapper">
   <div class="login-card">
     <div class="login-header">
@@ -713,7 +718,7 @@ if ($login_success) { unset($_SESSION['success']); }
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // ── Floating particles (enhanced) ──

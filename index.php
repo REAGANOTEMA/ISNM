@@ -77,12 +77,12 @@ include_once 'shared/_header.php';
         </div>
         
         <div class="cta-buttons">
-          <a href="application.php" class="btn-3d btn-yellow">
+          <a href="application.php" class="btn-3d btn-yellow cta-pulse">
             <span class="shine"></span>
             <i class="fas fa-graduation-cap"></i>
             <span>Apply Now</span>
           </a>
-          <a href="student-login.php" class="btn-3d btn-blue">
+          <a href="student-login.php" class="btn-3d btn-blue cta-pulse">
             <span class="shine"></span>
             <i class="fas fa-user-graduate"></i>
             <span>Student Portal</span>
@@ -253,7 +253,7 @@ include_once 'shared/_header.php';
                   <span class="shine"></span>
                   <i class="fas fa-info-circle me-2"></i>Learn More About Us
                 </a>
-                <a href="volunteer.php" class="btn-3d btn-chocolate">
+                <a href="volunteer.php" class="btn-3d btn-chocolate cta-pulse">
                   <span class="shine"></span>
                   <i class="fas fa-hands-helping me-2"></i>Volunteer With Us
                 </a>
@@ -387,7 +387,7 @@ include_once 'shared/_header.php';
         <h2 class="mb-4">Ready to Start Your Healthcare Journey?</h2>
         <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
         <div class="cta-buttons">
-          <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3">
+          <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3 cta-pulse">
             <span class="shine"></span>
             <i class="fas fa-paper-plane"></i> Apply Online
           </a>

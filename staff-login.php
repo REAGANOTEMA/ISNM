@@ -109,7 +109,8 @@ if ($login_success) { unset($_SESSION['success']); }
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Staff Portal Sign-In | ISNM</title>
 <link rel="icon" type="image/x-icon" href="images/school-logo.png">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -693,7 +694,12 @@ body{
   </div>
 </div>
 <div class="login-right">
-  <div class="login-card-wrap">
+  <div class="text-center mb-3">
+  <a href="index.php" class="text-decoration-none" style="color:var(--yellow);font-size:0.9rem">
+    <i class="fas fa-arrow-left me-1"></i> Back to Home
+  </a>
+</div>
+<div class="login-card-wrap">
     <div class="login-card">
       <div class="card-accent-top"></div>
       <div class="card-glow"></div>
@@ -788,5 +794,6 @@ document.addEventListener('DOMContentLoaded',function(){
   })}
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
