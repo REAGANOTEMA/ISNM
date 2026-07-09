@@ -314,7 +314,7 @@ if (!function_exists('executePrepared')) {
             }
 
             return $stmt;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Query Error: ' . $e->getMessage());
             throw $e;
         }

@@ -123,7 +123,7 @@ if (!function_exists('executeCrossDatabaseQuery')) {
                 $results[$db] = DatabaseConnection::executeQuery($db, $sql, $params);
             }
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Cross-database query error: " . $e->getMessage());
         }
         
@@ -151,7 +151,7 @@ if (!function_exists('checkSystemHealth')) {
                     'client_info' => $connection->get_client_info(),
                     'error' => null
                 ];
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $health['databases'][$db] = [
                     'connected' => false,
                     'error' => $e->getMessage()
@@ -178,7 +178,7 @@ if (!function_exists('logSystemActivity')) {
             
             DatabaseConnection::executeInsert($database, $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Logging error: " . $e->getMessage());
         }
     }
@@ -215,7 +215,7 @@ if (!function_exists('getCacheData')) {
                 return json_decode($row['cache_data'], true);
             }
             return null;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Cache retrieval error: " . $e->getMessage());
             return null;
         }
@@ -244,7 +244,7 @@ if (!function_exists('setCacheData')) {
             $stmt->bind_param('ssii', $key, $json, $seconds, $seconds);
             $stmt->execute();
             $stmt->close();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Cache storage error: " . $e->getMessage());
         }
     }
@@ -259,7 +259,7 @@ if (!function_exists('sendNotification')) {
             
             DatabaseConnection::executeInsert($database, $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Notification error: " . $e->getMessage());
         }
     }
@@ -274,7 +274,7 @@ if (!function_exists('queueEmail')) {
             
             DatabaseConnection::executeInsert('staffs', $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Email queue error: " . $e->getMessage());
         }
     }
@@ -336,7 +336,7 @@ if (!function_exists('trackPerformance')) {
             
             DatabaseConnection::executeInsert($database, $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Performance tracking error: " . $e->getMessage());
         }
     }
@@ -352,7 +352,7 @@ if (!function_exists('addSmartSuggestion')) {
             
             DatabaseConnection::executeInsert('staffs', $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Smart suggestion error: " . $e->getMessage());
         }
     }
@@ -367,7 +367,7 @@ if (!function_exists('logDocumentGeneration')) {
             
             DatabaseConnection::executeInsert($database, $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Document generation log error: " . $e->getMessage());
         }
     }
@@ -382,7 +382,7 @@ if (!function_exists('addRealTimeUpdate')) {
             
             DatabaseConnection::executeInsert('staffs', $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Real-time update error: " . $e->getMessage());
         }
     }
@@ -401,7 +401,7 @@ if (!function_exists('getSystemSetting')) {
             
             return $default;
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("System setting retrieval error: " . $e->getMessage());
             return $default;
         }
@@ -416,7 +416,7 @@ if (!function_exists('setSystemSetting')) {
             
             DatabaseConnection::executeQuery('staffs', $sql, $params);
             
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("System setting update error: " . $e->getMessage());
         }
     }
