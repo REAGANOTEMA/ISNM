@@ -492,7 +492,7 @@ try {
             $version = $_POST['version_installed'] ?? '';
             if (!$swId || !$compId) throw new Exception('Software and computer required');
             $stmt = $ict->prepare("INSERT INTO software_installations (software_id, computer_id, version_installed, installed_by) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param('iiss', $swId, $compId, $version, $userId);
+            $stmt->bind_param('iiis', $swId, $compId, $version, $userId);
             $stmt->execute();
             respond(true, 'Installation recorded');
             break;

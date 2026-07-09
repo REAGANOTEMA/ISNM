@@ -199,7 +199,7 @@ if (!function_exists('isnm_mysqli_connect')) {
                     }
                     if ($conn) {
                         if (stripos($conn->connect_error, 'access denied') !== false) $accessDenied = true;
-                        $conn->close();
+                        try { $conn->close(); } catch (\Throwable $_) { /* PHP 8.2+ throws on failed connections */ }
                     }
                     $conn = null;
                 }

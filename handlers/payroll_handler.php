@@ -212,7 +212,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("INSERT INTO payroll_loans (payroll_employee_id, loan_number, loan_type, principal_amount, interest_rate, installments, installment_amount, loan_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $stmt->bind_param('issdddsi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
+            $stmt->bind_param('issididisi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
             $stmt->execute() ? $_SESSION['success'] = 'Loan recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
             $stmt->close();
             $pconn->close();
@@ -437,7 +437,9 @@ try {
             $endDate = trim($_POST['end_date'] ?? '');
             $reason = trim($_POST['reason'] ?? '');
             if ($staffIdReq && $leaveTypeId && $startDate && $endDate) {
-                $stmt = $payrollConn->prepare("INSERT INTO staff_leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+                $pconn = getPayrollConnection();
+                if (!$pconn) throw new Exception('Payroll DB connection failed');
+                $stmt = $pconn->prepare("INSERT INTO staff_leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
                 if ($stmt) {
                     $stmt->bind_param("iisss", $staffIdReq, $leaveTypeId, $startDate, $endDate, $reason);
                     if ($stmt->execute()) {
@@ -449,6 +451,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Failed to prepare leave request.';
                 }
+                $pconn->close();
             } else {
                 $_SESSION['error'] = 'Please fill all required fields.';
             }
@@ -458,7 +461,9 @@ try {
         case 'approve_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
-                $stmt = $payrollConn->prepare("UPDATE staff_leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
+                $pconn = getPayrollConnection();
+                if (!$pconn) throw new Exception('Payroll DB connection failed');
+                $stmt = $pconn->prepare("UPDATE staff_leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
                     $stmt->execute();
@@ -467,6 +472,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Could not approve leave request.';
                 }
+                $pconn->close();
             }
             break;
 
@@ -474,7 +480,9 @@ try {
         case 'reject_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
-                $stmt = $payrollConn->prepare("UPDATE staff_leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
+                $pconn = getPayrollConnection();
+                if (!$pconn) throw new Exception('Payroll DB connection failed');
+                $stmt = $pconn->prepare("UPDATE staff_leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
                     $stmt->execute();
@@ -483,6 +491,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Could not reject leave request.';
                 }
+                $pconn->close();
             }
             break;
 
@@ -492,14 +501,16 @@ try {
             $daysPerYear = (int)($_POST['days_per_year'] ?? 30);
             $description = trim($_POST['description'] ?? '');
             if ($typeName) {
-                $stmt = $payrollConn->prepare("INSERT INTO leave_types (type_name, leave_type_name, days_per_year, description, is_active) VALUES (?, ?, ?, ?, 1)");
+                $pconn = getPayrollConnection();
+                if (!$pconn) throw new Exception('Payroll DB connection failed');
+                $stmt = $pconn->prepare("INSERT INTO leave_types (type_name, leave_type_name, days_per_year, description, is_active) VALUES (?, ?, ?, ?, 1)");
                 if ($stmt) {
                     $stmt->bind_param("ssis", $typeName, $typeName, $daysPerYear, $description);
                     $stmt->execute();
                     $stmt->close();
                     $_SESSION['success'] = 'Leave type added.';
                 } else {
-                    $stmt2 = $payrollConn->prepare("INSERT INTO leave_types (type_name, days_per_year, is_active) VALUES (?, ?, 1)");
+                    $stmt2 = $pconn->prepare("INSERT INTO leave_types (type_name, days_per_year, is_active) VALUES (?, ?, 1)");
                     if ($stmt2) {
                         $stmt2->bind_param("si", $typeName, $daysPerYear);
                         $stmt2->execute();
@@ -507,6 +518,7 @@ try {
                         $_SESSION['success'] = 'Leave type added.';
                     }
                 }
+                $pconn->close();
             }
             break;
 

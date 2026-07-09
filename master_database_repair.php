@@ -1,404 +1,265 @@
 <?php
 /**
- * ISNM Master Database Repair & Initialization Script
- * Comprehensive tool to initialize, repair, and validate all databases
- * This is THE script to run when encountering database unavailability errors
+ * MASTER DATABASE REPAIR & AUDIT FIX
  * 
- * Usage: php master_database_repair.php [--import-sql] [--skip-validation] [--verbose]
+ * ISNM School Management System
+ * Repairs all database schema issues across all databases.
+ * MySQL 8.0 compatible (no ADD COLUMN IF NOT EXISTS).
+ * PHP 8.2+ compatible.
+ * 
+ * SAFE TO RE-RUN.
  */
 
 require_once __DIR__ . '/config/database.php';
 
-class MasterDatabaseRepair {
-    private $verbose = false;
-    private $importSql = false;
-    private $skipValidation = false;
-    private $sqlDir = __DIR__ . '/sql';
-    private $allSuccess = true;
-    
-    private $databases = [
-        'igangaschoolofl_students_db' => [
-            'func' => 'getStudentsConnection',
-            'user' => 'root',
-            'pass' => 'ReagaN23#',
-            'sqlFile' => 'students/igangaschoolofl_students_db.sql',
-            'tables' => [
-                'students' => 'Student profiles and enrollment',
-                'academic_records' => 'Academic performance records',
-                'student_fee_accounts' => 'Student financial accounts',
-                'bursar_users' => 'Finance staff accounts',
-                'courses' => 'Course definitions',
-            ],
-        ],
-        'igangaschoolofl_staffs_db' => [
-            'func' => 'getStaffConnection',
-            'user' => 'root',
-            'pass' => 'ReagaN23#',
-            'sqlFile' => 'staffs/igangaschoolofl_staffs_db.sql',
-            'tables' => [
-                'staff' => 'Staff profiles',
-                'hr_users' => 'HR staff accounts',
-                'payroll' => 'Salary and compensation',
-                'staff_activity_log' => 'Activity audit trail',
-                'departments' => 'Organizational departments',
-            ],
-        ],
-        'igangaschoolofl_website_db' => [
-            'func' => 'getWebsiteConnection',
-            'user' => 'root',
-            'pass' => 'ReagaN23#',
-            'sqlFile' => 'website/igangaschoolofl_website_db.sql',
-            'tables' => [
-                'contact_submissions' => 'Website contact form submissions',
-                'website_announcements' => 'Website announcements and news',
-                'news' => 'News articles',
-            ],
-        ],
-        'igangaschoolofl_ict' => [
-            'func' => 'getICTConnection',
-            'user' => 'root',
-            'pass' => 'ReagaN23#',
-            'sqlFile' => 'ict/igangaschoolofl_ict.sql',
-            'tables' => [
-                'ict_assets' => 'IT equipment inventory',
-                'ict_asset_categories' => 'Asset categories',
-                'asset_assignments' => 'Equipment assignments',
-                'lab_computers' => 'Computer lab inventory',
-            ],
-        ],
-    ];
-    
-    public function __construct($args = []) {
-        $this->verbose = in_array('--verbose', $args) || in_array('-v', $args);
-        $this->importSql = in_array('--import-sql', $args);
-        $this->skipValidation = in_array('--skip-validation', $args);
+$output = [];
+$errors = [];
+
+function log_fix($db, $msg, $type = 'FIX') {
+    global $output;
+    $output[] = "[$type] [$db] $msg";
+    echo "[$type] [$db] $msg\n";
+}
+
+function log_error($db, $msg) {
+    global $errors;
+    $errors[] = "[ERROR] [$db] $msg";
+    echo "[ERROR] [$db] $msg\n";
+}
+
+function safe_query($conn, $sql) {
+    if (!$conn || $conn->connect_error) return false;
+    try { return $conn->query($sql); } catch (Throwable $e) { return false; }
+}
+
+function column_exists($conn, $table, $column) {
+    $r = safe_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if ($r && $r->num_rows > 0) { $r->free(); return true; }
+    if ($r) $r->free();
+    return false;
+}
+
+function table_exists($conn, $table) {
+    $r = safe_query($conn, "SHOW TABLES LIKE '$table'");
+    if ($r && $r->num_rows > 0) { $r->free(); return true; }
+    if ($r) $r->free();
+    return false;
+}
+
+function add_column_if_missing($conn, $db, $table, $column, $definition) {
+    if (column_exists($conn, $table, $column)) {
+        log_fix($db, "Column `$column` already exists in `$table` — skipped");
+        return;
     }
-    
-    private function log($message, $level = 'INFO') {
-        $timestamp = date('Y-m-d H:i:s');
-        $prefix = '';
-        $color = '';
-        
-        switch ($level) {
-            case 'ERROR':
-                $prefix = '❌';
-                break;
-            case 'SUCCESS':
-                $prefix = '✓';
-                break;
-            case 'WARN':
-                $prefix = '⚠';
-                break;
-            case 'INFO':
-                $prefix = 'ℹ';
-                break;
-        }
-        
-        $formatted = "[$timestamp] $prefix [$level] $message";
-        
-        if (php_sapi_name() === 'cli') {
-            echo $formatted . "\n";
-        } else {
-            echo htmlspecialchars($formatted) . "<br>";
-        }
-        
-        error_log($formatted);
-    }
-    
-    private function logError($message) {
-        $this->allSuccess = false;
-        $this->log($message, 'ERROR');
-    }
-    
-    private function logSuccess($message) {
-        $this->log($message, 'SUCCESS');
-    }
-    
-    private function logWarning($message) {
-        $this->log($message, 'WARN');
-    }
-    
-    private function logInfo($message) {
-        $this->log($message, 'INFO');
-    }
-    
-    /**
-     * Step 1: Establish admin connection for database creation
-     */
-    private function step1_EstablishAdminConnection() {
-        $this->logInfo('=== Step 1: Establishing Admin Connection ===');
-        
-        $rootPass = getenv('MYSQL_ROOT_PASSWORD') ?: 'ReagaN23#';
-        $adminConn = @new mysqli('localhost', 'root', $rootPass, '', 3306);
-        
-        if (!$adminConn || $adminConn->connect_error) {
-            $this->logError("Cannot connect as root user: " . ($adminConn ? $adminConn->connect_error : 'Unknown error'));
-            $this->logInfo('Ensure MySQL is running and root password is correct');
-            return null;
-        }
-        
-        $this->logSuccess('Connected as root user');
-        $this->logInfo('MySQL Version: ' . $adminConn->get_server_info());
-        
-        return $adminConn;
-    }
-    
-    /**
-     * Step 2: Create all databases if they don't exist
-     */
-    private function step2_CreateDatabases($adminConn) {
-        $this->logInfo('');
-        $this->logInfo('=== Step 2: Creating Databases ===');
-        
-        if (!$adminConn) return false;
-        
-        $created = 0;
-        
-        foreach (array_keys($this->databases) as $dbName) {
-            $sql = "CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            
-            if ($adminConn->query($sql)) {
-                $this->logSuccess("Database '$dbName' ready");
-                $created++;
-            } else {
-                $this->logError("Failed to create database '$dbName': " . $adminConn->error);
-            }
-        }
-        
-        $this->logInfo("Total: $created databases processed");
-        return true;
-    }
-    
-    /**
-     * Step 3: Grant permissions
-     */
-    private function step3_GrantPermissions($adminConn) {
-        $this->logInfo('');
-        $this->logInfo('=== Step 3: Granting Permissions ===');
-        
-        if (!$adminConn) return false;
-        
-        // Grant root full privileges
-        $grants = [
-            "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION",
-            "GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION",
-        ];
-        
-        foreach ($grants as $grant) {
-            if ($adminConn->query($grant)) {
-                $this->logSuccess("Privileges granted");
-            } else {
-                $this->logWarning("Could not grant privileges: " . $adminConn->error);
-            }
-        }
-        
-        if ($adminConn->query("FLUSH PRIVILEGES")) {
-            $this->logSuccess("Privileges flushed");
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Step 4: Import SQL schemas
-     */
-    private function step4_ImportSchemas($adminConn) {
-        $this->logInfo('');
-        $this->logInfo('=== Step 4: Importing Database Schemas ===');
-        
-        if (!$adminConn) return false;
-        
-        $imported = 0;
-        
-        foreach ($this->databases as $dbName => $config) {
-            $sqlFile = $this->sqlDir . '/' . $config['sqlFile'];
-            
-            if (!file_exists($sqlFile)) {
-                $this->logWarning("SQL file not found: $sqlFile");
-                continue;
-            }
-            
-            $this->logInfo("Reading schema from: " . $config['sqlFile']);
-            
-            // Read SQL file
-            $sql = file_get_contents($sqlFile);
-            
-            // Split by statements
-            $statements = preg_split('/;(?=(?:[^\']*\'[^\']*\')*[^\']*$)/', $sql);
-            
-            $adminConn->select_db($dbName);
-            $stmtCount = 0;
-            
-            foreach ($statements as $statement) {
-                $statement = trim($statement);
-                
-                if (empty($statement) || strpos($statement, '--') === 0) {
-                    continue;
-                }
-                
-                if ($adminConn->query($statement)) {
-                    $stmtCount++;
-                } else {
-                    $this->logWarning("Error executing statement in $dbName: " . $adminConn->error);
-                }
-            }
-            
-            $this->logSuccess("Database '$dbName': $stmtCount statements executed");
-            $imported++;
-        }
-        
-        $this->logInfo("Total: $imported databases imported");
-        return true;
-    }
-    
-    /**
-     * Step 5: Validate connections
-     */
-    private function step5_ValidateConnections() {
-        $this->logInfo('');
-        $this->logInfo('=== Step 5: Validating Database Connections ===');
-        
-        $connected = 0;
-        
-        foreach ($this->databases as $dbName => $config) {
-            $func = $config['func'];
-            
-            if (!function_exists($func)) {
-                $this->logError("Connection function '$func' not found");
-                continue;
-            }
-            
-            $conn = @$func();
-            
-            if ($conn && !$conn->connect_error) {
-                $currentDb = $conn->query("SELECT DATABASE() as db")->fetch_assoc()['db'];
-                $tableCount = $conn->query("SELECT COUNT(*) as cnt FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$dbName'")->fetch_assoc()['cnt'];
-                
-                $this->logSuccess("$dbName - Connected ($tableCount tables)");
-                
-                if ($this->verbose) {
-                    $tables = $conn->query("SHOW TABLES");
-                    $tableList = [];
-                    while ($row = $tables->fetch_row()) {
-                        $tableList[] = $row[0];
-                    }
-                    $this->logInfo("  Tables: " . implode(', ', $tableList));
-                }
-                
-                $conn->close();
-                $connected++;
-            } else {
-                $this->logError("$dbName - Connection failed: " . ($conn ? $conn->connect_error : 'NULL'));
-            }
-        }
-        
-        $this->logInfo("Total: $connected databases connected");
-        return $connected === count($this->databases);
-    }
-    
-    /**
-     * Step 6: Validate schema tables
-     */
-    private function step6_ValidateSchema() {
-        $this->logInfo('');
-        $this->logInfo('=== Step 6: Validating Database Schema ===');
-        
-        if ($this->skipValidation) {
-            $this->logWarning('Validation skipped (--skip-validation flag)');
-            return true;
-        }
-        
-        $allValid = true;
-        
-        foreach ($this->databases as $dbName => $config) {
-            $func = $config['func'];
-            $conn = function_exists($func) ? @$func() : null;
-            
-            if (!$conn || $conn->connect_error) {
-                $this->logError("Cannot validate $dbName - connection failed");
-                $allValid = false;
-                continue;
-            }
-            
-            $this->logInfo("Validating $dbName...");
-            
-            foreach ($config['tables'] as $tableName => $description) {
-                $result = $conn->query("SHOW TABLES LIKE '$tableName'");
-                
-                if ($result && $result->num_rows > 0) {
-                    $this->logSuccess("  ✓ $tableName - $description");
-                } else {
-                    $this->logWarning("  ✗ $tableName - MISSING ($description)");
-                    $allValid = false;
-                }
-            }
-            
-            $conn->close();
-        }
-        
-        return $allValid;
-    }
-    
-    /**
-     * Run complete repair process
-     */
-    public function run() {
-        $this->logInfo('╔════════════════════════════════════════════╗');
-        $this->logInfo('║  ISNM Master Database Repair & Initialize  ║');
-        $this->logInfo('║  This tool will fix database unavailability ║');
-        $this->logInfo('╚════════════════════════════════════════════╝');
-        $this->logInfo('');
-        $this->logInfo('Environment: ' . (defined('APP_ENV') ? APP_ENV : 'unknown'));
-        $this->logInfo('Debug: ' . (defined('APP_DEBUG') && APP_DEBUG ? 'ON' : 'OFF'));
-        $this->logInfo('');
-        
-        // Step 1: Admin connection
-        $adminConn = $this->step1_EstablishAdminConnection();
-        if (!$adminConn) {
-            $this->logError('Cannot proceed without admin connection');
-            return false;
-        }
-        
-        // Step 2: Create databases
-        $this->step2_CreateDatabases($adminConn);
-        
-        // Step 3: Grant permissions
-        $this->step3_GrantPermissions($adminConn);
-        
-        // Step 4: Import schemas
-        if ($this->importSql) {
-            $this->step4_ImportSchemas($adminConn);
-        } else {
-            $this->logWarning('Skipping SQL import. Use --import-sql to import schemas');
-        }
-        
-        $adminConn->close();
-        
-        // Step 5: Validate connections
-        $this->step5_ValidateConnections();
-        
-        // Step 6: Validate schema
-        $this->step6_ValidateSchema();
-        
-        $this->logInfo('');
-        $this->logInfo('=== Final Result ===');
-        
-        if ($this->allSuccess) {
-            $this->logSuccess('All checks passed! Database is ready to use.');
-            $this->logInfo('You can now access the system normally.');
-        } else {
-            $this->logError('Some issues remain. Please review the errors above.');
-            $this->logInfo('For detailed troubleshooting, run with --verbose flag');
-        }
-        
-        return $this->allSuccess;
+    $r = safe_query($conn, "ALTER TABLE `$table` ADD COLUMN $definition");
+    if ($r !== false) {
+        log_fix($db, "ADD COLUMN `$column` TO `$table`");
+    } else {
+        log_error($db, "Failed to add `$column` to `$table`: " . $conn->error);
     }
 }
 
-// Parse command line arguments
-$args = isset($argv) ? array_slice($argv, 1) : [];
-$repair = new MasterDatabaseRepair($args);
-$success = $repair->run();
+function run_pk_auto_increment($conn, $db, $table) {
+    $r = safe_query($conn, "SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='$table' AND COLUMN_KEY='PRI' AND EXTRA LIKE '%auto_increment%'");
+    if ($r) {
+        $row = $r->fetch_assoc();
+        $r->free();
+        if ($row && $row['cnt'] > 0) {
+            log_fix($db, "`$table` already has AUTO_INCREMENT PRIMARY KEY — skipped");
+            return;
+        }
+    }
+    $r2 = safe_query($conn, "ALTER TABLE `$table` MODIFY COLUMN id INT(11) NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (id)");
+    if ($r2 !== false) {
+        log_fix($db, "Fixed AUTO_INCREMENT + PRIMARY KEY on `$table`");
+    } else {
+        log_error($db, "Failed to fix `$table`: " . $conn->error);
+    }
+}
 
-exit($success ? 0 : 1);
-?>
+echo "================================================================" . "\n";
+echo "ISNM MASTER DATABASE REPAIR TOOL" . "\n";
+echo "Repairing all databases..." . "\n";
+echo "================================================================" . "\n\n";
+
+// ============================================================
+// 1. REPAIR STUDENTS DATABASE
+// ============================================================
+echo "--- REPAIRING STUDENTS DATABASE ---\n";
+try {
+    $conn = getStudentsConnection();
+    if ($conn && !$conn->connect_error) {
+        $dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
+        log_fix('students_db', "Connected to $dbName on {$conn->server_info}");
+
+        run_pk_auto_increment($conn, 'students_db', 'students');
+        safe_query($conn, "ALTER TABLE students ADD UNIQUE INDEX idx_student_number_unique (student_number)");
+        safe_query($conn, "DELETE FROM announcements WHERE id = 0");
+        run_pk_auto_increment($conn, 'students_db', 'announcements');
+        add_column_if_missing($conn, 'students_db', 'announcements', 'status', "`status` VARCHAR(50) DEFAULT 'published' AFTER `is_active`");
+        add_column_if_missing($conn, 'students_db', 'announcements', 'view_count', "`view_count` INT(11) DEFAULT 0 AFTER `status`");
+        add_column_if_missing($conn, 'students_db', 'announcements', 'attachment_path', "`attachment_path` VARCHAR(500) DEFAULT NULL AFTER `view_count`");
+        add_column_if_missing($conn, 'students_db', 'announcements', 'posted_date', "`posted_date` DATETIME DEFAULT NULL AFTER `attachment_path`");
+
+        $tables_with_issues = ['academic_registrar_activity_log','asset_categories','assets','bank_transactions','budget_records','budgets','bursar_chart_of_accounts','bursar_general_ledger','bursar_tax_filings','bursar_tax_periods','bursar_users','cash_book','chart_of_accounts','clinical_placements','clinical_placements_students'];
+        foreach ($tables_with_issues as $tbl) {
+            if (table_exists($conn, $tbl)) {
+                run_pk_auto_increment($conn, 'students_db', $tbl);
+            }
+        }
+
+        try { $conn->close(); } catch (Throwable $ignore) {}
+    } else {
+        log_error('students_db', 'Cannot connect — ' . ($conn ? $conn->connect_error : 'unknown'));
+    }
+} catch (Throwable $e) {
+    log_error('students_db', 'Exception: ' . $e->getMessage());
+}
+
+// ============================================================
+// 2. REPAIR STAFFS DATABASE
+// ============================================================
+echo "\n--- REPAIRING STAFFS DATABASE ---\n";
+try {
+    $conn = getStaffConnection();
+    if ($conn && !$conn->connect_error) {
+        $dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
+        log_fix('staffs_db', "Connected to $dbName on {$conn->server_info}");
+
+        // Add full_name to users
+        add_column_if_missing($conn, 'staffs_db', 'users', 'full_name', "`full_name` VARCHAR(255) DEFAULT NULL AFTER `username`");
+        safe_query($conn, "UPDATE users SET full_name = username WHERE full_name IS NULL OR full_name = ''");
+
+        // Create messages table if not exists
+        if (!table_exists($conn, 'messages')) {
+            $r = safe_query($conn, "CREATE TABLE `messages` (
+                `id` INT(11) NOT NULL AUTO_INCREMENT,
+                `sender_id` INT(11) NOT NULL,
+                `receiver_id` INT(11) NOT NULL,
+                `subject` VARCHAR(255) NOT NULL,
+                `message` TEXT NOT NULL,
+                `message_type` VARCHAR(50) DEFAULT 'text',
+                `attachment_path` VARCHAR(500) DEFAULT NULL,
+                `priority` VARCHAR(20) DEFAULT 'medium',
+                `status` VARCHAR(20) DEFAULT 'sent',
+                `parent_message_id` INT(11) DEFAULT NULL,
+                `read_date` DATETIME DEFAULT NULL,
+                `sent_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+                `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+                PRIMARY KEY (`id`),
+                KEY `idx_messages_sender` (`sender_id`),
+                KEY `idx_messages_receiver` (`receiver_id`),
+                KEY `idx_messages_status` (`status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            if ($r !== false) {
+                log_fix('staffs_db', "Created `messages` table");
+            } else {
+                log_error('staffs_db', "Failed to create `messages`: " . $conn->error);
+            }
+        } else {
+            log_fix('staffs_db', "`messages` table already exists — skipped");
+        }
+
+        // Add missing columns to announcements
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'announcement_type', "`announcement_type` VARCHAR(50) DEFAULT 'general' AFTER `body`");
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'attachment_path', "`attachment_path` VARCHAR(500) DEFAULT NULL AFTER `announcement_type`");
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'expiry_date', "`expiry_date` DATE DEFAULT NULL AFTER `attachment_path`");
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'view_count', "`view_count` INT(11) DEFAULT 0 AFTER `expiry_date`");
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'status', "`status` VARCHAR(50) DEFAULT 'published' AFTER `view_count`");
+        add_column_if_missing($conn, 'staffs_db', 'announcements', 'posted_date', "`posted_date` TIMESTAMP NULL AFTER `status`");
+        safe_query($conn, "UPDATE announcements SET posted_date = created_at WHERE posted_date IS NULL");
+        safe_query($conn, "UPDATE announcements SET `status` = 'published' WHERE `status` IS NULL OR `status` = ''");
+
+        // Add missing columns to student_finance
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'tuition_fee', "`tuition_fee` DECIMAL(15,2) DEFAULT 0.00 AFTER `student_id`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'amount_paid', "`amount_paid` DECIMAL(15,2) DEFAULT 0.00 AFTER `tuition_fee`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'payment_method', "`payment_method` VARCHAR(50) DEFAULT NULL AFTER `amount_paid`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'payment_date', "`payment_date` DATE DEFAULT NULL AFTER `payment_method`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'payment_status', "`payment_status` VARCHAR(50) DEFAULT 'pending' AFTER `payment_date`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'semester', "`semester` VARCHAR(50) DEFAULT NULL AFTER `payment_status`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'academic_year', "`academic_year` VARCHAR(20) DEFAULT NULL AFTER `semester`");
+        add_column_if_missing($conn, 'staffs_db', 'student_finance', 'receipt_number', "`receipt_number` VARCHAR(100) DEFAULT NULL AFTER `academic_year`");
+
+        // Add rate to payroll_overtime
+        add_column_if_missing($conn, 'staffs_db', 'payroll_overtime', 'rate', "`rate` DECIMAL(10,2) DEFAULT 0.00 AFTER `hours`");
+
+        // Fix staff_roles role_name
+        add_column_if_missing($conn, 'staffs_db', 'staff_roles', 'role_name', "`role_name` VARCHAR(100) DEFAULT NULL AFTER `name`");
+
+        try { $conn->close(); } catch (Throwable $ignore) {}
+    } else {
+        log_error('staffs_db', 'Cannot connect — ' . ($conn ? $conn->connect_error : 'unknown'));
+    }
+} catch (Throwable $e) {
+    log_error('staffs_db', 'Exception: ' . $e->getMessage());
+}
+
+// ============================================================
+// 3. REPAIR ICT DATABASE
+// ============================================================
+echo "\n--- REPAIRING ICT DATABASE ---\n";
+try {
+    $conn = getICTConnection();
+    if ($conn && !$conn->connect_error) {
+        $dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
+        log_fix('ict_db', "Connected to $dbName on {$conn->server_info}");
+        run_pk_auto_increment($conn, 'ict_db', 'ict_assets');
+        add_column_if_missing($conn, 'ict_db', 'ict_system_settings', 'updated_by', "`updated_by` INT(11) DEFAULT NULL AFTER `setting_value`");
+        try { $conn->close(); } catch (Throwable $ignore) {}
+    } else {
+        log_error('ict_db', 'Cannot connect — ' . ($conn ? $conn->connect_error : 'unknown'));
+    }
+} catch (Throwable $e) {
+    log_error('ict_db', 'Exception: ' . $e->getMessage());
+}
+
+// ============================================================
+// 4. REPAIR WEBSITE DATABASE
+// ============================================================
+echo "\n--- REPAIRING WEBSITE DATABASE ---\n";
+try {
+    $conn = getWebsiteConnection();
+    if ($conn && !$conn->connect_error) {
+        $dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
+        log_fix('website_db', "Connected to $dbName on {$conn->server_info}");
+        try { $conn->close(); } catch (Throwable $ignore) {}
+    } else {
+        log_error('website_db', 'Cannot connect — ' . ($conn ? $conn->connect_error : 'unknown'));
+    }
+} catch (Throwable $e) {
+    log_error('website_db', 'Exception: ' . $e->getMessage());
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
+echo "\n================================================================" . "\n";
+echo "REPAIR COMPLETE" . "\n";
+echo "================================================================" . "\n";
+echo "Total fixes applied: " . count($output) . "\n";
+echo "Total errors: " . count($errors) . "\n\n";
+
+if (!empty($errors)) {
+    foreach ($errors as $e) {
+        echo "  $e\n";
+    }
+}
+
+// Write repair log
+$logDir = __DIR__ . '/storage/logs';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0777, true);
+}
+
+$log = "ISNM Database Repair Log - " . date('Y-m-d H:i:s') . "\n";
+$log .= str_repeat('=', 80) . "\n\nFixes Applied:\n";
+foreach ($output as $o) { $log .= "  $o\n"; }
+if (!empty($errors)) {
+    $log .= "\nErrors:\n";
+    foreach ($errors as $e) { $log .= "  $e\n"; }
+}
+
+$logFile = $logDir . '/db_repair_log_' . date('Ymd_His') . '.txt';
+file_put_contents($logFile, $log);
+echo "\nLog written to: $logFile\n";

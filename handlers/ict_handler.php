@@ -396,7 +396,7 @@ try {
             if (!$id) ictRespond(false, 'Ticket ID required');
             $sets = []; $params = []; $types = '';
             if ($status) { $sets[] = "status=?"; $params[] = $status; $types .= 's'; }
-            if ($notes) { $sets[] = "resolution_notes=CONCAT(IFNULL(resolution_notes,''),CONCAT('\n[?] ',?))"; $params[] = $userName; $params[] = $notes; $types .= 'ss'; }
+            if ($notes) { $sets[] = "resolution_notes=CONCAT(IFNULL(resolution_notes,''),'\n[', ?, '] ', ?)"; $params[] = $userName; $params[] = $notes; $types .= 'ss'; }
             if ($assign > 0) { $sets[] = "assigned_to=?"; $params[] = $assign; $types .= 'i'; }
             if ($status === 'resolved') { $sets[] = "resolved_at=NOW()"; }
             if (!empty($sets)) {
