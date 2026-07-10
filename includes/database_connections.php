@@ -68,23 +68,38 @@ class DatabaseConnection {
             $hosts = array_values(array_unique(array_filter([$cfg['host'], 'localhost', '127.0.0.1'])));
             $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
 
-            // Hosting fallback credentials (used when .env missing/overridden)
-            $knownCreds = [
-                'igangaschoolofl_staffs_db'   => ['user'=>'igangaschoolofl_staffs_db',   'pass'=>''],
-                'igangaschoolofl_students_db' => ['user'=>'igangaschoolofl_students_db', 'pass'=>''],
-                'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db',  'pass'=>''],
-                'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',          'pass'=>''],
-            ];
+            $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
             $credSet = [['user' => $username, 'pass' => $password]];
-            // Try hosting credentials first (they match cPanel MySQL users)
-            if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
-                array_unshift($credSet, $knownCreds[$database]);
-            }
-            // Local XAMPP fallback — try root with no password only if no credentials configured
-            $host = $cfg['host'] ?? 'localhost';
-            $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']);
-            if ($isLocalHost && $username !== 'root') {
-                $credSet[] = ['user' => 'root', 'pass' => ''];
+
+            if ($isLocalHost) {
+                // On localhost, try root with .env password first, then root/empty
+                $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
+                $localCreds = [];
+                if (!empty($rootPass)) {
+                    $localCreds[] = ['user' => 'root', 'pass' => $rootPass];
+                }
+                $localCreds[] = ['user' => 'root', 'pass' => ''];
+                $localCreds[] = ['user' => 'root', 'pass' => 'root'];
+                $credSet = array_merge($localCreds, $credSet);
+                // Deduplicate
+                $seen = [];
+                $credSet = array_values(array_filter($credSet, function($c) use (&$seen) {
+                    $key = $c['user'] . '|' . $c['pass'];
+                    if (isset($seen[$key])) return false;
+                    $seen[$key] = true;
+                    return true;
+                }));
+            } else {
+                // On production, try hosting credentials first
+                $knownCreds = [
+                    'igangaschoolofl_staffs_db'   => ['user'=>'igangaschoolofl_staffs_db',   'pass'=>''],
+                    'igangaschoolofl_students_db' => ['user'=>'igangaschoolofl_students_db', 'pass'=>''],
+                    'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db',  'pass'=>''],
+                    'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',          'pass'=>''],
+                ];
+                if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
+                    array_unshift($credSet, $knownCreds[$database]);
+                }
             }
 
             foreach ($credSet as $cred) {
