@@ -50,3 +50,4 @@
         </div>
     </div>
 </div>
+<?php include_once __DIR__ . '/../../includes/enterprise_control_panel.php'; ?>

@@ -384,4 +384,5 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 <?php
 $sidebarRendered = true;
 require_once __DIR__ . '/settings_modal.php';
+require_once __DIR__ . '/enterprise_control_panel.php';
 ?>
