@@ -55,18 +55,20 @@
   display: none;
 }
 
-/* --- Remove conflicting generic navbar styles from responsive.css --- */
-.navbar.navbar-expand-lg {
-  background: transparent !important;
-}
-.navbar-expand-lg .navbar-nav .nav-link {
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  font-weight: inherit;
-  padding: inherit;
-  border-radius: inherit;
+/* --- Remove conflicting generic navbar styles from responsive.css (desktop only) --- */
+@media (min-width: 992px) {
+  .navbar.navbar-expand-lg {
+    background: transparent !important;
+  }
+  .navbar-expand-lg .navbar-nav .nav-link {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    font-weight: inherit;
+    padding: inherit;
+    border-radius: inherit;
+  }
 }
 
 /* --- Card refinements --- */

@@ -514,17 +514,19 @@
     overflow-y: auto !important;
   }
 
-  .navbar-nav {
+  .isnm-navbar .navbar-nav {
     flex-direction: column !important;
     gap: 6px !important;
     width: 100% !important;
   }
 
-  .nav-item {
+  .isnm-navbar .nav-item {
     width: 100% !important;
   }
 
-  .nav-link {
+  .isnm-navbar .navbar-nav .nav-link,
+  .isnm-navbar .nav-item .nav-link,
+  .isnm-navbar .nav-link {
     width: 100% !important;
     padding: 14px 18px !important;
     margin: 0 !important;
@@ -533,20 +535,51 @@
     font-size: 0.95rem !important;
     border-radius: 8px !important;
     background: #F8F9FA !important;
+    background-image: none !important;
     border: 2px solid #1A237E !important;
     color: #3E2723 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    text-shadow: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
   }
 
-  .nav-link:hover {
+  .isnm-navbar .nav-link:hover,
+  .isnm-navbar .nav-link:focus {
     background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    background-image: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    color: #3E2723 !important;
     transform: translateX(6px) !important;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+    border-color: #FFD700 !important;
   }
 
-  .nav-link::after {
+  .isnm-navbar .nav-link::after {
     display: none !important;
+    width: 0 !important;
   }
 
-  .dropdown-menu {
+  .isnm-navbar .nav-link::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .isnm-navbar .nav-link.active,
+  .isnm-navbar .nav-link.active:focus {
+    background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    color: #3E2723 !important;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+  }
+
+  .isnm-navbar .dropdown-menu {
     position: static !important;
     transform: none !important;
     margin-top: 6px !important;
@@ -554,11 +587,27 @@
     border: 1px solid #1A237E !important;
     border-radius: 6px !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    background: #FFFFFF !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
-  .dropdown-item {
+  .isnm-navbar .dropdown-item {
     padding: 12px 16px !important;
     font-size: 0.9rem !important;
+    background: transparent !important;
+    border: none !important;
+    color: #3E2723 !important;
+    font-weight: 500 !important;
+  }
+
+  .isnm-navbar .dropdown-item:hover {
+    background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    color: #3E2723 !important;
+  }
+
+  .isnm-navbar .dropdown-item i {
+    color: #1A237E !important;
   }
 }
 
@@ -715,5 +764,116 @@
 
   .dropdown-menu {
     border-width: 2px !important;
+  }
+}
+
+/* ============================================
+   Scrolled Navbar State (added by JS)
+   ============================================ */
+.isnm-navbar.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  background: #FFFFFF !important;
+}
+
+.isnm-navbar.scrolled .navbar-collapse {
+  background: #FFFFFF !important;
+}
+
+/* ============================================
+   Mobile Dropdown Toggle (click to open)
+   ============================================ */
+@media (max-width: 991px) {
+  .isnm-navbar .dropdown-toggle::after {
+    content: '' !important;
+    display: inline-block !important;
+    margin-left: auto !important;
+    vertical-align: middle !important;
+    border-top: 0.3em solid #3E2723 !important;
+    border-right: 0.3em solid transparent !important;
+    border-bottom: 0 !important;
+    border-left: 0.3em solid transparent !important;
+    transition: transform 0.3s ease !important;
+  }
+
+  .isnm-navbar .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg) !important;
+  }
+
+  .isnm-navbar .dropdown-menu {
+    animation: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ============================================
+   Mobile Scroll Lock (prevent body scroll when menu open)
+   ============================================ */
+@media (max-width: 991px) {
+  .navbar-collapse.show {
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* ============================================
+   Hamburger Icon Animation
+   ============================================ */
+.navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%233E2723' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M6 6l18 18M6 24L24 6'/%3e%3c/svg%3e") !important;
+}
+
+/* ============================================
+   Extra Small Mobile (iPhone SE, 320px)
+   ============================================ */
+@media (max-width: 340px) {
+  .isnm-header {
+    padding: 8px 10px !important;
+  }
+
+  .logo-img {
+    height: 35px !important;
+  }
+
+  .school-title {
+    font-size: 1rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .school-motto {
+    font-size: 0.7rem !important;
+  }
+
+  .isnm-navbar .navbar-collapse {
+    padding: 10px !important;
+  }
+
+  .isnm-navbar .nav-link {
+    padding: 10px 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .isnm-navbar .dropdown-menu {
+    margin-left: 10px !important;
+  }
+
+  .isnm-navbar .dropdown-item {
+    padding: 10px 10px !important;
+    font-size: 0.82rem !important;
+  }
+}
+
+/* ============================================
+   iPad Specific
+   ============================================ */
+@media (min-width: 768px) and (max-width: 1024px) and (hover: none) {
+  .isnm-navbar .nav-link {
+    min-height: 50px !important;
+    padding: 14px 18px !important;
+  }
+
+  .isnm-navbar .dropdown-item {
+    min-height: 48px !important;
   }
 }

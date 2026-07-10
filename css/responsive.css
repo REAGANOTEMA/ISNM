@@ -664,23 +664,7 @@ body {
         font-size: 0.8rem;
     }
     
-    /* Mobile Navigation */
-    .navbar {
-        padding: 0.5rem 0;
-    }
-    
-    .navbar-nav {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0.5rem;
-    }
-    
-    .navbar-nav .nav-link {
-        font-size: 0.8rem;
-        padding: 10px 12px;
-        text-align: center;
-        margin: 2px 0;
-    }
+    /* Mobile Navigation - handled by navigation.css */
 }
 
 /* Small Devices (landscape phones, 576px and up) */
@@ -729,11 +713,7 @@ body {
         font-size: 0.85rem;
     }
     
-    /* Tablet Navigation */
-    .navbar-nav .nav-link {
-        font-size: 0.85rem;
-        padding: 8px 14px;
-    }
+    /* Tablet Navigation - handled by navigation.css */
 }
 
 /* Medium Devices (tablets, 768px and up) */
@@ -785,11 +765,7 @@ body {
         font-size: 0.9rem;
     }
     
-    /* Medium Tablet Navigation */
-    .navbar-nav .nav-link {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
+    /* Medium Tablet Navigation - handled by navigation.css */
 }
 
 /* Large Devices (desktops, 992px and up) */
@@ -825,11 +801,7 @@ body {
         font-size: 0.95rem;
     }
     
-    /* Desktop Navigation */
-    .navbar-nav .nav-link {
-        font-size: 0.95rem;
-        padding: 8px 18px;
-    }
+    /* Desktop Navigation - handled by navigation.css */
 }
 
 /* Extra Large Devices (large desktops, 1200px and up) */
@@ -872,11 +844,7 @@ body {
         font-size: 1rem;
     }
     
-    /* Large Desktop Navigation */
-    .navbar-nav .nav-link {
-        font-size: 1rem;
-        padding: 8px 20px;
-    }
+    /* Large Desktop Navigation - handled by navigation.css */
 }
 
 /* Landscape Orientation */
