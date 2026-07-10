@@ -82,11 +82,12 @@ $userInitial = strtoupper(substr($currentUser, 0, 1));
 .isnm-sidebar .nav-item:hover{color:#fff;background:rgba(255,255,255,0.05);padding-left:24px}
 .isnm-sidebar .nav-item.active{color:#fff;background:linear-gradient(90deg,rgba(102,126,234,0.15),transparent);border-left-color:#667eea}
 .isnm-sidebar .nav-item.active::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:#667eea;border-radius:3px 0 0 3px}
-.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:none;opacity:0;transition:opacity 0.3s}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:none;opacity:0;transition:opacity 0.3s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .sidebar-overlay.active{display:block;opacity:1}
-@media(max-width:991px){.isnm-sidebar{transform:translateX(-100%)}.isnm-sidebar.active{transform:translateX(0)}.isnm-sidebar .sidebar-close-btn{display:flex}.sidebar-overlay.active{display:block}.sidebar-overlay{display:none}}
+@media(max-width:991px){.isnm-sidebar{transform:translateX(-100%);width:280px;max-width:85vw}.isnm-sidebar.active{transform:translateX(0)}.isnm-sidebar .sidebar-close-btn{display:flex}.sidebar-overlay.active{display:block}.sidebar-overlay{display:none}}
 @media(min-width:992px){.sidebar-overlay{display:none!important}}
-body.sidebar-open .dashboard-container{padding-left:290px}@media(max-width:991px){body.sidebar-open .dashboard-container{padding-left:20px}}
+body.sidebar-open .dashboard-container{padding-left:290px}@media(max-width:991px){body.sidebar-open .dashboard-container{padding-left:0}}
+body.menu-open{overflow:hidden!important;position:fixed!important;width:100%!important}
 </style>
 <script>
 document.addEventListener('DOMContentLoaded',function(){var s=document.getElementById('isnmSidebar'),c=document.getElementById('sidebarClose'),o=document.getElementById('sidebarOverlay');function t(){s.classList.toggle('active');o.classList.toggle('active');document.body.classList.toggle('sidebar-open')}if(c)c.addEventListener('click',t);if(o)o.addEventListener('click',t);var h=document.querySelector('.navbar-toggler');if(h)h.addEventListener('click',function(e){if(window.innerWidth<992){e.preventDefault();t()}})})

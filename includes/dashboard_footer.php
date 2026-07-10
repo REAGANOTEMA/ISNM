@@ -77,7 +77,7 @@ window.addEventListener('unhandledrejection',function(e){
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {
   function initSidebar() {
-    var sidebar  = document.querySelector('.sidebar, .dashboard-sidebar');
+    var sidebar  = document.querySelector('.sidebar, .dashboard-sidebar, .isnm-sidebar');
     var overlay  = document.getElementById('sidebarOverlay');
     var toggleBtn = document.getElementById('sidebarToggle');
     if (!sidebar) return;
@@ -87,6 +87,7 @@ window.addEventListener('unhandledrejection',function(e){
       toggleBtn = document.createElement('button');
       toggleBtn.id = 'sidebarToggle';
       toggleBtn.className = 'sidebar-toggle';
+      toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
       toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
       document.body.appendChild(toggleBtn);
     }
@@ -99,8 +100,18 @@ window.addEventListener('unhandledrejection',function(e){
       document.body.appendChild(overlay);
     }
 
-    function open()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
-    function close() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+    function open()  {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+      document.body.classList.add('menu-open');
+    }
+    function close() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+      document.body.classList.remove('menu-open');
+    }
 
     toggleBtn.addEventListener('click', function () {
       sidebar.classList.contains('open') ? close() : open();
@@ -112,6 +123,13 @@ window.addEventListener('unhandledrejection',function(e){
       link.addEventListener('click', function () {
         if (window.innerWidth < 769) close();
       });
+    });
+
+    // Clean up on resize to desktop
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 992) {
+        document.body.classList.remove('menu-open');
+      }
     });
   }
 

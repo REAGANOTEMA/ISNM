@@ -318,6 +318,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 .membership-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
 </style>
 <link rel="stylesheet" href="../dashboards/dashboard-mobile.css?v=1.0">
+<link rel="stylesheet" href="../css/mobile-fixes.css?v=1">
 </head>
 <body>
 <?php $csrf = htmlspecialchars($_SESSION['csrf_token']); ?>

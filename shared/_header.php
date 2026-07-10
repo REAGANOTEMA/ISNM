@@ -57,6 +57,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="stylesheet" href="css/navigation.css?v=5" />
   <link rel="stylesheet" href="css/animations.css?v=2" />
   <link rel="stylesheet" href="css/polish.css?v=1" />
+  <link rel="stylesheet" href="css/mobile-fixes.css?v=1" />
 </head>
 
 <body>
@@ -201,5 +202,39 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.addEventListener('scroll', onScroll, {passive: true});
   onScroll();
+
+  // Mobile menu: close on link click & toggle body scroll lock
+  var toggler = document.querySelector('.navbar-toggler');
+  var collapse = document.getElementById('mainNavbar');
+  if (toggler && collapse) {
+    // Close menu when clicking a nav link
+    collapse.querySelectorAll('.nav-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse && collapse.classList.contains('show')) {
+          bsCollapse.hide();
+        }
+        document.body.classList.remove('menu-open');
+      });
+    });
+
+    // Toggle body scroll lock when menu opens/closes
+    toggler.addEventListener('click', function() {
+      setTimeout(function() {
+        if (collapse.classList.contains('show')) {
+          document.body.classList.add('menu-open');
+        } else {
+          document.body.classList.remove('menu-open');
+        }
+      }, 100);
+    });
+
+    // Clean up on resize to desktop
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 992) {
+        document.body.classList.remove('menu-open');
+      }
+    });
+  }
 });
 </script>

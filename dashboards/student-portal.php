@@ -152,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
 <link rel="icon" href="../images/school-logo.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/mobile-fixes.css?v=1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
@@ -231,23 +232,108 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 .sp-progress{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
 .sp-progress-bar{height:100%;background:#3b82f6;border-radius:4px;transition:width .3s}
 @media(max-width:768px){
-.sp-sidebar{transform:translateX(-100%)}
+.sp-sidebar{transform:translateX(-100%);width:280px;max-width:85vw;z-index:1100}
 .sp-sidebar.open{transform:translateX(0)}
-.sp-topbar{left:0}
+.sp-topbar{left:0;padding:0 14px 0 56px}
 .sp-content{margin-left:0;padding:16px}
 .sp-grid-2,.sp-grid-3{grid-template-columns:1fr}
 .sp-stats{grid-template-columns:repeat(2,1fr)}
-.sp-tabs{overflow-x:auto;flex-wrap:nowrap}
-.mobile-toggle{display:block!important}
+.sp-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+.mobile-toggle{display:flex!important}
+.sp-card{padding:16px}
+.sp-stat{padding:14px}
+.sp-stat h3{font-size:1.2rem}
+.sp-stat p{font-size:.75rem}
+.sp-table th,.sp-table td{padding:8px 6px;font-size:.78rem}
+.sp-btn{min-height:40px;padding:8px 14px}
+.sp-form-group input,.sp-form-group select,.sp-form-group textarea{font-size:16px!important;padding:10px 12px!important;min-height:44px!important}
 }
-.mobile-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1001;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:1rem;cursor:pointer}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999}
+.mobile-toggle{
+  display:none;
+  position:fixed;
+  top:14px;
+  left:14px;
+  z-index:1100;
+  background:linear-gradient(135deg,#FFD700,#FFA000);
+  color:#3E2723;
+  border:none;
+  border-radius:10px;
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  font-size:1rem;
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 10px rgba(255,215,0,0.3);
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.mobile-toggle:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(255,215,0,0.4)}
+.mobile-toggle:active{transform:scale(0.95)}
+.mobile-toggle i{transition:transform 0.3s ease}
+.sidebar-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:1050;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
 .sidebar-overlay.show{display:block}
 </style>
 </head>
 <body>
-<button class="mobile-toggle" onclick="document.querySelector('.sp-sidebar').classList.toggle('open');document.querySelector('.sidebar-overlay').classList.toggle('show')"><i class="fas fa-bars"></i></button>
-<div class="sidebar-overlay" onclick="document.querySelector('.sp-sidebar').classList.remove('open');this.classList.remove('show')"></div>
+<button class="mobile-toggle" id="spMobileToggle" aria-label="Toggle navigation">
+  <i class="fas fa-bars" id="spToggleIcon"></i>
+</button>
+<div class="sidebar-overlay" id="spOverlay"></div>
+
+<script>
+(function(){
+  var toggle = document.getElementById('spMobileToggle');
+  var sidebar = document.querySelector('.sp-sidebar');
+  var overlay = document.getElementById('spOverlay');
+  var icon = document.getElementById('spToggleIcon');
+  if(!toggle || !sidebar) return;
+
+  function openMenu(){
+    sidebar.classList.add('open');
+    if(overlay) overlay.classList.add('show');
+    icon.className = 'fas fa-times';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu(){
+    sidebar.classList.remove('open');
+    if(overlay) overlay.classList.remove('show');
+    icon.className = 'fas fa-bars';
+    document.body.style.overflow = '';
+  }
+
+  toggle.addEventListener('click', function(){
+    if(sidebar.classList.contains('open')) closeMenu();
+    else openMenu();
+  });
+
+  if(overlay){
+    overlay.addEventListener('click', closeMenu);
+  }
+
+  // Close on nav link click
+  sidebar.querySelectorAll('.nav-item').forEach(function(link){
+    link.addEventListener('click', function(){
+      if(window.innerWidth <= 768) closeMenu();
+    });
+  });
+
+  // Close on resize to desktop
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 768) closeMenu();
+  });
+})();
+</script>
 
 <aside class="sp-sidebar">
 <div class="brand">

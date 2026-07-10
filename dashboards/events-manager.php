@@ -283,6 +283,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 .btn-action{padding:4px 10px;font-size:.75rem;border-radius:6px}
 </style>
 <link rel="stylesheet" href="../dashboards/dashboard-mobile.css?v=1.0">
+<link rel="stylesheet" href="../css/mobile-fixes.css?v=1">
 </head>
 <body>
 <?php $csrf = htmlspecialchars($_SESSION['csrf_token']); ?>

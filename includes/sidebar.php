@@ -104,22 +104,46 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
   display: none;
   position: fixed;
   top: 14px; left: 14px;
-  z-index: 1080;
-  background: var(--primary, #1a237e);
-  color: #fff;
+  z-index: 1100;
+  background: linear-gradient(135deg, #FFD700, #FFA000);
+  color: #3E2723;
   border: none;
-  border-radius: 8px;
-  width: 42px; height: 42px;
+  border-radius: 10px;
+  width: 44px; height: 44px;
+  min-width: 44px; min-height: 44px;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  box-shadow: 0 2px 10px rgba(255,215,0,0.3);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebar-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(255,215,0,0.4);
+}
+.sidebar-toggle:active {
+  transform: scale(0.95);
+}
+.sidebar-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.4), 0 2px 10px rgba(255,215,0,0.3);
 }
 @media (max-width: 768px) { .sidebar-toggle { display: flex; } }
 /* ── OVERLAY ── */
-.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1040; }
-.sidebar-overlay.open { display:block; }
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 1050;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { display: block; }
+/* ── BODY SCROLL LOCK ── */
+body.menu-open { overflow: hidden !important; position: fixed !important; width: 100% !important; }
 </style>
 <?php if ($isRight): ?>
 <style>
