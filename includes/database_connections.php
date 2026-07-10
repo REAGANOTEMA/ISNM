@@ -71,34 +71,17 @@ class DatabaseConnection {
             $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
             $credSet = [['user' => $username, 'pass' => $password]];
 
-            if ($isLocalHost) {
-                // On localhost, try root with .env password first, then root/empty
+            // Only try root fallbacks when user IS root (local dev without proper .env)
+            if ($username === 'root') {
                 $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
-                $localCreds = [];
-                if (!empty($rootPass)) {
-                    $localCreds[] = ['user' => 'root', 'pass' => $rootPass];
+                if (!empty($rootPass) && $rootPass !== $password) {
+                    $credSet[] = ['user' => 'root', 'pass' => $rootPass];
                 }
-                $localCreds[] = ['user' => 'root', 'pass' => ''];
-                $localCreds[] = ['user' => 'root', 'pass' => 'root'];
-                $credSet = array_merge($localCreds, $credSet);
-                // Deduplicate
-                $seen = [];
-                $credSet = array_values(array_filter($credSet, function($c) use (&$seen) {
-                    $key = $c['user'] . '|' . $c['pass'];
-                    if (isset($seen[$key])) return false;
-                    $seen[$key] = true;
-                    return true;
-                }));
-            } else {
-                // On production, try hosting credentials first
-                $knownCreds = [
-                    'igangaschoolofl_staffs_db'   => ['user'=>'igangaschoolofl_staffs_db',   'pass'=>''],
-                    'igangaschoolofl_students_db' => ['user'=>'igangaschoolofl_students_db', 'pass'=>''],
-                    'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db',  'pass'=>''],
-                    'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',          'pass'=>''],
-                ];
-                if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
-                    array_unshift($credSet, $knownCreds[$database]);
+                if ('' !== $password) {
+                    $credSet[] = ['user' => 'root', 'pass' => ''];
+                }
+                if ('root' !== $password) {
+                    $credSet[] = ['user' => 'root', 'pass' => 'root'];
                 }
             }
 

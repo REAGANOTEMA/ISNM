@@ -52,6 +52,10 @@ if (!function_exists('isnm_load_env')) {
 }
 
 isnm_load_env(__DIR__ . '/../.env');
+// If no .env found, try .env.production as fallback (deployed on hosting)
+if (empty($_ENV['DB_HOST']) && is_file(__DIR__ . '/../.env.production')) {
+    isnm_load_env(__DIR__ . '/../.env.production');
+}
 // Load .env.local ONLY on localhost dev — never on production hosting
 $isLocalDev = (isset($_SERVER['HTTP_HOST']) && (
     strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
@@ -88,14 +92,10 @@ if (!defined('STUDENTS_DB_NAME')) {
     define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschoolofl_students_db'));
 }
 if (!defined('STUDENTS_DB_USER')) {
-    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', 'root'));
+    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', STUDENTS_DB_NAME));
 }
 if (!defined('STUDENTS_DB_PASS')) {
-    $val = isnm_env('STUDENTS_DB_PASS', '');
-    if ($val === '' && getenv('APP_ENV') !== 'development') {
-        error_log('FATAL: STUDENTS_DB_PASS is empty in production. Set it in .env');
-    }
-    define('STUDENTS_DB_PASS', $val);
+    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
 }
 if (!defined('STUDENTS_DB_CHARSET')) {
     define('STUDENTS_DB_CHARSET', isnm_env('STUDENTS_DB_CHARSET', DB_CHARSET));
@@ -111,14 +111,10 @@ if (!defined('STAFF_DB_NAME')) {
     define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschoolofl_staffs_db'));
 }
 if (!defined('STAFF_DB_USER')) {
-    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', 'root'));
+    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', STAFF_DB_NAME));
 }
 if (!defined('STAFF_DB_PASS')) {
-    $val = isnm_env('STAFF_DB_PASS', '');
-    if ($val === '' && getenv('APP_ENV') !== 'development') {
-        error_log('FATAL: STAFF_DB_PASS is empty in production. Set it in .env');
-    }
-    define('STAFF_DB_PASS', $val);
+    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', ''));
 }
 if (!defined('STAFF_DB_CHARSET')) {
     define('STAFF_DB_CHARSET', isnm_env('STAFF_DB_CHARSET', DB_CHARSET));
@@ -134,7 +130,7 @@ if (!defined('WEBSITE_DB_NAME')) {
     define('WEBSITE_DB_NAME', isnm_env('WEBSITE_DB_NAME', 'igangaschoolofl_website_db'));
 }
 if (!defined('WEBSITE_DB_USER')) {
-    define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', 'root'));
+    define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', WEBSITE_DB_NAME));
 }
 if (!defined('WEBSITE_DB_PASS')) {
     define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', ''));
@@ -153,7 +149,7 @@ if (!defined('ICT_DB_NAME')) {
     define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict'));
 }
 if (!defined('ICT_DB_USER')) {
-    define('ICT_DB_USER', isnm_env('ICT_DB_USER', 'root'));
+    define('ICT_DB_USER', isnm_env('ICT_DB_USER', ICT_DB_NAME));
 }
 if (!defined('ICT_DB_PASS')) {
     define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', ''));
@@ -167,40 +163,20 @@ if (!function_exists('isnm_mysqli_connect')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
-        $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false);
-
+        // Always try provided credentials FIRST
         $credSet = [['user' => $user, 'pass' => $pass, 'db' => $db]];
 
-        if ($isLocalHost) {
-            // On localhost, try root with .env password first, then root/empty, then root/root
+        // Only try root fallbacks when user IS root (local dev without proper .env)
+        if ($user === 'root') {
             $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
-            $localCreds = [];
-            if (!empty($rootPass)) {
-                $localCreds[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
+            if (!empty($rootPass) && $rootPass !== $pass) {
+                $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
             }
-            $localCreds[] = ['user' => 'root', 'pass' => '', 'db' => $db];
-            $localCreds[] = ['user' => 'root', 'pass' => 'root', 'db' => $db];
-            // Insert local creds at the beginning, so they're tried first
-            $credSet = array_merge($localCreds, $credSet);
-            // Remove duplicates (keep first occurrence)
-            $seen = [];
-            $credSet = array_filter($credSet, function($c) use (&$seen) {
-                $key = $c['user'] . '|' . $c['pass'];
-                if (isset($seen[$key])) return false;
-                $seen[$key] = true;
-                return true;
-            });
-            $credSet = array_values($credSet);
-        } else {
-            // On production, try hosting credentials first
-            $knownCreds = [
-                'igangaschoolofl_staffs_db'    => ['user'=>'igangaschoolofl_staffs_db',    'pass'=>''],
-                'igangaschoolofl_students_db'  => ['user'=>'igangaschoolofl_students_db',  'pass'=>''],
-                'igangaschoolofl_website_db'   => ['user'=>'igangaschoolofl_website_db',   'pass'=>''],
-                'igangaschoolofl_ict'          => ['user'=>'igangaschoolofl_ict',           'pass'=>''],
-            ];
-            if (isset($knownCreds[$db]) && $knownCreds[$db]['user'] !== $user) {
-                array_unshift($credSet, $knownCreds[$db] + ['db' => $db]);
+            if ('' !== $pass) {
+                $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
+            }
+            if ('root' !== $pass) {
+                $credSet[] = ['user' => 'root', 'pass' => 'root', 'db' => $db];
             }
         }
 

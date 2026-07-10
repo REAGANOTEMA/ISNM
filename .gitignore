@@ -1,6 +1,7 @@
 /vendor/
 .env
-.env.*
+.env.local
 !.env.example
+!.env.production
 logs/
 *.log
