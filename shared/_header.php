@@ -200,3 +200,40 @@ include_once __DIR__ . '/../includes/functions.php';
     </div>
 </div>
 <?php unset($_SESSION['error_message']); endif; ?>
+
+<script>
+// 3D Parallax Nav Effect & Scroll Glass
+(function(){
+  var nav = document.querySelector('.isnm-navbar');
+  if (!nav) return;
+  // Scroll glass intensification
+  function onScroll() {
+    if (window.scrollY > 30) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive: true});
+  onScroll();
+  // 3D tilt on nav links (desktop only)
+  if (window.matchMedia('(min-width: 992px)').matches) {
+    var links = nav.querySelectorAll('.nav-link');
+    links.forEach(function(link) {
+      link.addEventListener('mousemove', function(e) {
+        var rect = this.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        var centerX = rect.width / 2;
+        var centerY = rect.height / 2;
+        var rotateX = ((y - centerY) / centerY) * -8;
+        var rotateY = ((x - centerX) / centerX) * 8;
+        this.style.transform = 'translateY(-2px) translateZ(8px) scale(1.04) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+      });
+      link.addEventListener('mouseleave', function() {
+        this.style.transform = '';
+      });
+    });
+  }
+})();
+</script>

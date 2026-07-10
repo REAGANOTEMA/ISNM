@@ -3,53 +3,22 @@
    Targeted overrides for a cleaner, more professional public site
    ============================================================ */
 
-/* --- Slimmer Desktop Navigation --- */
+/* --- 3D Glassmorphic Nav Desktop refinement --- */
 @media (min-width: 992px) {
   .isnm-navbar {
-    min-height: 56px;
+    min-height: 64px;
   }
   .isnm-navbar .navbar-collapse {
-    height: 56px;
+    height: 64px;
   }
   .isnm-navbar .navbar-nav {
-    gap: 2px;
-  }
-  .isnm-navbar .nav-link {
-    padding: 6px 12px !important;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 0.82rem;
-    border: none !important;
-    border-radius: 6px;
-    height: auto;
-    margin: 0 1px;
-  }
-  .isnm-navbar .nav-link::before,
-  .isnm-navbar .nav-link::after {
-    display: none;
-  }
-  .isnm-navbar .nav-link:hover,
-  .isnm-navbar .nav-link:focus {
-    background: rgba(255,215,0,0.2) !important;
-    color: var(--isnm-chocolate) !important;
-    transform: translateY(-1px);
-    box-shadow: none !important;
-    border: none !important;
-  }
-  .isnm-navbar .nav-link.active {
-    background: rgba(255,215,0,0.25) !important;
-    color: var(--isnm-chocolate) !important;
-    box-shadow: none !important;
-    border: none !important;
+    gap: 4px;
   }
   .isnm-navbar .navbar-brand {
-    height: 56px;
+    height: 64px;
   }
   .isnm-navbar .dropdown-menu {
-    margin-top: 4px;
     left: 0;
-    transform: none;
   }
 }
 
