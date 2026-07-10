@@ -50,6 +50,38 @@ if ($chk && $chk->num_rows === 0) {
     $conn->query("ALTER TABLE intakes ADD COLUMN application_deadline DATE DEFAULT NULL AFTER application_start");
     $conn->query("ALTER TABLE intakes MODIFY status ENUM('Open','Closed','Upcoming') NOT NULL DEFAULT 'Upcoming'");
 }
+// Migrate student_admission_tracking - add missing columns
+$chk2 = $conn->query("SHOW COLUMNS FROM student_admission_tracking LIKE 'application_number'");
+if ($chk2 && $chk2->num_rows === 0) {
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN application_number VARCHAR(30) NOT NULL AFTER id");
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN applicant_id INT DEFAULT NULL AFTER application_number");
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN interview_scheduled TINYINT(1) NOT NULL DEFAULT 0 AFTER documents_uploaded");
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN interview_date DATETIME DEFAULT NULL AFTER interview_scheduled");
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN interview_notes TEXT DEFAULT NULL AFTER interview_date");
+    $conn->query("ALTER TABLE student_admission_tracking ADD COLUMN communication_count INT NOT NULL DEFAULT 0 AFTER interview_notes");
+    $conn->query("ALTER TABLE student_admission_tracking MODIFY admission_status ENUM('Pending','Under Review','Requirements Pending','Approved','Rejected','Registered') NOT NULL DEFAULT 'Pending'");
+}
+// Migrate academic_programs - add missing columns
+$chk3 = $conn->query("SHOW COLUMNS FROM academic_programs LIKE 'total_fee'");
+if ($chk3 && $chk3->num_rows === 0) {
+    $conn->query("ALTER TABLE academic_programs ADD COLUMN total_fee DECIMAL(14,2) NOT NULL DEFAULT 0.00 AFTER duration_years");
+    $conn->query("ALTER TABLE academic_programs ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at");
+}
+// Migrate admission_activity_logs - add missing columns
+$chk4 = $conn->query("SHOW COLUMNS FROM admission_activity_logs LIKE 'applicant_id'");
+if ($chk4 && $chk4->num_rows === 0) {
+    $conn->query("ALTER TABLE admission_activity_logs ADD COLUMN applicant_id INT DEFAULT NULL AFTER id");
+    $conn->query("ALTER TABLE admission_activity_logs ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL AFTER description");
+    $conn->query("ALTER TABLE admission_activity_logs ADD COLUMN user_agent TEXT DEFAULT NULL AFTER ip_address");
+    $conn->query("ALTER TABLE admission_activity_logs ADD INDEX idx_log_app (applicant_id)");
+}
+// Migrate admission_notifications - add missing columns
+$chk5 = $conn->query("SHOW COLUMNS FROM admission_notifications LIKE 'user_id'");
+if ($chk5 && $chk5->num_rows === 0) {
+    $conn->query("ALTER TABLE admission_notifications ADD COLUMN user_id INT DEFAULT NULL AFTER applicant_id");
+    $conn->query("ALTER TABLE admission_notifications ADD COLUMN type ENUM('info','success','warning','danger') NOT NULL DEFAULT 'info' AFTER user_id");
+    $conn->query("ALTER TABLE admission_notifications ADD COLUMN link VARCHAR(500) DEFAULT NULL AFTER is_read");
+}
 // Seed defaults with exact 8 document requirements + 20 supply items
 $r = $conn->query("SELECT COUNT(*) c FROM admission_requirements"); if ($r && (int)$r->fetch_assoc()['c']===0) { 
     // 8 Document Requirements (remove Proof of Payment and Interview Letter)
