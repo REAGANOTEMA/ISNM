@@ -50,12 +50,12 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
 
 <!-- ═══ ENTERPRISE CONTROL PANEL (ADDON) ═══ -->
 <style>
-.ent-cp-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1099; }
+.ent-cp-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1060; }
 .ent-cp-overlay.open { display:block; }
 .ent-cp-panel {
     position:fixed; top:0; right:-320px; bottom:0; width:320px;
     background:#fff; box-shadow:-4px 0 30px rgba(0,0,0,0.15);
-    z-index:1100; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index:1070; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
     overflow-y:auto; font-family:'Inter',-apple-system,sans-serif;
 }
 .ent-cp-panel.open { right:0; }
@@ -119,12 +119,13 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
 .ent-cp-toggle {
     position:fixed; bottom:20px; right:20px; width:48px; height:48px;
     border-radius:50%; border:none; background:linear-gradient(135deg,#0f172a,#1e3a5f);
-    color:#fff; font-size:18px; cursor:pointer; z-index:999;
+    color:#fff; font-size:18px; cursor:pointer; z-index:1090;
     box-shadow:0 4px 20px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;
     transition:transform 0.2s;
 }
 .ent-cp-toggle:hover { transform:scale(1.1); }
 @media(max-width:768px) { .ent-cp-panel { width:100%; right:-100%; } }
+@media(max-width:480px) { .ent-cp-toggle { bottom:12px; right:12px; width:44px; height:44px; font-size:16px; } }
 </style>
 
 <div class="ent-cp-overlay" id="entCpOverlay" onclick="document.getElementById('entCpPanel').classList.remove('open');this.classList.remove('open')"></div>

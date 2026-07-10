@@ -90,6 +90,29 @@ $groupIconColors = [
 $accordionMode = true;
 $currentDir  = dirname($_SERVER['PHP_SELF']);
 ?>
+<style>
+/* ── MOBILE SIDEBAR TOGGLE (left-side) ── */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 1080;
+  background: var(--primary, #1a237e);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  width: 42px; height: 42px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+@media (max-width: 768px) { .sidebar-toggle { display: flex; } }
+/* ── OVERLAY ── */
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1040; }
+.sidebar-overlay.open { display:block; }
+</style>
 <?php if ($isRight): ?>
 <style>
 /* ── RIGHT-SIDED SIDEBAR OVERRIDES ── */
@@ -274,6 +297,10 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 <button class="isnm-sidebar-right-toggle" id="sidebarRightToggle" aria-label="Open sidebar">
     <i class="fas fa-bars"></i>
 </button>
+<?php else: ?>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+</button>
 <?php endif; ?>
 <?php endif; ?>
 
@@ -317,18 +344,19 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         });
     }
 
-    // ── Right-side mobile toggle ──
-    var rightToggle = document.getElementById('sidebarRightToggle');
-    if (rightToggle) {
-        rightToggle.addEventListener('click', function() {
-            var sidebar = document.getElementById('isnmSidebar');
-            sidebar.classList.toggle('open');
-            var overlay = document.getElementById('sidebarOverlay');
-            if (overlay) overlay.classList.toggle('open');
-        });
+    // ── Mobile sidebar toggle (universal) ──
+    function toggleSidebar() {
+        var sidebar = document.getElementById('isnmSidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        if (sidebar) sidebar.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('open');
     }
+    var leftToggle = document.getElementById('sidebarToggle');
+    if (leftToggle) leftToggle.addEventListener('click', toggleSidebar);
+    var rightToggle = document.getElementById('sidebarRightToggle');
+    if (rightToggle) rightToggle.addEventListener('click', toggleSidebar);
 
-    // ── Right-side mobile close ──
+    // ── Sidebar mobile close buttons ──
     var mobileClose = document.getElementById('sidebarMobileClose');
     if (mobileClose) {
         mobileClose.addEventListener('click', function() {

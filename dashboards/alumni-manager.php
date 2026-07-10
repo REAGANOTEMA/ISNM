@@ -317,11 +317,12 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 .employment-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
 .membership-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
 </style>
+<link rel="stylesheet" href="../dashboards/dashboard-mobile.css?v=1.0">
 </head>
 <body>
 <?php $csrf = htmlspecialchars($_SESSION['csrf_token']); ?>
 
-<style>:root{--sidebar-w:270px}.dashboard-main{margin-left:var(--sidebar-w);width:calc(100% - var(--sidebar-w));min-height:100vh;background:#f5f7fa}@media(max-width:991px){.dashboard-main{margin-left:0;width:100%}}</style>
+<style>:root{--sidebar-w:270px}.dashboard-main{margin-left:var(--sidebar-w);width:calc(100% - var(--sidebar-w));min-height:100vh;background:#f5f7fa}@media(max-width:991px){.dashboard-main{margin-left:0;width:100%}}@media(max-width:768px){.dashboard-main{margin-left:0!important;width:100%!important}}</style>
 <div class="dashboard-main">
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
