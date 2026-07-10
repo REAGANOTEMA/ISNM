@@ -163,11 +163,26 @@ if (!function_exists('isnm_mysqli_connect')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
-        // Always try provided credentials FIRST
         $credSet = [['user' => $user, 'pass' => $pass, 'db' => $db]];
 
-        // Only try root fallbacks when user IS root (local dev without proper .env)
+        // If provided user is root, try .env.production hosting creds first
         if ($user === 'root') {
+            $prodEnvFile = __DIR__ . '/../.env.production';
+            if (is_file($prodEnvFile)) {
+                $prodEnv = parse_ini_string(file_get_contents($prodEnvFile));
+                $prodKeys = [
+                    'igangaschoolofl_students_db' => ['user_key' => 'STUDENTS_DB_USER', 'pass_key' => 'STUDENTS_DB_PASS'],
+                    'igangaschoolofl_staffs_db'   => ['user_key' => 'STAFF_DB_USER',    'pass_key' => 'STAFF_DB_PASS'],
+                    'igangaschoolofl_website_db'  => ['user_key' => 'WEBSITE_DB_USER',  'pass_key' => 'WEBSITE_DB_PASS'],
+                    'igangaschoolofl_ict'         => ['user_key' => 'ICT_DB_USER',      'pass_key' => 'ICT_DB_PASS'],
+                ];
+                if (isset($prodKeys[$db]) && !empty($prodEnv[$prodKeys[$db]['pass_key']])) {
+                    $pu = $prodEnv[$prodKeys[$db]['user_key']] ?? $db;
+                    $pp = $prodEnv[$prodKeys[$db]['pass_key']] ?? '';
+                    $credSet[] = ['user' => $pu, 'pass' => $pp, 'db' => $db];
+                }
+            }
+            // Root fallbacks
             $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
             if (!empty($rootPass) && $rootPass !== $pass) {
                 $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
@@ -180,10 +195,14 @@ if (!function_exists('isnm_mysqli_connect')) {
             }
         }
 
+        // Also try DB-name-as-user pattern (cPanel) if not already first
+        if ($user !== $db) {
+            $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
+        }
+
         $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
         $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
 
-        $errors = [];
         foreach ($credSet as $cred) {
             $u = $cred['user'];
             $p = $cred['pass'];
@@ -200,7 +219,7 @@ if (!function_exists('isnm_mysqli_connect')) {
                     }
                     if ($conn) {
                         if (stripos($conn->connect_error, 'access denied') !== false) $accessDenied = true;
-                        try { $conn->close(); } catch (\Throwable $_) { /* PHP 8.2+ throws on failed connections */ }
+                        try { $conn->close(); } catch (\Throwable $_) {}
                     }
                     $conn = null;
                 }

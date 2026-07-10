@@ -71,8 +71,24 @@ class DatabaseConnection {
             $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
             $credSet = [['user' => $username, 'pass' => $password]];
 
-            // Only try root fallbacks when user IS root (local dev without proper .env)
             if ($username === 'root') {
+                // Try .env.production hosting credentials
+                $prodEnvFile = __DIR__ . '/../.env.production';
+                if (is_file($prodEnvFile)) {
+                    $prodEnv = parse_ini_string(file_get_contents($prodEnvFile));
+                    $dbMapReverse = [
+                        'igangaschoolofl_staffs_db'   => ['user_key' => 'STAFF_DB_USER',    'pass_key' => 'STAFF_DB_PASS'],
+                        'igangaschoolofl_students_db' => ['user_key' => 'STUDENTS_DB_USER', 'pass_key' => 'STUDENTS_DB_PASS'],
+                        'igangaschoolofl_website_db'  => ['user_key' => 'WEBSITE_DB_USER',  'pass_key' => 'WEBSITE_DB_PASS'],
+                        'igangaschoolofl_ict'         => ['user_key' => 'ICT_DB_USER',      'pass_key' => 'ICT_DB_PASS'],
+                    ];
+                    if (isset($dbMapReverse[$database]) && !empty($prodEnv[$dbMapReverse[$database]['pass_key']])) {
+                        $pu = $prodEnv[$dbMapReverse[$database]['user_key']] ?? $database;
+                        $pp = $prodEnv[$dbMapReverse[$database]['pass_key']] ?? '';
+                        $credSet[] = ['user' => $pu, 'pass' => $pp];
+                    }
+                }
+                // Root fallbacks
                 $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
                 if (!empty($rootPass) && $rootPass !== $password) {
                     $credSet[] = ['user' => 'root', 'pass' => $rootPass];
