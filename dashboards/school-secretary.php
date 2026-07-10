@@ -1285,7 +1285,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}
     </div>
     <form id="registerForm" onsubmit="return registerStudent(event)">
         <div class="row g-3">
-            <div class="col-md-4"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="full_name" required placeholder="e.g. John Doe"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="full_name" required placeholder="e.g. Reagan Otema"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Other Names</label><input type="text" class="form-control" name="other_names"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Date of Birth</label><input type="date" class="form-control" name="date_of_birth"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Gender <span class="text-danger">*</span></label><select class="form-select" name="gender" required><option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select></div>

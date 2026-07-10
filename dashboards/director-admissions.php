@@ -174,11 +174,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'reject') {
-        $id=(int)($_POST['id']??0); $reason=trim($_POST['reason']??'');
+        $id=(int)($_POST['id']??0); $reason=trim($_POST['reason']??''); $dec='Rejected';
         $conn->query("UPDATE applicants SET status='Rejected',rejection_reason='".$conn->real_escape_string($reason)."' WHERE id=$id");
         $conn->query("UPDATE student_admission_tracking SET admission_status='Rejected' WHERE applicant_id=$id");
         $s=$conn->prepare("INSERT INTO admission_decisions(applicant_id,decision,decision_reason,decided_by,decided_at,notified_applicant) VALUES(?,?,?,?,NOW(),1)");
-        if($s){$s->bind_param('issi',$id,$reason,$userId);$s->execute();$s->close();}
+        if($s){$s->bind_param('issi',$id,$dec,$reason,$userId);$s->execute();$s->close();}
         logAdmission($conn,$id,$userId,"Rejected","Reason: $reason"); notifyAdmission($conn,$id,$userId,'danger','Application Rejected',"Your application was rejected. Reason: $reason");
         echo json_encode(['success'=>true]); exit;
     }
@@ -589,14 +589,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'import_online') {
         $aid=(int)($_POST['application_id']??0);
         if(!$aid||!$webConn){echo json_encode(['success'=>false,'message'=>'Invalid']);exit;}
-        $app=$webConn->query("SELECT * FROM student_applications WHERE id=$aid")->fetch_assoc();
+        $qr=$webConn->query("SELECT * FROM student_applications WHERE id=$aid");
+        if(!$qr){echo json_encode(['success'=>false,'message'=>'Query failed']);exit;}
+        $app=$qr->fetch_assoc();
         if(!$app){echo json_encode(['success'=>false,'message'=>'Not found']);exit;}
         $appNum='ONL'.date('Y').str_pad($aid,5,'0',STR_PAD_LEFT);
+        $fullName=$app['full_name']??($app['first_name'].' '.$app['surname']);
         $progName=$app['program_applied']??'';
         $progId=0;
         if($progName){$pr=$conn->query("SELECT id FROM academic_programs WHERE program_name='".$conn->real_escape_string($progName)."' LIMIT 1");if($pr&&$pr->num_rows)$progId=(int)$pr->fetch_assoc()['id'];}
         $s=$conn->prepare("INSERT INTO applicants(application_number,full_name,email,phone,gender,program_id,intake,application_source,status,submitted_at) VALUES(?,?,?,?,?,?,?,'Online','New',NOW())");
-        if($s){$s->bind_param('sssssis',$appNum,$app['full_name']??$app['first_name'].' '.$app['surname'],$app['email']??'',$app['phone']??'','Female',$progId,$progName);$s->execute();$newId=$conn->insert_id;$s->close();
+        if($s){$s->bind_param('sssssis',$appNum,$fullName,$app['email']??'',$app['phone']??'','Female',$progId,$progName);$s->execute();$newId=$conn->insert_id;$s->close();
         $conn->query("INSERT INTO student_admission_tracking(application_number,applicant_id,admission_status) VALUES('$appNum',$newId,'Pending')");
         logAdmission($conn,$newId,$userId,"Imported Online","Imported from website application #$aid");}
         echo json_encode(['success'=>true,'id'=>$newId??0]);exit;
@@ -971,7 +974,8 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
         <div class="info-grid" id="guardianInfoGrid">
           <div class="info-item"><div class="label">Guardian</div><div class="value" id="guardianNameValue"><?=htmlspecialchars($app['guardian_name'])?> (<?=htmlspecialchars($app['guardian_relationship']??'')?>)</div></div>
           <div class="info-item"><div class="label">Guardian Phone</div><div class="value" id="guardianPhoneValue"><?=htmlspecialchars($app['guardian_phone']??'-')?></div></div>
-          <div class="info-item"><div class="label">Emergency Contact</div><div class="value" id="emergencyContactValue"><?=htmlspecialchars($app['emergency_contact_name']??'-')?> (<?=htmlspecialchars($app['emergency_contact_phone']??'-')?>)</div></div>
+              <div class="info-item"><div class="label">Emergency Contact</div><div class="value" id="emergencyContactNameValue"><?=htmlspecialchars($app['emergency_contact_name']??'-')?></div></div>
+              <div class="info-item"><div class="label">Emergency Phone</div><div class="value" id="emergencyContactPhoneValue"><?=htmlspecialchars($app['emergency_contact_phone']??'-')?></div></div>
         </div>
       </div>
       <?php endif; ?>
@@ -1070,7 +1074,8 @@ function editApplicantDetails(id) {
         {id: 'phoneValue', name: 'phone', type: 'tel'},
         {id: 'guardianNameValue', name: 'guardian_name', type: 'text'},
         {id: 'guardianPhoneValue', name: 'guardian_phone', type: 'tel'},
-        {id: 'emergencyContactValue', name: 'emergency_contact_name', type: 'text'}
+        {id: 'emergencyContactNameValue', name: 'emergency_contact_name', type: 'text'},
+        {id: 'emergencyContactPhoneValue', name: 'emergency_contact_phone', type: 'tel'}
     ];
     
     fields.forEach(field => {
@@ -1106,7 +1111,7 @@ function editApplicantDetails(id) {
 }
 
 function saveApplicantDetails(id) {
-    const fields = ['full_name','gender','date_of_birth','nationality','district','religion','email','phone','guardian_name','guardian_phone','emergency_contact_name'];
+    const fields = ['full_name','gender','date_of_birth','nationality','district','religion','email','phone','guardian_name','guardian_phone','emergency_contact_name','emergency_contact_phone'];
     const data = {id: id};
     
     fields.forEach(field => {

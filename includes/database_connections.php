@@ -75,13 +75,16 @@ class DatabaseConnection {
                 'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db',  'pass'=>''],
                 'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',          'pass'=>''],
             ];
-            // Local XAMPP fallback — try root with no password if custom users don't exist
-            if (!isset($knownCreds[$database]) || $knownCreds[$database]['user'] !== 'root') {
-                $knownCreds[$database] = ['user' => 'root', 'pass' => ''];
-            }
             $credSet = [['user' => $username, 'pass' => $password]];
+            // Try hosting credentials first (they match cPanel MySQL users)
             if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
                 array_unshift($credSet, $knownCreds[$database]);
+            }
+            // Local XAMPP fallback — try root with no password only if no credentials configured
+            $host = $cfg['host'] ?? 'localhost';
+            $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']);
+            if ($isLocalHost && $username !== 'root') {
+                $credSet[] = ['user' => 'root', 'pass' => ''];
             }
 
             foreach ($credSet as $cred) {
