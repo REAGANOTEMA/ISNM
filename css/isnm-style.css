@@ -3363,7 +3363,6 @@ h3 {
   top: 0; left: 0; right: 0; bottom: 0;
   background: radial-gradient(circle at 30% 50%, rgba(255,215,0,0.08) 0%, transparent 50%);
 }
-.hero-overlay { display: none; }
 .hero-particles { display: none; }
 .hero-content {
   position: relative;

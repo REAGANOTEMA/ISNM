@@ -1,0 +1,352 @@
+/* ============================================================
+   ISNM Design Polish v1.0
+   Targeted overrides for a cleaner, more professional public site
+   ============================================================ */
+
+/* --- Slimmer Desktop Navigation --- */
+@media (min-width: 992px) {
+  .isnm-navbar {
+    min-height: 56px;
+  }
+  .isnm-navbar .navbar-collapse {
+    height: 56px;
+  }
+  .isnm-navbar .navbar-nav {
+    gap: 2px;
+  }
+  .isnm-navbar .nav-link {
+    padding: 6px 12px !important;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.82rem;
+    border: none !important;
+    border-radius: 6px;
+    height: auto;
+    margin: 0 1px;
+  }
+  .isnm-navbar .nav-link::before,
+  .isnm-navbar .nav-link::after {
+    display: none;
+  }
+  .isnm-navbar .nav-link:hover,
+  .isnm-navbar .nav-link:focus {
+    background: rgba(255,215,0,0.2) !important;
+    color: var(--isnm-chocolate) !important;
+    transform: translateY(-1px);
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .isnm-navbar .nav-link.active {
+    background: rgba(255,215,0,0.25) !important;
+    color: var(--isnm-chocolate) !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .isnm-navbar .navbar-brand {
+    height: 56px;
+  }
+  .isnm-navbar .dropdown-menu {
+    margin-top: 4px;
+    left: 0;
+    transform: none;
+  }
+}
+
+/* --- Simplified School Title (remove color cycling) --- */
+.school-title {
+  animation: tickerScroll 20s linear infinite !important;
+  color: var(--isnm-yellow) !important;
+  text-shadow:
+    0px 1px 0px rgba(0,0,0,0.8),
+    0px 2px 0px rgba(0,0,0,0.6),
+    0px 3px 0px rgba(0,0,0,0.4),
+    0px 4px 0px rgba(0,0,0,0.2) !important;
+}
+
+@media (max-width: 991px) {
+  .school-title {
+    animation: tickerScrollMobile 15s linear infinite !important;
+    color: var(--isnm-yellow) !important;
+  }
+}
+@media (max-width: 768px) {
+  .school-title {
+    animation: tickerScrollTablet 13s linear infinite !important;
+  }
+}
+@media (max-width: 480px) {
+  .school-title {
+    animation: tickerScrollSmall 12s linear infinite !important;
+  }
+}
+
+/* --- Fixed Hero Overlay (only hidden on hero-header pages) --- */
+.hero-header .hero-overlay {
+  display: none;
+}
+
+/* --- Remove conflicting generic navbar styles from responsive.css --- */
+.navbar.navbar-expand-lg {
+  background: transparent !important;
+}
+.navbar-expand-lg .navbar-nav .nav-link {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-weight: inherit;
+  padding: inherit;
+  border-radius: inherit;
+}
+
+/* --- Card refinements --- */
+.program-card,
+.facility-card,
+.news-card,
+.stat-card,
+.vm-card,
+.donation-card,
+.contact-card,
+.opportunity-card,
+.benefit-card,
+.achievement-card,
+.announcement-card,
+.action-card,
+.stats-card,
+.requirements-card,
+.interview-card,
+.form-container,
+.content-section,
+.section-card,
+.donation-card,
+.hours-card,
+.member-card,
+.welcome-card,
+.quick-action-card,
+.upload-card {
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.program-card:hover,
+.facility-card:hover,
+.news-card:hover,
+.stat-card:hover,
+.vm-card:hover,
+.donation-card:hover,
+.contact-card:hover,
+.opportunity-card:hover,
+.benefit-card:hover,
+.achievement-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04);
+}
+
+/* --- Section spacing polish --- */
+section.py-5 {
+  padding-top: 4rem !important;
+  padding-bottom: 4rem !important;
+}
+
+/* --- Cinematic hero — keep background visible --- */
+.hero-section .hero-overlay {
+  display: block;
+}
+
+/* --- Consistent page header heights --- */
+.page-header,
+.hero-header {
+  padding: 3rem 0 !important;
+}
+
+/* --- Mobile nav collapse: ensure hamburger shows only < 992px --- */
+.isnm-navbar .navbar-toggler {
+  display: block;
+}
+@media (min-width: 992px) {
+  .isnm-navbar .navbar-toggler {
+    display: none;
+  }
+}
+
+/* --- Responsive tweaks for 360-575px --- */
+@media (max-width: 575px) {
+  .isnm-header {
+    padding: 10px 12px;
+  }
+  .header-container {
+    gap: 8px;
+    flex-direction: column;
+  }
+  .logo-img,
+  .logo-img-right {
+    height: 35px;
+    max-width: 35px;
+  }
+  .school-title {
+    font-size: 1.1rem !important;
+    letter-spacing: 0.5px;
+  }
+  .school-motto {
+    font-size: 0.75rem;
+  }
+  .hero-section {
+    min-height: 90dvh;
+  }
+  .cinematic-title {
+    font-size: 1.5rem !important;
+  }
+  .hero-stats {
+    gap: 8px;
+  }
+  .stat-item {
+    padding: 10px 8px;
+    min-width: 70px;
+  }
+  .stat-number {
+    font-size: 1.3rem;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  .btn-cinematic {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    min-width: 160px;
+  }
+  .page-title {
+    font-size: 1.5rem !important;
+  }
+  .section-title {
+    font-size: 1.4rem !important;
+  }
+  .program-card,
+  .facility-card,
+  .news-card,
+  .vm-card {
+    padding: 1rem;
+  }
+  .program-header {
+    padding: 1rem;
+  }
+  .program-content {
+    padding: 1rem;
+  }
+  .news-card-img,
+  .news-card-img-placeholder {
+    height: 140px;
+  }
+  .vmv-card {
+    padding: 1.5rem;
+  }
+  .footer-links ul {
+    columns: 1;
+  }
+}
+
+/* --- 576-767px (small tablet) --- */
+@media (min-width: 576px) and (max-width: 767px) {
+  .hero-section {
+    min-height: 85dvh;
+  }
+  .cinematic-title {
+    font-size: 2rem !important;
+  }
+  .stat-item {
+    padding: 14px 12px;
+    min-width: 90px;
+  }
+}
+
+/* --- 768-991px (tablet) --- */
+@media (min-width: 768px) and (max-width: 991px) {
+  .hero-section {
+    min-height: 80dvh;
+  }
+  .cinematic-title {
+    font-size: 2.4rem !important;
+  }
+  .stat-item {
+    padding: 18px 16px;
+    min-width: 110px;
+  }
+}
+
+/* --- Fix hero content on mobile not overlapping properly --- */
+@media (max-width: 991px) {
+  .hero-content {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* --- Program cards: equal height fix --- */
+@media (min-width: 768px) {
+  .programs-overview .row.g-4 > [class*="col-"] {
+    display: flex;
+  }
+  .programs-overview .program-card {
+    height: 100%;
+  }
+}
+
+/* --- Gallery grid consistency --- */
+.row.g-4 > [class*="col-"] {
+  display: flex;
+  flex-direction: column;
+}
+.row.g-4 > [class*="col-"] > * {
+  flex: 1;
+}
+
+/* --- Contact grid equal height --- */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.contact-card {
+  height: 100%;
+}
+
+/* --- Smooth page transitions --- */
+main {
+  min-height: 60vh;
+}
+
+/* --- Fix overlapping elements on small screens --- */
+@media (max-width: 575px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .values-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .key-highlights {
+    grid-template-columns: 1fr;
+  }
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+  .board-members {
+    grid-template-columns: 1fr;
+  }
+  .contact-form-container {
+    padding: 1.5rem;
+  }
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+  }
+}
+
+/* --- Print-friendly --- */
+@media print {
+  .isnm-navbar,
+  .isnm-header,
+  .hero-section {
+    display: none;
+  }
+}
