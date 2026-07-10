@@ -3639,35 +3639,34 @@ h3 {
 .modal-backdrop { background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(5px); }
 
 /* ============ Programs Page ============ */
-.program-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
-  border: 2px solid rgba(144,238,144,0.5);
+.programs-overview .program-card {
+  padding: 0;
+  border: none;
 }
 .program-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-  color: white; padding: 1rem;
+  color: white; padding: 1.25rem 1.5rem;
   display: flex; align-items: center; gap: 1rem;
-  border-bottom: 2px solid rgba(255,255,255,0.1);
 }
-.program-icon {
-  width: 45px; height: 45px;
+.program-header .program-icon {
+  width: 48px; height: 48px;
   background: rgba(255,255,255,0.15); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.program-icon i { font-size: 1.2rem; color: white; }
+.program-header .program-icon i { font-size: 1.3rem; color: white; }
 .program-title h3 {
-  margin: 0; font-size: 1rem; font-weight: 600;
-  font-family: 'Inter', 'Poppins', sans-serif;
+  margin: 0; font-size: 1.1rem; font-weight: 700;
+  font-family: 'Playfair Display', Georgia, serif;
   color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .program-duration {
   display: inline-block; background: rgba(255,255,255,0.2);
-  padding: 0.2rem 0.5rem; border-radius: 15px; font-size: 0.8rem;
-  margin-top: 0.3rem;
+  padding: 0.25rem 0.6rem; border-radius: 15px; font-size: 0.8rem;
+  margin-top: 0.35rem;
 }
 .program-content { padding: 1.5rem; }
-.program-content h4 { color: #1e3a8a; margin: 0.8rem 0 0.5rem; font-size: 0.95rem; font-weight: 700; }
+.program-content h4 { color: #1e3a8a; margin: 0.8rem 0 0.5rem; font-size: 1rem; font-weight: 700; }
 .program-content p { color: #1e293b; line-height: 1.7; margin-bottom: 1rem; font-size: 0.95rem; }
 .requirements-list, .course-content { list-style: none; padding: 0; margin: 1rem 0; }
 .requirements-list li, .course-content li {
