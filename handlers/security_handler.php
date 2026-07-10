@@ -22,11 +22,10 @@ switch ($action) {
     case 'add_incident':
         $incident_type = trim($_POST['incident_type'] ?? '');
         $location      = trim($_POST['location'] ?? '');
-        $severity      = trim($_POST['severity'] ?? 'Medium');
         $description   = trim($_POST['description'] ?? '');
         if ($incident_type && $description) {
-            $stmt = $conn->prepare("INSERT INTO security_incidents (incident_type, location, description, severity, status, reported_by, reported_by_name, incident_date) VALUES (?, ?, ?, ?, 'Reported', ?, ?, NOW())");
-            $stmt->bind_param("ssssis", $incident_type, $location, $description, $severity, $user_id, $user_name);
+            $stmt = $conn->prepare("INSERT INTO security_incidents (incident_type, location, description, status, reported_by) VALUES (?, ?, ?, 'Reported', ?)");
+            $stmt->bind_param("sssi", $incident_type, $location, $description, $user_id);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Incident reported successfully.";
             } else {
@@ -42,15 +41,14 @@ switch ($action) {
     case 'update_incident':
         $id = (int)($_POST['id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
-        $resolution_notes = trim($_POST['resolution_notes'] ?? '');
         if ($id && $status) {
             $resolved_at = ($status === 'Resolved' || $status === 'Closed') ? date('Y-m-d H:i:s') : null;
             if ($resolved_at) {
-                $stmt = $conn->prepare("UPDATE security_incidents SET status=?, resolution_notes=?, resolved_at=? WHERE id=?");
-                $stmt->bind_param("sssi", $status, $resolution_notes, $resolved_at, $id);
+                $stmt = $conn->prepare("UPDATE security_incidents SET status=?, resolved_at=? WHERE id=?");
+                $stmt->bind_param("ssi", $status, $resolved_at, $id);
             } else {
-                $stmt = $conn->prepare("UPDATE security_incidents SET status=?, resolution_notes=? WHERE id=?");
-                $stmt->bind_param("ssi", $status, $resolution_notes, $id);
+                $stmt = $conn->prepare("UPDATE security_incidents SET status=? WHERE id=?");
+                $stmt->bind_param("si", $status, $id);
             }
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Incident #$id updated.";
@@ -82,14 +80,17 @@ switch ($action) {
     // ─── PATROLS ───
     case 'add_patrol':
         $officer_id   = (int)($_POST['officer_id'] ?? $user_id);
-        $officer_name = trim($_POST['officer_name'] ?? $user_name);
         $patrol_area  = trim($_POST['patrol_area'] ?? '');
         $start_time   = trim($_POST['start_time'] ?? date('Y-m-d H:i:s'));
         $findings     = trim($_POST['findings'] ?? '');
         $status       = trim($_POST['status'] ?? 'Scheduled');
         if ($patrol_area) {
-            $stmt = $conn->prepare("INSERT INTO security_patrols (officer_id, officer_name, patrol_area, start_time, findings, status) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("isssss", $officer_id, $officer_name, $patrol_area, $start_time, $findings, $status);
+            $parts       = explode('T', $start_time);
+            $patrol_date = $parts[0] ?? date('Y-m-d');
+            $s_time      = $parts[1] ?? (str_contains($start_time, ' ') ? explode(' ', $start_time)[1] ?? date('H:i:s') : date('H:i:s'));
+            if (!str_contains($s_time, ':')) { $s_time = date('H:i:s'); }
+            $stmt = $conn->prepare("INSERT INTO security_patrols (guard_id, patrol_area, patrol_date, start_time, notes, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("isssss", $officer_id, $patrol_area, $patrol_date, $s_time, $findings, $status);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Patrol record added.";
             } else {
@@ -108,8 +109,15 @@ switch ($action) {
         $findings   = trim($_POST['findings'] ?? '');
         $status     = trim($_POST['status'] ?? '');
         if ($id) {
-            $stmt = $conn->prepare("UPDATE security_patrols SET end_time=?, findings=?, status=? WHERE id=?");
-            $stmt->bind_param("sssi", $end_time, $findings, $status, $id);
+            $parts2 = explode('T', $end_time);
+            $e_time = $parts2[1] ?? (str_contains($end_time, ' ') ? explode(' ', $end_time)[1] ?? null : null);
+            if ($e_time) {
+                $stmt = $conn->prepare("UPDATE security_patrols SET end_time=?, notes=?, status=? WHERE id=?");
+                $stmt->bind_param("sssi", $e_time, $findings, $status, $id);
+            } else {
+                $stmt = $conn->prepare("UPDATE security_patrols SET notes=?, status=? WHERE id=?");
+                $stmt->bind_param("ssi", $findings, $status, $id);
+            }
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Patrol #$id updated.";
             } else {

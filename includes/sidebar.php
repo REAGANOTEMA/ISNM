@@ -23,12 +23,18 @@ $user_type = $_SESSION['type'];
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
-// Try dynamic sidebar first
+// Try dynamic sidebar first (fall back to static if empty)
 $useDynamicSidebar = false;
 if (file_exists(__DIR__ . '/dynamic_sidebar.php')) {
     require_once __DIR__ . '/dynamic_sidebar.php';
     if (function_exists('renderDynamicSidebar') && isset($_SESSION['role'])) {
-        $useDynamicSidebar = true;
+        ob_start();
+        renderDynamicSidebar();
+        $dynamicSidebarOutput = ob_get_clean();
+        if (trim($dynamicSidebarOutput) !== '') {
+            $useDynamicSidebar = true;
+            echo $dynamicSidebarOutput;
+        }
     }
 }
 

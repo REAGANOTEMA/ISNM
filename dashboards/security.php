@@ -54,7 +54,7 @@ $recent_incidents = array_slice($all_incidents, 0, 10);
 $all_patrols = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM security_patrols ORDER BY start_time DESC LIMIT 100");
+        $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.guard_id=s.id ORDER BY sp.patrol_date DESC, sp.start_time DESC LIMIT 100");
         if ($r) $all_patrols = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
@@ -63,7 +63,7 @@ if ($conn) {
 $active_patrols = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.officer_id=s.id WHERE DATE(sp.start_time)=CURDATE() ORDER BY sp.start_time DESC LIMIT 10");
+        $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.guard_id=s.id WHERE sp.patrol_date=CURDATE() ORDER BY sp.start_time DESC LIMIT 10");
         if ($r) $active_patrols = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
@@ -190,8 +190,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                 <?php else: ?>
                 <?php foreach ($active_patrols as $pat):
                     $pStatus = strtolower($pat['status'] ?? 'scheduled');
+                    $patrolName = $pat['guard_name'] ?? ('Guard #' . ($pat['guard_id'] ?? '?'));
                 ?>
-                <div class="alert-item"><div class="d-flex justify-content-between align-items-center"><div><h6><?= htmlspecialchars($pat['officer_name'] ?? $pat['guard_name'] ?? 'Guard') ?></h6><small class="text-muted"><?= htmlspecialchars($pat['patrol_area'] ?? '-') ?> | Started: <?= !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-' ?></small></div><span class="badge bg-<?= $pStatus === 'active' || $pStatus === 'in progress' ? 'primary' : ($pStatus === 'completed' ? 'success' : 'secondary') ?>"><?= ucfirst(htmlspecialchars($pat['status'])) ?></span></div></div>
+                <div class="alert-item"><div class="d-flex justify-content-between align-items-center"><div><h6><?= htmlspecialchars($patrolName) ?></h6><small class="text-muted"><?= htmlspecialchars($pat['patrol_area'] ?? '-') ?> | Started: <?= !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-' ?></small></div><span class="badge bg-<?= $pStatus === 'active' || $pStatus === 'in progress' ? 'primary' : ($pStatus === 'completed' ? 'success' : 'secondary') ?>"><?= ucfirst(htmlspecialchars($pat['status'])) ?></span></div></div>
                 <?php endforeach; ?>
                 <?php endif; ?>
             </div>
@@ -322,23 +323,26 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                 <?php foreach ($all_patrols as $pat):
                     $pSt = strtolower($pat['status'] ?? 'scheduled');
                     $pBadge = ($pSt === 'active' || $pSt === 'in progress') ? 'primary' : ($pSt === 'completed' ? 'success' : ($pSt === 'cancelled' ? 'danger' : 'secondary'));
+                    $patrolName = $pat['guard_name'] ?? ('Guard #' . ($pat['guard_id'] ?? '?'));
+                    $patrolDate = !empty($pat['patrol_date']) ? date('d M Y', strtotime($pat['patrol_date'])) : '-';
+                    $patrolStart = !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-';
+                    $patrolEnd = !empty($pat['end_time']) ? date('g:i A', strtotime($pat['end_time'])) : '—';
                 ?>
                 <tr>
                     <td><strong>#<?= (int)$pat['id'] ?></strong></td>
-                    <td><?= htmlspecialchars($pat['officer_name'] ?? '-') ?></td>
+                    <td><?= htmlspecialchars($patrolName) ?></td>
                     <td><?= htmlspecialchars($pat['patrol_area']) ?></td>
-                    <td><small><?= !empty($pat['start_time']) ? date('d M Y, g:i A', strtotime($pat['start_time'])) : '-' ?></small></td>
-                    <td><small><?= !empty($pat['end_time']) ? date('d M Y, g:i A', strtotime($pat['end_time'])) : '—' ?></small></td>
-                    <td><small><?= htmlspecialchars(substr($pat['findings'] ?? '-', 0, 50)) ?></small></td>
+                    <td><small><?= $patrolDate ?> <?= $patrolStart ?></small></td>
+                    <td><small><?= $patrolEnd ?></small></td>
+                    <td><small><?= htmlspecialchars(substr($pat['notes'] ?? '-', 0, 50)) ?></small></td>
                     <td><span class="badge bg-<?= $pBadge ?>"><?= htmlspecialchars($pat['status']) ?></span></td>
                     <td>
                         <button class="btn btn-outline-primary btn-sm" title="Update" data-bs-toggle="modal" data-bs-target="#editPatrolModal"
                             data-id="<?= (int)$pat['id'] ?>"
-                            data-officer="<?= htmlspecialchars($pat['officer_name'] ?? '') ?>"
                             data-area="<?= htmlspecialchars($pat['patrol_area'] ?? '') ?>"
-                            data-start="<?= htmlspecialchars($pat['start_time'] ?? '') ?>"
-                            data-end="<?= htmlspecialchars($pat['end_time'] ?? '') ?>"
-                            data-findings="<?= htmlspecialchars($pat['findings'] ?? '') ?>"
+                            data-start="<?= htmlspecialchars($pat['patrol_date'] ?? '') ?>T<?= htmlspecialchars($pat['start_time'] ?? '') ?>"
+                            data-end="<?= !empty($pat['end_time']) ? date('Y-m-d') . 'T' . htmlspecialchars($pat['end_time']) : '' ?>"
+                            data-findings="<?= htmlspecialchars($pat['notes'] ?? '') ?>"
                             data-status="<?= htmlspecialchars($pat['status'] ?? '') ?>"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>
