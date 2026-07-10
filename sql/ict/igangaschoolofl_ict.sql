@@ -3361,7 +3361,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl__iq8pceee4-m-wnDL2NXS9rg9R7iAKa3p`@`localhost` PROCEDURE `MigratePayroll`()
+CREATE DEFINER=`igangaschoolofl_ict`@`localhost` PROCEDURE `MigratePayroll`()
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;
@@ -3434,4 +3434,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-05 16:55:45
+-- Dump completed on 2026-07-10 13:07:18

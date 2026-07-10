@@ -4228,7 +4228,7 @@ CREATE TABLE `student_academic_profiles` (
   KEY `idx_sap_student` (`student_number`),
   KEY `idx_sap_year` (`academic_year`),
   KEY `idx_sap_program` (`program`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4237,6 +4237,7 @@ CREATE TABLE `student_academic_profiles` (
 
 LOCK TABLES `student_academic_profiles` WRITE;
 /*!40000 ALTER TABLE `student_academic_profiles` DISABLE KEYS */;
+INSERT INTO `student_academic_profiles` VALUES (1,'STU202644246','Daniel Kizza','Diploma in Nursing',2026,NULL,'Active',NULL,NULL,'2026-07-05 17:36:37','2026-07-05 17:36:37');
 /*!40000 ALTER TABLE `student_academic_profiles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -5016,6 +5017,34 @@ LOCK TABLES `student_sick_leave` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `student_status_history`
+--
+
+DROP TABLE IF EXISTS `student_status_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `student_status_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_id` int(11) NOT NULL,
+  `status_type` varchar(50) NOT NULL,
+  `old_value` varchar(100) DEFAULT NULL,
+  `new_value` varchar(100) DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `changed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `student_status_history`
+--
+
+LOCK TABLES `student_status_history` WRITE;
+/*!40000 ALTER TABLE `student_status_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_status_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `student_timetables`
 --
 
@@ -5596,7 +5625,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl__iq8pceee4-m-wnDL2NXS9rg9R7iAKa3p`@`localhost` PROCEDURE `MigratePayroll`()
+CREATE DEFINER=`igangaschoolofl_students_db`@`localhost` PROCEDURE `MigratePayroll`()
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;
@@ -5705,4 +5734,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-05 16:56:22
+-- Dump completed on 2026-07-10 13:08:03
