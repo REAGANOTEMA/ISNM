@@ -217,6 +217,7 @@ $students = executeQuery($students_sql);
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
@@ -435,5 +436,6 @@ $students = executeQuery($students_sql);
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

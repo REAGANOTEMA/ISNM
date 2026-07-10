@@ -414,7 +414,7 @@ body {
 </style>
 </head>
 <body>
-
+<?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- Loading Screen -->
@@ -1262,5 +1262,6 @@ function escHtml(str) {
   return d.innerHTML;
 }
 </script>
+<?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

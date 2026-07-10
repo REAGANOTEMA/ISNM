@@ -286,6 +286,8 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 <body>
 <?php $csrf = htmlspecialchars($_SESSION['csrf_token']); ?>
 
+<style>:root{--sidebar-w:270px}.dashboard-main{margin-left:var(--sidebar-w);width:calc(100% - var(--sidebar-w));min-height:100vh;background:#f5f7fa}@media(max-width:991px){.dashboard-main{margin-left:0;width:100%}}</style>
+<div class="dashboard-main">
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -709,5 +711,8 @@ function deleteAttendee(id) {
     });
 }
 </script>
+</div>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

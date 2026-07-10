@@ -148,6 +148,7 @@ footer a { color:var(--accent); text-decoration:none; }
 </style>
 </head>
 <body>
+<?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
 
 <nav class="navbar navbar-expand-lg">
     <div class="container">
@@ -437,5 +438,6 @@ $(document).ready(function() {
     }
 });
 </script>
+<?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

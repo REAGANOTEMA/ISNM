@@ -540,6 +540,7 @@ $programs = executeQuery($programs_sql);
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
@@ -1154,6 +1155,7 @@ $programs = executeQuery($programs_sql);
             });
         }, 5000);
     </script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 
