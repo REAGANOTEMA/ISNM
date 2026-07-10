@@ -163,42 +163,43 @@ if (!function_exists('isnm_mysqli_connect')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
-        $credSet = [['user' => $user, 'pass' => $pass, 'db' => $db]];
+        // Hardcoded hosting credentials — always try first, no .env dependency
+        $hostingCreds = [
+            'igangaschoolofl_students_db' => ['user' => 'igangaschoolofl_students_db', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
+            'igangaschoolofl_staffs_db'   => ['user' => 'igangaschoolofl_staffs_db',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
+            'igangaschoolofl_website_db'  => ['user' => 'igangaschoolofl_website_db',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
+            'igangaschoolofl_ict'         => ['user' => 'igangaschoolofl_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
+        ];
 
-        // If provided user is root, try .env.production hosting creds first
-        if ($user === 'root') {
-            $prodEnvFile = __DIR__ . '/../.env.production';
-            if (is_file($prodEnvFile)) {
-                $prodEnv = parse_ini_string(file_get_contents($prodEnvFile));
-                $prodKeys = [
-                    'igangaschoolofl_students_db' => ['user_key' => 'STUDENTS_DB_USER', 'pass_key' => 'STUDENTS_DB_PASS'],
-                    'igangaschoolofl_staffs_db'   => ['user_key' => 'STAFF_DB_USER',    'pass_key' => 'STAFF_DB_PASS'],
-                    'igangaschoolofl_website_db'  => ['user_key' => 'WEBSITE_DB_USER',  'pass_key' => 'WEBSITE_DB_PASS'],
-                    'igangaschoolofl_ict'         => ['user_key' => 'ICT_DB_USER',      'pass_key' => 'ICT_DB_PASS'],
-                ];
-                if (isset($prodKeys[$db]) && !empty($prodEnv[$prodKeys[$db]['pass_key']])) {
-                    $pu = $prodEnv[$prodKeys[$db]['user_key']] ?? $db;
-                    $pp = $prodEnv[$prodKeys[$db]['pass_key']] ?? '';
-                    $credSet[] = ['user' => $pu, 'pass' => $pp, 'db' => $db];
-                }
-            }
-            // Root fallbacks
+        $credSet = [];
+        // 1. Hosting creds first (if we know them)
+        if (isset($hostingCreds[$db])) {
+            $credSet[] = $hostingCreds[$db] + ['db' => $db];
+        }
+        // 2. Provided credentials
+        $credSet[] = ['user' => $user, 'pass' => $pass, 'db' => $db];
+        // 3. DB-name-as-user (cPanel pattern) if different
+        if ($user !== $db) {
+            $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
+        }
+        // 4. Root fallbacks (local dev)
+        if ($user === 'root' || $pass !== ($hostingCreds[$db]['pass'] ?? '')) {
             $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
             if (!empty($rootPass) && $rootPass !== $pass) {
                 $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
             }
-            if ('' !== $pass) {
-                $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
-            }
-            if ('root' !== $pass) {
-                $credSet[] = ['user' => 'root', 'pass' => 'root', 'db' => $db];
-            }
+            $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
+            $credSet[] = ['user' => 'root', 'pass' => 'root', 'db' => $db];
         }
 
-        // Also try DB-name-as-user pattern (cPanel) if not already first
-        if ($user !== $db) {
-            $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
-        }
+        // Deduplicate
+        $seen = [];
+        $credSet = array_values(array_filter($credSet, function($c) use (&$seen) {
+            $key = $c['user'] . '|' . $c['pass'];
+            if (isset($seen[$key])) return false;
+            $seen[$key] = true;
+            return true;
+        }));
 
         $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
         $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));

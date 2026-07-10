@@ -69,37 +69,40 @@ class DatabaseConnection {
             $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
 
             $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
-            $credSet = [['user' => $username, 'pass' => $password]];
 
-            if ($username === 'root') {
-                // Try .env.production hosting credentials
-                $prodEnvFile = __DIR__ . '/../.env.production';
-                if (is_file($prodEnvFile)) {
-                    $prodEnv = parse_ini_string(file_get_contents($prodEnvFile));
-                    $dbMapReverse = [
-                        'igangaschoolofl_staffs_db'   => ['user_key' => 'STAFF_DB_USER',    'pass_key' => 'STAFF_DB_PASS'],
-                        'igangaschoolofl_students_db' => ['user_key' => 'STUDENTS_DB_USER', 'pass_key' => 'STUDENTS_DB_PASS'],
-                        'igangaschoolofl_website_db'  => ['user_key' => 'WEBSITE_DB_USER',  'pass_key' => 'WEBSITE_DB_PASS'],
-                        'igangaschoolofl_ict'         => ['user_key' => 'ICT_DB_USER',      'pass_key' => 'ICT_DB_PASS'],
-                    ];
-                    if (isset($dbMapReverse[$database]) && !empty($prodEnv[$dbMapReverse[$database]['pass_key']])) {
-                        $pu = $prodEnv[$dbMapReverse[$database]['user_key']] ?? $database;
-                        $pp = $prodEnv[$dbMapReverse[$database]['pass_key']] ?? '';
-                        $credSet[] = ['user' => $pu, 'pass' => $pp];
-                    }
-                }
-                // Root fallbacks
+            // Hardcoded hosting credentials — always try first, no .env dependency
+            $hostingCreds = [
+                'igangaschoolofl_students_db' => ['user' => 'igangaschoolofl_students_db', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
+                'igangaschoolofl_staffs_db'   => ['user' => 'igangaschoolofl_staffs_db',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
+                'igangaschoolofl_website_db'  => ['user' => 'igangaschoolofl_website_db',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
+                'igangaschoolofl_ict'         => ['user' => 'igangaschoolofl_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
+            ];
+
+            $credSet = [];
+            // 1. Hosting creds first (if we know them)
+            if (isset($hostingCreds[$database])) {
+                $credSet[] = $hostingCreds[$database];
+            }
+            // 2. Provided credentials
+            $credSet[] = ['user' => $username, 'pass' => $password];
+            // 3. Root fallbacks (local dev)
+            if ($username === 'root' || $password !== ($hostingCreds[$database]['pass'] ?? '')) {
                 $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
                 if (!empty($rootPass) && $rootPass !== $password) {
                     $credSet[] = ['user' => 'root', 'pass' => $rootPass];
                 }
-                if ('' !== $password) {
-                    $credSet[] = ['user' => 'root', 'pass' => ''];
-                }
-                if ('root' !== $password) {
-                    $credSet[] = ['user' => 'root', 'pass' => 'root'];
-                }
+                $credSet[] = ['user' => 'root', 'pass' => ''];
+                $credSet[] = ['user' => 'root', 'pass' => 'root'];
             }
+
+            // Deduplicate
+            $seen = [];
+            $credSet = array_values(array_filter($credSet, function($c) use (&$seen) {
+                $key = $c['user'] . '|' . $c['pass'];
+                if (isset($seen[$key])) return false;
+                $seen[$key] = true;
+                return true;
+            }));
 
             foreach ($credSet as $cred) {
                 $u = $cred['user'];
