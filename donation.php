@@ -458,7 +458,7 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-3d btn-glass" data-bs-dismiss="modal"><span class="shine"></span>Cancel</button>
+            <button type="button" class="btn-3d btn-red" data-bs-dismiss="modal"><span class="shine"></span>Cancel</button>
             <button type="button" class="btn-3d btn-yellow" onclick="processDonation()">
               <i class="fas fa-lock me-2"></i><span class="shine"></span>Process Donation
             </button>

@@ -826,3 +826,15 @@ Stack trace:
 [09-Jul-2026 18:53:44 Africa/Kampala] Error [2]: mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 89
 [09-Jul-2026 18:53:44 Africa/Kampala] Error [2]: mysqli::__construct(): (HY000/1045): Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: NO) in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 89
 [09-Jul-2026 18:53:46 Africa/Kampala] Error [2]: mysqli::__construct(): (HY000/2002): No connection could be made because the target machine actively refused it in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 89
+[10-Jul-2026 06:55:03 Africa/Kampala] Database connection error: Connection to igangaschoolofl_staffs_db failed - no viable credentials
+[10-Jul-2026 06:55:03 Africa/Kampala] Connection test failed for igangaschoolofl_staffs_db: Call to a member function query() on null
+[10-Jul-2026 06:55:27 Africa/Kampala] Database connection error: Connection to igangaschoolofl_students_db failed - no viable credentials
+[10-Jul-2026 06:55:27 Africa/Kampala] Connection test failed for igangaschoolofl_students_db: Call to a member function query() on null
+[10-Jul-2026 06:55:52 Africa/Kampala] Database connection error: Connection to igangaschoolofl_website_db failed - no viable credentials
+[10-Jul-2026 06:55:52 Africa/Kampala] Connection test failed for igangaschoolofl_website_db: Call to a member function query() on null
+[10-Jul-2026 06:56:16 Africa/Kampala] Database connection error: Connection to igangaschoolofl_ict failed - no viable credentials
+[10-Jul-2026 06:56:16 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Call to a member function query() on null
+[10-Jul-2026 06:56:16 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_staffs_db database
+[10-Jul-2026 06:56:16 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
+[10-Jul-2026 06:56:16 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
+[10-Jul-2026 06:56:16 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database

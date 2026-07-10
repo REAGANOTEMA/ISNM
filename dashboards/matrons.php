@@ -616,7 +616,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         <form method="POST">
                         <div style="padding:18px 24px;background:#10b981;color:#fff;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">
                             <h5 style="margin:0"><i class="fas fa-plus me-2"></i>New Store Requisition</h5>
-                            <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem" onclick="this.closest('#newReqModal').style.display='none'">&times;</button>
+                            <button type="button" class="btn-close btn-close-white" style="font-size:1.2rem" onclick="this.closest('#newReqModal').style.display='none'" aria-label="Close"></button>
                         </div>
                         <div style="padding:24px">
                             <input type="hidden" name="action" value="create_store_requisition">

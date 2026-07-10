@@ -69,9 +69,9 @@
   font-family:'Rajdhani','Poppins',sans-serif;font-size:13px;font-weight:600;
   cursor:pointer;position:relative;overflow:hidden;
   transition:all 0.3s;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
-  background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);
+  background:rgba(0,0,0,0.05);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.9);
   box-shadow:0 4px 15px rgba(0,0,0,0.1),inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.btn-glass:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.15)}
+.btn-glass:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.4)}
 .btn-glass:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(0,0,0,0.1),inset 0 2px 6px rgba(0,0,0,0.08)}

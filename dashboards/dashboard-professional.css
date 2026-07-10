@@ -767,6 +767,103 @@ h1, h2, h3, h4, h5, h6,
   border-color: #1a237e !important;
 }
 
+/* ── Quick Action Buttons (academic-registrar, etc.) ──────── */
+.quick-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 12px 18px !important;
+  border-radius: 12px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease !important;
+  cursor: pointer !important;
+}
+.quick-action-btn:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+}
+.quick-action-btn i {
+  font-size: 1.1rem !important;
+}
+
+/* ── Action Button (student.php, etc.) ───────────────────── */
+.action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px 18px !important;
+  border-radius: 10px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease !important;
+  cursor: pointer !important;
+}
+.action-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08) !important;
+}
+
+/* ── Section Tabs (sickbay, etc.) ────────────────────────── */
+.section-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  color: #64748b !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+.section-tab:hover {
+  background: rgba(26, 35, 126, 0.06) !important;
+  color: #1a237e !important;
+}
+.section-tab.active {
+  background: #1a237e !important;
+  color: #fff !important;
+}
+
+/* ── Inline Faux Buttons (fw-bold links used as CTAs) ───── */
+a.fw-bold[href] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+}
+a.fw-bold[href]:hover {
+  background: rgba(26, 35, 126, 0.06) !important;
+}
+
+/* ── Text links with text-primary used as action links ──── */
+a.text-primary[href] {
+  transition: all 0.2s ease !important;
+}
+a.text-primary[href]:hover {
+  filter: brightness(1.2) !important;
+  text-decoration: underline !important;
+}
+
+/* ── All native buttons ──────────────────────────────────── */
+button:not(.btn):not(.btn-3d):not(.dropdown-item):not(.navbar-toggler):not([class*="btn-"]):not(.ql-editor *) {
+  cursor: pointer !important;
+  transition: opacity 0.2s ease !important;
+}
+button:not(.btn):not(.btn-3d):not(.dropdown-item):not(.navbar-toggler):not([class*="btn-"]):not(.ql-editor *):hover {
+  opacity: 0.85 !important;
+}
+
 /* ── Print Styles ────────────────────────────────────────────── */
 @media print {
   .card,

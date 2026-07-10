@@ -111,7 +111,7 @@ $report = $_GET['report'] ?? '';
 if ($report) {
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
-    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
+    echo '<div class="no-print"><button class="btn btn-primary btn-sm" onclick="window.print()" style="margin-bottom:12px">Print</button> <button class="btn btn-secondary btn-sm" onclick="window.close()">Close</button></div>';
     if ($report === 'student_progress') {
         echo '<h2>Student Progress Report</h2>';
         $r=$students_conn->query("SELECT s.full_name,s.student_number,s.program,s.level,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM students s LEFT JOIN staffs_db.academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");

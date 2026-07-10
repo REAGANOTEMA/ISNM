@@ -351,13 +351,13 @@ if ($login_success) { unset($_SESSION['success']); }
     gap: 16px; flex-wrap: wrap;
   }
   
-  .link-row a {
+  .link-row a:not(.btn-3d) {
     color: var(--primary); text-decoration: none;
     font-size: 0.88rem; transition: color 0.2s ease;
   }
   
-  .link-row a:hover { color: var(--primary-dark); }
-  .link-row a i { margin-right: 5px; }
+  .link-row a:not(.btn-3d):hover { color: var(--primary-dark); }
+  .link-row a:not(.btn-3d) i { margin-right: 5px; }
 
   .alert {
     border-radius: 10px; margin-bottom: 18px;
@@ -710,9 +710,9 @@ if ($login_success) { unset($_SESSION['success']); }
       </div>
 
     <div class="link-row">
-        <a href="student-forgot-password.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-key"></i> Forgot Password</a>
-        <a href="organogram.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
-        <a href="index.php" class="btn-3d btn-glass btn-3d-sm"><i class="fas fa-home"></i> Homepage</a>
+        <a href="student-forgot-password.php" class="btn-3d btn-blue btn-3d-sm"><i class="fas fa-key"></i> Forgot Password</a>
+        <a href="organogram.php" class="btn-3d btn-green btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
+        <a href="index.php" class="btn-3d btn-chocolate btn-3d-sm"><i class="fas fa-home"></i> Homepage</a>
     </div>
     </div>
   </div>

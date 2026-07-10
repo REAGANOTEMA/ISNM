@@ -644,7 +644,7 @@ elseif ($page === 'courses'):
 <div style="background:#fff;border-radius:12px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;padding:24px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
 <h4 style="margin:0">Register Courses</h4>
-<button onclick="document.getElementById('regModal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer">&times;</button>
+<button class="btn-close" onclick="document.getElementById('regModal').style.display='none'" aria-label="Close"></button>
 </div>
 <?php if (empty($available)): ?>
 <p class="text-muted">No courses available for your program/level.</p>
@@ -1255,7 +1255,7 @@ elseif ($page === 'requests'):
 <div style="background:#fff;border-radius:12px;width:90%;max-width:500px;padding:24px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
 <h4 style="margin:0">Submit Request</h4>
-<button onclick="document.getElementById('reqModal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer">&times;</button>
+<button class="btn-close" onclick="document.getElementById('reqModal').style.display='none'" aria-label="Close"></button>
 </div>
 <form method="POST">
 <input type="hidden" name="action" value="submit_request">
