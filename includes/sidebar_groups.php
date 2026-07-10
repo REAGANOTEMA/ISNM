@@ -419,7 +419,7 @@ function normalizeRoleKeySidebar(string $role): string {
     $map = [
         'director general' => 'director_general', 'ceo' => 'ceo',
         'director ict' => 'director_ict', 'director academics' => 'director_academics',
-        'director admissions' => 'director_admissions', 'director finance' => 'director_finance',
+        'director admissions' => 'director_admissions', 'admissions' => 'director_admissions', 'admissions officer' => 'director_admissions', 'admissions clerk' => 'director_admissions', 'director finance' => 'director_finance',
         'school principal' => 'principal', 'deputy principal' => 'deputy_principal',
         'academic registrar' => 'academic_registrar', 'school secretary' => 'secretary',
         'hr manager' => 'hr', 'school librarian' => 'librarian', 'librarian' => 'librarian',

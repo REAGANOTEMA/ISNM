@@ -135,7 +135,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id=(int)($_POST['id']??0);
         $conn->query("UPDATE applicants SET status='Approved',approved_by=$userId,approved_at=NOW() WHERE id=$id");
         $conn->query("UPDATE student_admission_tracking SET admission_status='Approved' WHERE applicant_id=$id");
-        $conn->prepare("INSERT INTO admission_decisions(applicant_id,decision,decision_reason,decided_by,decided_at,notified_applicant) VALUES(?,?,'',?,NOW(),1)");
+        $dec='Approved';
+        $s=$conn->prepare("INSERT INTO admission_decisions(applicant_id,decision,decision_reason,decided_by,decided_at,notified_applicant) VALUES(?,?,'',?,NOW(),1)");
+        if($s){$s->bind_param('isi',$id,$dec,$userId);$s->execute();$s->close();}
         logAdmission($conn,$id,$userId,"Approved","Application approved"); notifyAdmission($conn,$id,$userId,'success','Application Approved','Congratulations! Your application has been approved.','staff-portal.php');
         echo json_encode(['success'=>true]); exit;
     }
@@ -558,8 +560,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $app=$webConn->query("SELECT * FROM student_applications WHERE id=$aid")->fetch_assoc();
         if(!$app){echo json_encode(['success'=>false,'message'=>'Not found']);exit;}
         $appNum='ONL'.date('Y').str_pad($aid,5,'0',STR_PAD_LEFT);
+        $progName=$app['program_applied']??'';
+        $progId=0;
+        if($progName){$pr=$conn->query("SELECT id FROM academic_programs WHERE program_name='".$conn->real_escape_string($progName)."' LIMIT 1");if($pr&&$pr->num_rows)$progId=(int)$pr->fetch_assoc()['id'];}
         $s=$conn->prepare("INSERT INTO applicants(application_number,full_name,email,phone,gender,program_id,intake,application_source,status,submitted_at) VALUES(?,?,?,?,?,?,?,'Online','New',NOW())");
-        if($s){$s->bind_param('sssssis',$appNum,$app['full_name']??$app['first_name'].' '.$app['surname'],$app['email']??'',$app['phone']??'','Female',$aid,$app['program_applied']??'');$s->execute();$newId=$conn->insert_id;$s->close();
+        if($s){$s->bind_param('sssssis',$appNum,$app['full_name']??$app['first_name'].' '.$app['surname'],$app['email']??'',$app['phone']??'','Female',$progId,$progName);$s->execute();$newId=$conn->insert_id;$s->close();
         $conn->query("INSERT INTO student_admission_tracking(application_number,applicant_id,admission_status) VALUES('$appNum',$newId,'Pending')");
         logAdmission($conn,$newId,$userId,"Imported Online","Imported from website application #$aid");}
         echo json_encode(['success'=>true,'id'=>$newId??0]);exit;
@@ -721,8 +726,48 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .empty-state{text-align:center;padding:40px 20px;color:#94a3b8}.empty-state i{font-size:48px;margin-bottom:12px;opacity:.3}
 .loading-skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton 1.5s infinite;border-radius:6px;height:20px;margin-bottom:8px}
 @keyframes skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@media(max-width:768px){.adm-content{margin-left:0;padding:14px}.stats-grid{grid-template-columns:repeat(2,1fr)}.filter-row>*{min-width:100%}.profile-section{padding:10px}}
-@media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
+@media(max-width:768px){
+.adm-content{margin-left:0;padding:12px}
+.adm-header{padding:16px;border-radius:12px}
+.adm-header h1{font-size:18px}
+.adm-tabs{padding:4px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.adm-tabs::-webkit-scrollbar{display:none}
+.adm-tabs a{padding:6px 10px;font-size:11px;white-space:nowrap}
+.stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+.stat-card{padding:14px}
+.stat-card .num{font-size:22px}
+.stat-card .icon{font-size:24px;opacity:.08}
+.card{padding:14px;border-radius:10px}
+.card h3{font-size:13px}
+.table{font-size:12px}
+.table td,.table th{padding:6px 8px}
+.filter-row{gap:8px}
+.filter-row>*{min-width:100%}
+.search-box{font-size:12px;padding:6px 10px}
+.progress-tracker{gap:4px;padding:10px;overflow-x:auto;flex-wrap:nowrap}
+.progress-step{font-size:10px;padding:3px 6px;white-space:nowrap}
+.profile-section{padding:10px;border-radius:8px}
+.info-grid{grid-template-columns:1fr;gap:6px}
+.info-item .value{font-size:13px}
+.whatsapp-float{width:44px;height:44px;font-size:22px;bottom:16px;right:16px}
+.empty-state{padding:24px 12px}
+.empty-state i{font-size:32px}
+#stuTable{font-size:11px}
+#stuTable td{padding:4px 6px}
+}
+@media(max-width:480px){
+.stats-grid{grid-template-columns:1fr;gap:8px}
+.adm-header h1{font-size:16px}
+.adm-header p{font-size:12px}
+.stat-card .num{font-size:20px}
+.card{padding:10px}
+.card h3{font-size:12px}
+.table{font-size:11px}
+.table td,.table th{padding:4px 6px}
+.btn-sm{font-size:11px;padding:3px 8px}
+.form-select-sm,.form-control-sm{font-size:11px}
+.adm-tabs a{padding:5px 8px;font-size:10px}
+}
 </style>
 </head>
 <body>

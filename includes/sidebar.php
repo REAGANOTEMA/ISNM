@@ -9,10 +9,12 @@
  *   $sidebarPosition = 'right';  // or 'left' (default)
  *   include_once __DIR__ . '/includes/sidebar.php';
  */
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
-    header('Location: ../index.php'); exit();
+    echo '<script>window.location.href="../index.php";</script>'; exit();
 }
 
 $sidebarPosition = $sidebarPosition ?? 'left';

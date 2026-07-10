@@ -31,18 +31,18 @@ $flash_error   = $_SESSION['error']   ?? null;
 unset($_SESSION['success'], $_SESSION['error']);
 
 // ── Statistics ──
-$total_incidents_today = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE DATE(incident_date) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$security_patrols      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE DATE(start_time) = CURDATE() AND status IN ('Scheduled','In Progress','Active')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_incidents_today = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$security_patrols      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress','Active')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $access_control_checks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM access_control_logs WHERE DATE(access_time) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$emergency_alerts      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE severity = 'Critical' AND DATE(incident_date) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$emergency_alerts      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $cctv_cameras_active   = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_equipment WHERE equipment_type = 'CCTV Camera' AND status = 'Operational'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$total_guards          = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE DATE(start_time) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_guards          = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
 // ── Data: All incidents ──
 $all_incidents = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM security_incidents ORDER BY incident_date DESC, id DESC LIMIT 100");
+        $result = $conn->query("SELECT * FROM security_incidents ORDER BY created_at DESC, id DESC LIMIT 100");
         if ($result) { while ($row = $result->fetch_assoc()) { $all_incidents[] = $row; } }
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
@@ -172,11 +172,8 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
         <?php if (empty($recent_incidents)): ?>
         <div class="text-center text-muted py-4"><i class="fas fa-check-circle fa-2x text-success mb-2"></i><p>No recent incidents</p></div>
         <?php else: ?>
-        <?php foreach (array_slice($recent_incidents, 0, 5) as $inc):
-            $sev = strtolower($inc['severity'] ?? 'low');
-            $sevClass = ($sev === 'critical') ? 'critical' : (($sev === 'high') ? 'high' : (($sev === 'medium') ? 'medium' : 'low'));
-        ?>
-        <div class="alert-item <?= $sevClass ?>"><div class="d-flex justify-content-between align-items-center"><div><h6><i class="fas fa-<?= $sevClass === 'high' || $sevClass === 'critical' ? 'exclamation-circle' : ($sevClass === 'medium' ? 'exclamation-triangle' : 'info-circle') ?>"></i> <?= htmlspecialchars($inc['incident_type'] ?? 'Incident') ?></h6><small class="text-muted"><?= htmlspecialchars($inc['location'] ?? '-') ?> | <?= !empty($inc['incident_date']) ? date('g:i A', strtotime($inc['incident_date'])) : '-' ?> | <?= htmlspecialchars(substr($inc['description'] ?? '-', 0, 80)) ?></small></div><span class="badge bg-<?= $sevClass === 'high' || $sevClass === 'critical' ? 'danger' : ($sevClass === 'medium' ? 'warning text-dark' : 'success') ?>"><?= ucfirst(htmlspecialchars($inc['severity'] ?? 'Low')) ?></span></div></div>
+        <?php foreach (array_slice($recent_incidents, 0, 5) as $inc): ?>
+        <div class="alert-item low"><div class="d-flex justify-content-between align-items-center"><div><h6><i class="fas fa-info-circle"></i> <?= htmlspecialchars($inc['incident_type'] ?? 'Incident') ?></h6><small class="text-muted"><?= htmlspecialchars($inc['location'] ?? '-') ?> | <?= !empty($inc['created_at']) ? date('g:i A', strtotime($inc['created_at'])) : '-' ?> | <?= htmlspecialchars(substr($inc['description'] ?? '-', 0, 80)) ?></small></div><span class="badge bg-success">Low</span></div></div>
         <?php endforeach; ?>
         <?php endif; ?>
     </div>
@@ -267,26 +264,22 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     <tr><td colspan="8" class="text-center text-muted py-4">No incidents recorded yet.</td></tr>
                 <?php else: ?>
                 <?php foreach ($all_incidents as $inc):
-                    $sevLc = strtolower($inc['severity'] ?? 'low');
-                    $sevBadge = ($sevLc === 'critical') ? 'dark' : (($sevLc === 'high') ? 'danger' : (($sevLc === 'medium') ? 'warning' : 'success'));
                     $statusBadge = strtolower($inc['status'] ?? 'reported') === 'resolved' || strtolower($inc['status'] ?? '') === 'closed' ? 'success' : (strtolower($inc['status'] ?? '') === 'in progress' ? 'primary' : 'secondary');
                 ?>
                 <tr>
                     <td><strong>#<?= (int)$inc['id'] ?></strong></td>
                     <td><?= htmlspecialchars($inc['incident_type']) ?></td>
                     <td><small><?= htmlspecialchars($inc['location'] ?? '-') ?></small></td>
-                    <td><span class="badge bg-<?= $sevBadge ?>"><?= htmlspecialchars($inc['severity']) ?></span></td>
+                    <td><span class="badge bg-success">Low</span></td>
                     <td><span class="badge bg-<?= $statusBadge ?>"><?= htmlspecialchars($inc['status']) ?></span></td>
-                    <td><small><?= htmlspecialchars($inc['reported_by_name'] ?? '-') ?></small></td>
-                    <td><small><?= !empty($inc['incident_date']) ? date('d M Y, g:i A', strtotime($inc['incident_date'])) : '-' ?></small></td>
+                    <td><small><?= htmlspecialchars($inc['reported_by'] ?? '-') ?></small></td>
+                    <td><small><?= !empty($inc['created_at']) ? date('d M Y, g:i A', strtotime($inc['created_at'])) : '-' ?></small></td>
                     <td>
                         <div class="btn-group btn-group-sm">
                             <button class="btn btn-outline-primary" title="Edit" data-bs-toggle="modal" data-bs-target="#editIncidentModal"
                                 data-id="<?= (int)$inc['id'] ?>"
                                 data-status="<?= htmlspecialchars($inc['status'] ?? '') ?>"
-                                data-resolution="<?= htmlspecialchars($inc['resolution_notes'] ?? '') ?>"
-                                data-type="<?= htmlspecialchars($inc['incident_type'] ?? '') ?>"
-                                data-severity="<?= htmlspecialchars($inc['severity'] ?? '') ?>"><i class="fas fa-edit"></i></button>
+                                data-type="<?= htmlspecialchars($inc['incident_type'] ?? '') ?>"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-outline-danger" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteIncidentModal"
                                 data-id="<?= (int)$inc['id'] ?>"
                                 data-type="<?= htmlspecialchars($inc['incident_type'] ?? '') ?>"><i class="fas fa-trash"></i></button>

@@ -179,6 +179,12 @@ if (!function_exists('isnm_mysqli_connect')) {
             array_unshift($credSet, $knownCreds[$db] + ['db' => $db]);
         }
 
+        // On localhost, always add a root/empty fallback
+        $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false);
+        if ($isLocalHost && $user !== 'root') {
+            $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
+        }
+
         $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
         $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
 

@@ -28,11 +28,11 @@ try {
         if ($r) $cpStats['visitors_today'] = (int)$r->fetch_assoc()['c'];
         $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE() AND status = 'Checked In'");
         if ($r) $cpStats['checked_in'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(incident_date) = CURDATE()");
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
         if ($r) $cpStats['incidents_today'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_patrols WHERE DATE(start_time) = CURDATE() AND status IN ('Scheduled','In Progress','Active')");
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress','Active')");
         if ($r) $cpStats['active_patrols'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE severity = 'Critical' AND DATE(incident_date) = CURDATE()");
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
         if ($r) $cpStats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
     }
 } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
