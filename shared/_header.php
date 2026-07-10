@@ -52,63 +52,51 @@ include_once __DIR__ . '/../includes/functions.php';
   
   <!-- Custom CSS (with cache-busting version) -->
   <link rel="stylesheet" href="shared/style.css?v=2" />
-  <link rel="stylesheet" href="css/isnm-style.css?v=3" /><!-- merged: header.css + isnm-style.css -->
+  <link rel="stylesheet" href="css/isnm-style.css?v=3" />
   <link rel="stylesheet" href="css/responsive.css?v=2" />
+  <link rel="stylesheet" href="css/navigation.css?v=5" />
   <link rel="stylesheet" href="css/animations.css?v=2" />
   <link rel="stylesheet" href="css/polish.css?v=1" />
 </head>
 
 <body>
 
-<!-- Perfectly Aligned ISNM Header -->
+<!-- ISNM Header -->
 <header class="isnm-header">
   <div class="header-container">
-    <!-- Left: Logo -->
     <div class="header-logo">
       <a href="index.php" class="logo-link">
         <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
       </a>
     </div>
     
-    <!-- Center: Animated School Title and Motto -->
     <div class="header-title">
-      <div class="title-wrapper">
-        <div class="ticker-wrapper">
-          <div class="ticker-track">
-            <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-            <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-          </div>
-        </div>
-      </div>
-      <p class="school-motto">"Chosen to Serve , Based on a disciplined mind for health action"</p>
+      <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+      <p class="school-motto">"Chosen to Serve, Based on a disciplined mind for health action"</p>
     </div>
     
-    <!-- Right: Logo -->
-    <div class="header-logo-right">
+    <div class="header-logo">
       <a href="index.php" class="logo-link">
-        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img-right">
+        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
       </a>
     </div>
   </div>
 </header>
 
-<!-- Clean Bootstrap 5 Navigation -->
+<!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg isnm-navbar sticky-top">
   <div class="container">
-    <!-- Mobile Brand (Logo + Name) -->
     <a class="navbar-brand d-lg-none" href="index.php">
       <img src="images/school-logo.png" alt="ISNM Logo" class="brand-logo">
       <span class="brand-name">ISNM</span>
     </a>
     
-    <!-- Mobile Toggle Button -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     
-    <!-- Navigation Menu -->
     <div class="collapse navbar-collapse" id="mainNavbar">
-      <ul class="navbar-nav mx-auto">
+      <ul class="navbar-nav">
         <li class="nav-item">
           <a class="nav-link" href="index.php">
             <i class="fas fa-home"></i> Home
@@ -124,7 +112,7 @@ include_once __DIR__ . '/../includes/functions.php';
             <i class="fas fa-history"></i> History
           </a>
         </li>
-         <li class="nav-item">
+        <li class="nav-item">
           <a class="nav-link" href="programs.php">
             <i class="fas fa-graduation-cap"></i> Programs
           </a>
@@ -149,15 +137,11 @@ include_once __DIR__ . '/../includes/functions.php';
             <i class="fas fa-envelope"></i> Contact
           </a>
         </li>
-        
-        <!-- Portal Link -->
         <li class="nav-item">
           <a class="nav-link" href="organogram.php">
             <i class="fas fa-sitemap"></i> Portal
           </a>
         </li>
-        
-        <!-- Login Dropdown -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-sign-in-alt"></i> Login
@@ -202,11 +186,11 @@ include_once __DIR__ . '/../includes/functions.php';
 <?php unset($_SESSION['error_message']); endif; ?>
 
 <script>
-// 3D Parallax Nav Effect & Scroll Glass
-(function(){
+// Navigation scroll effect
+document.addEventListener('DOMContentLoaded', function() {
   var nav = document.querySelector('.isnm-navbar');
   if (!nav) return;
-  // Scroll glass intensification
+  
   function onScroll() {
     if (window.scrollY > 30) {
       nav.classList.add('scrolled');
@@ -214,26 +198,8 @@ include_once __DIR__ . '/../includes/functions.php';
       nav.classList.remove('scrolled');
     }
   }
+  
   window.addEventListener('scroll', onScroll, {passive: true});
   onScroll();
-  // 3D tilt on nav links (desktop only)
-  if (window.matchMedia('(min-width: 992px)').matches) {
-    var links = nav.querySelectorAll('.nav-link');
-    links.forEach(function(link) {
-      link.addEventListener('mousemove', function(e) {
-        var rect = this.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-        var centerX = rect.width / 2;
-        var centerY = rect.height / 2;
-        var rotateX = ((y - centerY) / centerY) * -8;
-        var rotateY = ((x - centerX) / centerX) * 8;
-        this.style.transform = 'translateY(-2px) translateZ(8px) scale(1.04) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
-      });
-      link.addEventListener('mouseleave', function() {
-        this.style.transform = '';
-      });
-    });
-  }
-})();
+});
 </script>

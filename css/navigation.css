@@ -1,0 +1,719 @@
+/* ============================================
+   ISNM Navigation - Clean & Visible
+   Loaded AFTER isnm-style.css to override
+   conflicting dark glassmorphism styles
+   ============================================ */
+
+/* ============================================
+   Header Section
+   ============================================ */
+.isnm-header {
+  background: linear-gradient(135deg, #3E2723 0%, #1A237E 100%) !important;
+  padding: 15px 20px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  position: relative !important;
+  z-index: 1000 !important;
+  border-bottom: 3px solid #FFD700 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.isnm-header::before {
+  display: none !important;
+}
+
+.isnm-header::after {
+  display: none !important;
+}
+
+.header-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  gap: 20px !important;
+  height: auto !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Logo Styles */
+.header-logo {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.logo-link {
+  display: block !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.logo-link:hover {
+  transform: scale(1.05) !important;
+}
+
+.logo-img {
+  height: 60px !important;
+  width: auto !important;
+  border-radius: 50% !important;
+  border: 3px solid #FFD700 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease !important;
+  background: #FFF8DC !important;
+  padding: 3px !important;
+}
+
+.logo-img:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* Title Section */
+.header-title {
+  flex: 1 !important;
+  text-align: center !important;
+  padding: 0 15px !important;
+  min-width: 0 !important;
+}
+
+.school-title {
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 700 !important;
+  font-size: 1.8rem !important;
+  margin: 0 0 5px 0 !important;
+  color: #FFD700 !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  padding-right: 0 !important;
+  animation: none !important;
+  filter: none !important;
+  white-space: normal !important;
+}
+
+.school-motto {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 0.9rem !important;
+  color: #FFF8DC !important;
+  margin: 0 !important;
+  font-style: italic !important;
+  opacity: 0.95 !important;
+  text-shadow: none !important;
+  letter-spacing: 0.5px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  line-height: 1.3 !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+}
+
+/* ============================================
+   Navigation Bar - Clean White Theme
+   ============================================ */
+.navbar {
+  background: #FFFFFF !important;
+  padding: 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 999 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  pointer-events: auto !important;
+}
+
+.isnm-navbar {
+  background: #FFFFFF !important;
+  border-bottom: 2px solid #1A237E !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  padding: 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 999 !important;
+  min-height: 65px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform-style: flat !important;
+  perspective: none !important;
+}
+
+.isnm-navbar::before {
+  display: none !important;
+}
+
+.isnm-navbar::after {
+  display: none !important;
+}
+
+.isnm-navbar.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  background: #FFFFFF !important;
+}
+
+.isnm-navbar .container {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 0 15px !important;
+  width: 100% !important;
+}
+
+/* Mobile Brand */
+.navbar-brand {
+  display: flex !important;
+  align-items: center !important;
+  padding: 8px 12px !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #3E2723 !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+  text-shadow: none !important;
+}
+
+.navbar-brand:hover {
+  color: #1A237E !important;
+}
+
+.brand-logo {
+  height: 35px !important;
+  width: auto !important;
+  margin-right: 10px !important;
+  border-radius: 50% !important;
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.brand-name {
+  font-weight: 700 !important;
+  color: #3E2723 !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #3E2723 !important;
+  background-clip: unset !important;
+  text-shadow: none !important;
+}
+
+/* Hamburger Menu */
+.navbar-toggler {
+  border: none !important;
+  padding: 8px 12px !important;
+  background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #3E2723 !important;
+}
+
+.navbar-toggler:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3) !important;
+  outline: none !important;
+}
+
+.navbar-toggler-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%233E2723' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 100% !important;
+  background-color: transparent !important;
+  color: #3E2723 !important;
+}
+
+/* ============================================
+   Navigation Menu Items
+   ============================================ */
+.navbar-collapse {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.navbar-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.nav-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.nav-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 12px 16px !important;
+  color: #3E2723 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-decoration: none !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  white-space: nowrap !important;
+  border: 2px solid transparent !important;
+  min-height: 44px !important;
+  background: transparent !important;
+  text-align: center !important;
+  transform: none !important;
+  box-shadow: none !important;
+  transform-style: flat !important;
+  font-family: 'Poppins', sans-serif !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  overflow: hidden !important;
+  justify-content: center !important;
+  width: auto !important;
+}
+
+/* Remove dark-theme pseudo elements from isnm-style.css */
+.nav-link::before {
+  display: none !important;
+  content: none !important;
+  position: static !important;
+  inset: auto !important;
+  border-radius: 0 !important;
+  background: none !important;
+  opacity: 0 !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: none !important;
+}
+
+.nav-link::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 50% !important;
+  width: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, #FFD700, transparent) !important;
+  border-radius: 2px !important;
+  transform: translateX(-50%) !important;
+  transition: width 0.3s ease !important;
+}
+
+.nav-link i {
+  font-size: 0.85rem !important;
+  transition: transform 0.3s ease !important;
+  margin-right: 4px !important;
+}
+
+.nav-link:hover {
+  background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+  color: #3E2723 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+  border-color: #3E2723 !important;
+}
+
+.nav-link:hover::after {
+  width: 60% !important;
+}
+
+.nav-link:hover i {
+  transform: scale(1.1) !important;
+}
+
+.nav-link:active {
+  transform: translateY(0px) !important;
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+  color: #3E2723 !important;
+  border-color: #3E2723 !important;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2) !important;
+}
+
+.nav-link.active::after {
+  width: 70% !important;
+}
+
+/* ============================================
+   Dropdown Menu
+   ============================================ */
+.dropdown-menu {
+  background: #FFFFFF !important;
+  border: 2px solid #1A237E !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 8px !important;
+  padding: 8px !important;
+  min-width: 200px !important;
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 1000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation: none !important;
+}
+
+.dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+  color: #3E2723 !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  transform: none !important;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+  color: #3E2723 !important;
+  transform: translateX(3px) !important;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2) !important;
+}
+
+.dropdown-item i {
+  width: 18px !important;
+  text-align: center !important;
+  color: #1A237E !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.3s ease !important;
+}
+
+.dropdown-item:hover i {
+  transform: scale(1.2) !important;
+}
+
+.dropdown-toggle::after {
+  border-top-color: #3E2723 !important;
+  border-width: 6px 6px 0 !important;
+  margin-left: 8px !important;
+}
+
+/* ============================================
+   DESKTOP (992px and up)
+   ============================================ */
+@media (min-width: 992px) {
+  .navbar-brand {
+    display: none !important;
+  }
+
+  .navbar-toggler {
+    display: none !important;
+  }
+
+  .isnm-navbar .navbar-collapse {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 65px !important;
+  }
+
+  .navbar-nav {
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
+    gap: 2px !important;
+  }
+
+  .nav-item {
+    width: auto !important;
+    height: 100% !important;
+  }
+
+  .nav-link {
+    width: auto !important;
+    padding: 12px 16px !important;
+    font-size: 0.88rem !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .dropdown-menu {
+    position: absolute !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .nav-link {
+    padding: 12px 20px !important;
+    font-size: 0.92rem !important;
+  }
+}
+
+/* ============================================
+   TABLET & MOBILE (991px and below)
+   ============================================ */
+@media (max-width: 991px) {
+  .isnm-header {
+    padding: 12px 15px !important;
+  }
+
+  .header-container {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .logo-img {
+    height: 50px !important;
+  }
+
+  .school-title {
+    font-size: 1.5rem !important;
+  }
+
+  .school-motto {
+    font-size: 0.85rem !important;
+  }
+
+  /* Mobile Nav Collapse */
+  .isnm-navbar .navbar-collapse {
+    background: #FFFFFF !important;
+    border: 2px solid #1A237E !important;
+    border-radius: 8px !important;
+    padding: 15px !important;
+    margin-top: 10px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+  }
+
+  .navbar-nav {
+    flex-direction: column !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .nav-item {
+    width: 100% !important;
+  }
+
+  .nav-link {
+    width: 100% !important;
+    padding: 14px 18px !important;
+    margin: 0 !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    background: #F8F9FA !important;
+    border: 2px solid #1A237E !important;
+    color: #3E2723 !important;
+  }
+
+  .nav-link:hover {
+    background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    transform: translateX(6px) !important;
+  }
+
+  .nav-link::after {
+    display: none !important;
+  }
+
+  .dropdown-menu {
+    position: static !important;
+    transform: none !important;
+    margin-top: 6px !important;
+    margin-left: 20px !important;
+    border: 1px solid #1A237E !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .dropdown-item {
+    padding: 12px 16px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* ============================================
+   MOBILE PHONES (575px and below)
+   ============================================ */
+@media (max-width: 575px) {
+  .isnm-header {
+    padding: 10px 12px !important;
+  }
+
+  .logo-img {
+    height: 45px !important;
+  }
+
+  .school-title {
+    font-size: 1.3rem !important;
+  }
+
+  .school-motto {
+    font-size: 0.8rem !important;
+  }
+
+  .isnm-navbar .container {
+    padding: 0 10px !important;
+  }
+
+  .navbar-brand {
+    font-size: 1rem !important;
+    padding: 6px 10px !important;
+  }
+
+  .brand-logo {
+    height: 30px !important;
+  }
+
+  .navbar-toggler {
+    padding: 6px 10px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .isnm-navbar .navbar-collapse {
+    padding: 12px !important;
+    margin-top: 8px !important;
+  }
+
+  .nav-link {
+    padding: 12px 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .dropdown-menu {
+    margin-left: 15px !important;
+    padding: 6px !important;
+  }
+
+  .dropdown-item {
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ============================================
+   SMALL MOBILE (360px and below)
+   ============================================ */
+@media (max-width: 360px) {
+  .logo-img {
+    height: 40px !important;
+  }
+
+  .school-title {
+    font-size: 1.1rem !important;
+  }
+
+  .school-motto {
+    font-size: 0.75rem !important;
+  }
+
+  .nav-link {
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE
+   ============================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .isnm-header {
+    padding: 8px 15px !important;
+  }
+
+  .logo-img {
+    height: 35px !important;
+  }
+
+  .school-title {
+    font-size: 1.2rem !important;
+  }
+
+  .isnm-navbar .navbar-collapse {
+    max-height: 50vh !important;
+  }
+
+  .nav-link {
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ============================================
+   Touch Device Optimizations
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  .nav-link {
+    min-height: 48px !important;
+  }
+
+  .dropdown-item {
+    min-height: 44px !important;
+  }
+}
+
+/* ============================================
+   Focus States for Accessibility
+   ============================================ */
+.nav-link:focus,
+.dropdown-item:focus,
+.navbar-brand:focus,
+.navbar-toggler:focus {
+  outline: 2px solid #1A237E !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================
+   Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   High Contrast Mode
+   ============================================ */
+@media (prefers-contrast: high) {
+  .nav-link {
+    border-width: 2px !important;
+  }
+
+  .dropdown-menu {
+    border-width: 2px !important;
+  }
+}
