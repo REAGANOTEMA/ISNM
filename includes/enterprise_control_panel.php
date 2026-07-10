@@ -17,30 +17,23 @@ $cpUser = $_SESSION['full_name'] ?? 'Staff';
 $cpRole = $_SESSION['role'] ?? '';
 $cpUid  = (int)($_SESSION['user_id'] ?? 0);
 $cpConn = null;
-$cpStudentsConn = null;
 
 try { if (function_exists('getStaffConnection')) $cpConn = getStaffConnection(); } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
-try { if (function_exists('getStudentsConnection')) $cpStudentsConn = getStudentsConnection(); } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
-// Gather stats
-$cpStats = ['students' => 0, 'staff' => 0, 'approvals' => 0, 'tasks' => 0, 'events' => 0, 'notifs' => 0];
+// Gather security-specific stats
+$cpStats = ['visitors_today' => 0, 'incidents_today' => 0, 'active_patrols' => 0, 'critical_alerts' => 0, 'checked_in' => 0];
 try {
-    if ($cpStudentsConn) {
-        $r = $cpStudentsConn->query("SELECT COUNT(*)c FROM students WHERE status='Active'");
-        if ($r) $cpStats['students'] = (int)$r->fetch_assoc()['c'];
-    }
     if ($cpConn) {
-        $r = $cpConn->query("SELECT COUNT(*)c FROM staff WHERE status='Active'");
-        if ($r) $cpStats['staff'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM approval_requests WHERE status IN ('Active','pending','in_review')");
-        if ($r) $cpStats['approvals'] = (int)$r->fetch_assoc()['c'];
-        if ($cpUid) {
-            $stmt = $cpConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
-            if ($stmt) { $stmt->bind_param('i', $cpUid); $stmt->execute(); $cpStats['tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
-            $cpStats['notifs'] = getUnreadNotificationCount($cpConn, $cpUid);
-        }
-        $r = $cpConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");
-        if ($r) $cpStats['events'] = (int)$r->fetch_assoc()['c'];
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE()");
+        if ($r) $cpStats['visitors_today'] = (int)$r->fetch_assoc()['c'];
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE() AND status = 'Checked In'");
+        if ($r) $cpStats['checked_in'] = (int)$r->fetch_assoc()['c'];
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(incident_date) = CURDATE()");
+        if ($r) $cpStats['incidents_today'] = (int)$r->fetch_assoc()['c'];
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_patrols WHERE DATE(start_time) = CURDATE() AND status IN ('Scheduled','In Progress','Active')");
+        if ($r) $cpStats['active_patrols'] = (int)$r->fetch_assoc()['c'];
+        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE severity = 'Critical' AND DATE(incident_date) = CURDATE()");
+        if ($r) $cpStats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
     }
 } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
@@ -152,38 +145,38 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
 
     <!-- Stats -->
     <div class="ent-cp-section">
-        <div class="ent-cp-section-title"><i class="fas fa-chart-pie"></i> Quick Stats</div>
+        <div class="ent-cp-section-title"><i class="fas fa-chart-pie"></i> Security Stats Today</div>
         <div class="ent-cp-stats">
             <div class="ent-cp-stat">
-                <div class="ent-cp-stat-value" style="color:#3b82f6"><?= number_format($cpStats['students']) ?></div>
-                <div class="ent-cp-stat-label">Students</div>
+                <div class="ent-cp-stat-value" style="color:#3b82f6"><?= number_format($cpStats['visitors_today']) ?></div>
+                <div class="ent-cp-stat-label">Visitors</div>
             </div>
             <div class="ent-cp-stat">
-                <div class="ent-cp-stat-value" style="color:#10b981"><?= number_format($cpStats['staff']) ?></div>
-                <div class="ent-cp-stat-label">Staff</div>
+                <div class="ent-cp-stat-value" style="color:#10b981"><?= number_format($cpStats['checked_in']) ?></div>
+                <div class="ent-cp-stat-label">Checked In</div>
             </div>
             <div class="ent-cp-stat">
-                <div class="ent-cp-stat-value" style="color:#f59e0b"><?= number_format($cpStats['tasks']) ?></div>
-                <div class="ent-cp-stat-label">My Tasks</div>
+                <div class="ent-cp-stat-value" style="color:#f59e0b"><?= number_format($cpStats['active_patrols']) ?></div>
+                <div class="ent-cp-stat-label">Patrols</div>
             </div>
             <div class="ent-cp-stat">
-                <div class="ent-cp-stat-value" style="color:#8b5cf6"><?= number_format($cpStats['events']) ?></div>
-                <div class="ent-cp-stat-label">Events</div>
+                <div class="ent-cp-stat-value" style="color:#ef4444"><?= number_format($cpStats['incidents_today']) ?></div>
+                <div class="ent-cp-stat-label">Incidents</div>
             </div>
         </div>
     </div>
 
-    <!-- Pending -->
+    <!-- Alerts -->
     <div class="ent-cp-section">
-        <div class="ent-cp-section-title"><i class="fas fa-check-double"></i> Pending</div>
+        <div class="ent-cp-section-title"><i class="fas fa-exclamation-triangle"></i> Critical</div>
         <div style="display:flex;gap:8px">
-            <div style="flex:1;text-align:center;padding:8px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
-                <div style="font-size:18px;font-weight:700;color:#ea580c"><?= $cpStats['approvals'] ?></div>
-                <div style="font-size:10px;color:#9a3412">Approvals</div>
+            <div style="flex:1;text-align:center;padding:8px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
+                <div style="font-size:18px;font-weight:700;color:#dc2626"><?= $cpStats['critical_alerts'] ?></div>
+                <div style="font-size:10px;color:#991b1b">Critical Alerts</div>
             </div>
-            <div style="flex:1;text-align:center;padding:8px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe">
-                <div style="font-size:18px;font-weight:700;color:#2563eb"><?= $cpStats['notifs'] ?></div>
-                <div style="font-size:10px;color:#1e40af">Alerts</div>
+            <div style="flex:1;text-align:center;padding:8px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
+                <div style="font-size:18px;font-weight:700;color:#16a34a"><?= number_format($cpStats['checked_in']) ?></div>
+                <div style="font-size:10px;color:#166534">On Campus</div>
             </div>
         </div>
     </div>
@@ -191,14 +184,17 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
     <!-- Quick Actions -->
     <div class="ent-cp-section">
         <div class="ent-cp-section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-        <a href="<?= htmlspecialchars($cpDashboardUrl) ?>" class="ent-cp-action">
+        <a href="../dashboards/security.php?page=overview" class="ent-cp-action">
             <i class="fas fa-home" style="color:#3b82f6"></i> Dashboard Home
         </a>
-        <a href="<?= htmlspecialchars($cpDashboardUrl) ?>?section=profile" class="ent-cp-action">
-            <i class="fas fa-user-circle" style="color:#8b5cf6"></i> My Profile
+        <a href="../dashboards/security.php?page=incidents" class="ent-cp-action">
+            <i class="fas fa-exclamation-triangle" style="color:#dc2626"></i> Report Incident
         </a>
-        <a href="<?= htmlspecialchars($cpDashboardUrl) ?>?section=settings" class="ent-cp-action">
-            <i class="fas fa-cog" style="color:#f59e0b"></i> Settings
+        <a href="../dashboards/security.php?page=patrol" class="ent-cp-action">
+            <i class="fas fa-walking" style="color:#f59e0b"></i> Add Patrol
+        </a>
+        <a href="../dashboards/security.php?page=visitors" class="ent-cp-action">
+            <i class="fas fa-user-plus" style="color:#16a34a"></i> Check In Visitor
         </a>
         <a href="../auth-handler.php?action=logout" class="ent-cp-action">
             <i class="fas fa-sign-out-alt" style="color:#ef4444"></i> Logout

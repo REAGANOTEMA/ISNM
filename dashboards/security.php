@@ -15,17 +15,12 @@ $user_name = $user['full_name'] ?? '';
 $pageToSection = [
     'home'                  => 'overview',
     'overview'              => 'overview',
-    'visitor-registration'  => 'visitor-registration',
-    'visitor-history'       => 'visitor-history',
-    'visitor-exit'          => 'visitor-exit',
-    'vehicle-entry'         => 'vehicle-entry',
-    'vehicle-exit'          => 'vehicle-exit',
+    'visitor-registration'  => 'visitors',
+    'visitor-history'       => 'visitors',
+    'visitors'              => 'visitors',
     'incidents'             => 'incidents',
     'emergency'             => 'emergency',
-    'blacklist'             => 'blacklist',
-    'visitor-pass'          => 'visitor-pass',
     'patrol'                => 'patrol',
-    'visitors'              => 'visitors',
 ];
 $page    = $_GET['page'] ?? 'home';
 $section = $pageToSection[$page] ?? 'overview';
@@ -77,7 +72,7 @@ if ($conn) {
 $all_visitors = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM security_visitors ORDER BY check_in_time DESC LIMIT 100");
+        $r = $conn->query("SELECT * FROM security_visitors ORDER BY visit_date DESC, actual_arrival DESC LIMIT 100");
         if ($r) $all_visitors = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
@@ -87,9 +82,9 @@ $today_visitors  = [];
 $visitor_count   = 0;
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM security_visitors WHERE DATE(check_in_time) = CURDATE() ORDER BY check_in_time DESC LIMIT 20");
+        $r = $conn->query("SELECT * FROM security_visitors WHERE visit_date = CURDATE() ORDER BY actual_arrival DESC LIMIT 20");
         if ($r) $today_visitors = $r->fetch_all(MYSQLI_ASSOC);
-        $rq = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE DATE(check_in_time) = CURDATE()");
+        $rq = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE visit_date = CURDATE()");
         if ($rq) $visitor_count = (int) $rq->fetch_row()[0];
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
@@ -120,6 +115,7 @@ if ($conn) {
         if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
+$csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($_SESSION['csrf_token'] ?? '') . '">';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -221,12 +217,12 @@ if ($conn) {
                 <?php if (empty($today_visitors)): ?>
                 <div class="text-center text-muted py-3">No visitors for today</div>
                 <?php else: ?>
-                <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Name</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Check In</th><th>Status</th></tr></thead><tbody>
+                <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Name</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Arrival</th><th>Status</th></tr></thead><tbody>
                 <?php foreach ($today_visitors as $v):
                     $vs = $v['status'];
                     switch($vs) { case 'Checked In': $vs_badge = 'success'; break; case 'On Campus': $vs_badge = 'primary'; break; case 'Checked Out': $vs_badge = 'secondary'; break; default: $vs_badge = 'secondary'; }
                 ?>
-                <tr><td><strong><?= htmlspecialchars($v['visitor_name']) ?></strong></td><td><small><?= htmlspecialchars($v['phone'] ?? '-') ?></small></td><td><span class="badge bg-info"><?= htmlspecialchars($v['purpose']) ?></span></td><td><small><?= htmlspecialchars($v['person_to_visit'] ?? '-') ?></small></td><td><small><?= !empty($v['check_in_time']) ? date('g:i A', strtotime($v['check_in_time'])) : '-' ?></small></td><td><span class="badge bg-<?= $vs_badge ?>"><?= htmlspecialchars($v['status']) ?></span></td></tr>
+                <tr><td><strong><?= htmlspecialchars($v['visitor_name']) ?></strong></td><td><small><?= htmlspecialchars($v['visitor_phone'] ?? '-') ?></small></td><td><span class="badge bg-info"><?= htmlspecialchars($v['visitor_nature']) ?></span></td><td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td><td><small><?= !empty($v['actual_arrival']) ? date('g:i A', strtotime($v['actual_arrival'])) : '-' ?></small></td><td><span class="badge bg-<?= $vs_badge ?>"><?= htmlspecialchars($v['status']) ?></span></td></tr>
                 <?php endforeach; ?>
                 </tbody></table></div>
                 <?php endif; ?>
@@ -357,10 +353,7 @@ if ($conn) {
     // ═══════════════════════════════════════════════
     // VISITORS — Full CRUD
     // ═══════════════════════════════════════════════
-    case 'visitors':
-    case 'visitor-registration':
-    case 'visitor-history':
-    case 'visitor-exit': ?>
+    case 'visitors': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0"><i class="fas fa-id-card me-2"></i>Visitor Management</h4>
         <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVisitorModal"><i class="fas fa-plus me-1"></i>Check In Visitor</button>
@@ -370,11 +363,11 @@ if ($conn) {
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle" id="visitorsTable">
                 <thead class="table-light">
-                    <tr><th>#</th><th>Name</th><th>ID #</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th></tr>
+                    <tr><th>#</th><th>Name</th><th>ID/Passport</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                 <?php if (empty($all_visitors)): ?>
-                    <tr><td colspan="10" class="text-center text-muted py-4">No visitor records found.</td></tr>
+                    <tr><td colspan="11" class="text-center text-muted py-4">No visitor records found.</td></tr>
                 <?php else: ?>
                 <?php foreach ($all_visitors as $v):
                     $vStBadge = ($v['status'] === 'Checked In') ? 'success' : (($v['status'] === 'On Campus') ? 'primary' : (($v['status'] === 'Checked Out') ? 'secondary' : 'warning'));
@@ -382,12 +375,13 @@ if ($conn) {
                 <tr>
                     <td><strong>#<?= (int)$v['id'] ?></strong></td>
                     <td><?= htmlspecialchars($v['visitor_name']) ?></td>
-                    <td><small><?= htmlspecialchars($v['id_number'] ?? '-') ?></small></td>
-                    <td><small><?= htmlspecialchars($v['phone'] ?? '-') ?></small></td>
-                    <td><span class="badge bg-info"><?= htmlspecialchars($v['purpose']) ?></span></td>
-                    <td><small><?= htmlspecialchars($v['person_to_visit'] ?? '-') ?></small></td>
-                    <td><small><?= !empty($v['check_in_time']) ? date('d M Y, g:i A', strtotime($v['check_in_time'])) : '-' ?></small></td>
-                    <td><small><?= !empty($v['check_out_time']) ? date('d M Y, g:i A', strtotime($v['check_out_time'])) : '—' ?></small></td>
+                    <td><small><?= htmlspecialchars($v['badge_number'] ?? '-') ?></small></td>
+                    <td><small><?= htmlspecialchars($v['visitor_phone'] ?? '-') ?></small></td>
+                    <td><span class="badge bg-info"><?= htmlspecialchars($v['visitor_nature']) ?></span></td>
+                    <td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td>
+                    <td><small><?= !empty($v['visit_date']) ? date('d M Y', strtotime($v['visit_date'])) : '-' ?></small></td>
+                    <td><small><?= !empty($v['actual_arrival']) ? date('g:i A', strtotime($v['actual_arrival'])) : '-' ?></small></td>
+                    <td><small><?= !empty($v['actual_departure']) ? date('g:i A', strtotime($v['actual_departure'])) : '—' ?></small></td>
                     <td><span class="badge bg-<?= $vStBadge ?>"><?= htmlspecialchars($v['status']) ?></span></td>
                     <td>
                         <?php if ($v['status'] !== 'Checked Out'): ?>
@@ -445,6 +439,7 @@ endswitch; ?>
 <!-- Add Incident -->
 <div class="modal fade" id="addIncidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Report Incident</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="add_incident">
@@ -459,6 +454,7 @@ endswitch; ?>
 <!-- Edit Incident -->
 <div class="modal fade" id="editIncidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-edit me-2 text-primary"></i>Update Incident</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="update_incident">
@@ -473,6 +469,7 @@ endswitch; ?>
 <!-- Delete Incident -->
 <div class="modal fade" id="deleteIncidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-trash me-2"></i>Delete Incident</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="delete_incident">
@@ -491,6 +488,7 @@ endswitch; ?>
 <!-- Add Patrol -->
 <div class="modal fade" id="addPatrolModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-walking me-2 text-primary"></i>Add Patrol Record</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="add_patrol">
@@ -511,6 +509,7 @@ endswitch; ?>
 <!-- Edit Patrol -->
 <div class="modal fade" id="editPatrolModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-edit me-2 text-primary"></i>Update Patrol</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="update_patrol">
@@ -530,6 +529,7 @@ endswitch; ?>
 <!-- Add Visitor (Check In) -->
 <div class="modal fade" id="addVisitorModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2 text-success"></i>Check In Visitor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="add_visitor">
@@ -546,6 +546,7 @@ endswitch; ?>
 <!-- Edit Visitor (Check Out) -->
 <div class="modal fade" id="editVisitorModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
 <form method="POST" action="../handlers/security_handler.php">
+<?= $csrf_field ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-sign-out-alt me-2 text-warning"></i>Check Out Visitor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
     <input type="hidden" name="action" value="update_visitor">
@@ -595,10 +596,9 @@ document.addEventListener('DOMContentLoaded',function(){
             document.getElementById('editPatrolId').value = this.dataset.id;
             document.getElementById('editPatrolIdDisplay').textContent = this.dataset.id;
             document.getElementById('editPatrolArea').textContent = this.dataset.area;
-            var st = this.dataset.start;
-            if(st){ document.getElementById('editPatrolEndTime').value = st.substring(0,16); }
             var et = this.dataset.end;
             if(et){ document.getElementById('editPatrolEndTime').value = et.substring(0,16); }
+            else { document.getElementById('editPatrolEndTime').value = new Date().toISOString().substring(0,16); }
             document.getElementById('editPatrolStatus').value = this.dataset.status;
             document.getElementById('editPatrolFindings').value = this.dataset.findings || '';
         });

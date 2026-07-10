@@ -75,6 +75,10 @@ class DatabaseConnection {
                 'igangaschoolofl_website_db'  => ['user'=>'igangaschoolofl_website_db',  'pass'=>''],
                 'igangaschoolofl_ict'         => ['user'=>'igangaschoolofl_ict',          'pass'=>''],
             ];
+            // Local XAMPP fallback — try root with no password if custom users don't exist
+            if (!isset($knownCreds[$database]) || $knownCreds[$database]['user'] !== 'root') {
+                $knownCreds[$database] = ['user' => 'root', 'pass' => ''];
+            }
             $credSet = [['user' => $username, 'pass' => $password]];
             if (isset($knownCreds[$database]) && $knownCreds[$database]['user'] !== $username) {
                 array_unshift($credSet, $knownCreds[$database]);

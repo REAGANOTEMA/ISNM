@@ -130,9 +130,15 @@ switch ($action) {
         $purpose          = trim($_POST['purpose'] ?? '');
         $person_to_visit  = trim($_POST['person_to_visit'] ?? '');
         $check_in_time    = trim($_POST['check_in_time'] ?? date('Y-m-d H:i:s'));
+        $parts            = explode('T', $check_in_time);
+        $visit_date       = $parts[0] ?? date('Y-m-d');
+        $arrival_time     = $parts[1] ?? date('H:i:s');
+        if (!str_contains($arrival_time, ':')) {
+            $arrival_time = date('H:i:s');
+        }
         if ($visitor_name && $purpose) {
-            $stmt = $conn->prepare("INSERT INTO security_visitors (visitor_name, id_number, phone, purpose, person_to_visit, check_in_time, status) VALUES (?, ?, ?, ?, ?, ?, 'Checked In')");
-            $stmt->bind_param("ssssss", $visitor_name, $id_number, $phone, $purpose, $person_to_visit, $check_in_time);
+            $stmt = $conn->prepare("INSERT INTO security_visitors (visitor_name, visitor_phone, visitor_nature, person_to_visit_name, visit_date, actual_arrival, badge_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Checked In')");
+            $stmt->bind_param("sssssss", $visitor_name, $phone, $purpose, $person_to_visit, $visit_date, $arrival_time, $id_number);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Visitor '$visitor_name' checked in.";
             } else {
@@ -148,10 +154,12 @@ switch ($action) {
     case 'update_visitor':
         $id           = (int)($_POST['id'] ?? 0);
         $check_out    = trim($_POST['check_out_time'] ?? date('Y-m-d H:i:s'));
+        $parts        = explode('T', $check_out);
+        $depart_time  = $parts[1] ?? (str_contains($check_out, ' ') ? explode(' ', $check_out)[1] ?? date('H:i:s') : date('H:i:s'));
         $status       = trim($_POST['status'] ?? 'Checked Out');
         if ($id) {
-            $stmt = $conn->prepare("UPDATE security_visitors SET check_out_time=?, status=? WHERE id=?");
-            $stmt->bind_param("ssi", $check_out, $status, $id);
+            $stmt = $conn->prepare("UPDATE security_visitors SET actual_departure=?, status=? WHERE id=?");
+            $stmt->bind_param("ssi", $depart_time, $status, $id);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Visitor #$id updated.";
             } else {
