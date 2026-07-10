@@ -18,7 +18,7 @@ function getSidebarGroups(string $role): array {
     $g['MAIN'] = [
         ['label' => 'Dashboard', 'icon' => 'fas fa-chart-pie', 'page' => 'home'],
     ];
-    if ($isExec) {
+    if ($isExec && $roleKey !== 'director_admissions') {
         $g['MAIN'][] = ['label' => 'Overview',  'icon' => 'fas fa-home',      'page' => 'overview'];
         $g['MAIN'][] = ['label' => 'Analytics', 'icon' => 'fas fa-chart-line','page' => 'analytics'];
     }
@@ -26,8 +26,8 @@ function getSidebarGroups(string $role): array {
     // ── OPERATIONS (role-specific) ──
     $g['OPERATIONS'] = getRoleOperations($role);
 
-    // ── MANAGEMENT (exec roles only) ──
-    if ($isExec) {
+    // ── MANAGEMENT (exec roles only; NOT for director_admissions — its dashboard has no handlers for these) ──
+    if ($isExec && $roleKey !== 'director_admissions') {
         $g['MANAGEMENT'] = [
             ['label' => 'Approvals',    'icon' => 'fas fa-check-double', 'page' => 'approvals'],
             ['label' => 'Tasks',        'icon' => 'fas fa-tasks',       'page' => 'tasks'],
@@ -35,8 +35,8 @@ function getSidebarGroups(string $role): array {
         ];
     }
 
-    // ── REPORTS (exec roles only; others get Reports inside OPERATIONS) ──
-    if ($isExec) {
+    // ── REPORTS (exec roles only) ──
+    if ($isExec && $roleKey !== 'director_admissions') {
         $g['REPORTS'] = [
             ['label' => 'Daily Reports',   'icon' => 'fas fa-calendar-day',  'page' => 'reports-daily'],
             ['label' => 'Monthly Reports', 'icon' => 'fas fa-calendar-alt',  'page' => 'reports-monthly'],
@@ -46,8 +46,8 @@ function getSidebarGroups(string $role): array {
         ];
     }
 
-    // ── COMMUNICATION (exec roles only; others get Messages/Announcements inside OPERATIONS) ──
-    if ($isExec) {
+    // ── COMMUNICATION (exec roles only) ──
+    if ($isExec && $roleKey !== 'director_admissions') {
         $g['COMMUNICATION'] = [
             ['label' => 'Notifications', 'icon' => 'fas fa-bell',       'page' => 'notifications'],
             ['label' => 'Messages',      'icon' => 'fas fa-envelope',   'page' => 'messages'],

@@ -18,6 +18,8 @@ $userName = $user['full_name'] ?? 'Director';
 $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 $uploadDir = __DIR__ . '/../uploads/admissions/';
 if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
+$photoDir = __DIR__ . '/../uploads/passport_photos/';
+if (!is_dir($photoDir)) @mkdir($photoDir, 0755, true);
 if (!$conn) die('Database connection failed.');
 
 // ── Auto-migrate tables (safe, runs once per page load if table missing) ──
@@ -82,6 +84,16 @@ if ($chk5 && $chk5->num_rows === 0) {
     $conn->query("ALTER TABLE admission_notifications ADD COLUMN type ENUM('info','success','warning','danger') NOT NULL DEFAULT 'info' AFTER user_id");
     $conn->query("ALTER TABLE admission_notifications ADD COLUMN link VARCHAR(500) DEFAULT NULL AFTER is_read");
 }
+// Auto-migrate photo columns on students table
+if ($stuConn) {
+    try {
+        $chkPhoto = $stuConn->query("SHOW COLUMNS FROM students LIKE 'passport_photo'");
+        if ($chkPhoto && $chkPhoto->num_rows === 0) {
+            $stuConn->query("ALTER TABLE students ADD COLUMN passport_photo VARCHAR(500) DEFAULT NULL AFTER status");
+            $stuConn->query("ALTER TABLE students ADD COLUMN profile_picture VARCHAR(500) DEFAULT NULL AFTER passport_photo");
+        }
+    } catch (Exception $e) { error_log('photo migration: '.$e->getMessage()); }
+}
 // Seed defaults with exact 8 document requirements + 20 supply items
 $r = $conn->query("SELECT COUNT(*) c FROM admission_requirements"); if ($r && (int)$r->fetch_assoc()['c']===0) { 
     // 8 Document Requirements (remove Proof of Payment and Interview Letter)
@@ -129,6 +141,7 @@ function getStatusBadge($s) { $m=['New'=>'bg-primary','Under Review'=>'bg-info',
 function adCount($conn, $status) { $r=$conn->query("SELECT COUNT(*) c FROM applicants WHERE status='".$conn->real_escape_string($status)."'"); return $r?(int)$r->fetch_assoc()['c']:0; }
 
 $page = $_GET['page'] ?? 'overview';
+if ($page === 'home') $page = 'overview';
 $sub = $_GET['sub'] ?? '';
 $aid = (int)($_GET['aid'] ?? 0);
 
@@ -611,11 +624,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($stuConn){
             if(strlen($q)>=2){
                 $qq='%'.$conn->real_escape_string($q).'%';
-                $s=$stuConn->prepare("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status FROM {$studentsDb}.students WHERE (first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? OR email LIKE ?) AND status!='deleted' LIMIT 100");
+                $s=$stuConn->prepare("SELECT id,student_id,student_number,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture FROM {$studentsDb}.students WHERE (first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? OR email LIKE ?) AND status!='deleted' LIMIT 100");
                 if($s){$s->bind_param('sssss',$qq,$qq,$qq,$qq,$qq);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
             } else {
                 // No search keyword - return recent active students
-                $s=$stuConn->query("SELECT id,student_id,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status FROM {$studentsDb}.students WHERE status!='deleted' ORDER BY id DESC LIMIT 200");
+                $s=$stuConn->query("SELECT id,student_id,student_number,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture FROM {$studentsDb}.students WHERE status!='deleted' ORDER BY id DESC LIMIT 200");
                 if($s)$rows=$s->fetch_all(MYSQLI_ASSOC);
             }
         }
@@ -641,19 +654,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $g=trim($_POST['gender']??''); $dob=trim($_POST['date_of_birth']??''); $set=trim($_POST['set_name']??'');
         $success=false;$msg='';$newId=0;$studentNum='';$regNum='';$tempPw='';
         if($fn&&$sn&&$stuConn){
-            // Generate unique IDs
             $randPart=str_pad(rand(1,99999),5,'0',STR_PAD_LEFT);
             $studentNum='STU'.date('Y').$randPart;
             $regNum='REG'.date('Y').$randPart;
             $full="$fn $sn";
-            // Generate temporary password
             $tempPw=substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#'),0,10);
             $pwHash=password_hash($tempPw,PASSWORD_BCRYPT);
-            $s=$stuConn->prepare("INSERT INTO {$studentsDb}.students(student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,password,is_first_login,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'Active',NOW(),NOW())");
-            if($s){$s->bind_param('ssssssssssssss',$studentNum,$studentNum,$regNum,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob,$set,$pwHash);$success=$s->execute();$newId=$s->insert_id;$s->close();}
+            // Handle photo upload
+            $photoPath = '';
+            if (isset($_FILES['passport_photo']) && $_FILES['passport_photo']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['passport_photo']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg','jpeg','png','gif','webp'];
+                if (in_array($ext, $allowed)) {
+                    $photoName = 'stu_' . $studentNum . '_' . time() . '.' . $ext;
+                    $dest = $photoDir . $photoName;
+                    if (move_uploaded_file($_FILES['passport_photo']['tmp_name'], $dest)) {
+                        $photoPath = 'uploads/passport_photos/' . $photoName;
+                    }
+                }
+            }
+            $s=$stuConn->prepare("INSERT INTO {$studentsDb}.students(student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,password,is_first_login,status,passport_photo,profile_picture,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'Active',?,?,NOW(),NOW())");
+            if($s){$s->bind_param('sssssssssssssssss',$studentNum,$studentNum,$regNum,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob,$set,$pwHash,$photoPath,$photoPath);$success=$s->execute();$newId=$s->insert_id;$s->close();}
             if($success){
                 $msg="Student added. Login: $studentNum / Password: $tempPw";
-                // Create admission tracking record
                 if($conn){
                     $s2=$conn->prepare("INSERT INTO student_admission_tracking(application_number,student_number,program,intake,admission_status,requirements_total,requirements_completed) VALUES(?,?,?,?,'Registered',0,0)");
                     if($s2){$s2->bind_param('ssss',$regNum,$studentNum,$pg,$set);$s2->execute();$s2->close();}
@@ -669,8 +692,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $set=trim($_POST['set_name']??'');
         $success=false;$msg='';
         if($id&&$fn&&$sn&&$stuConn){
-            $s=$stuConn->prepare("UPDATE {$studentsDb}.students SET first_name=?,surname=?,full_name=CONCAT(?,' ',?),email=?,phone=?,program=?,level=?,gender=?,set_name=?,status=?,updated_at=NOW() WHERE id=?");
-            if($s){$s->bind_param('sssssssssssi',$fn,$sn,$fn,$sn,$em,$ph,$pg,$lv,$g,$set,$st,$id);$success=$s->execute();$s->close();$msg=$success?'Updated.':'Update failed';}
+            // Handle photo upload
+            $photoSql = ''; $photoParams = []; $photoTypes = '';
+            if (isset($_FILES['passport_photo']) && $_FILES['passport_photo']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['passport_photo']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg','jpeg','png','gif','webp'];
+                if (in_array($ext, $allowed)) {
+                    $photoName = 'stu_' . $id . '_' . time() . '.' . $ext;
+                    $dest = $photoDir . $photoName;
+                    if (move_uploaded_file($_FILES['passport_photo']['tmp_name'], $dest)) {
+                        $pPath = 'uploads/passport_photos/' . $photoName;
+                        $photoSql = ',passport_photo=?,profile_picture=?';
+                        $photoParams = [$pPath, $pPath];
+                        $photoTypes = 'ss';
+                    }
+                }
+            }
+            $sql = "UPDATE {$studentsDb}.students SET first_name=?,surname=?,full_name=CONCAT(?,' ',?),email=?,phone=?,program=?,level=?,gender=?,set_name=?,status=?,updated_at=NOW(){$photoSql} WHERE id=?";
+            $s=$stuConn->prepare($sql);
+            if($s){
+                $types = 'sssssssssss' . $photoTypes . 'i';
+                $params = array_merge([$fn,$sn,$fn,$sn,$em,$ph,$pg,$lv,$g,$set,$st], $photoParams, [$id]);
+                $s->bind_param($types, ...$params);
+                $success=$s->execute();$s->close();$msg=$success?'Updated.':'Update failed';
+            }
         }else{$msg='ID and name required.';}
         echo json_encode(['success'=>$success,'message'=>$msg]); exit;
     }
@@ -679,6 +724,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($id&&$stuConn){$s=$stuConn->prepare("UPDATE {$studentsDb}.students SET status='Inactive' WHERE id=?");if($s){$s->bind_param('i',$id);$success=$s->execute();$s->close();$msg=$success?'Student deactivated.':'Delete failed';}}
         else{$msg='ID required.';}
         echo json_encode(['success'=>$success,'message'=>$msg]); exit;
+    }
+    // ── Student Details Fetch (for full edit) ──
+    if ($action === 'stu_get') {
+        $id=(int)($_POST['id']??0); $data=null;
+        if($id&&$stuConn){
+            $s=$stuConn->prepare("SELECT * FROM {$studentsDb}.students WHERE id=?");
+            if($s){$s->bind_param('i',$id);$s->execute();$data=$s->get_result()->fetch_assoc();$s->close();}
+        }
+        echo json_encode($data?:[]); exit;
+    }
+    // ── Student Requirements Status ──
+    if ($action === 'stu_requirements') {
+        $id=(int)($_POST['id']??0); $rows=[];
+        if($id&&$conn){
+            // Get the applicant linked to this student by student_number
+            $stu=$stuConn->query("SELECT student_number,full_name FROM {$studentsDb}.students WHERE id=$id")->fetch_assoc();
+            if($stu){
+                $sn=$stuConn->real_escape_string($stu['student_number']);
+                $app=$conn->query("SELECT id FROM applicants WHERE student_number='$sn' LIMIT 1")->fetch_assoc();
+                $aid=$app['id']??0;
+                if($aid){
+                    $r=$conn->query("SELECT ar.requirement_name,ar.is_mandatory,ar.display_order,COALESCE(ars.status,'Not Submitted') as status,ars.remarks as director_notes,ars.submitted_at,ars.verified_at,ars.requirement_id FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
+                    if($r)$rows=$r->fetch_all(MYSQLI_ASSOC);
+                }
+            }
+        }
+        echo json_encode($rows); exit;
+    }
+    // ── Student Set Requirement Status ──
+    if ($action === 'stu_set_req') {
+        $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
+        if($aid&&$rid&&$conn){
+            $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
+            if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);$s->execute();$s->close();}
+            $conn->query("UPDATE student_admission_tracking SET requirements_completed=(SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received')) WHERE applicant_id=$aid");
+        }
+        echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'global_stu_search') {
         globalStudentSearchHandler($conn, $stuConn);
@@ -1703,7 +1785,7 @@ $yearsList = $filterOpts['years'] ?? [];
   </div>
 
   <div class="table-responsive" style="max-height:600px;overflow-y:auto">
-    <table class="table table-sm table-hover" id="stuTable"><thead><tr><th>ID</th><th>Name</th><th>Set</th><th>Program</th><th>Level</th><th>Gender</th><th>Contact</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
+    <table class="table table-sm table-hover" id="stuTable"><thead><tr><th>Photo</th><th>ID</th><th>Name</th><th>Set</th><th>Program</th><th>Level</th><th>Gender</th><th>Contact</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
     <tbody id="stuTableBody">
       <tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
     </tbody></table>
@@ -1713,7 +1795,7 @@ $yearsList = $filterOpts['years'] ?? [];
 <!-- Student Modal (Add/Edit) -->
 <div class="modal fade" id="stuModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="stuModalTitle">Add Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-  <form id="stuForm"><div class="modal-body row g-2">
+  <form id="stuForm" enctype="multipart/form-data"><div class="modal-body row g-2">
     <input type="hidden" name="action" id="stuAction" value="stu_add">
     <input type="hidden" name="id" id="stuId" value="0">
     <div class="col-md-6"><label class="small fw-medium">First Name *</label><input type="text" name="first_name" id="stuFn" class="form-control form-control-sm" required></div>
@@ -1723,9 +1805,11 @@ $yearsList = $filterOpts['years'] ?? [];
     <div class="col-md-4"><label class="small fw-medium">Set Name</label><input type="text" name="set_name" id="stuSet" class="form-control form-control-sm" placeholder="e.g. Set 28"></div>
     <div class="col-md-4"><label class="small fw-medium">Program</label><input type="text" name="program" id="stuPg" class="form-control form-control-sm" placeholder="e.g. Diploma Nursing"></div>
     <div class="col-md-4"><label class="small fw-medium">Level</label><select name="level" id="stuLv" class="form-select form-select-sm"><option value="">-- Select --</option><option value="Certificate">Certificate</option><option value="Diploma">Diploma</option><option value="Degree">Degree</option></select></div>
-    <div class="col-md-4"><label class="small fw-medium">Gender</label><select name="gender" id="stuGd" class="form-select form-select-sm"><option value="">-- Select --</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
-    <div class="col-md-4"><label class="small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="stuDb" class="form-control form-control-sm"></div>
-    <div class="col-md-4"><label class="small fw-medium">Status</label><select name="status" id="stuSt" class="form-select form-select-sm"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option><option value="Suspended">Suspended</option></select></div>
+    <div class="col-md-3"><label class="small fw-medium">Gender</label><select name="gender" id="stuGd" class="form-select form-select-sm"><option value="">-- Select --</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+    <div class="col-md-3"><label class="small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="stuDb" class="form-control form-control-sm"></div>
+    <div class="col-md-3"><label class="small fw-medium">Status</label><select name="status" id="stuSt" class="form-select form-select-sm"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option><option value="Suspended">Suspended</option></select></div>
+    <div class="col-md-3"><label class="small fw-medium">Passport Photo</label><input type="file" name="passport_photo" id="stuPhoto" class="form-control form-control-sm" accept="image/jpeg,image/png,image/gif,image/webp"></div>
+    <div class="col-md-12" id="stuPhotoPreview" style="display:none"><img id="stuPhotoImg" style="max-height:100px;border-radius:8px;border:2px solid #e2e8f0" alt="Preview"></div>
   </div>
   <div class="modal-footer">
     <div id="stuMsg" class="small me-auto"></div>
@@ -1734,12 +1818,26 @@ $yearsList = $filterOpts['years'] ?? [];
   </div></form></div></div>
 </div>
 
+<!-- Requirements Viewer Modal -->
+<div class="modal fade" id="reqViewModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title"><i class="fas fa-clipboard-check"></i> <span id="reqViewTitle">Requirements</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="reqViewBody">
+    <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+  </div>
+</div></div></div>
+
 <script>
 var _stuData=[];
 function editStuFromRow(idx){
   var s=_stuData[idx];
   if(!s) return;
-  editStu(s);
+  // Load full data from DB for photo and all details
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_get&id='+(s.id||0)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r){return r.json();}).then(function(full){
+    if(full&&full.id) editStu(full); else editStu(s);
+  });
 }
 function showStuModal(id){
   document.getElementById('stuForm').reset();
@@ -1748,6 +1846,8 @@ function showStuModal(id){
   document.getElementById('stuId').value=0;
   document.getElementById('stuSt').value='Active';
   document.getElementById('stuMsg').textContent='';
+  document.getElementById('stuPhotoPreview').style.display='none';
+  document.getElementById('stuPhoto').value='';
   new bootstrap.Modal(document.getElementById('stuModal')).show();
 }
 function editStu(s){
@@ -1766,6 +1866,14 @@ function editStu(s){
   document.getElementById('stuDb').value=s.date_of_birth||'';
   document.getElementById('stuSt').value=s.status||'Active';
   document.getElementById('stuMsg').textContent='';
+  // Show existing photo
+  var photo=s.passport_photo||s.profile_picture||'';
+  if(photo){
+    document.getElementById('stuPhotoPreview').style.display='block';
+    document.getElementById('stuPhotoImg').src='../'+photo;
+  } else {
+    document.getElementById('stuPhotoPreview').style.display='none';
+  }
   new bootstrap.Modal(document.getElementById('stuModal')).show();
 }
 function deleteStu(id,name){
@@ -1776,6 +1884,55 @@ function viewExcelStudent(name,file,id,setInfo,program,phone){
   var msg='Excel Student: '+name+'\nFile: '+file+'\nIndex: '+id+'\nSet: '+(setInfo||'-')+'\nProgram: '+(program||'-')+'\nPhone: '+(phone||'-');
   alert(msg);
 }
+var _reqStudentNumber='';
+function showRequirements(stuId,stuName,stuNumber){
+  _reqStudentNumber=stuNumber||'';
+  document.getElementById('reqViewTitle').textContent=stuName+' — Requirements';
+  document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
+  new bootstrap.Modal(document.getElementById('reqViewModal')).show();
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r){return r.json();}).then(function(data){
+    if(!data||data.length===0){
+      document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4 text-muted"><i class="fas fa-clipboard-list fa-2x mb-2"></i><br>No requirements found. This student may not have an applicant record linked.</div>';
+      return;
+    }
+    var h='<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Requirement</th><th>Status</th><th>Notes</th><th>Action</th></tr></thead><tbody>';
+    data.forEach(function(r){
+      var statusClass=r.status==='Verified'||r.status==='Received'?'success':r.status==='Submitted'?'info':r.status==='Missing'||r.status==='Rejected'?'danger':'secondary';
+      var reqId=r.requirement_id||0;
+      h+='<tr><td class="small">'+r.requirement_name+(r.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td>'
+        +'<td><span class="badge bg-'+statusClass+'" id="srs_'+reqId+'">'+r.status+'</span></td>'
+        +'<td class="small text-muted">'+((r.director_notes||'').substring(0,50)||'-')+'</td>'
+        +'<td><select class="form-select form-select-sm" style="width:120px;display:inline-block" onchange="setStudentReq('+stuId+','+reqId+',this.value)">'
+        +'<option value="">—</option>'
+        +'<option value="Received" '+(r.status==='Received'?'selected':'')+'>Received</option>'
+        +'<option value="Submitted" '+(r.status==='Submitted'?'selected':'')+'>Submitted</option>'
+        +'<option value="Verified" '+(r.status==='Verified'?'selected':'')+'>Verified</option>'
+        +'<option value="Missing" '+(r.status==='Missing'?'selected':'')+'>Missing</option>'
+        +'<option value="Not Yet Given" '+(r.status==='Not Yet Given'?'selected':'')+'>Not Yet Given</option>'
+        +'<option value="Rejected" '+(r.status==='Rejected'?'selected':'')+'>Rejected</option>'
+        +'</select></td></tr>';
+    });
+    h+='</tbody></table></div>';
+    document.getElementById('reqViewBody').innerHTML=h;
+  });
+}
+function setStudentReq(stuId,reqId,status){
+  if(!status||!reqId) return;
+  var sn=_reqStudentNumber||document.getElementById('stuSearchNumber')?.value||'';
+  if(!sn) return;
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=filter_applicants&search='+encodeURIComponent(sn)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r2){return r2.json();}).then(function(apps){
+    var aid=0;
+    if(apps&&apps.length>0) aid=apps[0].id;
+    if(!aid){alert('No applicant record linked to this student number: '+sn);return;}
+    fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_set_req&applicant_id='+aid+'&requirement_id='+reqId+'&status='+encodeURIComponent(status)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r3){return r3.json();}).then(function(d){
+      if(d.success){
+        document.getElementById('srs_'+reqId).textContent=status;
+        var sc=status==='Verified'||status==='Received'?'success':status==='Submitted'?'info':status==='Missing'||status==='Rejected'?'danger':'secondary';
+        document.getElementById('srs_'+reqId).className='badge bg-'+sc;
+      }
+    });
+  });
+}
 function filterStudents(){
   var q=document.getElementById('stuKeyword').value;
   var set=document.getElementById('stuFilterSet').value;
@@ -1784,7 +1941,7 @@ function filterStudents(){
   var yr=document.getElementById('stuFilterYear').value;
   var gd=document.getElementById('stuFilterGender').value;
   var st=document.getElementById('stuFilterStatus').value;
-  document.getElementById('stuTableBody').innerHTML='<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>';
+  document.getElementById('stuTableBody').innerHTML='<tr><td colspan="11" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>';
   var body=new URLSearchParams();
   body.append('action','stu_search');
   body.append('csrf_token',CSRF);
@@ -1799,7 +1956,7 @@ function filterStudents(){
     _stuData=data;
     var tbody=document.getElementById('stuTableBody');
     if(!data||data.length===0){
-      tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-search"></i> No students found matching your criteria.</td></tr>';
+      tbody.innerHTML='<tr><td colspan="11" class="text-center text-muted py-4"><i class="fas fa-search"></i> No students found matching your criteria.</td></tr>';
       document.getElementById('stuResultCount').textContent='0 results';
       return;
     }
@@ -1810,6 +1967,8 @@ function filterStudents(){
       var statusClass=(s.status||'Active').toLowerCase()==='active'?'bg-success':'bg-secondary';
       var sourceBadge=isExcel?'<span class="badge bg-info text-white" title="'+(s._file||'')+'">Excel</span>':'<span class="badge bg-dark">DB</span>';
       var nameAttr=s.full_name.replace(/['"\\]/g,'');
+      var hasPhoto=s.passport_photo||s.profile_picture||'';
+      var photoHtml=hasPhoto?'<img src="../'+hasPhoto+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0">':'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">'+(s.full_name?s.full_name.charAt(0).toUpperCase():'?')+'</div>';
       var actions='';
       if(isExcel){
         var fileAttr=(s._file||'').replace(/['"\\]/g,'');
@@ -1817,13 +1976,19 @@ function filterStudents(){
         var setAttr=(s.set_name||s.set||'').replace(/['"\\]/g,'');
         var progAttr=(s.program||'').replace(/['"\\]/g,'');
         var phoneAttr=(s.phone||'').replace(/['"\\]/g,'');
-        actions='<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="viewExcelStudent(\''+nameAttr+'\',\''+fileAttr+'\',\''+idAttr+'\',\''+setAttr+'\',\''+progAttr+'\',\''+phoneAttr+'\')" title="View"><i class="fas fa-eye"></i></button>';
+        actions='<div class="d-flex gap-1">'
+          +'<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="viewExcelStudent(\''+nameAttr+'\',\''+fileAttr+'\',\''+idAttr+'\',\''+setAttr+'\',\''+progAttr+'\',\''+phoneAttr+'\')" title="View"><i class="fas fa-eye"></i></button>'
+          +'</div>';
       } else {
-        actions='<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editStuFromRow('+i+')" title="Edit" data-idx="'+i+'"><i class="fas fa-edit"></i></button>'
-          +' <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteStu('+(s.id||0)+',\''+nameAttr+'\')" title="Deactivate"><i class="fas fa-user-slash"></i></button>';
+        actions='<div class="d-flex gap-1">'
+          +'<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editStuFromRow('+i+')" title="Edit"><i class="fas fa-edit"></i></button>'
+          +'<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="showRequirements('+(s.id||0)+',\''+nameAttr+'\',\''+((s.student_number||s.student_id||'').replace(/[\'\\]/g,''))+'\')" title="Requirements"><i class="fas fa-clipboard-check"></i></button>'
+          +'<button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteStu('+(s.id||0)+',\''+nameAttr+'\')" title="Deactivate"><i class="fas fa-user-slash"></i></button>'
+          +'</div>';
       }
       h+='<tr>'
-        +'<td class="small">'+(s.student_id||s.index_number||'-')+'</td>'
+        +'<td class="text-center">'+photoHtml+'</td>'
+        +'<td class="small">'+(s.student_id||s.index_number||s.student_number||'-')+'</td>'
         +'<td><strong>'+s.full_name+'</strong></td>'
         +'<td class="small">'+(s.set_name||s.set||'-')+'</td>'
         +'<td class="small">'+(s.program||'-')+'</td>'
@@ -1849,6 +2014,20 @@ function clearFilters(){
   document.getElementById('stuFilterStatus').value='';
   filterStudents();
 }
+// Photo preview
+document.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='stuPhoto'){
+    var file=e.target.files[0];
+    if(file){
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        document.getElementById('stuPhotoPreview').style.display='block';
+        document.getElementById('stuPhotoImg').src=ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
 // Initial load
 filterStudents();
 
@@ -1856,10 +2035,13 @@ document.getElementById('stuForm').addEventListener('submit',function(e){
   e.preventDefault();
   var fd=new FormData(this);
   fd.append('csrf_token',CSRF);
-  fetch('',{method:'POST',body:new URLSearchParams(fd)}).then(function(r){return r.json();}).then(function(d){
+  fetch('',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
     var msg=document.getElementById('stuMsg');
     if(d.success && d.student_number){
       msg.innerHTML='<i class="fas fa-check-circle text-success"></i> <strong>Student added!</strong><br><small>Login: <code>'+d.student_number+'</code> / Password: <code>'+(d.password||'set during first login')+'</code><br>Share these credentials with the student.</small>';
+      msg.style.color='#059669';
+    } else if(d.success){
+      msg.innerHTML='<i class="fas fa-check-circle text-success"></i> '+d.message;
       msg.style.color='#059669';
     } else {
       msg.textContent=d.message;
@@ -2001,5 +2183,6 @@ loadReport();
 function exportCSV(type){postData({action:'export_csv',export_type:type});showToast('Exporting CSV...','info');}
 function doRegister(){const sel=document.getElementById('regSelect');if(!sel||!sel.value)return alert('Select an approved applicant.');if(!confirm('Register this applicant?'))return;postData({action:'register_student',id:sel.value}).then(d=>{if(d.success){showToast('Student registered!\nStudent #: '+d.student_number+'\nUsername: '+d.username+'\nPassword: '+d.password,'success');location.reload();}else{showToast('Registration failed','danger');}});}
 </script>
+</div><!-- /.adm-content -->
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body></html>
