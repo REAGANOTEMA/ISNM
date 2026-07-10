@@ -894,6 +894,7 @@ function handlePasswordChange() {
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
     <!-- Perfect Mobile Responsive Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
@@ -1448,6 +1449,7 @@ function handlePasswordChange() {
             });
         });
     </script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

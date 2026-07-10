@@ -682,6 +682,7 @@ function generateStudentId() {
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
@@ -1407,6 +1408,7 @@ function generateStudentId() {
             }
         });
     </script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

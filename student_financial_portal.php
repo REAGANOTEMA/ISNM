@@ -53,6 +53,7 @@ $balance = getStudentBalance($student_id);
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/student_mgt_sidebar.php'; ?>
     <div class="container py-4">
         <!-- Header with School Logo -->
         <div class="text-center mb-4">
@@ -254,5 +255,6 @@ $balance = getStudentBalance($student_id);
             window.open('print_statement.php?id=' + id, '_blank');
         }
     </script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

@@ -17,13 +17,14 @@ ini_set('log_errors', 1);
     <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <!-- <link rel="stylesheet" type="text/css" href="css/style.css"> -->
     <title>ERP | owner</title>
     <link rel="stylesheet" href="../css/oranbyte-google-translator.css">
     <script src="../js/oranbyte-google-translator.js"></script>
 </head>
 <body>
+    <?php include_once __DIR__ . '/../includes/sidebars/owner_sidebar.php'; ?>
     <div class="header">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
@@ -123,5 +124,6 @@ ini_set('log_errors', 1);
 
         initMDB({ Ripple });
     </script>
+    <?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

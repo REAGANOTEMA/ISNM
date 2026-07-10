@@ -58,14 +58,17 @@ $role = $_SESSION['role'] ?? '';
             min-height: 100vh;
             margin: 0;
             padding: 0;
+            padding-left: 270px;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        @media (max-width: 991px) { body { padding-left: 0; } }
 
         .navbar {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1020;
         }
 
         .navbar-brand {
@@ -238,6 +241,7 @@ $role = $_SESSION['role'] ?? '';
     </style>
 </head>
 <body>
+    <?php include_once 'includes/sidebars/staff_main_sidebar.php'; ?>
     <!-- Perfect Mobile Responsive Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
@@ -523,5 +527,6 @@ $role = $_SESSION['role'] ?? '';
         }, 3000);
         <?php endif; ?>
     </script>
+    <?php include_once 'includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
