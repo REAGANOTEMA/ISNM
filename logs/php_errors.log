@@ -88,3 +88,5 @@
 [10-Jul-2026 14:54:05 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
 [10-Jul-2026 14:54:05 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
 [10-Jul-2026 14:54:05 Africa/Kampala] Error fetching news: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: NO)
+[10-Jul-2026 15:25:21 Africa/Kampala] Error [2]: session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\ISNM\news.php on line 5
+[10-Jul-2026 15:25:22 Africa/Kampala] Error [2]: session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\ISNM\shared\_header.php on line 168

@@ -37,7 +37,7 @@ if ($conn->connect_error) {
 }
 
 echo "Connected to database: " . $conn->host_info . "\n";
-echo "Database: " . $dbname . "\n\n";
+echo "Database: " . $db_name . "\n\n";
 
 $sql_statements = [
 

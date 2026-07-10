@@ -9,26 +9,9 @@ echo "<style>body{font-family:monospace;padding:20px;background:#1e293b;color:#e
 echo "h1{color:#f59e0b} .ok{color:#10b981} .fail{color:#ef4444} .info{color:#60a5fa}</style></head><body>";
 echo "<h1>ISNM Production Setup</h1>";
 
-// ── Connect: try all combos ──
-$hosts = ['localhost','127.0.0.1'];
-$ports = [3306,3307];
-$creds = [
-    ['u'=>'root','p'=>''],
-    ['u'=>'root','p'=>'root'],
-    ['u'=>'igangaschoolofl_staffs_db','p'=>'AgKzJjZZnT5q58jCahs8'],
-];
-$conn = null;
-foreach ($creds as $c) {
-    if ($conn) break;
-    foreach ($hosts as $h) {
-        if ($conn) break;
-        foreach ($ports as $p) {
-            $try = @new mysqli($h, $c['u'], $c['p'], 'igangaschoolofl_staffs_db', $p);
-            if ($try && !$try->connect_error) { $conn = $try; break; }
-            if ($try) $try->close();
-        }
-    }
-}
+// ── Connect using config ──
+require_once __DIR__ . '/config/database.php';
+$conn = getStaffConnection();
 if (!$conn) {
     die("<p class='fail'>FATAL: Cannot connect to staff database. Check that the database exists in your hosting control panel.</p>");
 }

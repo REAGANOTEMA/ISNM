@@ -1,31 +1,25 @@
 <?php
 /**
  * COMPREHENSIVE DATABASE AUDIT — ISNM ERP
- * Scans all 3 databases, lists every table and its columns
+ * Scans all 4 databases, lists every table and its columns
  */
-
-$host = '127.0.0.1';
-$port = 3307;
-$user = 'igangaschoolofl_staffs_db';
-$pass = 'AgKzJjZZnT5q58jCahs8';
+require_once __DIR__ . '/config/database.php';
 
 $databases = [
-    'igangaschoolofl_staffs_db' => 'staffs',
-    'igangaschoolofl_students_db' => 'students',
-    'igangaschoolofl_website_db' => 'website',
+    'igangaschoolofl_staffs_db' => ['label' => 'staffs',     'func' => 'getStaffConnection'],
+    'igangaschoolofl_students_db' => ['label' => 'students',  'func' => 'getStudentsConnection'],
+    'igangaschoolofl_website_db' => ['label' => 'website',   'func' => 'getWebsiteConnection'],
+    'igangaschoolofl_ict' => ['label' => 'ict',         'func' => 'getICTConnection'],
 ];
 
-foreach ($databases as $dbName => $label) {
+foreach ($databases as $dbName => $info) {
     echo "\n" . str_repeat('=', 70) . "\n";
-    echo "DATABASE: {$dbName} ({$label})\n";
+    echo "DATABASE: {$dbName} ({$info['label']})\n";
     echo str_repeat('=', 70) . "\n";
     
-    $conn = @new mysqli($host, $user, $pass, $dbName, $port);
-    if ($conn->connect_error) {
-        $conn = @new mysqli($host, $user, $pass, $dbName);
-    }
-    if ($conn->connect_error) {
-        echo "  CONNECTION FAILED: " . $conn->connect_error . "\n";
+    $conn = $info['func']();
+    if (!$conn || $conn->connect_error) {
+        echo "  CONNECTION FAILED: " . ($conn ? $conn->connect_error : 'Function returned null') . "\n";
         continue;
     }
     $conn->set_charset('utf8mb4');
@@ -33,7 +27,6 @@ foreach ($databases as $dbName => $label) {
     $r = $conn->query("SHOW TABLES");
     if (!$r || $r->num_rows === 0) {
         echo "  No tables found.\n";
-        $conn->close();
         continue;
     }
     
@@ -55,6 +48,4 @@ foreach ($databases as $dbName => $label) {
         }
         echo "  {$tbl} (" . count($colList) . " cols): " . implode(', ', $colList) . "\n";
     }
-    
-    $conn->close();
 }
