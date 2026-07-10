@@ -1,7 +1,7 @@
 <?php
 $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
 ?>
-<div class="position-fixed bottom-0 end-0 p-3 d-print-none" style="z-index:9999">
+<div class="position-fixed d-print-none" style="bottom:var(--fab-search,144px);right:24px;z-index:9999">
     <button class="btn btn-primary rounded-circle shadow-lg" id="<?= $uqid ?>_toggle"
             style="width:56px;height:56px;" title="Search Students (Ctrl+K)"
             onclick="document.getElementById('<?= $uqid ?>_modal').classList.add('show');document.getElementById('<?= $uqid ?>_modal').style.display='block';document.getElementById('<?= $uqid ?>_input').focus()">

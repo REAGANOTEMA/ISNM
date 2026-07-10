@@ -285,6 +285,16 @@ window.onerror = function(msg, url) {
 </script>
 
 <style>
+/* ── Floating Action Button Stack (prevents overlap) ── */
+:root {
+  --fab-spacing: 60px;
+  --fab-scroll: 24px;          /* scroll-to-top */
+  --fab-whatsapp: 84px;        /* whatsapp float */
+  --fab-search: 144px;         /* student quick search */
+  --fab-comm: 204px;           /* communication button */
+  --fab-approval: 264px;       /* department approval fab */
+  --fab-cp: 324px;             /* enterprise control panel */
+}
 /* ── Dashboard Responsive Fixes (unified with dashboard-mobile.css) ── */
 @media (max-width: 768px) {
   .main-content, .dashboard-main { margin-left: 0 !important; }
@@ -330,11 +340,11 @@ window.onerror = function(msg, url) {
 /* ── Loading Progress Bar ── */
 .isnm-loading-bar { position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#ec4899);z-index:9999;transition:width 0.4s ease,opacity 0.3s;box-shadow:0 0 10px rgba(59,130,246,0.5); }
 /* ── Scroll-to-top ── */
-.isnm-scroll-top { position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:1050;box-shadow:0 4px 16px rgba(0,0,0,0.2);display:none;align-items:center;justify-content:center;transition:transform 0.2s,opacity 0.2s;opacity:0; }
+.isnm-scroll-top { position:fixed;bottom:var(--fab-scroll,24px);right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:1050;box-shadow:0 4px 16px rgba(0,0,0,0.2);display:none;align-items:center;justify-content:center;transition:transform 0.2s,opacity 0.2s;opacity:0; }
 .isnm-scroll-top.show { display:flex;opacity:1; }
 .isnm-scroll-top:hover { transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 /* ── Keyboard shortcut toast ── */
-.isnm-shortcut-toast { position:fixed;bottom:80px;right:24px;background:#0f172a;color:#fff;border-radius:12px;padding:16px 20px;font-size:12px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:320px;display:none; }
+.isnm-shortcut-toast { position:fixed;bottom:var(--fab-cp,324px);right:24px;background:#0f172a;color:#fff;border-radius:12px;padding:16px 20px;font-size:12px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:320px;display:none; }
 .isnm-shortcut-toast.show { display:block;animation:fadeIn 0.2s ease; }
 .isnm-shortcut-toast kbd { display:inline-block;background:rgba(255,255,255,0.1);padding:2px 7px;border-radius:4px;font-size:11px;margin:0 2px;font-family:inherit; }
 .isnm-shortcut-toast hr { border-color:rgba(255,255,255,0.1);margin:8px 0; }

@@ -110,7 +110,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
 
 /* Toggle button */
 .ent-cp-toggle {
-    position:fixed; bottom:20px; right:20px; width:48px; height:48px;
+    position:fixed; bottom:var(--fab-cp,324px); right:20px; width:48px; height:48px;
     border-radius:50%; border:none; background:linear-gradient(135deg,#0f172a,#1e3a5f);
     color:#fff; font-size:18px; cursor:pointer; z-index:1090;
     box-shadow:0 4px 20px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;
@@ -118,7 +118,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
 }
 .ent-cp-toggle:hover { transform:scale(1.1); }
 @media(max-width:768px) { .ent-cp-panel { width:100%; right:-100%; } }
-@media(max-width:480px) { .ent-cp-toggle { bottom:12px; right:12px; width:44px; height:44px; font-size:16px; } }
+@media(max-width:480px) { .ent-cp-toggle { bottom:calc(var(--fab-cp,324px) - 8px); right:12px; width:44px; height:44px; font-size:16px; } }
 </style>
 
 <div class="ent-cp-overlay" id="entCpOverlay" onclick="document.getElementById('entCpPanel').classList.remove('open');this.classList.remove('open')"></div>

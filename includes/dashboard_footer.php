@@ -406,7 +406,7 @@ function openCommunicationModal() {
 
 /* ── Communication Floating Button ─────────────────────────────── */
 .comm-floating-btn {
-    position: fixed; bottom: 24px; right: 24px; z-index: 1059;
+    position: fixed; bottom: var(--fab-comm, 204px); right: 24px; z-index: 1059;
     width: 52px; height: 52px; border-radius: 50%;
     background: linear-gradient(135deg, #1a237e, #283593);
     color: #fff; display: flex; align-items: center; justify-content: center;
@@ -420,7 +420,7 @@ function openCommunicationModal() {
 }
 .comm-floating-btn:active { transform: scale(.95); }
 @media (max-width: 480px) {
-    .comm-floating-btn { width: 44px; height: 44px; font-size: 18px; bottom: 16px; right: 16px; }
+    .comm-floating-btn { width: 44px; height: 44px; font-size: 18px; bottom: calc(var(--fab-comm, 204px) - 8px); right: 16px; }
 }
 /* ── Notification Bell Styles ──────────────────────────────────── */
 .notif-bell {
@@ -593,7 +593,7 @@ function openCommunicationModal() {
 }
 /* ── Department Approval FAB (Floating Action Button) ── */
 .dep-approval-fab {
-  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  position: fixed; bottom: var(--fab-approval, 264px); right: 24px; z-index: 9999;
   width: 52px; height: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #1a237e, #283593);
   color: #fff; border: none; box-shadow: 0 4px 16px rgba(26,35,126,0.35);
@@ -611,7 +611,7 @@ function openCommunicationModal() {
 }
 .dep-approval-fab:hover .dep-approval-fab-tooltip { opacity: 1; }
 @media (max-width: 768px) {
-  .dep-approval-fab { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
+  .dep-approval-fab { bottom: calc(var(--fab-approval, 264px) - 8px); right: 16px; width: 48px; height: 48px; font-size: 18px; }
 }
 </style>
 

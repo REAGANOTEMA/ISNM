@@ -762,6 +762,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode(['success'=>true]); exit;
     }
+    // ── Student Set Requirement by student_id (direct, no applicant lookup needed) ──
+    if ($action === 'stu_set_req_by_student') {
+        $sid=(int)($_POST['student_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
+        $ok=false;
+        if($sid&&$rid&&$stuConn&&$conn){
+            $sr=$stuConn->query("SELECT student_number FROM {$studentsDb}.students WHERE id=$sid")->fetch_assoc();
+            $sn=$sr['student_number']??'';
+            if($sn){
+                $ar=$conn->query("SELECT id FROM applicants WHERE student_number='".$conn->real_escape_string($sn)."' LIMIT 1")->fetch_assoc();
+                $aid=$ar['id']??0;
+                if($aid){
+                    $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
+                    if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);$s->execute();$s->close();
+                    $conn->query("UPDATE student_admission_tracking SET requirements_completed=(SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received')) WHERE applicant_id=$aid");
+                    $ok=true;}
+                }
+            }
+        }
+        echo json_encode(['success'=>$ok]); exit;
+    }
     if ($action === 'global_stu_search') {
         globalStudentSearchHandler($conn, $stuConn);
         exit;
@@ -838,7 +858,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
 .info-item .label{font-size:11px;color:#94a3b8;font-weight:500;text-transform:uppercase}
 .info-item .value{font-size:14px;color:#0f172a;font-weight:500}
-.whatsapp-float{position:fixed;bottom:24px;right:24px;z-index:999;background:#25D366;color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 20px rgba(37,211,102,.4);cursor:pointer;transition:all .2s;text-decoration:none}
+.whatsapp-float{position:fixed;bottom:var(--fab-whatsapp,84px);right:24px;z-index:999;background:#25D366;color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 20px rgba(37,211,102,.4);cursor:pointer;transition:all .2s;text-decoration:none}
 .whatsapp-float:hover{transform:scale(1.1);color:#fff;box-shadow:0 6px 30px rgba(37,211,102,.5)}
 .empty-state{text-align:center;padding:40px 20px;color:#94a3b8}.empty-state i{font-size:48px;margin-bottom:12px;opacity:.3}
 .loading-skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:skeleton 1.5s infinite;border-radius:6px;height:20px;margin-bottom:8px}
@@ -866,7 +886,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .profile-section{padding:10px;border-radius:8px}
 .info-grid{grid-template-columns:1fr;gap:6px}
 .info-item .value{font-size:13px}
-.whatsapp-float{width:44px;height:44px;font-size:22px;bottom:16px;right:16px}
+.whatsapp-float{width:44px;height:44px;font-size:22px;bottom:calc(var(--fab-whatsapp,84px) - 8px);right:16px}
 .empty-state{padding:24px 12px}
 .empty-state i{font-size:32px}
 #stuTable{font-size:11px}
@@ -884,6 +904,28 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .btn-sm{font-size:11px;padding:3px 8px}
 .form-select-sm,.form-control-sm{font-size:11px}
 .adm-tabs a{padding:5px 8px;font-size:10px}
+}
+/* ── Sidebar Override — ensure it works correctly ── */
+.isnm-sidebar.sidebar{position:fixed;top:0;left:0;z-index:1050}
+.isnm-sidebar.sidebar .sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0}
+.isnm-sidebar.sidebar .menu-group-header{cursor:pointer;user-select:none;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.isnm-sidebar.sidebar .menu-children{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.isnm-sidebar.sidebar .menu-group.expanded .menu-children{max-height:1000px}
+.isnm-sidebar.sidebar .child-link{display:flex;align-items:center;gap:10px;padding:9px 16px 9px 44px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:13px;transition:all 0.15s;border-left:3px solid transparent}
+.isnm-sidebar.sidebar .child-link:hover{background:rgba(255,255,255,0.08);color:#fff}
+.isnm-sidebar.sidebar .child-link.active{background:rgba(255,255,255,0.1);color:#fff;border-left-color:#3b82f6}
+.isnm-sidebar.sidebar .menu-chevron{transition:transform 0.2s;font-size:10px}
+.isnm-sidebar.sidebar .menu-group.expanded .menu-chevron{transform:rotate(180deg)}
+@media(max-width:768px){
+  .isnm-sidebar.sidebar{transform:translateX(-100%);width:280px!important;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
+  .isnm-sidebar.sidebar.open,.isnm-sidebar.sidebar.active{transform:translateX(0)}
+  .adm-content{margin-left:0!important}
+  #stuTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #stuTableWrap table{font-size:11px;min-width:800px}
+}
+@media(max-width:480px){
+  #stuTableWrap table{min-width:700px;font-size:10px}
+  #stuTableWrap table td,#stuTableWrap table th{padding:3px 4px}
 }
 </style>
 </head>
@@ -1127,6 +1169,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
   </div>
 </div>
 <script>
+var _tk='<?=$csrfToken?>';
 function loadActivity(){fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_activity&applicant_id=<?=$aid?>&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{let h=document.getElementById('activityLog');if(!d||d.length===0){h.innerHTML='<div class="text-muted small p-2">No activity.</div>';return;}h.innerHTML=d.map(a=>'<div class="p-2 border-bottom small"><strong>'+a.action+'</strong><br><span class="text-muted">'+a.description+'<br>'+a.created_at+'</span></div>').join('');});}
 function loadComm(){fetch('director-admissions.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_communications&applicant_id=<?=$aid?>&csrf_token=<?=$csrfToken?>'}).then(r=>r.json()).then(d=>{let h=document.getElementById('commHistory');if(!d||d.length===0){h.innerHTML='<div class="text-muted small p-2">No communications.</div>';return;}h.innerHTML=d.map(c=>'<div class="p-2 border-bottom small"><strong>['+c.communication_type+']</strong> '+c.subject+'<br><span class="text-muted">'+c.message.substring(0,100)+'<br>'+c.sent_at+'</span></div>').join('');});}
 loadActivity();loadComm();
@@ -1208,7 +1251,7 @@ function saveApplicantDetails(id) {
     Object.keys(data).forEach(key => {
         body.append(key, data[key]);
     });
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     
     fetch('director-admissions.php', {
         method: 'POST',
@@ -1236,7 +1279,7 @@ function deleteApplicant(id, name) {
     const body = new URLSearchParams();
     body.append('action', 'delete_applicant');
     body.append('id', id);
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     
     fetch('director-admissions.php', {
         method: 'POST',
@@ -1301,6 +1344,7 @@ function deleteApplicant(id, name) {
 </div>
 
 <script>
+var _tk=window.CSRF_TOKEN||'<?=$csrfToken?>';
 let allRequirements = <?= json_encode($requirements) ?>;
 let selectedReqs = {};
 
@@ -1312,7 +1356,7 @@ function loadRequirementsPortal() {
     
     const body = new URLSearchParams();
     body.append('action', 'filter_applicants');
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     body.append('search', search);
     body.append('status', status === 'all' ? '' : status);
     body.append('program_id', program === 'all' ? '' : program);
@@ -1336,7 +1380,7 @@ function loadRequirementsPortal() {
         const appIds = applicants.map(a => a.id);
         const body2 = new URLSearchParams();
         body2.append('action', 'get_bulk_requirement_status');
-        body2.append('csrf_token', CSRF);
+        body2.append('csrf_token', _tk);
         body2.append('applicant_ids', JSON.stringify(appIds));
         
         fetch('director-admissions.php', {
@@ -1508,7 +1552,7 @@ function bulkUpdateRequirements() {
     body.append('action', 'bulk_set_requirements');
     body.append('updates', JSON.stringify(updates));
     body.append('status', status);
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     
     fetch('director-admissions.php', {
         method: 'POST',
@@ -1582,7 +1626,7 @@ function updateQuickStatus(appId, reqId) {
     body.append('requirement_id', reqId);
     body.append('status', status);
     body.append('notes', notes);
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     
     fetch('director-admissions.php', {
         method: 'POST',
@@ -1621,7 +1665,7 @@ function exportRequirementsCSV() {
     body.append('status', status === 'all' ? '' : status);
     body.append('program_id', program === 'all' ? '' : program);
     body.append('intake', intake === 'all' ? '' : intake);
-    body.append('csrf_token', CSRF);
+    body.append('csrf_token', _tk);
     
     fetch('director-admissions.php', {
         method: 'POST',
@@ -1785,7 +1829,7 @@ $yearsList = $filterOpts['years'] ?? [];
   </div>
 
   <div class="table-responsive" style="max-height:600px;overflow-y:auto">
-    <table class="table table-sm table-hover" id="stuTable"><thead><tr><th>Photo</th><th>ID</th><th>Name</th><th>Set</th><th>Program</th><th>Level</th><th>Gender</th><th>Contact</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
+    <div id="stuTableWrap"><table class="table table-sm table-hover" id="stuTable"><thead><tr><th>Photo</th><th>ID</th><th>Name</th><th>Set</th><th>Program</th><th>Level</th><th>Gender</th><th>Contact</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
     <tbody id="stuTableBody">
       <tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
     </tbody></table>
@@ -1831,11 +1875,12 @@ $yearsList = $filterOpts['years'] ?? [];
 
 <script>
 var _stuData=[];
+var _tk=window.CSRF_TOKEN||'<?=$csrfToken?>';
 function editStuFromRow(idx){
   var s=_stuData[idx];
   if(!s) return;
   // Load full data from DB for photo and all details
-  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_get&id='+(s.id||0)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r){return r.json();}).then(function(full){
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_get&id='+(s.id||0)+'&csrf_token='+encodeURIComponent(_tk)}).then(function(r){return r.json();}).then(function(full){
     if(full&&full.id) editStu(full); else editStu(s);
   });
 }
@@ -1878,31 +1923,30 @@ function editStu(s){
 }
 function deleteStu(id,name){
   if(!confirm('Deactivate '+name+'?'))return;
-  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id+'&csrf_token='+encodeURIComponent(CSRF)}).then(r=>r.json()).then(d=>{if(d.success)filterStudents();else alert(d.message);});
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_delete&id='+id+'&csrf_token='+encodeURIComponent(_tk)}).then(r=>r.json()).then(d=>{if(d.success)filterStudents();else alert(d.message);});
 }
 function viewExcelStudent(name,file,id,setInfo,program,phone){
   var msg='Excel Student: '+name+'\nFile: '+file+'\nIndex: '+id+'\nSet: '+(setInfo||'-')+'\nProgram: '+(program||'-')+'\nPhone: '+(phone||'-');
   alert(msg);
 }
-var _reqStudentNumber='';
 function showRequirements(stuId,stuName,stuNumber){
-  _reqStudentNumber=stuNumber||'';
   document.getElementById('reqViewTitle').textContent=stuName+' — Requirements';
   document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
   new bootstrap.Modal(document.getElementById('reqViewModal')).show();
-  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r){return r.json();}).then(function(data){
+  var body='action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(_tk);
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(function(r){return r.json();}).then(function(data){
     if(!data||data.length===0){
       document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4 text-muted"><i class="fas fa-clipboard-list fa-2x mb-2"></i><br>No requirements found. This student may not have an applicant record linked.</div>';
       return;
     }
-    var h='<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Requirement</th><th>Status</th><th>Notes</th><th>Action</th></tr></thead><tbody>';
+    var h='<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Requirement</th><th>Status</th><th>Notes</th><th style="width:140px">Set Status</th></tr></thead><tbody>';
     data.forEach(function(r){
       var statusClass=r.status==='Verified'||r.status==='Received'?'success':r.status==='Submitted'?'info':r.status==='Missing'||r.status==='Rejected'?'danger':'secondary';
       var reqId=r.requirement_id||0;
       h+='<tr><td class="small">'+r.requirement_name+(r.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td>'
         +'<td><span class="badge bg-'+statusClass+'" id="srs_'+reqId+'">'+r.status+'</span></td>'
         +'<td class="small text-muted">'+((r.director_notes||'').substring(0,50)||'-')+'</td>'
-        +'<td><select class="form-select form-select-sm" style="width:120px;display:inline-block" onchange="setStudentReq('+stuId+','+reqId+',this.value)">'
+        +'<td><select class="form-select form-select-sm req-status-select" data-stuid="'+stuId+'" data-reqid="'+reqId+'" onchange="setStudentReqDirect(this)">'
         +'<option value="">—</option>'
         +'<option value="Received" '+(r.status==='Received'?'selected':'')+'>Received</option>'
         +'<option value="Submitted" '+(r.status==='Submitted'?'selected':'')+'>Submitted</option>'
@@ -1912,26 +1956,44 @@ function showRequirements(stuId,stuName,stuNumber){
         +'<option value="Rejected" '+(r.status==='Rejected'?'selected':'')+'>Rejected</option>'
         +'</select></td></tr>';
     });
-    h+='</tbody></table></div>';
+    h+='</tbody></table></div>'
+      +'<div class="d-flex justify-content-between align-items-center mt-2">'
+      +'<small class="text-muted"><i class="fas fa-info-circle"></i> Changes save instantly.</small>'
+      +'<button class="btn btn-sm btn-outline-success" onclick="markAllRequirements('+stuId+')"><i class="fas fa-check-double"></i> Mark All Verified</button>'
+      +'</div>';
     document.getElementById('reqViewBody').innerHTML=h;
   });
 }
-function setStudentReq(stuId,reqId,status){
-  if(!status||!reqId) return;
-  var sn=_reqStudentNumber||document.getElementById('stuSearchNumber')?.value||'';
-  if(!sn) return;
-  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=filter_applicants&search='+encodeURIComponent(sn)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r2){return r2.json();}).then(function(apps){
-    var aid=0;
-    if(apps&&apps.length>0) aid=apps[0].id;
-    if(!aid){alert('No applicant record linked to this student number: '+sn);return;}
-    fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_set_req&applicant_id='+aid+'&requirement_id='+reqId+'&status='+encodeURIComponent(status)+'&csrf_token='+encodeURIComponent(CSRF)}).then(function(r3){return r3.json();}).then(function(d){
-      if(d.success){
-        document.getElementById('srs_'+reqId).textContent=status;
-        var sc=status==='Verified'||status==='Received'?'success':status==='Submitted'?'info':status==='Missing'||status==='Rejected'?'danger':'secondary';
-        document.getElementById('srs_'+reqId).className='badge bg-'+sc;
-      }
-    });
+function setStudentReqDirect(sel){
+  var stuId=parseInt(sel.getAttribute('data-stuid'))||0;
+  var reqId=parseInt(sel.getAttribute('data-reqid'))||0;
+  var status=sel.value;
+  if(!status||!stuId||!reqId){sel.value='';return;}
+  var badge=document.getElementById('srs_'+reqId);
+  var origStatus=badge?badge.textContent:'';
+  // Optimistic UI update
+  if(badge){
+    var sc=status==='Verified'||status==='Received'?'success':status==='Submitted'?'info':status==='Missing'||status==='Rejected'?'danger':'secondary';
+    badge.textContent=status;
+    badge.className='badge bg-'+sc;
+  }
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_set_req_by_student&student_id='+stuId+'&requirement_id='+reqId+'&status='+encodeURIComponent(status)+'&csrf_token='+encodeURIComponent(_tk)}).then(function(r){return r.json();}).then(function(d){
+    if(!d.success && badge){
+      badge.textContent=origStatus;
+      badge.className='badge bg-secondary';
+    }
   });
+}
+function markAllRequirements(stuId){
+  if(!confirm('Set ALL requirements to Verified for this student?'))return;
+  var selects=document.querySelectorAll('.req-status-select[data-stuid="'+stuId+'"]');
+  var count=0;
+  selects.forEach(function(sel){
+    sel.value='Verified';
+    setStudentReqDirect(sel);
+    count++;
+  });
+  if(typeof showToast==='function')showToast('Marked '+count+' requirements as Verified.','success');
 }
 function filterStudents(){
   var q=document.getElementById('stuKeyword').value;
@@ -1944,7 +2006,7 @@ function filterStudents(){
   document.getElementById('stuTableBody').innerHTML='<tr><td colspan="11" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>';
   var body=new URLSearchParams();
   body.append('action','stu_search');
-  body.append('csrf_token',CSRF);
+  body.append('csrf_token',_tk);
   body.append('q',q);
   body.append('set',set);
   body.append('program',pg);
@@ -2034,7 +2096,7 @@ filterStudents();
 document.getElementById('stuForm').addEventListener('submit',function(e){
   e.preventDefault();
   var fd=new FormData(this);
-  fd.append('csrf_token',CSRF);
+  fd.append('csrf_token',_tk);
   fetch('',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
     var msg=document.getElementById('stuMsg');
     if(d.success && d.student_number){
