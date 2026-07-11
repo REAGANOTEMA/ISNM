@@ -204,31 +204,40 @@ document.addEventListener('DOMContentLoaded', function() {
   onScroll();
 
   var collapse = document.getElementById('mainNavbar');
+  var toggler = document.querySelector('.navbar-toggler');
   if (collapse) {
     function hideMenu() {
-      var bs = bootstrap.Collapse.getInstance(collapse);
-      if (bs && collapse.classList.contains('show')) bs.hide();
+      if (collapse.classList.contains('show')) {
+        collapse.classList.remove('show');
+        if (toggler) {
+          toggler.classList.add('collapsed');
+          toggler.setAttribute('aria-expanded', 'false');
+        }
+      }
       document.body.classList.remove('menu-open');
     }
-    collapse.addEventListener('shown.bs.collapse', function() {
-      document.body.classList.add('menu-open');
-    });
-    collapse.addEventListener('hidden.bs.collapse', function() {
-      document.body.classList.remove('menu-open');
-    });
+    collapse.addEventListener('shown.bs.collapse', function() { document.body.classList.add('menu-open'); });
+    collapse.addEventListener('hidden.bs.collapse', function() { document.body.classList.remove('menu-open'); });
+    // Close menu instantly when tapping a nav link (before page navigation)
     collapse.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(l) {
       l.addEventListener('click', hideMenu);
     });
     collapse.querySelectorAll('.dropdown-item').forEach(function(i) {
       i.addEventListener('click', hideMenu);
     });
+    // Close on outside tap
     document.addEventListener('click', function(e) {
       if (window.innerWidth >= 992) return;
       var nav = document.querySelector('.isnm-navbar');
       if (nav && !nav.contains(e.target) && collapse.classList.contains('show')) hideMenu();
     });
+    // Close on resize to desktop
     window.addEventListener('resize', function() {
-      if (window.innerWidth >= 992) { document.body.classList.remove('menu-open'); var bs = bootstrap.Collapse.getInstance(collapse); if (bs) bs.hide(); }
+      if (window.innerWidth >= 992) hideMenu();
+    });
+    // Reset menu on bfcache restore (back/forward navigation)
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) hideMenu();
     });
   }
 });
