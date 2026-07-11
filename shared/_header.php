@@ -97,9 +97,6 @@ include_once __DIR__ . '/../includes/functions.php';
     </button>
     
     <div class="collapse navbar-collapse" id="mainNavbar">
-      <div class="mobile-close-btn d-lg-none">
-        <button type="button" class="btn-close btn-close-dark" aria-label="Close menu"></button>
-      </div>
       <ul class="navbar-nav">
         <li class="nav-item">
           <a class="nav-link" href="index.php">
@@ -206,10 +203,8 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('scroll', onScroll, {passive: true});
   onScroll();
 
-  var toggler = document.querySelector('.navbar-toggler');
   var collapse = document.getElementById('mainNavbar');
-  var closeBtn = document.querySelector('.mobile-close-btn .btn-close');
-  if (toggler && collapse) {
+  if (collapse) {
     function hideMenu() {
       var bs = bootstrap.Collapse.getInstance(collapse);
       if (bs && collapse.classList.contains('show')) bs.hide();
@@ -217,13 +212,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     collapse.addEventListener('shown.bs.collapse', function() {
       document.body.classList.add('menu-open');
-      if (toggler) toggler.style.display = 'none';
     });
     collapse.addEventListener('hidden.bs.collapse', function() {
       document.body.classList.remove('menu-open');
-      if (toggler) toggler.style.display = '';
     });
-    if (closeBtn) closeBtn.addEventListener('click', hideMenu);
     collapse.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(l) {
       l.addEventListener('click', hideMenu);
     });
@@ -232,10 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.addEventListener('click', function(e) {
       if (window.innerWidth >= 992) return;
-      if (!document.querySelector('.isnm-navbar') || !document.querySelector('.isnm-navbar').contains(e.target) && collapse.classList.contains('show')) hideMenu();
+      var nav = document.querySelector('.isnm-navbar');
+      if (nav && !nav.contains(e.target) && collapse.classList.contains('show')) hideMenu();
     });
     window.addEventListener('resize', function() {
-      if (window.innerWidth >= 992) { document.body.classList.remove('menu-open'); var bs = bootstrap.Collapse.getInstance(collapse); if (bs) bs.hide(); if (toggler) toggler.style.display = ''; }
+      if (window.innerWidth >= 992) { document.body.classList.remove('menu-open'); var bs = bootstrap.Collapse.getInstance(collapse); if (bs) bs.hide(); }
     });
   }
 });
