@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -490,7 +490,7 @@ if ($view_case_id && $conn) {
     <?php else: ?>
     <div class="dashboard-content content-section">
         <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
-            <h2>Student Welfare Overview</h2>
+            <h2>Student Welfare Overview</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
@@ -513,7 +513,7 @@ if ($view_case_id && $conn) {
 
         <section id="students" class="content-section dashboard-section<?= $section==='students'?' active':'' ?>" data-section="students">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>Student Welfare Cases</h2>
+                <h2>Student Welfare Cases</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
                 <button class="btn btn-success" onclick="document.getElementById('addWelfareForm').style.display='block'"><i class="fas fa-plus"></i> New Welfare Case</button>
             </div>
 
@@ -567,8 +567,9 @@ if ($view_case_id && $conn) {
                 </form>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
+            <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchZQUE" type="text" placeholder="Search..." onkeyup="filterTable('srchZQUE','tblZQUE')"></div>
+<div class="table-responsive">
+                <table id="tblZQUE" class="table table-striped table-hover">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -633,7 +634,7 @@ if ($view_case_id && $conn) {
         </section>
 
         <section id="counseling" class="content-section dashboard-section<?= $section==='counseling'?' active':'' ?>" data-section="counseling">
-            <h2>Counseling Services</h2>
+            <h2>Counseling Services</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="counseling-actions">
                 <button class="btn btn-primary" onclick="openModal('scheduleSession')"><i class="fas fa-calendar-plus"></i> Schedule Session</button>
                 <button class="btn btn-success" onclick="openModal('counselingRecord')"><i class="fas fa-file-medical"></i> Counseling Record</button>
@@ -662,7 +663,7 @@ if ($view_case_id && $conn) {
 
         <section id="discipline" class="content-section dashboard-section<?= $section==='discipline'?' active':'' ?>" data-section="discipline">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>Student Discipline</h2>
+                <h2>Student Discipline</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
                 <button class="btn btn-success" onclick="document.getElementById('addDisciplineForm').style.display='block'"><i class="fas fa-plus"></i> New Discipline Case</button>
             </div>
 
@@ -710,7 +711,8 @@ if ($view_case_id && $conn) {
                 </form>
             </div>
 
-            <div class="table-responsive">
+            <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchWNLE" type="text" placeholder="Search..." onkeyup="filterTable('srchWNLE','tblWNLE')"></div>
+<div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
@@ -751,7 +753,7 @@ if ($view_case_id && $conn) {
         </section>
 
         <section id="accommodation" class="content-section dashboard-section<?= $section==='accommodation'?' active':'' ?>" data-section="accommodation">
-            <h2>Accommodation Management</h2>
+            <h2>Accommodation Management</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="accommodation-overview">
                 <h3>Hostel Overview</h3>
                 <div class="hostel-stats">
@@ -771,7 +773,7 @@ if ($view_case_id && $conn) {
         </section>
 
         <section id="activities" class="content-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
-            <h2>Student Activities</h2>
+            <h2>Student Activities</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="activities-overview">
                 <h3>Upcoming Activities</h3>
                 <div class="activity-list">
@@ -795,7 +797,7 @@ if ($view_case_id && $conn) {
         </section>
 
         <section id="security" class="content-section dashboard-section<?= $section==='security'?' active':'' ?>" data-section="security">
-            <h2>Security & Safety</h2>
+            <h2>Security & Safety</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="security-overview">
                 <div class="security-stats">
                     <div class="security-stat"><h4>Security Personnel</h4><div>5 on duty</div><small>All positions covered</small></div>
@@ -805,7 +807,7 @@ if ($view_case_id && $conn) {
         </section>
 
         <section class="activities-section">
-            <h2>Recent Welfare Activities</h2>
+            <h2>Recent Welfare Activities</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="activities-list">
                 <?php if (empty($recent_activities)): ?>
                 <div class="text-muted">No recent activities</div>
@@ -935,6 +937,22 @@ function openModal(title, content, actionText) {
     if (actionText) modalAction.textContent = actionText;
     modal.show();
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 
 <div id="reqFormHTML" style="display:none">

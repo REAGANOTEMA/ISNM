@@ -8,7 +8,7 @@ $userId = $user['id'] ?? 0;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// ── Ensure tables exist ──
+// â”€â”€ Ensure tables exist â”€â”€
 $staffConn->query("CREATE TABLE IF NOT EXISTS `events` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `title` varchar(255) NOT NULL,
@@ -72,7 +72,7 @@ $staffConn->query("INSERT IGNORE INTO event_categories (name, description, color
     ('Meeting', 'Meetings and gatherings', '#fd7e14'),
     ('Ceremony', 'Official ceremonies', '#d63384')");
 
-// ── AJAX Handlers ──
+// â”€â”€ AJAX Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Events Management — ISNM</title>
+<title>Events Management â€” ISNM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -293,7 +293,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2><i class="fas fa-calendar-alt me-2"></i>Events Management</h2>
+            <h2><i class="fas fa-calendar-alt me-2"></i>Events Management</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <p>Plan, organize, and track institutional events</p>
         </div>
         <div>
@@ -443,7 +443,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
-    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Event Attendees — <span id="attendeeEventTitle"></span></h5>
+    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Event Attendees â€” <span id="attendeeEventTitle"></span></h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
@@ -472,7 +472,7 @@ $(document).ready(function() {
     initCalendar();
 });
 
-// ── List View ──
+// â”€â”€ List View â”€â”€
 const eventsTable = $('#eventsTable').DataTable({
     processing: true,
     serverSide: false,
@@ -523,7 +523,7 @@ function showListView() {
     $('#listView').show();
 }
 
-// ── Calendar ──
+// â”€â”€ Calendar â”€â”€
 let calendar = null;
 function initCalendar() {
     const el = document.getElementById('calendar');
@@ -557,7 +557,7 @@ function initCalendar() {
     calendar.render();
 }
 
-// ── Event CRUD ──
+// â”€â”€ Event CRUD â”€â”€
 function openEventModal(data) {
     $('#eventModalTitle').text('New Event');
     $('#eventId').val(0);
@@ -642,7 +642,7 @@ function deleteEvent(id) {
     });
 }
 
-// ── Attendees ──
+// â”€â”€ Attendees â”€â”€
 function viewAttendees(eventId, eventTitle) {
     $('#attendeeEventId').val(eventId);
     $('#attendeeEventTitle').text(eventTitle);
@@ -712,6 +712,22 @@ function deleteAttendee(id) {
         }, 'json');
     });
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </div>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

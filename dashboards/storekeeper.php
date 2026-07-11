@@ -393,7 +393,7 @@ case 'dashboard': ?>
 // INVENTORY
 // ════════════════════════════════════════════
 case 'inventory': ?>
-<h1 class="sk-page-title">Inventory Management</h1>
+<h1 class="sk-page-title">Inventory Management <button onclick="window.print()" class="sk-btn sk-btn-outline sk-btn-sm no-print"><i class="fas fa-print"></i> Print Report</button></h1>
 <p class="sk-page-sub">Manage all stock items, expiry dates, and batch numbers</p>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">

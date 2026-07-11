@@ -6,7 +6,7 @@ $students_conn = $ctx['students'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'CEO';
 
-// ── Page routing ──
+// â”€â”€ Page routing â”€â”€
 $pageToSection = [
     'home'          => 'overview',
     'overview'      => 'overview',
@@ -72,7 +72,7 @@ if ($students_conn) {
 <?php switch ($section):
     case 'overview': ?>
     <div class="content-header">
-        <h1><i class="fas fa-crown"></i> CEO Dashboard</h1>
+        <h1><i class="fas fa-crown"></i> CEO Dashboard</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
         <span class="text-muted"><?= date('l, d M Y') ?></span>
     </div>
     <div class="row g-3 mb-4">
@@ -91,7 +91,7 @@ if ($students_conn) {
         <?php break;
     case 'staff': ?>
         <div class="content-header">
-            <h1><i class="fas fa-users me-2"></i>Staff Management</h1>
+            <h1><i class="fas fa-users me-2"></i>Staff Management</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
             <span class="text-muted"><?= date('l, d M Y') ?></span>
         </div>
         <?php
@@ -140,7 +140,7 @@ if ($students_conn) {
         </div>
         <?php break;
     case 'departments': ?>
-        <div class="content-header"><h1><i class="fas fa-building me-2"></i>Department Monitoring</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-building me-2"></i>Department Monitoring</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Departments</h6><h3><?= count($deptList) ?></h3></div></div></div>
             <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Staff</h6><h3><?= number_format($stats['staff']) ?></h3></div></div></div>
@@ -154,7 +154,7 @@ if ($students_conn) {
         </div>
         <?php break;
     case 'performance': ?>
-        <div class="content-header"><h1><i class="fas fa-chart-bar me-2"></i>Performance Dashboard</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-chart-bar me-2"></i>Performance Dashboard</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-4"><div class="card border-primary"><div class="card-body text-center"><h6 class="text-primary">Students</h6><h2 class="text-primary"><?= number_format($stats['students']) ?></h2><small class="text-muted">Enrolled</small></div></div></div>
             <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Staff</h6><h2 class="text-success"><?= number_format($stats['staff']) ?></h2><small class="text-muted">Active</small></div></div></div>
@@ -166,14 +166,14 @@ if ($students_conn) {
         </div></div></div></div>
         <?php break;
     case 'financial': ?>
-        <div class="content-header"><h1><i class="fas fa-coins me-2"></i>Financial Overview</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-coins me-2"></i>Financial Overview</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-6"><div class="card border-success"><div class="card-body"><h6 class="text-success">Total Revenue</h6><h2 class="text-success">UGX <?= number_format($stats['revenue'], 0) ?></h2></div></div></div>
             <div class="col-md-6"><div class="card"><div class="card-body text-center"><p class="mb-0 text-muted">View detailed financial reports in the <a href="financial-reports.php" class="fw-bold">Financial Reports</a> module.</p></div></div></div>
         </div>
         <?php break;
     case 'student': ?>
-        <div class="content-header"><h1><i class="fas fa-user-graduate me-2"></i>Student Management</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-user-graduate me-2"></i>Student Management</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Students</h6><h3><?= number_format($stats['students']) ?></h3></div></div></div>
             <div class="col-md-3"><div class="card"><div class="card-body"><h6>Programs</h6><h3><?= $stats['programs'] ?></h3></div></div></div>
@@ -189,7 +189,7 @@ if ($students_conn) {
         </div>
         <?php break;
     case 'quality': ?>
-        <div class="content-header"><h1><i class="fas fa-shield-alt me-2"></i>Quality Assurance</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-shield-alt me-2"></i>Quality Assurance</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">QA Pass Rate</h6><h2 class="text-success"><?= $qaPassRate ?>%</h2></div></div></div>
             <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Reviews</h6><h2><?= count($qaReviews) ?></h2></div></div></div>
@@ -205,7 +205,7 @@ if ($students_conn) {
         </div>
         <?php break;
     case 'audit': ?>
-        <div class="content-header"><h1><i class="fas fa-clipboard-check me-2"></i>Audit Trail</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-clipboard-check me-2"></i>Audit Trail</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="content-section"><h5 class="fw-bold mb-3"><i class="fas fa-history me-2"></i>Recent Activity</h5>
             <?php if (empty($auditLogs)): ?><div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p>No audit logs found.</p><p class="small">The <code>staff_audit_logs</code> table may be empty or does not exist.</p></div>
             <?php else: ?>
@@ -216,7 +216,7 @@ if ($students_conn) {
         </div>
         <?php break;
     case 'system-health': ?>
-        <div class="content-header"><h1><i class="fas fa-heartbeat me-2"></i>System Health</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header"><h1><i class="fas fa-heartbeat me-2"></i>System Health</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button><span class="text-muted"><?= date('l, d M Y') ?></span></div>
         <div class="row g-3 mb-4">
             <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Staff DB</h6><i class="fas fa-check-circle fa-2x text-success"></i><p class="mt-2 mb-0">Connected</p></div></div></div>
             <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Students DB</h6><i class="fas fa-check-circle fa-2x text-success"></i><p class="mt-2 mb-0">Connected</p></div></div></div>

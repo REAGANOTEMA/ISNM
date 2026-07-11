@@ -159,6 +159,7 @@ $pageToSection = [
     'staff'      => 'staff',
 ];
 $page  = $_GET['page'] ?? 'home';
+if ($page === 'incidents') $page = 'incident_reports';
 $section = $pageToSection[$page] ?? 'overview';
 
 $profileImageUrl = '../images/username.png';
@@ -346,8 +347,12 @@ unset($_SESSION['success'], $_SESSION['error']);
             </div>
 
             <?php if (!empty($nursing_students)): ?>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="nsSearch" type="text" placeholder="Search..." onkeyup="filterTable('nsSearch','nsTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="nsTable">
                     <thead><tr><th>Student ID</th><th>Student Name</th><th>Program</th><th>Year</th><th>Clinical Hours</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($nursing_students as $s): ?>
@@ -383,8 +388,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </button>
             </div>
             <?php if (!empty($practical_assessments)): ?>
+            <div class="mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="paSearch" type="text" placeholder="Search..." onkeyup="filterTable('paSearch','paTable')">
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="paTable">
                     <thead><tr><th>Student ID</th><th>Skill</th><th>Date</th><th>Score</th><th>Grade</th><th>Assessor</th><th>Comments</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($practical_assessments as $a): ?>
@@ -425,8 +433,12 @@ unset($_SESSION['success'], $_SESSION['error']);
             </div>
 
             <?php if (!empty($clinical_placements)): ?>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="cpSearch" type="text" placeholder="Search..." onkeyup="filterTable('cpSearch','cpTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="cpTable">
                     <thead><tr><th>Student ID</th><th>Facility</th><th>Department</th><th>Start Date</th><th>End Date</th><th>Supervisor</th><th>Hours</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($clinical_placements as $p): ?>
@@ -526,8 +538,12 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <h2><i class="fas fa-users me-2"></i>Department Staff</h2>
                 <button class="btn btn-primary btn-sm" onclick="showAddStaff()"><i class="fas fa-plus me-1"></i>Add Staff</button>
             </div>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="staffSearch" type="text" placeholder="Search..." onkeyup="filterTable('staffSearch','staffTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="staffTable">
                     <thead><tr><th>Name</th><th>Position</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php
@@ -543,7 +559,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <tr>
                             <td><?= htmlspecialchars($s['full_name']) ?></td>
                             <td><?= htmlspecialchars($s['position'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($s['email']) ?></td>
+                            <td><a href="mailto:<?= htmlspecialchars($s['email']) ?>"><i class="fas fa-envelope text-primary me-1"></i><?= htmlspecialchars($s['email']) ?></a></td>
                             <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
                             <td><span class="badge bg-<?= ($s['status'] ?? 'Active') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
                             <td>
@@ -1080,6 +1096,22 @@ function editAssessment(a) {
         });
     });
 })();
+
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

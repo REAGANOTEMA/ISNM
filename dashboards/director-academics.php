@@ -582,6 +582,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <!-- â•â•â• TOP BAR â•â•â• -->
 
 <div class="acad-content">
+<div style="text-align:right;margin-bottom:8px" class="no-print"><button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i> Print</button></div>
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="section-card">
@@ -992,8 +993,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             </section>
 
             <!-- â•â•â•â•â•â•â•â•â•â•â• LECTURERS â•â•â•â•â•â•â•â•â•â•â• -->
-            <section id="lecturers-section" class="content-section <?= $section==='lecturers'?'active':'' ?> dashboard-section" data-section="lecturers">
-                <h2><i class="fas fa-chalkboard-teacher me-2"></i>Lecturer Management</h2>
+                <section id="lecturers-section" class="content-section <?= $section==='lecturers'?'active':'' ?> dashboard-section" data-section="lecturers">
+                <h2><i class="fas fa-chalkboard-teacher me-2"></i>Lecturer Management <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print"></i> Print</button></h2>
                 <div class="row g-3">
                     <div class="col-lg-8">
                         <div class="section-card">
@@ -1002,12 +1003,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                             <div class="mb-2"><input type="text" id="lecturerSearch" class="form-control form-control-sm" placeholder="Search lecturers..." onkeyup="filterTable('lecturerSearch','lecturerTable')"></div>
                             <div class="table-responsive" style="max-height:350px;overflow-y:auto">
                                 <table class="table table-sm table-hover" id="lecturerTable">
-                                    <thead><tr><th>Name</th><th>Position</th><th>Department</th><th>Courses</th><th>Action</th></tr></thead>
+                                    <thead><tr><th>Name</th><th>Position</th><th>Department</th><th>Email</th><th>Courses</th><th>Action</th></tr></thead>
                                     <tbody>
                                     <?php foreach($lecturers as $l):
                                         $lc = sc($conn,"SELECT COUNT(*)c FROM course_assignments WHERE lecturer_id={$l['id']}");
                                     ?>
-                                    <tr><td><strong><?= htmlspecialchars($l['full_name']) ?></strong></td><td><?= htmlspecialchars($l['position']) ?></td><td><?= htmlspecialchars($l['department']??'-') ?></td><td><span class="badge bg-info"><?= $lc ?></span></td>
+                                    <tr><td><strong><?= htmlspecialchars($l['full_name']) ?></strong></td><td><?= htmlspecialchars($l['position']) ?></td><td><?= htmlspecialchars($l['department']??'-') ?></td><td><?php if(!empty($l['email'])): ?><a href="mailto:<?= htmlspecialchars($l['email']) ?>" class="text-decoration-none" title="Send email"><i class="fas fa-envelope text-primary me-1"></i><small><?= htmlspecialchars($l['email']) ?></small></a><?php else: ?><small class="text-muted">-</small><?php endif; ?></td><td><span class="badge bg-info"><?= $lc ?></span></td>
                                     <td><button class="btn btn-sm btn-outline-primary" onclick="assignCourse(<?= $l['id'] ?>,'<?= addslashes($l['full_name']) ?>')"><i class="fas fa-plus"></i> Course</button></td></tr>
                                     <?php endforeach; ?>
                                     </tbody>

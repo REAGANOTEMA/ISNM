@@ -99,6 +99,12 @@
     # Route /workflow/{page} → workflow/{page}.php
     RewriteRule ^workflow/([^/.]+)/?$ workflow/$1.php [L,QSA]
 
+    # Route /website/content → dashboards/website-pages.php
+    RewriteRule ^website/content/?$ dashboards/website-pages.php [L,QSA]
+
+    # Route /website/news → dashboards/student-announcements.php
+    RewriteRule ^website/news/?$ dashboards/student-announcements.php [L,QSA]
+
     # Redirect /director and /director/ to overview
     RewriteRule ^director/?$ /director/overview [R=301,L]
     # Map /director/{page} → dashboards/director-general.php?page={page}

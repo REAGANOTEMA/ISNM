@@ -392,8 +392,12 @@ if ($conn) {
                     </form>
                 </div>
             </div>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="mwSearch" type="text" placeholder="Search..." onkeyup="filterTable('mwSearch','mwTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="mwTable">
                     <thead><tr><th>Student ID</th><th>Name</th><th>Program</th><th>Year</th><th>Clinical Hours</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php if (empty($mw_students)): ?>
@@ -506,8 +510,12 @@ if ($conn) {
                     </form>
                 </div>
             </div>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="plSearch" type="text" placeholder="Search..." onkeyup="filterTable('plSearch','plTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="plTable">
                     <thead><tr><th>Student ID</th><th>Facility</th><th>Dept</th><th>Supervisor</th><th>Start</th><th>End</th><th>Obs</th><th>Assist</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php if (empty($mw_placements)): ?>
@@ -613,8 +621,11 @@ if ($conn) {
                     </form>
                 </div>
             </div>
+            <div class="mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="skSearch" type="text" placeholder="Search..." onkeyup="filterTable('skSearch','skTable')">
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="skTable">
                     <thead><tr><th>Skill Name</th><th>Description</th><th>Category</th><th>Mandatory</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php if (empty($mw_skills)): ?>
@@ -699,8 +710,12 @@ if ($conn) {
                 <h2><i class="fas fa-users me-2"></i>Department Staff</h2>
                 <button class="btn btn-primary btn-sm" onclick="showAddStaff()"><i class="fas fa-plus me-1"></i>Add Staff</button>
             </div>
+            <div class="d-flex justify-content-between mb-2">
+                <input class="form-control form-control-sm" style="max-width:300px" id="stSearch" type="text" placeholder="Search..." onkeyup="filterTable('stSearch','stTable')">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></button>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="stTable">
                     <thead><tr><th>Name</th><th>Position</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php
@@ -716,7 +731,7 @@ if ($conn) {
                         <tr>
                             <td><?= htmlspecialchars($s['full_name']) ?></td>
                             <td><?= htmlspecialchars($s['position'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($s['email']) ?></td>
+                            <td><a href="mailto:<?= htmlspecialchars($s['email']) ?>"><i class="fas fa-envelope text-primary me-1"></i><?= htmlspecialchars($s['email']) ?></a></td>
                             <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
                             <td><span class="badge bg-<?= ($s['status'] ?? 'Active') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
                             <td>
@@ -942,6 +957,22 @@ function editPlacement(p) {
     document.getElementById('editPlStatus').value = p.status || 'Active';
     document.getElementById('editPlNotes').value = p.notes || '';
     new bootstrap.Modal(document.getElementById('editPlacementModal')).show();
+}
+
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
 }
 </script>
 

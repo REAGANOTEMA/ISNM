@@ -26,8 +26,8 @@ function getSidebarGroups(string $role): array {
     // ── OPERATIONS (role-specific) ──
     $g['OPERATIONS'] = getRoleOperations($role);
 
-    // ── MANAGEMENT (exec roles only; NOT for director_admissions — its dashboard has no handlers for these) ──
-    if ($isExec && $roleKey !== 'director_admissions') {
+    // ── MANAGEMENT (exec roles only) ──
+    if ($isExec) {
         $g['MANAGEMENT'] = [
             ['label' => 'Approvals',    'icon' => 'fas fa-check-double', 'page' => 'approvals'],
             ['label' => 'Tasks',        'icon' => 'fas fa-tasks',       'page' => 'tasks'],
@@ -417,31 +417,35 @@ function getRoleOperations(string $role): array {
 function normalizeRoleKeySidebar(string $role): string {
     $m = strtolower(trim($role));
     $map = [
-        'director general' => 'director_general', 'ceo' => 'ceo',
+        'director general' => 'director_general', 'ceo' => 'ceo', 'chief executive officer' => 'ceo', 'executive director' => 'ceo',
         'director ict' => 'director_ict', 'director academics' => 'director_academics',
-        'director admissions' => 'director_admissions', 'admissions' => 'director_admissions', 'admissions officer' => 'director_admissions', 'admissions clerk' => 'director_admissions', 'director finance' => 'director_finance',
+        'director admissions' => 'director_admissions', 'director admissions & requirements' => 'director_admissions', 'admissions' => 'director_admissions', 'admissions officer' => 'director_admissions', 'admissions clerk' => 'director_admissions',
+        'director finance' => 'director_finance',
         'school principal' => 'principal', 'deputy principal' => 'deputy_principal',
         'academic registrar' => 'academic_registrar', 'school secretary' => 'secretary',
         'hr manager' => 'hr', 'school librarian' => 'librarian', 'librarian' => 'librarian',
-        'head of nursing' => 'head_nursing', 'head nursing' => 'head_nursing',
-        'head of midwifery' => 'head_midwifery', 'head midwifery' => 'head_midwifery',
+        'head of nursing' => 'head_nursing', 'head nursing' => 'head_nursing', 'head nursing department' => 'head_nursing', 'hod' => 'head_nursing', 'head of department' => 'head_nursing',
+        'head of midwifery' => 'head_midwifery', 'head midwifery' => 'head_midwifery', 'head midwifery department' => 'head_midwifery',
         'senior lecturer' => 'senior_lecturer', 'senior lecturers' => 'senior_lecturer',
         'lecturer' => 'lecturer', 'lecturers' => 'lecturer',
         'matron' => 'matron', 'matrons' => 'matron',
         'warden' => 'wardens', 'wardens' => 'wardens',
-        'driver' => 'drivers', 'drivers' => 'drivers',
+        'driver' => 'drivers', 'drivers' => 'drivers', 'transport officer' => 'drivers',
         'security' => 'security', 'security officer' => 'security',
         'storekeeper' => 'store', 'store keeper' => 'store',
         'computer lab' => 'computer_lab', 'computer lab manager' => 'computer_lab', 'computer laboratory' => 'computer_lab',
         'skills lab' => 'skills_lab', 'skills lab manager' => 'skills_lab', 'skills lab technician' => 'skills_lab', 'skills laboratory' => 'skills_lab',
         'guild president' => 'guild',
         'school bursar' => 'bursar', 'bursar' => 'bursar',
-        'sickbay' => 'sickbay', 'sickbay nurse' => 'sickbay', 'sick_bay' => 'sickbay',
-        'non-teaching' => 'non_teaching', 'non-teaching-staff' => 'non_teaching', 'non teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching', 'non_teaching' => 'non_teaching',
-        'system admin' => 'system_admin', 'system-admin' => 'system_admin', 'system_admin' => 'system_admin',
+        'sickbay' => 'sickbay', 'sickbay nurse' => 'sickbay', 'sick_bay' => 'sickbay', 'nurse' => 'sickbay',
+        'non-teaching' => 'non_teaching', 'non-teaching-staff' => 'non_teaching', 'non teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching', 'non_teaching' => 'non_teaching', 'non teaching staff' => 'non_teaching',
+        'system admin' => 'system_admin', 'system-admin' => 'system_admin', 'system_admin' => 'system_admin', 'system administrator' => 'system_admin', 'admin' => 'system_admin', 'administrator' => 'system_admin',
         'student' => 'student', 'students' => 'student',
         'events coordinator' => 'events', 'events manager' => 'events',
         'alumni relations officer' => 'alumni', 'alumni officer' => 'alumni',
+        'clinical placement officer' => 'academic_registrar',
+        'quality assurance officer' => 'senior_lecturer',
+        'lab technician' => 'skills_lab',
     ];
     return $map[$m] ?? 'lecturer';
 }

@@ -22,6 +22,9 @@ $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
+function ict_mailto($email) {
+    return $email ? '<a href="mailto:'.htmlspecialchars($email).'" title="Send email"><i class="fas fa-envelope text-primary"></i></a>' : '-';
+}
 function ict_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
@@ -102,7 +105,7 @@ if ($staff_conn) {
     } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 }
 
-$ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security'];
+$ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security','it_infrastructure'=>'dashboard','infrastructure'=>'dashboard','system_logs'=>'dashboard','backup_management'=>'dashboard','ict_policy'=>'dashboard'];
 $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'overview';
@@ -287,6 +290,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <!-- â•â•â• TOP BAR â•â•â• -->
 
 <div class="ict-content">
+<div class="d-flex justify-content-end mb-2 no-print">
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i> Print</button>
+</div>
 <?php if ($tab === 'overview'): ?>
 <div class="row g-3">
   <div class="col-lg-7">
@@ -906,7 +912,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                                 <?php foreach ($staff_accounts as $s): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($s['full_name']) ?></td>
-                                    <td><small><?= htmlspecialchars($s['email'] ?? '-') ?></small></td>
+                                    <td><small><?= htmlspecialchars($s['email'] ?? '-') ?></small> <?= ict_mailto($s['email'] ?? '') ?></td>
                                     <td><span class="badge bg-info"><?= htmlspecialchars($s['role']) ?></span></td>
                                     <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= $s['status'] ?></span></td>
                                     <td><small class="text-muted"><?= htmlspecialchars($s['last_login'] ?? 'Never') ?></small></td>
@@ -939,12 +945,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                     <?php $students_list = ict_fetch($students_conn, "SELECT id, first_name, last_name, email, status, last_login FROM students ORDER BY last_login DESC LIMIT 15"); ?>
                     <div class="table-responsive" style="max-height:300px;overflow-y:auto">
                         <table class="table table-sm table-hover table-small">
-                            <thead><tr><th>Name</th><th>Status</th><th>Last Login</th></tr></thead>
+                            <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
                             <tbody>
-                                <?php if (empty($students_list)): ?><tr><td colspan="3" class="text-center text-muted">No records</td></tr><?php endif; ?>
+                                <?php if (empty($students_list)): ?><tr><td colspan="4" class="text-center text-muted">No records</td></tr><?php endif; ?>
                                 <?php foreach ($students_list as $s): ?>
                                 <tr>
                                     <td><small><?= htmlspecialchars($s['first_name'] . ' ' . $s['last_name']) ?></small></td>
+                                    <td><small><?= htmlspecialchars($s['email'] ?? '-') ?></small> <?= ict_mailto($s['email'] ?? '') ?></td>
                                     <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= $s['status'] ?? 'Active' ?></span></td>
                                     <td><small class="text-muted"><?= htmlspecialchars($s['last_login'] ?? 'Never') ?></small></td>
                                 </tr>

@@ -23,12 +23,13 @@ $pageTitle = 'Intake Planning';
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
-<div class="page-title-card"><h2><i class="fas fa-calendar-plus me-2"></i>Intake Planning</h2><p>Plan and manage student intakes across programs</p></div>
+<div class="page-title-card"><h2><i class="fas fa-calendar-plus me-2"></i>Intake Planning <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button></h2><p>Plan and manage student intakes across programs</p></div>
 <div class="row g-4">
 <div class="col-md-8"><div class="card"><div class="card-header">Intake History</div><div class="card-body">
 <?php if (empty($intakes)): ?><div class="empty-state"><i class="fas fa-database"></i><p>No intake data available.</p></div>
 <?php else: ?>
-<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Year</th><th>Program</th><th>Students</th></tr></thead><tbody>
+<div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchACGM" type="text" placeholder="Search..." onkeyup="filterTable('srchACGM','tblACGM')"></div>
+<div class="table-responsive"><table id="tblACGM" class="table table-hover"><thead><tr><th>Year</th><th>Program</th><th>Students</th></tr></thead><tbody>
 <?php foreach ($intakes as $i): ?>
 <tr><td><strong><?= htmlspecialchars($i['intake_year']) ?></strong></td><td><?= htmlspecialchars($i['program']) ?></td><td><span class="badge bg-primary"><?= (int)$i['student_count'] ?></span></td></tr>
 <?php endforeach; ?>
@@ -48,4 +49,21 @@ $pageTitle = 'Intake Planning';
 </div></div></div></div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+</script>
 </body></html>

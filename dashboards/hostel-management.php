@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Hostel Management';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
@@ -10,7 +10,7 @@ try { $conn2 = getDatabaseConnection('students'); } catch (Exception $e) { $conn
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];
 
-// hostel_rooms and hostel are in students_db â€” use $conn2 when available
+// hostel_rooms and hostel are in students_db — use $conn2 when available
 $hdb = $conn2 ?: $conn;
 $hprefix = ($hdb === $conn && !$conn2) ? 'igangaschool_students.' : '';
 
@@ -37,7 +37,7 @@ if ($hdb) {
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><i class="fas fa-bed me-2"></i>Hostel Management</h4>
+        <h4 class="fw-bold mb-0"><i class="fas fa-bed me-2"></i>Hostel Management</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
         <span class="text-muted small"><?= date('l, d M Y') ?></span>
     </div>
     <div class="row g-3 mb-4">
@@ -71,8 +71,9 @@ if ($hdb) {
         <?php if (empty($rooms)): ?>
         <div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No hostel rooms found.</p></div>
         <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchJLRH" type="text" placeholder="Search..." onkeyup="filterTable('srchJLRH','tblJLRH')"></div>
+<div class="table-responsive">
+            <table id="tblJLRH" class="table table-striped table-hover align-middle">
                 <thead class="table-light">
                     <tr><th>Room #</th><th>Hostel</th><th>Capacity</th><th>Occupants</th><th>Status</th></tr>
                 </thead>
@@ -97,5 +98,22 @@ if ($hdb) {
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+</script>
 </body>
 </html>

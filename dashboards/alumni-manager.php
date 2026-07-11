@@ -8,7 +8,7 @@ $userId = $user['id'] ?? 0;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// ── Ensure tables exist ──
+// â”€â”€ Ensure tables exist â”€â”€
 $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `student_id` varchar(50) DEFAULT NULL,
@@ -99,7 +99,7 @@ $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_jobs` (
     KEY `idx_jobs_current` (`is_current`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-// ── AJAX Handlers ──
+// â”€â”€ AJAX Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
@@ -288,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Alumni Management — ISNM</title>
+<title>Alumni Management â€” ISNM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -328,7 +328,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2><i class="fas fa-user-graduate me-2"></i>Alumni Management</h2>
+            <h2><i class="fas fa-user-graduate me-2"></i>Alumni Management</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <p>Manage alumni records, contributions, and engagement</p>
         </div>
         <div>
@@ -662,7 +662,7 @@ function deleteAlumni(id) {
     });
 }
 
-// ── Contributions ──
+// â”€â”€ Contributions â”€â”€
 function loadContributions(alumniId) {
     $.post('', { action: 'list_contributions', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;
@@ -691,7 +691,7 @@ function addContribution() {
     }, 'json');
 }
 
-// ── Jobs ──
+// â”€â”€ Jobs â”€â”€
 function loadJobs(alumniId) {
     $.post('', { action: 'list_jobs', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;
@@ -721,7 +721,7 @@ function addJob() {
     }, 'json');
 }
 
-// ── Alumni Events ──
+// â”€â”€ Alumni Events â”€â”€
 function loadAlumniEvents(alumniId) {
     $.post('', { action: 'list_alumni_events', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;
@@ -748,6 +748,22 @@ function addAlumniEvent() {
         else Swal.fire('Error', r.message, 'error');
     }, 'json');
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </div>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

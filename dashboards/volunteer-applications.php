@@ -63,7 +63,7 @@ $pageTitle = 'Volunteer Applications';
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
-        <h1><i class="fas fa-hands-helping"></i> Volunteer Applications</h1>
+        <h1><i class="fas fa-hands-helping"></i> Volunteer Applications</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
     </div>
     <?php if (!empty($_SESSION['success'])): ?>
     <div class="alert alert-success py-2"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div>

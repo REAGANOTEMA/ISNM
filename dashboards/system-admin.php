@@ -49,9 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <div class="page-content">
     <div class="content-header d-flex justify-content-between align-items-center">
         <h1 class="mb-0"><i class="fas fa-cogs"></i> System Administration</h1>
+        <div class="d-flex gap-2">
+        <input type="text" class="form-control form-control-sm" id="sysSearchInput" placeholder="Filter tables..." style="width:200px" onkeyup="filterSysTables(this.value)">
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" title="Print page"><i class="fas fa-print"></i></button>
         <button class="btn btn-sm btn-3d btn-3d-blue" onclick="openGlobalSearch()" title="Search students (Ctrl+K)">
           <i class="fas fa-search"></i> Global Search <small style="opacity:0.7">Ctrl+K</small>
         </button>
+        </div>
     </div>
     <?php renderGlobalSearchBar($conn, $studentsConn); ?>
 
@@ -263,5 +267,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <?php endif; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterSysTables(q) {
+    q = q.toLowerCase();
+    document.querySelectorAll('.table-responsive table').forEach(function(tbl) {
+        tbl.querySelectorAll('tbody tr').forEach(function(tr) {
+            var txt = tr.textContent.toLowerCase();
+            tr.style.display = txt.indexOf(q) > -1 ? '' : 'none';
+        });
+    });
+}
+function openGlobalSearch() {
+    var el = document.querySelector('.global-search-bar input, .student-lookup, [onkeyup*="search"]');
+    if (el) el.focus();
+}
+</script>
 </body>
 </html>

@@ -77,7 +77,7 @@ if ($conn) {
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><i class="fas fa-user-tie me-2"></i>Recruitment</h4>
+        <h4 class="fw-bold mb-0"><i class="fas fa-user-tie me-2"></i>Recruitment</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
         <span class="text-muted small"><?= date('l, d M Y') ?></span>
     </div>
     <div class="row g-3 mb-4">
@@ -114,8 +114,9 @@ if ($conn) {
         <?php if (empty($positions)): ?>
         <div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No recruitment positions found.</p></div>
         <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchJZQM" type="text" placeholder="Search..." onkeyup="filterTable('srchJZQM','tblJZQM')"></div>
+<div class="table-responsive">
+            <table id="tblJZQM" class="table table-striped table-hover align-middle">
                 <thead class="table-light">
                     <tr><th>Position Title</th><th>Department</th><th>Applicants</th><th>Status</th><th>Posted Date</th><th>Actions</th></tr>
                 </thead>
@@ -228,6 +229,22 @@ function submitEditPosition() {
         .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
         .catch(function(e) { alert('Error updating position'); });
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </body>
 </html>

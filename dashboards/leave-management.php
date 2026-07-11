@@ -123,8 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 
 <div class="print-area content-section">
+<div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchTLMR" type="text" placeholder="Search..." onkeyup="filterTable('srchTLMR','tblTLMR')"></div>
 <div class="table-responsive">
-<table class="table table-striped table-hover align-middle">
+<table id="tblTLMR" class="table table-striped table-hover align-middle">
 <thead class="table-light"><tr><th>Staff</th><th>Leave Type</th><th>Start</th><th>End</th><th>Days</th><th>Reason</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
 <tbody>
 <?php if(empty($records)): ?>
@@ -166,5 +167,22 @@ $bc=$st==='Approved'?'bg-success':($st==='Pending'?'bg-warning text-dark':($st==
 </div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Submit Request</button></div></form></div></div>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+</script>
 </body>
 </html>

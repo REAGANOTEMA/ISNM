@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['computer lab']);
@@ -1008,7 +1008,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-6">
                 <div class="section-card">
                     <h2><i class="fas fa-door-open me-2 text-primary"></i>Lab Rooms</h2>
-                    <div class="table-responsive">
+                    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchBLUE" type="text" placeholder="Search..." onkeyup="filterTable('srchBLUE','tblBLUE')"></div>
+<div class="table-responsive">
                         <table class="table table-sm">
                             <thead><tr><th>Room</th><th>Code</th><th>Capacity</th><th>Computers</th><th>Status</th></tr></thead>
                             <tbody>
@@ -1188,7 +1189,7 @@ $('#printTypeSelect, #printJobForm select[name=paper_size], #printJobForm input[
     const c = charges.find(x => x.print_type === type && x.paper_size === paper);
     const pp = c ? parseFloat(c.charge_per_page) : 0;
     const total = pp * pages * copies;
-    $('#chargeDisplay').text(total > 0 ? `UGX ${pp.toLocaleString()} Ã— ${pages}p Ã— ${copies}x = UGX ${total.toLocaleString()}` : 'Charge not configured');
+    $('#chargeDisplay').text(total > 0 ? `UGX ${pp.toLocaleString()} × ${pages}p × ${copies}x = UGX ${total.toLocaleString()}` : 'Charge not configured');
 });
 
 // Single-click actions
@@ -1335,6 +1336,22 @@ function downloadPDF() {
     win.document.close();
     setTimeout(() => { win.print(); }, 500);
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

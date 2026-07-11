@@ -84,7 +84,7 @@ if ($conn) {
 <main class="main" style="margin-left:270px;padding:32px;">
 <div class="container-fluid">
 <div class="d-flex justify-content-between align-items-center mb-4">
-<h4 class="fw-bold mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Training & CPD</h4>
+<h4 class="fw-bold mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Training & CPD</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
 <span class="text-muted small"><?= date('l, d M Y') ?></span>
 </div>
 <div class="row g-3 mb-4">
@@ -102,8 +102,9 @@ if ($conn) {
         <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i>Training Records</h5>
         <div><button class="btn btn-primary btn-sm" onclick="showAddTraining()"><i class="fas fa-plus me-1"></i>Add Training</button> <button class="btn btn-success btn-sm" onclick="showEnrollStaff()"><i class="fas fa-user-plus me-1"></i>Enroll Staff</button></div>
     </div>
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchDBCO" type="text" placeholder="Search..." onkeyup="filterTable('srchDBCO','tblDBCO')"></div>
+<div class="table-responsive">
+        <table id="tblDBCO" class="table table-striped table-hover align-middle">
             <thead class="table-light"><tr><th>Training</th><th>Staff</th><th>Provider</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
             <?php if(empty($records)): ?>
@@ -220,5 +221,21 @@ function submitUpdateEnroll() {
         .then(function(d) { if (d.success) window.location.reload(); else alert('Error: ' + (d.error || 'Failed')); })
         .catch(function(e) { alert('Error'); });
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </body>

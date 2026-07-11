@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * Director of Admissions & Requirements — Complete Enterprise Dashboard
+ * Director of Admissions & Requirements � Complete Enterprise Dashboard
  * Covers: Applications, Review, Requirements, Filtering, Search, Analytics,
  * Registration, Communications, WhatsApp, Reports, Security, Audit.
  */
@@ -22,7 +22,7 @@ $photoDir = __DIR__ . '/../uploads/passport_photos/';
 if (!is_dir($photoDir)) @mkdir($photoDir, 0755, true);
 if (!$conn) die('Database connection failed.');
 
-// ── Auto-migrate tables (safe, runs once per page load if table missing) ──
+// -- Auto-migrate tables (safe, runs once per page load if table missing) --
 $autoMigrateSQL = [
     "CREATE TABLE IF NOT EXISTS academic_programs (id INT AUTO_INCREMENT PRIMARY KEY,program_code VARCHAR(20) NOT NULL UNIQUE,program_name VARCHAR(255) NOT NULL,program_type ENUM('Certificate','Diploma','Degree','Short Course') NOT NULL DEFAULT 'Diploma',department VARCHAR(100) DEFAULT NULL,duration_years DECIMAL(3,1) NOT NULL DEFAULT 2.0,total_fee DECIMAL(14,2) NOT NULL DEFAULT 0.00,status ENUM('Active','Inactive') NOT NULL DEFAULT 'Active',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS intakes (id INT AUTO_INCREMENT PRIMARY KEY,intake_name VARCHAR(100) NOT NULL,intake_month VARCHAR(20) NOT NULL,intake_year YEAR NOT NULL,application_start DATE DEFAULT NULL,application_deadline DATE DEFAULT NULL,status ENUM('Open','Closed','Upcoming') NOT NULL DEFAULT 'Upcoming',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE KEY uk_intake(intake_month,intake_year)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
@@ -134,7 +134,7 @@ $r = $conn->query("SELECT COUNT(*) c FROM intakes"); if ($r && (int)$r->fetch_as
 // Sync programs from students DB
 if ($stuConn) { $conn->query("INSERT IGNORE INTO academic_programs(program_code,program_name,program_type,duration_years) SELECT CONCAT('PGM-',p.id),p.program_name,p.program_type,p.duration_years FROM $studentsDb.programs p WHERE p.is_active=1 AND NOT EXISTS(SELECT 1 FROM academic_programs ap WHERE ap.program_name=p.program_name COLLATE utf8mb4_general_ci LIMIT 1)"); }
 
-// ── Helpers ──
+// -- Helpers --
 function logAdmission($conn, $applicantId, $userId, $action, $desc) { $ip=$_SERVER['REMOTE_ADDR']??'';$ua=$_SERVER['HTTP_USER_AGENT']??'';$s=$conn->prepare("INSERT INTO admission_activity_logs(applicant_id,user_id,action,description,ip_address,user_agent) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$action,$desc,$ip,$ua);$s->execute();$s->close();} }
 function notifyAdmission($conn, $applicantId, $userId, $type, $title, $msg, $link='') { $s=$conn->prepare("INSERT INTO admission_notifications(applicant_id,user_id,type,title,message,link) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$type,$title,$msg,$link);$s->execute();$s->close();} }
 function getStatusBadge($s) { $m=['New'=>'bg-primary','Under Review'=>'bg-info','Waiting for Documents'=>'bg-warning text-dark','Requirements Verified'=>'bg-success','Interview Scheduled'=>'bg-purple','Approved'=>'bg-success','Rejected'=>'bg-danger','Registered'=>'bg-dark','Withdrawn'=>'bg-secondary'];$c=$m[$s]??'bg-secondary';return "<span class=\"badge $c\">".htmlspecialchars($s).'</span>'; }
@@ -142,10 +142,12 @@ function adCount($conn, $status) { $r=$conn->query("SELECT COUNT(*) c FROM appli
 
 $page = $_GET['page'] ?? 'overview';
 if ($page === 'home') $page = 'overview';
+if ($page === 'applicant_management') $page = 'applicants';
+if ($page === 'enrollment') $page = 'registration';
 $sub = $_GET['sub'] ?? '';
 $aid = (int)($_GET['aid'] ?? 0);
 
-// ── StudentDataLoader (needed early for POST handlers) ──
+// -- StudentDataLoader (needed early for POST handlers) --
 $stuLoader = new StudentDataLoader($stuConn);
 $allStudents = $stuLoader->loadAllStudents();
 $totalAllStudents = count($allStudents);
@@ -154,7 +156,7 @@ $excelFileCount = count($excelSources);
 $excelRowCount = 0;
 foreach ($excelSources as $es) $excelRowCount += $es['students'];
 
-// ── POST / AJAX handlers ──
+// -- POST / AJAX handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     header('Content-Type: application/json');
@@ -617,7 +619,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         logAdmission($conn,$newId,$userId,"Imported Online","Imported from website application #$aid");}
         echo json_encode(['success'=>true,'id'=>$newId??0]);exit;
     }
-    // ── Student Directory CRUD ──
+    // -- Student Directory CRUD --
     if ($action === 'stu_search') {
         $q=trim($_POST['q']??''); $rows=[];$set=trim($_POST['set']??'');$pg=trim($_POST['program']??'');$st=trim($_POST['status']??'');$yr=trim($_POST['year']??'');$gd=trim($_POST['gender']??'');
         // Search DB students
@@ -725,7 +727,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else{$msg='ID required.';}
         echo json_encode(['success'=>$success,'message'=>$msg]); exit;
     }
-    // ── Student Details Fetch (for full edit) ──
+    // -- Student Details Fetch (for full edit) --
     if ($action === 'stu_get') {
         $id=(int)($_POST['id']??0); $data=null;
         if($id&&$stuConn){
@@ -734,7 +736,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode($data?:[]); exit;
     }
-    // ── Student Comprehensive Detail ──
+    // -- Student Comprehensive Detail --
     if ($action === 'stu_detail') {
         $id=(int)($_POST['id']??0); $result=[];
         if($id&&$stuConn){
@@ -778,7 +780,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode($result); exit;
     }
-    // ── Student Requirements Status ──
+    // -- Student Requirements Status --
     if ($action === 'stu_requirements') {
         $id=(int)($_POST['id']??0); $rows=[];
         if($id&&$conn){
@@ -796,7 +798,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode($rows); exit;
     }
-    // ── Student Set Requirement Status ──
+    // -- Student Set Requirement Status --
     if ($action === 'stu_set_req') {
         $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
         if($aid&&$rid&&$conn){
@@ -806,7 +808,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode(['success'=>true]); exit;
     }
-    // ── Student Set Requirement by student_id (direct, no applicant lookup needed) ──
+    // -- Student Set Requirement by student_id (direct, no applicant lookup needed) --
     if ($action === 'stu_set_req_by_student') {
         $sid=(int)($_POST['student_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
         $ok=false;
@@ -833,7 +835,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;
 }
 
-// ── Data fetching ──
+// -- Data fetching --
 $stats = ['total'=>0,'new'=>0,'review'=>0,'waiting'=>0,'verified'=>0,'approved'=>0,'rejected'=>0,'registered'=>0,'interview'=>0];
 $r=$conn->query("SELECT COUNT(*) c FROM applicants"); if($r)$stats['total']=(int)$r->fetch_assoc()['c'];
 foreach(['New','Under Review','Waiting for Documents','Requirements Verified','Interview Scheduled','Approved','Rejected','Registered'] as $s) $stats[str_replace(' ','_',strtolower($s))]=adCount($conn,$s);
@@ -949,7 +951,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .form-select-sm,.form-control-sm{font-size:11px}
 .adm-tabs a{padding:5px 8px;font-size:10px}
 }
-/* ── Sidebar Override — ensure it works correctly ── */
+/* -- Sidebar Override � ensure it works correctly -- */
 .isnm-sidebar.sidebar{position:fixed;top:0;left:0;z-index:1050}
 .isnm-sidebar.sidebar .sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0}
 .isnm-sidebar.sidebar .menu-group-header{cursor:pointer;user-select:none;padding:10px 16px;display:flex;align-items:center;gap:10px}
@@ -1161,7 +1163,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
         <td style="min-width:180px">
           <div class="d-flex gap-1">
             <select id="reqStatus_<?=$r['id']?>" class="form-select form-select-sm" style="width:auto;display:inline-block" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,this.value,document.getElementById('reqNote_<?=$r['id']?>').value)">
-              <option value="">—</option>
+              <option value="">�</option>
               <option value="Received" <?=$cs==='Received'?'selected':''?>>Received</option>
               <option value="Submitted" <?=$cs==='Submitted'?'selected':''?>>Submitted</option>
               <option value="Verified" <?=$cs==='Verified'?'selected':''?>>Verified</option>
@@ -1347,7 +1349,7 @@ function deleteApplicant(id, name) {
 <?php endif; ?>
 
 <?php elseif ($page === 'requirements'): ?>
-<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal — All Applicants</h3>
+<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal � All Applicants</h3>
   <p class="text-muted small mb-3">Matrix view: each row is an applicant, each column is a requirement. Click to toggle status. Checkboxes for bulk marking.</p>
   
   <!-- Advanced Filters -->
@@ -1755,7 +1757,7 @@ loadRequirementsPortal();
     <div class="col-md-6">
       <select class="form-select" id="regSelect" size="10">
         <?php $apps=$conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.status='Approved' ORDER BY a.full_name"); if($apps)while($a=$apps->fetch_assoc()): ?>
-        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> — <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
+        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> � <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
         <?php endwhile; ?>
       </select>
     </div>
@@ -1778,7 +1780,7 @@ loadRequirementsPortal();
         <div class="col-md-5">
           <div class="mb-3"><label class="form-label small fw-bold">Select Applicant</label>
             <select class="form-select" id="commApplicant">
-              <option value="">— Select —</option>
+              <option value="">� Select �</option>
               <?php $allApps=$conn->query("SELECT id,full_name,application_number,email,phone FROM applicants ORDER BY full_name"); if($allApps)while($a=$allApps->fetch_assoc()): ?>
               <option value="<?=$a['id']?>" data-email="<?=htmlspecialchars($a['email'])?>" data-phone="<?=htmlspecialchars($a['phone'])?>"><?=htmlspecialchars($a['full_name'])?> (<?=htmlspecialchars($a['application_number'])?>)</option>
               <?php endwhile; ?>
@@ -1797,7 +1799,7 @@ loadRequirementsPortal();
             <?php
             $comms=$conn->query("SELECT c.*,a.full_name as app_name FROM admission_communications c JOIN applicants a ON c.applicant_id=a.id ORDER BY c.sent_at DESC LIMIT 50");
             if($comms&&$comms->num_rows>0): while($c=$comms->fetch_assoc()): ?>
-            <div class="p-2 border-bottom small"><strong>[<?=htmlspecialchars($c['communication_type'])?>]</strong> <?=htmlspecialchars($c['subject'])?> → <span class="text-primary"><?=htmlspecialchars($c['app_name'])?></span><br><span class="text-muted"><?=htmlspecialchars(substr($c['message'],0,150))?><br><span class="smaller"><?=$c['sent_at']?></span></span></div>
+            <div class="p-2 border-bottom small"><strong>[<?=htmlspecialchars($c['communication_type'])?>]</strong> <?=htmlspecialchars($c['subject'])?> ? <span class="text-primary"><?=htmlspecialchars($c['app_name'])?></span><br><span class="text-muted"><?=htmlspecialchars(substr($c['message'],0,150))?><br><span class="smaller"><?=$c['sent_at']?></span></span></div>
             <?php endwhile; else: ?><p class="text-muted small">No communications yet.</p><?php endif; ?>
           </div>
         </div>
@@ -1990,7 +1992,7 @@ function viewExcelStudent(name,file,id,setInfo,program,phone){
   alert(msg);
 }
 function showRequirements(stuId,stuName,stuNumber){
-  document.getElementById('reqViewTitle').textContent=stuName+' — Requirements';
+  document.getElementById('reqViewTitle').textContent=stuName+' � Requirements';
   document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
   new bootstrap.Modal(document.getElementById('reqViewModal')).show();
   var body='action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(_tk);
@@ -2007,7 +2009,7 @@ function showRequirements(stuId,stuName,stuNumber){
         +'<td><span class="badge bg-'+statusClass+'" id="srs_'+reqId+'">'+r.status+'</span></td>'
         +'<td class="small text-muted">'+((r.director_notes||'').substring(0,50)||'-')+'</td>'
         +'<td><select class="form-select form-select-sm req-status-select" data-stuid="'+stuId+'" data-reqid="'+reqId+'" onchange="setStudentReqDirect(this)">'
-        +'<option value="">—</option>'
+        +'<option value="">�</option>'
         +'<option value="Received" '+(r.status==='Received'?'selected':'')+'>Received</option>'
         +'<option value="Submitted" '+(r.status==='Submitted'?'selected':'')+'>Submitted</option>'
         +'<option value="Verified" '+(r.status==='Verified'?'selected':'')+'>Verified</option>'
@@ -2078,7 +2080,7 @@ function viewStudentDetail(idx,id){
         reqHtml+='<tr><td class="small">'+rr.requirement_name+(rr.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td><td><span class="badge bg-'+sc+'">'+rr.status+'</span></td></tr>';
       });
       reqHtml+='</tbody></table></div>';
-    }else{reqHtml='<p class="text-muted small">No applicant record linked — cannot track requirements.</p>';}
+    }else{reqHtml='<p class="text-muted small">No applicant record linked � cannot track requirements.</p>';}
     var payHtml='',paySum=d.payment_summary||{paid:0,total:0};
     var bal=parseFloat(paySum.total)-parseFloat(paySum.paid);
     var payStatus=bal<=0?'<span class="badge bg-success">Paid in Full</span>':bal>0?'<span class="badge bg-warning text-dark">Balance: '+bal.toLocaleString()+'</span>':'<span class="badge bg-secondary">No Data</span>';
@@ -2299,7 +2301,7 @@ function showToast(message, type='info') {
     });
 }
 
-// ── Overview Charts ──
+// -- Overview Charts --
 <?php if($page==='overview'): ?>
 postData({action:'dashboard_stats'}).then(d=>{
   if(!d)return;
@@ -2313,7 +2315,7 @@ postData({action:'reports_data',from:'<?=date('Y-m-d',strtotime('-14 days'))?>',
 });
 <?php endif; ?>
 
-// ── Applicant filter ──
+// -- Applicant filter --
 <?php if($page==='applicants'): ?>
 ['appSearch','filterStatus','filterProgram','filterIntake','filterGender'].forEach(id=>document.getElementById(id)?.addEventListener('change',filterApps));
 document.getElementById('appSearch')?.addEventListener('input',filterApps);
@@ -2335,10 +2337,10 @@ function filterApps(){
 }
 <?php endif; ?>
 
-// ── Requirements portal toggle ──
+// -- Requirements portal toggle --
 function toggleReq(aid,rid,st){postData({action:'set_requirement',applicant_id:aid,requirement_id:rid,status:st}).then(d=>{if(d.success){showToast('Requirement updated','success');loadRequirementsPortal();}else{showToast('Update failed','danger');}});}
 
-// ── Website submissions ──
+// -- Website submissions --
 <?php if($page==='submissions'): ?>
 postData({action:'website_submissions'}).then(d=>{
   const tb=document.getElementById('webSubTable');
@@ -2347,7 +2349,7 @@ postData({action:'website_submissions'}).then(d=>{
 });
 <?php endif; ?>
 
-// ── Reports ──
+// -- Reports --
 <?php if($page==='reports'||$page==='analytics'): ?>
 function loadReport(){
   const from=document.getElementById('rptFrom')?.value||'<?=date('Y-m-d',strtotime('-30 days'))?>';

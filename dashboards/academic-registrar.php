@@ -581,7 +581,9 @@ if ($ajaxAction === 'get_transcript_preview') {
         echo '<tr><td>' . $i++ . '</td><td>' . htmlspecialchars($it['course_code']) . '</td><td>' . htmlspecialchars($it['marks_obtained']) . '</td><td>' . htmlspecialchars($it['grade']) . '</td><td>' . htmlspecialchars($it['grade_point']) . '</td></tr>';
     }
     echo '</tbody></table>';
-    echo '<p class="text-end"><strong>CGPA:</strong> ' . htmlspecialchars($t['cumulative_gpa'] ?: 'N/A') . '</p></div>';
+    echo '<p class="text-end"><strong>CGPA:</strong> ' . htmlspecialchars($t['cumulative_gpa'] ?: 'N/A') . '</p>';
+    echo '<div class="text-center mt-3"><button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Transcript</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>';
+    echo '</div>';
     exit;
 }
 
@@ -596,7 +598,8 @@ if ($ajaxAction === 'get_certificate_preview') {
     $c = $r->fetch_assoc();
     $stmt->close();
     if (!$c) { echo '<p class="text-muted">No certificate found.</p>'; exit; }
-    echo '<div class="p-5 text-center" style="font-family:serif;border:3px double #1a237e;">';
+    echo '<div class="p-5" style="font-family:serif;border:3px double #1a237e;" id="certificateContent">';
+    echo '<div class="text-center">';
     echo '<h2 class="mb-1">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>';
     echo '<hr style="border-top:2px solid #1a237e;">';
     echo '<h4 class="text-uppercase mt-3">' . htmlspecialchars($c['certificate_type']) . '</h4>';
@@ -608,6 +611,9 @@ if ($ajaxAction === 'get_certificate_preview') {
     echo '<p class="mt-2"><strong>Certificate No:</strong> ' . htmlspecialchars($c['certificate_number']) . '</p>';
     if ($c['issue_date']) echo '<p><strong>Issue Date:</strong> ' . htmlspecialchars($c['issue_date']) . '</p>';
     echo '</div>';
+    echo '<div class="text-center mt-4"><button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Certificate</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>';
+    echo '</div>';
+    echo '<script>window.onload=function(){setTimeout(function(){document.title="Certificate - ' . addslashes($c['full_name']) . '";},100);}</script>';
     exit;
 }
 
@@ -1045,6 +1051,20 @@ function previewTranscript(studentId) {
         });
 }
 
+function printTranscript(studentId) {
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write('<html><head><title>Print Transcript</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
+    fetch('academic-registrar.php?ajax=get_transcript_preview&student_id=' + studentId)
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            w.document.write(html);
+            w.document.write('<div class="text-center mt-3 no-print"><button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>');
+            w.document.write('</body></html>');
+            w.document.close();
+        });
+}
+
 function previewCertificate(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
     w.document.write('<html><head><title>Certificate Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head><body>');
@@ -1052,6 +1072,20 @@ function previewCertificate(studentId) {
         .then(function(r) { return r.text(); })
         .then(function(html) {
             w.document.write(html);
+            w.document.write('</body></html>');
+            w.document.close();
+        });
+}
+
+function printCertificate(studentId) {
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
+    fetch('academic-registrar.php?ajax=get_certificate_preview&student_id=' + studentId)
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            w.document.write(html);
+            w.document.write('<div class="text-center mt-3 no-print"><button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>');
             w.document.write('</body></html>');
             w.document.close();
         });
@@ -1516,6 +1550,7 @@ document.addEventListener('click', function(e) {
             <td><?= $t['is_downloadable'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?></td>
             <td>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="previewTranscript(<?= $t['student_id'] ?>)" title="Preview"><i class="fas fa-eye"></i></button>
+              <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="printTranscript(<?= $t['student_id'] ?>)" title="Print"><i class="fas fa-print"></i></button>
               <?php if (!$t['is_downloadable']): ?><button class="btn btn-sm btn-outline-success py-0 px-2" onclick="markDownloadable('transcript', <?= $t['id'] ?>)" title="DL"><i class="fas fa-download"></i></button><?php endif; ?>
               <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="archiveDoc('transcript', <?= $t['id'] ?>)" title="Archive"><i class="fas fa-archive"></i></button>
             </td></tr>
@@ -1572,6 +1607,7 @@ document.addEventListener('click', function(e) {
             <td><?= $c['is_downloadable'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?></td>
             <td>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="previewCertificate(<?= $c['student_id'] ?>)" title="Preview"><i class="fas fa-eye"></i></button>
+              <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="printCertificate(<?= $c['student_id'] ?>)" title="Print"><i class="fas fa-print"></i></button>
               <?php if (!$c['is_downloadable']): ?><button class="btn btn-sm btn-outline-success py-0 px-2" onclick="markDownloadable('certificate', <?= $c['id'] ?>)" title="DL"><i class="fas fa-download"></i></button><?php endif; ?>
               <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="archiveDoc('certificate', <?= $c['id'] ?>)" title="Archive"><i class="fas fa-archive"></i></button>
             </td></tr>

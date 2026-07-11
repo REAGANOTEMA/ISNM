@@ -81,7 +81,7 @@ if ($conn) {
 <main class="main" style="margin-left:270px;padding:32px;">
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><i class="fas fa-comments me-2"></i>Communications</h4>
+        <h4 class="fw-bold mb-0"><i class="fas fa-comments me-2"></i>Communications</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
         <div class="d-flex gap-2 align-items-center">
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
             <button class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;" onclick="openComposeModal()"><i class="fas fa-pen me-1"></i>Compose</button>
@@ -371,6 +371,22 @@ function escapeHtml(str) {
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
 }
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </body>
 </html>

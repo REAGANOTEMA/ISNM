@@ -531,7 +531,7 @@ if ($students) {
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-6"><div class="card stats-card-lab"><div class="card-body d-flex align-items-center gap-3">
                 <div class="stats-icon" style="background:rgba(13,110,253,.12);color:var(--sl-primary)"><i class="fas fa-tools"></i></div>
-                <div><h3 class="fw-bold mb-0" id="stat-equipment"><?= $equipment_count ?></h3><small class="text-muted">Equipment Items</small></div>
+                <div><h3 class="fw-bold mb-0" id="stat-equipment"><?= $equipment_count ?></h3> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button><small class="text-muted">Equipment Items</small></div>
             </div></div></div>
             <div class="col-md-3 col-6"><div class="card stats-card-lab"><div class="card-body d-flex align-items-center gap-3">
                 <div class="stats-icon" style="background:rgba(25,135,84,.12);color:var(--sl-success)"><i class="fas fa-hand-holding"></i></div>
@@ -586,7 +586,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openEqModal()"><i class="fas fa-plus me-1"></i>Add Equipment</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchVFHR" type="text" placeholder="Search..." onkeyup="filterTable('srchVFHR','tblVFHR')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="eq-table"><thead class="table-light"><tr>
                 <th>Code</th><th>Name</th><th>Category</th><th>Qty</th><th>Condition</th><th>Location</th><th>Status</th><th style="width:120px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -618,7 +619,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openCoModal()"><i class="fas fa-plus me-1"></i>New Check out</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchHMNX" type="text" placeholder="Search..." onkeyup="filterTable('srchHMNX','tblHMNX')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="co-table"><thead class="table-light"><tr>
                 <th>ID</th><th>Equipment</th><th>Borrower</th><th>Check out</th><th>Expected Return</th><th>Status</th><th style="width:140px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -650,7 +652,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openSesModal()"><i class="fas fa-plus me-1"></i>New Session</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchSBQM" type="text" placeholder="Search..." onkeyup="filterTable('srchSBQM','tblSBQM')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="ses-table"><thead class="table-light"><tr>
                 <th>Session Name</th><th>Date</th><th>Time</th><th>Instructor</th><th>Room</th><th>Status</th><th style="width:120px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -684,7 +687,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openSkModal()"><i class="fas fa-plus me-1"></i>Record Skill</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchHCLI" type="text" placeholder="Search..." onkeyup="filterTable('srchHCLI','tblHCLI')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="sk-table"><thead class="table-light"><tr>
                 <th>Skill</th><th>Description</th><th>Session</th><th>Demo Date</th><th>Instructor ID</th><th>Students</th><th style="width:100px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -714,7 +718,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openConModal()"><i class="fas fa-plus me-1"></i>Add Item</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchJVCH" type="text" placeholder="Search..." onkeyup="filterTable('srchJVCH','tblJVCH')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="con-table"><thead class="table-light"><tr>
                 <th>Item</th><th>Category</th><th>Qty</th><th>Unit</th><th>Min Stock</th><th>Unit Cost</th><th>Supplier</th><th>Status</th><th style="width:100px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -746,7 +751,8 @@ if ($students) {
                 <select id="att-session-filter" class="form-select form-select-sm d-inline-block" style="width:300px" onchange="loadAtt()"><option value="">-- All Sessions --</option></select>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchPGBA" type="text" placeholder="Search..." onkeyup="filterTable('srchPGBA','tblPGBA')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="att-table"><thead class="table-light"><tr>
                 <th>Session</th><th>Date</th><th>Student ID</th><th>Status</th><th>Check in</th><th>Marked By</th><th style="width:80px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -772,7 +778,8 @@ if ($students) {
                 <button class="btn btn-primary btn-sm ms-2" onclick="openIncModal()"><i class="fas fa-plus me-1"></i>Report Incident</button>
             </div>
         </div>
-        <div class="card"><div class="card-body p-0"><div class="table-responsive">
+        <div class="card"><div class="card-body p-0"><div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchKROW" type="text" placeholder="Search..." onkeyup="filterTable('srchKROW','tblKROW')"></div>
+<div class="table-responsive">
             <table class="table table-hover mb-0" id="inc-table"><thead class="table-light"><tr>
                 <th>Date</th><th>Time</th><th>Type</th><th>Severity</th><th>Description</th><th>Equipment</th><th>Status</th><th style="width:100px">Actions</th>
             </tr></thead><tbody></tbody></table>
@@ -1213,6 +1220,22 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (view==='attendance') { loadAttSessions(); loadAtt(); }
     else if (view==='incidents') loadInc();
 });
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 </body>
 </html>

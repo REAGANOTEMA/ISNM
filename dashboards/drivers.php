@@ -10,7 +10,7 @@ $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// ── POST Handlers ──
+// â”€â”€ POST Handlers â”€â”€
 $flash = '';
 $flashType = 'success';
 
@@ -311,10 +311,10 @@ if (isset($_GET['flash'])) {
     $flashType = $_GET['flash_type'] ?? 'success';
 }
 
-// ── Page Routing ──
+// â”€â”€ Page Routing â”€â”€
 $page = $_GET['page'] ?? 'home';
 
-// ── Data Queries ──
+// â”€â”€ Data Queries â”€â”€
 $total_trips_today = $students_transport = $total_vehicles = $total_routes = $total_students = $total_fuel_cost = 0;
 
 if ($conn) {
@@ -500,11 +500,11 @@ if ($conn) {
 
 <?php switch ($page):
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HOME / OVERVIEW
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'home': ?>
-<h1 class="drv-page-title">Transport Dashboard</h1>
+<h1 class="drv-page-title">Transport Dashboard</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Overview of all transport operations</p>
 
 <div class="drv-stat-grid">
@@ -575,11 +575,11 @@ case 'home': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // VEHICLES CRUD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'transport-vehicles': ?>
-<h1 class="drv-page-title">Manage Vehicles</h1>
+<h1 class="drv-page-title">Manage Vehicles</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Add, edit, and manage the transport fleet</p>
 
 <?php if ($edit_entity && $edit_type === 'edit_vehicle'): ?>
@@ -674,11 +674,11 @@ case 'transport-vehicles': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTES CRUD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'transport-routes': ?>
-<h1 class="drv-page-title">Manage Routes</h1>
+<h1 class="drv-page-title">Manage Routes</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Define and manage transport routes between locations</p>
 
 <?php if ($edit_entity && $edit_type === 'edit_route'): ?>
@@ -785,11 +785,11 @@ case 'transport-routes': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TRIPS CRUD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'transport-trips': ?>
-<h1 class="drv-page-title">Manage Trips</h1>
+<h1 class="drv-page-title">Manage Trips</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Schedule and track all transport trips</p>
 
 <?php if ($edit_entity && $edit_type === 'edit_trip'): ?>
@@ -911,11 +911,11 @@ case 'transport-trips': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // STUDENT TRANSPORT CRUD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'student-transport': ?>
-<h1 class="drv-page-title">Student Transport</h1>
+<h1 class="drv-page-title">Student Transport</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Assign students to routes and vehicles</p>
 
 <?php if ($edit_entity && $edit_type === 'edit_student'): ?>
@@ -1021,11 +1021,11 @@ case 'student-transport': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FUEL LOG CRUD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'fuel-log': ?>
-<h1 class="drv-page-title">Fuel Log</h1>
+<h1 class="drv-page-title">Fuel Log</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Track fuel consumption for all vehicles</p>
 
 <div class="drv-stat-grid" style="margin-bottom:24px">
@@ -1134,11 +1134,11 @@ case 'fuel-log': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REPORTS
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'reports': ?>
-<h1 class="drv-page-title">Transport Reports</h1>
+<h1 class="drv-page-title">Transport Reports</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Analytics and summaries for transport operations</p>
 
 <div class="drv-stat-grid">
@@ -1213,17 +1213,33 @@ case 'reports': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DEFAULT
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 default: ?>
-<h1 class="drv-page-title">Transport Dashboard</h1>
+<h1 class="drv-page-title">Transport Dashboard</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
 <p class="drv-page-sub">Select a module from the sidebar</p>
 <?php break;
 endswitch; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

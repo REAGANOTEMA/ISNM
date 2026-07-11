@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -24,7 +24,7 @@ if (file_exists($profileSettingsFile)) {
 
 $studentsConn = $ctx['students'];
 
-// â”€â”€â”€ POST Handlers â”€â”€â”€
+// ─── POST Handlers ───
 $flash_msg = '';
 $flash_type = 'success';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -516,8 +516,9 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             <div class="mb-2"><label>Comments</label><textarea name="comments" class="form-control" rows="2"></textarea></div>
                         </form>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
+                    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchXHSL" type="text" placeholder="Search..." onkeyup="filterTable('srchXHSL','tblXHSL')"></div>
+<div class="table-responsive">
+                        <table id="tblXHSL" class="table table-bordered table-hover">
                             <thead><tr><th>#</th><th>Student</th><th>Course</th><th>Type</th><th>Title</th><th>Total</th><th>Obtained</th><th>Date</th><th>Comments</th><th>Actions</th></tr></thead>
                             <tbody>
                             <?php if (empty($all_assessments)): ?>
@@ -620,7 +621,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             <button type="submit" class="btn btn-success">Save Resource</button>
                         </form>
                     </div>
-                    <div class="table-responsive">
+                    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchAFUN" type="text" placeholder="Search..." onkeyup="filterTable('srchAFUN','tblAFUN')"></div>
+<div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead><tr><th>#</th><th>Title</th><th>Type</th><th>Course</th><th>File/URL</th><th>Description</th><th>Actions</th></tr></thead>
                             <tbody>
@@ -719,7 +721,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             <button type="submit" class="btn btn-success">Post Announcement</button>
                         </form>
                     </div>
-                    <div class="table-responsive">
+                    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchZXOP" type="text" placeholder="Search..." onkeyup="filterTable('srchZXOP','tblZXOP')"></div>
+<div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead><tr><th>#</th><th>Title</th><th>Content</th><th>Audience</th><th>Published</th><th>Date</th></tr></thead>
                             <tbody>
@@ -769,7 +772,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
         if (empty($attendanceRecords)): ?><p class="text-muted text-center py-3">No attendance records found for your courses.</p>
         <?php else: ?>
-        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Date</th><th>Student</th><th>Status</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchPYFT" type="text" placeholder="Search..." onkeyup="filterTable('srchPYFT','tblPYFT')"></div>
+<div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Date</th><th>Student</th><th>Status</th></tr></thead><tbody>
         <?php foreach ($attendanceRecords as $a): ?><tr><td><?= htmlspecialchars($a['date']??'') ?></td><td><?= htmlspecialchars($a['full_name']??$a['student_number']??'') ?></td><td><span class="badge bg-<?= ($a['status']??'')==='Present'?'success':(($a['status']??'')==='Absent'?'danger':'warning') ?>"><?= htmlspecialchars($a['status']??'N/A') ?></span></td></tr><?php endforeach; ?>
         </tbody></table></div>
         <?php endif; ?>
@@ -786,7 +790,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
         if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
         <?php else: ?>
-        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFHMT" type="text" placeholder="Search..." onkeyup="filterTable('srchFHMT','tblFHMT')"></div>
+<div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
         <?php foreach ($catRecords as $c): ?><tr><td><?= htmlspecialchars($c['student_name']??$c['student_id']??'-') ?></td><td><?= htmlspecialchars($c['course_code']??$c['course_name']??'-') ?></td><td><?= htmlspecialchars($c['marks']??$c['score']??$c['total_marks']??'-') ?></td><td><?= htmlspecialchars($c['grade']??'-') ?></td></tr><?php endforeach; ?>
         </tbody></table></div>
         <?php endif; ?>
@@ -803,7 +808,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
         <?php else: ?>
-        <div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchZEDC" type="text" placeholder="Search..." onkeyup="filterTable('srchZEDC','tblZEDC')"></div>
+<div class="table-responsive"><table class="table table-striped table-sm"><thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Grade</th></tr></thead><tbody>
         <?php foreach ($examRecords as $e): ?><tr><td><?= htmlspecialchars($e['student_name']??$e['student_id']??'-') ?></td><td><?= htmlspecialchars($e['course_code']??$e['course_name']??'-') ?></td><td><?= htmlspecialchars($e['marks']??$e['score']??$e['total_marks']??'-') ?></td><td><?= htmlspecialchars($e['grade']??'-') ?></td></tr><?php endforeach; ?>
         </tbody></table></div>
         <?php endif; ?>
@@ -843,7 +849,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
         if (empty($lessonPlans)): ?><p class="text-muted text-center py-3">No lesson plans created yet.</p>
         <?php else: ?>
-        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Date</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchCHFJ" type="text" placeholder="Search..." onkeyup="filterTable('srchCHFJ','tblCHFJ')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Date</th></tr></thead><tbody>
         <?php foreach ($lessonPlans as $lp): ?><tr><td><?= htmlspecialchars($lp['title']??$lp['topic']??'-') ?></td><td><?= htmlspecialchars($lp['course_name']??$lp['course']??'-') ?></td><td><?= htmlspecialchars($lp['created_at']??'') ?></td></tr><?php endforeach; ?>
         </tbody></table></div>
         <?php endif; ?>
@@ -860,7 +867,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
         if (empty($assignments)): ?><p class="text-muted text-center py-3">No assignments created yet.</p>
         <?php else: ?>
-        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Due Date</th><th>Status</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchACKD" type="text" placeholder="Search..." onkeyup="filterTable('srchACKD','tblACKD')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Course</th><th>Due Date</th><th>Status</th></tr></thead><tbody>
         <?php foreach ($assignments as $as): ?><tr><td><?= htmlspecialchars($as['title']??'-') ?></td><td><?= htmlspecialchars($as['course_name']??$as['course_id']??'-') ?></td><td><?= htmlspecialchars($as['due_date']??$as['deadline']??'') ?></td><td><span class="badge bg-<?= ($as['status']??'')==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($as['status']??'Active') ?></span></td></tr><?php endforeach; ?>
         </tbody></table></div>
         <?php endif; ?>
@@ -1081,7 +1089,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
     </script>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
@@ -1148,6 +1156,22 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         });
     });
 })();
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

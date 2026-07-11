@@ -44,7 +44,7 @@ $expired = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') < $
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
-        <h1><i class="fas fa-id-card"></i> Professional Licenses</h1>
+        <h1><i class="fas fa-id-card"></i> Professional Licenses</h1><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end"><i class="fas fa-print"></i> Print</button>
     </div>
     <div class="row mb-4">
         <div class="col-md-4"><div class="card"><div class="card-body"><h6>Total Licenses</h6><h3><?= count($licenses) ?></h3></div></div></div>

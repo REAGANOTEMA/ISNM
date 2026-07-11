@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../config/database.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <div class="main-content" style="margin-left:270px;padding:20px;background:#f0f2f5;min-height:100vh;">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center page-header">
-            <h4 class="fw-bold mb-0"><i class="fas fa-bullhorn me-2"></i>Student Announcements</h4>
+            <h4 class="fw-bold mb-0"><i class="fas fa-bullhorn me-2"></i>Student Announcements</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
             <div>
                 <span class="text-muted small me-3"><?= date('l, d M Y') ?></span>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAnnModal"><i class="fas fa-plus me-1"></i>New Announcement</button>
@@ -221,7 +221,23 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Publish</button></div>
 </form></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

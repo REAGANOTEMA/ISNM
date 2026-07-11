@@ -65,7 +65,6 @@ function renderDynamicSidebar(): void {
         'compliance' => '#ef4444', 'clinical' => '#ef4444', 'system' => '#475569',
     ];
     ?>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <nav class="isnm-sidebar sidebar" id="isnmSidebar">
         <div class="sidebar-brand">
             <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">

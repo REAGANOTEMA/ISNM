@@ -17,8 +17,10 @@ $pageToSection = [
     'home'          => 'overview',
     'overview'      => 'overview',
     'student-body'  => 'student-body',
+    'guild_management' => 'student-body',
     'welfare'       => 'welfare',
     'events'        => 'events',
+    'sports_events' => 'events',
     'feedback'      => 'feedback',
     'reports'       => 'reports',
 ];
@@ -74,6 +76,15 @@ if ($staffDb) {
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="gld-content">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <input type="text" class="form-control form-control-sm" id="guildFilterAll" placeholder="Filter all tables..." style="width:250px" onkeyup="filterGuildTables(this.value)">
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" title="Print page"><i class="fas fa-print me-1"></i>Print</button>
+        <a href="mailto:?subject=Guild%20Dashboard%20Report&body=Guild%20President%20Dashboard%20-%20<?= urlencode(date('Y-m-d')) ?>" class="btn btn-sm btn-outline-info" title="Email report"><i class="fas fa-envelope"></i></a>
+    </div>
+</div>
 <?php switch ($section):
     case 'student-body': ?>
         <h1><i class="fas fa-users"></i> Student Body</h1>
@@ -90,6 +101,7 @@ if ($staffDb) {
         </div>
         <div class="row g-3">
             <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-notes-medical me-2"></i>Recent Welfare Cases</h5>
+                <input type="text" class="form-control form-control-sm mb-2" placeholder="Filter welfare cases..." onkeyup="filterGuildTables(this.value)">
                 <?php if (empty($welfareCases)): ?><p class="text-muted text-center py-3">No welfare cases recorded.</p>
                 <?php else: ?>
                 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>
@@ -244,5 +256,16 @@ if ($staffDb) {
 endswitch; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterGuildTables(q) {
+    q = q.toLowerCase();
+    document.querySelectorAll('.gld-content .table-responsive table').forEach(function(tbl) {
+        tbl.querySelectorAll('tbody tr').forEach(function(tr) {
+            var txt = tr.textContent.toLowerCase();
+            tr.style.display = txt.indexOf(q) > -1 ? '' : 'none';
+        });
+    });
+}
+</script>
 </body>
 </html>

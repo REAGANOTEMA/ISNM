@@ -31,7 +31,7 @@ $pageTitle = 'ICT Policy';
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
-<div class="page-title-card"><h2><i class="fas fa-file-lines me-2"></i>ICT Policy & Infrastructure</h2><p>Manage ICT policies, IT infrastructure, software inventory, and compliance</p></div>
+<div class="page-title-card"><h2><i class="fas fa-file-lines me-2"></i>ICT Policy & Infrastructure <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button></h2><p>Manage ICT policies, IT infrastructure, software inventory, and compliance</p></div>
 <div class="row g-4">
 <div class="col-md-6"><div class="card"><div class="card-header">IT Infrastructure (<?= count($infrastructure) ?>)</div><div class="card-body" style="max-height:350px;overflow-y:auto">
 <?php if (empty($infrastructure)): ?><div class="empty-state"><i class="fas fa-server"></i><p>No infrastructure assets recorded.</p></div>
@@ -55,7 +55,8 @@ $pageTitle = 'ICT Policy';
 <div class="col-12"><div class="card"><div class="card-header">Compliance Records</div><div class="card-body">
 <?php if (empty($compliance)): ?><div class="empty-state"><i class="fas fa-clipboard"></i><p>No compliance records.</p></div>
 <?php else: ?>
-<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Type</th><th>Document</th><th>Issue Date</th><th>Expiry Date</th><th>Status</th></tr></thead><tbody>
+<div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchNUGS" type="text" placeholder="Search..." onkeyup="filterTable('srchNUGS','tblNUGS')"></div>
+<div class="table-responsive"><table id="tblNUGS" class="table table-sm"><thead><tr><th>Type</th><th>Document</th><th>Issue Date</th><th>Expiry Date</th><th>Status</th></tr></thead><tbody>
 <?php foreach ($compliance as $c): ?>
 <tr><td class="small"><?= htmlspecialchars($c['compliance_type']??'') ?></td><td class="small"><?= htmlspecialchars($c['document_name']??'') ?></td><td class="small"><?= htmlspecialchars($c['issue_date']??'') ?></td><td class="small"><?= htmlspecialchars($c['expiry_date']??'N/A') ?></td><td><span class="status-pill <?= ($c['status']??'') === 'Valid' ? 'success' : (($c['status']??'') === 'Expired' ? 'danger' : 'warning') ?>"><?= htmlspecialchars($c['status']??'Pending') ?></span></td></tr>
 <?php endforeach; ?>
@@ -64,4 +65,21 @@ $pageTitle = 'ICT Policy';
 </div></div></div></div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+</script>
 </body></html>

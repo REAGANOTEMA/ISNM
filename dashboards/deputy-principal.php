@@ -32,6 +32,7 @@ function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function dep_success($m) { $_SESSION['dep_success'] = $m; }
 function dep_error($m) { $_SESSION['dep_error'] = $m; }
 function safeCount($c, $s) { $r = $c->query($s); if (!$r) return 0; $w = $r->fetch_assoc(); return intval($w['c'] ?? 0); }
+function dep_mailto($email) { return $email ? '<a href="mailto:'.htmlspecialchars($email).'" class="text-decoration-none" title="Send email"><i class="fas fa-envelope text-primary"></i></a>' : ''; }
 
 // â”€â”€ AJAX DATA ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -526,6 +527,7 @@ unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="dep-content dashboard-section active" data-section="deputy">
+<div style="text-align:right;margin-bottom:8px" class="no-print"><button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i> Print</button></div>
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
 

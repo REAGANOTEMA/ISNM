@@ -247,7 +247,7 @@ $pageTitle = 'HR Manager';
 <div class="hr-content">
 <?php if (isset($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible"><?=htmlspecialchars($_SESSION['success'])?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php unset($_SESSION['success']); endif; ?>
 
-<div class="hr-header"><h1>Human Resources Management</h1><p><?=htmlspecialchars($user['full_name'] ?? 'HR Manager')?> &middot; <?=htmlspecialchars($user_role)?></p></div>
+<div class="hr-header"><h1>Human Resources Management <button onclick="window.print()" class="btn btn-sm btn-outline-light no-print"><i class="fas fa-print"></i> Print</button></h1><p><?=htmlspecialchars($user['full_name'] ?? 'HR Manager')?> &middot; <?=htmlspecialchars($user_role)?></p></div>
 
 <nav class="hr-tabs">
   <a href="hr-manager.php" class="<?=$page==='overview'?'active':''?>">Overview</a>
@@ -308,7 +308,7 @@ $pageTitle = 'HR Manager';
 <?php foreach ($staffList as $s): ?><tr>
   <td><?=htmlspecialchars($s['staff_id']??$s['id'])?></td>
   <td><?=htmlspecialchars($s['full_name'])?></td>
-  <td><?=htmlspecialchars($s['email'])?></td>
+  <td><?=htmlspecialchars($s['email'])?> <a href="mailto:<?=htmlspecialchars($s['email'])?>" class="text-decoration-none" title="Send email"><i class="fas fa-envelope text-primary ms-1"></i></a></td>
   <td><?=htmlspecialchars($s['position']??'-')?></td>
   <td><?=htmlspecialchars($s['department']??'-')?></td>
   <td><?=htmlspecialchars($s['role_name']??'-')?></td>
@@ -367,7 +367,7 @@ $pageTitle = 'HR Manager';
     <div class="hr-card"><h3>Applications (<?=count($applications)?>)</h3>
     <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Position</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>
     <?php foreach ($applications as $a): ?><tr>
-      <td><?=htmlspecialchars($a['applicant_name'])?><br><small class="text-muted"><?=htmlspecialchars($a['email'])?></small></td>
+      <td><?=htmlspecialchars($a['applicant_name'])?><br><small class="text-muted"><?=htmlspecialchars($a['email'])?></small> <a href="mailto:<?=htmlspecialchars($a['email'])?>" class="text-decoration-none" title="Send email"><i class="fas fa-envelope text-primary"></i></a></td>
       <td><?=htmlspecialchars($a['vacancy_title'])?></td>
       <td><?=htmlspecialchars($a['created_at'])?></td>
       <td><?=hrStatusBadge($a['application_status'])?></td>
@@ -527,7 +527,33 @@ $pageTitle = 'HR Manager';
   </div>
 </div>
 
-<?php elseif ($page === 'communications'): ?>
+<?php elseif ($page === 'hr_settings'): ?>
+<div class="card">
+  <div class="card-header"><h5><i class="fas fa-cog"></i> HR Settings</h5></div>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Default Contract Duration (months)</label>
+        <input type="number" class="form-control" name="default_contract_duration" value="12">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Probation Period (months)</label>
+        <input type="number" class="form-control" name="probation_period" value="3">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Leave Days Per Year</label>
+        <input type="number" class="form-control" name="annual_leave_days" value="30">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Sick Leave Days Per Year</label>
+        <input type="number" class="form-control" name="sick_leave_days" value="15">
+      </div>
+      <div class="col-12"><button class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button></div>
+    </form>
+  </div>
+</div>
+<?php elseif ($page === 'communications'): ?>';
+
 <div class="row">
   <div class="col-md-5">
     <div class="hr-card"><h3>Send Announcement</h3>
@@ -549,7 +575,7 @@ $pageTitle = 'HR Manager';
   </div>
 </div>
 
-<?php elseif ($page === 'reports'): ?>
+<?php elseif ($page === 'hr_reports' || $page === 'reports'): ?>
 <div class="row">
   <div class="col-md-6">
     <div class="hr-card"><h3>Staff by Department</h3>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'academics', 'lecturer', 'head']);
 $staffDb = $ctx['staff'];
@@ -42,7 +42,7 @@ $dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sund
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2"></i>Timetable Management</h4>
+        <h4 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2"></i>Timetable Management</h4> <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button>
         <span class="text-muted small"><?= date('l, d M Y') ?></span>
     </div>
     <div class="stats-grid">
@@ -57,8 +57,9 @@ $dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sund
     <?php foreach ($dayOrder as $day): if (!isset($days[$day])) continue; ?>
     <div class="content-section mb-3">
         <h5 class="fw-bold mb-3"><i class="fas fa-calendar-day me-2"></i><?= htmlspecialchars($day) ?></h5>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchUSDL" type="text" placeholder="Search..." onkeyup="filterTable('srchUSDL','tblUSDL')"></div>
+<div class="table-responsive">
+            <table id="tblUSDL" class="table table-striped table-hover mb-0">
                 <thead><tr><th>Time</th><th>Course</th><th>Instructor</th><th>Room</th></tr></thead>
                 <tbody>
                     <?php foreach ($days[$day] as $t): ?>
@@ -77,5 +78,22 @@ $dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sund
     <?php endif; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+</script>
 </body>
 </html>

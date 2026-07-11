@@ -157,7 +157,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         
                 <!-- Library Overview -->
                 <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
-                    <h2>Library Overview</h2>
+                    <h2>Library Overview <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print"></i> Print</button></h2>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">
@@ -203,7 +203,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 
                 <!-- Book Management -->
                 <section id="books" class="content-section dashboard-section<?= $section==='books'?' active':'' ?>" data-section="books">
-                    <h2>Book Management</h2>
+                    <h2>Book Management <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print"></i> Print Catalog</button></h2>
                     <div class="book-actions">
                         <button class="btn btn-primary" onclick="openModal('addBook')">
                             <i class="fas fa-plus"></i> Add New Book
@@ -399,6 +399,12 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                                         <span>Registered:</span>
                                         <strong><?= !empty($rm['registration_date']) ? date('M j, Y', strtotime($rm['registration_date'])) : '-' ?></strong>
                                     </div>
+                                    <?php if (!empty($rm['email'])): ?>
+                                    <div class="detail">
+                                        <span>Email:</span>
+                                        <strong><a href="mailto:<?= htmlspecialchars($rm['email']) ?>"><?= htmlspecialchars($rm['email']) ?></a></strong>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="member-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Profile</button>

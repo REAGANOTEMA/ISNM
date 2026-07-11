@@ -21,6 +21,8 @@ $pageToSection = [
     'incidents'             => 'incidents',
     'emergency'             => 'emergency',
     'patrol'                => 'patrol',
+    'access_control'        => 'access_control',
+    'security_patrols'      => 'patrol',
 ];
 $page    = $_GET['page'] ?? 'home';
 $section = $pageToSection[$page] ?? 'overview';
@@ -215,7 +217,8 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                 <?php if (empty($today_visitors)): ?>
                 <div class="text-center text-muted py-3">No visitors for today</div>
                 <?php else: ?>
-                <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Name</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Arrival</th><th>Status</th></tr></thead><tbody>
+                <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchIKAT" type="text" placeholder="Search..." onkeyup="filterTable('srchIKAT','tblIKAT')"></div>
+<div class="table-responsive"><table id="tblIKAT" class="table table-sm table-hover"><thead><tr><th>Name</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Arrival</th><th>Status</th></tr></thead><tbody>
                 <?php foreach ($today_visitors as $v):
                     $vs = $v['status'];
                     switch($vs) { case 'Checked In': $vs_badge = 'success'; break; case 'On Campus': $vs_badge = 'primary'; break; case 'Checked Out': $vs_badge = 'secondary'; break; default: $vs_badge = 'secondary'; }
@@ -254,7 +257,8 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
 
     <div class="card-section">
-        <div class="table-responsive">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchLANO" type="text" placeholder="Search..." onkeyup="filterTable('srchLANO','tblLANO')"></div>
+<div class="table-responsive">
             <table class="table table-striped table-hover align-middle" id="incidentsTable">
                 <thead class="table-light">
                     <tr><th>#</th><th>Type</th><th>Location</th><th>Severity</th><th>Status</th><th>Reported By</th><th>Date</th><th>Actions</th></tr>
@@ -304,7 +308,8 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
 
     <div class="card-section">
-        <div class="table-responsive">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchBXSH" type="text" placeholder="Search..." onkeyup="filterTable('srchBXSH','tblBXSH')"></div>
+<div class="table-responsive">
             <table class="table table-striped table-hover align-middle" id="patrolsTable">
                 <thead class="table-light">
                     <tr><th>#</th><th>Officer</th><th>Area</th><th>Start</th><th>End</th><th>Findings</th><th>Status</th><th>Actions</th></tr>
@@ -357,7 +362,8 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
 
     <div class="card-section">
-        <div class="table-responsive">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchNSBR" type="text" placeholder="Search..." onkeyup="filterTable('srchNSBR','tblNSBR')"></div>
+<div class="table-responsive">
             <table class="table table-striped table-hover align-middle" id="visitorsTable">
                 <thead class="table-light">
                     <tr><th>#</th><th>Name</th><th>ID/Passport</th><th>Phone</th><th>Purpose</th><th>Person to Visit</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Status</th><th>Actions</th></tr>
@@ -402,13 +408,56 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     // ═══════════════════════════════════════════════
     // EMERGENCY
     // ═══════════════════════════════════════════════
-    case 'emergency': ?>
+    case 'access_control': ?>
+<div class="section-card">
+  <div class="section-title"><i class="fas fa-shield-alt"></i> Access Control & Monitoring</div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h6><i class="fas fa-video text-primary"></i> CCTV Cameras</h6>
+        <p class="text-muted small">Active: <?= $cctv_cameras_active ?? 0 ?></p>
+        <p class="text-muted small">Total checks today: <?= $access_control_checks ?></p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h6><i class="fas fa-clipboard-list text-info"></i> Access Logs Today</h6>
+        <?php
+        $logs = [];
+        if ($conn) {
+            $r = $conn->query("SELECT * FROM access_control_logs WHERE DATE(access_time)=CURDATE() ORDER BY access_time DESC LIMIT 20");
+            if ($r) $logs = $r->fetch_all(MYSQLI_ASSOC);
+        }
+        if ($logs): ?>
+        <table class="table table-sm small">
+          <thead><tr><th>Person</th><th>Direction</th><th>Time</th></tr></thead>
+          <tbody>
+          <?php foreach($logs as $log): ?>
+            <tr>
+              <td><?= htmlspecialchars($log['person_name'] ?? $log['card_id'] ?? '-') ?></td>
+              <td><span class="badge bg-<?= ($log['direction']??'in')==='in'?'success':'warning' ?>"><?= strtoupper($log['direction']??'IN') ?></span></td>
+              <td><?= date('H:i', strtotime($log['access_time'])) ?></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?>
+        <p class="text-muted">No access logs recorded today.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+<?php
+    case 'emergency': ?>';
+
     <h4 class="fw-bold mb-3"><i class="fas fa-ambulance me-2"></i>Emergency Contacts</h4>
     <div class="card-section">
         <?php if (empty($emergency_contacts)): ?>
         <p class="text-muted text-center py-3">No emergency contacts configured.</p>
         <?php else: ?>
-        <div class="table-responsive">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchUXGL" type="text" placeholder="Search..." onkeyup="filterTable('srchUXGL','tblUXGL')"></div>
+<div class="table-responsive">
             <table class="table table-bordered"><thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Email</th></tr></thead><tbody>
             <?php foreach ($emergency_contacts as $ec): ?>
             <tr><td><?= htmlspecialchars($ec['contact_name']) ?></td><td><span class="badge bg-danger"><?= htmlspecialchars($ec['contact_type']) ?></span></td><td><a href="tel:<?= htmlspecialchars($ec['phone_number']) ?>"><?= htmlspecialchars($ec['phone_number']) ?></a></td><td><?= htmlspecialchars($ec['email'] ?? '-') ?></td></tr>
@@ -562,6 +611,7 @@ endswitch; ?>
 <?php if (empty($emergency_contacts)): ?>
 <p class="text-muted">No emergency contacts configured.</p>
 <?php else: ?>
+<div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchVMON" type="text" placeholder="Search..." onkeyup="filterTable('srchVMON','tblVMON')"></div>
 <div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Email</th></tr></thead><tbody>
 <?php foreach ($emergency_contacts as $ec): ?>
 <tr><td><?= htmlspecialchars($ec['contact_name']) ?></td><td><span class="badge bg-danger"><?= htmlspecialchars($ec['contact_type']) ?></span></td><td><a href="tel:<?= htmlspecialchars($ec['phone_number']) ?>"><?= htmlspecialchars($ec['phone_number']) ?></a></td><td><?= htmlspecialchars($ec['email'] ?? '-') ?></td></tr>
@@ -608,7 +658,23 @@ document.addEventListener('DOMContentLoaded',function(){
     });
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
 $user = $ctx['user'];
@@ -291,7 +291,8 @@ if ($conn && $canEditAcademic) {
         <small class="text-muted">Showing up to 100 results</small>
       </div>
       <div class="card section-card p-0">
-        <div class="table-responsive">
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchDRLE" type="text" placeholder="Search..." onkeyup="filterTable('srchDRLE','tblDRLE')"></div>
+<div class="table-responsive">
           <table class="table table-hover mb-0" id="studentTable">
             <thead class="table-light">
               <tr>
@@ -346,7 +347,8 @@ if ($conn && $canEditAcademic) {
       <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#admissionModal"><i class="fas fa-plus me-1"></i>Record Admission</button>
     </div>
     <?php if(empty($pendingAdmissions)): ?><p class="text-muted small">No pending admission records.</p><?php else: ?>
-    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Application</th><th>Applicant</th><th>Program</th><th>Year</th><th>Status</th><th>Date</th></tr></thead><tbody><?php foreach($pendingAdmissions as $a): ?>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchDUMP" type="text" placeholder="Search..." onkeyup="filterTable('srchDUMP','tblDUMP')"></div>
+<div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Application</th><th>Applicant</th><th>Program</th><th>Year</th><th>Status</th><th>Date</th></tr></thead><tbody><?php foreach($pendingAdmissions as $a): ?>
       <tr><td><code><?= htmlspecialchars($a['application_number']) ?></code></td><td><?= htmlspecialchars($a['applicant_name']) ?></td><td><?= htmlspecialchars($a['program']) ?></td><td><?= htmlspecialchars($a['academic_year'] ?? '-') ?></td><td><span class="badge bg-warning text-dark"><?= htmlspecialchars($a['admission_status']) ?></span></td><td><?= date('d M Y',strtotime($a['application_date'])) ?></td></tr>
     <?php endforeach; ?></tbody></table></div><?php endif; ?>
   </section>
@@ -357,7 +359,8 @@ if ($conn && $canEditAcademic) {
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5><i class="fas fa-book me-2"></i>Active Courses</h5>
     </div>
-    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Code</th><th>Course</th><th>Program</th><th>Level</th><th>Semester</th><th>Type</th></tr></thead><tbody><?php if(empty($courses)): ?><tr><td colspan="6" class="text-muted py-4">No active courses yet.</td></tr><?php else: foreach($courses as $c): ?>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchUWHD" type="text" placeholder="Search..." onkeyup="filterTable('srchUWHD','tblUWHD')"></div>
+<div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Code</th><th>Course</th><th>Program</th><th>Level</th><th>Semester</th><th>Type</th></tr></thead><tbody><?php if(empty($courses)): ?><tr><td colspan="6" class="text-muted py-4">No active courses yet.</td></tr><?php else: foreach($courses as $c): ?>
       <tr><td><code><?= htmlspecialchars($c['course_code']) ?></code></td><td><?= htmlspecialchars($c['course_name']) ?></td><td><?= htmlspecialchars($c['program']) ?></td><td><?= htmlspecialchars($c['level']) ?></td><td><?= htmlspecialchars($c['semester']) ?></td><td><?= $c['is_compulsory'] ? '<span class="badge bg-primary">Compulsory</span>' : '<span class="badge bg-secondary">Elective</span>' ?></td></tr>
     <?php endforeach; endif; ?></tbody></table></div>
   </section>
@@ -479,6 +482,22 @@ document.getElementById('studentSearchForm')?.addEventListener('submit', functio
         alert('Please enter a search term or select a filter.');
     }
 });
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

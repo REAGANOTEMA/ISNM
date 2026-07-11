@@ -51,6 +51,7 @@ $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
 function pcurrency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function psuccess($m) { $_SESSION['p_success'] = $m; }
 function perror($m) { $_SESSION['p_error'] = $m; }
+function pmailto($email) { return $email ? '<a href="mailto:'.htmlspecialchars($email).'" class="text-decoration-none" title="Send email"><i class="fas fa-envelope text-primary"></i></a>' : ''; }
 
 // -- AJAX: principal_stats --
 if ($view === 'principal_stats' && $ajax === '1') {
@@ -560,6 +561,7 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="prin-content dashboard-section active" data-section="principal">
+<div style="text-align:right;margin-bottom:8px" class="no-print"><button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i> Print</button></div>
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
 <?php if ($view === 'home'): ?>

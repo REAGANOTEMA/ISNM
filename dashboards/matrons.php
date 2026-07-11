@@ -350,7 +350,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             </section>
 
             <section id="students" class="content-section dashboard-section<?= $section === 'students' ? ' active' : '' ?>" data-section="students">
-                <h2>Student Welfare Management</h2>
+                <h2>Student Welfare Management <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ms-2"><i class="fas fa-print"></i></button></h2>
 
                 <div class="welfare-stats-grid">
                     <div class="welfare-stat-card"><h3><?php echo $welfare_stats['total']; ?></h3><p>Total Cases</p></div>
@@ -369,8 +369,9 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     </button>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchNXAB" type="text" placeholder="Search..." onkeyup="filterTable('srchNXAB','tblNXAB')"></div>
+<div class="table-responsive">
+                    <table id="tblNXAB" class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
@@ -1000,7 +1001,23 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             document.getElementById('reqItemsContainer').insertAdjacentHTML('beforeend', html);
             matronReqIdx++;
         }
-    </script>
+    function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

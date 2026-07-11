@@ -35,7 +35,6 @@ if (file_exists(__DIR__ . '/dynamic_sidebar.php')) {
         $dynamicSidebarOutput = ob_get_clean();
         if (trim($dynamicSidebarOutput) !== '') {
             $useDynamicSidebar = true;
-            echo $dynamicSidebarOutput;
         }
     }
 }
@@ -256,7 +255,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 </style>
 <?php endif; ?>
 <?php if ($useDynamicSidebar): ?>
-<?php renderDynamicSidebar(); ?>
+<?php echo $dynamicSidebarOutput; ?>
 <?php else: ?>
 <nav class="isnm-sidebar sidebar" id="isnmSidebar">
     <?php if ($isRight): ?>
@@ -325,6 +324,8 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         <?php endforeach; ?>
     </div>
 </nav>
+<?php endif; ?>
+
 <?php if ($isRight): ?>
 <button class="isnm-sidebar-right-toggle" id="sidebarRightToggle" aria-label="Open sidebar">
     <i class="fas fa-bars"></i>
@@ -334,9 +335,6 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     <i class="fas fa-bars"></i>
 </button>
 <?php endif; ?>
-<?php endif; ?>
-
-<?php if (!$useDynamicSidebar): ?>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <script>
 (function() {
@@ -440,7 +438,6 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     })();
 })();
 </script>
-<?php endif; ?>
 <?php
 $sidebarRendered = true;
 require_once __DIR__ . '/settings_modal.php';

@@ -390,7 +390,8 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-6">
     <div class="brs-card"><h3>Recent Transactions</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchPFRS" type="text" placeholder="Search..." onkeyup="filterTable('srchPFRS','tblPFRS')"></div>
+<div class="table-responsive"><table id="tblPFRS" class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>
     <?php foreach (array_slice($payments,0,8) as $p): ?><tr>
       <td><?=htmlspecialchars($p['student_name'])?></td>
       <td><strong><?=number_format($p['amount'])?></strong></td>
@@ -438,11 +439,13 @@ $pageTitle = 'Bursar Dashboard';
   </div>
   <div class="col-md-7">
     <div class="brs-card"><h3>Fee Structure</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Fee Name</th><th>Amount</th><th>Type</th><th>Program ID</th><th>Year</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchKONM" type="text" placeholder="Search..." onkeyup="filterTable('srchKONM','tblKONM')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Fee Name</th><th>Amount</th><th>Type</th><th>Program ID</th><th>Year</th></tr></thead><tbody>
     <?php foreach ($feeStructures as $f): ?><tr><td><?=htmlspecialchars($f['fee_name'])?></td><td><strong><?=number_format($f['amount'])?></strong></td><td><?=htmlspecialchars($f['fee_type']??'-')?></td><td><?=htmlspecialchars($f['program_id']??'All')?></td><td><?=htmlspecialchars($f['academic_year']??'')?></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
     <div class="brs-card"><h3>Student Fee Balances</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Total Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFICW" type="text" placeholder="Search..." onkeyup="filterTable('srchFICW','tblFICW')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Total Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>
     <?php foreach ($studentFees as $f): ?><tr><td><?=htmlspecialchars($f['student_name'])?></td><td><?=number_format($f['total_fees']??$f['total_due']??($f['assigned_amount']??($f['paid_amount']??$f['amount']??0)+($f['balance']??0)))?></td><td><?=number_format($f['paid']??$f['paid_amount']??($f['amount_paid']??0))?></td><td><strong class="<?=$f['balance']>0?'text-danger':'text-success'?>"><?=number_format($f['balance'])?></strong></td><td><?=$f['balance']<=0?'<span class="badge bg-success">Cleared</span>':'<span class="badge bg-danger">Outstanding</span>'?></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>
@@ -465,7 +468,8 @@ $pageTitle = 'Bursar Dashboard';
   </div>
   <div class="col-md-7">
     <div class="brs-card"><h3>Payment History</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchRZVM" type="text" placeholder="Search..." onkeyup="filterTable('srchRZVM','tblRZVM')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Status</th><th>Date</th></tr></thead><tbody>
     <?php foreach ($payments as $p): ?><tr>
       <td><?=htmlspecialchars($p['student_name'])?></td>
       <td><strong><?=number_format($p['amount'])?></strong></td>
@@ -483,7 +487,8 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-6">
     <div class="brs-card"><h3>Revenue by Category</h3>
     <?php $revCat = $stuConn ? $stuConn->query("SELECT fee_type, COUNT(*) cnt, SUM(amount) total FROM fee_structures WHERE is_active=1 GROUP BY fee_type") : null; if ($revCat): ?>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Type</th><th>Count</th><th>Total</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchBGCE" type="text" placeholder="Search..." onkeyup="filterTable('srchBGCE','tblBGCE')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Type</th><th>Count</th><th>Total</th></tr></thead><tbody>
     <?php while ($r = $revCat->fetch_assoc()): ?><tr><td><?=htmlspecialchars($r['fee_type']??'-')?></td><td><?=$r['cnt']?></td><td><strong><?=number_format($r['total'])?></strong></td></tr><?php endwhile; ?>
     </tbody></table></div><?php endif; ?>
   </div>
@@ -492,7 +497,8 @@ $pageTitle = 'Bursar Dashboard';
     <?php
     $daily = $stuConn ? $stuConn->query("SELECT DATE(payment_date) as dt, COUNT(*) cnt, SUM(amount_received) total FROM payments WHERE status='Completed' GROUP BY DATE(payment_date) ORDER BY dt DESC LIMIT 14") : null;
     if ($daily): ?>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Transactions</th><th>Amount</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchQMIY" type="text" placeholder="Search..." onkeyup="filterTable('srchQMIY','tblQMIY')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Transactions</th><th>Amount</th></tr></thead><tbody>
     <?php while ($d = $daily->fetch_assoc()): ?><tr><td><?=$d['dt']?></td><td><?=$d['cnt']?></td><td><strong><?=number_format($d['total'])?></strong></td></tr><?php endwhile; ?>
     </tbody></table></div><?php endif; ?>
   </div>
@@ -500,12 +506,14 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-6">
     <div class="brs-card"><h3>Debtors List (Outstanding)</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Balance</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFZOU" type="text" placeholder="Search..." onkeyup="filterTable('srchFZOU','tblFZOU')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Balance</th></tr></thead><tbody>
     <?php $debtors = array_filter($studentFees, fn($f)=>$f['balance']>0); foreach ($debtors as $f): ?><tr><td><?=htmlspecialchars($f['student_name'])?></td><td class="text-danger"><strong><?=number_format($f['balance'])?></strong></td></tr><?php endforeach; if (empty($debtors)): ?><tr><td colspan="2" class="text-muted">No outstanding balances.</td></tr><?php endif; ?>
     </tbody></table></div></div>
   <div class="col-md-6">
     <div class="brs-card"><h3>Expense Summary</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Category</th><th>Total</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchVEJH" type="text" placeholder="Search..." onkeyup="filterTable('srchVEJH','tblVEJH')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Category</th><th>Total</th></tr></thead><tbody>
     <?php $expCat = $staffConn ? $staffConn->query("SELECT category, SUM(amount) total FROM expenses GROUP BY category ORDER BY total DESC") : null; if ($expCat) while ($e = $expCat->fetch_assoc()): ?><tr><td><?=htmlspecialchars(ucfirst($e['category']??'General'))?></td><td><strong><?=number_format($e['total'])?></strong></td></tr><?php endwhile; ?>
     </tbody></table></div></div>
 </div>
@@ -533,11 +541,13 @@ $pageTitle = 'Bursar Dashboard';
   </div>
   <div class="col-md-7">
     <div class="brs-card"><h3>Budgets</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Budget Name</th><th>Amount</th><th>Fiscal Year</th><th>Status</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchCIGF" type="text" placeholder="Search..." onkeyup="filterTable('srchCIGF','tblCIGF')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Budget Name</th><th>Amount</th><th>Fiscal Year</th><th>Status</th></tr></thead><tbody>
     <?php foreach ($budgets as $b): ?><tr><td><?=htmlspecialchars($b['budget_name']??$b['title']??'')?></td><td><strong><?=number_format($b['total_amount'])?></strong></td><td><?=htmlspecialchars($b['fiscal_year']??'')?></td><td><span class="badge bg-<?=$b['status']==='Approved'||$b['status']==='approved'?'success':'warning'?>"><?=htmlspecialchars($b['status'])?></span></td></tr><?php endforeach; ?>
     </tbody></table></div>
     <div class="brs-card"><h3>Expenses</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Description</th><th>Amount</th><th>Category</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchYDKF" type="text" placeholder="Search..." onkeyup="filterTable('srchYDKF','tblYDKF')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Description</th><th>Amount</th><th>Category</th><th>Date</th><th>Status</th></tr></thead><tbody>
     <?php foreach ($expenses as $e): ?><tr><td><?=htmlspecialchars($e['title']??$e['expense_title']??$e['description']??'')?></td><td><strong><?=number_format($e['amount'])?></strong></td><td><?=htmlspecialchars($e['category']??'-')?></td><td><?=htmlspecialchars($e['expense_date']??$e['date']??$e['created_at']??'')?></td><td><span class="badge bg-<?=in_array($e['status'],['approved','Approved','paid','Paid'])?'success':'warning'?>"><?=htmlspecialchars($e['status'])?></span></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>
@@ -568,7 +578,8 @@ $pageTitle = 'Bursar Dashboard';
   </div>
   <div class="col-md-7">
     <div class="brs-card"><h3>Payroll History</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Total Gross</th><th>PAYE</th><th>NSSF</th><th>Net Pay</th><th>Approval Chain</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchZHAG" type="text" placeholder="Search..." onkeyup="filterTable('srchZHAG','tblZHAG')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Total Gross</th><th>PAYE</th><th>NSSF</th><th>Net Pay</th><th>Approval Chain</th><th>Status</th><th>Date</th></tr></thead><tbody>
     <?php $approvalChain = ['HR','PayrollOfficer','Bursar','DirectorFinance','CEO']; foreach ($payrollRuns as $p): ?><tr>
       <td><?=htmlspecialchars($p['period'])?></td>
       <td><strong><?=number_format($p['total_gross']??0)?></strong></td>
@@ -609,11 +620,13 @@ $pageTitle = 'Bursar Dashboard';
   </div>
   <div class="col-md-7">
     <div class="brs-card"><h3>Chart of Accounts</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Account Code</th><th>Name</th><th>Type</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchDIJO" type="text" placeholder="Search..." onkeyup="filterTable('srchDIJO','tblDIJO')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Account Code</th><th>Name</th><th>Type</th></tr></thead><tbody>
     <?php $coa = $staffConn ? $staffConn->query("SELECT * FROM chart_of_accounts ORDER BY code") : null; if ($coa) while ($a = $coa->fetch_assoc()): ?><tr><td><?=htmlspecialchars($a['code'])?></td><td><?=htmlspecialchars($a['name'])?></td><td><?=htmlspecialchars($a['type']??'-')?></td></tr><?php endwhile; ?>
     </tbody></table></div>
     <div class="brs-card"><h3>Bank Reconciliations</h3>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Bank Balance</th><th>Book Balance</th><th>Difference</th><th>Status</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchXYSO" type="text" placeholder="Search..." onkeyup="filterTable('srchXYSO','tblXYSO')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Bank Balance</th><th>Book Balance</th><th>Difference</th><th>Status</th></tr></thead><tbody>
     <?php foreach ($bankReconciliations as $b): ?><tr><td><?=htmlspecialchars($b['reconciliation_date']??'')?></td><td><strong><?=number_format($b['bank_balance']??0)?></strong></td><td><?=number_format($b['book_balance']??0)?></td><td><?=number_format($b['difference']??0)?></td><td><span class="badge bg-<?=$b['status']==='completed'?'success':'warning'?>"><?=htmlspecialchars($b['status'])?></span></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>
@@ -648,7 +661,8 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-7">
     <div class="brs-card"><h3>Fixed Asset Register with Depreciation</h3>
     <?php $assets = $staffConn ? $staffConn->query("SELECT * FROM assets ORDER BY created_at DESC LIMIT 20") : null; if ($assets && $assets->num_rows > 0): ?>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Asset</th><th>Purchase Cost</th><th>Current Value</th><th>Depr/yr</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchQMLF" type="text" placeholder="Search..." onkeyup="filterTable('srchQMLF','tblQMLF')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Asset</th><th>Purchase Cost</th><th>Current Value</th><th>Depr/yr</th><th>Status</th><th>Actions</th></tr></thead><tbody>
     <?php while ($a = $assets->fetch_assoc()):
       $cost = (float)($a['purchase_cost']??$a['value']??0);
       $salvage = (float)($a['salvage_value']??0);
@@ -670,7 +684,8 @@ $pageTitle = 'Bursar Dashboard';
     </div>
     <div class="brs-card"><h3>Stock / Consumables Inventory</h3>
     <?php $invItems = $staffConn ? $staffConn->query("SELECT * FROM inventory_items ORDER BY created_at DESC LIMIT 20") : null; if ($invItems && $invItems->num_rows > 0): ?>
-    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Item</th><th>Category</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>
+    <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchERKF" type="text" placeholder="Search..." onkeyup="filterTable('srchERKF','tblERKF')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Item</th><th>Category</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>
     <?php while ($i = $invItems->fetch_assoc()): $reorder = (int)($i['reorder_level']??0); $qty = (int)($i['quantity']??0); $lowStock = $reorder > 0 && $qty <= $reorder; ?>
     <tr>
       <td><?=htmlspecialchars($i['item_name']??'')?></td>
@@ -729,7 +744,8 @@ $pageTitle = 'Bursar Dashboard';
       <div class="col-md-6">
         <h4 class="fs-6"><i class="fas fa-percent text-success me-1"></i> Withholding Tax</h4>
         <?php $wht = $staffConn ? $staffConn->query("SELECT * FROM bursar_withholding_tax ORDER BY tax_date DESC LIMIT 10") : null; if ($wht && $wht->num_rows > 0): ?>
-        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchLRMF" type="text" placeholder="Search..." onkeyup="filterTable('srchLRMF','tblLRMF')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Amount</th><th>Status</th></tr></thead><tbody>
         <?php while ($w = $wht->fetch_assoc()): ?><tr><td><?=htmlspecialchars($w['tax_date']??$w['period']??'')?></td><td><?=number_format($w['wht_amount']??$w['gross_amount']??0)?></td><td><?=htmlspecialchars($w['status']??'-')?></td></tr><?php endwhile; ?>
         </tbody></table></div>
         <?php else: ?><p class="text-muted small">No withholding tax records.</p><?php endif; ?>
@@ -737,7 +753,8 @@ $pageTitle = 'Bursar Dashboard';
       <div class="col-md-6">
         <h4 class="fs-6"><i class="fas fa-chart-pie text-primary me-1"></i> VAT Reports</h4>
         <?php $vat = $staffConn ? $staffConn->query("SELECT * FROM bursar_vat_reports ORDER BY created_at DESC LIMIT 10") : null; if ($vat && $vat->num_rows > 0): ?>
-        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Net</th><th>Status</th></tr></thead><tbody>
+        <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFWIA" type="text" placeholder="Search..." onkeyup="filterTable('srchFWIA','tblFWIA')"></div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Period</th><th>Net</th><th>Status</th></tr></thead><tbody>
         <?php while ($v = $vat->fetch_assoc()): ?><tr><td><?=htmlspecialchars($v['period_start']??$v['period_end']??'')?></td><td><?=number_format($v['net_vat']??$v['output_vat']??0)?></td><td><?=htmlspecialchars($v['status']??'-')?></td></tr><?php endwhile; ?>
         </tbody></table></div>
         <?php else: ?><p class="text-muted small">No VAT records.</p><?php endif; ?>
@@ -756,6 +773,22 @@ $pageTitle = 'Bursar Dashboard';
 <script>
 document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION['csrf_token'])?>';document.querySelectorAll('form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});var pm=document.getElementById('payMethod');if(pm){pm.addEventListener('change',function(){document.getElementById('momoFields').style.display=this.value==='mobile_money'?'flex':'none';});}
 });
+function filterTable(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+}
+
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body></html>
