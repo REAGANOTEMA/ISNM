@@ -90,3 +90,67 @@
 [10-Jul-2026 14:54:05 Africa/Kampala] Error fetching news: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: NO)
 [10-Jul-2026 15:25:21 Africa/Kampala] Error [2]: session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\ISNM\news.php on line 5
 [10-Jul-2026 15:25:22 Africa/Kampala] Error [2]: session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\ISNM\shared\_header.php on line 168
+[11-Jul-2026 12:14:22 Africa/Kampala] Database connection error: Connection to igangaschool_staffs failed - no viable credentials
+[11-Jul-2026 12:14:22 Africa/Kampala] Connection test failed for igangaschool_staffs: Call to a member function query() on null
+[11-Jul-2026 12:14:28 Africa/Kampala] Database connection error: Connection to igangaschool_students failed - no viable credentials
+[11-Jul-2026 12:14:28 Africa/Kampala] Connection test failed for igangaschool_students: Call to a member function query() on null
+[11-Jul-2026 12:14:34 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:14:34 Africa/Kampala] Connection test failed for igangaschool_website: Call to a member function query() on null
+[11-Jul-2026 12:14:40 Africa/Kampala] Database connection error: Connection to igangaschool_ict failed - no viable credentials
+[11-Jul-2026 12:14:40 Africa/Kampala] Connection test failed for igangaschool_ict: Call to a member function query() on null
+[11-Jul-2026 12:14:40 Africa/Kampala] Warning: Failed to connect to igangaschool_staffs database
+[11-Jul-2026 12:14:40 Africa/Kampala] Warning: Failed to connect to igangaschool_students database
+[11-Jul-2026 12:14:40 Africa/Kampala] Warning: Failed to connect to igangaschool_website database
+[11-Jul-2026 12:14:40 Africa/Kampala] Warning: Failed to connect to igangaschool_ict database
+[11-Jul-2026 12:14:46 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:16:45 Africa/Kampala] Database connection error: Connection to igangaschool_staffs failed - no viable credentials
+[11-Jul-2026 12:16:45 Africa/Kampala] Connection test failed for igangaschool_staffs: Call to a member function query() on null
+[11-Jul-2026 12:16:51 Africa/Kampala] Database connection error: Connection to igangaschool_students failed - no viable credentials
+[11-Jul-2026 12:16:51 Africa/Kampala] Connection test failed for igangaschool_students: Call to a member function query() on null
+[11-Jul-2026 12:16:57 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:16:57 Africa/Kampala] Connection test failed for igangaschool_website: Call to a member function query() on null
+[11-Jul-2026 12:17:03 Africa/Kampala] Database connection error: Connection to igangaschool_ict failed - no viable credentials
+[11-Jul-2026 12:17:03 Africa/Kampala] Connection test failed for igangaschool_ict: Call to a member function query() on null
+[11-Jul-2026 12:17:03 Africa/Kampala] Warning: Failed to connect to igangaschool_staffs database
+[11-Jul-2026 12:17:03 Africa/Kampala] Warning: Failed to connect to igangaschool_students database
+[11-Jul-2026 12:17:03 Africa/Kampala] Warning: Failed to connect to igangaschool_website database
+[11-Jul-2026 12:17:03 Africa/Kampala] Warning: Failed to connect to igangaschool_ict database
+[11-Jul-2026 12:17:09 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:17:12 Africa/Kampala] Database connection error: Connection to igangaschool_staffs failed - no viable credentials
+[11-Jul-2026 12:17:12 Africa/Kampala] Connection test failed for igangaschool_staffs: Call to a member function query() on null
+[11-Jul-2026 12:17:18 Africa/Kampala] Database connection error: Connection to igangaschool_students failed - no viable credentials
+[11-Jul-2026 12:17:18 Africa/Kampala] Connection test failed for igangaschool_students: Call to a member function query() on null
+[11-Jul-2026 12:17:24 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:17:24 Africa/Kampala] Connection test failed for igangaschool_website: Call to a member function query() on null
+[11-Jul-2026 12:17:30 Africa/Kampala] Database connection error: Connection to igangaschool_ict failed - no viable credentials
+[11-Jul-2026 12:17:30 Africa/Kampala] Connection test failed for igangaschool_ict: Call to a member function query() on null
+[11-Jul-2026 12:17:30 Africa/Kampala] Warning: Failed to connect to igangaschool_staffs database
+[11-Jul-2026 12:17:30 Africa/Kampala] Warning: Failed to connect to igangaschool_students database
+[11-Jul-2026 12:17:30 Africa/Kampala] Warning: Failed to connect to igangaschool_website database
+[11-Jul-2026 12:17:30 Africa/Kampala] Warning: Failed to connect to igangaschool_ict database
+[11-Jul-2026 12:17:36 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:58:18 Africa/Kampala] Database connection error: Connection to igangaschool_staffs failed - no viable credentials
+[11-Jul-2026 12:58:18 Africa/Kampala] Connection test failed for igangaschool_staffs: Call to a member function query() on null
+[11-Jul-2026 12:58:24 Africa/Kampala] Database connection error: Connection to igangaschool_students failed - no viable credentials
+[11-Jul-2026 12:58:24 Africa/Kampala] Connection test failed for igangaschool_students: Call to a member function query() on null
+[11-Jul-2026 12:58:31 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:58:31 Africa/Kampala] Connection test failed for igangaschool_website: Call to a member function query() on null
+[11-Jul-2026 12:58:37 Africa/Kampala] Database connection error: Connection to igangaschool_ict failed - no viable credentials
+[11-Jul-2026 12:58:37 Africa/Kampala] Connection test failed for igangaschool_ict: Call to a member function query() on null
+[11-Jul-2026 12:58:37 Africa/Kampala] Warning: Failed to connect to igangaschool_staffs database
+[11-Jul-2026 12:58:37 Africa/Kampala] Warning: Failed to connect to igangaschool_students database
+[11-Jul-2026 12:58:37 Africa/Kampala] Warning: Failed to connect to igangaschool_website database
+[11-Jul-2026 12:58:37 Africa/Kampala] Warning: Failed to connect to igangaschool_ict database
+[11-Jul-2026 12:58:43 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:58:57 Africa/Kampala] Database connection error: Connection to igangaschool_staffs failed - no viable credentials
+[11-Jul-2026 12:58:57 Africa/Kampala] Connection test failed for igangaschool_staffs: Call to a member function query() on null
+[11-Jul-2026 12:59:03 Africa/Kampala] Database connection error: Connection to igangaschool_students failed - no viable credentials
+[11-Jul-2026 12:59:03 Africa/Kampala] Connection test failed for igangaschool_students: Call to a member function query() on null
+[11-Jul-2026 12:59:09 Africa/Kampala] Database connection error: Connection to igangaschool_website failed - no viable credentials
+[11-Jul-2026 12:59:09 Africa/Kampala] Connection test failed for igangaschool_website: Call to a member function query() on null
+[11-Jul-2026 12:59:15 Africa/Kampala] Database connection error: Connection to igangaschool_ict failed - no viable credentials
+[11-Jul-2026 12:59:15 Africa/Kampala] Connection test failed for igangaschool_ict: Call to a member function query() on null
+[11-Jul-2026 12:59:15 Africa/Kampala] Warning: Failed to connect to igangaschool_staffs database
+[11-Jul-2026 12:59:15 Africa/Kampala] Warning: Failed to connect to igangaschool_students database
+[11-Jul-2026 12:59:15 Africa/Kampala] Warning: Failed to connect to igangaschool_website database
+[11-Jul-2026 12:59:15 Africa/Kampala] Warning: Failed to connect to igangaschool_ict database
