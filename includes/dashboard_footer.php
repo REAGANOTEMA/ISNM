@@ -332,6 +332,178 @@ window.addEventListener('unhandledrejection',function(e){
     if (el) { el.classList.remove('active'); }
   });
 })();
+
+/* ══════════════════════════════════════════════════════════════════
+   UNIVERSAL DASHBOARD FIXES — applies to EVERY dashboard
+   ══════════════════════════════════════════════════════════════════ */
+
+// ── 1. UNIVERSAL SECTION SWITCHER ──────────────────────────────
+// If the dashboard uses data-section, this ensures ?page= and ?section= params
+// activate the correct section.
+(function() {
+    function switchToSection(name) {
+        if (!name) return;
+        // Try data-section elements (most common pattern)
+        var targets = document.querySelectorAll('[data-section]');
+        if (targets.length) {
+            targets.forEach(function(el) { el.classList.remove('active'); });
+            var match = document.querySelector('[data-section="' + name + '"]');
+            if (match) {
+                match.classList.add('active');
+                return true;
+            }
+        }
+        // Try element id match (director-general.php pattern)
+        var byId = document.getElementById(name);
+        if (byId) {
+            byId.classList.add('active');
+            return true;
+        }
+        // Try content-section + id
+        var cs = document.querySelector('.content-section#' + name + ', .dashboard-section#' + name);
+        if (cs) {
+            cs.classList.add('active');
+            return true;
+        }
+        return false;
+    }
+
+    // Read ?page= or ?section= from URL
+    var params = new URLSearchParams(window.location.search);
+    var sectionParam = params.get('section') || params.get('page') || '';
+    if (sectionParam && sectionParam !== 'home' && sectionParam !== 'overview') {
+        switchToSection(sectionParam);
+    }
+
+    // Listen for hash changes (for data-section switching)
+    window.addEventListener('hashchange', function() {
+        var hash = window.location.hash.replace('#', '');
+        if (hash) switchToSection(hash);
+    });
+
+    // Expose globally so dashboard-specific code can call it
+    window.switchSection = window.switchSection || switchToSection;
+})();
+
+// ── 2. CLOSE ALL BOOTSTRAP MODALS ON BACKDROP / BUTTON CLICK ──
+// Fixes modals that open but cannot be closed
+(function() {
+    document.addEventListener('click', function(e) {
+        var closeBtn = e.target.closest('[data-bs-dismiss="modal"], .btn-close, .close, .modal-close');
+        if (!closeBtn) {
+            // Click outside modal-content inside modal -> close
+            var modal = e.target.closest('.modal');
+            if (modal && !e.target.closest('.modal-content') && e.target !== modal) {
+                var bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) bsModal.hide();
+            }
+            return;
+        }
+        var modal = closeBtn.closest('.modal');
+        if (modal) {
+            var bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+        }
+    });
+
+    // Ensure all .modal elements can be closed with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.show').forEach(function(m) {
+                var bsModal = bootstrap.Modal.getInstance(m);
+                if (bsModal) bsModal.hide();
+            });
+        }
+    });
+})();
+
+// ── 3. MOBILE RESPONSIVENESS — remove inline margins/hardcode ──
+(function() {
+    function fixMobileLayout() {
+        if (window.innerWidth > 768) return;
+        // Remove hardcoded margin-left from common content wrappers
+        var mobileSelectors = 'gld-content,page-content,content-section,dashboard-section,' +
+                        'lec-content,mat-content,war-content,hr-content,' +
+                        'secu-content,drv-content,lib-content,' +
+                        'nurs-content,mid-content,dg-content,prin-content,' +
+                        'dep-content,sec-content,ict-content,' +
+                        'fin-content,acad-content,' +
+                        'transcript-container,dg-topbar,' +
+                        'dashboard-content,content-wrapper,main-content,main,' +
+                        'page-wrap,main-wrap';
+        mobileSelectors.split(',').forEach(function(cls) {
+            var els = document.getElementsByClassName(cls);
+            for (var i = 0; i < els.length; i++) {
+                if (els[i]) els[i].style.marginLeft = '';
+            }
+            // Also try as id
+            var el = document.getElementById(cls);
+            if (el) el.style.marginLeft = '';
+        });
+    }
+    fixMobileLayout();
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768) fixMobileLayout();
+    });
+})();
+
+// ── 4. UNIVERSAL filterTable() FUNCTION ────────────────────────
+// Makes filterTable available to ALL dashboards
+window.filterTable = window.filterTable || function(inputId, tableId) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var tr = table.getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        var found = false;
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) { found = true; break; }
+        }
+        tr[i].style.display = found ? "" : "none";
+    }
+};
+
+// ── 5. UNIVERSAL HELPER FUNCTIONS ─────────────────────────────
+window.escHtml = window.escHtml || function(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+};
+window.escJs = window.escJs || function(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return '&#' + c.charCodeAt(0) + ';';
+    });
+};
+
+// ── 6. STUDENT LOOKUP — ensure close on outside click ─────────
+(function() {
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.student-lookup-wrapper')) {
+            document.querySelectorAll('.lookup-results').forEach(function(el) { el.style.display = 'none'; });
+        }
+    });
+})();
+
+// ── 7. ENSURE PRINT BUTTONS WORK ──────────────────────────────
+// Some dashboards have print buttons that reference undeclared functions
+window.printCertificate = window.printCertificate || function(studentId) {
+    if (!studentId) { window.print(); return; }
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
+    w.document.write('<div class="p-5 text-center"><h2>Certificate</h2><p class="text-muted">Preview not available. Use browser print.</p>');
+    w.document.write('<div class="text-center mt-3 no-print"><button class="btn btn-primary" onclick="window.print()">Print</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>');
+    w.document.write('</body></html>');
+    w.document.close();
+};
+window.printTranscript = window.printTranscript || function(studentId) {
+    window.printCertificate(studentId);
+};
 </script>
 <?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 

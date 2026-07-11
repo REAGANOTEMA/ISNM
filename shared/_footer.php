@@ -321,151 +321,239 @@
     }
   }
   
-  /* ── Mobile ── */
-  @media (max-width: 768px) {
+  /* ════════════════════════════════════════════════════════════
+     MOBILE — Perfect mobile experience (< 992px)
+     ════════════════════════════════════════════════════════════ */
+  @media (max-width: 991px) {
     .isnm-footer .container {
-      padding: 28px 16px 12px;
+      padding: 28px 16px 16px;
     }
-    
     .isnm-footer .row > div {
-      margin-bottom: 20px;
-      padding: 0 8px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-left: 8px;
+      padding-right: 8px;
     }
-    
-    .footer-logo-img {
-      width: 60px;
-      height: 60px;
+    .isnm-footer .row > div:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
     }
-    
-    .footer-logo h4 {
-      font-size: 0.88rem;
-    }
-    
-    .footer-logo p {
-      font-size: 0.78rem;
-    }
-    
-    .social-links {
-      gap: 10px;
-      justify-content: flex-start;
-    }
-    
-    .social-btn {
-      width: 32px;
-      height: 32px;
-      font-size: 0.88rem;
-    }
-    
-    .footer-links ul {
-      columns: 2;
-      column-gap: 12px;
-    }
-    
-    .footer-links ul li a {
-      font-size: 0.72rem;
-      padding: 3px 0;
-    }
-    
-    .footer-links ul li a i {
-      margin-right: 3px !important;
-    }
-    
-    .developer-info .contact-info p {
-      font-size: 0.76rem;
-    }
-    
-    .developer-info .contact-info a {
-      font-size: 0.76rem;
-      word-break: break-all;
-    }
-    
-    .footer-bottom p {
-      font-size: 0.75rem;
-    }
-  }
-  
-  /* ── Small Mobile ── */
-  @media (max-width: 576px) {
-    .isnm-footer .container {
-      padding: 24px 14px 10px;
-    }
-    
     .footer-links ul {
       columns: 1;
     }
-    
+    .footer-logo {
+      text-align: left;
+    }
+    .footer-logo-img {
+      width: 64px;
+      height: 64px;
+    }
     .footer-logo h4 {
-      font-size: 0.84rem;
-      line-height: 1.3;
+      font-size: 0.9rem;
     }
-    
     .footer-logo p {
-      font-size: 0.74rem;
+      font-size: 0.82rem;
+      word-break: break-word;
     }
-    
+    .footer-logo p i {
+      width: 18px;
+      text-align: center;
+    }
     .social-links {
       justify-content: flex-start;
+      gap: 10px;
+      margin-top: 12px !important;
     }
-    
     .social-btn {
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+      min-width: 40px;
+      min-height: 40px;
+    }
+    .isnm-footer h5 {
+      font-size: 0.88rem;
+    }
+    .footer-links ul li a {
+      font-size: 0.82rem;
+      padding: 8px 0;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    .footer-links ul li a i {
+      font-size: 0.65rem;
+      width: 16px;
+      margin-right: 6px !important;
+    }
+    .footer-developer h5 {
       font-size: 0.85rem;
     }
-    
+    .footer-developer h6 {
+      font-size: 0.85rem;
+    }
+    .developer-info .contact-info p {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .developer-info .contact-info a {
+      font-size: 0.8rem;
+      word-break: break-all;
+      display: inline-block;
+    }
+    .developer-note p {
+      font-size: 0.78rem;
+    }
     .footer-developer .btn-3d.btn-sm {
       width: 100%;
       text-align: center;
-      padding: 10px 16px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      min-height: 44px;
+    }
+    .isnm-footer p,
+    .isnm-footer a {
       font-size: 0.82rem;
     }
-    
-    .footer-bottom p {
-      font-size: 0.72rem;
+    .footer-bottom {
+      padding: 14px 0;
     }
-    
+    .footer-bottom p {
+      font-size: 0.78rem;
+      padding: 0 8px;
+      line-height: 1.5;
+    }
     .footer-bottom .motto {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
+      display: block;
+      padding: 4px 8px 0;
+    }
+    .footer-stripes-top {
+      height: 5px;
+    }
+    .footer-stripes-bottom {
+      height: 3px;
     }
   }
-  
-  /* ── Extra Small ── */
+
+  /* ── Small Mobile (576px and below) ── */
+  @media (max-width: 576px) {
+    .isnm-footer .container {
+      padding: 22px 12px 12px;
+    }
+    .isnm-footer .row > div {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+    .footer-logo {
+      text-align: center;
+    }
+    .footer-logo-img {
+      width: 56px;
+      height: 56px;
+    }
+    .footer-logo h4 {
+      font-size: 0.85rem;
+    }
+    .footer-logo p {
+      font-size: 0.78rem;
+    }
+    .social-links {
+      justify-content: center;
+    }
+    .social-btn {
+      width: 38px;
+      height: 38px;
+      font-size: 0.95rem;
+      min-width: 38px;
+      min-height: 38px;
+    }
+    .isnm-footer h5 {
+      font-size: 0.84rem;
+      text-align: center;
+    }
+    .footer-links ul li a {
+      font-size: 0.78rem;
+      padding: 7px 0;
+      min-height: 38px;
+      justify-content: center;
+    }
+    .footer-links ul li a i {
+      width: 14px;
+      margin-right: 5px !important;
+    }
+    .developer-info .contact-info p {
+      font-size: 0.76rem;
+      text-align: center;
+    }
+    .developer-info .contact-info a {
+      font-size: 0.76rem;
+    }
+    .isnm-footer p,
+    .isnm-footer a {
+      font-size: 0.78rem;
+    }
+    .footer-bottom p {
+      font-size: 0.74rem;
+    }
+    .footer-bottom .motto {
+      font-size: 0.72rem;
+    }
+  }
+
+  /* ── Extra Small (360px and below) ── */
   @media (max-width: 360px) {
     .isnm-footer .container {
-      padding: 18px 10px 8px;
+      padding: 16px 8px 8px;
     }
-  
+    .isnm-footer .row > div {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
     .footer-logo-img {
       width: 48px;
       height: 48px;
     }
-  
+    .footer-logo h4 {
+      font-size: 0.8rem;
+    }
+    .footer-logo p {
+      font-size: 0.74rem;
+    }
+    .social-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 0.85rem;
+      min-width: 34px;
+      min-height: 34px;
+    }
     .footer-links ul li a {
-      font-size: 0.68rem;
-      padding: 3px 0;
+      font-size: 0.74rem;
+      padding: 6px 0;
+      min-height: 34px;
     }
-  
     .developer-info .contact-info p {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
     }
-  
     .developer-info .contact-info a {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
     }
-  
     .isnm-footer p,
     .isnm-footer a {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
     }
-  
     .footer-bottom p {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
     }
-  
-    .social-btn {
-      width: 28px;
-      height: 28px;
-      font-size: 0.75rem;
+    .footer-bottom .motto {
+      font-size: 0.68rem;
     }
   }
 </style>
@@ -575,7 +663,7 @@
   <span>Chat with us</span>
 </div>
 <style>
-#whatsappFloat{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:50px;padding:14px 18px;cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,0.4);transition:all 0.3s ease;font-family:'Inter','Segoe UI',sans-serif}#whatsappFloat i{font-size:26px}#whatsappFloat span{font-size:14px;font-weight:600;max-width:0;overflow:hidden;white-space:nowrap;transition:max-width 0.3s ease,opacity 0.3s ease;opacity:0}#whatsappFloat:hover{padding:14px 24px;box-shadow:0 6px 28px rgba(37,211,102,0.55)}#whatsappFloat:hover span{max-width:130px;opacity:1;margin-left:4px}#whatsappFloat::before{content:'';position:absolute;inset:0;border-radius:50px;animation:whatsappPulse 2s infinite}@keyframes whatsappPulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,0.5)}70%{box-shadow:0 0 0 14px rgba(37,211,102,0)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}}@media(max-width:576px){#whatsappFloat{bottom:16px;right:16px;padding:12px 14px}#whatsappFloat i{font-size:22px}#whatsappFloat span{display:none}}</style>
+#whatsappFloat{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:50px;padding:14px 18px;cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,0.4);transition:all 0.3s ease;font-family:'Inter','Segoe UI',sans-serif}#whatsappFloat i{font-size:26px}#whatsappFloat span{font-size:14px;font-weight:600;max-width:0;overflow:hidden;white-space:nowrap;transition:max-width 0.3s ease,opacity 0.3s ease;opacity:0}#whatsappFloat:hover{padding:14px 24px;box-shadow:0 6px 28px rgba(37,211,102,0.55)}#whatsappFloat:hover span{max-width:130px;opacity:1;margin-left:4px}#whatsappFloat::before{content:'';position:absolute;inset:0;border-radius:50px;animation:whatsappPulse 2s infinite}@keyframes whatsappPulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,0.5)}70%{box-shadow:0 0 0 14px rgba(37,211,102,0)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}}@media(max-width:576px){#whatsappFloat{bottom:16px;right:12px;padding:12px;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center}#whatsappFloat i{font-size:24px}#whatsappFloat span{display:none}#whatsappFloat::before{animation:whatsappPulse 2.5s infinite}}@media(max-width:360px){#whatsappFloat{bottom:12px;right:8px;width:44px;height:44px;padding:10px}#whatsappFloat i{font-size:20px}}</style>
 </body>
 
 </html>

@@ -197,6 +197,11 @@ if (!function_exists('staffRequireRole')) {
     }
 }
 
+// ── Normalize URL parameters: sidebar uses ?page= but many dashboards read ?section= ──
+// This ensures both always work regardless of what the sidebar or dashboard code uses.
+$_GET['section'] = $_GET['section'] ?? $_GET['page'] ?? null;
+$_GET['page']    = $_GET['page']    ?? $_GET['section'] ?? null;
+
 // ── Fallback for renderEmptyState if dashboard_components.php wasn't loaded ──
 if (!function_exists('renderEmptyState')) {
     function renderEmptyState($message, $icon = 'fas fa-inbox', $extra = '') {

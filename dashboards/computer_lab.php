@@ -1221,8 +1221,8 @@ function editComputer(id) {
         const v = c[k] || '';
         return `<div class="mb-1"><label class="small">${k.replace(/_/g,' ')}</label><input type="text" name="${k}" class="form-control form-control-sm" value="${v}"></div>`;
     }).filter(Boolean).join('');
-    $('#editCompBody').html(h || 'No editable fields');
-    $('#editComputerModal').modal('show');
+    document.getElementById('editCompBody').innerHTML = h || 'No editable fields';
+    new bootstrap.Modal(document.getElementById('editComputerModal')).show();
 }
 
 function completePrint(id) {
@@ -1263,7 +1263,7 @@ function updateRepair(id) {
             <button type="submit" class="btn btn-info text-white w-100"><i class="fas fa-save me-1"></i>Update</button>
         </form>
     `);
-    $('#repairUpdateModal').modal('show');
+    new bootstrap.Modal(document.getElementById('repairUpdateModal')).show();
     setTimeout(() => {
         $('#repairUpdateForm').submit(e => { e.preventDefault(); doAjax('repairUpdateForm', 'Repair updated'); });
     }, 100);

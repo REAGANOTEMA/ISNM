@@ -7,7 +7,7 @@ $studentsConn = $ctx['students'];
 $user = $ctx['user'];
 
 $pageTitle = 'System Administration';
-$view = $_GET['view'] ?? '';
+$view = $_GET['view'] ?? $_GET['page'] ?? $_GET['section'] ?? '';
 
 $backups = []; $logs = []; $sync = []; $settings = []; $errorLogs = []; $cacheCount = 0;
 if ($conn) {

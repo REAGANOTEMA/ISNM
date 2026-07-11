@@ -303,7 +303,7 @@ $pageTitle = 'HR Manager';
 
 <?php elseif ($page === 'staff'): ?>
 <div class="hr-card"><h3>Staff Records</h3>
-<button class="btn btn-sm btn-primary mb-3" onclick="$('#addStaffModal').modal('show')">+ Add Staff</button>
+<button class="btn btn-sm btn-primary mb-3" onclick="new bootstrap.Modal(document.getElementById('addStaffModal')).show()">+ Add Staff</button>
 <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Position</th><th>Department</th><th>Role</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>
 <?php foreach ($staffList as $s): ?><tr>
   <td><?=htmlspecialchars($s['staff_id']??$s['id'])?></td>
