@@ -21,6 +21,11 @@ class ErrorHandler {
     }
     
     public static function handleError($errno, $errstr, $errfile, $errline) {
+        // Respect @ operator suppression
+        if (!(error_reporting() & $errno)) {
+            return false;
+        }
+        
         $isProduction = defined('APP_ENV') && APP_ENV === 'production';
         
         error_log("Error [$errno]: $errstr in $errfile on line $errline");
