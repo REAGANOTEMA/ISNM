@@ -1475,13 +1475,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <p class="text-muted small" style="padding:20px;text-align:center;">No pending trip approvals. All trips are approved or no new trips submitted.</p>
           <div class="row g-2 mt-2">
             <div class="col-4"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#059669;">
-              <?php $tc=$conn->query("SELECT COUNT(*) c FROM transport_vehicles"); echo $tc?$tc->fetch_assoc()['c']:0; ?>
+              <?php $tc=$conn?$conn->query("SELECT COUNT(*) c FROM transport_vehicles"):null; echo $tc?$tc->fetch_assoc()['c']:0; ?>
             </div><div style="font-size:11px;color:#065f46;">Vehicles</div></div></div>
             <div class="col-4"><div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#2563eb;">
-              <?php $rc=$conn->query("SELECT COUNT(*) c FROM transport_routes WHERE status='active'"); echo $rc?$rc->fetch_assoc()['c']:0; ?>
+              <?php $rc=$conn?$conn->query("SELECT COUNT(*) c FROM transport_routes WHERE status='active'"):null; echo $rc?$rc->fetch_assoc()['c']:0; ?>
             </div><div style="font-size:11px;color:#1e40af;">Active Routes</div></div></div>
             <div class="col-4"><div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#ca8a04;">
-              <?php $ac=$conn->query("SELECT COUNT(*) c FROM transport_trips WHERE dg_approval_status='approved'"); echo $ac?$ac->fetch_assoc()['c']:0; ?>
+              <?php $ac=$conn?$conn->query("SELECT COUNT(*) c FROM transport_trips WHERE dg_approval_status='approved'"):null; echo $ac?$ac->fetch_assoc()['c']:0; ?>
             </div><div style="font-size:11px;color:#a16207;">Approved Trips</div></div></div>
           </div>
         <?php else: foreach($pendingTrips as $tp_):

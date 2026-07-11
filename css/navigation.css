@@ -719,6 +719,43 @@
   }
 }
 
+/* ── iOS Safari notch / safe area ── */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .isnm-navbar .container {
+    padding-left: max(15px, env(safe-area-inset-left)) !important;
+    padding-right: max(15px, env(safe-area-inset-right)) !important;
+  }
+  .navbar-collapse {
+    padding-left: max(15px, env(safe-area-inset-left)) !important;
+    padding-right: max(15px, env(safe-area-inset-right)) !important;
+  }
+}
+
+/* ── Mobile nav: ensure nav & collapse sit above page content ── */
+@media (max-width: 991px) {
+  .isnm-navbar {
+    z-index: 1060 !important;
+  }
+  .navbar-collapse {
+    z-index: 1061 !important;
+  }
+  .navbar-collapse.show {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
+  }
+}
+
+/* ── Dropdown on mobile: higher z-index so Login submenu sits above content ── */
+@media (max-width: 991px) {
+  .isnm-navbar .dropdown-menu.show {
+    position: static !important;
+    z-index: 1070 !important;
+  }
+  .isnm-navbar .dropdown-toggle[aria-expanded="true"] {
+    background: linear-gradient(135deg, #FFD700, #FFA000) !important;
+    border-color: #1A237E !important;
+  }
+}
+
 /* ============================================
    Touch Device Optimizations
    ============================================ */

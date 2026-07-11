@@ -674,7 +674,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             $s=$stuConn->prepare("INSERT INTO {$studentsDb}.students(student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,password,is_first_login,status,passport_photo,profile_picture,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'Active',?,?,NOW(),NOW())");
-            if($s){$s->bind_param('sssssssssssssssss',$studentNum,$studentNum,$regNum,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob,$set,$pwHash,$photoPath,$photoPath);$success=$s->execute();$newId=$s->insert_id;$s->close();}
+            if($s){$s->bind_param('ssssssssssssssss',$studentNum,$studentNum,$regNum,$fn,$sn,$full,$em,$ph,$pg,$lv,$g,$dob,$set,$pwHash,$photoPath,$photoPath);$success=$s->execute();$newId=$s->insert_id;$s->close();}
             if($success){
                 $msg="Student added. Login: $studentNum / Password: $tempPw";
                 if($conn){
@@ -733,6 +733,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if($s){$s->bind_param('i',$id);$s->execute();$data=$s->get_result()->fetch_assoc();$s->close();}
         }
         echo json_encode($data?:[]); exit;
+    }
+    // ── Student Comprehensive Detail ──
+    if ($action === 'stu_detail') {
+        $id=(int)($_POST['id']??0); $result=[];
+        if($id&&$stuConn){
+            $s=$stuConn->prepare("SELECT id,student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture,created_at,updated_at FROM {$studentsDb}.students WHERE id=?");
+            if($s){$s->bind_param('i',$id);$s->execute();$stu=$s->get_result()->fetch_assoc();$s->close();}
+            if($stu){
+                $result['student']=$stu;
+                // Get requirements via applicant link
+                $sn=$stuConn->real_escape_string($stu['student_number']);
+                $app=$conn->query("SELECT id FROM applicants WHERE student_number='$sn' LIMIT 1")->fetch_assoc();
+                $aid=$app['id']??0;
+                $result['applicant_id']=$aid;
+                if($aid){
+                    $r=$conn->query("SELECT ar.id,ar.requirement_name,ar.is_mandatory,COALESCE(ars.status,'Not Submitted') as status,ars.remarks as director_notes,ars.submitted_at,ars.verified_at FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
+                    if($r)$result['requirements']=$r->fetch_all(MYSQLI_ASSOC);
+                    // Counts
+                    $total=count($result['requirements']);
+                    $done=0;foreach($result['requirements'] as $rr){if(in_array($rr['status'],['Verified','Received','Submitted']))$done++;}
+                    $result['req_total']=$total;
+                    $result['req_done']=$done;
+                    // Admission tracking
+                    $tr=$conn->query("SELECT * FROM student_admission_tracking WHERE applicant_id=$aid OR student_number='$sn' LIMIT 1");
+                    if($tr)$result['tracking']=$tr->fetch_assoc();
+                }
+                // Payment info
+                $result['payments']=[];$result['payment_summary']=['paid'=>0,'total'=>0];
+                if($stuConn){
+                    $payTables=['payments','student_payments','fee_payments','student_invoices','receipts'];
+                    foreach($payTables as $pt){
+                        $tn=defined('STUDENTS_DB_NAME')?STUDENTS_DB_NAME.'.'.$pt:$pt;
+                        @$pChk=$stuConn->query("SELECT 1 FROM {$tn} LIMIT 1");
+                        if($pChk!==false){
+                            @$pSum=$stuConn->query("SELECT COALESCE(SUM(amount_paid),0) as paid,COALESCE(SUM(total_fee),0) as total FROM {$tn} WHERE student_id='{$stu['student_id']}' OR student_number='{$stu['student_number']}'");
+                            if($pSum){$ps=$pSum->fetch_assoc();$result['payment_summary']['paid']+=(float)$ps['paid'];$result['payment_summary']['total']+=(float)$ps['total'];}
+                            @$pList=$stuConn->query("SELECT * FROM {$tn} WHERE student_id='{$stu['student_id']}' OR student_number='{$stu['student_number']}' ORDER BY created_at DESC LIMIT 20");
+                            if($pList){$rows=$pList->fetch_all(MYSQLI_ASSOC);foreach($rows as $r){$r['_source']=$pt;$result['payments'][]=$r;}}
+                        }
+                    }
+                }
+            }
+        }
+        echo json_encode($result); exit;
     }
     // ── Student Requirements Status ──
     if ($action === 'stu_requirements') {
@@ -1862,6 +1906,22 @@ $yearsList = $filterOpts['years'] ?? [];
   </div></form></div></div>
 </div>
 
+<!-- Student Detail Modal -->
+<div class="modal fade" id="stuDetailModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-xl"><div class="modal-content">
+  <div class="modal-header" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff">
+    <h5 class="modal-title"><i class="fas fa-user-graduate"></i> <span id="stuDetName">Student Details</span></h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body p-0" id="stuDetBody">
+    <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><p class="mt-2 text-muted">Loading student details...</p></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-sm btn-success" onclick="editStuFromRow(window._stuDetIdx)" id="stuDetEditBtn"><i class="fas fa-edit"></i> Edit</button>
+    <button type="button" class="btn btn-sm btn-outline-info" onclick="showRequirements(window._stuDetId,'','')" id="stuDetReqBtn"><i class="fas fa-clipboard-check"></i> Requirements</button>
+  </div>
+</div></div></div>
+
 <!-- Requirements Viewer Modal -->
 <div class="modal fade" id="reqViewModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title"><i class="fas fa-clipboard-check"></i> <span id="reqViewTitle">Requirements</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -1995,6 +2055,79 @@ function markAllRequirements(stuId){
   });
   if(typeof showToast==='function')showToast('Marked '+count+' requirements as Verified.','success');
 }
+function viewStudentDetail(idx,id){
+  window._stuDetIdx=idx; window._stuDetId=id;
+  var s=_stuData[idx];
+  if(!s) return;
+  document.getElementById('stuDetName').textContent=s.full_name||'Student Details';
+  document.getElementById('stuDetBody').innerHTML='<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><p class="mt-2 text-muted">Loading student details...</p></div>';
+  new bootstrap.Modal(document.getElementById('stuDetailModal')).show();
+  fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=stu_detail&id='+id+'&csrf_token='+encodeURIComponent(_tk)}).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.student){document.getElementById('stuDetBody').innerHTML='<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-triangle fa-2x"></i><p class="mt-2">Failed to load student details.</p></div>';return;}
+    var stu=d.student;
+    var photo=stu.passport_photo||stu.profile_picture||'';
+    var photoHtml=photo?'<img src="../'+photo+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0">':'<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700">'+(stu.full_name?stu.full_name.charAt(0).toUpperCase():'?')+'</div>';
+    var reqHtml='',reqCounts='';
+    if(d.requirements){
+      var done=d.req_done||0,total=d.req_total||0,pct=total>0?Math.round(done/total*100):0;
+      var barColor=pct>=75?'bg-success':pct>=50?'bg-warning':'bg-danger';
+      reqCounts='<div class="d-flex justify-content-between small mb-1"><span>'+done+'/'+total+' completed</span><span>'+pct+'%</span></div><div class="progress" style="height:8px"><div class="progress-bar '+barColor+'" style="width:'+pct+'%"></div></div>';
+      reqHtml='<div class="table-responsive" style="max-height:160px;overflow-y:auto"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Requirement</th><th>Status</th></tr></thead><tbody>';
+      d.requirements.forEach(function(rr){
+        var sc=rr.status==='Verified'||rr.status==='Received'?'success':rr.status==='Submitted'?'info':rr.status==='Missing'||rr.status==='Rejected'?'danger':'secondary';
+        reqHtml+='<tr><td class="small">'+rr.requirement_name+(rr.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td><td><span class="badge bg-'+sc+'">'+rr.status+'</span></td></tr>';
+      });
+      reqHtml+='</tbody></table></div>';
+    }else{reqHtml='<p class="text-muted small">No applicant record linked — cannot track requirements.</p>';}
+    var payHtml='',paySum=d.payment_summary||{paid:0,total:0};
+    var bal=parseFloat(paySum.total)-parseFloat(paySum.paid);
+    var payStatus=bal<=0?'<span class="badge bg-success">Paid in Full</span>':bal>0?'<span class="badge bg-warning text-dark">Balance: '+bal.toLocaleString()+'</span>':'<span class="badge bg-secondary">No Data</span>';
+    payHtml='<div class="d-flex justify-content-between small mb-1"><span>Total Fee: <strong>'+parseFloat(paySum.total).toLocaleString()+'</strong></span><span>Paid: <strong>'+parseFloat(paySum.paid).toLocaleString()+'</strong></span><span>'+payStatus+'</span></div>';
+    if(d.payments&&d.payments.length>0){
+      payHtml+='<div class="table-responsive" style="max-height:120px;overflow-y:auto"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Date</th><th>Amount</th><th>Ref</th></tr></thead><tbody>';
+      d.payments.forEach(function(p){
+        payHtml+='<tr><td class="small">'+(p.created_at||p.payment_date||'-')+'</td><td class="small">'+(p.amount_paid||p.amount||'0')+'</td><td class="small">'+(p.reference||p.receipt_no||'-')+'</td></tr>';
+      });
+      payHtml+='</tbody></table></div>';
+    }else{payHtml+='<p class="text-muted small mt-1">No payment records found.</p>';}
+    var regStatus=stu.status==='Active'?'<span class="badge bg-success">Active</span>':stu.status==='Inactive'?'<span class="badge bg-danger">Inactive</span>':'<span class="badge bg-secondary">'+stu.status+'</span>';
+    var html='<div class="row g-0">'
+      +'<div class="col-md-4 p-4 text-center border-end" style="background:#f8fafc">'
+        +'<div class="mb-3">'+photoHtml+'</div>'
+        +'<h5 class="mb-1">'+stu.full_name+'</h5>'
+        +'<div class="small text-muted">'+regStatus+'</div>'
+        +'<hr>'
+        +'<div class="text-start small"><div class="mb-1"><span class="text-muted">Student #:</span> <strong>'+stu.student_number+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">ID:</span> <strong>'+(stu.student_id||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Reg #:</span> <strong>'+(stu.registration_number||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Program:</span> <strong>'+(stu.program||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Level:</span> <strong>'+(stu.level||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Set:</span> <strong>'+(stu.set_name||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Gender:</span> <strong>'+(stu.gender||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">DOB:</span> <strong>'+(stu.date_of_birth||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Email:</span> <strong>'+(stu.email||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Phone:</span> <strong>'+(stu.phone||'-')+'</strong></div>'
+        +'<div class="mb-1"><span class="text-muted">Created:</span> <strong>'+(stu.created_at||'-')+'</strong></div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="col-md-8 p-4">'
+        +'<h6 class="fw-bold mb-2"><i class="fas fa-clipboard-check text-purple"></i> Admission Requirements <span class="badge bg-'+barColor+' ms-2">'+pct+'%</span></h6>'
+        +reqCounts+'<div class="mt-2">'+reqHtml+'</div>'
+        +'<hr>'
+        +'<h6 class="fw-bold mb-2"><i class="fas fa-money-bill-wave text-success"></i> Fee Status</h6>'
+        +payHtml
+        +'<hr>'
+        +'<h6 class="fw-bold mb-2"><i class="fas fa-clipboard-list text-info"></i> Quick Actions</h6>'
+        +'<div class="d-flex gap-2 flex-wrap">'
+        +'<button class="btn btn-sm btn-outline-primary" onclick="editStuFromRow('+idx+')"><i class="fas fa-edit"></i> Edit</button>'
+        +'<button class="btn btn-sm btn-outline-info" onclick="showRequirements('+id+',\''+(stu.full_name||'').replace(/'/g,'')+'\',\''+(stu.student_number||'')+'\')"><i class="fas fa-clipboard-check"></i> Requirements</button>'
+        +'<button class="btn btn-sm btn-outline-danger" onclick="deleteStu('+id+',\''+(stu.full_name||'').replace(/'/g,'')+'\')"><i class="fas fa-user-slash"></i> Deactivate</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+    document.getElementById('stuDetBody').innerHTML=html;
+  });
+}
 function filterStudents(){
   var q=document.getElementById('stuKeyword').value;
   var set=document.getElementById('stuFilterSet').value;
@@ -2043,7 +2176,7 @@ function filterStudents(){
           +'</div>';
       } else {
         actions='<div class="d-flex gap-1">'
-          +'<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editStuFromRow('+i+')" title="Edit"><i class="fas fa-edit"></i></button>'
+          +'<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="viewStudentDetail('+i+','+(s.id||0)+')" title="View Details"><i class="fas fa-eye"></i></button>'
           +'<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="showRequirements('+(s.id||0)+',\''+nameAttr+'\',\''+((s.student_number||s.student_id||'').replace(/[\'\\]/g,''))+'\')" title="Requirements"><i class="fas fa-clipboard-check"></i></button>'
           +'<button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteStu('+(s.id||0)+',\''+nameAttr+'\')" title="Deactivate"><i class="fas fa-user-slash"></i></button>'
           +'</div>';

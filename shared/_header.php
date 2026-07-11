@@ -207,8 +207,16 @@ document.addEventListener('DOMContentLoaded', function() {
   var toggler = document.querySelector('.navbar-toggler');
   var collapse = document.getElementById('mainNavbar');
   if (toggler && collapse) {
-    // Close menu when clicking a nav link
-    collapse.querySelectorAll('.nav-link').forEach(function(link) {
+    // Use Bootstrap collapse events for reliable open/close detection
+    collapse.addEventListener('shown.bs.collapse', function() {
+      document.body.classList.add('menu-open');
+    });
+    collapse.addEventListener('hidden.bs.collapse', function() {
+      document.body.classList.remove('menu-open');
+    });
+
+    // Close menu when clicking a non-dropdown nav link
+    collapse.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(link) {
       link.addEventListener('click', function() {
         var bsCollapse = bootstrap.Collapse.getInstance(collapse);
         if (bsCollapse && collapse.classList.contains('show')) {
@@ -217,22 +225,35 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.remove('menu-open');
       });
     });
-
-    // Toggle body scroll lock when menu opens/closes
-    toggler.addEventListener('click', function() {
-      setTimeout(function() {
-        if (collapse.classList.contains('show')) {
-          document.body.classList.add('menu-open');
-        } else {
-          document.body.classList.remove('menu-open');
+    // Close dropdown submenus when a dropdown-item is clicked
+    collapse.querySelectorAll('.dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse && collapse.classList.contains('show')) {
+          bsCollapse.hide();
         }
-      }, 100);
+        document.body.classList.remove('menu-open');
+      });
+    });
+
+    // Close menu when tapping outside (mobile)
+    document.addEventListener('click', function(e) {
+      if (window.innerWidth >= 992) return;
+      var nav = document.querySelector('.isnm-navbar');
+      if (!nav) return;
+      if (!nav.contains(e.target) && collapse.classList.contains('show')) {
+        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse) bsCollapse.hide();
+        document.body.classList.remove('menu-open');
+      }
     });
 
     // Clean up on resize to desktop
     window.addEventListener('resize', function() {
       if (window.innerWidth >= 992) {
         document.body.classList.remove('menu-open');
+        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse) bsCollapse.hide();
       }
     });
   }

@@ -36,6 +36,12 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.principal_notices (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(300), content TEXT, audience VARCHAR(100), published_by VARCHAR(200), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.staff_appraisals (id INT AUTO_INCREMENT PRIMARY KEY, staff_id INT, reviewer_id INT, review_date DATE, performance_score DECIMAL(5,2), strengths TEXT, areas_improvement TEXT, overall_rating VARCHAR(50), status ENUM('draft','submitted','reviewed','completed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.department_reviews (id INT AUTO_INCREMENT PRIMARY KEY, department VARCHAR(200), reviewer_id INT, review_period VARCHAR(50), overall_score DECIMAL(5,2), strengths TEXT, weaknesses TEXT, recommendations TEXT, status ENUM('draft','submitted','reviewed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meetings (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(300) NOT NULL, meeting_type VARCHAR(100) DEFAULT '', meeting_date DATE DEFAULT NULL, start_time TIME DEFAULT NULL, end_time TIME DEFAULT NULL, location VARCHAR(200) DEFAULT '', agenda TEXT, status VARCHAR(50) DEFAULT 'scheduled', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meeting_attendees (id INT AUTO_INCREMENT PRIMARY KEY, meeting_id INT NOT NULL, attendee_name VARCHAR(200) DEFAULT '', attended TINYINT(1) DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_meeting (meeting_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.clinical_placements_students (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, clinical_placement_id INT DEFAULT 0, facility_name VARCHAR(300) DEFAULT '', start_date DATE DEFAULT NULL, end_date DATE DEFAULT NULL, supervisor_name VARCHAR(200) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_academic_profiles (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL UNIQUE, gpa DECIMAL(4,2) DEFAULT 0.00, credit_hours_earned INT DEFAULT 0, total_credit_hours INT DEFAULT 0, academic_standing VARCHAR(100) DEFAULT 'Good', advisor_name VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.staff_activity_log (id INT AUTO_INCREMENT PRIMARY KEY, staff_id INT NOT NULL, action VARCHAR(200) DEFAULT '', description TEXT, ip_address VARCHAR(50) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_staff (staff_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.grading_approval_workflow_log (id INT AUTO_INCREMENT PRIMARY KEY, workflow_id INT NOT NULL, stage VARCHAR(100) DEFAULT '', action VARCHAR(200) DEFAULT '', comments TEXT, actor_id INT DEFAULT 0, actor_name VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_workflow (workflow_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
 if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
@@ -154,7 +160,7 @@ if ($view === 'student_progress_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
     if ($students) {
-        $r = $students->query("SELECT s.id, s.surname, s.first_name, s.program, s.level, s.intake_year, s.intake_period, s.status, (SELECT COUNT(*) FROM examination_records e WHERE e.student_id=s.id AND e.grade IS NOT NULL) exams_taken FROM students s WHERE s.status='Active' ORDER BY s.surname LIMIT 100");
+        $r = $students->query("SELECT s.id, s.surname, s.first_name, s.program, s.level, s.intake_year, s.intake_period, s.status, (SELECT COUNT(*) FROM {$staff_db}.examination_records e WHERE e.student_id=s.id AND e.grade IS NOT NULL) exams_taken FROM students s WHERE s.status='Active' ORDER BY s.surname LIMIT 100");
         if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw;
     }
     echo json_encode($rows); exit;
@@ -464,9 +470,8 @@ if ($view === 'submit_staff_appraisal' && $ajax === '1') {
     header('Content-Type: application/json');
     $si = (int)($_POST['staff_id']??0); $rd = trim($_POST['review_date']??date('Y-m-d')); $ps = (float)($_POST['performance_score']??0); $stg = trim($_POST['strengths']??''); $ai = trim($_POST['areas_improvement']??''); $or = trim($_POST['overall_rating']??'');
     if ($si && $ps) {
-        $stmt = $staff->prepare("INSERT INTO {$staff_db}.staff_appraisals (staff_id,reviewer_id,review_date,performance_score,strengths,areas_improvement,overall_rating,status) VALUES (?,?,?,?,'submitted')");
         $stmt2 = $staff->prepare("INSERT INTO {$staff_db}.staff_appraisals (staff_id,reviewer_id,review_date,performance_score,strengths,areas_improvement,overall_rating,status) VALUES (?,?,?,?,?,?,?,?)");
-        if ($stmt2) { $s='submitted'; $stmt2->bind_param('iisdsss', $si, $uid, $rd, $ps, $stg, $ai, $or, $s); $stmt2->execute(); $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
+        if ($stmt2) { $s='submitted'; $stmt2->bind_param('iisdssss', $si, $uid, $rd, $ps, $stg, $ai, $or, $s); $stmt2->execute(); $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Staff ID and score required']); exit;

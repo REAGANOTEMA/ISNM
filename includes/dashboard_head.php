@@ -352,31 +352,6 @@ window.onerror = function(msg, url) {
 .isnm-shortcut-toast hr { border-color:rgba(255,255,255,0.1);margin:8px 0; }
 </style>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var sidebar = document.querySelector('.sidebar, .dashboard-sidebar, .isnm-sidebar, .ent-sidebar');
-    if (!sidebar) return;
-    var toggle = document.querySelector('.sidebar-toggle, .mobile-menu-toggle, .ent-hamburger');
-    if (!toggle) {
-        toggle = document.createElement('button');
-        toggle.className = 'sidebar-toggle';
-        toggle.innerHTML = '<i class="fas fa-bars"></i>';
-        document.body.appendChild(toggle);
-    }
-    toggle.addEventListener('click', function() {
-        sidebar.classList.toggle('open');
-        var overlay = document.querySelector('.sidebar-overlay');
-        if (overlay) overlay.classList.toggle('open');
-    });
-    var overlay = document.querySelector('.sidebar-overlay');
-    if (overlay) {
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('open');
-        });
-    }
-});
-</script>
-<script>
 /* ── Loading Progress Bar (deferred until body exists) ── */
 (function(){
     'use strict';

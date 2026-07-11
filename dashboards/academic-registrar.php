@@ -133,13 +133,14 @@ $autoMigrate = [
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`registrar_student_registration` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, academic_year VARCHAR(20) NOT NULL, semester VARCHAR(100) NOT NULL, registration_date DATE DEFAULT NULL, registration_status VARCHAR(50) DEFAULT 'Registered', registered_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_year (academic_year)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_programs` (id INT AUTO_INCREMENT PRIMARY KEY, program_code VARCHAR(50) NOT NULL UNIQUE, program_name VARCHAR(300) NOT NULL, program_type VARCHAR(100) DEFAULT '', department VARCHAR(200) DEFAULT '', duration_years INT DEFAULT 3, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_course_catalog` (id INT AUTO_INCREMENT PRIMARY KEY, course_code VARCHAR(50) NOT NULL, course_title VARCHAR(300) NOT NULL, credits DECIMAL(5,2) DEFAULT 0.00, program_code VARCHAR(50) DEFAULT '', year_of_study INT DEFAULT 1, semester VARCHAR(100) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_program (program_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`examination_records` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) NOT NULL, exam_type VARCHAR(50) DEFAULT 'Final', marks_obtained DECIMAL(8,2) DEFAULT 0.00, total_marks DECIMAL(8,2) DEFAULT 100.00, grade VARCHAR(5) DEFAULT '', continuous_assessment_marks DECIMAL(8,2) DEFAULT 0.00, final_exam_marks DECIMAL(8,2) DEFAULT 0.00, grade_status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_course (course_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`examination_records` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) NOT NULL, exam_type VARCHAR(50) DEFAULT 'Final', marks_obtained DECIMAL(8,2) DEFAULT 0.00, total_marks DECIMAL(8,2) DEFAULT 100.00, grade VARCHAR(5) DEFAULT '', continuous_assessment_marks DECIMAL(8,2) DEFAULT 0.00, final_exam_marks DECIMAL(8,2) DEFAULT 0.00, grade_status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_student_course_exam (student_id, course_code, exam_type)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grading_approval_workflow` (id INT AUTO_INCREMENT PRIMARY KEY, workflow_number INT NOT NULL UNIQUE, examination_record_id INT DEFAULT 0, hod_status VARCHAR(50) DEFAULT 'Pending', registrar_status VARCHAR(50) DEFAULT 'Pending', principal_status VARCHAR(50) DEFAULT 'Pending', hod_approved_by INT DEFAULT 0, registrar_approved_by INT DEFAULT 0, principal_approved_by INT DEFAULT 0, current_stage VARCHAR(100) DEFAULT 'HOD', published_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_record (examination_record_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 ];
 if ($staff) {
     foreach ($autoMigrate as $ddl) {
         try { $staff->query($ddl); } catch (Exception $e) { error_log('academic-registrar context: ' . $e->getMessage()); }
     }
+    try { $staff->query("ALTER TABLE `{$staff_db}`.`examination_records` ADD UNIQUE INDEX IF NOT EXISTS uq_student_course_exam (student_id, course_code, exam_type)"); } catch (Exception $e) { error_log('academic-registrar: ' . $e->getMessage()); }
 }
 
 // ── Seed starter data if tables are empty ──
@@ -264,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             if ($stmt) { $stmt->bind_param('sii', $newProgram, $newLevel, $sid);
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("INSERT INTO student_progression (student_id, to_year, academic_year, progression_type, approved_by, status) VALUES (?, ?, ?, 'Transfer', ?, 'Approved')");
-                    if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newLevel, date('Y'), $user_id); $stmt2->execute(); $stmt2->close(); }
+                    $transferYear = date('Y'); if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newLevel, $transferYear, $user_id); $stmt2->execute(); $stmt2->close(); }
                     $_SESSION['success'] = 'Student transferred successfully.'; logAudit($staff, $user_id, 'TRANSFER', 'student', $sid, "Transferred to $newProgram level $newLevel. $remarks");
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID and new program required.';
@@ -322,7 +323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         $status = 'Pending';
         if ($sid && $courseCode) {
             $stmt = $staff->prepare("INSERT INTO examination_records (student_id, course_code, exam_type, marks_obtained, total_marks, grade, continuous_assessment_marks, final_exam_marks, grade_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE marks_obtained=VALUES(marks_obtained), total_marks=VALUES(total_marks), grade=VALUES(grade), continuous_assessment_marks=VALUES(continuous_assessment_marks), final_exam_marks=VALUES(final_exam_marks), grade_status=VALUES(grade_status)");
-            if ($stmt) { $stmt->bind_param('issdddsds', $sid, $courseCode, $examType, $marksObtained, $total, $grade, $ca, $finalExam, $status);
+            if ($stmt) { $stmt->bind_param('issddsdds', $sid, $courseCode, $examType, $marksObtained, $total, $grade, $ca, $finalExam, $status);
                 if ($stmt->execute()) { $_SESSION['success'] = "Marks entered for $courseCode."; logAudit($staff, $user_id, 'ENTER_MARKS', 'examination_record', $staff->insert_id, "Entered marks $marksObtained/$total for student $sid course $courseCode"); }
                 else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID and course code required.';
@@ -357,9 +358,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                 if ($stmt->execute()) {
                     $trid = $stmt->insert_id;
                     $rstmt = $staff->prepare("SELECT course_code, marks_obtained, total_marks, grade, continuous_assessment_marks, final_exam_marks FROM examination_records WHERE student_id = ? AND grade_status = 'Verified'");
-                    $rstmt->bind_param('i', $sid);
+                    if ($rstmt) { $rstmt->bind_param('i', $sid);
                     $rstmt->execute();
-                    $res = $rstmt->get_result();
+                    $res = $rstmt->get_result(); } else $res = null;
                     if ($res) {
                         while ($row = $res->fetch_assoc()) {
                             $gp = calculateGPA($row['marks_obtained'], $row['total_marks']);
@@ -931,6 +932,9 @@ $sectionTitles = [
           </div>
           <?php endforeach; ?>
           <?php endif; ?>
+</div>
+</div>
+</div>
 </div>
 
 <script>

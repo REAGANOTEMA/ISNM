@@ -25,6 +25,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.risk_register (id INT AUTO_INCREMENT PRIMARY KEY, risk_name VARCHAR(300), description TEXT, category VARCHAR(100), likelihood ENUM('low','medium','high') DEFAULT 'medium', impact ENUM('low','medium','high') DEFAULT 'medium', mitigation TEXT, status ENUM('active','monitored','resolved') DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.compliance_alerts (id INT AUTO_INCREMENT PRIMARY KEY, alert_title VARCHAR(300), description TEXT, compliance_type ENUM('financial','ura','regulatory') DEFAULT 'financial', severity ENUM('low','medium','high','critical') DEFAULT 'medium', status ENUM('open','acknowledged','resolved') DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.payroll_approvals (id INT AUTO_INCREMENT PRIMARY KEY, budget_id INT DEFAULT 0, request_type VARCHAR(50), requested_by INT DEFAULT 0, amount DECIMAL(14,2) DEFAULT 0, description TEXT, status ENUM('pending','approved','rejected','changes_requested','escalated') DEFAULT 'pending', approver_id INT DEFAULT 0, approver_name VARCHAR(200), approver_comments TEXT, escalated_to INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.payroll_history (id INT AUTO_INCREMENT PRIMARY KEY, staff_id INT NOT NULL, gross_salary DECIMAL(14,2) DEFAULT 0, deductions DECIMAL(14,2) DEFAULT 0, net_salary DECIMAL(14,2) DEFAULT 0, payment_date DATE DEFAULT NULL, payment_method VARCHAR(50) DEFAULT '', status VARCHAR(50) DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_staff (staff_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
 $page = $_GET['page'] ?? '';
@@ -208,7 +209,7 @@ if ($ajax === 'approve_budget_request' && $staff) {
     $cmt=$_POST['comments']??'';
     if($id){
         $stmt=$staff->prepare("UPDATE {$students_db}.budget_approvals SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
-        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+        if($stmt){$stmt->bind_param('sissi',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     }
     echo json_encode(['success'=>false]); exit;
 }
@@ -242,7 +243,7 @@ if ($ajax === 'approve_payroll' && $staff) {
     $cmt=$_POST['comments']??'';
     if($id){
         $stmt=$staff->prepare("UPDATE {$students_db}.payroll_approvals SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
-        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+        if($stmt){$stmt->bind_param('sissi',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     }
     echo json_encode(['success'=>false]); exit;
 }
@@ -256,10 +257,10 @@ if ($ajax === 'submit_approval_action' && $staff) {
     if(!$id||!$tbl||!in_array($tbl,$validTables)){ echo json_encode(['success'=>false,'error'=>'Invalid parameters']); exit; }
     if($st==='escalated'){
         $stmt=$staff->prepare("UPDATE {$students_db}.$tbl SET status=?,approver_id=?,approver_name=?,approver_comments=?,escalated_to=? WHERE id=?");
-        if($stmt){$stmt->bind_param('sisiii',$st,$uid,$uname,$cmt,$escl,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+        if($stmt){$stmt->bind_param('sissii',$st,$uid,$uname,$cmt,$escl,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     } else {
         $stmt=$staff->prepare("UPDATE {$students_db}.$tbl SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
-        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+        if($stmt){$stmt->bind_param('sissi',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     }
     echo json_encode(['success'=>false,'error'=>'Update failed or no changes']); exit;
 }
