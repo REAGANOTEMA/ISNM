@@ -57,11 +57,12 @@ if (empty($_ENV['DB_HOST']) && is_file(__DIR__ . '/../.env.production')) {
     isnm_load_env(__DIR__ . '/../.env.production');
 }
 // Load .env.local ONLY on localhost dev — never on production hosting
-$isLocalDev = (isset($_SERVER['HTTP_HOST']) && (
-    strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
-    strpos($_SERVER['HTTP_HOST'], '::1') !== false
-)) || (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
+$isLocalDev = (php_sapi_name() === 'cli')
+    || (isset($_SERVER['HTTP_HOST']) && (
+        strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+        strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
+        strpos($_SERVER['HTTP_HOST'], '::1') !== false
+    )) || (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
 if ($isLocalDev && is_file(__DIR__ . '/../.env.local')) {
     isnm_load_env(__DIR__ . '/../.env.local');
 }

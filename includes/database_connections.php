@@ -5,57 +5,81 @@
 class DatabaseConnection {
     private static $connections = [];
     private static $configs = null;
-    private static $dbMap = [
-        'staffs'   => 'igangaschool_staffs',
-        'students' => 'igangaschool_students',
-        'website'  => 'igangaschool_website',
-        'ict'      => 'igangaschool_ict',
-    ];
+    private static $dbMap = null;
+
+    private static function getDbMap() {
+        if (self::$dbMap === null) {
+            require_once __DIR__ . '/../config/database.php';
+            $map = [
+                'staffs'   => STAFF_DB_NAME,
+                'students' => STUDENTS_DB_NAME,
+                'website'  => WEBSITE_DB_NAME,
+                'ict'      => ICT_DB_NAME,
+            ];
+            // Reverse mappings for production name compatibility
+            foreach ($map as $short => $actual) {
+                $map[$actual] = $actual;
+            }
+            self::$dbMap = $map;
+        }
+        return self::$dbMap;
+    }
 
     private static function getConfigs() {
         if (self::$configs === null) {
             require_once __DIR__ . '/../config/database.php';
+            $staffCfg = [
+                'host' => STAFF_DB_HOST,
+                'username' => STAFF_DB_USER,
+                'password' => STAFF_DB_PASS,
+                'port' => STAFF_DB_PORT,
+                'charset' => STAFF_DB_CHARSET,
+            ];
+            $studentsCfg = [
+                'host' => STUDENTS_DB_HOST,
+                'username' => STUDENTS_DB_USER,
+                'password' => STUDENTS_DB_PASS,
+                'port' => STUDENTS_DB_PORT,
+                'charset' => STUDENTS_DB_CHARSET,
+            ];
+            $websiteCfg = [
+                'host' => WEBSITE_DB_HOST,
+                'username' => WEBSITE_DB_USER,
+                'password' => WEBSITE_DB_PASS,
+                'port' => WEBSITE_DB_PORT,
+                'charset' => WEBSITE_DB_CHARSET,
+            ];
+            $ictCfg = [
+                'host' => ICT_DB_HOST,
+                'username' => ICT_DB_USER,
+                'password' => ICT_DB_PASS,
+                'port' => ICT_DB_PORT,
+                'charset' => ICT_DB_CHARSET,
+            ];
             self::$configs = [
-                'igangaschool_staffs' => [
-                    'host' => STAFF_DB_HOST,
-                    'username' => STAFF_DB_USER,
-                    'password' => STAFF_DB_PASS,
-                    'port' => STAFF_DB_PORT,
-                    'charset' => STAFF_DB_CHARSET,
-                ],
-'igangaschool_students' => [
-                     'host' => STUDENTS_DB_HOST,
-                     'username' => STUDENTS_DB_USER,
-                     'password' => STUDENTS_DB_PASS,
-                     'port' => STUDENTS_DB_PORT,
-                     'charset' => DB_CHARSET,
-                 ],
-                'igangaschool_website' => [
-                    'host' => WEBSITE_DB_HOST,
-                    'username' => WEBSITE_DB_USER,
-                    'password' => WEBSITE_DB_PASS,
-                    'port' => WEBSITE_DB_PORT,
-                    'charset' => WEBSITE_DB_CHARSET,
-                ],
-'igangaschool_ict' => [
-                     'host' => ICT_DB_HOST,
-                     'username' => ICT_DB_USER,
-                     'password' => ICT_DB_PASS,
-                     'port' => ICT_DB_PORT,
-                     'charset' => ICT_DB_CHARSET,
-                 ],
+                STAFF_DB_NAME    => $staffCfg,
+                STUDENTS_DB_NAME => $studentsCfg,
+                WEBSITE_DB_NAME  => $websiteCfg,
+                ICT_DB_NAME      => $ictCfg,
+                // Production name aliases for backward compat
+                'igangaschool_staffs'   => $staffCfg,
+                'igangaschool_students' => $studentsCfg,
+                'igangaschool_website'  => $websiteCfg,
+                'igangaschool_ict'      => $ictCfg,
             ];
         }
         return self::$configs;
     }
 
     private static function resolveDatabaseName($database) {
-        return self::$dbMap[$database] ?? $database;
+        $map = self::getDbMap();
+        return $map[$database] ?? $database;
     }
 
     public static function getConnection($database) {
         $database = self::resolveDatabaseName($database);
         if (!isset(self::$connections[$database])) {
+            mysqli_report(MYSQLI_REPORT_OFF);
             $oldLevel = error_reporting(0);
 
             $configs = self::getConfigs();
@@ -133,19 +157,19 @@ class DatabaseConnection {
     }
 
     public static function getStaffConnection() {
-        return self::getConnection('igangaschool_staffs');
+        return self::getConnection('staffs');
     }
 
     public static function getStudentsConnection() {
-        return self::getConnection('igangaschool_students');
+        return self::getConnection('students');
     }
 
     public static function getWebsiteConnection() {
-        return self::getConnection('igangaschool_website');
+        return self::getConnection('website');
     }
 
     public static function getICTConnection() {
-        return self::getConnection('igangaschool_ict');
+        return self::getConnection('ict');
     }
 
     public static function closeConnection($database) {
@@ -179,12 +203,11 @@ class DatabaseConnection {
 
     public static function testAllConnections() {
         $results = [];
-        $databases = ['igangaschool_staffs', 'igangaschool_students', 'igangaschool_website', 'igangaschool_ict'];
-        
-        foreach ($databases as $database) {
-            $results[$database] = self::testConnection($database);
+        $map = self::getDbMap();
+        foreach (['staffs', 'students', 'website', 'ict'] as $short) {
+            $actual = $map[$short];
+            $results[$actual] = self::testConnection($short);
         }
-        
         return $results;
     }
 
