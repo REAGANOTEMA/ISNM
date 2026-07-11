@@ -97,6 +97,9 @@ include_once __DIR__ . '/../includes/functions.php';
     </button>
     
     <div class="collapse navbar-collapse" id="mainNavbar">
+      <div class="mobile-close-btn d-lg-none">
+        <button type="button" class="btn-close btn-close-dark" aria-label="Close menu"></button>
+      </div>
       <ul class="navbar-nav">
         <li class="nav-item">
           <a class="nav-link" href="index.php">
@@ -203,58 +206,36 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('scroll', onScroll, {passive: true});
   onScroll();
 
-  // Mobile menu: close on link click & toggle body scroll lock
   var toggler = document.querySelector('.navbar-toggler');
   var collapse = document.getElementById('mainNavbar');
+  var closeBtn = document.querySelector('.mobile-close-btn .btn-close');
   if (toggler && collapse) {
-    // Use Bootstrap collapse events for reliable open/close detection
+    function hideMenu() {
+      var bs = bootstrap.Collapse.getInstance(collapse);
+      if (bs && collapse.classList.contains('show')) bs.hide();
+      document.body.classList.remove('menu-open');
+    }
     collapse.addEventListener('shown.bs.collapse', function() {
       document.body.classList.add('menu-open');
+      if (toggler) toggler.style.display = 'none';
     });
     collapse.addEventListener('hidden.bs.collapse', function() {
       document.body.classList.remove('menu-open');
+      if (toggler) toggler.style.display = '';
     });
-
-    // Close menu when clicking a non-dropdown nav link
-    collapse.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(link) {
-      link.addEventListener('click', function() {
-        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
-        if (bsCollapse && collapse.classList.contains('show')) {
-          bsCollapse.hide();
-        }
-        document.body.classList.remove('menu-open');
-      });
+    if (closeBtn) closeBtn.addEventListener('click', hideMenu);
+    collapse.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(l) {
+      l.addEventListener('click', hideMenu);
     });
-    // Close dropdown submenus when a dropdown-item is clicked
-    collapse.querySelectorAll('.dropdown-item').forEach(function(item) {
-      item.addEventListener('click', function() {
-        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
-        if (bsCollapse && collapse.classList.contains('show')) {
-          bsCollapse.hide();
-        }
-        document.body.classList.remove('menu-open');
-      });
+    collapse.querySelectorAll('.dropdown-item').forEach(function(i) {
+      i.addEventListener('click', hideMenu);
     });
-
-    // Close menu when tapping outside (mobile)
     document.addEventListener('click', function(e) {
       if (window.innerWidth >= 992) return;
-      var nav = document.querySelector('.isnm-navbar');
-      if (!nav) return;
-      if (!nav.contains(e.target) && collapse.classList.contains('show')) {
-        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
-        if (bsCollapse) bsCollapse.hide();
-        document.body.classList.remove('menu-open');
-      }
+      if (!document.querySelector('.isnm-navbar') || !document.querySelector('.isnm-navbar').contains(e.target) && collapse.classList.contains('show')) hideMenu();
     });
-
-    // Clean up on resize to desktop
     window.addEventListener('resize', function() {
-      if (window.innerWidth >= 992) {
-        document.body.classList.remove('menu-open');
-        var bsCollapse = bootstrap.Collapse.getInstance(collapse);
-        if (bsCollapse) bsCollapse.hide();
-      }
+      if (window.innerWidth >= 992) { document.body.classList.remove('menu-open'); var bs = bootstrap.Collapse.getInstance(collapse); if (bs) bs.hide(); if (toggler) toggler.style.display = ''; }
     });
   }
 });
