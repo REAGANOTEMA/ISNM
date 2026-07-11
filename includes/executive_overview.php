@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Executive Overview Renderer for Director General Dashboard.
  * Provides: stats cards, department comparison, alerts, compliance, risks.
@@ -24,11 +24,11 @@ function getExecutiveStats($studentsConn, $staffConn) {
         if ($staffConn) {
             $r = $staffConn->query("SELECT COUNT(*) as c FROM staff WHERE status = 'Active'"); if ($r) $stats['total_staff'] = (int)$r->fetch_assoc()['c'];
             try {
-                $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.institutional_alerts WHERE is_resolved = 0 AND priority = 'Critical'");
+                $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschool_staffs.institutional_alerts WHERE is_resolved = 0 AND priority = 'Critical'");
                 if ($r) $stats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
             } catch (Exception $e) { error_log('exec_overview loadCache: ' . $e->getMessage()); }
             try {
-                $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests WHERE status = 'Active'");
+                $r = $staffConn->query("SELECT COUNT(*) as c FROM igangaschool_staffs.approval_requests WHERE status = 'Active'");
                 if ($r) $stats['pending_approvals'] = (int)$r->fetch_assoc()['c'];
             } catch (Exception $e) { error_log('exec_overview loadCache: ' . $e->getMessage()); }
         }
@@ -46,12 +46,12 @@ function getDepartmentPerformance($staffConn) {
             SELECT dd.department_name, dd.department_code, dd.description,
                    sr.role_name, sr.hierarchy_level,
                    (SELECT COUNT(*) FROM staff s WHERE s.role_id = dd.role_id AND LOWER(s.status) = 'active') as staff_count,
-                   (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND (dt.status = 'In Progress' OR dt.status = 'Not Started')) as active_targets,
-                   (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status = 'Missed') as missed_targets,
-                   (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status IN ('Achieved','Exceeded')) as achieved_targets,
-                   (SELECT AVG(CASE WHEN dt.achieved_value > 0 AND dt.target_value > 0 THEN (dt.achieved_value / dt.target_value) * 100 ELSE 0 END) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code) as avg_performance
-            FROM igangaschoolofl_staffs_db.director_departments dd
-            JOIN igangaschoolofl_staffs_db.staff_roles sr ON dd.role_id = sr.id
+                   (SELECT COUNT(*) FROM igangaschool_staffs.department_targets dt WHERE dt.department_code = dd.department_code AND (dt.status = 'In Progress' OR dt.status = 'Not Started')) as active_targets,
+                   (SELECT COUNT(*) FROM igangaschool_staffs.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status = 'Missed') as missed_targets,
+                   (SELECT COUNT(*) FROM igangaschool_staffs.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status IN ('Achieved','Exceeded')) as achieved_targets,
+                   (SELECT AVG(CASE WHEN dt.achieved_value > 0 AND dt.target_value > 0 THEN (dt.achieved_value / dt.target_value) * 100 ELSE 0 END) FROM igangaschool_staffs.department_targets dt WHERE dt.department_code = dd.department_code) as avg_performance
+            FROM igangaschool_staffs.director_departments dd
+            JOIN igangaschool_staffs.staff_roles sr ON dd.role_id = sr.id
             WHERE dd.status = 'Active'
             ORDER BY sr.hierarchy_level ASC
         ");

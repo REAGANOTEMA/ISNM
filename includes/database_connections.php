@@ -6,38 +6,38 @@ class DatabaseConnection {
     private static $connections = [];
     private static $configs = null;
     private static $dbMap = [
-        'staffs'   => 'igangaschoolofl_staffs_db',
-        'students' => 'igangaschoolofl_students_db',
-        'website'  => 'igangaschoolofl_website_db',
-        'ict'      => 'igangaschoolofl_ict',
+        'staffs'   => 'igangaschool_staffs',
+        'students' => 'igangaschool_students',
+        'website'  => 'igangaschool_website',
+        'ict'      => 'igangaschool_ict',
     ];
 
     private static function getConfigs() {
         if (self::$configs === null) {
             require_once __DIR__ . '/../config/database.php';
             self::$configs = [
-                'igangaschoolofl_staffs_db' => [
+                'igangaschool_staffs' => [
                     'host' => STAFF_DB_HOST,
                     'username' => STAFF_DB_USER,
                     'password' => STAFF_DB_PASS,
                     'port' => STAFF_DB_PORT,
                     'charset' => STAFF_DB_CHARSET,
                 ],
-'igangaschoolofl_students_db' => [
+'igangaschool_students' => [
                      'host' => STUDENTS_DB_HOST,
                      'username' => STUDENTS_DB_USER,
                      'password' => STUDENTS_DB_PASS,
                      'port' => STUDENTS_DB_PORT,
                      'charset' => DB_CHARSET,
                  ],
-                'igangaschoolofl_website_db' => [
+                'igangaschool_website' => [
                     'host' => WEBSITE_DB_HOST,
                     'username' => WEBSITE_DB_USER,
                     'password' => WEBSITE_DB_PASS,
                     'port' => WEBSITE_DB_PORT,
                     'charset' => WEBSITE_DB_CHARSET,
                 ],
-'igangaschoolofl_ict' => [
+'igangaschool_ict' => [
                      'host' => ICT_DB_HOST,
                      'username' => ICT_DB_USER,
                      'password' => ICT_DB_PASS,
@@ -59,7 +59,7 @@ class DatabaseConnection {
             $oldLevel = error_reporting(0);
 
             $configs = self::getConfigs();
-            $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
+            $cfg = $configs[$database] ?? $configs['igangaschool_students'];
             
             $username = $cfg['username'];
             $password = $cfg['password'];
@@ -72,10 +72,10 @@ class DatabaseConnection {
 
             // Hardcoded hosting credentials — always try first, no .env dependency
             $hostingCreds = [
-                'igangaschoolofl_students_db' => ['user' => 'igangaschoolofl_students_db', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
-                'igangaschoolofl_staffs_db'   => ['user' => 'igangaschoolofl_staffs_db',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
-                'igangaschoolofl_website_db'  => ['user' => 'igangaschoolofl_website_db',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
-                'igangaschoolofl_ict'         => ['user' => 'igangaschoolofl_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
+                'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
+                'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
+                'igangaschool_website'  => ['user' => 'igangaschool_website',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
+                'igangaschool_ict'         => ['user' => 'igangaschool_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
             ];
 
             $credSet = [];
@@ -133,19 +133,19 @@ class DatabaseConnection {
     }
 
     public static function getStaffConnection() {
-        return self::getConnection('igangaschoolofl_staffs_db');
+        return self::getConnection('igangaschool_staffs');
     }
 
     public static function getStudentsConnection() {
-        return self::getConnection('igangaschoolofl_students_db');
+        return self::getConnection('igangaschool_students');
     }
 
     public static function getWebsiteConnection() {
-        return self::getConnection('igangaschoolofl_website_db');
+        return self::getConnection('igangaschool_website');
     }
 
     public static function getICTConnection() {
-        return self::getConnection('igangaschoolofl_ict');
+        return self::getConnection('igangaschool_ict');
     }
 
     public static function closeConnection($database) {
@@ -179,7 +179,7 @@ class DatabaseConnection {
 
     public static function testAllConnections() {
         $results = [];
-        $databases = ['igangaschoolofl_staffs_db', 'igangaschoolofl_students_db', 'igangaschoolofl_website_db', 'igangaschoolofl_ict'];
+        $databases = ['igangaschool_staffs', 'igangaschool_students', 'igangaschool_website', 'igangaschool_ict'];
         
         foreach ($databases as $database) {
             $results[$database] = self::testConnection($database);
@@ -192,7 +192,7 @@ class DatabaseConnection {
         $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $configs = self::getConfigs();
-        $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
+        $cfg = $configs[$database] ?? $configs['igangaschool_students'];
         return [
             'host' => $cfg['host'],
             'database' => $database,

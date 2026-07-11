@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Complete System Setup Script
  * Comprehensive initialization with new database credentials and staff accounts
@@ -25,10 +25,10 @@ class CompleteSystemSetup {
         $prefix = '';
         
         switch ($level) {
-            case 'ERROR': $prefix = '❌'; break;
-            case 'SUCCESS': $prefix = '✓'; break;
-            case 'WARN': $prefix = '⚠'; break;
-            case 'INFO': $prefix = 'ℹ'; break;
+            case 'ERROR': $prefix = 'âŒ'; break;
+            case 'SUCCESS': $prefix = 'âœ“'; break;
+            case 'WARN': $prefix = 'âš '; break;
+            case 'INFO': $prefix = 'â„¹'; break;
         }
         
         $formatted = "[$timestamp] $prefix [$level] $message";
@@ -44,7 +44,7 @@ class CompleteSystemSetup {
         
         // Try with first database credential as admin
         $dbCreds = getAllDBCredentials();
-        $staffDbCreds = $dbCreds['igangaschoolofl_staffs_db'];
+        $staffDbCreds = $dbCreds['igangaschool_staffs'];
         
         // Try connecting with the staff database user credentials
         $this->adminConn = @new mysqli(
@@ -90,10 +90,10 @@ class CompleteSystemSetup {
                 $tableRow = $tableResult->fetch_assoc();
                 $tableCount = $tableRow['cnt'];
                 
-                $this->log("✓ Database '$dbName' exists ($tableCount tables)", 'SUCCESS');
+                $this->log("âœ“ Database '$dbName' exists ($tableCount tables)", 'SUCCESS');
                 $verified++;
             } else {
-                $this->log("✗ Database '$dbName' NOT found", 'WARN');
+                $this->log("âœ— Database '$dbName' NOT found", 'WARN');
             }
         }
         
@@ -123,11 +123,11 @@ class CompleteSystemSetup {
             );
             
             if (!$testConn->connect_error) {
-                $this->log("✓ User '{$creds['username']}' can access '$dbName'", 'SUCCESS');
+                $this->log("âœ“ User '{$creds['username']}' can access '$dbName'", 'SUCCESS');
                 $testConn->close();
                 $verified++;
             } else {
-                $this->log("✗ User '{$creds['username']}' cannot access '$dbName'", 'WARN');
+                $this->log("âœ— User '{$creds['username']}' cannot access '$dbName'", 'WARN');
             }
         }
         
@@ -280,11 +280,11 @@ class CompleteSystemSetup {
                 $conn = @$func();
                 if ($conn && !$conn->connect_error) {
                     $dbName = $conn->query("SELECT DATABASE() as db")->fetch_assoc()['db'];
-                    $this->log("✓ $name: Connected to $dbName", 'SUCCESS');
+                    $this->log("âœ“ $name: Connected to $dbName", 'SUCCESS');
                     $conn->close();
                     $connected++;
                 } else {
-                    $this->log("✗ $name: Connection failed", 'ERROR');
+                    $this->log("âœ— $name: Connection failed", 'ERROR');
                 }
             }
         }
@@ -296,10 +296,10 @@ class CompleteSystemSetup {
      * Run complete setup
      */
     public function run() {
-        $this->log("╔════════════════════════════════════════╗");
-        $this->log("║  ISNM Complete System Setup            ║");
-        $this->log("║  New Database Credentials & Staff Setup║");
-        $this->log("╚════════════════════════════════════════╝");
+        $this->log("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—");
+        $this->log("â•‘  ISNM Complete System Setup            â•‘");
+        $this->log("â•‘  New Database Credentials & Staff Setupâ•‘");
+        $this->log("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
         $this->log("");
         
         // Step 1
@@ -330,12 +330,12 @@ class CompleteSystemSetup {
         
         if ($dbsOk && $usersOk && $connsOk) {
             $this->log("");
-            $this->log("✓ System setup completed successfully!", 'SUCCESS');
+            $this->log("âœ“ System setup completed successfully!", 'SUCCESS');
             $this->log("You can now login with staff credentials", 'SUCCESS');
             return true;
         } else {
             $this->log("");
-            $this->log("✗ Some checks failed - review errors above", 'ERROR');
+            $this->log("âœ— Some checks failed - review errors above", 'ERROR');
             return false;
         }
     }

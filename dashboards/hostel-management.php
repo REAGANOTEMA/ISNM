@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'Hostel Management';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
@@ -10,9 +10,9 @@ try { $conn2 = getDatabaseConnection('students'); } catch (Exception $e) { $conn
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];
 
-// hostel_rooms and hostel are in students_db — use $conn2 when available
+// hostel_rooms and hostel are in students_db â€” use $conn2 when available
 $hdb = $conn2 ?: $conn;
-$hprefix = ($hdb === $conn && !$conn2) ? 'igangaschoolofl_students_db.' : '';
+$hprefix = ($hdb === $conn && !$conn2) ? 'igangaschool_students.' : '';
 
 if ($hdb) {
     $t = $hdb->query("SELECT COUNT(*) c FROM {$hprefix}hostel_rooms");

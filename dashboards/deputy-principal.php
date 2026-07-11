@@ -1,12 +1,12 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['deputy principal', 'principal']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Deputy Principal';
-$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschoolofl_staffs_db';
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschool_staffs';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 $migrate = function($db) use ($staff_db, $students_db) {
     if (!$db) return;
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meeting_minutes (id INT AUTO_INCREMENT PRIMARY KEY, meeting_id INT, agenda_item VARCHAR(300), discussion TEXT, resolution TEXT, action_items TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -33,7 +33,7 @@ function dep_success($m) { $_SESSION['dep_success'] = $m; }
 function dep_error($m) { $_SESSION['dep_error'] = $m; }
 function safeCount($c, $s) { $r = $c->query($s); if (!$r) return 0; $w = $r->fetch_assoc(); return intval($w['c'] ?? 0); }
 
-// ── AJAX DATA ENDPOINTS ─────────────────────────────────────
+// â”€â”€ AJAX DATA ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if ($view === 'deputy_stats' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
@@ -130,7 +130,7 @@ if ($view === 'approval_list_deputy' && $ajax === '1' && $staff) {
     $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 
-// ── AJAX WRITE ENDPOINTS ────────────────────────────────────
+// â”€â”€ AJAX WRITE ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if ($view === 'create_task' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
@@ -371,7 +371,7 @@ if ($view === 'update_placement_status' && $ajax === '1' && $staff) {
 }
 if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
 
-// ── POST HANDLERS ───────────────────────────────────────────
+// â”€â”€ POST HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
@@ -1257,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', depLoadImprovement);
 <?php endif; ?>
 </div>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

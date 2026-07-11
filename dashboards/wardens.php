@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -8,7 +8,7 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
@@ -226,7 +226,7 @@ $discipline_cases_count = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM stu
 $all_welfare_cases = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC");
+        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschool_students.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC");
         if ($r) $all_welfare_cases = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
@@ -251,7 +251,7 @@ if ($conn && !empty($all_welfare_cases)) {
 $today_counseling = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN igangaschoolofl_students_db.students s ON cs.student_id=s.id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
+        $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN igangaschool_students.students s ON cs.student_id=s.id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
         if ($r) $today_counseling = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
@@ -259,7 +259,7 @@ if ($conn) {
 $all_discipline_cases = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC");
+        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschool_students.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC");
         if ($r) $all_discipline_cases = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
@@ -330,7 +330,7 @@ $edit_case_id = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
 $view_case_id = isset($_GET['view']) ? (int)$_GET['view'] : 0;
 $edit_case = null;
 if ($edit_case_id && $conn) {
-    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id WHERE wc.id = ?");
+    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschool_students.students s ON wc.student_id=s.id WHERE wc.id = ?");
     $stmt->bind_param("i", $edit_case_id);
     $stmt->execute();
     $edit_case = $stmt->get_result()->fetch_assoc();
@@ -338,7 +338,7 @@ if ($edit_case_id && $conn) {
 }
 $view_case = null;
 if ($view_case_id && $conn) {
-    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id WHERE wc.id = ?");
+    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschool_students.students s ON wc.student_id=s.id WHERE wc.id = ?");
     $stmt->bind_param("i", $view_case_id);
     $stmt->execute();
     $view_case = $stmt->get_result()->fetch_assoc();

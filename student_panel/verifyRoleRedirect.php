@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -9,7 +9,7 @@ ini_set('log_errors', 1);
 
     $userId = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
     if ($userId) {
-        $sql = 'SELECT `role` FROM `igangaschoolofl_staffs_db`.`users` WHERE `users`.`id`=? ;';
+        $sql = 'SELECT `role` FROM `igangaschool_staffs`.`users` WHERE `users`.`id`=? ;';
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "s", $userId);
         mysqli_stmt_execute($stmt);

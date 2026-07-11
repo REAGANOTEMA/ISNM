@@ -1,7 +1,7 @@
-/*M!999999\- enable the sandbox mode */ 
+﻿/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.23-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: igangaschoolofl_students_db
+-- Host: localhost    Database: igangaschool_students
 -- ------------------------------------------------------
 -- Server version	10.6.23-MariaDB-cll-lve
 
@@ -5174,7 +5174,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`igangaschoolofl_students_db`@`localhost`*/ /*!50003 TRIGGER `students_before_insert` BEFORE INSERT ON `students` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER `students_before_insert` BEFORE INSERT ON `students` FOR EACH ROW BEGIN
     IF NEW.full_name IS NULL OR NEW.full_name = '' THEN
         SET NEW.full_name = TRIM(CONCAT(NEW.first_name, ' ', COALESCE(NEW.other_name, ''), ' ', NEW.surname));
     END IF;
@@ -5221,7 +5221,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`igangaschoolofl_students_db`@`localhost`*/ /*!50003 TRIGGER `students_before_update` BEFORE UPDATE ON `students` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER `students_before_update` BEFORE UPDATE ON `students` FOR EACH ROW BEGIN
     IF NEW.full_name IS NULL OR NEW.full_name = '' THEN
         SET NEW.full_name = TRIM(CONCAT(NEW.first_name, ' ', COALESCE(NEW.other_name, ''), ' ', NEW.surname));
     END IF;
@@ -5584,11 +5584,11 @@ LOCK TABLES `website_announcements` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'igangaschoolofl_students_db'
+-- Dumping events for database 'igangaschool_students'
 --
 
 --
--- Dumping routines for database 'igangaschoolofl_students_db'
+-- Dumping routines for database 'igangaschool_students'
 --
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
@@ -5600,7 +5600,7 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_students_db`@`localhost` PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
+CREATE  PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
 BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
@@ -5625,7 +5625,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_students_db`@`localhost` PROCEDURE `MigratePayroll`()
+CREATE  PROCEDURE `MigratePayroll`()
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;
@@ -5701,7 +5701,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`igangaschoolofl_students_db`@`localhost` SQL SECURITY INVOKER */
+/*!50013  SQL SECURITY INVOKER */
 /*!50001 VIEW `student_dashboard_view` AS select `s`.`id` AS `id`,`s`.`student_number` AS `student_number`,coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`,coalesce(`s`.`course`,`s`.`program`) AS `course`,coalesce(`s`.`year`,`s`.`current_year`) AS `year`,`s`.`set_name` AS `set_name`,`s`.`email` AS `email`,coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`,coalesce(`sa`.`gpa`,0) AS `current_gpa`,coalesce(`sf`.`balance`,0) AS `fee_balance`,coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` from (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where `student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`) group by `student_academic_records`.`student_id`) `sa` on(`s`.`id` = `sa`.`student_id`)) left join (select `student_attendance`.`student_id` AS `student_id`,sum(case when `student_attendance`.`status` = 'Present' then 1 else 0 end) * 100.0 / count(0) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on(`s`.`id` = `sa2`.`student_id`)) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where `student_fees`.`status` in ('Unpaid','Partially Paid','Overdue') group by `student_fees`.`student_id`) `sf` on(`s`.`id` = `sf`.`student_id`)) where `s`.`status` = 'Active' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5719,7 +5719,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`igangaschoolofl_students_db`@`localhost` SQL SECURITY INVOKER */
+/*!50013  SQL SECURITY INVOKER */
 /*!50001 VIEW `student_login_view` AS select `students`.`id` AS `id`,`students`.`student_number` AS `student_number`,coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`,`students`.`email` AS `email`,`students`.`password` AS `password`,coalesce(`students`.`course`,`students`.`program`) AS `course`,`students`.`status` AS `status`,`students`.`last_login` AS `last_login`,`students`.`login_attempts` AS `login_attempts`,`students`.`is_first_login` AS `is_first_login` from `students` where `students`.`status` = 'Active' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;

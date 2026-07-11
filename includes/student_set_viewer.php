@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Student Set Viewer – Reusable Component
+ * Student Set Viewer â€“ Reusable Component
  * 
  * Drop this include into any dashboard to add:
  * - Set/program/level filter selector
@@ -11,7 +11,7 @@
  *   require_once __DIR__ . '/../includes/student_set_viewer.php';
  *   renderStudentSetViewer($studentsConn);
  * 
- * Expects: $studentsConn (mysqli connection to igangaschoolofl_students_db)
+ * Expects: $studentsConn (mysqli connection to igangaschool_students)
  */
 
 if (!function_exists('renderStudentSetViewer')):
@@ -33,7 +33,7 @@ function renderStudentSetViewer($conn, array $options = []) {
     $canShowAll = $showAllOption || $isSuperAdmin;
     $hasFilters = $selectedSet || $selectedProgram || $selectedLevel || $search !== '';
 
-    // ── Fetch distinct filter options ──
+    // â”€â”€ Fetch distinct filter options â”€â”€
     $sets     = [];
     $programs = [];
     $levels   = [];
@@ -51,7 +51,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         } catch (Exception $e) { error_log('student_set_viewer load: ' . $e->getMessage()); }
     }
 
-    // ── Build WHERE clause ──
+    // â”€â”€ Build WHERE clause â”€â”€
     $conditions = ['1=1'];
     $bindParams = [];
     $bindTypes  = '';
@@ -82,7 +82,7 @@ function renderStudentSetViewer($conn, array $options = []) {
 
     $whereSQL = implode(' AND ', $conditions);
 
-    // ── Query data (count + paginated result) ──
+    // â”€â”€ Query data (count + paginated result) â”€â”€
     $students      = [];
     $totalFiltered = 0;
 
@@ -141,7 +141,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         $totalPages = 1;
     }
 
-    // ── Check if a specific student is requested for profile view ──
+    // â”€â”€ Check if a specific student is requested for profile view â”€â”€
     $viewStudentId = $_GET['view_student'] ?? '';
     $viewStudent   = null;
     if ($viewStudentId && $conn) {
@@ -163,19 +163,19 @@ function renderStudentSetViewer($conn, array $options = []) {
     $offset       = max(0, ($currentPage - 1) * $perPage);
     $useTable     = $totalFiltered > 30;
 
-    // ── Print support ──
+    // â”€â”€ Print support â”€â”€
     $isPrint = isset($_GET['print']) && $_GET['print'] === 'set';
 
-    // ── Build pagination / action query string helper ──
+    // â”€â”€ Build pagination / action query string helper â”€â”€
     $listQuery = array_diff_key($_GET, array_flip(['view_student', 'print']));
     ?>
     <div class="student-set-viewer">
         <?php if ($viewStudent): ?>
-            <!-- ── SINGLE STUDENT FULL PROFILE ── -->
+            <!-- â”€â”€ SINGLE STUDENT FULL PROFILE â”€â”€ -->
             <?php renderFullStudentProfile($viewStudent, $conn, $showStatement); ?>
         <?php else: ?>
 
-        <!-- ── HEADER ── -->
+        <!-- â”€â”€ HEADER â”€â”€ -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0" style="color:#0f172a">
                 <i class="fas <?= $icon ?> me-2" style="color:var(--isnm-blue, #1e3a8a)"></i><?= $title ?>
@@ -190,7 +190,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             </div>
         </div>
 
-        <!-- ── FILTER BAR ── -->
+        <!-- â”€â”€ FILTER BAR â”€â”€ -->
         <form method="GET" class="row g-2 mb-4 p-3 rounded-3" style="background:linear-gradient(135deg,#1e3a8a,#0f4c3a);">
             <?php foreach ($_GET as $gk => $gv): ?>
                 <?php if (!in_array($gk, ['set_name','program','level','search','page','print','view_student','sort_by','sort_order'])): ?>
@@ -241,7 +241,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         <?php if ($isPrint): ?>
         <div class="print-header d-none d-print-block text-center mb-4">
             <h2 style="color:#1a237e;">IGANGA SCHOOL OF NURSING & MIDWIFERY</h2>
-            <h4>Student Records – <?= htmlspecialchars($selectedSet ?: 'All Sets') ?><?= $search !== '' ? ' (Search: ' . htmlspecialchars($search) . ')' : '' ?></h4>
+            <h4>Student Records â€“ <?= htmlspecialchars($selectedSet ?: 'All Sets') ?><?= $search !== '' ? ' (Search: ' . htmlspecialchars($search) . ')' : '' ?></h4>
             <p class="text-muted">Generated: <?= date('l, F j, Y') . ' | Page ' . $currentPage . ' of ' . $totalPages ?></p>
             <hr>
         </div>
@@ -260,7 +260,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         <?php else: ?>
 
             <?php if ($useTable): ?>
-            <!-- ── TABLE VIEW (fast, scrollable) ── -->
+            <!-- â”€â”€ TABLE VIEW (fast, scrollable) â”€â”€ -->
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle mb-0 student-records-table" id="studentRecordsTable">
                     <thead class="table-dark">
@@ -327,7 +327,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 </table>
             </div>
             <?php else: ?>
-            <!-- ── CARD VIEW (prettier, for small sets) ── -->
+            <!-- â”€â”€ CARD VIEW (prettier, for small sets) â”€â”€ -->
             <div class="student-cards-container" id="studentSetCards">
                 <?php
                 $currentSet = '';
@@ -483,7 +483,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             </div>
             <?php endif; ?>
 
-            <!-- ── PAGINATION ── -->
+            <!-- â”€â”€ PAGINATION â”€â”€ -->
             <?php if ($totalPages > 1): ?>
             <nav class="mt-3 d-print-none" aria-label="Student pagination">
                 <ul class="pagination pagination-sm justify-content-center mb-0 flex-wrap">
@@ -498,7 +498,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                     $startPage = max(1, $currentPage - $range);
                     $endPage   = min($totalPages, $currentPage + $range);
                     if ($startPage > 1): ?>
-                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        <li class="page-item disabled"><span class="page-link">â€¦</span></li>
                     <?php endif;
                     for ($i = $startPage; $i <= $endPage; $i++):
                     ?>
@@ -507,7 +507,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                     </li>
                     <?php endfor;
                     if ($endPage < $totalPages): ?>
-                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        <li class="page-item disabled"><span class="page-link">â€¦</span></li>
                     <?php endif; ?>
                     <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
                         <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => $currentPage + 1])) ?>" aria-label="Next"><i class="fas fa-angle-right"></i></a>
@@ -518,11 +518,11 @@ function renderStudentSetViewer($conn, array $options = []) {
                 </ul>
             </nav>
             <div class="text-center text-muted small mt-1 d-print-none">
-                Showing <?= $offset + 1 ?>–<?= min($offset + $perPage, $totalFiltered) ?> of <?= $totalFiltered ?> students
+                Showing <?= $offset + 1 ?>â€“<?= min($offset + $perPage, $totalFiltered) ?> of <?= $totalFiltered ?> students
             </div>
             <?php endif; ?>
 
-            <!-- ── SUMMARY ── -->
+            <!-- â”€â”€ SUMMARY â”€â”€ -->
             <div class="mt-4 p-3 bg-light rounded d-print-none">
                 <div class="row g-2 text-center">
                     <div class="col-md-3">
@@ -549,7 +549,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         <?php endif; ?>
     </div>
 
-    <!-- ── EDIT STUDENT MODAL ── -->
+    <!-- â”€â”€ EDIT STUDENT MODAL â”€â”€ -->
     <div class="modal fade" id="editStudentModal" tabindex="-1" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
         <div class="modal-dialog" style="background:#fff;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
             <div class="modal-header" style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
@@ -757,7 +757,7 @@ function renderStudentSetViewer($conn, array $options = []) {
     });
     </script>
     <script>
-    // ── Edit Student Modal Functions ──
+    // â”€â”€ Edit Student Modal Functions â”€â”€
     var editStudentData = {};
     function openEditStudentModal(id) {
         var s = null;

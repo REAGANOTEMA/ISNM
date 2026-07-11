@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -16,8 +16,8 @@ $section = $_GET['section'] ?? 'dashboard';
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'Academic Registrar';
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 if (!function_exists('safeCount')) {
 function safeCount($conn, $sql) {
@@ -143,7 +143,7 @@ if ($staff) {
     try { $staff->query("ALTER TABLE `{$staff_db}`.`examination_records` ADD UNIQUE INDEX IF NOT EXISTS uq_student_course_exam (student_id, course_code, exam_type)"); } catch (Exception $e) { error_log('academic-registrar: ' . $e->getMessage()); }
 }
 
-// ── Seed starter data if tables are empty ──
+// â”€â”€ Seed starter data if tables are empty â”€â”€
 if ($staff) {
     $r = $staff->query("SELECT COUNT(*) c FROM grade_scales");
     if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
@@ -1079,7 +1079,7 @@ function archiveDoc(type, id) {
 
 function escJs(str) { if (!str) return ''; return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
-/* ── Auto-inject CSRF token into all POST forms ── */
+/* â”€â”€ Auto-inject CSRF token into all POST forms â”€â”€ */
 (function() {
     var csrf = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
     if (!csrf) return;
@@ -1859,7 +1859,7 @@ document.addEventListener('click', function(e) {
 
 <?php include __DIR__ . '/../includes/dashboard_footer.php'; ?>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

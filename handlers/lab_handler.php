@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Lab Manager unified AJAX/Form POST handler.
  * Returns JSON: {success: bool, message: string, data: mixed}
@@ -33,7 +33,7 @@ $action = $_POST['action'] ?? '';
 
 try {
     switch ($action) {
-        // ── LAB ROOMS ──
+        // â”€â”€ LAB ROOMS â”€â”€
         case 'add_lab_room':
             $name = $_POST['room_name'] ?? '';
             $code = $_POST['room_code'] ?? '';
@@ -71,7 +71,7 @@ try {
             respond(true, 'Lab room deactivated');
             break;
 
-        // ── COMPUTERS ──
+        // â”€â”€ COMPUTERS â”€â”€
         case 'add_computer':
             $cid = $_POST['computer_id'] ?? '';
             $name = $_POST['computer_name'] ?? '';
@@ -115,7 +115,7 @@ try {
             respond(true, 'Computer removed');
             break;
 
-        // ── STUDENT ID CARDS ──
+        // â”€â”€ STUDENT ID CARDS â”€â”€
         case 'generate_id_card':
             $studentId = (int)($_POST['student_id'] ?? 0);
             $expiry = $_POST['expiry_date'] ?? date('Y-m-d', strtotime('+1 year'));
@@ -189,7 +189,7 @@ try {
         case 'verify_id_card':
             $cardNum = $_POST['card_number'] ?? '';
             if (!$cardNum) throw new Exception('Card number required');
-            $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschoolofl_students_db.students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
+            $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschool_students.students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
             $stmt->bind_param('s', $cardNum);
             $stmt->execute();
             $card = $stmt->get_result()->fetch_assoc();
@@ -197,7 +197,7 @@ try {
             respond(true, 'Card verified', $card);
             break;
 
-        // ── PRACTICAL SESSIONS ──
+        // â”€â”€ PRACTICAL SESSIONS â”€â”€
         case 'add_practical_session':
             $code = $_POST['session_code'] ?? '';
             $course = $_POST['course_name'] ?? '';
@@ -242,7 +242,7 @@ try {
             respond(true, 'Session cancelled');
             break;
 
-        // ── LAB ATTENDANCE ──
+        // â”€â”€ LAB ATTENDANCE â”€â”€
         case 'mark_attendance':
             $studentId = (int)($_POST['student_id'] ?? 0);
             $sessionId = (int)($_POST['session_id'] ?? 0);
@@ -280,7 +280,7 @@ try {
             respond(true, "$count attendance records marked");
             break;
 
-        // ── EQUIPMENT ──
+        // â”€â”€ EQUIPMENT â”€â”€
         case 'add_equipment':
             $code = $_POST['equipment_code'] ?? '';
             $name = $_POST['equipment_name'] ?? '';
@@ -359,7 +359,7 @@ try {
             respond(true, 'Equipment returned');
             break;
 
-        // ── PRINTING ──
+        // â”€â”€ PRINTING â”€â”€
         case 'create_print_job':
             $reqName = $_POST['requester_name'] ?? '';
             $reqType = $_POST['requester_type'] ?? 'student';
@@ -411,7 +411,7 @@ try {
             respond(true, 'Printing charge updated');
             break;
 
-        // ── REPAIRS / TECHNICAL SUPPORT ──
+        // â”€â”€ REPAIRS / TECHNICAL SUPPORT â”€â”€
         case 'report_repair':
             $computerId = (int)($_POST['computer_id'] ?? 0);
             $reportedBy = $_POST['reported_by'] ?? '';
@@ -448,7 +448,7 @@ try {
             respond(true, 'Repair updated');
             break;
 
-        // ── SOFTWARE ──
+        // â”€â”€ SOFTWARE â”€â”€
         case 'add_software':
             $name = $_POST['software_name'] ?? '';
             $ver = $_POST['version'] ?? '';
@@ -497,7 +497,7 @@ try {
             respond(true, 'Installation recorded');
             break;
 
-        // ── CONSUMABLES ──
+        // â”€â”€ CONSUMABLES â”€â”€
         case 'add_consumable':
             $name = $_POST['item_name'] ?? '';
             $cat = $_POST['item_category'] ?? 'other';
@@ -546,7 +546,7 @@ try {
             respond(true, 'Consumable deleted');
             break;
 
-        // ── SETTINGS ──
+        // â”€â”€ SETTINGS â”€â”€
         case 'save_setting':
             $key = $_POST['setting_key'] ?? '';
             $value = $_POST['setting_value'] ?? '';

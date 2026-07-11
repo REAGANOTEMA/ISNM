@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 require_once 'auth-service.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
 
-// academic_records table is in staffs_db — keep $conn as staffs_db (from includes/config.php)
+// academic_records table is in staffs_db â€” keep $conn as staffs_db (from includes/config.php)
 // Get students_db separately for student lookups
 $studentsDb = getStudentsConnection();
 
@@ -259,7 +259,7 @@ $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_c
 // Get academic records
 $records_sql = "SELECT ar.*, s.first_name, s.surname, s.program, s.level 
                FROM academic_records ar 
-               JOIN igangaschoolofl_students_db.students s ON ar.student_id = s.student_id 
+               JOIN igangaschool_students.students s ON ar.student_id = s.student_id 
                $where_clause 
                ORDER BY ar.academic_year DESC, ar.semester DESC, ar.student_id ASC";
 $academic_records = executeQuery($records_sql, $params, $types);
@@ -273,7 +273,7 @@ $semesters_sql = "SELECT DISTINCT semester FROM academic_records ORDER BY semest
 $semesters = executeQuery($semesters_sql);
 
 // Get unique programs for filter
-$programs_sql = "SELECT DISTINCT program FROM igangaschoolofl_students_db.students ORDER BY program";
+$programs_sql = "SELECT DISTINCT program FROM igangaschool_students.students ORDER BY program";
 $programs = executeQuery($programs_sql);
 ?>
 

@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 title ISNM Database Fix - Removes #1813 Tablespace Error
 color 0c
@@ -17,7 +17,7 @@ echo      MySQL stopped.
 echo.
 
 echo [2/4] Deleting old database folder...
-set "DBDIR=C:\xampp\mysql\data\igangaschoolofl_staffs_db"
+set "DBDIR=C:\xampp\mysql\data\igangaschool_staffs"
 
 if exist "%DBDIR%" (
     echo      Found folder: %DBDIR%

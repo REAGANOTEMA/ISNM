@@ -1,10 +1,10 @@
-============================================
+﻿============================================
  ISNM DATABASE SCHEMA AUDIT
  Date: 2026-06-16 16:32:24
 ============================================
 
 ------------------------------------------------------------
- DATABASE: igangaschoolofl_staffs_db  (connection: staff_db)
+ DATABASE: igangaschool_staffs  (connection: staff_db)
 ------------------------------------------------------------
  Connected successfully.
 
@@ -4608,7 +4608,7 @@
     created_at                    timestamp                     YES             CURRENT_TIMESTAMP        DEFAULT_GENERATED
 
 ------------------------------------------------------------
- DATABASE: igangaschoolofl_students_db  (connection: students_db)
+ DATABASE: igangaschool_students  (connection: students_db)
 ------------------------------------------------------------
  Connected successfully.
 
@@ -5420,7 +5420,7 @@
     created_at                    timestamp                     YES             CURRENT_TIMESTAMP        DEFAULT_GENERATED
 
 ------------------------------------------------------------
- DATABASE: igangaschoolofl_website_db  (connection: website_db)
+ DATABASE: igangaschool_website  (connection: website_db)
 ------------------------------------------------------------
  Connected successfully.
 
@@ -5444,7 +5444,7 @@
     updated_at                    timestamp                     YES             CURRENT_TIMESTAMP        DEFAULT_GENERATED on update CURRENT_TIMESTAMP
 
 ------------------------------------------------------------
- DATABASE: igangaschoolofl_ict  (connection: ict_db)
+ DATABASE: igangaschool_ict  (connection: ict_db)
 ------------------------------------------------------------
  ** FAILED TO CONNECT **
 

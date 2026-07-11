@@ -1,11 +1,11 @@
-VB <?php
+﻿VB <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'registrar', 'principal']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_calendar` (id INT AUTO_INCREMENT PRIMARY KEY, academic_year VARCHAR(20) NOT NULL, semester VARCHAR(100) DEFAULT NULL, start_date DATE NULL, end_date DATE NULL, exam_start_date DATE NULL, exam_end_date DATE NULL, is_current TINYINT(1) DEFAULT 0, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_year_sem (academic_year, semester)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

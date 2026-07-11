@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
     $params = [$student_id];
     $types = "i";
     $records_sql = "SELECT ar.*, cc.course_title AS course_name, cc.credits AS catalog_credits
-                    FROM igangaschoolofl_staffs_db.academic_records ar
-                    LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON ar.course_code = cc.course_code
+                    FROM igangaschool_staffs.academic_records ar
+                    LEFT JOIN igangaschool_staffs.academic_course_catalog cc ON ar.course_code = cc.course_code
                     WHERE ar.student_id = ?";
     
     if (!empty($academic_year_filter)) {
@@ -192,7 +192,7 @@ function generateTranscriptContent($student, $academic_records, $transcript_type
         
         $rows .= '<tr style="background:#e8ecff;font-weight:700">
             <td colspan="8" style="text-align:right;padding:6px 10px;color:#1a237e;font-size:11px">
-                End of ' . htmlspecialchars($sem_name) . ' (' . htmlspecialchars($sem_year) . ') — GPA: ' . number_format($sem_gpa, 2) . ' | Credits: ' . $sem_credits . '
+                End of ' . htmlspecialchars($sem_name) . ' (' . htmlspecialchars($sem_year) . ') â€” GPA: ' . number_format($sem_gpa, 2) . ' | Credits: ' . $sem_credits . '
             </td>
         </tr>';
     }
@@ -307,7 +307,7 @@ function getAcademicYears() {
     global $ctx;
     
     $staff_conn = $ctx['staff'];
-    $stmt = $staff_conn->prepare("SELECT DISTINCT academic_year FROM igangaschoolofl_staffs_db.academic_records ORDER BY academic_year DESC");
+    $stmt = $staff_conn->prepare("SELECT DISTINCT academic_year FROM igangaschool_staffs.academic_records ORDER BY academic_year DESC");
     if (!$stmt) return [];
     $stmt->execute();
     $result = $stmt->get_result();
@@ -321,7 +321,7 @@ function getSemesters() {
     global $ctx;
     
     $staff_conn = $ctx['staff'];
-    $stmt = $staff_conn->prepare("SELECT DISTINCT semester FROM igangaschoolofl_staffs_db.academic_records ORDER BY semester");
+    $stmt = $staff_conn->prepare("SELECT DISTINCT semester FROM igangaschool_staffs.academic_records ORDER BY semester");
     if (!$stmt) return [];
     $stmt->execute();
     $result = $stmt->get_result();
@@ -379,7 +379,7 @@ function getSemesters() {
                             <?php
                             $students = getStudentsForDropdown();
                             foreach ($students as $s) {
-                                echo '<option value="' . (int)$s['id'] . '">' . htmlspecialchars($s['full_name']) . ' — ' . htmlspecialchars($s['registration_number'] ?? '') . ' (' . htmlspecialchars($s['program'] ?? '') . ')</option>';
+                                echo '<option value="' . (int)$s['id'] . '">' . htmlspecialchars($s['full_name']) . ' â€” ' . htmlspecialchars($s['registration_number'] ?? '') . ' (' . htmlspecialchars($s['program'] ?? '') . ')</option>';
                             }
                             ?>
                         </select>

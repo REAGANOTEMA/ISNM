@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/department_approval_request.php';
@@ -20,7 +20,7 @@ $user_name = $user['full_name'] ?? 'ICT Director';
 $user_role = $_SESSION['role'] ?? '';
 $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 function ict_q($conn, $sql) {
     if (!$conn) return 0;
@@ -38,7 +38,7 @@ function ict_fetch_one($conn, $sql) {
     catch (Exception $e) { error_log('director-ict getDetail: ' . $e->getMessage()); return null; }
 }
 
-// ── STATS ──
+// â”€â”€ STATS â”€â”€
 $total_staff   = ict_q($staff_conn, "SELECT COUNT(*) FROM staff WHERE status='Active'");
 $total_students = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
 $active_servers  = ict_q($ict, "SELECT COUNT(*) FROM ict_servers WHERE status='online'");
@@ -49,7 +49,7 @@ $closed_tickets  = ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE st
 $today_backups   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_backups WHERE DATE(created_at)=CURDATE()");
 $active_alerts   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_alerts WHERE status='active'");
 $wifi_active     = ict_q($ict, "SELECT COUNT(*) FROM ict_wifi_devices WHERE status='online'");
-$ict_db = defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschoolofl_ict';
+$ict_db = defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschool_ict';
 $db_size_mb      = 0;
 $size_row = ict_fetch_one($ict, "SELECT ROUND(SUM(data_length+index_length)/1024/1024,2) as size_mb FROM information_schema.TABLES WHERE TABLE_SCHEMA='$ict_db'");
 if ($size_row) $db_size_mb = $size_row['size_mb'];
@@ -60,7 +60,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// ── DATA ──
+// â”€â”€ DATA â”€â”€
 $assets       = ict_fetch($ict, "SELECT a.*, c.category_name FROM ict_assets a LEFT JOIN ict_asset_categories c ON a.category_id=c.id ORDER BY a.created_at DESC LIMIT 30");
 $asset_cats   = ict_fetch($ict, "SELECT * FROM ict_asset_categories ORDER BY category_name");
 $servers      = ict_fetch($ict, "SELECT * FROM ict_servers ORDER BY server_name");
@@ -80,7 +80,7 @@ $network_logs = ict_fetch($ict, "SELECT * FROM ict_network_logs ORDER BY logged_
 $assignments  = ict_fetch($ict, "SELECT a.*, ast.asset_number, ast.asset_name FROM ict_asset_assignments a LEFT JOIN ict_assets ast ON a.asset_id=ast.id WHERE a.status='active' ORDER BY a.assignment_date DESC LIMIT 20");
 $maintenance  = ict_fetch($ict, "SELECT m.*, a.asset_number, a.asset_name FROM ict_asset_maintenance m LEFT JOIN ict_assets a ON m.asset_id=a.id ORDER BY m.created_at DESC LIMIT 20");
 
-// ── User & Access ──
+// â”€â”€ User & Access â”€â”€
 $staff_accounts  = ict_fetch($staff_conn, "SELECT s.id, s.full_name, s.email, sr.role_name AS role, s.status, s.last_login FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
 $staff_count     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff");
 $student_count   = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
@@ -90,9 +90,9 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/director_website_panel.php';
 $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()");
-// ── Module Permissions ──
+// â”€â”€ Module Permissions â”€â”€
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");
-// ── Approvals ──
+// â”€â”€ Approvals â”€â”€
 $pending_tickets = ict_fetch($ict, "SELECT * FROM it_support_tickets WHERE status IN ('open','in_progress') ORDER BY FIELD(priority,'critical','high','medium','low'), created_at DESC LIMIT 15");
 $pending_approval_requests = [];
 if ($staff_conn) {
@@ -108,7 +108,7 @@ if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'overview';
 $ictIcon = 'fa-laptop-code';
 $ictRole = 'Director ICT';
-$ictSubtitle = 'Information & Communication Technology – System Administration & Infrastructure Oversight';
+$ictSubtitle = 'Information & Communication Technology â€“ System Administration & Infrastructure Oversight';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -132,7 +132,7 @@ body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; col
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
 .page-content { padding: 0 !important; }
 
-/* ── Top Bar ── */
+/* â”€â”€ Top Bar â”€â”€ */
 
 @media (max-width: 768px) {
     .ict-content { margin-left: 0; padding: 12px; }
@@ -166,11 +166,11 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 
 
-/* ── Content ── */
+/* â”€â”€ Content â”€â”€ */
 .ict-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
 @media (max-width: 768px) { .ict-content { margin-left: 0; } }
 
-/* ── KPI Cards ── */
+/* â”€â”€ KPI Cards â”€â”€ */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -198,7 +198,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
 .kpi-pr { border-left-color: #8b5cf6; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
 
-/* ── Section Cards ── */
+/* â”€â”€ Section Cards â”€â”€ */
 .section-card {
   background: var(--ict-card-bg);
   border-radius: 10px;
@@ -214,7 +214,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .section-title i { font-size: 15px; }
 .section-subtitle { font-size: 11px; color: var(--ict-text-muted); margin: 0; }
 
-/* ── Monitor Cards ── */
+/* â”€â”€ Monitor Cards â”€â”€ */
 .monitor-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-radius:10px; padding:14px 12px; color:#e2e8f0; text-align:center; transition:transform .2s,box-shadow .2s; }
 .monitor-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.3); }
 .monitor-card h3 { font-size:24px; font-weight:800; margin:0; background:linear-gradient(135deg,#fff,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
@@ -222,7 +222,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .monitor-card .progress { height:4px; margin-top:8px; border-radius:10px; background:#334155; }
 .monitor-card .progress-bar { border-radius:10px; }
 
-/* ── Tables ── */
+/* â”€â”€ Tables â”€â”€ */
 .ict-table { font-size: 12px; margin-bottom: 0; }
 .ict-table thead th { background: #f8fafc; font-weight: 600; color: var(--ict-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--ict-border); }
 .ict-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -235,21 +235,21 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .filter-pill.active { background:var(--ict-accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); }
 .status-led { width:10px; height:10px; border-radius:50%; display:inline-block; box-shadow:0 0 6px rgba(0,0,0,.15); }
 
-/* ── Badges ── */
+/* â”€â”€ Badges â”€â”€ */
 .badge-soft { font-weight: 500; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 
-/* ── Activity timeline ── */
+/* â”€â”€ Activity timeline â”€â”€ */
 .activity-timeline { list-style: none; padding: 0; margin: 0; }
 .activity-timeline li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
 .activity-timeline li:last-child { border-bottom: none; }
 
-/* ── Animations ── */
+/* â”€â”€ Animations â”€â”€ */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 .an-fade { animation: fadeInUp 0.5s ease forwards; }
 .an-slide { animation: slideIn 0.4s ease forwards; }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
@@ -262,7 +262,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 }
 @media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
 
-/* ── Print ── */
+/* â”€â”€ Print â”€â”€ */
 @media print {
   body { background:#fff !important; font-size:10pt; }
   .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
@@ -284,7 +284,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<!-- ═══ TOP BAR ═══ -->
+<!-- â•â•â• TOP BAR â•â•â• -->
 
 <div class="ict-content">
 <?php if ($tab === 'overview'): ?>
@@ -401,7 +401,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                             <div style="max-height:250px;overflow-y:auto">
                             <?php if (empty($assignments)): ?><div class="text-muted small">No active assignments</div>
                             <?php else: foreach ($assignments as $as): ?>
-                            <div class="py-1 border-bottom small"><strong><?= htmlspecialchars($as['asset_name'] ?? $as['asset_number']) ?></strong> → Staff #<?= $as['assigned_to_staff_id'] ?: 'Dept' ?>
+                            <div class="py-1 border-bottom small"><strong><?= htmlspecialchars($as['asset_name'] ?? $as['asset_number']) ?></strong> â†’ Staff #<?= $as['assigned_to_staff_id'] ?: 'Dept' ?>
                             <span class="badge bg-<?= $as['status']==='active'?'success':'secondary' ?> float-end"><?= $as['status'] ?></span></div>
                             <?php endforeach; endif; ?>
                             </div>
@@ -625,10 +625,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         </div>
                         <div class="mb-2"><label class="form-label">Target Database</label>
                             <select name="target_database" class="form-select">
-                                <option value="igangaschoolofl_ict">ICT Database</option>
-                                <option value="igangaschoolofl_staffs_db">Staff Database</option>
-                                <option value="igangaschoolofl_students_db">Students Database</option>
-                                <option value="igangaschoolofl_website_db">Website Database</option>
+                                <option value="igangaschool_ict">ICT Database</option>
+                                <option value="igangaschool_staffs">Staff Database</option>
+                                <option value="igangaschool_students">Students Database</option>
+                                <option value="igangaschool_website">Website Database</option>
                                 <option value="all">All Databases</option>
                             </select>
                         </div>
@@ -1310,7 +1310,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </form>
 </div></div>
 
-<!-- jQuery & Bootstrap already loaded in dashboard_head.php — do NOT re-add here -->
+<!-- jQuery & Bootstrap already loaded in dashboard_head.php â€” do NOT re-add here -->
 <script>
 const ICT_HANDLER = '../handlers/ict_handler.php';
 const CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
@@ -1453,7 +1453,7 @@ function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).
 function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter-pill[onclick*="'${s}'"]`).addClass('active'); $('.section-card tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 </script>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

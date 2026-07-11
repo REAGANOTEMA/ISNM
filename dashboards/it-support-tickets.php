@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['ict', 'support', 'admin']);
@@ -94,7 +94,7 @@ $open_tickets = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE 
 $in_progress_tickets = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE status = 'in_progress'");
 $resolved_month = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE status = 'resolved' AND resolved_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
 
-$sql = "SELECT t.*, s.full_name AS assigned_name FROM it_support_tickets t LEFT JOIN igangaschoolofl_staffs_db.staff s ON t.assigned_to = s.id $status_where ORDER BY FIELD(t.priority,'critical','high','medium','low'), t.created_at DESC LIMIT 100";
+$sql = "SELECT t.*, s.full_name AS assigned_name FROM it_support_tickets t LEFT JOIN igangaschool_staffs.staff s ON t.assigned_to = s.id $status_where ORDER BY FIELD(t.priority,'critical','high','medium','low'), t.created_at DESC LIMIT 100";
 $stmt = $ict_conn->prepare($sql);
 if ($stmt) {
     if ($types) $stmt->bind_param($types, ...$params);

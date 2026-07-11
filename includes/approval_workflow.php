@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Approval Workflow System - Configurable multi-stage approval engine.
  * Supports: request creation, review, recommendation, approval, rejection, escalation.
@@ -12,7 +12,7 @@ function getWorkflows($conn, $activeOnly = true) {
     $workflows = [];
     if (!$conn) return $workflows;
     try {
-        $sql = "SELECT * FROM igangaschoolofl_staffs_db.approval_workflows";
+        $sql = "SELECT * FROM igangaschool_staffs.approval_workflows";
         if ($activeOnly) $sql .= " WHERE is_active = 1";
         $sql .= " ORDER BY category, workflow_name";
         $result = $conn->query($sql);
@@ -27,7 +27,7 @@ function getWorkflowStages($workflowId, $conn) {
     $stages = [];
     if (!$conn) return $stages;
     try {
-        $stmt = $conn->prepare("SELECT * FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC");
+        $stmt = $conn->prepare("SELECT * FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC");
         if (!$stmt) return $stages;
         $stmt->bind_param('i', $workflowId);
         $stmt->execute();
@@ -50,7 +50,7 @@ function createApprovalRequest($workflowId, $title, $description, $requesterId, 
         if (empty($stages)) return false;
         $firstStage = $stages[0];
         $requestNumber = 'REQ-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        $stmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_requests (workflow_id, request_number, title, description, priority, requester_id, requester_name, requester_role, current_stage_id, current_stage_order, status, reference_type, reference_id, reference_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_requests (workflow_id, request_number, title, description, priority, requester_id, requester_name, requester_role, current_stage_id, current_stage_order, status, reference_type, reference_id, reference_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, NOW())");
         if (!$stmt) return false;
         $order = (int)$firstStage['stage_order'];
         $stmt->bind_param('issssisssisis', $workflowId, $requestNumber, $title, $description, $priority, $requesterId, $requesterName, $requesterRole, $firstStage['id'], $order, $referenceType, $referenceId, $referenceUrl);
@@ -59,7 +59,7 @@ function createApprovalRequest($workflowId, $title, $description, $requesterId, 
         if ($r) {
             $newId = $conn->insert_id;
             if ($newId) {
-                $actStmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'created', 'Request created', 'Pending', 0, NOW())");
+                $actStmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'created', 'Request created', 'Pending', 0, NOW())");
                 if ($actStmt) {
                     $actStmt->bind_param('iii', $newId, $firstStage['id'], $requesterId);
                     $actStmt->execute();
@@ -100,7 +100,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
     }
     if (!$conn) return false;
     try {
-        $reqStmt = $conn->prepare("SELECT ar.*, (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages FROM igangaschoolofl_staffs_db.approval_requests ar WHERE ar.id = ?");
+        $reqStmt = $conn->prepare("SELECT ar.*, (SELECT COUNT(*) FROM igangaschool_staffs.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages FROM igangaschool_staffs.approval_requests ar WHERE ar.id = ?");
         if (!$reqStmt) return false;
         $reqStmt->bind_param('i', $requestId);
         $reqStmt->execute();
@@ -110,14 +110,14 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
 
         // Role enforcement: user must have equal or higher authority (lower role_level number)
         $userLevel = getUserHierarchyLevel($staffId, $conn);
-        $stageStmt = $conn->prepare("SELECT assigned_role_id, assigned_role_name, stage_name, stage_order, is_final FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ?");
+        $stageStmt = $conn->prepare("SELECT assigned_role_id, assigned_role_name, stage_name, stage_order, is_final FROM igangaschool_staffs.approval_stages WHERE id = ?");
         if ($stageStmt) {
             $stageStmt->bind_param('i', $request['current_stage_id']);
             $stageStmt->execute();
             $stage = $stageStmt->get_result()->fetch_assoc();
             $stageStmt->close();
             if ($stage && !empty($stage['assigned_role_name'])) {
-                // Stage has a specific role assigned — only that role can act
+                // Stage has a specific role assigned â€” only that role can act
                 $roleStmt = $conn->prepare("SELECT sr.role_name, sr.role_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
                 if ($roleStmt) {
                     $roleStmt->bind_param('i', $staffId);
@@ -130,7 +130,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
                     }
                 }
             } elseif ($stage && empty($stage['assigned_role_name']) && $actionType === 'approve') {
-                // No role assigned on stage — only Director General (role_level=1) may approve
+                // No role assigned on stage â€” only Director General (role_level=1) may approve
                 if ($userLevel > 1) {
                     error_log("processApprovalAction: No assigned role on stage, only Director General (level=1) can approve. User $staffId has level $userLevel");
                     return false;
@@ -150,7 +150,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $currentOrder = (int)$request['current_stage_order'];
         $totalStages = (int)$request['total_stages'];
 
-        $actStmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_actions (request_id, stage_id, action_by, action_type, comments, notes, decision, previous_stage_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $actStmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_actions (request_id, stage_id, action_by, action_type, comments, notes, decision, previous_stage_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         if (!$actStmt) return false;
         $decision = 'Approved';
         if ($actionType === 'reject') $decision = 'Rejected';
@@ -162,20 +162,20 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $actStmt->close();
 
         if ($actionType === 'reject' || $actionType === 'cancel') {
-            $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = ?, rejection_reason = ?, updated_at = NOW() WHERE id = ?");
+            $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = ?, rejection_reason = ?, updated_at = NOW() WHERE id = ?");
             $newStatus = $actionType === 'reject' ? 'Rejected' : 'Cancelled';
             if (!$updStmt) return false;
             $updStmt->bind_param('ssi', $newStatus, $comments, $requestId);
             $updStmt->execute();
             $updStmt->close();
         } elseif ($actionType === 'return') {
-            $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = 'Returned', rejection_reason = ?, current_stage_id = (SELECT id FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC LIMIT 1), current_stage_order = 1, updated_at = NOW() WHERE id = ?");
+            $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Returned', rejection_reason = ?, current_stage_id = (SELECT id FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC LIMIT 1), current_stage_order = 1, updated_at = NOW() WHERE id = ?");
             if (!$updStmt) return false;
             $updStmt->bind_param('sii', $comments, $request['workflow_id'], $requestId);
             $updStmt->execute();
             $updStmt->close();
         } elseif ($actionType === 'approve' && $currentOrder >= $totalStages) {
-            $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = 'Approved', final_approval_by = ?, final_approval_at = NOW(), updated_at = NOW() WHERE id = ?");
+            $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Approved', final_approval_by = ?, final_approval_at = NOW(), updated_at = NOW() WHERE id = ?");
             if (!$updStmt) return false;
             $updStmt->bind_param('ii', $staffId, $requestId);
             $updStmt->execute();
@@ -183,14 +183,14 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         } elseif ($actionType === 'approve' || $actionType === 'escalate') {
             $nextOrder = ($actionType === 'escalate') ? $currentOrder + 2 : $currentOrder + 1;
             if ($nextOrder > $totalStages) $nextOrder = $totalStages;
-            $nextStmt = $conn->prepare("SELECT id FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ? AND stage_order = ? LIMIT 1");
+            $nextStmt = $conn->prepare("SELECT id FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? AND stage_order = ? LIMIT 1");
             if (!$nextStmt) return false;
             $nextStmt->bind_param('ii', $request['workflow_id'], $nextOrder);
             $nextStmt->execute();
             $nextStage = $nextStmt->get_result()->fetch_assoc();
             $nextStmt->close();
             if ($nextStage) {
-                $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET current_stage_id = ?, current_stage_order = ?, status = CASE WHEN ? >= ? THEN 'Approved' ELSE 'Active' END, updated_at = NOW() WHERE id = ?");
+                $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET current_stage_id = ?, current_stage_order = ?, status = CASE WHEN ? >= ? THEN 'Approved' ELSE 'Active' END, updated_at = NOW() WHERE id = ?");
                 if (!$updStmt) return false;
                 $updStmt->bind_param('iiiii', $nextStage['id'], $nextOrder, $nextOrder, $totalStages, $requestId);
                 $updStmt->execute();
@@ -217,7 +217,7 @@ function resubmitApprovalRequest($requestId, $staffId, $comments = null, $conn =
     }
     if (!$conn) return false;
     try {
-        $reqStmt = $conn->prepare("SELECT ar.* FROM igangaschoolofl_staffs_db.approval_requests ar WHERE ar.id = ? AND ar.status = 'Returned' AND ar.requester_id = ?");
+        $reqStmt = $conn->prepare("SELECT ar.* FROM igangaschool_staffs.approval_requests ar WHERE ar.id = ? AND ar.status = 'Returned' AND ar.requester_id = ?");
         if (!$reqStmt) return false;
         $reqStmt->bind_param('ii', $requestId, $staffId);
         $reqStmt->execute();
@@ -225,13 +225,13 @@ function resubmitApprovalRequest($requestId, $staffId, $comments = null, $conn =
         $reqStmt->close();
         if (!$request) return false;
 
-        $actStmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'resubmit', ?, 'Resubmitted', ?, NOW())");
+        $actStmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'resubmit', ?, 'Resubmitted', ?, NOW())");
         if (!$actStmt) return false;
         $actStmt->bind_param('iiisi', $requestId, $request['current_stage_id'], $staffId, $comments, $request['current_stage_order']);
         $actStmt->execute();
         $actStmt->close();
 
-        $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = 'Active', rejection_reason = NULL, updated_at = NOW() WHERE id = ?");
+        $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Active', rejection_reason = NULL, updated_at = NOW() WHERE id = ?");
         if (!$updStmt) return false;
         $updStmt->bind_param('i', $requestId);
         $updStmt->execute();

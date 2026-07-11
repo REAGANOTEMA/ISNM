@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'academics', 'lecturer', 'head']);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
 $pageTitle = 'Timetable Management';
 
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 if ($staffDb) {
     $staffDb->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_timetable` (id INT AUTO_INCREMENT PRIMARY KEY, timetable_id VARCHAR(50) UNIQUE, academic_year VARCHAR(20) DEFAULT NULL, semester VARCHAR(100) DEFAULT NULL, program_code VARCHAR(50) DEFAULT '', course_code VARCHAR(50) DEFAULT '', day_of_week VARCHAR(20) NOT NULL, start_time TIME NULL, end_time TIME NULL, venue VARCHAR(200) DEFAULT '', lecturer_id INT DEFAULT 0, timetable_status VARCHAR(50) DEFAULT 'Draft', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_day (day_of_week), KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

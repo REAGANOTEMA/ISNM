@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
 $user = $ctx['user'];
@@ -65,8 +65,8 @@ $conn = $studentsDb;
 $uid = $_SESSION['user_id'] ?? 0;
 $uname = $_SESSION['full_name'] ?? 'User';
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`student_admissions` (id INT AUTO_INCREMENT PRIMARY KEY, application_number VARCHAR(50) UNIQUE, applicant_name VARCHAR(300) NOT NULL, program VARCHAR(200) DEFAULT '', academic_year VARCHAR(20) DEFAULT NULL, admission_status VARCHAR(50) DEFAULT 'Applied', application_date DATE DEFAULT NULL, decided_by INT DEFAULT 0, remarks TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

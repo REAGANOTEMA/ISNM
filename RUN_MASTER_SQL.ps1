@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # ISNM Master SQL Executor (PowerShell)
 # Run this script to set up the complete system
 # ============================================================
@@ -7,7 +7,7 @@
 $MYSQL_HOST = "localhost"
 $MYSQL_USER = "root"
 $MYSQL_PORT = 3306
-$MYSQL_DB = "igangaschoolofl_staffs_db"
+$MYSQL_DB = "igangaschool_staffs"
 $XAMPP_PATH = "C:\xampp"
 $MYSQL_PATH = "$XAMPP_PATH\mysql\bin\mysql.exe"
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path

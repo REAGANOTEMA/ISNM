@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -16,8 +16,8 @@ if (!$isStrictPrincipal) {
     echo '<!DOCTYPE html><html><head><title>403 Forbidden</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}.card{background:#fff;border-radius:12px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:420px}.card h1{color:#dc2626;font-size:48px;margin:0 0 8px}.card p{color:#64748b;margin:0 0 20px}.card .btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600}</style></head><body><div class="card"><h1>403</h1><p>Access denied. Only the School Principal may access this dashboard.</p><a href="../dashboard.php" class="btn">Go to My Dashboard</a></div></body></html>';
     exit;
 }
-$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschoolofl_staffs_db';
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschool_staffs';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 $migrate = function($db) use ($staff_db, $students_db) {
     if (!$db) return;
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meeting_minutes (id INT AUTO_INCREMENT PRIMARY KEY, meeting_id INT, agenda_item VARCHAR(300), discussion TEXT, resolution TEXT, action_items TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -569,7 +569,7 @@ try {
     if ($students) {
         $r = $students->query("SELECT COUNT(*) c FROM students WHERE status='Active'"); if ($r) $totalStudents = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT ROUND(AVG(IFNULL(attendance_percentage,0)),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $attRate = (float)($r->fetch_assoc()['v']??0);
-        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.examination_records WHERE grade IS NOT NULL) t FROM igangaschoolofl_staffs_db.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
+        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM igangaschool_staffs.examination_records WHERE grade IS NOT NULL) t FROM igangaschool_staffs.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $welfareAlerts = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $upMt = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='completed'"); if ($r) $revTotal = (float)$r->fetch_assoc()['v'];
@@ -1534,7 +1534,7 @@ if ($staff) {
 
 </div>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

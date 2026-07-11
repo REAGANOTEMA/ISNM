@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['computer lab']);
@@ -28,7 +28,7 @@ $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
 $students = null;
 try { $students = getStudentsConnection(); } catch (Exception $e) { error_log('computer_lab context: ' . $e->getMessage()); }
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
 // Stats
 $total_computers   = lab_q($ict, "SELECT COUNT(*) FROM lab_computers WHERE status!='deleted'");
@@ -1188,7 +1188,7 @@ $('#printTypeSelect, #printJobForm select[name=paper_size], #printJobForm input[
     const c = charges.find(x => x.print_type === type && x.paper_size === paper);
     const pp = c ? parseFloat(c.charge_per_page) : 0;
     const total = pp * pages * copies;
-    $('#chargeDisplay').text(total > 0 ? `UGX ${pp.toLocaleString()} × ${pages}p × ${copies}x = UGX ${total.toLocaleString()}` : 'Charge not configured');
+    $('#chargeDisplay').text(total > 0 ? `UGX ${pp.toLocaleString()} Ã— ${pages}p Ã— ${copies}x = UGX ${total.toLocaleString()}` : 'Charge not configured');
 });
 
 // Single-click actions

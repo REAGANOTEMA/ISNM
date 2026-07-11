@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 /**
  * Approval Integration Hub
  * Bridges the approval_workflow system with application entities:
- *   - store_requests → approval_requests (DG final approval)
- *   - pending_students → approval_requests (DG final approval)
+ *   - store_requests â†’ approval_requests (DG final approval)
+ *   - pending_students â†’ approval_requests (DG final approval)
  *   - General approvals
  */
 
@@ -20,7 +20,7 @@ function submitStoreForApproval($storeReqId, $conn = null) {
         $priority = ucfirst(strtolower($req['urgency'] ?? 'Medium'));
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 
@@ -54,7 +54,7 @@ function submitStudentForApproval($pendingId, $conn = null) {
         }
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 

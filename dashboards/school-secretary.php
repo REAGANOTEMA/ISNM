@@ -8,8 +8,8 @@ $students_conn = $ctx['students'] ?? null;
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'School Secretary';
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 $website_conn = $ctx['website'] ?? null;
 
 $migrations = [

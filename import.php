@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 /**
  * ISNM Student Data Import Script
  * 
  * This script imports student data from Excel files in the 'students_data' folder
  * into the MySQL database using PhpSpreadsheet library.
  * 
- * Database: igangaschoolofl_students_db
+ * Database: igangaschool_students
  * Table: students(id, full_name, registration_number, national_student_id_number, 
  *              index_number, mobile_number, course, year, set_name, gender)
  */

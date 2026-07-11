@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'finance', 'bursar', 'store', 'admin', 'secretary', 'registrar', 'deputy', 'principal']);
 $user = $ctx['user'];
@@ -98,7 +98,7 @@ $sf = $_GET['status'] ?? '';
 $allowed = ['Pending','Approved','Fulfilled','Rejected'];
 $where = ($sf && in_array($sf, $allowed)) ? "WHERE r.status='$sf'" : '';
 
-$requests = dr_fetch($conn, "SELECT r.*, s.full_name AS requester_name FROM department_requests r LEFT JOIN igangaschoolofl_staffs_db.staff s ON r.requested_by=s.id $where ORDER BY FIELD(r.status,'Pending','Approved','Fulfilled','Rejected'), r.created_at DESC LIMIT 100");
+$requests = dr_fetch($conn, "SELECT r.*, s.full_name AS requester_name FROM department_requests r LEFT JOIN igangaschool_staffs.staff s ON r.requested_by=s.id $where ORDER BY FIELD(r.status,'Pending','Approved','Fulfilled','Rejected'), r.created_at DESC LIMIT 100");
 
 $pageTitle = 'Department Requests';
 ?><!DOCTYPE html>

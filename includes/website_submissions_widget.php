@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 /**
  * Website Submissions Widget
  * Reusable widget for viewing website submissions across director dashboards.
  * 
  * Parameters:
- *   $conn    - Website database connection (igangaschoolofl_website_db)
+ *   $conn    - Website database connection (igangaschool_website)
  *   $types   - Array of types to show: 'contacts', 'donations', 'volunteers', 'applications'
  *   $limit   - Max records per type (default 10)
  */

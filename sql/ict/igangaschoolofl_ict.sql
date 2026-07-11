@@ -1,7 +1,7 @@
-/*M!999999\- enable the sandbox mode */ 
+﻿/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.23-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: igangaschoolofl_ict
+-- Host: localhost    Database: igangaschool_ict
 -- ------------------------------------------------------
 -- Server version	10.6.23-MariaDB-cll-lve
 
@@ -3300,11 +3300,11 @@ LOCK TABLES `website_announcements` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'igangaschoolofl_ict'
+-- Dumping events for database 'igangaschool_ict'
 --
 
 --
--- Dumping routines for database 'igangaschoolofl_ict'
+-- Dumping routines for database 'igangaschool_ict'
 --
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
@@ -3316,7 +3316,7 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_ict`@`localhost` PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
+CREATE  PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
 BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
@@ -3341,7 +3341,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_ict`@`localhost` PROCEDURE `add_role_description_col_if_missing`()
+CREATE  PROCEDURE `add_role_description_col_if_missing`()
 BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
     ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
@@ -3361,7 +3361,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_ict`@`localhost` PROCEDURE `MigratePayroll`()
+CREATE  PROCEDURE `MigratePayroll`()
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;

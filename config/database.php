@@ -89,7 +89,7 @@ if (!defined('STUDENTS_DB_PORT')) {
     define('STUDENTS_DB_PORT', (int) isnm_env('STUDENTS_DB_PORT', DB_PORT));
 }
 if (!defined('STUDENTS_DB_NAME')) {
-    define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschoolofl_students_db'));
+    define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschool_students'));
 }
 if (!defined('STUDENTS_DB_USER')) {
     define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', STUDENTS_DB_NAME));
@@ -108,7 +108,7 @@ if (!defined('STAFF_DB_PORT')) {
     define('STAFF_DB_PORT', (int) isnm_env('STAFF_DB_PORT', DB_PORT));
 }
 if (!defined('STAFF_DB_NAME')) {
-    define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschoolofl_staffs_db'));
+    define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschool_staffs'));
 }
 if (!defined('STAFF_DB_USER')) {
     define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', STAFF_DB_NAME));
@@ -127,7 +127,7 @@ if (!defined('WEBSITE_DB_PORT')) {
     define('WEBSITE_DB_PORT', (int) isnm_env('WEBSITE_DB_PORT', DB_PORT));
 }
 if (!defined('WEBSITE_DB_NAME')) {
-    define('WEBSITE_DB_NAME', isnm_env('WEBSITE_DB_NAME', 'igangaschoolofl_website_db'));
+    define('WEBSITE_DB_NAME', isnm_env('WEBSITE_DB_NAME', 'igangaschool_website'));
 }
 if (!defined('WEBSITE_DB_USER')) {
     define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', WEBSITE_DB_NAME));
@@ -146,7 +146,7 @@ if (!defined('ICT_DB_PORT')) {
     define('ICT_DB_PORT', (int) isnm_env('ICT_DB_PORT', DB_PORT));
 }
 if (!defined('ICT_DB_NAME')) {
-    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict'));
+    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschool_ict'));
 }
 if (!defined('ICT_DB_USER')) {
     define('ICT_DB_USER', isnm_env('ICT_DB_USER', ICT_DB_NAME));
@@ -165,10 +165,10 @@ if (!function_exists('isnm_mysqli_connect')) {
 
         // Hardcoded hosting credentials — always try first, no .env dependency
         $hostingCreds = [
-            'igangaschoolofl_students_db' => ['user' => 'igangaschoolofl_students_db', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
-            'igangaschoolofl_staffs_db'   => ['user' => 'igangaschoolofl_staffs_db',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
-            'igangaschoolofl_website_db'  => ['user' => 'igangaschoolofl_website_db',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
-            'igangaschoolofl_ict'         => ['user' => 'igangaschoolofl_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
+            'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => '0uZdJgH98k:9;Y'],
+            'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => '0uZdJgH98k:9;Y'],
+            'igangaschool_website'  => ['user' => 'igangaschool_website',  'pass' => '0uZdJgH98k:9;Y'],
+            'igangaschool_ict'      => ['user' => 'igangaschool_ict',      'pass' => '0uZdJgH98k:9;Y'],
         ];
 
         $credSet = [];

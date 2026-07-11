@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','principal','deputy','secretary','matron','warden','head']);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
 $pageTitle = 'Student Discipline';
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
 if ($studentsDb) {
     $studentsDb->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`student_discipline` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, offense TEXT, reported_by VARCHAR(200), hearing_date DATE, outcome VARCHAR(500), action_taken VARCHAR(200), status ENUM('open','resolved','appealed') DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

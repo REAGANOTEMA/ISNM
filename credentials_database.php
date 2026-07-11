@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Credentials Documentation
  * Comprehensive staff account database
@@ -8,28 +8,28 @@
 
 // Database Credentials
 $DATABASE_CREDENTIALS = [
-    'igangaschoolofl_ict' => [
+    'igangaschool_ict' => [
         'hostname' => 'localhost',
-        'username' => 'igangaschoolofl_ict',
+        'username' => 'igangaschool_ict',
         'password' => 'HHCrQVjr6QNKzSEVtx9J',
         'port' => 3306,
         'charset' => 'utf8mb4',
     ],
-    'igangaschoolofl_students_db' => [
+    'igangaschool_students' => [
         'hostname' => 'localhost',
-        'username' => 'igangaschoolofl_students_db',
+        'username' => 'igangaschool_students',
         'password' => 'hbkKdmMHUfHTHuxWKPRf',
         'port' => 3306,
         'charset' => 'utf8mb4',
     ],
-    'igangaschoolofl_staffs_db' => [
+    'igangaschool_staffs' => [
         'hostname' => 'localhost',
-        'username' => 'igangaschoolofl_staffs_db',
+        'username' => 'igangaschool_staffs',
         'password' => 'AgKzJjZZnT5q58jCahs8',
         'port' => 3306,
         'charset' => 'utf8mb4',
     ],
-    'igangaschoolofl_website_db' => [
+    'igangaschool_website' => [
         'hostname' => 'localhost',
         'username' => 'igangaschoolofnursingandmidwifery',
         'password' => 'AaCH75gXpekcFQj5wPZn',

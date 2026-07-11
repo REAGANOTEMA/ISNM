@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Migration Script: School Secretary Module Tables
  * Creates all required tables for the enhanced School Secretary dashboard.
@@ -18,7 +18,7 @@ if (file_exists($configPath)) {
 $db_host   = defined('STAFF_DB_HOST') ? STAFF_DB_HOST : 'localhost';
 $db_user   = defined('STAFF_DB_USER') ? STAFF_DB_USER : 'root';
 $db_pass   = defined('STAFF_DB_PASS') ? STAFF_DB_PASS : '';
-$db_name   = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+$db_name   = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 $db_port   = defined('STAFF_DB_PORT') ? STAFF_DB_PORT : 3306;
 
 $conn = @new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
@@ -41,7 +41,7 @@ echo "Database: " . $db_name . "\n\n";
 
 $sql_statements = [
 
-    // ── Appointments ──
+    // â”€â”€ Appointments â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_appointments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -106,7 +106,7 @@ $sql_statements = [
         FOREIGN KEY (meeting_id) REFERENCES secretary_meetings(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Official Documents ──
+    // â”€â”€ Official Documents â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_official_documents (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -136,7 +136,7 @@ $sql_statements = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Messages (Internal Comms) ──
+    // â”€â”€ Messages (Internal Comms) â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         sender_id INT NOT NULL,
@@ -147,7 +147,7 @@ $sql_statements = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Internal Requests ──
+    // â”€â”€ Internal Requests â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_requests (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -160,7 +160,7 @@ $sql_statements = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Announcements ──
+    // â”€â”€ Announcements â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_announcements (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -172,7 +172,7 @@ $sql_statements = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Contacts ──
+    // â”€â”€ Contacts â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_contacts (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -185,7 +185,7 @@ $sql_statements = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-    // ── Correspondence ──
+    // â”€â”€ Correspondence â”€â”€
     "CREATE TABLE IF NOT EXISTS secretary_correspondence (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -229,7 +229,7 @@ foreach ($sql_statements as $sql) {
     }
 }
 
-// ── Handle ALTER TABLE for existing secretary_meetings ──
+// â”€â”€ Handle ALTER TABLE for existing secretary_meetings â”€â”€
 echo "\n--- Checking secretary_meetings columns ---\n";
 $colCheck = $conn->query("SHOW COLUMNS FROM secretary_meetings LIKE 'venue'");
 if ($colCheck && $colCheck->num_rows === 0) {

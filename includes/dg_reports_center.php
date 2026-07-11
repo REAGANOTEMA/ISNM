@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Executive Reports Center for Director General Dashboard.
  * Provides: Academic, Financial, HR, and System reports with export & search.
@@ -22,7 +22,7 @@ $rcFinancialData = [];
 $rcHRData = [];
 $rcSystemData = [];
 
-// ── ACADEMIC REPORTS ──
+// â”€â”€ ACADEMIC REPORTS â”€â”€
 try {
     if ($studentsConn) {
         $r = $studentsConn->query("SELECT program, COUNT(*) as count FROM students WHERE program IS NOT NULL AND program != '' GROUP BY program ORDER BY count DESC");
@@ -62,13 +62,13 @@ try {
     }
 } catch (Exception $e) { error_log('reports_center academic: ' . $e->getMessage()); }
 
-// ── FINANCIAL REPORTS ──
+// â”€â”€ FINANCIAL REPORTS â”€â”€
 try {
     if ($conn) {
         $r = $conn->query("
             SELECT DATE_FORMAT(payment_date, '%Y-%m') as ym, DATE_FORMAT(payment_date, '%b %Y') as label,
                    COUNT(*) as txns, COALESCE(SUM(amount_received), 0) as total
-            FROM igangaschoolofl_students_db.payments
+            FROM igangaschool_students.payments
             WHERE status IN ('verified','approved')
             GROUP BY DATE_FORMAT(payment_date, '%Y-%m')
             ORDER BY ym DESC LIMIT 12
@@ -84,7 +84,7 @@ try {
                    COALESCE(SUM(si.balance), 0) as total_outstanding,
                    ROUND(COALESCE(SUM(si.amount_paid) / NULLIF(SUM(si.total_amount), 0) * 100, 0), 1) as collection_rate
             FROM student_invoices si
-            LEFT JOIN igangaschoolofl_students_db.students s ON si.student_id = s.id
+            LEFT JOIN igangaschool_students.students s ON si.student_id = s.id
             WHERE si.status IN ('pending','partial','overdue','paid')
             GROUP BY s.program
             ORDER BY total_outstanding DESC
@@ -106,7 +106,7 @@ try {
             SELECT si.student_id, s.first_name, s.last_name, s.student_number, s.program,
                    si.total_amount, si.amount_paid, si.balance
             FROM student_invoices si
-            LEFT JOIN igangaschoolofl_students_db.students s ON si.student_id = s.id
+            LEFT JOIN igangaschool_students.students s ON si.student_id = s.id
             WHERE si.status IN ('partial','overdue') AND si.balance > 0
             ORDER BY si.balance DESC LIMIT 10
         ");
@@ -114,7 +114,7 @@ try {
     }
 } catch (Exception $e) { error_log('reports_center financial: ' . $e->getMessage()); }
 
-// ── HR REPORTS ──
+// â”€â”€ HR REPORTS â”€â”€
 try {
     if ($conn) {
         $r = $conn->query("
@@ -171,7 +171,7 @@ try {
     }
 } catch (Exception $e) { error_log('reports_center hr: ' . $e->getMessage()); }
 
-// ── SYSTEM REPORTS ──
+// â”€â”€ SYSTEM REPORTS â”€â”€
 $rcSystemData['table_counts'] = [];
 $rcSystemData['activity_summary'] = [];
 $rcSystemData['errors'] = 0;
@@ -227,7 +227,7 @@ try {
     }
 } catch (Exception $e) { error_log('reports_center system: ' . $e->getMessage()); }
 
-// ── Helper: render a table with search & export ──
+// â”€â”€ Helper: render a table with search & export â”€â”€
 function rcRenderTable($id, $headers, $rows, $emptyMsg = 'No data available.') {
     $html = '<div class="rc-table-wrap" style="margin-top:8px;">';
     $html .= '<div class="rc-table-toolbar" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">';
@@ -322,7 +322,7 @@ function rcFormatCurrency($v) {
         <button class="rc-tab-btn" data-rc-tab="system" onclick="rcSwitchTab('system')"><i class="fas fa-cogs"></i> System</button>
     </div>
 
-    <!-- ═══ ACADEMIC TAB ═══ -->
+    <!-- â•â•â• ACADEMIC TAB â•â•â• -->
     <div class="rc-tab-content active" id="rcTab_academic">
         <div class="row g-3">
             <div class="col-lg-6">
@@ -403,7 +403,7 @@ function rcFormatCurrency($v) {
         </div>
     </div>
 
-    <!-- ═══ FINANCIAL TAB ═══ -->
+    <!-- â•â•â• FINANCIAL TAB â•â•â• -->
     <div class="rc-tab-content" id="rcTab_financial">
         <div class="row g-3">
             <div class="col-lg-7">
@@ -495,7 +495,7 @@ function rcFormatCurrency($v) {
         </div>
     </div>
 
-    <!-- ═══ HR TAB ═══ -->
+    <!-- â•â•â• HR TAB â•â•â• -->
     <div class="rc-tab-content" id="rcTab_hr">
         <div class="row g-3">
             <div class="col-lg-6">
@@ -588,7 +588,7 @@ function rcFormatCurrency($v) {
         </div>
     </div>
 
-    <!-- ═══ SYSTEM TAB ═══ -->
+    <!-- â•â•â• SYSTEM TAB â•â•â• -->
     <div class="rc-tab-content" id="rcTab_system">
         <div class="row g-3">
             <div class="col-lg-12">

@@ -1,15 +1,15 @@
-<?php
+﻿<?php
 /**
- * COMPREHENSIVE DATABASE AUDIT — ISNM ERP
+ * COMPREHENSIVE DATABASE AUDIT â€” ISNM ERP
  * Scans all 4 databases, lists every table and its columns
  */
 require_once __DIR__ . '/config/database.php';
 
 $databases = [
-    'igangaschoolofl_staffs_db' => ['label' => 'staffs',     'func' => 'getStaffConnection'],
-    'igangaschoolofl_students_db' => ['label' => 'students',  'func' => 'getStudentsConnection'],
-    'igangaschoolofl_website_db' => ['label' => 'website',   'func' => 'getWebsiteConnection'],
-    'igangaschoolofl_ict' => ['label' => 'ict',         'func' => 'getICTConnection'],
+    'igangaschool_staffs' => ['label' => 'staffs',     'func' => 'getStaffConnection'],
+    'igangaschool_students' => ['label' => 'students',  'func' => 'getStudentsConnection'],
+    'igangaschool_website' => ['label' => 'website',   'func' => 'getWebsiteConnection'],
+    'igangaschool_ict' => ['label' => 'ict',         'func' => 'getICTConnection'],
 ];
 
 foreach ($databases as $dbName => $info) {

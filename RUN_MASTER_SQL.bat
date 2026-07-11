@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 REM ============================================================
 REM ISNM Master SQL Executor
 REM Run this batch file to set up the complete system
@@ -8,7 +8,7 @@ REM MySQL connection details
 set MYSQL_HOST=localhost
 set MYSQL_USER=root
 set MYSQL_PORT=3306
-set MYSQL_DB=igangaschoolofl_staffs_db
+set MYSQL_DB=igangaschool_staffs
 
 REM Check if mysql is in PATH
 where mysql >nul 2>nul

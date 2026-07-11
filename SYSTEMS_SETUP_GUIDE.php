@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Comprehensive Implementation Guide for ISNM Financial & HR Management Systems
  * 
@@ -207,14 +207,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 ISNM Financial & HR Management Systems</h1>
+            <h1>ðŸŽ“ ISNM Financial & HR Management Systems</h1>
             <p>Comprehensive Implementation Guide</p>
         </div>
         
         <div class="content">
             <!-- Section 1: Overview -->
             <div class="section">
-                <h2>📋 System Overview</h2>
+                <h2>ðŸ“‹ System Overview</h2>
                 
                 <div class="subsection">
                     <h3>What You Have Received</h3>
@@ -228,7 +228,7 @@
             
             <!-- Section 2: Bursar System -->
             <div class="section">
-                <h2>💼 Bursar Portal Setup & Usage</h2>
+                <h2>ðŸ’¼ Bursar Portal Setup & Usage</h2>
                 
                 <div class="subsection">
                     <h3>Access Credentials</h3>
@@ -266,18 +266,18 @@
                 <div class="subsection">
                     <h3>Key Features</h3>
                     <ul>
-                        <li>✓ Student fee structure management</li>
-                        <li>✓ Invoice generation and tracking</li>
-                        <li>✓ Payment recording (cash, bank, mobile money, cheque)</li>
-                        <li>✓ Automatic receipt generation</li>
-                        <li>✓ Financial reports (daily, weekly, monthly)</li>
-                        <li>✓ Budget management and expenditure tracking</li>
-                        <li>✓ Penalty configuration and tracking</li>
-                        <li>✓ Scholarship/sponsorship management</li>
-                        <li>✓ Professional dashboard with analytics</li>
-                        <li>✓ PDF/Excel export capabilities</li>
-                        <li>✓ Activity logs and audit trail</li>
-                        <li>✓ Role-based access control</li>
+                        <li>âœ“ Student fee structure management</li>
+                        <li>âœ“ Invoice generation and tracking</li>
+                        <li>âœ“ Payment recording (cash, bank, mobile money, cheque)</li>
+                        <li>âœ“ Automatic receipt generation</li>
+                        <li>âœ“ Financial reports (daily, weekly, monthly)</li>
+                        <li>âœ“ Budget management and expenditure tracking</li>
+                        <li>âœ“ Penalty configuration and tracking</li>
+                        <li>âœ“ Scholarship/sponsorship management</li>
+                        <li>âœ“ Professional dashboard with analytics</li>
+                        <li>âœ“ PDF/Excel export capabilities</li>
+                        <li>âœ“ Activity logs and audit trail</li>
+                        <li>âœ“ Role-based access control</li>
                     </ul>
                 </div>
                 
@@ -295,7 +295,7 @@
             
             <!-- Section 3: HR System -->
             <div class="section">
-                <h2>👥 HR Portal Setup & Usage</h2>
+                <h2>ðŸ‘¥ HR Portal Setup & Usage</h2>
                 
                 <div class="subsection">
                     <h3>Access Credentials</h3>
@@ -333,24 +333,24 @@
                 <div class="subsection">
                     <h3>Key Features</h3>
                     <ul>
-                        <li>✓ Complete staff records management</li>
-                        <li>✓ Employment details and contract tracking</li>
-                        <li>✓ Recruitment and hiring module</li>
-                        <li>✓ Job vacancy posting and application tracking</li>
-                        <li>✓ Interview scheduling and tracking</li>
-                        <li>✓ Onboarding checklist system</li>
-                        <li>✓ Daily attendance and time management</li>
-                        <li>✓ Leave management system with balance tracking</li>
-                        <li>✓ Duty roster management</li>
-                        <li>✓ Performance appraisal system</li>
-                        <li>✓ Training and CPD tracking</li>
-                        <li>✓ Professional licenses and certification tracking</li>
-                        <li>✓ Disciplinary and conduct records</li>
-                        <li>✓ Employment contracts and compliance tracking</li>
-                        <li>✓ Salary structure and payroll support</li>
-                        <li>✓ Payslip generation</li>
-                        <li>✓ Professional reports and analytics</li>
-                        <li>✓ Staff self service portal features</li>
+                        <li>âœ“ Complete staff records management</li>
+                        <li>âœ“ Employment details and contract tracking</li>
+                        <li>âœ“ Recruitment and hiring module</li>
+                        <li>âœ“ Job vacancy posting and application tracking</li>
+                        <li>âœ“ Interview scheduling and tracking</li>
+                        <li>âœ“ Onboarding checklist system</li>
+                        <li>âœ“ Daily attendance and time management</li>
+                        <li>âœ“ Leave management system with balance tracking</li>
+                        <li>âœ“ Duty roster management</li>
+                        <li>âœ“ Performance appraisal system</li>
+                        <li>âœ“ Training and CPD tracking</li>
+                        <li>âœ“ Professional licenses and certification tracking</li>
+                        <li>âœ“ Disciplinary and conduct records</li>
+                        <li>âœ“ Employment contracts and compliance tracking</li>
+                        <li>âœ“ Salary structure and payroll support</li>
+                        <li>âœ“ Payslip generation</li>
+                        <li>âœ“ Professional reports and analytics</li>
+                        <li>âœ“ Staff self service portal features</li>
                     </ul>
                 </div>
                 
@@ -368,7 +368,7 @@
             
             <!-- Section 4: Database Information -->
             <div class="section">
-                <h2>🗄️ Database Configuration</h2>
+                <h2>ðŸ—„ï¸ Database Configuration</h2>
                 
                 <div class="subsection">
                     <h3>Multiple Database Architecture</h3>
@@ -381,12 +381,12 @@
                         </tr>
                         <tr>
                             <td>Bursar (Financial)</td>
-                            <td><code>igangaschoolofl_students_db</code></td>
+                            <td><code>igangaschool_students</code></td>
                             <td><code>sql/students/bursar_system.sql</code></td>
                         </tr>
                         <tr>
                             <td>HR (Staff)</td>
-                            <td><code>igangaschoolofl_staffs_db</code></td>
+                            <td><code>igangaschool_staffs</code></td>
                             <td><code>sql/staffs/hr_system.sql</code></td>
                         </tr>
                     </table>
@@ -412,7 +412,7 @@ mysql -u username -p database_name < sql/staffs/hr_system.sql
             
             <!-- Section 5: File Structure -->
             <div class="section">
-                <h2>📁 File Structure</h2>
+                <h2>ðŸ“ File Structure</h2>
                 
                 <div class="subsection">
                     <h3>Bursar System</h3>
@@ -447,22 +447,22 @@ mysql -u username -p database_name < sql/staffs/hr_system.sql
             
             <!-- Section 6: Next Steps -->
             <div class="section">
-                <h2>🚀 Quick Start Guide</h2>
+                <h2>ðŸš€ Quick Start Guide</h2>
                 
                 <div class="subsection">
                     <h3>Step 1: Run Database Scripts</h3>
                     <p>Execute both SQL scripts to create all necessary tables and data:</p>
                     <ul>
-                        <li>Run <code>sql/students/bursar_system.sql</code> in <code>igangaschoolofl_students_db</code></li>
-                        <li>Run <code>sql/staffs/hr_system.sql</code> in <code>igangaschoolofl_staffs_db</code></li>
+                        <li>Run <code>sql/students/bursar_system.sql</code> in <code>igangaschool_students</code></li>
+                        <li>Run <code>sql/staffs/hr_system.sql</code> in <code>igangaschool_staffs</code></li>
                     </ul>
                 </div>
                 
                 <div class="subsection">
                     <h3>Step 2: Initialize Systems</h3>
                     <ul>
-                        <li>Visit <code>bursar_setup.php</code> → Click "Setup Bursar System"</li>
-                        <li>Visit <code>hr_setup.php</code> → Click "Setup HR System"</li>
+                        <li>Visit <code>bursar_setup.php</code> â†’ Click "Setup Bursar System"</li>
+                        <li>Visit <code>hr_setup.php</code> â†’ Click "Setup HR System"</li>
                     </ul>
                 </div>
                 
@@ -487,23 +487,23 @@ mysql -u username -p database_name < sql/staffs/hr_system.sql
             
             <!-- Section 7: Support -->
             <div class="section">
-                <h2>💡 Important Notes</h2>
+                <h2>ðŸ’¡ Important Notes</h2>
                 
                 <div class="subsection">
-                    <p>✓ Both systems use <strong>professional, modern designs</strong> with gradient backgrounds and intuitive interfaces</p>
-                    <p>✓ All dashboards include <strong>real time statistics</strong> and analytics</p>
-                    <p>✓ Complete <strong>audit trail and activity logging</strong> is implemented</p>
-                    <p>✓ Systems support <strong>role based access control</strong> for security</p>
-                    <p>✓ Database schemas include <strong>all requested features and more</strong></p>
-                    <p>✓ Both systems are <strong>production ready</strong> and professional quality</p>
-                    <p>⚠ Remember to <strong>change default passwords</strong> in production</p>
-                    <p>⚠ <strong>Back up your databases</strong> regularly</p>
+                    <p>âœ“ Both systems use <strong>professional, modern designs</strong> with gradient backgrounds and intuitive interfaces</p>
+                    <p>âœ“ All dashboards include <strong>real time statistics</strong> and analytics</p>
+                    <p>âœ“ Complete <strong>audit trail and activity logging</strong> is implemented</p>
+                    <p>âœ“ Systems support <strong>role based access control</strong> for security</p>
+                    <p>âœ“ Database schemas include <strong>all requested features and more</strong></p>
+                    <p>âœ“ Both systems are <strong>production ready</strong> and professional quality</p>
+                    <p>âš  Remember to <strong>change default passwords</strong> in production</p>
+                    <p>âš  <strong>Back up your databases</strong> regularly</p>
                 </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>ISNM Financial & HR Management Systems | Iganga School of Nursing and Midwifery | © 2025</p>
+            <p>ISNM Financial & HR Management Systems | Iganga School of Nursing and Midwifery | Â© 2025</p>
             <p>For support and customization requests, contact your system administrator</p>
         </div>
     </div>

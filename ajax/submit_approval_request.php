@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX endpoint for submitting department approval requests to Director General.
  * Creates an approval_requests record linked to the correct workflow.
@@ -53,7 +53,7 @@ $workflowName = $workflowNameMap[$category] ?? 'General Department Request';
 
 try {
     // Find the workflow
-    $stmt = $conn->prepare("SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name = ? AND is_active = 1 LIMIT 1");
+    $stmt = $conn->prepare("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name = ? AND is_active = 1 LIMIT 1");
     if (!$stmt) {
         echo json_encode(['success' => false, 'error' => 'Database error']);
         exit;
@@ -86,7 +86,7 @@ try {
     if ($result) {
         // Get the created request number
         $lastId = $conn->insert_id;
-        $rn = $conn->query("SELECT request_number FROM igangaschoolofl_staffs_db.approval_requests WHERE id = $lastId");
+        $rn = $conn->query("SELECT request_number FROM igangaschool_staffs.approval_requests WHERE id = $lastId");
         $requestNumber = ($rn && $row = $rn->fetch_assoc()) ? $row['request_number'] : '';
 
         // Send notification to DG about new request

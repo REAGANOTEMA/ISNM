@@ -1,4 +1,4 @@
-
+﻿
 
 <?php include("../assets/noSessionRedirect.php"); ?>
 <?php include("./verifyRoleRedirect.php"); ?>
@@ -146,7 +146,7 @@
              $password=$_POST['current'] ?? '';
              $newpassword=$_POST['new'] ?? '';
              $confirmnewpassword=$_POST['repeat'] ?? '';
-            $stmt = $conn->prepare("SELECT password_hash FROM igangaschoolofl_staffs_db.users WHERE id=?");
+            $stmt = $conn->prepare("SELECT password_hash FROM igangaschool_staffs.users WHERE id=?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -158,7 +158,7 @@
                     if(password_verify($password, $pass)){
                     if($newpassword == $confirmnewpassword){
                           $newpasswordhash=password_hash($newpassword, PASSWORD_DEFAULT);
-                          $upd = $conn->prepare("UPDATE igangaschoolofl_staffs_db.users SET password_hash=? WHERE id=?");
+                          $upd = $conn->prepare("UPDATE igangaschool_staffs.users SET password_hash=? WHERE id=?");
                           $upd->bind_param("si", $newpasswordhash, $id);
                         if($upd->execute()){
                                 echo "<script>alert('Password Updated')</script>";

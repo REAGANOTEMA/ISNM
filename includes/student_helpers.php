@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Universal student lookup — searches igangaschoolofl_students_db
+ * Universal student lookup â€” searches igangaschool_students
  * and falls back to Excel data files in students_data/
  */
 
@@ -9,7 +9,7 @@ if (!function_exists('findStudents')) {
         $results = [];
         $term = trim($term);
 
-        // ── 1. Search students DB ─────────────────────────────────
+        // â”€â”€ 1. Search students DB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         try {
             $conn = getStudentsConnection();
             if ($conn) {
@@ -58,7 +58,7 @@ if (!function_exists('findStudents')) {
             error_log('findStudents DB: ' . $e->getMessage());
         }
 
-        // ── 2. Supplement from Excel files if DB returned nothing ─
+        // â”€â”€ 2. Supplement from Excel files if DB returned nothing â”€
         if (empty($results)) {
             try {
                 $loaderFile = __DIR__ . '/../views/student_data_loader.php';

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Database Schema Manager
  * Validates, repairs, and synchronizes database schema with SQL files
@@ -17,26 +17,26 @@ class DatabaseSchemaManager {
     private $databases = [
         'students' => [
             'func' => 'getStudentsConnection',
-            'name' => 'igangaschoolofl_students_db',
-            'sqlFile' => 'students/igangaschoolofl_students_db.sql',
+            'name' => 'igangaschool_students',
+            'sqlFile' => 'students/igangaschool_students.sql',
             'requiredTables' => ['students', 'academic_records', 'student_fee_accounts', 'bursar_users'],
         ],
         'staffs' => [
             'func' => 'getStaffConnection',
-            'name' => 'igangaschoolofl_staffs_db',
-            'sqlFile' => 'staffs/igangaschoolofl_staffs_db.sql',
+            'name' => 'igangaschool_staffs',
+            'sqlFile' => 'staffs/igangaschool_staffs.sql',
             'requiredTables' => ['staff', 'hr_users', 'payroll', 'staff_activity_log'],
         ],
         'website' => [
             'func' => 'getWebsiteConnection',
-            'name' => 'igangaschoolofl_website_db',
-            'sqlFile' => 'website/igangaschoolofl_website_db.sql',
+            'name' => 'igangaschool_website',
+            'sqlFile' => 'website/igangaschool_website.sql',
             'requiredTables' => ['contact_submissions', 'website_announcements', 'news'],
         ],
         'ict' => [
             'func' => 'getICTConnection',
-            'name' => 'igangaschoolofl_ict',
-            'sqlFile' => 'ict/igangaschoolofl_ict.sql',
+            'name' => 'igangaschool_ict',
+            'sqlFile' => 'ict/igangaschool_ict.sql',
             'requiredTables' => ['ict_assets', 'ict_asset_categories', 'asset_assignments'],
         ],
     ];
@@ -136,10 +136,10 @@ class DatabaseSchemaManager {
             foreach ($dbConfig['requiredTables'] as $requiredTable) {
                 if (in_array($requiredTable, $existingTables)) {
                     if ($this->verbose) {
-                        $this->logSuccess("  ✓ Table: $requiredTable");
+                        $this->logSuccess("  âœ“ Table: $requiredTable");
                     }
                 } else {
-                    $this->logWarning("  ✗ Missing table: $requiredTable");
+                    $this->logWarning("  âœ— Missing table: $requiredTable");
                     $issuesFound++;
                 }
             }
@@ -237,9 +237,9 @@ class DatabaseSchemaManager {
                         $createStmt = substr($sql, $startPos, $endPos - $startPos);
                         
                         if ($conn->query($createStmt)) {
-                            $this->logSuccess("✓ Created table: $requiredTable");
+                            $this->logSuccess("âœ“ Created table: $requiredTable");
                         } else {
-                            $this->logError("✗ Failed to create table $requiredTable: " . $conn->error);
+                            $this->logError("âœ— Failed to create table $requiredTable: " . $conn->error);
                         }
                     } else {
                         $this->logWarning("Could not find CREATE TABLE statement for $requiredTable in SQL file");

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['academics','registrar','director','lecturer','head']);
 $user = $ctx['user'];
@@ -8,9 +8,9 @@ $studentsConn = $ctx['students'];
 $conn = $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
-// ── AJAX endpoint for exam student list ────────────────
+// â”€â”€ AJAX endpoint for exam student list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['exam'])) {
     header('Content-Type: application/json');
     $examNumber = trim($_GET['exam']);

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // ISNM Enhanced Configuration with Multi-Database Support
 // Credentials are loaded from config/database.php and .env.
 
@@ -84,7 +84,7 @@ if (!function_exists('getDatabaseConnection')) {
             case 'website':
                 return DatabaseConnection::getWebsiteConnection();
             case 'ict':
-                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('igangaschoolofl_ict');
+                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('igangaschool_ict');
             default:
                 throw new Exception("Unknown database: {$database}");
         }

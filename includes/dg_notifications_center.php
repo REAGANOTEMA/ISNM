@@ -1,12 +1,12 @@
-<?php
+﻿<?php
 /**
  * Director General Notifications Center
  * Aggregates notifications from all system modules into a unified tabbed feed.
  *
  * Requires these variables in the parent scope:
- *   $conn         — staffs_db (igangaschoolofl_staffs_db)
- *   $studentsConn — students_db (igangaschoolofl_students_db)
- *   $websiteConn  — website_db (igangaschoolofl_website_db)
+ *   $conn         â€” staffs_db (igangaschool_staffs)
+ *   $studentsConn â€” students_db (igangaschool_students)
+ *   $websiteConn  â€” website_db (igangaschool_website)
  *
  * Usage (inside DG dashboard):
  *   include __DIR__ . '/../includes/dg_notifications_center.php';
@@ -127,7 +127,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         return isset($readKeys[$key]) ? 1 : 0;
     };
 
-    // ── 1. director_news (staffs_db) ──
+    // â”€â”€ 1. director_news (staffs_db) â”€â”€
     if ($conn) {
         $r = $conn->query("SELECT id, title, content AS message, created_at, 'published' AS status FROM director_news WHERE status='published' ORDER BY created_at DESC LIMIT 30");
         if ($r) {
@@ -149,7 +149,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         }
     }
 
-    // ── 2. staff_activity_log (staffs_db) ──
+    // â”€â”€ 2. staff_activity_log (staffs_db) â”€â”€
     if ($conn) {
         $r = $conn->query("SELECT id, activity_type, activity_description, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 50");
         if ($r) {
@@ -196,10 +196,10 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         }
     }
 
-    // ── 3. announcements (students_db via $studentsConn or $conn FQN) ──
+    // â”€â”€ 3. announcements (students_db via $studentsConn or $conn FQN) â”€â”€
     $annConn = $studentsConn ?: $conn;
     if ($annConn) {
-        $db = defined('DB_STUDENTS_RAW') ? DB_STUDENTS_RAW : 'igangaschoolofl_students_db';
+        $db = defined('DB_STUDENTS_RAW') ? DB_STUDENTS_RAW : 'igangaschool_students';
         $from = $studentsConn ? 'announcements' : $db . '.announcements';
         try {
             $r = $annConn->query("SELECT id, title, body, target_audience, created_at FROM $from ORDER BY id DESC LIMIT 30");
@@ -227,7 +227,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications announcements: ' . $e->getMessage()); }
     }
 
-    // ── 4. student_applications (website_db) ──
+    // â”€â”€ 4. student_applications (website_db) â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT id, first_name, surname, program_applied, submitted_at, status FROM student_applications WHERE status IN ('Pending','Approved','Rejected') ORDER BY submitted_at DESC LIMIT 30");
@@ -241,7 +241,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                         'tab' => 'admissions',
                         'type' => 'application',
                         'title' => "New Application: $name",
-                        'message' => ($row['program_applied'] ?? '') . ' — ' . ($row['status'] ?? 'Pending'),
+                        'message' => ($row['program_applied'] ?? '') . ' â€” ' . ($row['status'] ?? 'Pending'),
                         'created_at' => $row['submitted_at'],
                         'is_read' => $isRead($key),
                         'icon' => 'fas fa-file-alt',
@@ -253,7 +253,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications applications: ' . $e->getMessage()); }
     }
 
-    // ── 5. contact_submissions (website_db) ──
+    // â”€â”€ 5. contact_submissions (website_db) â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT id, first_name, last_name, subject, created_at, status FROM contact_submissions WHERE status IN ('unread','resolved') ORDER BY created_at DESC LIMIT 30");
@@ -278,7 +278,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications contacts: ' . $e->getMessage()); }
     }
 
-    // ── 6. volunteer_applications (website_db) ──
+    // â”€â”€ 6. volunteer_applications (website_db) â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT id, first_name, last_name, profession, opportunity, created_at, status FROM volunteer_applications WHERE status IN ('pending','approved','rejected') ORDER BY created_at DESC LIMIT 30");
@@ -291,7 +291,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                         'tab' => 'all',
                         'type' => 'volunteer',
                         'title' => "Volunteer: $name",
-                        'message' => ($row['profession'] ?? '') . ' — ' . ($row['opportunity'] ?? ''),
+                        'message' => ($row['profession'] ?? '') . ' â€” ' . ($row['opportunity'] ?? ''),
                         'created_at' => $row['created_at'],
                         'is_read' => $isRead($key),
                         'icon' => 'fas fa-hands-helping',
@@ -303,7 +303,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications volunteers: ' . $e->getMessage()); }
     }
 
-    // ── 7. donations (website_db) ──
+    // â”€â”€ 7. donations (website_db) â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT id, donor_name, amount, created_at, status FROM donations WHERE status IN ('pending','verified','cancelled') ORDER BY created_at DESC LIMIT 30");
@@ -316,7 +316,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
                         'tab' => 'finance',
                         'type' => 'donation',
                         'title' => "Donation from {$row['donor_name']}",
-                        'message' => "UGX $amount — {$row['status']}",
+                        'message' => "UGX $amount â€” {$row['status']}",
                         'created_at' => $row['created_at'],
                         'is_read' => $isRead($key),
                         'icon' => 'fas fa-hand-holding-heart',
@@ -328,7 +328,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications donations: ' . $e->getMessage()); }
     }
 
-    // ── 8. notifications table (staffs_db) ──
+    // â”€â”€ 8. notifications table (staffs_db) â”€â”€
     if ($conn) {
         try {
             $r = $conn->query("SELECT id, notification_type, title, message, created_at FROM notifications ORDER BY created_at DESC LIMIT 30");
@@ -367,7 +367,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications staffNotif: ' . $e->getMessage()); }
     }
 
-    // ── 9. notifications table (website_db) ──
+    // â”€â”€ 9. notifications table (website_db) â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT id, title, message, url, type, icon, created_at FROM notifications ORDER BY created_at DESC LIMIT 30");
@@ -406,7 +406,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications webNotif: ' . $e->getMessage()); }
     }
 
-    // ── 10. alerts (staffs_db) — active alerts ──
+    // â”€â”€ 10. alerts (staffs_db) â€” active alerts â”€â”€
     if ($conn) {
         try {
             $r = $conn->query("SELECT id, alert_type, message, status, created_at FROM alerts WHERE status IN ('active','critical') ORDER BY FIELD(status,'critical','active'), created_at DESC LIMIT 30");
@@ -437,7 +437,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications alerts: ' . $e->getMessage()); }
     }
 
-    // ── 11. student_notifications (students_db) — recent student-facing notifications ──
+    // â”€â”€ 11. student_notifications (students_db) â€” recent student-facing notifications â”€â”€
     if ($studentsConn) {
         try {
             $r = $studentsConn->query("SELECT id, type, title, message, created_at FROM student_notifications ORDER BY id DESC LIMIT 30");
@@ -461,7 +461,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
         } catch (Exception $e) { error_log('dg_notifications studentNotif: ' . $e->getMessage()); }
     }
 
-    // ── Sort by created_at DESC ──
+    // â”€â”€ Sort by created_at DESC â”€â”€
     usort($items, function ($a, $b) {
         return strtotime($b['created_at'] ?? '1970-01-01') - strtotime($a['created_at'] ?? '1970-01-01');
     });
@@ -470,7 +470,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
 }
 
 /**
- * Main render function — outputs the complete Notifications Center HTML.
+ * Main render function â€” outputs the complete Notifications Center HTML.
  */
 function renderNotificationsCenter($conn, $studentsConn, $websiteConn, int $userId): void {
     // Handle AJAX mark-read actions (clears output buffers for clean JSON response)

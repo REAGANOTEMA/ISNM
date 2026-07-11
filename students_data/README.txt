@@ -1,4 +1,4 @@
-Student data is loaded from both the database (igangaschoolofl_students_db.students) and
+﻿Student data is loaded from both the database (igangaschool_students.students) and
 Excel files in this directory. The student-directory.php page shows ALL students merged
 and allows you to:
 

@@ -15,7 +15,7 @@ $user = $ctx['user'];
 $userId = (int)($user['id'] ?? 0);
 $userRole = $_SESSION['role'] ?? '';
 $userName = $user['full_name'] ?? 'Director';
-$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 $uploadDir = __DIR__ . '/../uploads/admissions/';
 if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
 $photoDir = __DIR__ . '/../uploads/passport_photos/';

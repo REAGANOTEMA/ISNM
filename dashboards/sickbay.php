@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -488,15 +488,15 @@ $today_visits = sb_q($staff_conn, "SELECT COUNT(*) FROM daily_sick_records WHERE
 $pending_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHERE status = 'Pending' AND (is_deleted = 0 OR is_deleted IS NULL)");
 $active_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHERE status IN ('Approved','Extended') AND leave_to >= CURDATE() AND (is_deleted = 0 OR is_deleted IS NULL)");
 $critical_cases = sb_q($staff_conn, "SELECT COUNT(*) FROM daily_sick_records WHERE severity = 'Critical' AND visit_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND (is_deleted = 0 OR is_deleted IS NULL)");
-$recent_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschoolofl_students_db.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.created_at DESC LIMIT 10");
+$recent_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschool_students.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.created_at DESC LIMIT 10");
 $low_stock_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE status IN ('Low Stock','Out of Stock')");
 $low_stock_count = !empty($low_stock_meds) ? (int)$low_stock_meds[0]['cnt'] : 0;
 $expiring_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND expiry_date >= CURDATE()");
 $expiring_count = !empty($expiring_meds) ? (int)$expiring_meds[0]['cnt'] : 0;
 $sicknesses = sb_fetch($staff_conn, "SELECT * FROM sickness_directory ORDER BY sickness_name ASC");
 $sickness_list = sb_fetch($staff_conn, "SELECT * FROM sickness_directory WHERE status='Active' ORDER BY sickness_name ASC");
-$daily_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschoolofl_students_db.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.visit_date DESC, dsr.visit_time DESC LIMIT 200");
-$leave_records = sb_fetch($staff_conn, "SELECT sl.*, s.full_name as student_full_name FROM student_sick_leave sl LEFT JOIN igangaschoolofl_students_db.students s ON sl.student_id = s.id WHERE (sl.is_deleted = 0 OR sl.is_deleted IS NULL) ORDER BY sl.created_at DESC LIMIT 200");
+$daily_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschool_students.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.visit_date DESC, dsr.visit_time DESC LIMIT 200");
+$leave_records = sb_fetch($staff_conn, "SELECT sl.*, s.full_name as student_full_name FROM student_sick_leave sl LEFT JOIN igangaschool_students.students s ON sl.student_id = s.id WHERE (sl.is_deleted = 0 OR sl.is_deleted IS NULL) ORDER BY sl.created_at DESC LIMIT 200");
 $medicines = sb_fetch($staff_conn, "SELECT * FROM sickbay_medicine_stock ORDER BY medicine_name ASC");
 $medicine_transactions = sb_fetch($staff_conn, "SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id ORDER BY smt.created_at DESC LIMIT 50");
 $sickbay_visits = sb_fetch($staff_conn, "SELECT * FROM sickbay_visits ORDER BY visit_date DESC, id DESC LIMIT 200");
@@ -508,11 +508,11 @@ foreach ($sb_settings_rows as $row) { $sb_settings[$row['setting_key']] = $row['
 
 $health_records_list = []; $health_incidents_list = [];
 if ($staff_conn) {
-    $health_records_list = sb_fetch($staff_conn, "SELECT shr.*, s.full_name, s.student_number, s.program FROM student_health_records shr LEFT JOIN igangaschoolofl_students_db.students s ON shr.student_id = s.id ORDER BY s.full_name ASC LIMIT 200");
-    $health_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM health_incidents hi LEFT JOIN igangaschoolofl_students_db.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
-    $student_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM student_health_incidents hi LEFT JOIN igangaschoolofl_students_db.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $health_records_list = sb_fetch($staff_conn, "SELECT shr.*, s.full_name, s.student_number, s.program FROM student_health_records shr LEFT JOIN igangaschool_students.students s ON shr.student_id = s.id ORDER BY s.full_name ASC LIMIT 200");
+    $health_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM health_incidents hi LEFT JOIN igangaschool_students.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $student_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM student_health_incidents hi LEFT JOIN igangaschool_students.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
     $emergency_contacts_list = sb_fetch($staff_conn, "SELECT * FROM emergency_contacts WHERE is_active = 1 ORDER BY priority ASC");
-    $student_contacts_list = sb_fetch($staff_conn, "SELECT sec.*, s.full_name FROM student_emergency_contacts sec LEFT JOIN igangaschoolofl_students_db.students s ON sec.student_id = s.id ORDER BY s.full_name LIMIT 200");
+    $student_contacts_list = sb_fetch($staff_conn, "SELECT sec.*, s.full_name FROM student_emergency_contacts sec LEFT JOIN igangaschool_students.students s ON sec.student_id = s.id ORDER BY s.full_name LIMIT 200");
 }
 $recent_activities = [];
 if ($staff_conn) {
@@ -728,7 +728,7 @@ $pageTitle = 'Sickbay Management System';?>
     switch($md['status']){case'In Stock':$msc='bg-success';break;case'Low Stock':$msc='bg-warning text-dark';break;case'Out of Stock':$msc='bg-danger';break;case'Expired':$msc='bg-secondary';break;default:$msc='bg-secondary';}
     $mcs=$md['status']==='Out of Stock'?'stock-critical':($md['status']==='Low Stock'?'stock-warning':($md['status']==='Expired'?'stock-critical':''));
 ?>
-<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity_in_stock']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'�'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
+<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity_in_stock']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'ï¿½'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
 <?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- RECYCLE BIN -->
 <div class="sickbay-section <?=$active_section==='recycle-bin'?'active':''?>" id="sec-recycle-bin">
 <div class="health-card"><h2><i class="fas fa-trash-restore me-2 text-secondary"></i>Recycle Bin</h2>

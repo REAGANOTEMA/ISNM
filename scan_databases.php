@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 
 function scanDb($label, $connFunc) {
@@ -39,7 +39,7 @@ function scanDb($label, $connFunc) {
     echo "\n";
 }
 
-scanDb('STAFFS_DB (igangaschoolofl_staffs_db)', 'getStaffConnection');
-scanDb('STUDENTS_DB (igangaschoolofl_students_db)', 'getStudentsConnection');
-scanDb('WEBSITE_DB (igangaschoolofl_website_db)', 'getWebsiteConnection');
-scanDb('ICT_DB (igangaschoolofl_ict)', 'getICTConnection');
+scanDb('STAFFS_DB (igangaschool_staffs)', 'getStaffConnection');
+scanDb('STUDENTS_DB (igangaschool_students)', 'getStudentsConnection');
+scanDb('WEBSITE_DB (igangaschool_website)', 'getWebsiteConnection');
+scanDb('ICT_DB (igangaschool_ict)', 'getICTConnection');

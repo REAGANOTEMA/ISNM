@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 /**
  * Universal Department Approval Request Module
  * Any staff dashboard can include this to submit requests to the DG Approval Center.
- * Integrates with approval_workflow.php → approval_requests → Director General Approval Center.
+ * Integrates with approval_workflow.php â†’ approval_requests â†’ Director General Approval Center.
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['logged_in']) || ($_SESSION['type'] ?? '') !== 'staff') return;
@@ -24,9 +24,9 @@ function getMyApprovalRequests($conn = null, $limit = 10) {
     $requests = [];
     try {
         $sql = "SELECT ar.*, ws.workflow_name, ws.category as workflow_category,
-                (SELECT stage_name FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ar.current_stage_id) as current_stage_name
-                FROM igangaschoolofl_staffs_db.approval_requests ar
-                LEFT JOIN igangaschoolofl_staffs_db.approval_workflows ws ON ar.workflow_id = ws.id
+                (SELECT stage_name FROM igangaschool_staffs.approval_stages WHERE id = ar.current_stage_id) as current_stage_name
+                FROM igangaschool_staffs.approval_requests ar
+                LEFT JOIN igangaschool_staffs.approval_workflows ws ON ar.workflow_id = ws.id
                 WHERE ar.requester_id = ?
                 ORDER BY ar.created_at DESC
                 LIMIT ?";
@@ -58,7 +58,7 @@ function renderMyApprovalRequestsWidget($conn = null) {
         $html .= '<div class="list-group-item py-2 px-3" style="font-size:12px;">
             <div class="d-flex justify-content-between align-items-center">
                 <div><span class="fw-semibold">' . htmlspecialchars(substr($r['title'], 0, 50)) . '</span>
-                <br><span class="text-muted" style="font-size:11px;">' . htmlspecialchars($r['request_number']) . ' · ' . date('d M Y', strtotime($r['created_at'])) . '</span></div>
+                <br><span class="text-muted" style="font-size:11px;">' . htmlspecialchars($r['request_number']) . ' Â· ' . date('d M Y', strtotime($r['created_at'])) . '</span></div>
                 <span class="badge bg-' . $sc . '" style="font-size:9px;">' . $r['status'] . '</span>
             </div></div>';
     }
@@ -83,7 +83,7 @@ function renderDepartmentApprovalModal() {
     $categories = [];
     if ($conn) {
         try {
-            $r = $conn->query("SELECT DISTINCT category FROM igangaschoolofl_staffs_db.approval_workflows WHERE is_active=1 ORDER BY category");
+            $r = $conn->query("SELECT DISTINCT category FROM igangaschool_staffs.approval_workflows WHERE is_active=1 ORDER BY category");
             if ($r) while ($row = $r->fetch_assoc()) $categories[] = $row['category'];
         } catch (Exception $e) { error_log('dept_approval process: ' . $e->getMessage()); }
     }

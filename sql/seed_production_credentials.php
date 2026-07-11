@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Seed all 30 staff accounts with correct credentials on production/hosting.
  * Uses password_hash(PASSWORD_BCRYPT) matching auth-service.php.
@@ -86,6 +86,6 @@ if ($notFound > 0) {
     echo "first export from localhost:\n";
     echo "  mysqldump -u root -p isnm_school_portal staff > staff_backup.sql\n";
     echo "Then import on hosting:\n";
-    echo "  mysql -u HOSTING_USER -p igangaschoolofl_staffs_db < staff_backup.sql\n";
+    echo "  mysql -u HOSTING_USER -p igangaschool_staffs < staff_backup.sql\n";
     echo "Then re-run: php sql/seed_production_credentials.php\n";
 }

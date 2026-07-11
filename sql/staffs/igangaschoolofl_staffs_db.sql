@@ -1,7 +1,7 @@
-/*M!999999\- enable the sandbox mode */ 
+﻿/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.23-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: igangaschoolofl_staffs_db
+-- Host: localhost    Database: igangaschool_staffs
 -- ------------------------------------------------------
 -- Server version	10.6.23-MariaDB-cll-lve
 
@@ -6179,13 +6179,13 @@ LOCK TABLES `hr_users` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.bank_accounts`
+-- Table structure for table `igangaschool_students.bank_accounts`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.bank_accounts`;
+DROP TABLE IF EXISTS `igangaschool_students.bank_accounts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.bank_accounts` (
+CREATE TABLE `igangaschool_students.bank_accounts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) DEFAULT NULL,
   `bank_name` varchar(200) DEFAULT NULL,
@@ -6199,22 +6199,22 @@ CREATE TABLE `igangaschoolofl_students_db.bank_accounts` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.bank_accounts`
+-- Dumping data for table `igangaschool_students.bank_accounts`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.bank_accounts` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.bank_accounts` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.bank_accounts` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.bank_accounts` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.bank_accounts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.bank_accounts` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.fee_structure`
+-- Table structure for table `igangaschool_students.fee_structure`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.fee_structure`;
+DROP TABLE IF EXISTS `igangaschool_students.fee_structure`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.fee_structure` (
+CREATE TABLE `igangaschool_students.fee_structure` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) DEFAULT NULL,
   `fee_type` varchar(100) DEFAULT NULL,
@@ -6231,22 +6231,22 @@ CREATE TABLE `igangaschoolofl_students_db.fee_structure` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.fee_structure`
+-- Dumping data for table `igangaschool_students.fee_structure`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.fee_structure` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.fee_structure` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.fee_structure` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.fee_structure` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.fee_structure` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.fee_structure` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.journal_entries`
+-- Table structure for table `igangaschool_students.journal_entries`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.journal_entries`;
+DROP TABLE IF EXISTS `igangaschool_students.journal_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.journal_entries` (
+CREATE TABLE `igangaschool_students.journal_entries` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `entry_date` date NOT NULL,
   `description` text DEFAULT NULL,
@@ -6261,22 +6261,22 @@ CREATE TABLE `igangaschoolofl_students_db.journal_entries` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.journal_entries`
+-- Dumping data for table `igangaschool_students.journal_entries`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.journal_entries` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.journal_entries` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.journal_entries` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.journal_entries` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.journal_entries` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.journal_entries` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.journal_entry_lines`
+-- Table structure for table `igangaschool_students.journal_entry_lines`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.journal_entry_lines`;
+DROP TABLE IF EXISTS `igangaschool_students.journal_entry_lines`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.journal_entry_lines` (
+CREATE TABLE `igangaschool_students.journal_entry_lines` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `entry_id` int(11) DEFAULT NULL,
   `account_name` varchar(200) DEFAULT NULL,
@@ -6290,22 +6290,22 @@ CREATE TABLE `igangaschoolofl_students_db.journal_entry_lines` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.journal_entry_lines`
+-- Dumping data for table `igangaschool_students.journal_entry_lines`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.journal_entry_lines` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.journal_entry_lines` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.journal_entry_lines` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.journal_entry_lines` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.notifications`
+-- Table structure for table `igangaschool_students.notifications`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.notifications`;
+DROP TABLE IF EXISTS `igangaschool_students.notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.notifications` (
+CREATE TABLE `igangaschool_students.notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL,
   `type` varchar(50) DEFAULT NULL,
@@ -6319,22 +6319,22 @@ CREATE TABLE `igangaschoolofl_students_db.notifications` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.notifications`
+-- Dumping data for table `igangaschool_students.notifications`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.notifications` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.notifications` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.notifications` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.notifications` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.scholarships`
+-- Table structure for table `igangaschool_students.scholarships`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.scholarships`;
+DROP TABLE IF EXISTS `igangaschool_students.scholarships`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.scholarships` (
+CREATE TABLE `igangaschool_students.scholarships` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `scholarship_name` varchar(200) NOT NULL,
   `description` text DEFAULT NULL,
@@ -6347,22 +6347,22 @@ CREATE TABLE `igangaschoolofl_students_db.scholarships` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.scholarships`
+-- Dumping data for table `igangaschool_students.scholarships`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.scholarships` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.scholarships` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.scholarships` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.scholarships` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.scholarships` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.scholarships` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `igangaschoolofl_students_db.student_scholarships`
+-- Table structure for table `igangaschool_students.student_scholarships`
 --
 
-DROP TABLE IF EXISTS `igangaschoolofl_students_db.student_scholarships`;
+DROP TABLE IF EXISTS `igangaschool_students.student_scholarships`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `igangaschoolofl_students_db.student_scholarships` (
+CREATE TABLE `igangaschool_students.student_scholarships` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) DEFAULT NULL,
   `scholarship_id` int(11) DEFAULT NULL,
@@ -6376,12 +6376,12 @@ CREATE TABLE `igangaschoolofl_students_db.student_scholarships` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `igangaschoolofl_students_db.student_scholarships`
+-- Dumping data for table `igangaschool_students.student_scholarships`
 --
 
-LOCK TABLES `igangaschoolofl_students_db.student_scholarships` WRITE;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.student_scholarships` DISABLE KEYS */;
-/*!40000 ALTER TABLE `igangaschoolofl_students_db.student_scholarships` ENABLE KEYS */;
+LOCK TABLES `igangaschool_students.student_scholarships` WRITE;
+/*!40000 ALTER TABLE `igangaschool_students.student_scholarships` DISABLE KEYS */;
+/*!40000 ALTER TABLE `igangaschool_students.student_scholarships` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -9986,7 +9986,7 @@ CREATE TABLE `payroll_settings` (
 
 LOCK TABLES `payroll_settings` WRITE;
 /*!40000 ALTER TABLE `payroll_settings` DISABLE KEYS */;
-INSERT INTO `payroll_settings` VALUES (1,'currency','PHP','2026-06-28 05:57:22'),(2,'currency_symbol','₱','2026-06-28 05:57:22'),(3,'tax_rate','0','2026-06-28 05:57:22'),(4,'sss_rate','0.045','2026-06-28 05:57:22'),(5,'philhealth_rate','0.0225','2026-06-28 05:57:22'),(6,'pagibig_rate','0.02','2026-06-28 05:57:22'),(7,'overtime_rate','1.25','2026-06-28 05:57:22'),(9,'nssf_rate','10','2026-07-02 08:09:39'),(10,'paye_rate','12','2026-07-02 08:09:39'),(11,'employer_nssf_rate','10','2026-07-02 08:09:39'),(12,'institution_name','Iganga School of Nursing and Midwifery','2026-07-02 08:09:39'),(13,'payroll_start_day','1','2026-07-02 08:09:39'),(14,'payroll_end_day','28','2026-07-02 08:09:39'),(15,'payment_day','28','2026-07-02 08:09:39'),(16,'tax_threshold','235000','2026-07-02 08:09:39');
+INSERT INTO `payroll_settings` VALUES (1,'currency','PHP','2026-06-28 05:57:22'),(2,'currency_symbol','â‚±','2026-06-28 05:57:22'),(3,'tax_rate','0','2026-06-28 05:57:22'),(4,'sss_rate','0.045','2026-06-28 05:57:22'),(5,'philhealth_rate','0.0225','2026-06-28 05:57:22'),(6,'pagibig_rate','0.02','2026-06-28 05:57:22'),(7,'overtime_rate','1.25','2026-06-28 05:57:22'),(9,'nssf_rate','10','2026-07-02 08:09:39'),(10,'paye_rate','12','2026-07-02 08:09:39'),(11,'employer_nssf_rate','10','2026-07-02 08:09:39'),(12,'institution_name','Iganga School of Nursing and Midwifery','2026-07-02 08:09:39'),(13,'payroll_start_day','1','2026-07-02 08:09:39'),(14,'payroll_end_day','28','2026-07-02 08:09:39'),(15,'payment_day','28','2026-07-02 08:09:39'),(16,'tax_threshold','235000','2026-07-02 08:09:39');
 /*!40000 ALTER TABLE `payroll_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -15857,11 +15857,11 @@ LOCK TABLES `welfare_cases` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'igangaschoolofl_staffs_db'
+-- Dumping events for database 'igangaschool_staffs'
 --
 
 --
--- Dumping routines for database 'igangaschoolofl_staffs_db'
+-- Dumping routines for database 'igangaschool_staffs'
 --
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
@@ -15873,11 +15873,11 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_staffs_db`@`localhost` PROCEDURE `get_dashboard_statistics`(IN p_user_id INT, IN p_role VARCHAR(100))
+CREATE  PROCEDURE `get_dashboard_statistics`(IN p_user_id INT, IN p_role VARCHAR(100))
 BEGIN
     SELECT
-        (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.staff WHERE status='Active') AS total_staff,
-        (SELECT COUNT(*) FROM igangaschoolofl_students_db.students WHERE status='Active') AS total_students,
+        (SELECT COUNT(*) FROM igangaschool_staffs.staff WHERE status='Active') AS total_staff,
+        (SELECT COUNT(*) FROM igangaschool_students.students WHERE status='Active') AS total_students,
         0 AS pending_applications,
         2 AS active_programs,
         0 AS total_revenue,
@@ -15898,7 +15898,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_staffs_db`@`localhost` PROCEDURE `get_staff_performance_summary`(IN p_user_id INT)
+CREATE  PROCEDURE `get_staff_performance_summary`(IN p_user_id INT)
 BEGIN
     SELECT s.id, s.full_name, sr.role_name, s.department, s.status,
            0 AS performance_score, 'Good' AS rating
@@ -15926,8 +15926,8 @@ DELIMITER ;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`igangaschoolofl_staffs_db`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments` */;
+/*!50013  SQL SECURITY DEFINER */
+/*!50001 VIEW `fee_payments` AS select `igangaschool_students`.`payments`.`id` AS `id`,`igangaschool_students`.`payments`.`student_id` AS `student_id`,`igangaschool_students`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschool_students`.`payments`.`amount_received` AS `amount_paid`,`igangaschool_students`.`payments`.`payment_method` AS `payment_method`,`igangaschool_students`.`payments`.`payment_reference` AS `receipt_number`,`igangaschool_students`.`payments`.`status` AS `status`,`igangaschool_students`.`payments`.`payment_date` AS `payment_date`,`igangaschool_students`.`payments`.`notes` AS `notes`,`igangaschool_students`.`payments`.`received_by` AS `processed_by`,`igangaschool_students`.`payments`.`created_at` AS `created_at`,`igangaschool_students`.`payments`.`updated_at` AS `updated_at` from `igangaschool_students`.`payments` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;

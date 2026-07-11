@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'academics', 'secretary']);
 $user = $ctx['user'];
@@ -14,7 +14,7 @@ if ($conn) {
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE semester LIKE CONCAT('%', QUARTER(CURDATE()), '%') OR created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)"); if ($qr) $thisSemester = (int)$qr->fetch_assoc()['c'];
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Registered'"); if ($qr) $pending = (int)$qr->fetch_assoc()['c'];
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Completed'"); if ($qr) $completed = (int)$qr->fetch_assoc()['c'];
-    $r = $conn->query("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON cr.course_code=cc.course_code ORDER BY cr.created_at DESC LIMIT 50");
+    $r = $conn->query("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschool_staffs.academic_course_catalog cc ON cr.course_code=cc.course_code ORDER BY cr.created_at DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $registrations[] = $row;
 }
 ?><!DOCTYPE html>

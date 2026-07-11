@@ -8,8 +8,8 @@ $ctx = bootstrapStaffDashboard(['director finance', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Finance Director';
-$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschoolofl_staffs_db';
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschool_staffs';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 $migrate = function($db) use ($staff_db, $students_db) {
     if (!$db) return;
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.finance_messages (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT DEFAULT 0, sender_name VARCHAR(200), recipient_role VARCHAR(100), subject VARCHAR(300), message TEXT, is_read TINYINT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

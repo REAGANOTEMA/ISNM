@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Enterprise Director General Approval Center
  * Centralized approval authority for all institution requests.
@@ -7,7 +7,7 @@
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// ─── Get counts for summary cards ───
+// â”€â”€â”€ Get counts for summary cards â”€â”€â”€
 if (!function_exists('getApprovalCenterCounts')) {
 function getApprovalCenterCounts($conn) {
     $counts = [
@@ -21,23 +21,23 @@ function getApprovalCenterCounts($conn) {
             SUM(status='Approved' AND DATE(final_approval_at)=CURDATE()) as approved_today,
             SUM(status='Rejected' AND DATE(updated_at)=CURDATE()) as rejected_today,
             SUM(status='Active' AND (priority='Critical' OR priority='Urgent')) as critical
-            FROM igangaschoolofl_staffs_db.approval_requests");
+            FROM igangaschool_staffs.approval_requests");
         if ($r && $row = $r->fetch_assoc()) {
             $counts['pending'] = (int)$row['pending'];
             $counts['approved_today'] = (int)$row['approved_today'];
             $counts['rejected_today'] = (int)$row['rejected_today'];
             $counts['critical'] = (int)$row['critical'];
         }
-        $r2 = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests");
+        $r2 = $conn->query("SELECT COUNT(*) as c FROM igangaschool_staffs.approval_requests");
         if ($r2) $counts['total'] = (int)$r2->fetch_assoc()['c'];
-        $r3 = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Active' AND (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_actions WHERE request_id=approval_requests.id AND action_type='return')>0");
+        $r3 = $conn->query("SELECT COUNT(*) as c FROM igangaschool_staffs.approval_requests WHERE status='Active' AND (SELECT COUNT(*) FROM igangaschool_staffs.approval_actions WHERE request_id=approval_requests.id AND action_type='return')>0");
         if ($r3) $counts['returned'] = (int)$r3->fetch_assoc()['c'];
     } catch (Exception $e) { error_log('approval_center getPending: ' . $e->getMessage()); }
     return $counts;
 }
 }
 
-// ─── Summary Cards ───
+// â”€â”€â”€ Summary Cards â”€â”€â”€
 if (!function_exists('renderApprovalSummaryCards')) {
 function renderApprovalSummaryCards($conn) {
     $c = getApprovalCenterCounts($conn);
@@ -63,23 +63,23 @@ function renderApprovalSummaryCards($conn) {
 }
 }
 
-// ─── Fetch approvals with filters ───
+// â”€â”€â”€ Fetch approvals with filters â”€â”€â”€
 if (!function_exists('getApprovalCenterRequests')) {
 function getApprovalCenterRequests($conn, $filters = []) {
     $requests = [];
     if (!$conn) return $requests;
     try {
         $sql = "SELECT ar.*, ws.workflow_name, ws.category as workflow_category, 
-                (SELECT stage_name FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ar.current_stage_id) as current_stage_name,
-                (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages
-                FROM igangaschoolofl_staffs_db.approval_requests ar
-                LEFT JOIN igangaschoolofl_staffs_db.approval_workflows ws ON ar.workflow_id = ws.id
+                (SELECT stage_name FROM igangaschool_staffs.approval_stages WHERE id = ar.current_stage_id) as current_stage_name,
+                (SELECT COUNT(*) FROM igangaschool_staffs.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages
+                FROM igangaschool_staffs.approval_requests ar
+                LEFT JOIN igangaschool_staffs.approval_workflows ws ON ar.workflow_id = ws.id
                 WHERE 1=1";
         $params = []; $types = '';
 
         if (!empty($filters['status'])) {
             if ($filters['status'] === 'pending') {
-                $sql .= " AND ar.status = 'Active' AND ar.current_stage_order = (SELECT MAX(stage_order) FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ar.workflow_id)";
+                $sql .= " AND ar.status = 'Active' AND ar.current_stage_order = (SELECT MAX(stage_order) FROM igangaschool_staffs.approval_stages WHERE workflow_id = ar.workflow_id)";
             } elseif ($filters['status'] === 'active') {
                 $sql .= " AND ar.status = 'Active'";
             } elseif ($filters['status'] === 'approved_today') {
@@ -89,7 +89,7 @@ function getApprovalCenterRequests($conn, $filters = []) {
             } elseif ($filters['status'] === 'critical') {
                 $sql .= " AND ar.status = 'Active' AND (ar.priority = 'Critical' OR ar.priority = 'Urgent')";
             } elseif ($filters['status'] === 'returned') {
-                $sql .= " AND ar.status = 'Active' AND EXISTS (SELECT 1 FROM igangaschoolofl_staffs_db.approval_actions WHERE request_id = ar.id AND action_type = 'return')";
+                $sql .= " AND ar.status = 'Active' AND EXISTS (SELECT 1 FROM igangaschool_staffs.approval_actions WHERE request_id = ar.id AND action_type = 'return')";
             } else {
                 $sql .= " AND ar.status = ?";
                 $params[] = $filters['status']; $types .= 's';
@@ -129,7 +129,7 @@ function getApprovalCenterRequests($conn, $filters = []) {
 }
 }
 
-// ─── Request Card ───
+// â”€â”€â”€ Request Card â”€â”€â”€
 if (!function_exists('renderApprovalRequestCard')) {
 function renderApprovalRequestCard($req) {
     $pc = 'bg-secondary'; $pcolor = '#64748b';
@@ -193,7 +193,7 @@ function renderApprovalRequestCard($req) {
 }
 }
 
-// ─── Request List ───
+// â”€â”€â”€ Request List â”€â”€â”€
 if (!function_exists('renderApprovalRequestList')) {
 function renderApprovalRequestList($requests) {
     if (empty($requests)) {
@@ -208,7 +208,7 @@ function renderApprovalRequestList($requests) {
 }
 }
 
-// ─── Request Detail Modal ───
+// â”€â”€â”€ Request Detail Modal â”€â”€â”€
 if (!function_exists('renderRequestDetailModal')) {
 function renderRequestDetailModal() {
     ?>
@@ -266,7 +266,7 @@ function renderRequestDetailModal() {
 }
 }
 
-// ─── Confirmation Modal ───
+// â”€â”€â”€ Confirmation Modal â”€â”€â”€
 if (!function_exists('renderApprovalConfirmModal')) {
 function renderApprovalConfirmModal() {
     ?>
@@ -295,7 +295,7 @@ function renderApprovalConfirmModal() {
 }
 }
 
-// ─── JavaScript ───
+// â”€â”€â”€ JavaScript â”€â”€â”€
 if (!function_exists('renderApprovalCenterScripts')) {
 function renderApprovalCenterScripts() {
     ?>
@@ -545,7 +545,7 @@ function renderApprovalCenterScripts() {
 }
 }
 
-// ─── Render Full Approval Center (UI only) ───
+// â”€â”€â”€ Render Full Approval Center (UI only) â”€â”€â”€
 if (!function_exists('renderApprovalCenter')) {
 function renderApprovalCenter($conn) {
     $counts = getApprovalCenterCounts($conn);
@@ -556,7 +556,7 @@ function renderApprovalCenter($conn) {
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
             <div>
                 <h4 class="fw-bold mb-1" style="color:#0f172a;"><i class="fas fa-check-double me-2" style="color:#3b82f6;"></i>Approval Center</h4>
-                <p class="text-muted mb-0" style="font-size:13px;">Director General — Final approval authority for all institution requests.</p>
+                <p class="text-muted mb-0" style="font-size:13px;">Director General â€” Final approval authority for all institution requests.</p>
             </div>
             <div class="d-flex gap-2 mt-2 mt-md-0">
                 <div class="input-group" style="max-width:300px;">
@@ -577,7 +577,7 @@ function renderApprovalCenter($conn) {
 }
 }
 
-// ─── Render Approval Modals & Scripts (call OUTSIDE section-card) ───
+// â”€â”€â”€ Render Approval Modals & Scripts (call OUTSIDE section-card) â”€â”€â”€
 if (!function_exists('renderApprovalModalsAndScripts')) {
 function renderApprovalModalsAndScripts() {
     renderRequestDetailModal();

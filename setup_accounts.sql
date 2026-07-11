@@ -1,13 +1,13 @@
--- ============================================================
--- ISNM STAFF ACCOUNT SETUP — Run ONCE
+﻿-- ============================================================
+-- ISNM STAFF ACCOUNT SETUP â€” Run ONCE
 -- Paste into phpMyAdmin SQL tab or run: mysql ... < this.sql
 -- ============================================================
 -- bcrypt hashes generated 2026-07-06
 -- ============================================================
 
-USE igangaschoolofl_staffs_db;
+USE igangaschool_staffs;
 
--- ── 1. Ensure staff_roles exist ──────────────────────────────
+-- â”€â”€ 1. Ensure staff_roles exist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 INSERT IGNORE INTO staff_roles (role_name, dashboard_path, role_level) VALUES
 ('Director General',                    'dashboards/director-general.php',  1),
 ('CEO',                                 'dashboards/ceo.php',              1),
@@ -38,7 +38,7 @@ INSERT IGNORE INTO staff_roles (role_name, dashboard_path, role_level) VALUES
 ('Skills Lab Manager',                  'dashboards/skills-lab.php',        4),
 ('Skills Lab Technician',               'dashboards/skills-lab.php',        5);
 
--- ── 2. Create / update staff accounts ────────────────────────
+-- â”€â”€ 2. Create / update staff accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Column order: email, full_name, password, role_id, position, department, status, is_first_login, password_changed, hire_date
 
 INSERT IGNORE INTO staff (email, full_name, password, role_id, position, department, status, is_first_login, password_changed, hire_date) VALUES
@@ -200,7 +200,7 @@ INSERT IGNORE INTO staff (email, full_name, password, role_id, position, departm
  (SELECT id FROM staff_roles WHERE role_name='Security Officer' LIMIT 1),
  'Security Officer', 'Security', 'Active', 0, 1, CURDATE());
 
--- ── 3. Update passwords for any existing accounts ────────────
+-- â”€â”€ 3. Update passwords for any existing accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 UPDATE staff SET password='$2y$10$oyDYgwVlrVdxkuqBN1/hGei2RrBsFEU0Zx03usRpcru.OHEHFe0lC', is_first_login=0, password_changed=1 WHERE email='directorgeneral@igangaschoolofnursingandmidwifery.ac.ug';
 UPDATE staff SET password='$2y$10$LfakAho0G3z3k9IO8LQ5f.ZttedFPce/Y8.gHRWZ93b4UB0.vJXsC', is_first_login=0, password_changed=1 WHERE email='ceo@igangaschoolofnursingandmidwifery.ac.ug';
 UPDATE staff SET password='$2y$10$SRiViw0a/PvxIgNS0HTdzeNVAKC6k6f6PDlTAIuUjbN5KJTeWzWRi', is_first_login=0, password_changed=1 WHERE email='directoracademic@igangaschoolofnursingandmidwifery.ac.ug';

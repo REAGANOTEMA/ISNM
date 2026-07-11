@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -10,9 +10,9 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Midwifery';
 $user_id = (int)($user['id'] ?? 0);
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
-// ── CRUD POST Handlers ──
+// â”€â”€ CRUD POST Handlers â”€â”€
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// ── Page routing ──
+// â”€â”€ Page routing â”€â”€
 $pageToSection = [
     'home'       => 'overview',
     'overview'   => 'overview',
@@ -861,7 +861,7 @@ endswitch; ?>
 
 </div>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

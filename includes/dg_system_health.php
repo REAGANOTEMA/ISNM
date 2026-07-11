@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * System Health monitoring module for the Director General dashboard.
  * Provides: server health, database status, backup info, storage usage,
@@ -37,7 +37,7 @@ if (!function_exists('dirSize')) {
     }
 }
 
-// ── Gather data ──
+// â”€â”€ Gather data â”€â”€
 
 // Server Health
 $mysqlVersion = '';
@@ -87,16 +87,16 @@ $websiteDbStats = ['tables' => 0, 'rows' => 0];
 $ictDbStats = ['tables' => 0, 'rows' => 0];
 
 if ($staffDbConnected) {
-    $staffDbStats = getTableStats($conn, defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db');
+    $staffDbStats = getTableStats($conn, defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs');
 }
 if ($studentsDbConnected) {
-    $studentsDbStats = getTableStats($studentsConn, defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db');
+    $studentsDbStats = getTableStats($studentsConn, defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students');
 }
 if ($websiteConn && !$websiteConn->connect_error) {
-    $websiteDbStats = getTableStats($websiteConn, defined('WEBSITE_DB_NAME') ? WEBSITE_DB_NAME : 'igangaschoolofl_website_db');
+    $websiteDbStats = getTableStats($websiteConn, defined('WEBSITE_DB_NAME') ? WEBSITE_DB_NAME : 'igangaschool_website');
 }
 if ($ictConn && !$ictConn->connect_error) {
-    $ictDbStats = getTableStats($ictConn, defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschoolofl_ict');
+    $ictDbStats = getTableStats($ictConn, defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschool_ict');
 }
 
 // Backup Status
@@ -187,7 +187,7 @@ if ($staffDbConnected) {
 
 <div class="sh-grid">
 
-  <!-- ═══ Server Health Card ═══ -->
+  <!-- â•â•â• Server Health Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>
@@ -223,7 +223,7 @@ if ($staffDbConnected) {
     </div>
   </div>
 
-  <!-- ═══ Database Status Card ═══ -->
+  <!-- â•â•â• Database Status Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>
@@ -257,7 +257,7 @@ if ($staffDbConnected) {
     </div>
   </div>
 
-  <!-- ═══ Backup Status Card ═══ -->
+  <!-- â•â•â• Backup Status Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>
@@ -282,7 +282,7 @@ if ($staffDbConnected) {
     </div>
   </div>
 
-  <!-- ═══ Storage Card ═══ -->
+  <!-- â•â•â• Storage Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>
@@ -310,7 +310,7 @@ if ($staffDbConnected) {
     </div>
   </div>
 
-  <!-- ═══ Recent Errors Card ═══ -->
+  <!-- â•â•â• Recent Errors Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>
@@ -344,7 +344,7 @@ if ($staffDbConnected) {
     </div>
   </div>
 
-  <!-- ═══ Active Users Card ═══ -->
+  <!-- â•â•â• Active Users Card â•â•â• -->
   <div class="section-card">
     <div class="section-header">
       <div>

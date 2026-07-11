@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Database Initialization and Recovery Tool
  * Initializes all databases, creates tables, and validates schema
@@ -50,10 +50,10 @@ class DatabaseInitializer {
         $this->log('Checking database connections...');
         
         $functions = [
-            'Students' => ['func' => 'getStudentsConnection', 'db' => 'igangaschoolofl_students_db'],
-            'Staff' => ['func' => 'getStaffConnection', 'db' => 'igangaschoolofl_staffs_db'],
-            'Website' => ['func' => 'getWebsiteConnection', 'db' => 'igangaschoolofl_website_db'],
-            'ICT' => ['func' => 'getICTConnection', 'db' => 'igangaschoolofl_ict'],
+            'Students' => ['func' => 'getStudentsConnection', 'db' => 'igangaschool_students'],
+            'Staff' => ['func' => 'getStaffConnection', 'db' => 'igangaschool_staffs'],
+            'Website' => ['func' => 'getWebsiteConnection', 'db' => 'igangaschool_website'],
+            'ICT' => ['func' => 'getICTConnection', 'db' => 'igangaschool_ict'],
         ];
         
         $allConnected = true;
@@ -71,7 +71,7 @@ class DatabaseInitializer {
             $conn = @$func();
             
             if ($conn && !$conn->connect_error) {
-                $this->logSuccess("✓ $name database connected ($db)");
+                $this->logSuccess("âœ“ $name database connected ($db)");
                 
                 // Check tables
                 $result = $conn->query("SELECT COUNT(*) as count FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . $conn->real_escape_string($db) . "'");
@@ -84,7 +84,7 @@ class DatabaseInitializer {
                 
                 $conn->close();
             } else {
-                $this->logError("✗ $name database connection failed: " . ($conn ? $conn->connect_error : 'NULL connection'));
+                $this->logError("âœ— $name database connection failed: " . ($conn ? $conn->connect_error : 'NULL connection'));
                 if (isset($GLOBALS['isnm_last_db_error'])) {
                     $this->logError("  Details: " . $GLOBALS['isnm_last_db_error']);
                 }
@@ -145,10 +145,10 @@ class DatabaseInitializer {
                 
                 if ($result && $result->num_rows > 0) {
                     if ($this->verbose) {
-                        $this->logSuccess("  ✓ Table: $table exists");
+                        $this->logSuccess("  âœ“ Table: $table exists");
                     }
                 } else {
-                    $this->logWarning("  ✗ Table: $table missing");
+                    $this->logWarning("  âœ— Table: $table missing");
                     $allValid = false;
                 }
             }
@@ -181,27 +181,27 @@ class DatabaseInitializer {
         
         // Create databases if they don't exist
         $databases = [
-            'igangaschoolofl_students_db',
-            'igangaschoolofl_staffs_db',
-            'igangaschoolofl_website_db',
-            'igangaschoolofl_ict',
+            'igangaschool_students',
+            'igangaschool_staffs',
+            'igangaschool_website',
+            'igangaschool_ict',
         ];
         
         foreach ($databases as $dbName) {
             $sql = "CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
             if ($adminConn->query($sql)) {
-                $this->logSuccess("✓ Database '$dbName' ensured");
+                $this->logSuccess("âœ“ Database '$dbName' ensured");
             } else {
-                $this->logError("✗ Failed to ensure '$dbName': " . $adminConn->error);
+                $this->logError("âœ— Failed to ensure '$dbName': " . $adminConn->error);
             }
         }
         
         // Ensure root user has privileges
         $grants = "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION";
         if ($adminConn->query($grants)) {
-            $this->logSuccess("✓ Root user privileges granted");
+            $this->logSuccess("âœ“ Root user privileges granted");
         } else {
-            $this->logError("✗ Failed to grant root privileges");
+            $this->logError("âœ— Failed to grant root privileges");
         }
         
         $adminConn->query("FLUSH PRIVILEGES");
@@ -245,7 +245,7 @@ class DatabaseInitializer {
         $this->logSuccess('Schema: ' . ($schemaOk ? 'OK' : 'NEEDS ATTENTION'));
         
         if ($connectionsOk && $schemaOk) {
-            $this->logSuccess('✓ All checks passed!');
+            $this->logSuccess('âœ“ All checks passed!');
             return true;
         } else {
             if (!$connectionsOk) {

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../config/database.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
@@ -10,7 +10,7 @@ $userName = $user['full_name'] ?? 'User';
 
 $conn = $studentsConn;
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`announcements` (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(300) NOT NULL, body TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', priority VARCHAR(50) DEFAULT 'Normal', posted_by INT DEFAULT 0, is_active TINYINT(1) DEFAULT 1, expires_at DATE DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -50,7 +50,7 @@ if ($conn) {
         $params[] = $filterPriority;
     }
     $ws = implode(' AND ', $where);
-    $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschoolofl_staffs_db.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
+    $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschool_staffs.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
     if ($stmt) {
         if (!empty($params)) $stmt->bind_param($types, ...$params);
         $stmt->execute();

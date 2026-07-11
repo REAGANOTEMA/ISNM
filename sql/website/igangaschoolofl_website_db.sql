@@ -1,7 +1,7 @@
-/*M!999999\- enable the sandbox mode */ 
+﻿/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.23-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: igangaschoolofl_website_db
+-- Host: localhost    Database: igangaschool_website
 -- ------------------------------------------------------
 -- Server version	10.6.23-MariaDB-cll-lve
 
@@ -1764,11 +1764,11 @@ LOCK TABLES `website_announcements` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'igangaschoolofl_website_db'
+-- Dumping events for database 'igangaschool_website'
 --
 
 --
--- Dumping routines for database 'igangaschoolofl_website_db'
+-- Dumping routines for database 'igangaschool_website'
 --
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
@@ -1780,7 +1780,7 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`igangaschoolofl_website_db`@`localhost` PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
+CREATE  PROCEDURE `AddColIfMissing`(IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)
 BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Enterprise Dashboard Analytics & KPI Center
  * Live SQL-driven analytics, auto-refresh, executive KPIs, health score, AI insights.
@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (isset($GLOBALS['_dashboard_analytics_loaded'])) return;
 $GLOBALS['_dashboard_analytics_loaded'] = true;
 
-// ─── KPI Colors ───
+// â”€â”€â”€ KPI Colors â”€â”€â”€
 $KPI_COLORS = [
     'blue'   => ['bg'=>'#eef2ff','icon'=>'#4f46e5','text'=>'#1e1b4b','border'=>'#4f46e5'],
     'green'  => ['bg'=>'#f0fdf4','icon'=>'#16a34a','text'=>'#052e16','border'=>'#16a34a'],
@@ -21,7 +21,7 @@ $KPI_COLORS = [
     'indigo' => ['bg'=>'#eef2ff','icon'=>'#6366f1','text'=>'#172554','border'=>'#6366f1'],
 ];
 
-// ─── Helper: Format UGX ───
+// â”€â”€â”€ Helper: Format UGX â”€â”€â”€
 if (!function_exists('fmtUgx')) {
 function fmtUgx($val) {
     if ($val >= 1000000) return 'UGX ' . number_format($val / 1000000, 1) . 'M';
@@ -30,7 +30,7 @@ function fmtUgx($val) {
 }
 }
 
-// ─── Helper: Trend direction ───
+// â”€â”€â”€ Helper: Trend direction â”€â”€â”€
 if (!function_exists('trendDir')) {
 function trendDir($current, $previous) {
     if ($previous <= 0) return ['dir'=>'up','pct'=>0,'icon'=>'fa-minus','color'=>'#64748b'];
@@ -44,7 +44,7 @@ function trendDir($current, $previous) {
 }
 }
 
-// ─── Get ALL analytics data ───
+// â”€â”€â”€ Get ALL analytics data â”€â”€â”€
 if (!function_exists('getAnalyticsData')) {
 function getAnalyticsData($conn, $studentsConn, $websiteConn) {
     $data = [
@@ -60,7 +60,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         'last_updated' => time(),
     ];
 
-    // ── Students ──
+    // â”€â”€ Students â”€â”€
     if ($studentsConn) {
         try {
             $r = $studentsConn->query("SELECT COUNT(*) c FROM students"); if ($r) $data['students']['total'] = (int)$r->fetch_assoc()['c'];
@@ -79,7 +79,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics statQuery: ' . $e->getMessage()); }
     }
 
-    // ── Staff ──
+    // â”€â”€ Staff â”€â”€
     if ($conn) {
         try {
             $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE LOWER(status)='active'"); if ($r) $data['staff']['active'] = (int)$r->fetch_assoc()['c'];
@@ -91,16 +91,16 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics staff: ' . $e->getMessage()); }
     }
 
-    // ── Finance ──
+    // â”€â”€ Finance â”€â”€
     if ($conn) {
         try {
-            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
+            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschool_students.payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
             if ($r) $data['finance']['today_collection'] = (float)$r->fetch_assoc()['v'];
-            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
+            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschool_students.payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
             if ($r) $data['finance']['week_collection'] = (float)$r->fetch_assoc()['v'];
-            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
+            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschool_students.payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
             if ($r) $data['finance']['month_collection'] = (float)$r->fetch_assoc()['v'];
-            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE status IN('verified','approved')");
+            $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschool_students.payments WHERE status IN('verified','approved')");
             if ($r) $data['finance']['total_revenue'] = (float)$r->fetch_assoc()['v'];
             $r = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE status IN('approved','paid')");
             if ($r) $data['finance']['total_expenses'] = (float)$r->fetch_assoc()['v'];
@@ -111,7 +111,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 $mStart = date('Y-m-01', strtotime("-$i months"));
                 $mEnd = date('Y-m-t', strtotime("-$i months"));
                 $rev = 0; $exp = 0;
-                $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE payment_date BETWEEN '$mStart' AND '$mEnd' AND status IN('verified','approved')");
+                $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschool_students.payments WHERE payment_date BETWEEN '$mStart' AND '$mEnd' AND status IN('verified','approved')");
                 if ($r) $rev = (float)$r->fetch_assoc()['v'];
                 $r = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE expense_date BETWEEN '$mStart' AND '$mEnd' AND status IN('approved','paid')");
                 if ($r) $exp = (float)$r->fetch_assoc()['v'];
@@ -120,10 +120,10 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics finance: ' . $e->getMessage()); }
     }
 
-    // ── Payment Methods ──
+    // â”€â”€ Payment Methods â”€â”€
     if ($conn) {
         try {
-            $r = $conn->query("SELECT COALESCE(payment_method,'Other') method, COUNT(*) cnt, COALESCE(SUM(amount_received),0) total FROM igangaschoolofl_students_db.payments WHERE status IN('verified','approved') GROUP BY payment_method ORDER BY total DESC");
+            $r = $conn->query("SELECT COALESCE(payment_method,'Other') method, COUNT(*) cnt, COALESCE(SUM(amount_received),0) total FROM igangaschool_students.payments WHERE status IN('verified','approved') GROUP BY payment_method ORDER BY total DESC");
             if ($r) {
                 while ($row = $r->fetch_assoc()) {
                     $data['payment_methods']['labels'][] = $row['method'] ?: 'Other';
@@ -139,7 +139,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics payments: ' . $e->getMessage()); }
     }
 
-    // ── Attendance ──
+    // â”€â”€ Attendance â”€â”€
     if ($conn) {
         try {
             $r = $conn->query("SELECT status, COUNT(*) cnt FROM staff_attendance WHERE DATE(date)=CURDATE() GROUP BY status");
@@ -154,7 +154,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics attendance: ' . $e->getMessage()); }
     }
 
-    // ── Applications ──
+    // â”€â”€ Applications â”€â”€
     if ($websiteConn) {
         try {
             $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications"); if ($r) $data['applications']['total'] = (int)$r->fetch_assoc()['c'];
@@ -167,7 +167,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
         } catch (Exception $e) { error_log('dashboard_analytics applications: ' . $e->getMessage()); }
     }
 
-    // ── Health Score ──
+    // â”€â”€ Health Score â”€â”€
     $hs = ['enrollment'=>0, 'fee_collection'=>0, 'attendance'=>0, 'staff_availability'=>0, 'admission_growth'=>0];
     $hs['enrollment'] = $data['students']['total'] > 0 ? min(100, round(($data['students']['active'] / max(1, $data['students']['total'])) * 100)) : 0;
     $hs['fee_collection'] = $data['finance']['total_revenue'] > 0 ? min(100, round(($data['finance']['month_collection'] / max(1, $data['finance']['total_revenue'] / 12)) * 100)) : 0;
@@ -181,7 +181,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
     $data['health']['breakdown'] = $hs;
     $data['health']['score'] = round(array_sum($hs) / count($hs));
 
-    // ── AI Insights ──
+    // â”€â”€ AI Insights â”€â”€
     $insights = [];
     // Enrollment insight
     if ($data['students']['new_this_month'] > 0) {
@@ -211,11 +211,11 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
     // Revenue insight
     if ($data['finance']['total_revenue'] > 0 && $data['finance']['total_expenses'] > 0) {
         $profit = $data['finance']['total_revenue'] - $data['finance']['total_expenses'];
-        $insights[] = ['title'=>($profit>=0?'Positive Cash Flow':'Budget Deficit'), 'message'=>($profit>=0?"Surplus of ".fmtUgx($profit)." — financially stable.":"Deficit of ".fmtUgx(abs($profit)).". Review expenditure."), 'icon'=>'fa-chart-line', 'priority'=>($profit<0?'high':'low'), 'confidence'=>88];
+        $insights[] = ['title'=>($profit>=0?'Positive Cash Flow':'Budget Deficit'), 'message'=>($profit>=0?"Surplus of ".fmtUgx($profit)." â€” financially stable.":"Deficit of ".fmtUgx(abs($profit)).". Review expenditure."), 'icon'=>'fa-chart-line', 'priority'=>($profit<0?'high':'low'), 'confidence'=>88];
     }
     $data['insights'] = $insights;
 
-    // ── Revenue Forecast ──
+    // â”€â”€ Revenue Forecast â”€â”€
     if (!empty($data['finance']['monthly'])) {
         $revenues = array_column($data['finance']['monthly'], 'revenue');
         $avgRev = count($revenues) > 0 ? array_sum($revenues) / count($revenues) : 0;
@@ -233,7 +233,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
 }
 }
 
-// ─── Render Analytics Successfully ───
+// â”€â”€â”€ Render Analytics Successfully â”€â”€â”€
 if (!function_exists('renderAdminAnalytics')) {
 function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
     global $KPI_COLORS;
@@ -243,7 +243,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
     ob_start();
     ?>
     <div class="aa-dashboard">
-    <!-- ═══ ANALYTICS STYLES ═══ -->
+    <!-- â•â•â• ANALYTICS STYLES â•â•â• -->
     <style>
     .aa-dashboard { padding: 0; }
     .aa-kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 20px; }
@@ -309,17 +309,17 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
     @media (max-width:576px) { .aa-kpi-grid { grid-template-columns:1fr 1fr;gap:10px; } .aa-forecast-grid { grid-template-columns:1fr 1fr; } .aa-health { flex-direction:column; } .aa-health-breakdown { grid-template-columns:1fr; } .aa-kpi-card { padding:14px 12px; } .aa-kpi-card .aa-value { font-size:18px; } .aa-card { padding:14px; } }
     </style>
 
-    <!-- ═══ LIVE BAR ═══ (removed — DOM element did not exist) -->
+    <!-- â•â•â• LIVE BAR â•â•â• (removed â€” DOM element did not exist) -->
     <!--
     <div class="aa-live-bar" id="aaLiveBar">
         <span class="aa-live-dot"></span>
-        <span><strong>Live Analytics</strong> — <span id="aaLastUpdated">just now</span></span>
+        <span><strong>Live Analytics</strong> â€” <span id="aaLastUpdated">just now</span></span>
         <span style="color:#64748b;font-size:11px;" id="aaNextRefresh">Auto-refresh in 30s</span>
         <button class="aa-refresh-btn" onclick="aaRefresh()"><i class="fas fa-sync-alt me-1"></i>Refresh Now</button>
     </div>
     -->
 
-    <!-- ═══ KPI GRID ═══ -->
+    <!-- â•â•â• KPI GRID â•â•â• -->
     <div class="aa-kpi-grid" id="aaKpiGrid">
         <?php
         $sectionMap = ['students'=>'student','staff'=>'staff','collection'=>'financial','outstanding'=>'financial','applications'=>'services','attendance'=>'staff'];
@@ -353,7 +353,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
         <?php endforeach; ?>
     </div>
 
-    <!-- ═══ MAIN ROW: Revenue vs Expenses + Health ═══ -->
+    <!-- â•â•â• MAIN ROW: Revenue vs Expenses + Health â•â•â• -->
     <div class="aa-row">
         <div class="aa-card">
             <div class="aa-card-title"><i class="fas fa-chart-line" style="color:#3b82f6;"></i>Revenue vs Expenses</div>
@@ -378,7 +378,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
                 </div>
             </div>
             <div style="margin-top:12px;text-align:center;font-size:11px;color:<?=$d['health']['score']>=90?'#16a34a':($d['health']['score']>=75?'#3b82f6':($d['health']['score']>=50?'#d97706':'#dc2626'))?>;font-weight:600;">
-                <?=$d['health']['score']>=90?'Excellent — Top performance across all metrics.':($d['health']['score']>=75?'Good — Stable with room for improvement.':($d['health']['score']>=50?'Fair — Several areas need attention.':'Needs Attention — Critical improvements required.'))?>
+                <?=$d['health']['score']>=90?'Excellent â€” Top performance across all metrics.':($d['health']['score']>=75?'Good â€” Stable with room for improvement.':($d['health']['score']>=50?'Fair â€” Several areas need attention.':'Needs Attention â€” Critical improvements required.'))?>
             </div>
             <?php else: ?>
             <div class="aa-empty-state"><i class="fas fa-heartbeat"></i>Health score requires sufficient data across all metrics.</div>
@@ -386,7 +386,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
         </div>
     </div>
 
-    <!-- ═══ FORECAST + INSIGHTS ═══ -->
+    <!-- â•â•â• FORECAST + INSIGHTS â•â•â• -->
     <div class="aa-row">
         <div class="aa-card">
             <div class="aa-card-title"><i class="fas fa-chart-simple" style="color:#8b5cf6;"></i>Revenue Forecast</div>
@@ -424,7 +424,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
         </div>
     </div>
 
-    <!-- ═══ CHARTS ROW: Payment Methods + Attendance ═══ -->
+    <!-- â•â•â• CHARTS ROW: Payment Methods + Attendance â•â•â• -->
     <div class="aa-row" style="grid-template-columns: 1fr 1fr;">
         <div class="aa-card">
             <div class="aa-card-title"><i class="fas fa-chart-pie" style="color:#8b5cf6;"></i>Payment Methods</div>
@@ -462,7 +462,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
         </div>
     </div>
 
-    <!-- ═══ CHART.JS SCRIPTS ═══ -->
+    <!-- â•â•â• CHART.JS SCRIPTS â•â•â• -->
     <?php if (!empty($d['finance']['monthly'])): ?>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -576,7 +576,7 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
     </script>
     <?php endif; ?>
 
-    <!-- ═══ AUTO-REFRESH ═══ -->
+    <!-- â•â•â• AUTO-REFRESH â•â•â• -->
     <script>
     var aaData = <?=json_encode($d)?>;
     var aaRefreshTimer = 30;

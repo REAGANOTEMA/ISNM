@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['guild president']);
@@ -10,9 +10,9 @@ $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'User';
 $user_role = $user['role'] ?? '';
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
-// ── Page routing ──
+// â”€â”€ Page routing â”€â”€
 $pageToSection = [
     'home'          => 'overview',
     'overview'      => 'overview',
@@ -37,7 +37,7 @@ if ($studentsDb) {
     if ($r) while ($row = $r->fetch_assoc()) $programs[] = $row['program'];
 }
 
-// ── Data for sections ──
+// â”€â”€ Data for sections â”€â”€
 $welfareCases = []; $welfareOpen = 0; $welfareResolved = 0; $counselingSessions = [];
 $upcomingEvents = []; $sportsEvents = []; $studentDiscipline = []; $disciplineOpen = 0;
 if ($staffDb) {
@@ -47,13 +47,13 @@ if ($staffDb) {
     if ($r) $welfareOpen = (int)$r->fetch_assoc()['c'];
     $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('resolved','closed')");
     if ($r) $welfareResolved = (int)$r->fetch_assoc()['c'];
-    $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschoolofl_students_db.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
+    $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschool_students.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
     if ($r) $counselingSessions = $r->fetch_all(MYSQLI_ASSOC);
     $r = $staffDb->query("SELECT * FROM calendar_events WHERE event_date >= CURDATE() AND is_active=1 ORDER BY event_date ASC LIMIT 10");
     if ($r) $upcomingEvents = $r->fetch_all(MYSQLI_ASSOC);
     $r = $staffDb->query("SELECT * FROM sports_events WHERE event_date >= NOW() ORDER BY event_date ASC LIMIT 10");
     if ($r) $sportsEvents = $r->fetch_all(MYSQLI_ASSOC);
-    $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
+    $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschool_students.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
     if ($r) $studentDiscipline = $r->fetch_all(MYSQLI_ASSOC);
     $r = $staffDb->query("SELECT COUNT(*) c FROM student_discipline_records WHERE status IN ('Pending','Open','Under Investigation')");
     if ($r) $disciplineOpen = (int)$r->fetch_assoc()['c'];

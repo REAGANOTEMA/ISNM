@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 
@@ -94,7 +94,7 @@ if ($conn) {
     $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
                      FROM generated_documents gd 
                      JOIN staff s ON gd.generated_by = s.id 
-                     LEFT JOIN igangaschoolofl_students_db.students st ON gd.student_id = st.id 
+                     LEFT JOIN igangaschool_students.students st ON gd.student_id = st.id 
                      WHERE gd.document_type = 'Receipt' 
                      ORDER BY gd.generation_date DESC 
                      LIMIT 10";
