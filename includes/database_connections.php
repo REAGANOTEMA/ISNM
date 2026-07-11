@@ -72,10 +72,10 @@ class DatabaseConnection {
 
             // Hardcoded hosting credentials — always try first, no .env dependency
             $hostingCreds = [
-                'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
-                'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => 'AgKzJjZZnT5q58jCahs8'],
-                'igangaschool_website'  => ['user' => 'igangaschool_website',  'pass' => 'AaCH75gXpekcFQj5wPZn'],
-                'igangaschool_ict'         => ['user' => 'igangaschool_ict',         'pass' => 'HHCrQVjr6QNKzSEVtx9J'],
+                'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => '0uZdJgH98k:9;Y'],
+                'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => '0uZdJgH98k:9;Y'],
+                'igangaschool_website'  => ['user' => 'igangaschool_website',  'pass' => '0uZdJgH98k:9;Y'],
+                'igangaschool_ict'      => ['user' => 'igangaschool_ict',      'pass' => '0uZdJgH98k:9;Y'],
             ];
 
             $credSet = [];
