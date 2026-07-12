@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../config/database.php';
@@ -38,7 +38,7 @@ if (!$conn) {
 
 switch ($action) {
 
-    // ── Send a new message ──
+    // â”€â”€ Send a new message â”€â”€
     case 'send':
         $sender_id    = (int)($_POST['sender_id'] ?? $user_id);
         $recipient_id = (int)($_POST['recipient_id'] ?? 0);
@@ -65,7 +65,7 @@ switch ($action) {
         $r = $conn->prepare("SELECT full_name, position FROM staff WHERE id = ?");
         if ($r) {
             $r->bind_param("i", $sender_id);
-            $r->execute();
+            if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); };
             $row = $r->get_result()->fetch_assoc();
             $r->close();
             if ($row) {
@@ -78,7 +78,7 @@ switch ($action) {
         $r2 = $conn->prepare("SELECT full_name FROM staff WHERE id = ?");
         if ($r2) {
             $r2->bind_param("i", $recipient_id);
-            $r2->execute();
+            if (!$r2->execute()) { error_log('$r2 execute failed: ' . ($r2->error ?? 'unknown')); };
             $row2 = $r2->get_result()->fetch_assoc();
             $r2->close();
             if ($row2) $recipient_name = $row2['full_name'];
@@ -110,7 +110,7 @@ switch ($action) {
         }
         break;
 
-    // ── Get inbox messages ──
+    // â”€â”€ Get inbox messages â”€â”€
     case 'inbox':
         $rid    = (int)($_POST['recipient_id'] ?? $user_id);
         $offset = max(0, (int)($_POST['offset'] ?? 0));
@@ -122,7 +122,7 @@ switch ($action) {
             exit;
         }
         $stmt->bind_param("iii", $rid, $limit, $offset);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $messages = [];
         while ($row = $result->fetch_assoc()) $messages[] = $row;
@@ -132,7 +132,7 @@ switch ($action) {
         $total = 0;
         if ($ct) {
             $ct->bind_param("i", $rid);
-            $ct->execute();
+            if (!$ct->execute()) { error_log('$ct execute failed: ' . ($ct->error ?? 'unknown')); };
             $total = (int)$ct->get_result()->fetch_assoc()['c'];
             $ct->close();
         }
@@ -140,7 +140,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $messages, 'total' => $total]);
         break;
 
-    // ── Get sent messages ──
+    // â”€â”€ Get sent messages â”€â”€
     case 'sent':
         $sid    = (int)($_POST['sender_id'] ?? $user_id);
         $offset = max(0, (int)($_POST['offset'] ?? 0));
@@ -152,7 +152,7 @@ switch ($action) {
             exit;
         }
         $stmt->bind_param("iii", $sid, $limit, $offset);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $messages = [];
         while ($row = $result->fetch_assoc()) $messages[] = $row;
@@ -162,7 +162,7 @@ switch ($action) {
         $total = 0;
         if ($ct) {
             $ct->bind_param("i", $sid);
-            $ct->execute();
+            if (!$ct->execute()) { error_log('$ct execute failed: ' . ($ct->error ?? 'unknown')); };
             $total = (int)$ct->get_result()->fetch_assoc()['c'];
             $ct->close();
         }
@@ -170,7 +170,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $messages, 'total' => $total]);
         break;
 
-    // ── Mark message as read ──
+    // â”€â”€ Mark message as read â”€â”€
     case 'read':
         $msg_id = (int)($_POST['message_id'] ?? 0);
         $uid    = (int)($_POST['user_id'] ?? $user_id);
@@ -186,14 +186,14 @@ switch ($action) {
             exit;
         }
         $stmt->bind_param("ii", $msg_id, $uid);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $affected = $stmt->affected_rows;
         $stmt->close();
 
         echo json_encode(['success' => true, 'updated' => $affected > 0]);
         break;
 
-    // ── Soft delete message ──
+    // â”€â”€ Soft delete message â”€â”€
     case 'delete':
         $msg_id = (int)($_POST['message_id'] ?? 0);
         $uid    = (int)($_POST['user_id'] ?? $user_id);
@@ -214,28 +214,28 @@ switch ($action) {
             exit;
         }
         $stmt->bind_param("ii", $msg_id, $uid);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $affected = $stmt->affected_rows;
         $stmt->close();
 
         echo json_encode(['success' => true, 'deleted' => $affected > 0]);
         break;
 
-    // ── Unread count ──
+    // â”€â”€ Unread count â”€â”€
     case 'unread_count':
         $uid = (int)($_POST['user_id'] ?? $user_id);
         $r = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
         $count = 0;
         if ($r) {
             $r->bind_param("i", $uid);
-            $r->execute();
+            if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); };
             $count = (int)$r->get_result()->fetch_assoc()['c'];
             $r->close();
         }
         echo json_encode(['success' => true, 'count' => $count]);
         break;
 
-    // ── Get thread ──
+    // â”€â”€ Get thread â”€â”€
     case 'thread':
         $parent_id = (int)($_POST['parent_id'] ?? 0);
         $msg_id    = (int)($_POST['message_id'] ?? 0);
@@ -247,7 +247,7 @@ switch ($action) {
             $r0 = $conn->prepare("SELECT parent_id FROM staff_inbox WHERE id = ?");
             if ($r0) {
                 $r0->bind_param("i", $msg_id);
-                $r0->execute();
+                if (!$r0->execute()) { error_log('$r0 execute failed: ' . ($r0->error ?? 'unknown')); };
                 $row0 = $r0->get_result()->fetch_assoc();
                 $r0->close();
                 if ($row0 && $row0['parent_id']) {
@@ -262,7 +262,7 @@ switch ($action) {
             $stmt = $conn->prepare("SELECT * FROM staff_inbox WHERE (id = ? OR parent_id = ?) AND (sender_id = ? OR recipient_id = ?) ORDER BY created_at ASC");
             if ($stmt) {
                 $stmt->bind_param("iiii", $parent_id, $parent_id, $uid, $uid);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $res = $stmt->get_result();
                 while ($row = $res->fetch_assoc()) $messages[] = $row;
                 $stmt->close();
@@ -272,7 +272,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $messages]);
         break;
 
-    // ── Search messages ──
+    // â”€â”€ Search messages â”€â”€
     case 'search':
         $uid   = (int)($_POST['user_id'] ?? $user_id);
         $query = trim($_POST['query'] ?? '');
@@ -289,7 +289,7 @@ switch ($action) {
             exit;
         }
         $stmt->bind_param("iiss", $uid, $uid, $like, $like);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $res = $stmt->get_result();
         $messages = [];
         while ($row = $res->fetch_assoc()) $messages[] = $row;

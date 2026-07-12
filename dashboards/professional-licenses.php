@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr', 'manager', 'director', 'head', 'nursing', 'midwifery']);
 $conn = $ctx['staff'];
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_l
         $stmt = $conn->prepare("INSERT INTO professional_licenses (staff_name, license_number, license_type, expiry_date, issuing_body, created_by) VALUES (?, ?, ?, NULLIF(?, ''), ?, ?)");
         if ($stmt) {
             $stmt->bind_param('sssssi', $staff, $lic, $type, $expiry, $body, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }

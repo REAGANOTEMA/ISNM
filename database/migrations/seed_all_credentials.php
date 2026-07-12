@@ -1,12 +1,12 @@
-<?php
+﻿<?php
 /**
- * ═══════════════════════════════════════════════════════════════════════════
- * SEED ALL STAFF CREDENTIALS — ISNM ERP
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * SEED ALL STAFF CREDENTIALS â€” ISNM ERP
  * 
  * This script creates/updates ALL staff accounts with the exact credentials
  * specified by the system administrator. Run ONLY on production:
  *   php database/migrations/seed_all_credentials.php
- * ═══════════════════════════════════════════════════════════════════════════
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -18,7 +18,7 @@ if (!$conn) {
 
 echo "Connected to staff database.\n\n";
 
-// ── Step 0: Create tables if they do not exist ──
+// â”€â”€ Step 0: Create tables if they do not exist â”€â”€
 $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `role_name` varchar(100) NOT NULL,
@@ -32,9 +32,9 @@ $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
   UNIQUE KEY `role_name` (`role_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 if ($conn->error) {
-    echo "  ✗ ERROR creating staff_roles table: " . $conn->error . "\n";
+    echo "  âœ— ERROR creating staff_roles table: " . $conn->error . "\n";
 } else {
-    echo "  ✓ staff_roles table ready\n";
+    echo "  âœ“ staff_roles table ready\n";
 }
 
 $conn->query("CREATE TABLE IF NOT EXISTS `staff` (
@@ -89,13 +89,13 @@ $conn->query("CREATE TABLE IF NOT EXISTS `staff` (
   KEY `idx_staff_dob` (`date_of_birth`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 if ($conn->error) {
-    echo "  ✗ ERROR creating staff table: " . $conn->error . "\n";
+    echo "  âœ— ERROR creating staff table: " . $conn->error . "\n";
 } else {
-    echo "  ✓ staff table ready\n";
+    echo "  âœ“ staff table ready\n";
 }
 echo "\n";
 
-// ── Step 1: Ensure ALL staff_roles exist ──
+// â”€â”€ Step 1: Ensure ALL staff_roles exist â”€â”€
 $roles = [
     'Director General',
     'CEO',
@@ -130,7 +130,7 @@ $roleIds = [];
 foreach ($roles as $roleName) {
     $stmt = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
     $stmt->bind_param('s', $roleName);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {
         $roleIds[$roleName] = (int)$row['id'];
@@ -139,17 +139,17 @@ foreach ($roles as $roleName) {
         $desc = $roleName . ' role for ISNM ERP';
         $dash = '';
         $stmt2->bind_param('sss', $roleName, $desc, $dash);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $roleIds[$roleName] = (int)$stmt2->insert_id;
         $stmt2->close();
-        echo "  ✓ Created role: $roleName (ID: {$roleIds[$roleName]})\n";
+        echo "  âœ“ Created role: $roleName (ID: {$roleIds[$roleName]})\n";
     }
     $stmt->close();
 }
 
 echo "\nAll roles ready.\n\n";
 
-// ── Step 2: Define all staff credentials (as specified by admin) ──
+// â”€â”€ Step 2: Define all staff credentials (as specified by admin) â”€â”€
 // Format: [email, full_name, password_plain, role_name, staff_id, position, department]
 $staffList = [
     // Computer Lab
@@ -235,7 +235,7 @@ $errors = 0;
 foreach ($staffList as [$email, $fullName, $passwordPlain, $roleName, $staffId, $position, $department]) {
     $rid = $roleIds[$roleName] ?? null;
     if (!$rid) {
-        echo "  ✗ ERROR: No role ID for '$roleName' — skipping $email\n";
+        echo "  âœ— ERROR: No role ID for '$roleName' â€” skipping $email\n";
         $errors++;
         continue;
     }
@@ -245,7 +245,7 @@ foreach ($staffList as [$email, $fullName, $passwordPlain, $roleName, $staffId, 
     // Check if staff exists by email
     $chk = $conn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
     $chk->bind_param('s', $email);
-    $chk->execute();
+    if (!$chk->execute()) { error_log('$chk execute failed: ' . ($chk->error ?? 'unknown')); };
     $existing = $chk->get_result()->fetch_assoc();
     $chk->close();
 
@@ -253,10 +253,10 @@ foreach ($staffList as [$email, $fullName, $passwordPlain, $roleName, $staffId, 
         $upd = $conn->prepare("UPDATE staff SET password = ?, role_id = ?, position = ?, department = ?, full_name = ?, status = 'Active' WHERE email = ?");
         $upd->bind_param('sissss', $passwordHash, $rid, $position, $department, $fullName, $email);
         if ($upd->execute()) {
-            echo "  ✓ UPDATED: $email → $roleName\n";
+            echo "  âœ“ UPDATED: $email â†’ $roleName\n";
             $updated++;
         } else {
-            echo "  ✗ UPDATE FAILED: $email — " . $upd->error . "\n";
+            echo "  âœ— UPDATE FAILED: $email â€” " . $upd->error . "\n";
             $errors++;
         }
         $upd->close();
@@ -264,21 +264,21 @@ foreach ($staffList as [$email, $fullName, $passwordPlain, $roleName, $staffId, 
         $ins = $conn->prepare("INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', CURDATE())");
         $ins->bind_param('ssssssi', $staffId, $fullName, $email, $passwordHash, $position, $department, $rid);
         if ($ins->execute()) {
-            echo "  ✓ INSERTED: $email → $roleName (Password: $passwordPlain)\n";
+            echo "  âœ“ INSERTED: $email â†’ $roleName (Password: $passwordPlain)\n";
             $inserted++;
         } else {
-            echo "  ✗ INSERT FAILED: $email — " . $ins->error . "\n";
+            echo "  âœ— INSERT FAILED: $email â€” " . $ins->error . "\n";
             $errors++;
         }
         $ins->close();
     }
 }
 
-echo "\n═══════════════════════════════════════════════\n";
+echo "\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n";
 echo "  SUMMARY\n";
 echo "  Inserted: $inserted\n";
 echo "  Updated:  $updated\n";
 echo "  Errors:   $errors\n";
-echo "═══════════════════════════════════════════════\n";
+echo "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n";
 echo "\nAll credentials are now seeded!\n";
 echo "Users can log in at: staff-login.php\n";

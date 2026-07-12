@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -245,18 +245,18 @@ if (isset($_REQUEST['ajax'])) {
             try {
                 $ins = $conn->prepare("INSERT INTO `$staff_db`.`applicants` (full_name, other_names, date_of_birth, gender, phone, email, address, guardian_name, guardian_phone, application_number, program_id, intake, admission_date, nationality, emergency_contact, emergency_phone, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 $ins->bind_param('sssssssssssssssss', $full_name, $other_names, $dob, $gender, $phone, $email, $address, $guardian_name, $guardian_phone, $app_number, $prog_id, $intake, $admission_date, $nationality, $emergency_contact, $emergency_phone, $status);
-                $ins->execute();
+                if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
                 $applicant_id = $conn->insert_id;
                 $rc = 0;
                 $ck = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
                 $track = $conn->prepare("INSERT INTO `$staff_db`.`student_admission_tracking` (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
                 $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, $admission_date, $status, 0, $rc);
-                $track->execute();
+                if (!$track->execute()) { error_log('$track execute failed: ' . ($track->error ?? 'unknown')); };
                 $reqs = $conn->query("SELECT id FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($reqs) {
                     $ins2 = $conn->prepare("INSERT IGNORE INTO `$staff_db`.`applicant_requirement_status` (applicant_id, requirement_id, status) VALUES (?,?,'Not Submitted')");
-                    while ($rq = $reqs->fetch_assoc()) { $ins2->bind_param('ii', $applicant_id, $rq['id']); $ins2->execute(); }
+                    while ($rq = $reqs->fetch_assoc()) { $ins2->bind_param('ii', $applicant_id, $rq['id']); if (!$ins2->execute()) { error_log('$ins2 execute failed: ' . ($ins2->error ?? 'unknown')); }; }
                     $ins2->close();
                 }
                 if ($students_conn) {
@@ -267,12 +267,12 @@ if (isset($_REQUEST['ajax'])) {
                     $year = 1; $level = 'Year 1';
                     $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, last_name, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
                     $s_ins->bind_param('sssssssssssissssssssssss', $student_number, $reg_number, $first_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $hashed_password);
-                    $s_ins->execute();
+                    if (!$s_ins->execute()) { error_log('$s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {
                         $prof = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
                         $prof->bind_param('iss', $s_id, $status, 'unpaid');
-                        $prof->execute();
+                        if (!$prof->execute()) { error_log('$prof execute failed: ' . ($prof->error ?? 'unknown')); };
                     }
                 }
                 $conn->commit();
@@ -313,7 +313,7 @@ if (isset($_REQUEST['ajax'])) {
             $count_sql = "SELECT COUNT(*) FROM `$staff_db`.`applicants` a $where";
             $count_stmt = $conn->prepare($count_sql);
             if ($params) $count_stmt->bind_param($types, ...$params);
-            $count_stmt->execute();
+            if (!$count_stmt->execute()) { error_log('$count_stmt execute failed: ' . ($count_stmt->error ?? 'unknown')); };
             $total = $count_stmt->get_result()->fetch_row()[0];
             $sql = "SELECT a.*, ap.program_name, ap.program_code,
                     (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar
@@ -325,7 +325,7 @@ if (isset($_REQUEST['ajax'])) {
                     ORDER BY a.created_at DESC LIMIT $per_page OFFSET $offset";
             $stmt = $conn->prepare($sql);
             if ($params) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $students = [];
             while ($row = $result->fetch_assoc()) { $students[] = $row; }
@@ -341,12 +341,12 @@ if (isset($_REQUEST['ajax'])) {
             if (!$id) { $response['message'] = 'Invalid student ID'; break; }
             $stmt = $conn->prepare("SELECT a.*, ap.program_name, ap.program_code FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id WHERE a.id = ?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
                 $req_stmt->bind_param('i', $id);
-                $req_stmt->execute();
+                if (!$req_stmt->execute()) { error_log('$req_stmt execute failed: ' . ($req_stmt->error ?? 'unknown')); };
                 $req_result = $req_stmt->get_result();
                 $requirements = [];
                 while ($r = $req_result->fetch_assoc()) { $requirements[] = $r; }
@@ -395,7 +395,7 @@ if (isset($_REQUEST['ajax'])) {
                         $track_types .= 's';
                         $t_stmt = $conn->prepare("UPDATE `$staff_db`.`student_admission_tracking` SET " . implode(', ', $track_sets) . " WHERE student_number = ?");
                         $t_stmt->bind_param($track_types, ...$track_params);
-                        $t_stmt->execute();
+                        if (!$t_stmt->execute()) { error_log('$t_stmt execute failed: ' . ($t_stmt->error ?? 'unknown')); };
                     }
                 }
                 $response['success'] = true;
@@ -429,18 +429,18 @@ if (isset($_REQUEST['ajax'])) {
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
             $stmt = $conn->prepare("SELECT a.*, ap.program_name, ap.program_code FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id WHERE a.id = ?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $student = $stmt->get_result()->fetch_assoc();
             if (!$student) { $response['message'] = 'Not found'; break; }
             $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
             $req_stmt->bind_param('i', $id);
-            $req_stmt->execute();
+            if (!$req_stmt->execute()) { error_log('$req_stmt execute failed: ' . ($req_stmt->error ?? 'unknown')); };
             $req_res = $req_stmt->get_result();
             $requirements = [];
             while ($r = $req_res->fetch_assoc()) { $requirements[] = $r; }
             $doc_stmt = $conn->prepare("SELECT * FROM `$staff_db`.`student_documents` WHERE applicant_id = ? AND document_status='Active' ORDER BY uploaded_at DESC");
             $doc_stmt->bind_param('i', $id);
-            $doc_stmt->execute();
+            if (!$doc_stmt->execute()) { error_log('$doc_stmt execute failed: ' . ($doc_stmt->error ?? 'unknown')); };
             $doc_res = $doc_stmt->get_result();
             $documents = [];
             while ($d = $doc_res->fetch_assoc()) { $documents[] = $d; }
@@ -493,7 +493,7 @@ if (isset($_REQUEST['ajax'])) {
             if (!$applicant_id) { $response['message'] = 'Invalid ID'; break; }
             $stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
             $stmt->bind_param('i', $applicant_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $reqs = [];
             while ($r = $result->fetch_assoc()) { $reqs[] = $r; }
@@ -611,7 +611,7 @@ if (isset($_REQUEST['ajax'])) {
             if ($program_filter) { $where .= " AND a.program_id = ?"; $params[] = (int)$program_filter; $types .= 'i'; }
             $stmt = $conn->prepare("SELECT a.application_number, a.full_name, a.email, a.phone, ap.program_name, a.intake, a.status, a.date_of_birth, a.gender, a.address, a.guardian_name, a.guardian_phone, a.created_at FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id $where ORDER BY a.created_at DESC");
             if ($params) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             header('Content-Type: text/csv');
             header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d') . '.csv"');
@@ -623,7 +623,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_appointments':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_appointments` WHERE user_id = ? ORDER BY appointment_date DESC, appointment_time DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -661,7 +661,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_meetings':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? ORDER BY meeting_date DESC, meeting_time DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) {
@@ -717,7 +717,7 @@ if (isset($_REQUEST['ajax'])) {
             if (!$meeting_id) { $response['message'] = 'Invalid meeting'; break; }
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id = ? ORDER BY display_order ASC");
             $stmt->bind_param('i', $meeting_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['agenda'] = $items;
@@ -754,7 +754,7 @@ if (isset($_REQUEST['ajax'])) {
             if (!$meeting_id) { $response['message'] = 'Invalid meeting'; break; }
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id = ? ORDER BY priority DESC, due_date ASC");
             $stmt->bind_param('i', $meeting_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['action_items'] = $items;
@@ -801,7 +801,7 @@ if (isset($_REQUEST['ajax'])) {
             $end = date('Y-m-t', strtotime($start));
             $stmt = $conn->prepare("SELECT id, title, meeting_date, meeting_time, status, location, venue, duration_minutes FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? AND meeting_date BETWEEN ? AND ? ORDER BY meeting_date ASC, meeting_time ASC");
             $stmt->bind_param('iss', $user_id, $start, $end);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['meetings'] = $items;
@@ -818,7 +818,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_messages':
             $stmt = $conn->prepare("SELECT m.*, s.full_name as sender_name FROM `$staff_db`.`secretary_messages` m LEFT JOIN `$staff_db`.`staffs` s ON s.id = m.sender_id WHERE m.recipient_id = ? ORDER BY m.created_at DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -845,7 +845,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_requests':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_requests` WHERE user_id = ? ORDER BY created_at DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -880,7 +880,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_announcements':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_announcements` WHERE user_id = ? ORDER BY publish_date DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -915,7 +915,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_contacts':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_contacts` WHERE user_id = ? ORDER BY contact_name ASC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -952,7 +952,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_correspondence':
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_correspondence` WHERE user_id = ? ORDER BY created_at DESC");
             $stmt->bind_param('i', $user_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $items = [];
             while ($row = $result->fetch_assoc()) { $items[] = $row; }
@@ -1005,7 +1005,7 @@ if (isset($_REQUEST['ajax'])) {
             if ($search) { $where .= " AND (title LIKE ? OR reference_number LIKE ? OR subject LIKE ?)"; $s = "%$search%"; $params = array_merge($params, [$s, $s, $s]); $types .= 'sss'; }
             $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`secretary_official_documents` $where ORDER BY created_at DESC");
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $items = []; $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) { $items[] = $row; }
             $response['success'] = true;
             $response['documents'] = $items;
@@ -1344,17 +1344,17 @@ $stud_id = (int)($_REQUEST['id'] ?? 0);
 $student = null; $requirements = []; $documents = []; $profile = null;
 if ($stud_id) {
     $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`applicants` WHERE id = ?");
-    $stmt->bind_param('i', $stud_id); $stmt->execute(); $student = $stmt->get_result()->fetch_assoc();
+    $stmt->bind_param('i', $stud_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $student = $stmt->get_result()->fetch_assoc();
     if ($student) {
         $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'pending') as req_status, ars.completed_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? ORDER BY ar.sort_order");
-        $req_stmt->bind_param('i', $stud_id); $req_stmt->execute(); $req_res = $req_stmt->get_result();
+        $req_stmt->bind_param('i', $stud_id); if (!$req_stmt->execute()) { error_log('$req_stmt execute failed: ' . ($req_stmt->error ?? 'unknown')); }; $req_res = $req_stmt->get_result();
         while ($r = $req_res->fetch_assoc()) $requirements[] = $r;
         $doc_stmt = $conn->prepare("SELECT * FROM `$staff_db`.`student_documents` WHERE applicant_id = ? ORDER BY created_at DESC");
-        $doc_stmt->bind_param('i', $stud_id); $doc_stmt->execute(); $doc_res = $doc_stmt->get_result();
+        $doc_stmt->bind_param('i', $stud_id); if (!$doc_stmt->execute()) { error_log('$doc_stmt execute failed: ' . ($doc_stmt->error ?? 'unknown')); }; $doc_res = $doc_stmt->get_result();
         while ($d = $doc_res->fetch_assoc()) $documents[] = $d;
         if ($students_conn) {
             $p_stmt = $students_conn->prepare("SELECT * FROM `$students_db`.`student_profiles` WHERE student_id = ?");
-            $p_stmt->bind_param('i', $stud_id); $p_stmt->execute();
+            $p_stmt->bind_param('i', $stud_id); if (!$p_stmt->execute()) { error_log('$p_stmt execute failed: ' . ($p_stmt->error ?? 'unknown')); };
             $profile = $p_stmt->get_result()->fetch_assoc();
         }
     }
@@ -1474,7 +1474,7 @@ $edit_id = (int)($_REQUEST['id'] ?? 0);
 $edit_student = null;
 if ($edit_id) {
     $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`applicants` WHERE id = ?");
-    $stmt->bind_param('i', $edit_id); $stmt->execute(); $edit_student = $stmt->get_result()->fetch_assoc();
+    $stmt->bind_param('i', $edit_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_student = $stmt->get_result()->fetch_assoc();
 }
 ?>
 <?php if (!$edit_student): ?>

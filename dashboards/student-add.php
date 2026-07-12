@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'admissions', 'admin']);
 $staffDb = $ctx['staff'];
@@ -48,7 +48,7 @@ if ($conn) {
             $stmt = $conn->prepare("SELECT id, first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, email, program, level, set_name, year, status FROM students $where ORDER BY id DESC LIMIT 200");
             if ($stmt) {
                 if (!empty($params)) $stmt->bind_param($types, ...$params);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
                 $stmt->close();

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth-service.php';
 require_once 'config/database.php';
 
@@ -16,7 +16,7 @@ if ($token) {
     if ($conn) {
         $stmt = $conn->prepare("SELECT spr.id, spr.student_id, CONCAT(s.first_name,' ',s.surname) full_name FROM student_password_resets spr JOIN students s ON spr.student_id = s.id WHERE spr.reset_token = ? AND spr.expires_at > NOW() AND spr.is_used = 0 LIMIT 1");
         $stmt->bind_param('s', $token);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($row = $r->fetch_assoc()) {
             $validToken = true;
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($conn) {
         $stmt = $conn->prepare("SELECT spr.id, spr.student_id FROM student_password_resets spr WHERE spr.reset_token = ? AND spr.expires_at > NOW() AND spr.is_used = 0 LIMIT 1");
         $stmt->bind_param('s', $token);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($row = $r->fetch_assoc()) {
             $studentId = (int)$row['student_id'];
@@ -57,12 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $update = $conn->prepare("UPDATE students SET password = ?, password_changed = TRUE, is_first_login = FALSE, login_attempts = 0, locked_until = NULL, updated_at = NOW() WHERE id = ?");
             $update->bind_param('si', $hash, $studentId);
-            $update->execute();
+            if (!$update->execute()) { error_log('$update execute failed: ' . ($update->error ?? 'unknown')); };
             $update->close();
 
             $used = $conn->prepare("UPDATE student_password_resets SET is_used = 1 WHERE id = ?");
             $used->bind_param('i', $resetId);
-            $used->execute();
+            if (!$used->execute()) { error_log('$used execute failed: ' . ($used->error ?? 'unknown')); };
             $used->close();
 
             $_SESSION['success'] = 'Password has been reset successfully. You can now log in with your new password.';

@@ -59,7 +59,7 @@ try {
         exit;
     }
     $stmt->bind_param('s', $workflowName);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $wf = $result->fetch_assoc();
     $stmt->close();

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Unified News Management Widget
  * Embed in any staff dashboard via renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $user_role)
@@ -79,7 +79,7 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                     $stmt = $staff_conn->prepare("INSERT INTO director_news (title,slug,content,excerpt,featured_image,author_id,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,NOW())");
                     if ($stmt) {
                         $stmt->bind_param('sssssiss', $title, $slug, $content, $excerpt, $featuredImage, $user_id, $status, $published_at);
-                        $stmt->execute();
+                        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                         $newId = $stmt->insert_id;
                         $stmt->close();
 
@@ -88,7 +88,7 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                             $ws = $website_conn->prepare("INSERT INTO news (id,title,slug,content,excerpt,featured_image,author_id,author_name,author_role,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())");
                             if ($ws) {
                                 $ws->bind_param('isssssissss', $newId, $title, $slug, $content, $excerpt, $featuredImage, $user_id, $user_name, $user_role, $status, $published_at);
-                                $ws->execute();
+                                if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                                 $ws->close();
                             }
                         }
@@ -106,14 +106,14 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                         } else {
                             $stmt->bind_param('sssssi', $title, $content, $excerpt, $status, $published_at, $news_id);
                         }
-                        $stmt->execute();
+                        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                         $stmt->close();
 
                         if ($website_conn) {
                             $ws = $website_conn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?,published_at), author_name=?, author_role=? WHERE id=?");
                             if ($ws) {
                                 $ws->bind_param('sssssssi', $title, $content, $excerpt, $status, $published_at, $user_name, $user_role, $news_id);
-                                $ws->execute();
+                                if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                                 $ws->close();
                             }
                         }
@@ -135,14 +135,14 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                 $stmt = $staff_conn->prepare("UPDATE director_news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
                 if ($stmt) {
                     $stmt->bind_param('ssi', $newStatus, $pubAt, $news_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
 
                     if ($website_conn) {
                         $ws = $website_conn->prepare("UPDATE news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
                         if ($ws) {
                             $ws->bind_param('ssi', $newStatus, $pubAt, $news_id);
-                            $ws->execute();
+                            if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                             $ws->close();
                         }
                     }
@@ -156,11 +156,11 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
             $stmt = $staff_conn->prepare("DELETE FROM director_news WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param('i', $news_id);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 if ($website_conn) {
                     $ws = $website_conn->prepare("DELETE FROM news WHERE id=?");
-                    if ($ws) { $ws->bind_param('i', $news_id); $ws->execute(); $ws->close(); }
+                    if ($ws) { $ws->bind_param('i', $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                 }
                 $_SESSION['nw_success'] = 'News deleted.';
             }
@@ -175,7 +175,7 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
     if ($staff_conn) {
         $stmt = $staff_conn->prepare("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT ?");
         $stmt->bind_param("i", $limit);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($r) while ($row = $r->fetch_assoc()) $news[] = $row;
     }

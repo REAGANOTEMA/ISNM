@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Global Search Component — ISNM
+ * Global Search Component â€” ISNM
  * Includes both the search UI (renderGlobalSearchBar) and the AJAX handler.
  * Include in any dashboard head or layout file.
  *
@@ -170,7 +170,7 @@ function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websit
         $s = $db->prepare("SELECT id, student_id, student_number, index_number, CONCAT(first_name,' ',COALESCE(surname,'')) full_name, email, phone, program, level, set_name, status FROM students WHERE (first_name LIKE ? OR surname LIKE ? OR CONCAT(first_name,' ',COALESCE(surname,'')) LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? OR email LIKE ? OR set_name LIKE ?) AND status != 'deleted' LIMIT 100");
         if (!$s) return;
         $s->bind_param('sssssssss', $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq);
-        $s->execute();
+        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
         $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
         $s->close();
         foreach ($rows as $r) {
@@ -232,5 +232,5 @@ function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websit
 }
 }
 
-// ── Close the if (!function_exists('renderGlobalSearchBar')) wrapper ──
+// â”€â”€ Close the if (!function_exists('renderGlobalSearchBar')) wrapper â”€â”€
 }

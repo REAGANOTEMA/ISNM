@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Universal Dashboard Head — include at the very top of every dashboard <head>
+ * Universal Dashboard Head â€” include at the very top of every dashboard <head>
  * Usage: include_once __DIR__ . '/../includes/dashboard_head.php';
  * Set $pageTitle before including, e.g.: $pageTitle = 'Director General';
  */
@@ -12,7 +12,7 @@ $scopeParts = explode('/', trim($selfDir, '/'));
 array_pop($scopeParts); // remove 'dashboards'
 $swScope    = empty($scopeParts) ? '/' : '/' . implode('/', $scopeParts) . '/';
 
-// Cache-busting version — bump on every deploy
+// Cache-busting version â€” bump on every deploy
 $v = '2.2.1';
 
 /**
@@ -33,7 +33,7 @@ if (!empty($_SESSION['dashboard_profile_image_url'])) {
                 if ($studentConn) {
                     $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
                     $q->bind_param('i', (int)$_SESSION['user_id']);
-                    $q->execute();
+                    if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
                     $photoRow = $q->get_result()->fetch_assoc();
                     $q->close();
 
@@ -84,7 +84,7 @@ if (!empty($_SESSION['dashboard_profile_image_url'])) {
 <meta name="robots" content="noindex, nofollow">
 <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
-<!-- jQuery 3.6 — MUST load before any $ usage -->
+<!-- jQuery 3.6 â€” MUST load before any $ usage -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 window.CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
@@ -140,7 +140,7 @@ window.onerror = function(msg, url) {
 };
 </script>
 
-<!-- Favicon — all sizes, all devices -->
+<!-- Favicon â€” all sizes, all devices -->
 <link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
 <link rel="shortcut icon"         type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
 <link rel="apple-touch-icon"                       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
@@ -160,7 +160,7 @@ window.onerror = function(msg, url) {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- 3D Buttons System -->
 <link href="<?= $rootPath ?>/css/3d-buttons.css?v=<?= $v ?>" rel="stylesheet">
-<!-- Dashboard Base — normalized foundation (resolves cross-file conflicts) -->
+<!-- Dashboard Base â€” normalized foundation (resolves cross-file conflicts) -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-base.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Layout -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-style.css?v=<?= $v ?>" rel="stylesheet">
@@ -170,7 +170,7 @@ window.onerror = function(msg, url) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Enterprise Dashboard Layout System (merged: modern-ui + enterprise-layout + erp-design-system) -->
 <link href="<?= $rootPath ?>/css/enterprise-layout.css?v=<?= $v ?>" rel="stylesheet">
-<!-- Mobile Fixes — comprehensive responsive improvements (MUST be last CSS) -->
+<!-- Mobile Fixes â€” comprehensive responsive improvements (MUST be last CSS) -->
 <link href="<?= $rootPath ?>/css/mobile-fixes.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>
@@ -288,7 +288,7 @@ window.onerror = function(msg, url) {
 </script>
 
 <style>
-/* ── Floating Action Button Stack (prevents overlap) ── */
+/* â”€â”€ Floating Action Button Stack (prevents overlap) â”€â”€ */
 :root {
   --fab-spacing: 60px;
   --fab-scroll: 24px;          /* scroll-to-top */
@@ -298,7 +298,7 @@ window.onerror = function(msg, url) {
   --fab-approval: 264px;       /* department approval fab */
   --fab-cp: 324px;             /* enterprise control panel */
 }
-/* ── Dashboard Responsive Fixes (unified with dashboard-mobile.css) ── */
+/* â”€â”€ Dashboard Responsive Fixes (unified with dashboard-mobile.css) â”€â”€ */
 @media (max-width: 768px) {
   .main-content, .dashboard-main { margin-left: 0 !important; }
   .dashboard-header { padding: 0 14px 0 64px !important; }
@@ -340,20 +340,20 @@ window.onerror = function(msg, url) {
 /* Empty state */
 .empty-state { padding: 40px 20px; text-align: center; }
 .empty-state i { font-size: 3rem; color: #dee2e6; margin-bottom: 15px; }
-/* ── Loading Progress Bar ── */
+/* â”€â”€ Loading Progress Bar â”€â”€ */
 .isnm-loading-bar { position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#ec4899);z-index:9999;transition:width 0.4s ease,opacity 0.3s;box-shadow:0 0 10px rgba(59,130,246,0.5); }
-/* ── Scroll-to-top ── */
+/* â”€â”€ Scroll-to-top â”€â”€ */
 .isnm-scroll-top { position:fixed;bottom:var(--fab-scroll,24px);right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:1050;box-shadow:0 4px 16px rgba(0,0,0,0.2);display:none;align-items:center;justify-content:center;transition:transform 0.2s,opacity 0.2s;opacity:0; }
 .isnm-scroll-top.show { display:flex;opacity:1; }
 .isnm-scroll-top:hover { transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.3); }
-/* ── Keyboard shortcut toast ── */
+/* â”€â”€ Keyboard shortcut toast â”€â”€ */
 .isnm-shortcut-toast { position:fixed;bottom:var(--fab-cp,324px);right:24px;background:#0f172a;color:#fff;border-radius:12px;padding:16px 20px;font-size:12px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:320px;display:none; }
 .isnm-shortcut-toast.show { display:block;animation:fadeIn 0.2s ease; }
 .isnm-shortcut-toast kbd { display:inline-block;background:rgba(255,255,255,0.1);padding:2px 7px;border-radius:4px;font-size:11px;margin:0 2px;font-family:inherit; }
 .isnm-shortcut-toast hr { border-color:rgba(255,255,255,0.1);margin:8px 0; }
 </style>
 <script>
-/* ── Loading Progress Bar (deferred until body exists) ── */
+/* â”€â”€ Loading Progress Bar (deferred until body exists) â”€â”€ */
 (function(){
     'use strict';
     var bar, timer;
@@ -390,7 +390,7 @@ window.onerror = function(msg, url) {
     else window.addEventListener('load', finishLoad);
 })();
 
-/* ── Scroll-to-top Button ── */
+/* â”€â”€ Scroll-to-top Button â”€â”€ */
 (function(){
     'use strict';
     var btn;
@@ -413,7 +413,7 @@ window.onerror = function(msg, url) {
     initScrollBtn();
 })();
 
-/* ── Keyboard Shortcuts ── */
+/* â”€â”€ Keyboard Shortcuts â”€â”€ */
 (function(){
     'use strict';
     var toast;

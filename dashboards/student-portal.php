@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
@@ -17,7 +17,7 @@ if ($studentsDb) {
     $stmt = $studentsDb->prepare("SELECT * FROM students WHERE id = ?");
     if ($stmt) {
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $student = $stmt->get_result()->fetch_assoc();
         $stmt->close();
     }
@@ -59,7 +59,7 @@ function safeQueryPrepared($db, $sql, $types, $params) {
     $stmt = $db->prepare($sql);
     if (!$stmt) return [];
     $stmt->bind_param($types, ...$params);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $data = [];
     if ($result) while ($row = $result->fetch_assoc()) $data[] = $row;
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
                 $filename = 'student_' . $student_id . '_' . time() . '.' . $ext;
                 if (move_uploaded_file($file['tmp_name'], $dir . $filename)) {
                     $stmt = $studentsDb->prepare("UPDATE students SET profile_picture = ? WHERE id = ?");
-                    if ($stmt) { $stmt->bind_param("si", $filename, $student_id); $stmt->execute(); $stmt->close(); }
+                    if ($stmt) { $stmt->bind_param("si", $filename, $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                     $_SESSION['success'] = 'Profile photo updated.';
                 } else { $_SESSION['error'] = 'Failed to upload file.'; }
             } else { $_SESSION['error'] = 'Invalid file type or size (max 5MB).' ; }
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
     }
     if ($action === 'remove_photo') {
         $stmt = $studentsDb->prepare("UPDATE students SET profile_picture = NULL WHERE id = ?");
-        if ($stmt) { $stmt->bind_param("i", $student_id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param("i", $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Profile photo removed.';
         header("Location: student-portal.php?page=profile");
         exit();
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         $reason = trim($_POST['reason'] ?? '');
         if ($req_type && $reason) {
             $stmt = $studentsDb->prepare("INSERT INTO student_requests (student_id, request_type, reason, status, created_at) VALUES (?, ?, ?, 'Pending', NOW())");
-            if ($stmt) { $sid = $student_id; $stmt->bind_param("iss", $sid, $req_type, $reason); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $sid = $student_id; $stmt->bind_param("iss", $sid, $req_type, $reason); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Request submitted successfully.';
         } else { $_SESSION['error'] = 'Please fill all required fields.'; }
         header("Location: student-portal.php?page=requests");
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         $guardian_name = trim($_POST['guardian_name'] ?? '');
         $guardian_phone = trim($_POST['guardian_phone'] ?? '');
         $stmt = $studentsDb->prepare("UPDATE students SET phone=?, email=?, guardian_name=?, guardian_phone=? WHERE id=?");
-        if ($stmt) { $stmt->bind_param("ssssi", $phone, $email, $guardian_name, $guardian_phone, $student_id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param("ssssi", $phone, $email, $guardian_name, $guardian_phone, $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Profile updated.';
         header("Location: student-portal.php?page=profile");
         exit();
@@ -129,12 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         if (strlen($new) < 6) { $_SESSION['error'] = 'Password must be at least 6 characters.'; header("Location: student-portal.php?page=password"); exit(); }
         $stmt = $studentsDb->prepare("SELECT password FROM students WHERE id=?");
         if ($stmt) {
-            $stmt->bind_param("i", $student_id); $stmt->execute(); $row = $stmt->get_result()->fetch_assoc(); $stmt->close();
+            $stmt->bind_param("i", $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $row = $stmt->get_result()->fetch_assoc(); $stmt->close();
             $storedHash = $row['password'] ?? '';
             if (password_verify($current, $storedHash)) {
                 $newHash = password_hash($new, PASSWORD_DEFAULT);
                 $upd = $studentsDb->prepare("UPDATE students SET password=?, password_changed=1 WHERE id=?");
-                if ($upd) { $upd->bind_param("si", $newHash, $student_id); $upd->execute(); $upd->close(); }
+                if ($upd) { $upd->bind_param("si", $newHash, $student_id); if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); }; $upd->close(); }
                 $_SESSION['success'] = 'Password changed successfully.';
             } else { $_SESSION['error'] = 'Current password is incorrect.'; }
         }
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ISNM Student Portal — <?= ucfirst(htmlspecialchars($page)) ?></title>
+<title>ISNM Student Portal â€” <?= ucfirst(htmlspecialchars($page)) ?></title>
 <link rel="icon" href="../images/school-logo.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -376,7 +376,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <header class="sp-topbar">
 <div class="page-title"><i class="fas fa-graduation-cap me-2"></i><?= ucfirst(htmlspecialchars($page)) ?></div>
 <div class="user-info">
-<span><span class="name"><?= htmlspecialchars($full_name) ?></span><br><span class="role"><?= htmlspecialchars($program) ?> · Year <?= $current_year ?></span></span>
+<span><span class="name"><?= htmlspecialchars($full_name) ?></span><br><span class="role"><?= htmlspecialchars($program) ?> Â· Year <?= $current_year ?></span></span>
 <a href="../student-login.php?action=logout" class="sp-btn sp-btn-outline" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
 </div>
 </header>
@@ -387,9 +387,9 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <?php endif; ?>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 1. DASHBOARD
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 if ($page === 'dashboard'):
     $fee_balance = 0;
     if (tableExists($studentsDb, 'student_fee_tracking')) {
@@ -457,7 +457,7 @@ if ($page === 'dashboard'):
 <tr><td style="width:140px;color:#64748b">Name</td><td><strong><?= htmlspecialchars($full_name) ?></strong></td></tr>
 <tr><td style="color:#64748b">Reg No</td><td><?= htmlspecialchars($student_number) ?></td></tr>
 <tr><td style="color:#64748b">Program</td><td><?= htmlspecialchars($program) ?></td></tr>
-<tr><td style="color:#64748b">Year / Level</td><td>Year <?= $current_year ?> · <?= htmlspecialchars($level) ?></td></tr>
+<tr><td style="color:#64748b">Year / Level</td><td>Year <?= $current_year ?> Â· <?= htmlspecialchars($level) ?></td></tr>
 <tr><td style="color:#64748b">Set</td><td><?= htmlspecialchars($set_name) ?></td></tr>
 <tr><td style="color:#64748b">Status</td><td><span class="sp-badge sp-badge-<?= $student_status==='Active'?'success':'warning' ?>"><?= htmlspecialchars($student_status) ?></span></td></tr>
 <?php if ($admissionStatus !== 'Not Set'): ?><tr><td style="color:#64748b">Admission</td><td><span class="sp-badge sp-badge-<?= $admissionStatus==='Registered'?'success':'warning' ?>"><?= htmlspecialchars($admissionStatus) ?></span></td></tr><?php endif; ?>
@@ -529,9 +529,9 @@ if (empty($notifs)) {
 <?php endif; ?>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REQUIREMENTS
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'requirements'):
 ?>
 <div class="sp-card">
@@ -551,7 +551,7 @@ elseif ($page === 'requirements'):
 <td><?= htmlspecialchars($req['requirement_name']) ?></td>
 <td><span class="sp-badge sp-badge-<?= in_array($s,['Verified','Received'])?'success':(in_array($s,['Submitted'])?'info':(in_array($s,['Rejected','Missing'])?'danger':($s==='Not Yet Given'?'warning':'secondary'))) ?>"><?= htmlspecialchars($s) ?></span></td>
 <td><?= $req['updated_at'] ? date('M j, Y', strtotime($req['updated_at'])) : '-' ?></td>
-<td><?= !empty($req['director_notes']) ? nl2br(htmlspecialchars(substr($req['director_notes'],0,200))) : '<span style="color:#94a3b8">—</span>' ?></td>
+<td><?= !empty($req['director_notes']) ? nl2br(htmlspecialchars(substr($req['director_notes'],0,200))) : '<span style="color:#94a3b8">â€”</span>' ?></td>
 </tr>
 <?php endforeach; ?>
 </tbody>
@@ -564,14 +564,14 @@ elseif ($page === 'requirements'):
 <p style="color:#64748b;margin-top:8px;font-size:.85rem">Your admission status reflects the current stage of your application process. Contact the Admissions Office for any questions.</p>
 </div>
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 2. PROFILE
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'profile'):
     $profile = null;
     if (tableExists($studentsDb, 'student_profiles')) {
         $pr = $studentsDb->prepare("SELECT * FROM student_profiles WHERE student_id = ?");
-        if ($pr) { $pr->bind_param("i", $student_id); $pr->execute(); $profile = $pr->get_result()->fetch_assoc(); $pr->close(); }
+        if ($pr) { $pr->bind_param("i", $student_id); if (!$pr->execute()) { error_log('$pr execute failed: ' . ($pr->error ?? 'unknown')); }; $profile = $pr->get_result()->fetch_assoc(); $pr->close(); }
     }
 ?>
 <div class="sp-grid-2">
@@ -632,9 +632,9 @@ elseif ($page === 'profile'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 3. ACADEMIC RECORD
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'academics'):
     $records = safeQueryPrepared($studentsDb, "SELECT * FROM student_academic_records WHERE student_id=? ORDER BY academic_year DESC, semester DESC, subject ASC", "i", [$student_id]);
     $sem_gpa = safeQueryPrepared($studentsDb, "SELECT * FROM student_semester_gpa WHERE student_id=? ORDER BY academic_year DESC, semester DESC", "i", [$student_id]);
@@ -693,9 +693,9 @@ elseif ($page === 'academics'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 4. COURSE REGISTRATION
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'courses'):
     $registered = safeQueryPrepared($studentsDb, "SELECT scr.*, cc.course_code, cc.course_name, cc.credit_hours, cc.is_compulsory FROM student_course_registrations scr LEFT JOIN course_catalog cc ON scr.course_id=cc.id WHERE scr.student_id=? ORDER BY scr.academic_year DESC, scr.semester DESC", "i", [$student_id]);
     $available = safeQueryPrepared($studentsDb, "SELECT * FROM course_catalog WHERE program=? AND level=? AND status='Active' ORDER BY course_code", "ss", [$program, $level]);
@@ -766,9 +766,9 @@ $current_academic_year = date('Y');
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 5. RESULTS & TRANSCRIPTS
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'results'):
     $results = safeQueryPrepared($studentsDb, "SELECT * FROM student_academic_records WHERE student_id=? ORDER BY academic_year DESC, semester DESC", "i", [$student_id]);
     $transcripts = safeQueryPrepared($studentsDb, "SELECT * FROM student_transcripts WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
@@ -856,9 +856,9 @@ elseif ($page === 'results'):
 <?php endif; ?>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 6. ATTENDANCE
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'attendance'):
     $attendance = safeQueryPrepared($studentsDb, "SELECT * FROM student_attendance WHERE student_id=? ORDER BY date DESC, attendance_date DESC LIMIT 50", "i", [$student_id]);
     $clinical_att = safeQueryPrepared($studentsDb, "SELECT * FROM attendance_records ar JOIN class_sessions cs ON ar.session_id=cs.id WHERE ar.student_id=? AND cs.session_type='Clinical' ORDER BY cs.session_date DESC LIMIT 20", "i", [$student_id]);
@@ -915,9 +915,9 @@ elseif ($page === 'attendance'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 7. CLINICAL PLACEMENT
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'clinical'):
     $placements = safeQueryPrepared($studentsDb, "SELECT * FROM clinical_placements_students WHERE student_id=? ORDER BY start_date DESC", "i", [$student_id]);
     if (empty($placements)) $placements = safeQueryPrepared($studentsDb, "SELECT * FROM clinical_placements WHERE student_id=? ORDER BY start_date DESC", "i", [$student_id]);
@@ -968,9 +968,9 @@ elseif ($page === 'clinical'):
 <?php endif; ?>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 8. LOGBOOK
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'logbook'):
     $logbook = safeQueryPrepared($studentsDb, "SELECT * FROM student_logbook WHERE student_id=? ORDER BY entry_date DESC", "i", [$student_id]);
     $total_entries = count($logbook);
@@ -1007,9 +1007,9 @@ elseif ($page === 'logbook'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 9. COMPETENCIES
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'competency'):
     $competencies = safeQueryPrepared($studentsDb, "SELECT * FROM student_competencies WHERE student_id=? ORDER BY skill_category, skill_name", "i", [$student_id]);
     $grouped = [];
@@ -1040,9 +1040,9 @@ elseif ($page === 'competency'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 10. DISCIPLINE
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'discipline'):
     $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline WHERE student_id=? ORDER BY incident_date DESC", "s", [$student_number]);
     if (empty($cases)) $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline WHERE CAST(student_id AS UNSIGNED)=? ORDER BY incident_date DESC", "i", [$student_id]);
@@ -1082,7 +1082,7 @@ elseif ($page === 'discipline'):
 <span class="sp-badge sp-badge-<?= ($w['status'] ?? '')==='Active'?'danger':'secondary' ?>"><?= htmlspecialchars($w['status'] ?? '') ?></span>
 </div>
 <p style="font-size:.8rem;color:#64748b;margin:4px 0"><?= htmlspecialchars($w['description'] ?? '') ?></p>
-<small style="color:#94a3b8"><?= htmlspecialchars($w['severity'] ?? '') ?> · <?= date('M j, Y', strtotime($w['warning_date'] ?? '')) ?> · By: <?= htmlspecialchars($w['issued_by_name'] ?? '') ?></small>
+<small style="color:#94a3b8"><?= htmlspecialchars($w['severity'] ?? '') ?> Â· <?= date('M j, Y', strtotime($w['warning_date'] ?? '')) ?> Â· By: <?= htmlspecialchars($w['issued_by_name'] ?? '') ?></small>
 </div>
 <?php endforeach; ?>
 <?php endif; ?>
@@ -1090,9 +1090,9 @@ elseif ($page === 'discipline'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 11. FINANCES
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'finances'):
     $fees = safeQueryPrepared($studentsDb, "SELECT * FROM student_fee_tracking WHERE student_id=? ORDER BY due_date ASC", "i", [$student_id]);
     if (empty($fees)) $fees = safeQueryPrepared($studentsDb, "SELECT * FROM student_fees WHERE student_id=? ORDER BY due_date ASC", "i", [$student_id]);
@@ -1154,9 +1154,9 @@ elseif ($page === 'finances'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 12. HOSTEL
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'hostel'):
     $allocations = safeQueryPrepared($studentsDb, "SELECT ha.*, hr.room_number, hr.hostel_name FROM hostel_allocations ha LEFT JOIN hostel_rooms hr ON ha.room_id=hr.id WHERE ha.student_id=? ORDER BY ha.check_in_date DESC", "s", [$student_number]);
     if (empty($allocations)) $allocations = safeQueryPrepared($studentsDb, "SELECT ha.*, hr.room_number, hr.hostel_name FROM hostel_allocations ha LEFT JOIN hostel_rooms hr ON ha.room_id=hr.id WHERE ha.student_id=? ORDER BY ha.check_in_date DESC", "i", [$student_id]);
@@ -1178,7 +1178,7 @@ elseif ($page === 'hostel'):
 <div style="margin-top:8px;font-size:.85rem">
 <span>Check-in: <?= $h['check_in_date'] ?? $h['allocation_date'] ? date('M j, Y', strtotime($h['check_in_date'] ?? $h['allocation_date'])) : '' ?></span>
 <?php if (!empty($h['check_out_date'])): ?>
-<span> · Check-out: <?= date('M j, Y', strtotime($h['check_out_date'])) ?></span>
+<span> Â· Check-out: <?= date('M j, Y', strtotime($h['check_out_date'])) ?></span>
 <?php endif; ?>
 </div>
 </div>
@@ -1187,9 +1187,9 @@ elseif ($page === 'hostel'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 13. LIBRARY
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'library'):
     $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC", "s", [$student_number]);
     if (empty($borrowing)) {
@@ -1251,9 +1251,9 @@ elseif ($page === 'library'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 14. ANNOUNCEMENTS
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'notices'):
     $notices = safeQuery($studentsDb, "SELECT * FROM announcements WHERE is_active=1 AND (expires_at IS NULL OR expires_at >= CURDATE()) ORDER BY FIELD(priority,'Urgent','High','Normal','Low'), created_at DESC LIMIT 20");
     if (empty($notices)) $notices = safeQueryPrepared($studentsDb, "SELECT * FROM student_notifications WHERE student_id=? ORDER BY created_at DESC LIMIT 20", "i", [$student_id]);
@@ -1284,9 +1284,9 @@ elseif ($page === 'notices'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 15. MESSAGES
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'messages'):
     $messages = safeQueryPrepared($studentsDb, "SELECT * FROM messages WHERE student_id=? ORDER BY created_at DESC LIMIT 30", "s", [$student_number]);
     if (empty($messages)) $messages = safeQueryPrepared($studentsDb, "SELECT * FROM student_messages WHERE student_id=? ORDER BY created_at DESC LIMIT 30", "i", [$student_id]);
@@ -1310,9 +1310,9 @@ elseif ($page === 'messages'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 16. REQUESTS
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'requests'):
     $requests = safeQueryPrepared($studentsDb, "SELECT * FROM student_requests WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
 ?>
@@ -1365,9 +1365,9 @@ elseif ($page === 'requests'):
 </div>
 
 <?php
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 17. TIMETABLE
-// ════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'timetable'):
     $timetable = safeQueryPrepared($studentsDb, "SELECT * FROM student_timetables WHERE student_id=? ORDER BY FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'), start_time", "i", [$student_id]);
     if (empty($timetable)) $timetable = safeQueryPrepared($studentsDb, "SELECT * FROM timetable WHERE program=? AND year_of_study=? ORDER BY FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'), time_slot", "si", [$program, $current_year]);
@@ -1408,6 +1408,7 @@ elseif ($page === 'timetable'):
 <div class="sp-card" style="max-width:500px;margin:0 auto">
 <h4><i class="fas fa-key me-2"></i>Change Password</h4>
 <form method="POST" action="?page=password">
+<input type="text" name="username" value="<?= htmlspecialchars($_SESSION['username'] ?? $_SESSION['full_name'] ?? '') ?>" autocomplete="username" style="display:none;">
 <div class="sp-form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
 <div class="sp-form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" autocomplete="new-password" required minlength="6"></div>
 <div class="sp-form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" class="form-control" autocomplete="new-password" required minlength="6"></div>

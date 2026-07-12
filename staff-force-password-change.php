@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth-service.php';
 require_once 'config/database.php';
 
@@ -21,11 +21,11 @@ if ($conn) {
     $stmt = $conn->prepare("SELECT is_first_login FROM staff WHERE id = ? LIMIT 1");
     if ($stmt) {
         $stmt->bind_param('i', $_SESSION['user_id']);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$row || empty($row['is_first_login'])) {
-            // Already changed password — redirect to dashboard
+            // Already changed password â€” redirect to dashboard
             $dashboard = $auth_service->getDashboardRoute($_SESSION['role'] ?? '');
             $conn->close();
             header('Location: ' . ($dashboard ?: 'index.php'));

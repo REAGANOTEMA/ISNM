@@ -57,20 +57,20 @@ if ($ajax === 'finance_stats' && $staff) {
 if ($ajax === 'revenue_data' && $staff) {
     header('Content-Type: application/json');
     $f = $_GET['from']??date('Y-m-01'); $t = $_GET['to']??date('Y-m-d'); $rows=[];
-    if ($students) { $stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
+    if ($students) { $stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
     echo json_encode($rows); exit;
 }
 if ($ajax === 'fee_collection_data' && $staff) {
     header('Content-Type: application/json');
     $f = $_GET['from']??date('Y-m-01'); $t = $_GET['to']??date('Y-m-d'); $rows=[];
-    if ($students) { $stmt=$students->prepare("SELECT si.*,s.full_name student_name,s.student_number,s.program FROM {$students_db}.student_invoices si LEFT JOIN {$students_db}.students s ON si.student_id=s.id WHERE DATE(si.created_at) BETWEEN ? AND ? ORDER BY si.created_at DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
+    if ($students) { $stmt=$students->prepare("SELECT si.*,s.full_name student_name,s.student_number,s.program FROM {$students_db}.student_invoices si LEFT JOIN {$students_db}.students s ON si.student_id=s.id WHERE DATE(si.created_at) BETWEEN ? AND ? ORDER BY si.created_at DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
     echo json_encode($rows); exit;
 }
 if ($ajax === 'payment_list' && $staff) {
     header('Content-Type: application/json');
     $st = $_GET['status']??''; $rows=[];
     if ($students) {
-        if($st){$stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE p.status=? ORDER BY p.payment_date DESC LIMIT 200");$stmt->bind_param('s',$st);$stmt->execute();$r=$stmt->get_result();$stmt->close();}
+        if($st){$stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE p.status=? ORDER BY p.payment_date DESC LIMIT 200");$stmt->bind_param('s',$st);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();$stmt->close();}
         else{$r=$students->query("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id ORDER BY p.payment_date DESC LIMIT 200");}
         if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;
     }
@@ -79,7 +79,7 @@ if ($ajax === 'payment_list' && $staff) {
 if ($ajax === 'expenditure_list' && $staff) {
     header('Content-Type: application/json');
     $st = $_GET['status']??''; $rows=[];
-    if($st){$stmt=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE e.status=? ORDER BY e.created_at DESC LIMIT 200");$stmt->bind_param('s',$st);$stmt->execute();$r=$stmt->get_result();$stmt->close();}
+    if($st){$stmt=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE e.status=? ORDER BY e.created_at DESC LIMIT 200");$stmt->bind_param('s',$st);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();$stmt->close();}
     else{$r=$staff->query("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id ORDER BY e.created_at DESC LIMIT 200");}
     if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;
     echo json_encode($rows); exit;
@@ -88,7 +88,7 @@ if ($ajax === 'ledger_data' && $staff) {
     header('Content-Type: application/json');
     $f=$_GET['from']??date('Y-m-01'); $t=$_GET['to']??date('Y-m-d'); $rows=[];
     $stmt=$staff->prepare("SELECT * FROM {$students_db}.general_ledger WHERE entry_date BETWEEN ? AND ? ORDER BY entry_date DESC LIMIT 200");
-    if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
+    if($stmt){$stmt->bind_param('ss',$f,$t);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
     echo json_encode($rows); exit;
 }
 if ($ajax === 'supplier_list' && $staff) {
@@ -182,7 +182,7 @@ if ($ajax === 'cash_flow_data' && $staff) {
     $f=$_GET['from']??date('Y-01-01'); $t=$_GET['to']??date('Y-m-d'); $rows=[];
     if ($students) {
         $stmt=$students->prepare("SELECT DATE(payment_date) dt,COALESCE(SUM(amount_received),0) inflow,0 outflow FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ? GROUP BY DATE(payment_date) ORDER BY dt");
-        if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
+        if($stmt){$stmt->bind_param('ss',$f,$t);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
     }
     echo json_encode($rows); exit;
 }
@@ -228,13 +228,13 @@ if ($ajax === 'create_expenditure' && $staff) {
 if ($ajax === 'approve_expenditure' && $staff) {
     header('Content-Type: application/json');
     $id=(int)($_POST['id']??0);
-    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); $stmt->execute(); if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Approve failed']); exit; }
+    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Approve failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'reject_expenditure' && $staff) {
     header('Content-Type: application/json');
     $id=(int)($_POST['id']??0);
-    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); $stmt->execute(); if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Reject failed']); exit; }
+    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Reject failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'approve_payroll' && $staff) {
@@ -405,12 +405,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
+        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Expense approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'reject_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
+        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Expense rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'create_budget' && $staff) {
@@ -428,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_budget' && $staff) {
         $bid=(int)($_POST['budget_id']??0);
-        if($bid){ $stmt=$staff->prepare("UPDATE {$students_db}.budget_records SET status='Approved',approved_by=? WHERE id=?"); if($stmt){$stmt->bind_param('ii',$uid,$bid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Budget approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
+        if($bid){ $stmt=$staff->prepare("UPDATE {$students_db}.budget_records SET status='Approved',approved_by=? WHERE id=?"); if($stmt){$stmt->bind_param('ii',$uid,$bid);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Budget approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
     if ($act === 'record_payment' && $staff) {
@@ -444,12 +444,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_payment' && $staff) {
         $pid=(int)($_POST['payment_id']??0);
-        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='approved',verified_by=? WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$pid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Payment approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
+        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='approved',verified_by=? WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$pid);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Payment approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }
     if ($act === 'reject_payment' && $staff) {
         $pid=(int)($_POST['payment_id']??0);
-        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='rejected' WHERE id=?"); if($stmt){$stmt->bind_param('i',$pid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Payment rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
+        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='rejected' WHERE id=?"); if($stmt){$stmt->bind_param('i',$pid);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Payment rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }
     if ($act === 'edit_expense' && $staff) {
@@ -466,7 +466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'delete_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ $stmt=$staff->prepare("DELETE FROM expenses WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
+        if($id){ $stmt=$staff->prepare("DELETE FROM expenses WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Expense deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'edit_budget' && $staff) {
@@ -482,7 +482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'delete_budget' && $staff) {
         $id=(int)($_POST['budget_id']??0);
-        if($id){ $stmt=$staff->prepare("DELETE FROM {$students_db}.budget_records WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Budget deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
+        if($id){ $stmt=$staff->prepare("DELETE FROM {$students_db}.budget_records WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Budget deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
     header('Location: director-finance.php'); exit;
@@ -1237,9 +1237,9 @@ $pendingLedger = []; $r=$staff->query("SELECT * FROM {$students_db}.general_ledg
 <?php
 $isFrom = $_GET['from']??date('Y-m-01'); $isTo = $_GET['to']??date('Y-m-d');
 $isRev = 0; $isExp = 0; $expCats = [];
-if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)$isRev=(float)$r->fetch_assoc()['t'];$stmt->close();} }
-if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)$isExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
-if($staff){ $stmt=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category ORDER BY t DESC"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$expCats[]=$rw;$stmt->close();} }
+if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)$isRev=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)$isExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category ORDER BY t DESC"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$expCats[]=$rw;$stmt->close();} }
 ?>
 <form class="row g-2 mb-3" method="GET"><input type="hidden" name="section" value="income_statement">
 <div class="col-md-3"><input type="date" name="from" class="form-control env-field" value="<?= $isFrom ?>"></div>
@@ -1324,8 +1324,8 @@ $difference = $bankBalance - $bookBalance;
 <?php
 $recFrom = $_GET['from']??date('Y-m-01'); $recTo = $_GET['to']??date('Y-m-d');
 $recPay = 0; $recExp = 0;
-if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status='approved' AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);$stmt->execute();$r=$stmt->get_result();if($r)$recPay=(float)$r->fetch_assoc()['t'];$stmt->close();} }
-if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);$stmt->execute();$r=$stmt->get_result();if($r)$recExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status='approved' AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)$recPay=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };$r=$stmt->get_result();if($r)$recExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
 ?>
 <form class="row g-2 mb-3" method="GET"><input type="hidden" name="section" value="reconciliation_reports">
 <div class="col-md-3"><input type="date" name="from" class="form-control env-field" value="<?= $recFrom ?>"></div>
@@ -2050,16 +2050,16 @@ if ($report) {
         $rev = 0;
         if ($students) {
             $stmt = $students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");
-            if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); if ($r) $rev = (float)$r->fetch_assoc()['t']; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $rev = (float)$r->fetch_assoc()['t']; $stmt->close(); }
         }
         $exp = 0;
         $stmt = $staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");
-        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); if ($r) $exp = (float)$r->fetch_assoc()['t']; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $exp = (float)$r->fetch_assoc()['t']; $stmt->close(); }
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
         echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
         echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';
         $r2=null; $s2=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category");
-        if($s2){$s2->bind_param('ss',$from,$to);$s2->execute();$r2=$s2->get_result();$s2->close();}
+        if($s2){$s2->bind_param('ss',$from,$to);if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };$r2=$s2->get_result();$s2->close();}
         if($r2) while($row=$r2->fetch_assoc()){ echo '<tr><td>&nbsp;&nbsp;'.htmlspecialchars($row['expense_category']).'</td><td class="text-end">'.number_format($row['t'],0).'</td></tr>'; }
         echo '<tr><td>Total Expenses</td><td class="text-end fw-bold">'.number_format($exp,0).'</td></tr>';
         echo '<tr><td><strong>Net Income</strong></td><td class="text-end fw-bold" style="color:'.($rev-$exp>=0?'green':'red').'">'.number_format($rev-$exp,0).'</td></tr>';
@@ -2067,22 +2067,22 @@ if ($report) {
     } elseif ($report === 'expense_report') {
         echo '<h2>Expense Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
         $sr=null; $ss=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE DATE(e.expense_date) BETWEEN ? AND ? ORDER BY e.expense_date DESC");
-        if($ss){$ss->bind_param('ss',$from,$to);$ss->execute();$sr=$ss->get_result();$ss->close();}
+        if($ss){$ss->bind_param('ss',$from,$to);if (!$ss->execute()) { error_log('$ss execute failed: ' . ($ss->error ?? 'unknown')); };$sr=$ss->get_result();$ss->close();}
         echo '<table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>';
         if($sr) while($row=$sr->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['expense_id']).'</td><td>'.htmlspecialchars($row['expense_category']).'</td><td>'.htmlspecialchars($row['description']).'</td><td class="text-end">'.number_format($row['amount'],0).'</td><td>'.$row['expense_date'].'</td><td>'.$row['status'].'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'fee_collection') {
         echo '<h2>Fee Collection Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
         $qr=null; $qs=$students->prepare("SELECT p.payment_reference,s.full_name student_name,s.student_number,s.program,p.amount_received,p.payment_method,p.payment_date,p.status FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC");
-        if($qs){$qs->bind_param('ss',$from,$to);$qs->execute();$qr=$qs->get_result();$qs->close();}
+        if($qs){$qs->bind_param('ss',$from,$to);if (!$qs->execute()) { error_log('$qs execute failed: ' . ($qs->error ?? 'unknown')); };$qr=$qs->get_result();$qs->close();}
         echo '<table><thead><tr><th>Receipt</th><th>Student</th><th>Program</th><th class="text-end">Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>';
         $tt=0; if($qr) while($row=$qr->fetch_assoc()){ $tt+=$row['amount_received']; echo '<tr><td>'.htmlspecialchars($row['payment_reference']).'</td><td>'.htmlspecialchars($row['student_name']??$row['student_number']).'</td><td>'.htmlspecialchars($row['program']??'-').'</td><td class="text-end">'.number_format($row['amount_received'],0).'</td><td>'.htmlspecialchars($row['payment_method']).'</td><td>'.$row['payment_date'].'</td><td>'.$row['status'].'</td></tr>'; }
         echo '<tr><td colspan="3"><strong>Total</strong></td><td class="text-end fw-bold">'.number_format($tt,0).'</td><td colspan="3"></td></tr>';
         echo '</tbody></table>';
     } elseif ($report === 'tax_report') {
         echo '<h2>URA Tax Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev=0; if($students){$rs=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$rr=$rs->get_result();$rs->close();if($rr)$rev=(float)$rr->fetch_assoc()['t'];}}
-        $exp=0; $es=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");if($es){$es->bind_param('ss',$from,$to);$es->execute();$er=$es->get_result();$es->close();if($er)$exp=(float)$er->fetch_assoc()['t'];}
+        $rev=0; if($students){$rs=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$rr=$rs->get_result();$rs->close();if($rr)$rev=(float)$rr->fetch_assoc()['t'];}}
+        $exp=0; $es=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");if($es){$es->bind_param('ss',$from,$to);if (!$es->execute()) { error_log('$es execute failed: ' . ($es->error ?? 'unknown')); };$er=$es->get_result();$es->close();if($er)$exp=(float)$er->fetch_assoc()['t'];}
         $taxable = max(0,$rev-$exp);
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
         echo '<tr><td>Gross Revenue</td><td class="text-end">'.number_format($rev,0).'</td></tr>';

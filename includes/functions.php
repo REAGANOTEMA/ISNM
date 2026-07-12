@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Additional helper functions for ISNM Student Management System
 
 // Sanitize user input to prevent XSS attacks
@@ -369,7 +369,7 @@ function auditTrail($user_id, $action, $details, $ip_address = null) {
     
     $stmt = $GLOBALS['conn']->prepare($sql);
     $stmt->bind_param("issss", $user_id, $action, $details, $ip_address, $user_agent);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $stmt->close();
 }
 
@@ -464,7 +464,7 @@ function moveToTrash($conn, int $original_id, string $table, string $id_column, 
         $deleted_by_name = '';
         if ($deleted_by) {
             $q = $conn->prepare("SELECT full_name FROM staff WHERE id = ?");
-            if ($q) { $q->bind_param('i', $deleted_by); $q->execute(); $r = $q->get_result()->fetch_assoc(); $q->close(); if ($r) $deleted_by_name = $r['full_name']; }
+            if ($q) { $q->bind_param('i', $deleted_by); if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); }; $r = $q->get_result()->fetch_assoc(); $q->close(); if ($r) $deleted_by_name = $r['full_name']; }
         }
         $stmt = $conn->prepare("INSERT INTO recycle_bin (original_table, original_id_column, original_id, item_title, item_description, deleted_by, deleted_by_name, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
         if (!$stmt) return false;
@@ -514,7 +514,7 @@ function getOfficialDuties(int $roleId, $conn = null): array {
         $stmt = $conn->prepare("SELECT duty_title, duty_icon, sort_order FROM official_duties WHERE role_id = ? AND is_active = 1 ORDER BY sort_order ASC");
         if (!$stmt) return [];
         $stmt->bind_param('i', $roleId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $duties = [];
         while ($row = $result->fetch_assoc()) {

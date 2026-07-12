@@ -115,7 +115,7 @@ function getApprovalCenterRequests($conn, $filters = []) {
             $stmt = $conn->prepare($sql);
             if ($stmt) {
                 $stmt->bind_param($types, ...$params);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $result = $stmt->get_result();
                 while ($row = $result->fetch_assoc()) $requests[] = $row;
                 $stmt->close();

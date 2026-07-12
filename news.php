@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 
@@ -131,7 +131,7 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Also insert into website DB for public display
                         if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                             $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
-                            $ws->execute();
+                            if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                             $ws->close();
                         }
                         if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
@@ -161,10 +161,10 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($websiteConn) {
                         if ($featuredImage) {
                             $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); $ws->execute(); $ws->close(); }
+                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         } else {
                             $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id); $ws->execute(); $ws->close(); }
+                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         }
                     }
                     if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
@@ -192,7 +192,7 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     if ($websiteConn && $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?")) {
                         $ws->bind_param("i", $news_id);
-                        $ws->execute();
+                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                     $_SESSION['news_success'] = 'News article deleted.';
@@ -215,7 +215,7 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     if ($websiteConn && $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?")) {
                         $ws->bind_param("ssi", $newStatus, $pubAt, $news_id);
-                        $ws->execute();
+                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                     $_SESSION['news_success'] = 'News status updated to ' . $newStatus . '.';
@@ -262,7 +262,7 @@ if ($view === 'single' && $slug) {
     }
     if ($s) {
         $s->bind_param("s", $slug);
-        $s->execute();
+        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
         $result = $s->get_result();
         if ($result && $result->num_rows > 0) {
             $singleNews = $result->fetch_assoc();
@@ -277,7 +277,7 @@ if ($view === 'single' && $slug) {
         $stmtV = $staffConn->prepare("INSERT INTO news_views (news_id, user_id, user_type, ip_address, viewed_at) VALUES (?, ?, ?, ?, NOW())");
         if ($stmtV) {
             $stmtV->bind_param('iiss', $singleNews['id'], $viewerId, $viewerType, $ip);
-            $stmtV->execute();
+            if (!$stmtV->execute()) { error_log('$stmtV execute failed: ' . ($stmtV->error ?? 'unknown')); };
             $stmtV->close();
         }
     }

@@ -73,6 +73,15 @@ if (!function_exists('escapeString')) {
     }
 }
 
+// Safe execute wrapper — logs errors and returns false on failure
+if (!function_exists('dbExecute')) {
+    function dbExecute($stmt) {
+        if ($stmt->execute()) return true;
+        error_log('dbExecute failed: ' . $stmt->error);
+        return false;
+    }
+}
+
 // Enhanced utility functions
 if (!function_exists('getDatabaseConnection')) {
     function getDatabaseConnection($database) {
@@ -206,7 +215,7 @@ if (!function_exists('getCacheData')) {
             $stmt = $conn->prepare("SELECT cache_data FROM cache_management WHERE cache_key = ? AND expiry_time > NOW()");
             if (!$stmt) return null;
             $stmt->bind_param('s', $key);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $r = $stmt->get_result();
             $row = $r ? $r->fetch_assoc() : null;
             $stmt->close();
@@ -241,7 +250,7 @@ if (!function_exists('setCacheData')) {
             $stmt = $conn->prepare("INSERT INTO cache_management (cache_key, cache_data, expiry_time) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DATE_ADD(NOW(), INTERVAL ? SECOND)");
             if (!$stmt) return;
             $stmt->bind_param('ssii', $key, $json, $seconds, $seconds);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } catch (\Throwable $e) {
             error_log("Cache storage error: " . $e->getMessage());

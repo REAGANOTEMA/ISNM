@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../config/database.php';
 session_start();
 
@@ -54,14 +54,14 @@ $conn->query("CREATE TABLE IF NOT EXISTS push_subscriptions (
 $check = $conn->prepare("SELECT id FROM push_subscriptions WHERE endpoint = ?");
 if ($check) {
     $check->bind_param('s', $endpoint);
-    $check->execute();
+    if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };
     $check->store_result();
     if ($check->num_rows > 0) {
         $check->close();
         $update = $conn->prepare("UPDATE push_subscriptions SET auth_key=?, p256dh_key=?, device_type=?, user_agent=?, is_active=1, updated_at=NOW() WHERE endpoint=?");
         if ($update) {
             $update->bind_param('sssss', $authKey, $p256dhKey, $deviceType, $userAgent, $endpoint);
-            $update->execute();
+            if (!$update->execute()) { error_log('$update execute failed: ' . ($update->error ?? 'unknown')); };
             $update->close();
         }
     } else {
@@ -69,7 +69,7 @@ if ($check) {
         $insert = $conn->prepare("INSERT INTO push_subscriptions (user_id, user_type, endpoint, auth_key, p256dh_key, device_type, user_agent, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
         if ($insert) {
             $insert->bind_param('issssss', $userId, $userType, $endpoint, $authKey, $p256dhKey, $deviceType, $userAgent);
-            $insert->execute();
+            if (!$insert->execute()) { error_log('$insert execute failed: ' . ($insert->error ?? 'unknown')); };
             $insert->close();
         }
     }

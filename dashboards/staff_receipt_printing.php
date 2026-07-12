@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt']) &
         exit();
     }
     $template_stmt->bind_param("s", $receipt_type);
-    $template_stmt->execute();
+    if (!$template_stmt->execute()) { error_log('$template_stmt execute failed: ' . ($template_stmt->error ?? 'unknown')); };
     $template_result = $template_stmt->get_result();
     $template = ($template_result) ? $template_result->fetch_assoc() : null;
     

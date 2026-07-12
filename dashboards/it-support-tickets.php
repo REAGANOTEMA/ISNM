@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['ict', 'support', 'admin']);
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         $pr = trim($_POST['priority']);
         $desc = trim($_POST['description']);
         $stmt = $ict_conn->prepare("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES (?,?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('sssssss', $tn, $rn, $re, $rt, $it, $pr, $desc); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('sssssss', $tn, $rn, $re, $rt, $it, $pr, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = "Support ticket $tn created successfully.";
         header('Location: it-support-tickets.php'); exit;
     }
@@ -45,10 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         if ($id > 0) {
             if ($status === 'resolved') {
                 $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status=?, resolved_at = NOW() WHERE id=?");
-                if ($stmt) { $stmt->bind_param('si', $status, $id); $stmt->execute(); $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('si', $status, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             } else {
                 $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status=? WHERE id=?");
-                if ($stmt) { $stmt->bind_param('si', $status, $id); $stmt->execute(); $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('si', $status, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             }
             $_SESSION['success'] = "Ticket #$id status updated to $status.";
         }
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         $assigned = (int)($_POST['assigned_to'] ?? 0);
         if ($id > 0) {
             $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET assigned_to=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ii', $assigned, $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ii', $assigned, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = "Ticket #$id assigned.";
         }
         header('Location: it-support-tickets.php'); exit;
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         if ($id > 0 && $notes) {
             $fullNote = "\n[$user_name] $notes";
             $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status = 'resolved', resolution_notes = CONCAT(IFNULL(resolution_notes, ''), ?), resolved_at = NOW() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('si', $fullNote, $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('si', $fullNote, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = "Ticket #$id resolved with notes.";
         }
         header('Location: it-support-tickets.php'); exit;
@@ -98,7 +98,7 @@ $sql = "SELECT t.*, s.full_name AS assigned_name FROM it_support_tickets t LEFT 
 $stmt = $ict_conn->prepare($sql);
 if ($stmt) {
     if ($types) $stmt->bind_param($types, ...$params);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $stmt->close();
 } else $r = null;

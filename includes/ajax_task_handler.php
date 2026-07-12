@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ISNM AJAX Task Handler — Task management via AJAX
+ * ISNM AJAX Task Handler â€” Task management via AJAX
  * Handles: get tasks, create task, update status, delete task
  */
 session_start();
@@ -41,7 +41,7 @@ switch ($action) {
         );
         if ($stmt) {
             $stmt->bind_param('ii', $userId, $limit);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
                 $row['due_date'] = $row['due_date'] ? date('M j, Y', strtotime($row['due_date'])) : null;
@@ -79,7 +79,7 @@ switch ($action) {
             $params[] = $limit;
             $types .= 'i';
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
                 $tasks[] = $row;
@@ -156,7 +156,7 @@ switch ($action) {
             $stmt->bind_param('ssiii', $newStatus, $completedAt, $taskId, $userId, $userId);
             if ($stmt->execute() && $stmt->affected_rows >= 0) {
                 $stmt->close();
-                logActivity($conn, 'task_updated', "Task #{$taskId} status → {$newStatus}");
+                logActivity($conn, 'task_updated', "Task #{$taskId} status â†’ {$newStatus}");
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'Task not found or no change']);

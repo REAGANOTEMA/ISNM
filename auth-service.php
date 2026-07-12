@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Unified Authentication Service for ISNM School Management System
  */
@@ -20,7 +20,7 @@ class AuthenticationService {
         $stmt = $conn->prepare("SELECT locked_until FROM students WHERE index_number = ? AND status = 'Active' AND locked_until > NOW()");
         if (!$stmt) return false;
         $stmt->bind_param('s', $indexNumber);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $locked = $stmt->get_result()->num_rows > 0;
         $stmt->close();
         return $locked;
@@ -34,7 +34,7 @@ class AuthenticationService {
         $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active' AND locked_until > NOW()");
         if (!$stmt) return false;
         $stmt->bind_param('s', $email);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $locked = $stmt->get_result()->num_rows > 0;
         $stmt->close();
         return $locked;
@@ -44,17 +44,17 @@ class AuthenticationService {
         $conn = getConnection();
         if (!$conn) return;
         $s = $conn->prepare("UPDATE students SET login_attempts = login_attempts + 1 WHERE index_number = ?");
-        if ($s) { $s->bind_param('s', $indexNumber); $s->execute(); $s->close(); }
+        if ($s) { $s->bind_param('s', $indexNumber); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
         $s2 = $conn->prepare("SELECT login_attempts FROM students WHERE index_number = ?");
         if (!$s2) return;
         $s2->bind_param('s', $indexNumber);
-        $s2->execute();
+        if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };
         $row = $s2->get_result()->fetch_assoc();
         $s2->close();
         if ($row && $row['login_attempts'] >= $this->maxLoginAttempts) {
             $lock = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
             $s3 = $conn->prepare("UPDATE students SET locked_until = ? WHERE index_number = ?");
-            if ($s3) { $s3->bind_param('ss', $lock, $indexNumber); $s3->execute(); $s3->close(); }
+            if ($s3) { $s3->bind_param('ss', $lock, $indexNumber); if (!$s3->execute()) { error_log('$s3 execute failed: ' . ($s3->error ?? 'unknown')); }; $s3->close(); }
         }
     }
 
@@ -62,17 +62,17 @@ class AuthenticationService {
         $conn = getStaffConnection();
         if (!$conn) return;
         $s = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
-        if ($s) { $s->bind_param('s', $email); $s->execute(); $s->close(); }
+        if ($s) { $s->bind_param('s', $email); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
         $s2 = $conn->prepare("SELECT login_attempts FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
         if (!$s2) return;
         $s2->bind_param('s', $email);
-        $s2->execute();
+        if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };
         $row = $s2->get_result()->fetch_assoc();
         $s2->close();
         if ($row && $row['login_attempts'] >= $this->maxLoginAttempts) {
             $lock = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
             $s3 = $conn->prepare("UPDATE staff SET locked_until = ? WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
-            if ($s3) { $s3->bind_param('ss', $lock, $email); $s3->execute(); $s3->close(); }
+            if ($s3) { $s3->bind_param('ss', $lock, $email); if (!$s3->execute()) { error_log('$s3 execute failed: ' . ($s3->error ?? 'unknown')); }; $s3->close(); }
         }
     }
 
@@ -80,14 +80,14 @@ class AuthenticationService {
         $conn = getStaffConnection();
         if (!$conn) return;
         $s = $conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
-        if ($s) { $s->bind_param('i', $userId); $s->execute(); $s->close(); }
+        if ($s) { $s->bind_param('i', $userId); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
     }
 
     private function resetStudentFailedAttempts($userId) {
         $conn = getConnection();
         if (!$conn) return;
         $s = $conn->prepare("UPDATE students SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
-        if ($s) { $s->bind_param('i', $userId); $s->execute(); $s->close(); }
+        if ($s) { $s->bind_param('i', $userId); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
     }
 
     private function splitFullName($fullName) {
@@ -104,7 +104,7 @@ class AuthenticationService {
         $s = $conn->prepare("SELECT * FROM students WHERE index_number = ? LIMIT 1");
         if ($s) {
             $s->bind_param('s', $indexNumber);
-            $s->execute();
+            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             $r = $s->get_result();
             if ($r && $r->num_rows === 1) return $r->fetch_assoc();
             $s->close();
@@ -141,7 +141,7 @@ class AuthenticationService {
         if ($ins->execute()) {
             $id  = $conn->insert_id;
             $rs  = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-            if ($rs) { $rs->bind_param('i', $id); $rs->execute(); $r2 = $rs->get_result(); if ($r2 && $r2->num_rows === 1) return $r2->fetch_assoc(); }
+            if ($rs) { $rs->bind_param('i', $id); if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); }; $r2 = $rs->get_result(); if ($r2 && $r2->num_rows === 1) return $r2->fetch_assoc(); }
         }
         return null;
     }
@@ -166,7 +166,7 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid or expired reset token.'];
         }
         $stmt->bind_param('s', $token);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         if ($result->num_rows === 0) {
             $stmt->close();
@@ -203,7 +203,7 @@ class AuthenticationService {
         $s = $conn->prepare("UPDATE students SET password=?,password_changed=TRUE,is_first_login=FALSE,login_attempts=0,locked_until=NULL,updated_at=NOW() WHERE id=?");
         if (!$s) return ['success' => false, 'message' => 'Unable to prepare password update'];
         $s->bind_param('si', $hash, $studentId);
-        return $s->execute() ? ['success' => true, 'message' => 'Password saved successfully'] : ['success' => false, 'message' => 'Failed to update password'];
+        $ok = $s->execute(); if (!$ok) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); } return $ok ? ['success' => true, 'message' => 'Password saved successfully'] : ['success' => false, 'message' => 'Failed to update password'];
     }
 
     public function getStudentById($studentId) {
@@ -212,7 +212,7 @@ class AuthenticationService {
         $s = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
         if (!$s) return null;
         $s->bind_param('i', $studentId);
-        $s->execute();
+        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
         $r = $s->get_result();
         return ($r && $r->num_rows === 1) ? $r->fetch_assoc() : null;
     }
@@ -244,7 +244,7 @@ class AuthenticationService {
         $existing = null;
         if ($q) {
             $q->bind_param('s', $indexNumber);
-            $q->execute();
+            if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
             $existing = $q->get_result()->fetch_assoc();
             $q->close();
         }
@@ -313,7 +313,7 @@ class AuthenticationService {
     }
 
     public function authenticateStaff($email, $password) {
-        // Raw trim only — no sanitization that could alter characters
+        // Raw trim only â€” no sanitization that could alter characters
         $email    = strtolower(trim((string) $email));
         $password = (string) $password; // Do NOT trim or decode password here to preserve exact input
 
@@ -347,7 +347,7 @@ class AuthenticationService {
         );
         if (!$stmt) {
             error_log('authenticateStaff JOIN prepare failed (staff_roles may be missing): ' . $conn->error);
-            // staff_roles table likely doesn't exist — query staff table directly
+            // staff_roles table likely doesn't exist â€” query staff table directly
             $stmt = $conn->prepare(
                 "SELECT * FROM staff WHERE LOWER(email) = ? LIMIT 1"
             );
@@ -370,7 +370,7 @@ class AuthenticationService {
         $staff = $result->fetch_assoc();
         $stmt->close();
 
-        // Get role name — try staff_roles if available, otherwise use role_id
+        // Get role name â€” try staff_roles if available, otherwise use role_id
         if (!empty($staff['role_name'])) {
             $roleName = $staff['role_name'];
         } else {
@@ -380,7 +380,7 @@ class AuthenticationService {
             }
             if ($roleCheck) {
                 $roleCheck->bind_param('i', $staff['role_id']);
-                $roleCheck->execute();
+                if (!$roleCheck->execute()) { error_log('$roleCheck execute failed: ' . ($roleCheck->error ?? 'unknown')); };
                 $roleRow = $roleCheck->get_result()->fetch_assoc();
                 $roleCheck->close();
                 $roleName = $roleRow['role_name'] ?? '';
@@ -466,7 +466,7 @@ class AuthenticationService {
                     $s = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
                     if ($s) {
                         $s->bind_param('s', $roleName);
-                        $s->execute();
+                        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                         $row = $s->get_result()->fetch_assoc();
                         $s->close();
                         if (!empty($row['id'])) {
@@ -488,9 +488,9 @@ class AuthenticationService {
                     $ip  = $_SERVER['REMOTE_ADDR']     ?? '';
                     $ua  = $_SERVER['HTTP_USER_AGENT'] ?? '';
                     $s1  = $conn->prepare("INSERT INTO staff_login_sessions (staff_id,session_token,ip_address,user_agent,created_at,expires_at) VALUES (?,?,?,?,NOW(),DATE_ADD(NOW(),INTERVAL 30 MINUTE))");
-                    if ($s1) { $s1->bind_param('isss', $user['id'], $tok, $ip, $ua); $s1->execute(); $s1->close(); }
+                    if ($s1) { $s1->bind_param('isss', $user['id'], $tok, $ip, $ua); if (!$s1->execute()) { error_log('$s1 execute failed: ' . ($s1->error ?? 'unknown')); }; $s1->close(); }
                     $s2  = $conn->prepare("INSERT INTO staff_activity_log (staff_id,activity_type,activity_description,module_accessed,ip_address,user_agent) VALUES (?,'Login','User logged in successfully','authentication',?,?)");
-                    if ($s2) { $s2->bind_param('iss', $user['id'], $ip, $ua); $s2->execute(); $s2->close(); }
+                    if ($s2) { $s2->bind_param('iss', $user['id'], $ip, $ua); if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); }; $s2->close(); }
                 }
             } catch (Exception $e) { error_log('Session log skipped: ' . $e->getMessage()); }
         }
@@ -522,7 +522,7 @@ class AuthenticationService {
             return false;
         }
 
-        // 20-minute idle timeout → log out
+        // 20-minute idle timeout â†’ log out
         $idleTimeout = 1200;
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $idleTimeout) {
             $this->logout();
@@ -560,7 +560,7 @@ class AuthenticationService {
                 $ip = $_SERVER['REMOTE_ADDR']     ?? '';
                 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
                 $s  = $conn->prepare("INSERT INTO staff_activity_log (staff_id,activity_type,activity_description,module_accessed,ip_address,user_agent) VALUES (?,'Logout','User logged out','authentication',?,?)");
-                if ($s) { $s->bind_param('iss', $_SESSION['user_id'], $ip, $ua); $s->execute(); $s->close(); }
+                if ($s) { $s->bind_param('iss', $_SESSION['user_id'], $ip, $ua); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
             }
         }
         session_unset();
@@ -664,7 +664,7 @@ class AuthenticationService {
             $s = $conn->prepare("SELECT s.email FROM staff s INNER JOIN staff_roles sr ON s.role_id=sr.id WHERE sr.role_name=? AND s.status='Active' ORDER BY s.id ASC LIMIT 1");
             if (!$s) return null;
             $s->bind_param('s', $roleName);
-            $s->execute();
+            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             $row = $s->get_result()->fetch_assoc();
             $s->close();
             return $row['email'] ?? null;
@@ -771,7 +771,7 @@ class AuthenticationService {
         $exact = $this->getDashboardRouteFromKey($role);
         if ($exact) return $exact;
 
-        // Partial fallback: any role containing "admissions" → director-admissions.php
+        // Partial fallback: any role containing "admissions" â†’ director-admissions.php
         $normalized = $this->normalizeRoleKey($role);
         if (strpos($normalized, 'admissions') !== false) {
             return 'dashboards/director-admissions.php';
@@ -819,7 +819,7 @@ class AuthenticationService {
         }
 
         $chk = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
-        if ($chk) { $chk->bind_param('s', $index); $chk->execute(); if ($chk->get_result()->num_rows > 0) { $chk->close(); return ['success' => false, 'message' => 'A student with this index number already exists.']; } $chk->close(); }
+        if ($chk) { $chk->bind_param('s', $index); if (!$chk->execute()) { error_log('$chk execute failed: ' . ($chk->error ?? 'unknown')); }; if ($chk->get_result()->num_rows > 0) { $chk->close(); return ['success' => false, 'message' => 'A student with this index number already exists.']; } $chk->close(); }
 
         if (file_exists(__DIR__ . '/views/student_data_loader.php')) {
             require_once __DIR__ . '/views/student_data_loader.php';
@@ -845,7 +845,7 @@ class AuthenticationService {
             $s = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,phone,email,program,level,set_name,intake_year,intake_period,status,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,'',?,?,?,?,?,?,?,'Active',TRUE,FALSE,NOW(),NOW())");
             if (!$s) return ['success' => false, 'message' => 'Failed to prepare student account creation.'];
             $s->bind_param('sssssssssss', $index, $index, $firstName, $surname, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod);
-            $s->execute();
+            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level]];
         } catch (Exception $e) {
             error_log('createStudentAccount error: ' . $e->getMessage());
@@ -877,14 +877,14 @@ class AuthenticationService {
             $hash  = password_hash($staffData['password'], PASSWORD_BCRYPT);
             $rs    = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ?");
             $rs->bind_param('s', $staffData['role']);
-            $rs->execute();
+            if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };
             $rrow  = $rs->get_result()->fetch_assoc();
             $rs->close();
             if (!$rrow) return ['success' => false, 'message' => 'Invalid role specified'];
             $rid   = $rrow['id'];
             $s     = $conn->prepare("INSERT INTO staff (full_name,email,phone,password,role_id,position,department,status,created_at) VALUES (?,?,?,?,?,?,?,'Active',NOW())");
             $s->bind_param('ssssiss', $staffData['full_name'], $staffData['email'], $staffData['phone'], $hash, $rid, $staffData['position'], $staffData['department']);
-            $s->execute();
+            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             return ['success' => true, 'message' => 'Staff account created successfully'];
         } catch (Exception $e) {
             error_log('createStaffAccount error: ' . $e->getMessage());
@@ -895,7 +895,7 @@ class AuthenticationService {
 
 $auth_service = new AuthenticationService();
 
-// ── Lightweight session activity ping ──────────────────────────────
+// â”€â”€ Lightweight session activity ping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (!empty($_GET['ajax']) && $_GET['ajax'] === 'ping_activity' && $auth_service->isAuthenticated()) {
     $auth_service->checkAndLockSession();
     header('Content-Type: application/json');

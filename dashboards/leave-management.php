@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr', 'director', 'admin']);
 $conn = $ctx['staff'];
@@ -23,7 +23,7 @@ if ($conn) {
     if ($statusFilter !== '') { $w .= " AND lr.status=?"; $bindTypes .= 's'; $bindValues[] = $statusFilter; }
     if ($bindTypes) {
         $stmt = $conn->prepare("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
-        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); $stmt->execute(); $q = $stmt->get_result(); if ($q) $records = $q->fetch_all(MYSQLI_ASSOC); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $q = $stmt->get_result(); if ($q) $records = $q->fetch_all(MYSQLI_ASSOC); $stmt->close(); }
     } else {
         $q = $conn->query("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
         if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
             if ($stmt) {
                 $stmt->bind_param('iisss', $staffId, $leaveTypeId, $startDate, $endDate, $reason);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 $_SESSION['success'] = 'Leave request submitted.';
             } else {
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt) {
                 $reviewedBy = (int)($_SESSION['user_id'] ?? 0);
                 $stmt->bind_param('sii', $newStatus, $reviewedBy, $id);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 $_SESSION['success'] = "Leave request $newStatus.";
             }

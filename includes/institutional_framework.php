@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Institutional Framework: Hierarchy, Ownership, Alerts, Performance, Audit
  * Central include for director management enhancements.
@@ -7,9 +7,9 @@
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 1. DIRECTOR HIERARCHY
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('getDirectorHierarchy')) {
 function getDirectorHierarchy($conn) {
@@ -44,7 +44,7 @@ function getRoleHierarchyLevel($roleName, $conn) {
         $stmt = $conn->prepare("SELECT hierarchy_level FROM staff_roles WHERE role_name = ? LIMIT 1");
         if (!$stmt) return 99;
         $stmt->bind_param('s', $roleName);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         return $row ? (int)$row['hierarchy_level'] : 99;
@@ -97,9 +97,9 @@ function renderHierarchyChart($conn) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 2. DATA OWNERSHIP & ACCESS CONTROL
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('getDataOwnership')) {
 function getDataOwnership($roleId, $conn) {
@@ -109,7 +109,7 @@ function getDataOwnership($roleId, $conn) {
         $stmt = $conn->prepare("SELECT * FROM data_ownership_rules WHERE role_id = ?");
         if (!$stmt) return $rules;
         $stmt->bind_param('i', $roleId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
             $rules[] = $row;
@@ -127,14 +127,14 @@ function canAccessData($roleId, $departmentCode, $dataCategory, $conn) {
         $stmt = $conn->prepare("SELECT access_level FROM data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? LIMIT 1");
         if (!$stmt) return true;
         $stmt->bind_param('iss', $roleId, $departmentCode, $dataCategory);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$row) {
             $stmt2 = $conn->prepare("SELECT access_level FROM data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND access_level = 'full' LIMIT 1");
             if ($stmt2) {
                 $stmt2->bind_param('i', $roleId);
-                $stmt2->execute();
+                if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
                 $row2 = $stmt2->get_result()->fetch_assoc();
                 $stmt2->close();
                 return $row2 ? $row2['access_level'] : 'none';
@@ -156,14 +156,14 @@ function isDataOwner($roleId, $departmentCode, $dataCategory, $conn) {
         $stmt = $conn->prepare("SELECT is_owner FROM data_ownership_rules WHERE role_id = ? AND department_code = ? AND data_category = ? AND is_owner = 1 LIMIT 1");
         if (!$stmt) return false;
         $stmt->bind_param('iss', $roleId, $departmentCode, $dataCategory);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if ($row) return true;
         $stmt2 = $conn->prepare("SELECT is_owner FROM data_ownership_rules WHERE role_id = ? AND data_category = 'all' AND is_owner = 1 LIMIT 1");
         if ($stmt2) {
             $stmt2->bind_param('i', $roleId);
-            $stmt2->execute();
+            if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
             $row2 = $stmt2->get_result()->fetch_assoc();
             $stmt2->close();
             return $row2 ? true : false;
@@ -193,9 +193,9 @@ function renderOwnershipBadge($roleId, $conn) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 3. ENHANCED AUDIT TRAIL
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('recordAuditTrail')) {
 function recordAuditTrail($staffId, $action, $category, $description, $tableAffected = null, $recordId = null, $recordIdentifier = null, $previousValues = null, $newValues = null, $conn = null) {
@@ -245,7 +245,7 @@ function getAuditTrail($conn, $filters = [], $limit = 50, $offset = 0) {
         $stmt = $conn->prepare($sql);
         if (!$stmt) return $rows;
         if (!empty($params)) $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $rows[] = $row;
         $stmt->close();
@@ -294,9 +294,9 @@ function renderAuditTrailTable($conn, $filters = [], $limit = 30) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 4. DIRECTOR PERFORMANCE MONITORING
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('getDirectorPerformance')) {
 function getDirectorPerformance($staffId, $conn) {
@@ -305,7 +305,7 @@ function getDirectorPerformance($staffId, $conn) {
         $stmt = $conn->prepare("SELECT * FROM director_performance_reviews WHERE staff_id = ? ORDER BY id DESC LIMIT 1");
         if (!$stmt) return null;
         $stmt->bind_param('i', $staffId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         return $row ?: null;
@@ -324,7 +324,7 @@ function getDepartmentTargets($departmentCode, $fiscalYear, $conn) {
         $stmt = $conn->prepare("SELECT * FROM department_targets WHERE department_code = ? AND (fiscal_year = ? OR fiscal_year = '') ORDER BY target_category, target_name");
         if (!$stmt) return $targets;
         $stmt->bind_param('ss', $departmentCode, $fiscalYear);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $targets[] = $row;
         $stmt->close();
@@ -378,7 +378,7 @@ function renderDirectorPerformanceCard($staffId, $roleId, $roleName, $conn) {
     $deptCode = '';
     try {
         $dq = $conn->prepare("SELECT department_code FROM director_departments WHERE role_id = ? AND is_primary = 1 LIMIT 1");
-        if ($dq) { $dq->bind_param('i', $roleId); $dq->execute(); $dr = $dq->get_result()->fetch_assoc(); $dq->close(); if ($dr) $deptCode = $dr['department_code']; }
+        if ($dq) { $dq->bind_param('i', $roleId); if (!$dq->execute()) { error_log('$dq execute failed: ' . ($dq->error ?? 'unknown')); }; $dr = $dq->get_result()->fetch_assoc(); $dq->close(); if ($dr) $deptCode = $dr['department_code']; }
     } catch (Exception $e) { error_log('inst_framework getDirectorPerformance: ' . $e->getMessage()); }
     $targets = $deptCode ? getDepartmentTargets($deptCode, date('Y'), $conn) : [];
     $ps = calculatePerformanceScore($targets);
@@ -408,9 +408,9 @@ function renderDirectorPerformanceCard($staffId, $roleId, $roleName, $conn) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 5. INTELLIGENT MANAGEMENT ALERTS
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('createAlert')) {
 function createAlert($title, $message, $type = 'info', $priority = 'Medium', $category = 'other', $departmentCode = null, $sourceUrl = null, $isAuto = false, $conn = null) {
@@ -449,7 +449,7 @@ function getAlerts($conn, $departmentCode = null, $limit = 20, $unresolvedOnly =
         if (!$stmt) return $alerts;
         if ($departmentCode) $stmt->bind_param('si', $departmentCode, $limit);
         else $stmt->bind_param('i', $limit);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $alerts[] = $row;
         $stmt->close();
@@ -503,7 +503,7 @@ function getAlertCounts($conn, $departmentCode = null) {
         $stmt = $conn->prepare($sql);
         if (!$stmt) return $counts;
         if ($departmentCode) $stmt->bind_param('s', $departmentCode);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
             $k = strtolower($row['priority']);
@@ -516,9 +516,9 @@ function getAlertCounts($conn, $departmentCode = null) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 6. COMPLIANCE & RISK
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('getComplianceStatus')) {
 function getComplianceStatus($conn) {
@@ -579,9 +579,9 @@ function renderRiskBadge($score) {
 }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 7. PENDING APPROVALS
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (!function_exists('getPendingApprovals')) {
 function getPendingApprovals($conn, $roleId = null, $limit = 20) {
@@ -600,7 +600,7 @@ function getPendingApprovals($conn, $roleId = null, $limit = 20) {
         if (!$stmt) return $approvals;
         if ($roleId) $stmt->bind_param('ii', $roleId, $limit);
         else $stmt->bind_param('i', $limit);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $approvals[] = $row;
         $stmt->close();

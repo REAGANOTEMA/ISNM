@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../config/database.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
@@ -53,7 +53,7 @@ if ($conn) {
     $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschool_staffs.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
     if ($stmt) {
         if (!empty($params)) $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($r) while ($row = $r->fetch_assoc()) $announcements[] = $row;
         $stmt->close();
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         if ($title && $body) {
             $stmt = $conn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,expires_at) VALUES (?,?,?,?,?,?)");
             $stmt->bind_param("ssssi", $title, $body, $audience, $priority, $uid, $expires);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Announcement published.';
         }
@@ -83,13 +83,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $current = (int)($_POST['current']??0);
         $newActive = 1 - $current;
         $stmt = $conn->prepare("UPDATE announcements SET is_active=? WHERE id=?");
-        if ($stmt) { $stmt->bind_param('ii', $newActive, $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('ii', $newActive, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         header('Location: student-announcements.php'); exit;
     }
     if ($conn && $action==='delete_announcement') {
         $id = (int)($_POST['id']??0);
         $stmt = $conn->prepare("DELETE FROM announcements WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Announcement deleted.';
         header('Location: student-announcements.php'); exit;
     }

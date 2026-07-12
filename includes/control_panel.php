@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Professional Control Panel for ISNM Staff Dashboards
  * Include this in any dashboard to render the home page.
@@ -7,7 +7,7 @@
 if (!isset($ctx)) return;
 $uid = (int)($uid ?? $user_id ?? ($_SESSION['user_id'] ?? 0));
 
-// ── Gather dashboard stats ──
+// â”€â”€ Gather dashboard stats â”€â”€
 $cpStats = [
     'total_students' => 0,
     'active_staff'   => 0,
@@ -40,7 +40,7 @@ try {
             $stmt = $cpStaffConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
             if ($stmt) {
                 $stmt->bind_param('i', $cpUid);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $cpStats['pending_tasks'] = (int)$stmt->get_result()->fetch_assoc()['c'];
                 $stmt->close();
             }

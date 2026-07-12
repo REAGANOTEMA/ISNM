@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // ISNM Unified Database Connection System
 // Connects to all four databases: staffs_db, students_db, website_db, ict
 
@@ -94,7 +94,7 @@ class DatabaseConnection {
 
             $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
 
-            // Hardcoded hosting credentials — always try first, no .env dependency
+            // Hardcoded hosting credentials â€” always try first, no .env dependency
             $hostingCreds = [
                 'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => '3i%yHc00=cP^ZXwF'],
                 'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => '?e=8Dc^D_1Aq9UQd'],
@@ -241,7 +241,7 @@ class DatabaseConnection {
                 $stmt->bind_param($types, ...$params);
             }
             
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $stmt->close();
             
@@ -262,7 +262,7 @@ class DatabaseConnection {
                 $stmt->bind_param($types, ...$params);
             }
             
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $insert_id = $conn->insert_id;
             $stmt->close();
             

@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ISNM PRODUCTION SETUP — self-contained, no includes needed
+ * ISNM PRODUCTION SETUP â€” self-contained, no includes needed
  * Run ONCE from browser, then DELETE this file.
  */
 error_reporting(E_ERROR | E_PARSE);
@@ -9,7 +9,7 @@ echo "<style>body{font-family:monospace;padding:20px;background:#1e293b;color:#e
 echo "h1{color:#f59e0b} .ok{color:#10b981} .fail{color:#ef4444} .info{color:#60a5fa}</style></head><body>";
 echo "<h1>ISNM Production Setup</h1>";
 
-// ── Connect using config ──
+// â”€â”€ Connect using config â”€â”€
 require_once __DIR__ . '/config/database.php';
 $conn = getStaffConnection();
 if (!$conn) {
@@ -18,7 +18,7 @@ if (!$conn) {
 $conn->set_charset('utf8mb4');
 echo "<p class='ok'>Connected to staff database.</p>";
 
-// ── Step 1: Create staff table ──
+// â”€â”€ Step 1: Create staff table â”€â”€
 echo "<h2>Step 1: staff table</h2>";
 $r = $conn->query("SHOW TABLES LIKE 'staff'");
 if ($r && $r->num_rows > 0) {
@@ -49,7 +49,7 @@ if ($r && $r->num_rows > 0) {
     echo "<p class='ok'>Created.</p>";
 }
 
-// ── Step 2: Insert staff records ──
+// â”€â”€ Step 2: Insert staff records â”€â”€
 echo "<h2>Step 2: staff records</h2>";
 $cnt = $conn->query("SELECT COUNT(*) as c FROM staff")->fetch_assoc()['c'];
 echo "<p class='info'>Current: $cnt</p>";
@@ -96,10 +96,10 @@ if ($cnt == 0) {
     $ins->close();
     echo "<p class='ok'>Inserted $n records.</p>";
 } else {
-    echo "<p class='info'>Skipped — table has data.</p>";
+    echo "<p class='info'>Skipped â€” table has data.</p>";
 }
 
-// ── Step 3: Create staff_roles ──
+// â”€â”€ Step 3: Create staff_roles â”€â”€
 echo "<h2>Step 3: staff_roles table</h2>";
 $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,7 +115,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS `staff_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 echo "<p class='ok'>Ready.</p>";
 
-// ── Step 4: Populate roles ──
+// â”€â”€ Step 4: Populate roles â”€â”€
 echo "<h2>Step 4: Roles</h2>";
 $roles = [
     [1,'Director General','Executive leadership','executive','dashboards/director-general.php'],
@@ -163,13 +163,13 @@ $ins = $conn->prepare("INSERT INTO staff_roles (id,role_name,description,role_le
 $n = 0;
 foreach ($roles as $r) {
     $ins->bind_param('issss', $r[0],$r[1],$r[2],$r[3],$r[4]);
-    $ins->execute();
+    if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
     $n++;
 }
 $ins->close();
 echo "<p class='ok'>$n roles configured.</p>";
 
-// ── Step 5: Link staff to roles ──
+// â”€â”€ Step 5: Link staff to roles â”€â”€
 echo "<h2>Step 5: Link staff to roles</h2>";
 $map = [
     ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug','Computer Lab Manager'],
@@ -212,7 +212,7 @@ foreach ($map as $m) {
 $upd->close();
 echo "<p class='ok'>$n linked.</p>";
 
-// ── Step 6: Set passwords ──
+// â”€â”€ Step 6: Set passwords â”€â”€
 echo "<h2>Step 6: Passwords</h2>";
 $pwds = [
     ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug','Techno123'],
@@ -257,12 +257,12 @@ foreach ($pwds as $p) {
 }
 $upd->close();
 
-// ── Step 7: Unlock ──
+// â”€â”€ Step 7: Unlock â”€â”€
 echo "<h2>Step 7: Unlock</h2>";
 $conn->query("UPDATE staff SET login_attempts=0,locked_until=NULL");
 echo "<p class='ok'>Done.</p>";
 
-// ── Verify ──
+// â”€â”€ Verify â”€â”€
 echo "<h2>Verify</h2>";
 $v = $conn->query("SELECT COUNT(*) as c FROM staff")->fetch_assoc();
 echo "<p class='info'>Staff: {$v['c']}</p>";

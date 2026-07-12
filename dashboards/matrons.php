@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $check = $conn->prepare("SELECT id, full_name FROM students WHERE id = ?");
                 if ($check) {
                     $check->bind_param("i", $student_id);
-                    $check->execute();
+                    if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };
                     $result = $check->get_result();
                     if ($row = $result->fetch_assoc()) {
                         $student_name = $row['full_name'];
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $stmt = $conn->prepare("DELETE FROM welfare_actions WHERE case_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("i", $case_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
                 $stmt = $conn->prepare("DELETE FROM welfare_cases WHERE id = ?");
@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                                 $itemNotes = trim($ri['notes'] ?? '');
                                 if ($itemId > 0 && $qty > 0) {
                                     $ins->bind_param("iids", $reqId, $itemId, $qty, $itemNotes);
-                                    $ins->execute();
+                                    if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
                                 }
                             }
                             $ins->close();
@@ -269,7 +269,7 @@ if ($conn && !empty($cases)) {
         if ($stmt) {
             $types = str_repeat('i', count($case_ids));
             $stmt->bind_param($types, ...$case_ids);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
                 $actions_by_case[$row['case_id']][] = $row;
@@ -418,7 +418,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                                     <span class="badge bg-<?php echo $scls; ?>"><?php echo htmlspecialchars($stat); ?></span>
                                 </td>
                                 <td><?php echo htmlspecialchars($case['reported_by_name'] ?? ''); ?></td>
-                                <td><small><?php echo htmlspecialchars($case['resolution_notes'] ?? '—'); ?></small></td>
+                                <td><small><?php echo htmlspecialchars($case['resolution_notes'] ?? 'â€”'); ?></small></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-primary me-1" title="View Details" onclick="viewCase(<?php echo $cid; ?>)"><i class="fas fa-eye"></i></button>
                                     <button type="button" class="btn btn-sm btn-outline-warning me-1" title="Edit" onclick="editCase(<?php echo $cid; ?>)"><i class="fas fa-edit"></i></button>

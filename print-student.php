@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 bootstrapStaffDashboard();
 require_once __DIR__ . '/config/database.php';
@@ -11,7 +11,7 @@ $conn = DatabaseConnection::getStudentsConnection();
 $student = null;
 if ($conn) {
     $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-    if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else { $r = false; }
+    if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); $stmt->close(); } else { $r = false; }
     if ($r) $student = $r->fetch_assoc();
 }
 if (!$student) { echo '<html><body><h2>Student not found</h2><a href="javascript:window.close()">Close</a></body></html>'; exit; }

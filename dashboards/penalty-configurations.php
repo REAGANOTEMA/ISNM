@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['bursar', 'finance', 'director', 'registrar', 'secretary', 'ict']);
 $conn = $ctx['students'];
@@ -13,12 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $desc = trim($_POST['description'] ?? '');
         if ($action === 'add') {
             $stmt = $conn->prepare("INSERT INTO penalty_configurations (penalty_name, penalty_type, amount, description) VALUES (?, ?, ?, ?)");
-            if ($stmt) { $stmt->bind_param('ssds', $name, $type, $amount, $desc); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ssds', $name, $type, $amount, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = "Penalty '$name' added.";
         } else {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("UPDATE penalty_configurations SET penalty_name=?, penalty_type=?, amount=?, description=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssdsi', $name, $type, $amount, $desc, $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ssdsi', $name, $type, $amount, $desc, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = "Penalty '$name' updated.";
         }
         header('Location: penalty-configurations.php'); exit;
@@ -26,14 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'toggle') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt = $conn->prepare("UPDATE penalty_configurations SET is_active = NOT is_active WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Penalty status toggled.';
         header('Location: penalty-configurations.php'); exit;
     }
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt = $conn->prepare("DELETE FROM penalty_configurations WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Penalty deleted.';
         header('Location: penalty-configurations.php'); exit;
     }

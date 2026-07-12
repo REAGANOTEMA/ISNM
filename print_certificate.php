@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Certificate Printing Endpoint
  * Generates professional certificate HTML for printing
@@ -39,7 +39,7 @@ if ($student_id) {
             $q = $studentsDb->prepare("SELECT first_name, surname, other_names, student_number, program FROM students WHERE id = ? OR student_number = ? LIMIT 1");
             if ($q) {
                 $q->bind_param('is', $student_id, $student_id);
-                $q->execute();
+                if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
                 $s = $q->get_result()->fetch_assoc();
                 $q->close();
                 if ($s) {

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -25,7 +25,7 @@ if ($studentsDb) {
     $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
     if ($stmt) {
         $stmt->bind_param("si", $studentNumber, $userId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $sr = $stmt->get_result();
         $studentInfo = $sr ? $sr->fetch_assoc() : [];
         $stmt->close();
@@ -45,7 +45,7 @@ if ($studentsDb) {
     $stmt2 = $studentsDb->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? AND year_of_study=? AND status='Active'");
     if ($stmt2) {
         $stmt2->bind_param("si", $program, $year);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $avail = $stmt2->get_result();
         if ($avail) {
             $availableCourses = $avail->fetch_all(MYSQLI_ASSOC);
@@ -81,7 +81,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
         </div>
         <div class="text-end">
             <div class="fw-semibold"><?= $fullName ?></div>
-            <small class="text-muted">Y<?= $yearOfStudy ?> · <?= $program ?></small>
+            <small class="text-muted">Y<?= $yearOfStudy ?> Â· <?= $program ?></small>
         </div>
     </div>
 
@@ -112,11 +112,11 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                         ?>
                         <tr>
                             <td><?= $i++ ?></td>
-                            <td><?= htmlspecialchars($r['course_title'] ?? $r['course_name'] ?? $r['course_code'] ?? '—') ?></td>
-                            <td><?= htmlspecialchars($r['course_code'] ?? '—') ?></td>
-                            <td><?= htmlspecialchars($r['semester'] ?? $r['academic_year'] ?? '—') ?></td>
+                            <td><?= htmlspecialchars($r['course_title'] ?? $r['course_name'] ?? $r['course_code'] ?? 'â€”') ?></td>
+                            <td><?= htmlspecialchars($r['course_code'] ?? 'â€”') ?></td>
+                            <td><?= htmlspecialchars($r['semester'] ?? $r['academic_year'] ?? 'â€”') ?></td>
                             <td><span class="status-badge status-<?= $status ?>"><?= htmlspecialchars($status) ?></span></td>
-                            <td><?= htmlspecialchars($r['registration_date'] ?? '—') ?></td>
+                            <td><?= htmlspecialchars($r['registration_date'] ?? 'â€”') ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -144,7 +144,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                             <td><?= htmlspecialchars($c['course_title']??'') ?></td>
                             <td><?= (int)($c['credits']??0) ?></td>
                             <td><?= (int)($c['year_of_study']??$yearOfStudy) ?></td>
-                            <td><?= htmlspecialchars($c['semester']??'—') ?></td>
+                            <td><?= htmlspecialchars($c['semester']??'â€”') ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

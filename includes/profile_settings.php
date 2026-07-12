@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 if (defined('PROFILE_SETTINGS_LOADED')) return;
 define('PROFILE_SETTINGS_LOADED', true);
 
-// ── AJAX: Upload profile image ────────────────────────────────
+// â”€â”€ AJAX: Upload profile image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => ''];
@@ -56,7 +56,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
         // Create or update staff_profiles record
         $check = $staffDb->prepare("SELECT id FROM staff_profiles WHERE staff_id = ?");
         $check->bind_param('i', $staffId);
-        $check->execute();
+        if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };
         $exists = $check->get_result()->fetch_assoc();
         $check->close();
 
@@ -64,7 +64,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
             // Delete old photo
             $oldQuery = $staffDb->prepare("SELECT profile_picture FROM staff_profiles WHERE staff_id = ?");
             $oldQuery->bind_param('i', $staffId);
-            $oldQuery->execute();
+            if (!$oldQuery->execute()) { error_log('$oldQuery execute failed: ' . ($oldQuery->error ?? 'unknown')); };
             $oldRow = $oldQuery->get_result()->fetch_assoc();
             $oldQuery->close();
             if ($oldRow && $oldRow['profile_picture']) {
@@ -73,19 +73,19 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
             }
             $upd = $staffDb->prepare("UPDATE staff_profiles SET profile_picture = ? WHERE staff_id = ?");
             $upd->bind_param('si', $relativePath, $staffId);
-            $upd->execute();
+            if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); };
             $upd->close();
         } else {
             $ins = $staffDb->prepare("INSERT INTO staff_profiles (staff_id, profile_picture) VALUES (?, ?)");
             $ins->bind_param('is', $staffId, $relativePath);
-            $ins->execute();
+            if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
             $ins->close();
         }
 
         // Also update staff.profile_photo for backward compatibility
         $updStaff = $staffDb->prepare("UPDATE staff SET profile_photo = ? WHERE id = ?");
         $updStaff->bind_param('si', $relativePath, $staffId);
-        $updStaff->execute();
+        if (!$updStaff->execute()) { error_log('$updStaff execute failed: ' . ($updStaff->error ?? 'unknown')); };
         $updStaff->close();
 
         $response = ['success' => true, 'path' => '../' . $relativePath, 'error' => ''];
@@ -114,7 +114,7 @@ if (!function_exists('getStaffProfileImageUrl')) {
                 $s = $staffDb->prepare("SELECT profile_picture FROM staff_profiles WHERE staff_id = ?");
                 if ($s) {
                     $s->bind_param('i', $staffId);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     $row = $s->get_result()->fetch_assoc();
                     $s->close();
                     if ($row && $row['profile_picture']) {
@@ -130,7 +130,7 @@ if (!function_exists('getStaffProfileImageUrl')) {
                 $s2 = $staffDb->prepare("SELECT profile_photo FROM staff WHERE id = ?");
                 if ($s2) {
                     $s2->bind_param('i', $staffId);
-                    $s2->execute();
+                    if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };
                     $row2 = $s2->get_result()->fetch_assoc();
                     $s2->close();
                     if ($row2 && $row2['profile_photo']) {
@@ -149,7 +149,7 @@ if (!function_exists('getStaffProfileImageUrl')) {
     }
 }
 
-// ── Fetch staff data for profile form ─────────────────────────
+// â”€â”€ Fetch staff data for profile form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getStaffProfileData($staffId) {
     $data = [
         'first_name' => '', 'surname' => '', 'other_names' => '',
@@ -168,7 +168,7 @@ function getStaffProfileData($staffId) {
             $s = $staffDb->prepare("SELECT full_name, email, phone, department FROM staff WHERE id = ?");
             if ($s) {
                 $s->bind_param('i', $staffId);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 $row = $s->get_result()->fetch_assoc();
                 $s->close();
                 if ($row) {
@@ -186,7 +186,7 @@ function getStaffProfileData($staffId) {
             $sp = $staffDb->prepare("SELECT bio FROM staff_profiles WHERE staff_id = ?");
             if ($sp) {
                 $sp->bind_param('i', $staffId);
-                $sp->execute();
+                if (!$sp->execute()) { error_log('$sp execute failed: ' . ($sp->error ?? 'unknown')); };
                 $row2 = $sp->get_result()->fetch_assoc();
                 $sp->close();
                 if ($row2 && !empty($row2['bio'])) {
@@ -198,7 +198,7 @@ function getStaffProfileData($staffId) {
     return $data;
 }
 
-// ── AJAX: Save profile fields ────────────────────────────────
+// â”€â”€ AJAX: Save profile fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => ''];
@@ -237,18 +237,18 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
         // Update staff_profiles (bio)
         $check = $staffDb->prepare("SELECT id FROM staff_profiles WHERE staff_id = ?");
         $check->bind_param('i', $staffId);
-        $check->execute();
+        if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };
         $exists = $check->get_result()->fetch_assoc();
         $check->close();
         if ($exists) {
             $upd2 = $staffDb->prepare("UPDATE staff_profiles SET bio = ? WHERE staff_id = ?");
             $upd2->bind_param('si', $bio, $staffId);
-            $upd2->execute();
+            if (!$upd2->execute()) { error_log('$upd2 execute failed: ' . ($upd2->error ?? 'unknown')); };
             $upd2->close();
         } else {
             $ins = $staffDb->prepare("INSERT INTO staff_profiles (staff_id, bio) VALUES (?, ?)");
             $ins->bind_param('is', $staffId, $bio);
-            $ins->execute();
+            if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
             $ins->close();
         }
 
@@ -266,7 +266,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
     exit;
 }
 
-// ── Render profile settings modal ─────────────────────────────
+// â”€â”€ Render profile settings modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderProfileModal() {
     $staffId = (int)($_SESSION['user_id'] ?? 0);
     $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/username.png';
@@ -362,7 +362,7 @@ function renderProfileModal() {
     </div>
 <?php }
 
-// ── Styles ────────────────────────────────────────────────────
+// â”€â”€ Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderProfileStyles() { ?>
 <style>
 .profile-modal-content { border: none; border-radius: 20px; overflow: hidden; }
@@ -401,13 +401,13 @@ function renderProfileStyles() { ?>
 </style>
 <?php }
 
-// ── Scripts ───────────────────────────────────────────────────
+// â”€â”€ Scripts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderProfileScripts() { ?>
 <script>
 (function(){
     var staffId = <?= (int)($_SESSION['user_id'] ?? 0) ?>;
 
-    // Image input change → preview
+    // Image input change â†’ preview
     var input = document.getElementById('profileImageInput');
     var preview = document.getElementById('profileUploadPreview');
     var previewImg = document.getElementById('profilePreviewImg');
@@ -495,7 +495,7 @@ function renderProfileScripts() { ?>
 
     function escHtml(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    // ── Save profile fields ──
+    // â”€â”€ Save profile fields â”€â”€
     window.saveProfileFields = function() {
         var saveBtn = document.getElementById('profileInfoSaveBtn');
         var status = document.getElementById('profileSaveStatus');

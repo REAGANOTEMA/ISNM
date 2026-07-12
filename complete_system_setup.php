@@ -170,7 +170,7 @@ class CompleteSystemSetup {
             // Check if staff exists
             $check = $staffConn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
             $check->bind_param('s', $email);
-            $check->execute();
+            if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };
             $checkResult = $check->get_result();
             
             if ($checkResult->num_rows > 0) {
@@ -185,7 +185,7 @@ class CompleteSystemSetup {
                 if ($rq) {
                     $roleName = $creds['position'];
                     $rq->bind_param('s', $roleName);
-                    $rq->execute();
+                    if (!$rq->execute()) { error_log('$rq execute failed: ' . ($rq->error ?? 'unknown')); };
                     $rqResult = $rq->get_result();
                     if ($rqResult && $rqResult->num_rows > 0) {
                         $role_id_val = (int)$rqResult->fetch_assoc()['id'];
@@ -222,7 +222,7 @@ class CompleteSystemSetup {
                 if ($rq) {
                     $roleName = $creds['position'];
                     $rq->bind_param('s', $roleName);
-                    $rq->execute();
+                    if (!$rq->execute()) { error_log('$rq execute failed: ' . ($rq->error ?? 'unknown')); };
                     $rqResult = $rq->get_result();
                     if ($rqResult && $rqResult->num_rows > 0) {
                         $role_id_val = (int)$rqResult->fetch_assoc()['id'];

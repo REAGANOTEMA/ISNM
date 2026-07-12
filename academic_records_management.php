@@ -66,7 +66,7 @@ function handleAddMarks() {
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssissisidddssdi", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
 
         // Update student's cumulative GPA
@@ -109,7 +109,7 @@ function handleUpdateMarks() {
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("dddsddii", $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $_SESSION['user_id'], $record_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
 
         // Update student's cumulative GPA
@@ -143,7 +143,7 @@ function handleDeleteMarks() {
         $sql = "DELETE FROM academic_records WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $record_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
 
         // Update student's cumulative GPA

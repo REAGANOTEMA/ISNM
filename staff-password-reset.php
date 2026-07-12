@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Include unified authentication system
 require_once 'auth-service.php';
 
@@ -53,7 +53,7 @@ function handlePasswordResetRequest() {
     }
     $stmt = $conn->prepare("SELECT id, full_name FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
     $stmt->bind_param("s", $email);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
@@ -71,7 +71,7 @@ function handlePasswordResetRequest() {
     // Store reset token in staff table
     $update_stmt = $conn->prepare("UPDATE staff SET reset_token = ?, reset_expiry = ? WHERE id = ?");
     $update_stmt->bind_param("ssi", $reset_token, $reset_expiry, $user['id']);
-    $update_stmt->execute();
+    if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
     
     // In a real system, you would send an email here
     // For now, show the reset link directly

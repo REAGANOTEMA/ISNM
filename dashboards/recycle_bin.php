@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','ict','system admin']);
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'restore' && $item_id) {
         $q = $conn->prepare("SELECT * FROM recycle_bin WHERE id = ?");
         $q->bind_param('i', $item_id);
-        $q->execute();
+        if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
         $item = $q->get_result()->fetch_assoc();
         $q->close();
 
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $restore = $conn->query("UPDATE `$table` SET is_deleted = 0, deleted_at = NULL WHERE `$col` = $original_id AND is_deleted = 1");
             if ($restore) {
                 $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
-                if ($stmt) { $stmt->bind_param('i', $item_id); $stmt->execute(); $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('i', $item_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $_SESSION['success'] = 'Item restored successfully.';
             } else {
                 $_SESSION['error'] = 'Failed to restore item: ' . $conn->error;
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_forever' && $item_id) {
         $q = $conn->prepare("SELECT original_table, original_id_column, original_id FROM recycle_bin WHERE id = ?");
         $q->bind_param('i', $item_id);
-        $q->execute();
+        if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
         $item = $q->get_result()->fetch_assoc();
         $q->close();
 
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $conn->query("DELETE FROM `$table` WHERE `$col` = $original_id");
             $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
-            if ($stmt) { $stmt->bind_param('i', $item_id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $item_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Item permanently deleted.';
         }
         header('Location: recycle_bin.php');

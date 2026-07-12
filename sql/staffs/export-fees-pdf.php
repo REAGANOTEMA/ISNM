@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Student Fees PDF Export
  * Generates a professional PDF statement using the mPDF library.
@@ -30,7 +30,7 @@ try {
     // 2. Fetch Student Data
     $stmt = $conn->prepare("SELECT full_name, student_number, registration_number, program, current_year FROM students WHERE id = ?");
     $stmt->bind_param("i", $studentId);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $student = $stmt->get_result()->fetch_assoc();
     
     if (!$student) die("Student record not found.");
@@ -38,7 +38,7 @@ try {
     // 3. Fetch Fee Records
     $stmt = $conn->prepare("SELECT * FROM student_fees WHERE student_id = ? ORDER BY due_date DESC, created_at DESC");
     $stmt->bind_param("i", $studentId);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $feesResult = $stmt->get_result();
     
     $totalBilled = 0; $totalPaid = 0; $feesData = [];

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Auto-Deduction / Subscription Payment Processor
  * Handles creation, management, and processing of recurring payment subscriptions.
@@ -41,13 +41,13 @@ if (!function_exists('processAutoDeductions')) {
 
             $existing = $conn->prepare("SELECT id FROM subscription_deductions WHERE subscription_id = ? AND installment_number = ? AND status != 'skipped'");
             $existing->bind_param('ii', $subId, $installNo);
-            $existing->execute();
+            if (!$existing->execute()) { error_log('$existing execute failed: ' . ($existing->error ?? 'unknown')); };
             $existingResult = $existing->get_result();
             if ($existingResult && $existingResult->num_rows > 0) {
                 $results['skipped']++;
                 $updStmt = $conn->prepare("UPDATE payment_subscriptions SET next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = ?");
                 $updStmt->bind_param('i', $subId);
-                $updStmt->execute();
+                if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
                 $updStmt->close();
                 $existing->close();
                 continue;
@@ -64,7 +64,7 @@ if (!function_exists('processAutoDeductions')) {
                 $notes = 'Auto-deduction: Subscription #' . $subId . ' Installment ' . $installNo . '/' . $sub['total_installments'];
                 $method = $sub['payment_method'] ?? 'mobile_money';
                 $payStmt->bind_param('ssdss', $studentId, $ref, $amount, $method, $notes);
-                $payStmt->execute();
+                if (!$payStmt->execute()) { error_log('$payStmt execute failed: ' . ($payStmt->error ?? 'unknown')); };
                 $paymentId = $payStmt->insert_id;
                 $payStmt->close();
 
@@ -73,7 +73,7 @@ if (!function_exists('processAutoDeductions')) {
                     VALUES (?, ?, ?, ?, ?, NOW(), 'success', ?, ?, 1, NOW())
                 ");
                 $dedStmt->bind_param('isidssi', $subId, $studentId, $installNo, $amount, $dueDate, $ref, $paymentId);
-                $dedStmt->execute();
+                if (!$dedStmt->execute()) { error_log('$dedStmt execute failed: ' . ($dedStmt->error ?? 'unknown')); };
                 $dedStmt->close();
 
                 $newCollected = $installNo;
@@ -85,7 +85,7 @@ if (!function_exists('processAutoDeductions')) {
                     $updateStmt = $conn->prepare("UPDATE payment_subscriptions SET installments_collected = ?, next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = ?");
                     $updateStmt->bind_param('ii', $newCollected, $subId);
                 }
-                $updateStmt->execute();
+                if (!$updateStmt->execute()) { error_log('$updateStmt execute failed: ' . ($updateStmt->error ?? 'unknown')); };
                 $updateStmt->close();
 
                 $conn->commit();
@@ -101,7 +101,7 @@ if (!function_exists('processAutoDeductions')) {
                     ");
                     $reason = $e->getMessage();
                     $failStmt->bind_param('isidss', $subId, $studentId, $installNo, $amount, $dueDate, $reason);
-                    $failStmt->execute();
+                    if (!$failStmt->execute()) { error_log('$failStmt execute failed: ' . ($failStmt->error ?? 'unknown')); };
                     $failStmt->close();
                 } catch (Exception $e2) { error_log('auto_deduction process: ' . $e2->getMessage()); }
             }
@@ -160,7 +160,7 @@ if (!function_exists('getStudentSubscriptions')) {
             ORDER BY ps.created_at DESC
         ");
         $stmt->bind_param("s", $studentId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
         $stmt->close();
@@ -180,7 +180,7 @@ if (!function_exists('cancelSubscription')) {
             $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'cancelled' WHERE id = ?");
             $stmt->bind_param("i", $id);
         }
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $affected = $conn->affected_rows;
         $stmt->close();
         return $affected > 0;
@@ -199,7 +199,7 @@ if (!function_exists('pauseSubscription')) {
             $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'paused' WHERE id = ?");
             $stmt->bind_param("i", $id);
         }
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $affected = $conn->affected_rows;
         $stmt->close();
         return $affected > 0;
@@ -213,14 +213,14 @@ if (!function_exists('resumeSubscription')) {
         $id = (int)$subscriptionId;
         $freqStmt = $conn->prepare("SELECT frequency FROM payment_subscriptions WHERE id = ?");
         $freqStmt->bind_param("i", $id);
-        $freqStmt->execute();
+        if (!$freqStmt->execute()) { error_log('$freqStmt execute failed: ' . ($freqStmt->error ?? 'unknown')); };
         $q = $freqStmt->get_result();
         $interval = $q ? $q->fetch_assoc() : null;
         $freqStmt->close();
         $freq = $interval['frequency'] ?? 'monthly';
         $sqlFreq = $freq === 'weekly' ? 'INTERVAL 1 WEEK' : ($freq === 'quarterly' ? 'INTERVAL 3 MONTH' : 'INTERVAL 1 MONTH');
         $dateStmt = $conn->prepare("SELECT DATE_ADD(CURDATE(), $sqlFreq) AS nd");
-        $dateStmt->execute();
+        if (!$dateStmt->execute()) { error_log('$dateStmt execute failed: ' . ($dateStmt->error ?? 'unknown')); };
         $dq = $dateStmt->get_result();
         $nextDue = ($dq && $r = $dq->fetch_assoc()) ? $r['nd'] : null;
         $dateStmt->close();
@@ -231,7 +231,7 @@ if (!function_exists('resumeSubscription')) {
             $updStmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'active', next_due_date = ? WHERE id = ?");
             $updStmt->bind_param("si", $nextDue, $id);
         }
-        $updStmt->execute();
+        if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
         $affected = $conn->affected_rows;
         $updStmt->close();
         return $affected > 0;
@@ -256,7 +256,7 @@ if (!function_exists('getAllSubscriptions')) {
         } else {
             $stmt = $conn->prepare($sql . " ORDER BY ps.created_at DESC LIMIT " . (int)$limit);
         }
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
         $stmt->close();

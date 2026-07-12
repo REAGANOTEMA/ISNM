@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Financial Management Functions for ISNM
  * Uses bursar_system.sql schema (student_invoices, payments, expenditure_records, penalty_configurations)
@@ -19,7 +19,7 @@ if (!function_exists('generateFeeInvoiceNumber')) {
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_invoices WHERE invoice_number LIKE ?");
         $likePattern = $prefix . '%';
         $stmt->bind_param("s", $likePattern);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $number = $result['count'] + 1;
         return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
@@ -33,7 +33,7 @@ if (!function_exists('generatePaymentReference')) {
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM payments WHERE payment_reference LIKE ?");
         $likePattern = $prefix . '%';
         $stmt->bind_param("s", $likePattern);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $number = $result['count'] + 1;
         return $prefix . str_pad($number, 4, '0', STR_PAD_LEFT);
@@ -47,7 +47,7 @@ if (!function_exists('generateReceiptNumber')) {
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM payment_receipts WHERE receipt_number LIKE ?");
         $likePattern = $prefix . '%';
         $stmt->bind_param("s", $likePattern);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $number = $result['count'] + 1;
         return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
@@ -61,7 +61,7 @@ if (!function_exists('generateExpenseId')) {
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM expenditure_records WHERE expenditure_number LIKE ?");
         $likePattern = $prefix . '%';
         $stmt->bind_param("s", $likePattern);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $number = $result['count'] + 1;
         return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
@@ -77,7 +77,7 @@ if (!function_exists('getStudentBalance')) {
             WHERE student_id = ? AND status IN ('Pending', 'Partially Paid', 'Overdue')
         ");
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         return $result['total_balance'];
     }
@@ -91,7 +91,7 @@ if (!function_exists('calculatePenalty')) {
         if ($penalty_config_id) {
             $stmt = $conn->prepare("SELECT * FROM penalty_configurations WHERE id = ? AND is_active = TRUE");
             $stmt->bind_param("i", $penalty_config_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $config = $stmt->get_result()->fetch_assoc();
             
             if ($config) {
@@ -114,7 +114,7 @@ if (!function_exists('updateStudentInvoiceBalance')) {
             GROUP BY si.id
         ");
         $stmt->bind_param("i", $invoice_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         
         if ($result) {
@@ -133,7 +133,7 @@ if (!function_exists('updateStudentInvoiceBalance')) {
                 WHERE id = ?
             ");
             $update_stmt->bind_param("ddddi", $paid, $paid, $total, $paid, $invoice_id);
-            $update_stmt->execute();
+            if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
         }
     }
 }
@@ -159,7 +159,7 @@ if (!function_exists('getTotalCollections')) {
                 break;
         }
         if (!$stmt) return 0;
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         return $stmt->get_result()->fetch_assoc()['total'];
     }
 }
@@ -192,7 +192,7 @@ if (!function_exists('logFinancialActivity')) {
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
         $stmt->bind_param("isssss", $user_id, $action_type, $description, $module, $ip_address, $user_agent);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     }
 }
 
@@ -215,7 +215,7 @@ if (!function_exists('generateFinancialStatement')) {
             ORDER BY si.created_at DESC
         ");
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $invoices = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         
         $stmt = $conn->prepare("
@@ -230,7 +230,7 @@ if (!function_exists('generateFinancialStatement')) {
             ORDER BY p.payment_date DESC
         ");
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $payments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         
         return [

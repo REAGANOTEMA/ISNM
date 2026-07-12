@@ -769,7 +769,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                             $sv = null;
                             if ($ict) {
                                 $st = $ict->prepare("SELECT setting_value FROM ict_system_settings WHERE setting_key=?");
-                                if ($st) { $st->bind_param('s', $sk); $st->execute(); $sr = $st->get_result(); $sv = $sr->fetch_assoc(); $st->close(); }
+                                if ($st) { $st->bind_param('s', $sk); if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); }; $sr = $st->get_result(); $sv = $sr->fetch_assoc(); $st->close(); }
                             }
                             $val = $sv ? $sv['setting_value'] : '';
                         ?>

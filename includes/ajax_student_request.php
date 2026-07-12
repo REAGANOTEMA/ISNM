@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 include_once 'config.php';
 include_once 'functions.php';
@@ -38,7 +38,7 @@ try {
                                    FROM users WHERE role IN ('School Principal', 'School Secretary', 'Academic Registrar')";
                 $notif_stmt = $conn->prepare($notification_sql);
                 $notif_stmt->bind_param("s", $_SESSION['first_name'] . ' ' . $_SESSION['last_name']);
-                $notif_stmt->execute();
+                if (!$notif_stmt->execute()) { error_log('$notif_stmt execute failed: ' . ($notif_stmt->error ?? 'unknown')); };
                 
                 echo json_encode(['success' => true, 'message' => 'Bus service request submitted successfully']);
             } else {

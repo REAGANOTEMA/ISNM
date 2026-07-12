@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Staff Credentials Seeder
  * Inserts/updates all staff accounts with correct bcrypt passwords and role_id.
@@ -52,7 +52,7 @@ $getRoleId = function($roleName) use ($conn) {
     $s = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
     if (!$s) { echo "  WARNING: Cannot query staff_roles\n"; return null; }
     $s->bind_param('s', $roleName);
-    $s->execute();
+    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
     $r = $s->get_result();
     $id = ($r && $r->num_rows > 0) ? (int)$r->fetch_assoc()['id'] : null;
     if (!$id) echo "  WARNING: No staff_roles row for '$roleName'\n";
@@ -70,21 +70,21 @@ foreach ($staffAccounts as $s) {
 
     $chk = $conn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
     $chk->bind_param('s', $s['email']);
-    $chk->execute();
+    if (!$chk->execute()) { error_log('$chk execute failed: ' . ($chk->error ?? 'unknown')); };
     $existing = $chk->get_result()->fetch_assoc();
     $chk->close();
 
     if ($existing) {
         $st = $conn->prepare("UPDATE staff SET password=?, full_name=?, position=?, department=?, role_id=?, status='Active', login_attempts=0, locked_until=NULL, is_first_login=0, password_changed=1 WHERE id=?");
         $st->bind_param('ssssii', $hash, $s['full_name'], $s['position'], $s['department'], $roleId, $existing['id']);
-        $st->execute();
+        if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };
         if ($st->error) { echo "  ERROR: {$s['email']} - {$st->error}\n"; $errors++; }
         else { echo "  Updated: {$s['email']} ({$s['position']})\n"; $updated++; }
         $st->close();
     } else {
         $st = $conn->prepare("INSERT INTO staff (email,password,full_name,position,department,role_id,status,login_attempts,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,?,?,'Active',0,0,1,NOW(),NOW())");
         $st->bind_param('sssssi', $s['email'], $hash, $s['full_name'], $s['position'], $s['department'], $roleId);
-        $st->execute();
+        if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };
         if ($st->error) { echo "  ERROR: {$s['email']} - {$st->error}\n"; $errors++; }
         else { echo "  Inserted: {$s['email']} ({$s['position']})\n"; $inserted++; }
         $st->close();

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -25,7 +25,7 @@ $fines = [];
 if ($studentsDb) {
     $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
     $stmt->bind_param("si", $studentNumber, $userId);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $sr = $stmt->get_result();
     $studentInfo = $sr ? $sr->fetch_assoc() : [];
     $stmt->close();
@@ -37,14 +37,14 @@ if ($studentsDb) {
 
     $stmt = $studentsDb->prepare("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC LIMIT 20");
     $stmt->bind_param("i", $sidInt);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $bw = $stmt->get_result();
     if ($bw) $borrowings = $bw->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
     $stmt = $studentsDb->prepare("SELECT * FROM library_fines WHERE student_id=? AND paid=0");
     $stmt->bind_param("i", $sidInt);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $fn = $stmt->get_result();
     if ($fn) $fines = $fn->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -142,11 +142,11 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                             $status = $b['status'] ?? ($isOverdue ? 'Overdue' : 'Borrowed');
                         ?>
                         <tr>
-                            <td><?= htmlspecialchars($b['book_title']??'—') ?></td>
-                            <td><?= htmlspecialchars($b['borrow_date']??'—') ?></td>
-                            <td><?= htmlspecialchars($b['due_date']??'—') ?></td>
+                            <td><?= htmlspecialchars($b['book_title']??'â€”') ?></td>
+                            <td><?= htmlspecialchars($b['borrow_date']??'â€”') ?></td>
+                            <td><?= htmlspecialchars($b['due_date']??'â€”') ?></td>
                             <td><span class="status-badge" style="background:<?= $isOverdue?'#fef2f2':'#dcfce7' ?>;color:<?= $isOverdue?'#991b1b':'#166534' ?>;padding:2px 12px;border-radius:12px;font-size:.75rem"><?= $status ?></span></td>
-                            <td><?= $b['fine_amount'] ? 'UGX '.number_format((float)$b['fine_amount']) : '—' ?></td>
+                            <td><?= $b['fine_amount'] ? 'UGX '.number_format((float)$b['fine_amount']) : 'â€”' ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -183,7 +183,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                     <div class="meta">
                         <?php if ($b['isbn']??''): ?>ISBN: <?= htmlspecialchars($b['isbn']) ?><br><?php endif; ?>
                         <?= htmlspecialchars($b['category']??'') ?>
-                        <?php if ($b['publisher']??''): ?> · <?= htmlspecialchars($b['publisher']) ?><?php endif; ?>
+                        <?php if ($b['publisher']??''): ?> Â· <?= htmlspecialchars($b['publisher']) ?><?php endif; ?>
                     </div>
                     <div class="mt-2">
                         <span class="avail-badge <?= $avail > 0 ? 'avail-yes' : 'avail-no' ?>">

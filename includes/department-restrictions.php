@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Department-Based Access Restrictions
  * Ensures users only see data assigned to their department
@@ -24,7 +24,7 @@ class DepartmentRestrictions {
         if ($this->user_id) {
             $dept_stmt = $conn->prepare("SELECT department_id FROM users WHERE id = ?");
             $dept_stmt->bind_param("i", $this->user_id);
-            $dept_stmt->execute();
+            if (!$dept_stmt->execute()) { error_log('$dept_stmt execute failed: ' . ($dept_stmt->error ?? 'unknown')); };
             $dept_result = $dept_stmt->get_result();
             $dept_data = $dept_result->fetch_assoc();
             $this->user_department = $dept_data['department_id'] ?? null;
@@ -248,7 +248,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT s.program_id FROM students s LEFT JOIN programs p ON s.program_id = p.id WHERE s.id = ? AND p.department_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $dept_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -259,7 +259,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT id FROM courses WHERE id = ? AND department_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $dept_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -270,7 +270,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT ar.id FROM academic_records ar JOIN students s ON ar.student_id = s.id LEFT JOIN programs p ON s.program_id = p.id WHERE ar.id = ? AND p.department_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $dept_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -298,7 +298,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT id FROM course_assignments WHERE course_id = ? AND lecturer_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $uid);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -309,7 +309,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT s.id FROM students s JOIN enrollments e ON s.id = e.student_id WHERE s.id = ? AND e.lecturer_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $uid);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -320,7 +320,7 @@ class DepartmentRestrictions {
                 $stmt = $this->conn->prepare("SELECT id FROM academic_records WHERE id = ? AND lecturer_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("ii", $data_id, $uid);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $result = $stmt->get_result();
                     $count = $result->num_rows;
                     $stmt->close();
@@ -406,7 +406,7 @@ class DepartmentRestrictions {
         $stmt = $this->conn->prepare("INSERT INTO access_logs (user_id, user_role, action, resource_type, resource_id, access_granted, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
         if ($stmt) {
             $stmt->bind_param("isssii", $user_id, $user_role, $action_clean, $resource_type_clean, $resource_id_clean, $granted);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }

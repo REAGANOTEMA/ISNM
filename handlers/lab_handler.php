@@ -43,7 +43,7 @@ try {
             if (!$name || !$code) throw new Exception('Room name and code required');
             $stmt = $ict->prepare("INSERT INTO lab_rooms (room_name, room_code, capacity, computer_count, location) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param('ssiis', $name, $code, $capacity, $computers, $location);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Lab room added', ['id' => $ict->insert_id]);
             break;
 
@@ -58,7 +58,7 @@ try {
             if (!$id) throw new Exception('Room ID required');
             $stmt = $ict->prepare("UPDATE lab_rooms SET room_name=?, room_code=?, capacity=?, computer_count=?, location=?, status=? WHERE id=?");
             $stmt->bind_param('ssiissi', $name, $code, $capacity, $computers, $location, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Lab room updated');
             break;
 
@@ -67,7 +67,7 @@ try {
             if (!$id) throw new Exception('Room ID required');
             $stmt = $ict->prepare("UPDATE lab_rooms SET status='inactive' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Lab room deactivated');
             break;
 
@@ -85,7 +85,7 @@ try {
             if (!$cid || !$name) throw new Exception('Computer ID and name required');
             $stmt = $ict->prepare("INSERT INTO lab_computers (computer_id, computer_name, location, ip_address, mac_address, specifications, os_installed, purchase_date, warranty_expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sssssssss', $cid, $name, $location, $ip, $mac, $specs, $os, $purchase, $warranty);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Computer added', ['id' => $ict->insert_id]);
             break;
 
@@ -102,7 +102,7 @@ try {
             if (!$id) throw new Exception('Computer ID required');
             $stmt = $ict->prepare("UPDATE lab_computers SET computer_id=?, computer_name=?, location=?, status=?, ip_address=?, mac_address=?, specifications=?, os_installed=? WHERE id=?");
             $stmt->bind_param('ssssssssi', $cid, $name, $location, $status, $ip, $mac, $specs, $os, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Computer updated');
             break;
 
@@ -111,7 +111,7 @@ try {
             if (!$id) throw new Exception('Computer ID required');
             $stmt = $ict->prepare("UPDATE lab_computers SET status='deleted' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Computer removed');
             break;
 
@@ -122,7 +122,7 @@ try {
             if (!$studentId) throw new Exception('Student ID required');
             $stmt = $students->prepare("SELECT id, student_number, registration_number, full_name, program, intake_date, profile_picture, passport_photo FROM students WHERE id = ? LIMIT 1");
             $stmt->bind_param('i', $studentId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stu = $stmt->get_result()->fetch_assoc();
             if (!$stu) throw new Exception('Student not found');
             $cardNum = 'ID-' . strtoupper(substr(md5($studentId . time()), 0, 10));
@@ -131,14 +131,14 @@ try {
             $stmt = $ict->prepare("INSERT INTO student_id_cards (student_id, card_number, registration_number, program, intake, academic_year, expiry_date, photo_path, issued_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $year = date('Y');
             $stmt->bind_param('isssssssi', $studentId, $cardNum, $stu['registration_number'], $stu['program'], $intake, $year, $expiry, $photo, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $cardId = $ict->insert_id;
             $stmt = $ict->prepare("INSERT INTO id_card_print_history (card_id, student_id, print_type, printed_by) VALUES (?, ?, 'new', ?)");
             $stmt->bind_param('iii', $cardId, $studentId, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = ?");
             $stmt->bind_param('i', $cardId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'ID card generated', ['id' => $cardId, 'card_number' => $cardNum, 'student' => $stu]);
             break;
 
@@ -148,15 +148,15 @@ try {
             if (!$cardId) throw new Exception('Card ID required');
             $stmt = $ict->prepare("SELECT * FROM student_id_cards WHERE id = ?");
             $stmt->bind_param('i', $cardId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Card not found');
             $stmt = $ict->prepare("INSERT INTO id_card_print_history (card_id, student_id, print_type, reason, printed_by) VALUES (?, ?, 'reprint', ?, ?)");
             $stmt->bind_param('iiss', $cardId, $card['student_id'], $reason, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = ?");
             $stmt->bind_param('i', $cardId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Reprint logged');
             break;
 
@@ -167,7 +167,7 @@ try {
             if (!$cardId) throw new Exception('Card ID required');
             $stmt = $ict->prepare("SELECT * FROM student_id_cards WHERE id = ?");
             $stmt->bind_param('i', $cardId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Original card not found');
             $cardNum = 'ID-' . strtoupper(substr(md5($card['student_id'] . time()), 0, 10));
@@ -175,14 +175,14 @@ try {
             $stmt = $ict->prepare("INSERT INTO student_id_cards (student_id, card_number, registration_number, program, intake, academic_year, expiry_date, photo_path, status, issued_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)");
             $year = date('Y');
             $stmt->bind_param('isssssssi', $card['student_id'], $cardNum, $card['registration_number'], $card['program'], $card['intake'], $year, $expiry, $card['photo_path'], $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $newId = $ict->insert_id;
             $stmt = $ict->prepare("INSERT INTO id_card_replacements (student_id, original_card_id, reason, charge_amount, approved_by, new_card_id, status) VALUES (?, ?, ?, ?, ?, ?, 'approved')");
             $stmt->bind_param('iisiii', $card['student_id'], $cardId, $reason, $charge, $userId, $newId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE student_id_cards SET status='replaced' WHERE id = ?");
             $stmt->bind_param('i', $cardId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Card replacement created', ['new_card_id' => $newId, 'card_number' => $cardNum]);
             break;
 
@@ -191,7 +191,7 @@ try {
             if (!$cardNum) throw new Exception('Card number required');
             $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschool_students.students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
             $stmt->bind_param('s', $cardNum);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Card not found');
             respond(true, 'Card verified', $card);
@@ -213,7 +213,7 @@ try {
             if (!$code || !$course || !$date) throw new Exception('Required fields missing');
             $stmt = $ict->prepare("INSERT INTO lab_practical_sessions (session_code, course_name, instructor_name, lab_room_id, session_date, start_time, end_time, program, year, semester, max_students, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sssissssiiii', $code, $course, $instructor, $roomId, $date, $start, $end, $program, $year, $sem, $max, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Practical session created', ['id' => $ict->insert_id]);
             break;
 
@@ -229,7 +229,7 @@ try {
             if (!$id) throw new Exception('Session ID required');
             $stmt = $ict->prepare("UPDATE lab_practical_sessions SET course_name=?, instructor_name=?, lab_room_id=?, session_date=?, start_time=?, end_time=?, status=? WHERE id=?");
             $stmt->bind_param('ssissssi', $course, $instructor, $roomId, $date, $start, $end, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Session updated');
             break;
 
@@ -238,7 +238,7 @@ try {
             if (!$id) throw new Exception('Session ID required');
             $stmt = $ict->prepare("UPDATE lab_practical_sessions SET status='cancelled' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Session cancelled');
             break;
 
@@ -253,7 +253,7 @@ try {
             if (!$studentId) throw new Exception('Student ID required');
             $stmt = $ict->prepare("INSERT INTO lab_attendance (student_id, lab_room_id, session_id, attendance_date, time_in, computer_id, status, marked_by) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)");
             $stmt->bind_param('iiisisi', $studentId, $roomId, $sessionId, $date, $computerId, $statusVal, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Attendance marked');
             break;
 
@@ -269,11 +269,11 @@ try {
             foreach ($ids as $sid) {
                 if ($sid <= 0) continue;
                 $checkStmt->bind_param('iis', $sid, $sessionId, $date);
-                $checkStmt->execute();
+                if (!$checkStmt->execute()) { error_log('$checkStmt execute failed: ' . ($checkStmt->error ?? 'unknown')); };
                 $check = $checkStmt->get_result();
                 if ($check && $check->num_rows === 0) {
                     $insertStmt->bind_param('iiisi', $sid, $roomId, $sessionId, $date, $userId);
-                    $insertStmt->execute();
+                    if (!$insertStmt->execute()) { error_log('$insertStmt execute failed: ' . ($insertStmt->error ?? 'unknown')); };
                     $count++;
                 }
             }
@@ -294,7 +294,7 @@ try {
             if (!$code || !$name) throw new Exception('Code and name required');
             $stmt = $ict->prepare("INSERT INTO lab_equipment (equipment_code, equipment_name, equipment_type, brand, model, serial_number, lab_room_id, purchase_date, warranty_expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('ssssssiss', $code, $name, $type, $brand, $model, $serial, $roomId, $purchase, $warranty);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Equipment added', ['id' => $ict->insert_id]);
             break;
 
@@ -311,7 +311,7 @@ try {
             if (!$id) throw new Exception('Equipment ID required');
             $stmt = $ict->prepare("UPDATE lab_equipment SET equipment_name=?, equipment_type=?, brand=?, model=?, serial_number=?, lab_room_id=?, condition_status=?, status=? WHERE id=?");
             $stmt->bind_param('sssssisii', $name, $type, $brand, $model, $serial, $roomId, $condition, $statusEq, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Equipment updated');
             break;
 
@@ -320,7 +320,7 @@ try {
             if (!$id) throw new Exception('Equipment ID required');
             $stmt = $ict->prepare("UPDATE lab_equipment SET status='retired' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Equipment retired');
             break;
 
@@ -333,10 +333,10 @@ try {
             if (!$eqId || !$to) throw new Exception('Equipment ID and borrower required');
             $stmt = $ict->prepare("INSERT INTO lab_equipment_checkout (equipment_id, checked_out_to, borrower_type, borrower_id, checkout_date, expected_return, checked_out_by) VALUES (?, ?, ?, ?, NOW(), ?, ?)");
             $stmt->bind_param('issiii', $eqId, $to, $type, $borrowerId, $returnDate, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE lab_equipment SET status='in_use' WHERE id=?");
             $stmt->bind_param('i', $eqId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Equipment checked out');
             break;
 
@@ -346,15 +346,15 @@ try {
             if (!$checkoutId) throw new Exception('Checkout ID required');
             $stmt = $ict->prepare("UPDATE lab_equipment_checkout SET actual_return=NOW(), condition_at_return=?, status='returned' WHERE id=?");
             $stmt->bind_param('si', $condition, $checkoutId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("SELECT equipment_id FROM lab_equipment_checkout WHERE id=?");
             $stmt->bind_param('i', $checkoutId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $co = $stmt->get_result()->fetch_assoc();
             if ($co) {
                 $stmt = $ict->prepare("UPDATE lab_equipment SET status='available' WHERE id=?");
                 $stmt->bind_param('i', $co['equipment_id']);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             }
             respond(true, 'Equipment returned');
             break;
@@ -372,14 +372,14 @@ try {
             if (!$reqName || $pages < 1) throw new Exception('Requester name and valid page count required');
             $stmt = $ict->prepare("SELECT charge_per_page FROM printing_charges WHERE print_type=? AND paper_size=? AND is_active=1 LIMIT 1");
             $stmt->bind_param('ss', $printType, $paperSize);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $chargeRow = $stmt->get_result()->fetch_assoc();
             $chargePerPage = $chargeRow ? (float)$chargeRow['charge_per_page'] : 0;
             $total = $chargePerPage * $pages * $copies;
             $num = 'PRT-' . strtoupper(substr(md5(time()), 0, 8));
             $stmt = $ict->prepare("INSERT INTO printing_jobs (job_number, requester_name, requester_type, requester_id, document_name, pages, copies, print_type, paper_size, charge_per_page, total_charge) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sssssiiissd', $num, $reqName, $reqType, $reqId, $docName, $pages, $copies, $printType, $paperSize, $chargePerPage, $total);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Print job created', ['job_number' => $num, 'total_charge' => $total, 'id' => $ict->insert_id]);
             break;
 
@@ -388,7 +388,7 @@ try {
             if (!$id) throw new Exception('Job ID required');
             $stmt = $ict->prepare("UPDATE printing_jobs SET status='completed', printed_by=?, printed_at=NOW() WHERE id=?");
             $stmt->bind_param('ii', $userId, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Print job completed');
             break;
 
@@ -397,7 +397,7 @@ try {
             if (!$id) throw new Exception('Job ID required');
             $stmt = $ict->prepare("UPDATE printing_jobs SET status='cancelled' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Print job cancelled');
             break;
 
@@ -407,7 +407,7 @@ try {
             if (!$id) throw new Exception('Charge ID required');
             $stmt = $ict->prepare("UPDATE printing_charges SET charge_per_page=?, updated_by=? WHERE id=?");
             $stmt->bind_param('dii', $charge, $userId, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Printing charge updated');
             break;
 
@@ -422,7 +422,7 @@ try {
             $num = 'RPR-' . strtoupper(substr(md5(time()), 0, 8));
             $stmt = $ict->prepare("INSERT INTO computer_repairs (repair_number, computer_id, reported_by, issue_description, issue_category, priority) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sissss', $num, $computerId, $reportedBy, $desc, $category, $priority);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Repair reported', ['repair_number' => $num, 'id' => $ict->insert_id]);
             break;
 
@@ -444,7 +444,7 @@ try {
             $types .= 'i';
             $stmt = $ict->prepare("UPDATE computer_repairs SET " . implode(',', $sets) . " WHERE id=?");
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Repair updated');
             break;
 
@@ -459,7 +459,7 @@ try {
             if (!$name) throw new Exception('Software name required');
             $stmt = $ict->prepare("INSERT INTO software_inventory (software_name, version, license_key, license_type, license_expiry, category) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('ssssss', $name, $ver, $license, $type, $expiry, $category);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Software added', ['id' => $ict->insert_id]);
             break;
 
@@ -473,7 +473,7 @@ try {
             if (!$id) throw new Exception('Software ID required');
             $stmt = $ict->prepare("UPDATE software_inventory SET software_name=?, version=?, license_key=?, license_type=?, license_expiry=? WHERE id=?");
             $stmt->bind_param('sssssi', $name, $ver, $license, $type, $expiry, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Software updated');
             break;
 
@@ -482,7 +482,7 @@ try {
             if (!$id) throw new Exception('Software ID required');
             $stmt = $ict->prepare("DELETE FROM software_inventory WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Software deleted');
             break;
 
@@ -493,7 +493,7 @@ try {
             if (!$swId || !$compId) throw new Exception('Software and computer required');
             $stmt = $ict->prepare("INSERT INTO software_installations (software_id, computer_id, version_installed, installed_by) VALUES (?, ?, ?, ?)");
             $stmt->bind_param('iiis', $swId, $compId, $version, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Installation recorded');
             break;
 
@@ -508,7 +508,7 @@ try {
             if (!$name) throw new Exception('Item name required');
             $stmt = $ict->prepare("INSERT INTO lab_consumables (item_name, item_category, quantity, reorder_level, unit_cost, supplier) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('ssiids', $name, $cat, $qty, $reorder, $cost, $supplier);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Consumable added', ['id' => $ict->insert_id]);
             break;
 
@@ -518,7 +518,7 @@ try {
             if (!$id) throw new Exception('Item ID required');
             $stmt = $ict->prepare("UPDATE lab_consumables SET quantity=? WHERE id=?");
             $stmt->bind_param('ii', $qty, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Stock updated');
             break;
 
@@ -533,7 +533,7 @@ try {
             if (!$id || !$name) throw new Exception('Item ID and name required');
             $stmt = $ict->prepare("UPDATE lab_consumables SET item_name=?, item_category=?, quantity=?, reorder_level=?, unit_cost=?, supplier=? WHERE id=?");
             $stmt->bind_param('ssiidsi', $name, $cat, $qty, $reorder, $cost, $supplier, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Consumable updated');
             break;
 
@@ -542,7 +542,7 @@ try {
             if (!$id) throw new Exception('Item ID required');
             $stmt = $ict->prepare("DELETE FROM lab_consumables WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Consumable deleted');
             break;
 
@@ -553,7 +553,7 @@ try {
             if (!$key) throw new Exception('Setting key required');
             $stmt = $ict->prepare("INSERT INTO ict_system_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=?, updated_by=?");
             $stmt->bind_param('ssisi', $key, $value, $userId, $value, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             respond(true, 'Setting saved');
             break;
 

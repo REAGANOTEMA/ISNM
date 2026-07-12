@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/config_enhanced.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
@@ -39,7 +39,7 @@ $pending_apps        = $overview['pending_applications'];
 $loader = new StudentDataLoader();
 $excel_files_summary = $loader->getExcelFileSummary();
 
-// ── Dashboard stats cache ──
+// â”€â”€ Dashboard stats cache â”€â”€
 $dg_cache_key = 'dg_dashboard_stats';
 $dg_use_cache  = function_exists('getCacheData') && function_exists('setCacheData');
 $dg_cached     = $dg_use_cache ? getCacheData($dg_cache_key) : null;
@@ -178,7 +178,7 @@ if ($dg_cached) {
 $recent_students = [];
 try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) { error_log('director-general context: ' . $e->getMessage()); }
 
-// ── DG page routing ──
+// â”€â”€ DG page routing â”€â”€
 // Map ?page=xxx to internal section names
 $dgPageToSection = [
     'home'          => 'home',
@@ -225,14 +225,14 @@ $dgPageToSection = [
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
 
-// ── CEO vs DG branding ──
+// â”€â”€ CEO vs DG branding â”€â”€
 $isCEO      = (stripos($user_role, 'ceo') !== false) || (($_GET['dg_role'] ?? '') === 'ceo');
 $dgRole     = $isCEO ? 'CEO' : 'Director General';
 $dgIcon     = $isCEO ? 'fa-chart-line' : 'fa-crown';
 $dgSubtitle = $isCEO ? 'Executive Oversight &amp; Strategy &bull; Iganga School of Nursing &amp; Midwifery' : 'Full Institution Oversight &bull; Iganga School of Nursing &amp; Midwifery';
 $dgRoutePrefix = $isCEO ? '/ceo' : '/director';
 
-// ── Reusable page toolbar (breadcrumb, back, search, export) ──
+// â”€â”€ Reusable page toolbar (breadcrumb, back, search, export) â”€â”€
 function dgToolbar(string $title, string $icon, string $badgeText = '', string $badgeClass = 'bg-primary'): void {
     $sectionLabels = [
         'executive'=>'Executive Overview','departments'=>'Department Monitoring',
@@ -254,11 +254,11 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
         <nav style="font-size:12px;color:#64748b;flex:1;">
             <a href="#executive" style="color:#3b82f6;text-decoration:none;" onclick="switchToSection('executive');return false;">Dashboard</a>
-            <span style="margin:0 4px;">›</span>
+            <span style="margin:0 4px;">â€º</span>
             <span style="color:#0f172a;font-weight:600;"><?= htmlspecialchars($label) ?></span>
         </nav>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <input type="search" placeholder="Search this page…" class="dg-page-search" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;width:180px;outline:none;" oninput="dgFilterTable(this.value)">
+            <input type="search" placeholder="Search this pageâ€¦" class="dg-page-search" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;width:180px;outline:none;" oninput="dgFilterTable(this.value)">
             <button onclick="window.print()" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;"><i class="fas fa-print me-1"></i>Print</button>
             <button onclick="dgExportCSV()" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;"><i class="fas fa-download me-1"></i>Export</button>
             <?php if ($badgeText): ?>
@@ -269,13 +269,13 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
     <?php
 }
 
-// ── Global search handler ──
+// â”€â”€ Global search handler â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
     globalStudentSearchHandler($conn, $studentsConn, $conn, $websiteConn);
     exit;
 }
 
-// ── News Management POST handlers ──
+// â”€â”€ News Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
@@ -310,14 +310,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             $stmt = $conn->prepare("INSERT INTO director_news (title,slug,content,excerpt,featured_image,author_id,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,NOW())");
             if ($stmt) {
                 $stmt->bind_param('sssssiss', $title, $slug, $content, $excerpt, $featuredImage, $user_id, $status, $published_at);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $newId = $stmt->insert_id;
                 $stmt->close();
                 if ($websiteConn && $newId) {
                     $ws = $websiteConn->prepare("INSERT INTO news (id,title,slug,content,excerpt,featured_image,author_id,author_name,author_role,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())");
                     if ($ws) {
                         $ws->bind_param('isssssissss', $newId, $title, $slug, $content, $excerpt, $featuredImage, $user_id, $user_name, $user_role, $status, $published_at);
-                        $ws->execute();
+                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                 }
@@ -331,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                             $snTitle = mb_substr(strip_tags($title), 0, 200);
                             $snMsg = mb_substr(strip_tags($content), 0, 200);
                             $snStmt->bind_param('ss', $snTitle, $snMsg);
-                            $snStmt->execute();
+                            if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); };
                             $snStmt->close();
                         }
                         $snConn->close();
@@ -344,13 +344,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             if ($stmt) {
                 if ($featuredImage) { $stmt->bind_param('ssssssi', $title, $content, $excerpt, $status, $published_at, $featuredImage, $news_id); }
                 else { $stmt->bind_param('sssssi', $title, $content, $excerpt, $status, $published_at, $news_id); }
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 if ($websiteConn) {
                     $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?,published_at), author_name=?, author_role=? WHERE id=?");
                     if ($ws) {
                         $ws->bind_param('sssssssi', $title, $content, $excerpt, $status, $published_at, $user_name, $user_role, $news_id);
-                        $ws->execute();
+                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                 }
@@ -371,11 +371,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             $stmt = $conn->prepare("UPDATE director_news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param('ssi', $newStatus, $pubAt, $news_id);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 if ($websiteConn) {
                     $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
-                    if ($ws) { $ws->bind_param('ssi', $newStatus, $pubAt, $news_id); $ws->execute(); $ws->close(); }
+                    if ($ws) { $ws->bind_param('ssi', $newStatus, $pubAt, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                 }
                 if ($newStatus === 'published') {
                     $snConn = getStudentsConnection();
@@ -383,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                         $nt = $conn->query("SELECT title FROM director_news WHERE id=" . intval($news_id));
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
                         $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,'A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
-                        if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); $snStmt->execute(); $snStmt->close(); }
+                        if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); }; $snStmt->close(); }
                         $snConn->close();
                     }
                 }
@@ -395,16 +395,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
 
     if ($action === 'delete' && $news_id) {
         $imgStmt = $conn->prepare("SELECT featured_image FROM director_news WHERE id=?");
-        if ($imgStmt) { $imgStmt->bind_param('i', $news_id); $imgStmt->execute(); $imgRow = $imgStmt->get_result()->fetch_assoc(); $imgStmt->close(); }
+        if ($imgStmt) { $imgStmt->bind_param('i', $news_id); if (!$imgStmt->execute()) { error_log('$imgStmt execute failed: ' . ($imgStmt->error ?? 'unknown')); }; $imgRow = $imgStmt->get_result()->fetch_assoc(); $imgStmt->close(); }
         $stmt = $conn->prepare("DELETE FROM director_news WHERE id=?");
         if ($stmt) {
             $stmt->bind_param('i', $news_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             if (!empty($imgRow['featured_image'])) { $imgPath = __DIR__ . '/../' . $imgRow['featured_image']; if (file_exists($imgPath)) @unlink($imgPath); }
             if ($websiteConn) {
                 $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?");
-                if ($ws) { $ws->bind_param('i', $news_id); $ws->execute(); $ws->close(); }
+                if ($ws) { $ws->bind_param('i', $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
             }
             $_SESSION['nw_success'] = 'News article deleted.';
         }
@@ -427,7 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
             $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
             if ($stmt) {
                 $stmt->bind_param('ssssi', $title, $body, $target, $priority, $user_id);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
             $_SESSION['success'] = "Announcement published to all $target.";
@@ -496,7 +496,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     header('Location: director-general.php'); exit;
 }
 
-// ── CRUD POST handlers ──
+// â”€â”€ CRUD POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
@@ -561,45 +561,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     if ($action === 'approve_submission' && $websiteConn) {
         $type = trim($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
-        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subid));
-        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=" . intval($subid));
-        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='verified' WHERE id=" . intval($subid));
-        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Approved' WHERE id=" . intval($subid));
-        if ($subid) { $ok = true; $msg = 'Submission approved.'; }
+        $subOk = false;
+        if ($subid) {
+            if ($type === 'contact') $subOk = $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subid));
+            elseif ($type === 'volunteer') $subOk = $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=" . intval($subid));
+            elseif ($type === 'donation') $subOk = $websiteConn->query("UPDATE donations SET status='verified' WHERE id=" . intval($subid));
+            elseif ($type === 'application') $subOk = $websiteConn->query("UPDATE student_applications SET status='Approved' WHERE id=" . intval($subid));
+        }
+        if ($subOk) { $ok = true; $msg = 'Submission approved.'; } else { $msg = 'Database error approving submission.'; }
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
         $ref = $_POST['sub_ref'] ?? '';
-        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Store request approved.'; }
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request approved.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'transport_trip') {
         $subId = (int)($_POST['sub_id'] ?? 0);
-        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='approved', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Transport trip approved.'; }
+        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='approved', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); if ($stmt->execute()) { $ok = true; $msg = 'Transport trip approved.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
 
     if ($action === 'reject_submission' && $websiteConn) {
         $type = trim($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
-        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=" . intval($subid));
-        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=" . intval($subid));
-        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=" . intval($subid));
-        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=" . intval($subid));
-        $ok = true; $msg = 'Submission rejected.';
+        $subOk = false;
+        if ($subid) {
+            if ($type === 'contact') $subOk = $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=" . intval($subid));
+            elseif ($type === 'volunteer') $subOk = $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=" . intval($subid));
+            elseif ($type === 'donation') $subOk = $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=" . intval($subid));
+            elseif ($type === 'application') $subOk = $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=" . intval($subid));
+        }
+        if ($subOk) { $ok = true; $msg = 'Submission rejected.'; } else { $msg = 'Database error rejecting submission.'; }
     }
     if ($action === 'reject_submission' && $conn && ($_POST['sub_type'] ?? '') === 'transport_trip') {
         $subId = (int)($_POST['sub_id'] ?? 0);
-        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='rejected', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Transport trip rejected.'; }
+        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='rejected', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); if ($stmt->execute()) { $ok = true; $msg = 'Transport trip rejected.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
     if ($action === 'reject_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
         $ref = $_POST['sub_ref'] ?? '';
-        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='rejected',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Store request rejected.'; }
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='rejected',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request rejected.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
 
     if ($action === 'resolve_alert') {
         $aid = (int)($_POST['alert_id'] ?? 0);
         $subType = ($_POST['sub_type'] ?? '');
         $subId = (int)($_POST['sub_id'] ?? 0);
-        if ($aid && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE id=" . intval($aid)); $ok = true; $msg = 'Alert resolved.'; }
-        if ($subType === 'all_alerts' && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE status='active'"); $ok = true; $msg = 'All alerts resolved.'; }
+        if ($aid && $conn) { if ($conn->query("UPDATE alerts SET status='resolved' WHERE id=" . intval($aid))) { $ok = true; $msg = 'Alert resolved.'; } else { $msg = 'Database error.'; } }
+        if ($subType === 'all_alerts' && $conn) { if ($conn->query("UPDATE alerts SET status='resolved' WHERE status='active'")) { $ok = true; $msg = 'All alerts resolved.'; } else { $msg = 'Database error.'; } }
         if ($subType && $subId && $websiteConn) {
             $t = trim($subType);
             if ($t === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subId));
@@ -640,7 +646,7 @@ body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; col
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
 .page-content { padding: 0 !important; }
 
-/* ── Content ── */
+/* â”€â”€ Content â”€â”€ */
 .dg-content {
   padding: 20px 24px 32px;
   margin-left: var(--erp-sidebar-width);
@@ -668,7 +674,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   .dg-content { padding: 12px 14px 20px; margin-left: 0; width: 100%; }
 }
 
-/* ── KPI Cards ── */
+/* â”€â”€ KPI Cards â”€â”€ */
 .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 500px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -704,7 +710,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
 .kpi-pr { border-left-color: #8b5cf6; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
 
-/* ── Analytics Row ── */
+/* â”€â”€ Analytics Row â”€â”€ */
 .analytics-strip {
   background: var(--dg-card-bg);
   border-radius: 10px;
@@ -722,7 +728,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .analytics-strip .ax-title { font-size: 9px; font-weight: 700; color: var(--dg-text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
 .analytics-strip .ax canvas { max-height: 60px; }
 
-/* ── Section Cards ── */
+/* â”€â”€ Section Cards â”€â”€ */
 .section-card {
   background: var(--dg-card-bg);
   border-radius: 10px;
@@ -753,7 +759,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .section-title i { font-size: 15px; }
 .section-subtitle { font-size: 11px; color: var(--dg-text-muted); margin: 0; }
 
-/* ── Stat blocks (for financial, attendance) ── */
+/* â”€â”€ Stat blocks (for financial, attendance) â”€â”€ */
 .stat-block {
   padding: 10px 8px;
   border-radius: 8px;
@@ -764,7 +770,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .stat-block .stat-val { font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
 .stat-block .stat-lbl { font-size: 10px; font-weight: 500; margin-top: 1px; }
 
-/* ── Tables ── */
+/* â”€â”€ Tables â”€â”€ */
 .dg-table { font-size: 12px; margin-bottom: 0; }
 .dg-table thead th { background: #f8fafc; font-weight: 600; color: var(--dg-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--dg-border); }
 .dg-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -773,7 +779,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .table-scroll::-webkit-scrollbar { width: 4px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* ── Activity timeline ── */
+/* â”€â”€ Activity timeline â”€â”€ */
 .activity-timeline { list-style: none; padding: 0; margin: 0; }
 .activity-timeline li {
   display: flex;
@@ -794,7 +800,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   margin-top: 1px;
 }
 
-/* ── Pending submissions ── */
+/* â”€â”€ Pending submissions â”€â”€ */
 .submission-item {
   display: flex;
   align-items: center;
@@ -817,7 +823,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .submission-detail { font-size: 11px; color: var(--dg-text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .submission-time { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
 
-/* ── Director performance ── */
+/* â”€â”€ Director performance â”€â”€ */
 .dir-card {
   background: #fafbfc;
   border: 1px solid var(--dg-border);
@@ -831,10 +837,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .dir-card .dir-role { font-size: 10px; color: var(--dg-text-muted); margin-bottom: 8px; }
 .metric-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-/* ── Badges ── */
+/* â”€â”€ Badges â”€â”€ */
 .badge-soft { font-weight: 500; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 
-/* ── Section Visibility ── */
+/* â”€â”€ Section Visibility â”€â”€ */
 .dashboard-section { display: none; }
 .dashboard-section.active { display: block; }
 .section-tab.active { background: #1e3a8a !important; color: #fff !important; }
@@ -844,13 +850,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   .section-tab { white-space: nowrap; font-size: 11px !important; padding: 5px 10px !important; }
 }
 
-/* ── Modals ── */
+/* â”€â”€ Modals â”€â”€ */
 .modern-modal .modal-content { border: none; border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); }
 .modern-modal .modal-header { border: none; padding: 14px 18px; border-radius: 14px 14px 0 0; }
 .modern-modal .modal-body { padding: 16px 18px; }
 .modern-modal .modal-footer { border: none; padding: 12px 18px; }
 
-/* ── Animations ── */
+/* â”€â”€ Animations â”€â”€ */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.15); } 50% { box-shadow: 0 0 0 8px rgba(59,130,246,0.05); } }
@@ -860,7 +866,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .quick-chevron { transition: transform .25s ease; }
 .quick-chevron.rotated { transform: rotate(180deg); }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 1200px) { .analytics-strip { grid-template-columns: 1fr 1fr; } .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
@@ -874,7 +880,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 }
 @media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
 
-/* ── Print ── */
+/* â”€â”€ Print â”€â”€ */
 @media print {
   body { background:#fff !important; font-size:10pt; }
   .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
@@ -900,7 +906,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<!-- ═══ MAIN CONTENT AREA ═══ -->
+<!-- â•â•â• MAIN CONTENT AREA â•â•â• -->
 <div class="dg-content">
 <div class="ent-content-area ent-animate">
 
@@ -927,7 +933,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <?php renderGlobalSearchBar($conn, $studentsConn); ?>
 
-<!-- ═══ DYNAMIC PAGE LOADING ═══ -->
+<!-- â•â•â• DYNAMIC PAGE LOADING â•â•â• -->
 <?php
 $dgNewsList = [];
 $allStaffList = [];
@@ -1062,10 +1068,10 @@ switch ($dgSection):
       foreach($dirRoles as $rid):
         $rq=$conn?$conn->prepare("SELECT id,role_name FROM staff_roles WHERE id=?"):false;
         $rn=''; $si=0;
-        if($rq){$rq->bind_param('i',$rid);$rq->execute();$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];}
+        if($rq){$rq->bind_param('i',$rid);if (!$rq->execute()) { error_log('$rq execute failed: ' . ($rq->error ?? 'unknown')); };$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];}
         if($rn):
           $sq=$conn->prepare("SELECT id FROM staff WHERE role_id=? AND status='Active' LIMIT 1");
-          if($sq){$sq->bind_param('i',$rid);$sq->execute();$sr=$sq->get_result()->fetch_assoc();$sq->close();if($sr)$si=$sr['id'];}
+          if($sq){$sq->bind_param('i',$rid);if (!$sq->execute()) { error_log('$sq execute failed: ' . ($sq->error ?? 'unknown')); };$sr=$sq->get_result()->fetch_assoc();$sq->close();if($sr)$si=$sr['id'];}
       ?>
       <div class="col-md-4 col-lg-3"><?= renderDirectorPerformanceCard($si,$rid,$rn,$conn) ?></div>
       <?php endif; endforeach; ?>
@@ -1302,10 +1308,10 @@ if ($conn) {
           $best = $perfData['actual'][0]; $worst = end($perfData['actual']);
           $avg = round(array_sum($perfData['actual'])/count($perfData['actual']), 1);
         ?>
-        <div class="mb-2 p-2 rounded" style="background:#f0fdf4;"><strong style="color:#166534;">✓ Avg Score:</strong> <span class="float-end fw-bold"><?= $avg ?>%</span></div>
-        <div class="mb-2 p-2 rounded" style="background:#fef2f2;"><strong style="color:#dc2626;">⚠ Needs Focus:</strong> <span class="float-end"><?= $perfData['courses'][array_key_last($perfData['courses'])] ?? 'N/A' ?> (<?= $worst ?>%)</span></div>
-        <div class="mb-2 p-2 rounded" style="background:#eff6ff;"><strong style="color:#2563eb;">★ Top Performer:</strong> <span class="float-end"><?= $perfData['courses'][0] ?? 'N/A' ?> (<?= $best ?>%)</span></div>
-        <div class="p-2 rounded" style="background:#fffbeb;"><strong style="color:#d97706;">📈 Predicted Improvement:</strong> <span class="float-end fw-bold"><?= round(array_sum($perfData['predicted'])/count($perfData['predicted']) - $avg, 1) ?>%</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#f0fdf4;"><strong style="color:#166534;">âœ“ Avg Score:</strong> <span class="float-end fw-bold"><?= $avg ?>%</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#fef2f2;"><strong style="color:#dc2626;">âš  Needs Focus:</strong> <span class="float-end"><?= $perfData['courses'][array_key_last($perfData['courses'])] ?? 'N/A' ?> (<?= $worst ?>%)</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#eff6ff;"><strong style="color:#2563eb;">â˜… Top Performer:</strong> <span class="float-end"><?= $perfData['courses'][0] ?? 'N/A' ?> (<?= $best ?>%)</span></div>
+        <div class="p-2 rounded" style="background:#fffbeb;"><strong style="color:#d97706;">ðŸ“ˆ Predicted Improvement:</strong> <span class="float-end fw-bold"><?= round(array_sum($perfData['predicted'])/count($perfData['predicted']) - $avg, 1) ?>%</span></div>
         <?php else: ?>
         <div class="text-muted text-center py-4"><i class="fas fa-database fa-2x mb-2"></i><p>No exam data available yet.</p></div>
         <?php endif; ?>
@@ -1917,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><?= (int)($r['staff_count'] ?? 0) ?></td>
             <td><small><?= htmlspecialchars($r['dashboard_path'] ?? '-') ?></small></td>
             <td><?= (int)($r['role_level'] ?? 99) ?></td>
-            <td><?= ($r['is_executive'] ?? 0) ? '✅' : '' ?></td>
+            <td><?= ($r['is_executive'] ?? 0) ? 'âœ…' : '' ?></td>
             <td>
               <button class="btn btn-sm btn-outline-primary" onclick="alert('Role editing coming soon')"><i class="fas fa-edit"></i></button>
             </td>
@@ -1944,14 +1950,14 @@ document.addEventListener('DOMContentLoaded', function() {
     $mySent = [];
     if ($conn) {
       $ri = $conn->prepare("SELECT * FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0 ORDER BY created_at DESC LIMIT 30");
-      if ($ri) { $ri->bind_param("i", $user_id); $ri->execute(); $res = $ri->get_result(); while ($row = $res->fetch_assoc()) $myInbox[] = $row; $ri->close(); }
+      if ($ri) { $ri->bind_param("i", $user_id); if (!$ri->execute()) { error_log('$ri execute failed: ' . ($ri->error ?? 'unknown')); }; $res = $ri->get_result(); while ($row = $res->fetch_assoc()) $myInbox[] = $row; $ri->close(); }
       $rs = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT 30");
-      if ($rs) { $rs->bind_param("i", $user_id); $rs->execute(); $res = $rs->get_result(); while ($row = $res->fetch_assoc()) $mySent[] = $row; $rs->close(); }
+      if ($rs) { $rs->bind_param("i", $user_id); if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); }; $res = $rs->get_result(); while ($row = $res->fetch_assoc()) $mySent[] = $row; $rs->close(); }
     }
     $myUnread = 0;
     if ($conn) {
       $ru = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
-      if ($ru) { $ru->bind_param("i", $user_id); $ru->execute(); $myUnread = (int)$ru->get_result()->fetch_assoc()['c']; $ru->close(); }
+      if ($ru) { $ru->bind_param("i", $user_id); if (!$ru->execute()) { error_log('$ru execute failed: ' . ($ru->error ?? 'unknown')); }; $myUnread = (int)$ru->get_result()->fetch_assoc()['c']; $ru->close(); }
     }
     ?>
     <style>
@@ -2113,7 +2119,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $broadcasts = [];
             if ($conn) {
               $rb = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND recipient_id = 0 AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT 10");
-              if ($rb) { $rb->bind_param("i", $user_id); $rb->execute(); $res = $rb->get_result(); while ($row = $res->fetch_assoc()) $broadcasts[] = $row; $rb->close(); }
+              if ($rb) { $rb->bind_param("i", $user_id); if (!$rb->execute()) { error_log('$rb execute failed: ' . ($rb->error ?? 'unknown')); }; $res = $rb->get_result(); while ($row = $res->fetch_assoc()) $broadcasts[] = $row; $rb->close(); }
             }
             if (empty($broadcasts)): ?>
             <p class="text-muted small text-center py-3">No broadcasts sent yet.</p>
@@ -2203,7 +2209,7 @@ document.addEventListener('DOMContentLoaded', function() {
   else document.addEventListener('DOMContentLoaded', initChevrons);
 })();
 
-// ── DG page helpers ──
+// â”€â”€ DG page helpers â”€â”€
 function dgFilterTable(query) {
     var q = query.toLowerCase().trim();
     document.querySelectorAll('.dashboard-section.active .dg-table tbody tr').forEach(function(row) {
@@ -2270,7 +2276,7 @@ endswitch; ?>
 </div><!-- /ent-content-area -->
 </div><!-- /ent-main -->
 
-<!-- ═══ SEND ANNOUNCEMENT MODAL ═══ -->
+<!-- â•â•â• SEND ANNOUNCEMENT MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -2280,7 +2286,7 @@ endswitch; ?>
       </div>
       <div class="modal-body">
         <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Title *</label><input type="text" name="ann_title" class="form-control" required placeholder="e.g., Staff Meeting Tomorrow"></div>
-        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Message *</label><textarea name="ann_body" class="form-control" rows="4" required style="border-radius:8px;" placeholder="Write your announcement here…"></textarea></div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Message *</label><textarea name="ann_body" class="form-control" rows="4" required style="border-radius:8px;" placeholder="Write your announcement hereâ€¦"></textarea></div>
         <div class="row g-3">
           <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Target</label><select name="ann_target" class="form-select" style="border-radius:8px;"><option value="All">All</option><option value="Nursing">Nursing</option><option value="Midwifery">Midwifery</option><option value="Staff">Staff</option></select></div>
           <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Priority</label><select name="ann_priority" class="form-select" style="border-radius:8px;"><option value="Normal">Normal</option><option value="High">High</option><option value="Urgent">Urgent</option></select></div>
@@ -2294,7 +2300,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ═══ ADD DEPARTMENT MODAL ═══ -->
+<!-- â•â•â• ADD DEPARTMENT MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="addDeptModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -2318,7 +2324,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ═══ ADD STAFF MODAL ═══ -->
+<!-- â•â•â• ADD STAFF MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="addStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -2346,7 +2352,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ═══ EDIT STAFF MODAL ═══ -->
+<!-- â•â•â• EDIT STAFF MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="editStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -2375,7 +2381,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ═══ ADD NEW STUDENT MODAL ═══ -->
+<!-- â•â•â• ADD NEW STUDENT MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="addStudentModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content" id="addStudentForm">
@@ -2409,7 +2415,7 @@ endswitch; ?>
 
 <?php echo displayStudentProfileModal('student_profile_modal'); ?>
 
-<!-- ═══ NEWS MANAGEMENT MODAL ═══ -->
+<!-- â•â•â• NEWS MANAGEMENT MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="newsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <form method="POST" enctype="multipart/form-data" class="modal-content">
@@ -2457,7 +2463,7 @@ endswitch; ?>
 </div>
 
 <script>
-// ═══ CSRF token auto-inject for all forms ═══
+// â•â•â• CSRF token auto-inject for all forms â•â•â•
 (function(){
   document.addEventListener('DOMContentLoaded', function(){
     var token = window.CSRF_TOKEN || document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -2473,7 +2479,7 @@ endswitch; ?>
 })();
 </script>
 <script>
-// ═══ NEWS MANAGEMENT ═══
+// â•â•â• NEWS MANAGEMENT â•â•â•
 var dgNewsData = <?= json_encode($dgNewsList) ?>;
 
 function dgShowNewsModal() {
@@ -2542,7 +2548,7 @@ function sendMessage(id){
 }
 function printProfile(){ window.print(); }
 
-// ═══ STAFF MESSAGING ═══
+// â•â•â• STAFF MESSAGING â•â•â•
 function showMessagingTab(tab, btn) {
   document.querySelectorAll('.msg-tab-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
@@ -2638,7 +2644,7 @@ function sendBroadcast(e){
 }
 </script>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
@@ -2646,7 +2652,7 @@ function sendBroadcast(e){
   </div>
 </div>
 <script>
-// ═══ SWITCH SECTION ═══
+// â•â•â• SWITCH SECTION â•â•â•
 function switchToSection(section) {
     window.location.href = 'director-general.php?page=' + encodeURIComponent(section);
 }

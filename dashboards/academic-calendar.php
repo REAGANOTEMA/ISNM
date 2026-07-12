@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($ay) {
             $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,'Active')");
             $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = "Calendar entry added for $ay.";
         }
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM academic_calendar WHERE id = ?");
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Calendar entry deleted.';
         }

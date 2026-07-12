@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['director general', 'ceo', 'system admin', 'director ict', 'director academics', 'hr manager']);
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($title && $assigned_to) {
             $stmt = $conn->prepare("INSERT INTO task_assignments (title, description, assigned_by, assigned_to, priority, due_date, category, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
             $stmt->bind_param('ssiisss', $title, $desc, $user_id, $assigned_to, $priority, $due_date, $category);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $_SESSION['success'] = 'Task created.';
         }
         header('Location: tasks.php'); exit;

@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Notification Helper — create, fetch, and manage notifications across all dashboards.
+ * Notification Helper â€” create, fetch, and manage notifications across all dashboards.
  * Uses website_db.notifications + notification_reads tables.
  */
 require_once __DIR__ . '/../config/database.php';
@@ -80,7 +80,7 @@ if (!function_exists('getUnreadNotificationCount')) {
             $stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM notifications n WHERE NOT EXISTS (SELECT 1 FROM notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
             if (!$stmt) return 0;
             $stmt->bind_param("is", $user_id, $user_type);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = (int)$stmt->get_result()->fetch_assoc()['cnt'];
             $stmt->close();
             return $result;
@@ -99,7 +99,7 @@ if (!function_exists('getRecentNotifications')) {
             $stmt = $conn->prepare("SELECT n.*, CASE WHEN nr.id IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM notifications n LEFT JOIN notification_reads nr ON nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ? ORDER BY n.created_at DESC LIMIT ?");
             if (!$stmt) return [];
             $stmt->bind_param("isi", $user_id, $user_type, $limit);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
             return $rows;

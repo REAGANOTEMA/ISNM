@@ -68,7 +68,7 @@ function getTableStats($conn, $dbName) {
     $stmt = $conn->prepare("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'BASE TABLE'");
     if (!$stmt) return $result;
     $stmt->bind_param("s", $dbName);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $tables = $stmt->get_result();
     if (!$tables) { $stmt->close(); return $result; }
     $result['tables'] = $tables->num_rows;

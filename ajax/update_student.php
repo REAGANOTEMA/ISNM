@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetch']) && isset($_GET
     if ($id < 1) { echo json_encode(['success' => false, 'error' => 'Invalid ID']); exit; }
     $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     if ($r && $row = $r->fetch_assoc()) {
         echo json_encode($row);

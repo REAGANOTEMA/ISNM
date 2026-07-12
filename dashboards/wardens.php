@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
         $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $student = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
         $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $student = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                             $itemNotes = trim($ri['notes'] ?? '');
                             if ($itemId > 0 && $qty > 0) {
                                 $ins->bind_param("iids", $reqId, $itemId, $qty, $itemNotes);
-                                $ins->execute();
+                                if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
                             }
                         }
                         $ins->close();
@@ -238,7 +238,7 @@ if ($conn && !empty($all_welfare_cases)) {
     $types = str_repeat('i', count($case_ids));
     $stmt = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id IN ($placeholders) ORDER BY created_at ASC");
     $stmt->bind_param($types, ...$case_ids);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     if ($r) {
         while ($row = $r->fetch_assoc()) {
@@ -332,7 +332,7 @@ $edit_case = null;
 if ($edit_case_id && $conn) {
     $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschool_students.students s ON wc.student_id=s.id WHERE wc.id = ?");
     $stmt->bind_param("i", $edit_case_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $edit_case = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
@@ -340,13 +340,13 @@ $view_case = null;
 if ($view_case_id && $conn) {
     $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschool_students.students s ON wc.student_id=s.id WHERE wc.id = ?");
     $stmt->bind_param("i", $view_case_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $view_case = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     if ($view_case) {
         $stmt2 = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id = ? ORDER BY created_at ASC");
         $stmt2->bind_param("i", $view_case_id);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $view_case_actions = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt2->close();
     }

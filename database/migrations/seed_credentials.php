@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Seed all ISNM staff credentials into the staff table.
  * Run ONCE on production: php database/migrations/seed_credentials.php
@@ -48,7 +48,7 @@ $roleIds = [];
 foreach ($roles as $roleName) {
     $stmt = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ? LIMIT 1");
     $stmt->bind_param('s', $roleName);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {
         $roleIds[$roleName] = (int)$row['id'];
@@ -56,7 +56,7 @@ foreach ($roles as $roleName) {
         $stmt2 = $conn->prepare("INSERT INTO staff_roles (role_name, role_description) VALUES (?, ?)");
         $desc = $roleName . ' role for ISNM ERP';
         $stmt2->bind_param('ss', $roleName, $desc);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $roleIds[$roleName] = (int)$stmt2->insert_id;
         $stmt2->close();
         echo "Created role: $roleName (ID: {$roleIds[$roleName]})\n";
@@ -99,7 +99,7 @@ foreach ($staff as [$email, $fullName, $position, $department, $roleName, $staff
     // Check if staff already exists
     $chk = $conn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
     $chk->bind_param('s', $email);
-    $chk->execute();
+    if (!$chk->execute()) { error_log('$chk execute failed: ' . ($chk->error ?? 'unknown')); };
     $exists = $chk->get_result()->fetch_assoc();
     $chk->close();
 
@@ -108,7 +108,7 @@ foreach ($staff as [$email, $fullName, $position, $department, $roleName, $staff
         $upd = $conn->prepare("UPDATE staff SET password = ?, role_id = ?, status = 'Active' WHERE email = ?");
         $rid = $roleIds[$roleName] ?? null;
         $upd->bind_param('sis', $passwordHash, $rid, $email);
-        $upd->execute();
+        if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); };
         $upd->close();
         echo "UPDATED: $email ($fullName)\n";
         $inserted++;
@@ -124,7 +124,7 @@ foreach ($staff as [$email, $fullName, $position, $department, $roleName, $staff
 
     $ins = $conn->prepare("INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', CURDATE())");
     $ins->bind_param('ssssssi', $staffId, $fullName, $email, $passwordHash, $position, $department, $rid);
-    $ins->execute();
+    if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
     $ins->close();
     echo "INSERTED: $email ($fullName) as $roleName\n";
     $inserted++;

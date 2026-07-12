@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 /**
  * ISNM Enterprise Control Panel Addon
  * Include this at the BOTTOM of any dashboard (before </body>) to add the right-side control panel.
- * Works with ANY existing dashboard layout — no restructuring needed.
+ * Works with ANY existing dashboard layout â€” no restructuring needed.
  *
  * Usage:
  *   <?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
@@ -46,7 +46,7 @@ try {
             $r = $cpConn->query("SELECT COUNT(*)c FROM approval_requests WHERE status IN ('Active','pending','in_review')");
             if ($r) $cpStats['pending_approvals'] = (int)$r->fetch_assoc()['c'];
             $stmt = $cpConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
-            if ($stmt) { $stmt->bind_param('i', $cpUid); $stmt->execute(); $cpStats['pending_tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $cpUid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $cpStats['pending_tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
         }
     }
 } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
@@ -55,7 +55,7 @@ $cpDashboardUrl = $_SESSION['role_dashboard'] ?? '#';
 $cpInitial = strtoupper(substr($cpUser, 0, 1));
 ?>
 
-<!-- ═══ ENTERPRISE CONTROL PANEL (ADDON) ═══ -->
+<!-- â•â•â• ENTERPRISE CONTROL PANEL (ADDON) â•â•â• -->
 <style>
 .ent-cp-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1060; }
 .ent-cp-overlay.open { display:block; }

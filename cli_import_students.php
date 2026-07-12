@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * CLI student import script — bypasses web session/redirect complexity.
+ * CLI student import script â€” bypasses web session/redirect complexity.
  * Usage: php cli_import_students.php
  */
 error_reporting(E_ALL);
@@ -13,7 +13,7 @@ $conn = getStudentsConnection();
 if (!$conn) { die("Database connection failed\n"); }
 $conn->set_charset('utf8mb4');
 
-// ── Column name normalisation map ──
+// â”€â”€ Column name normalisation map â”€â”€
 $KNOWN_COLUMNS = [
     'full_name'                       => 'full_name',
     'name'                            => 'full_name',
@@ -253,7 +253,7 @@ function processFile($path, $conn) {
             }
         }
 
-        // Validate program — if it looks like garbage, use filename guess or level
+        // Validate program â€” if it looks like garbage, use filename guess or level
         if (!empty($rec['program']) && !isValidProgram($rec['program'])) {
             $rec['program'] = $fileGuess['program'] ?? '';
             $rec['course'] = '';
@@ -332,7 +332,7 @@ function processFile($path, $conn) {
             $st = $conn->prepare($sql);
             if ($st) {
                 $st->bind_param($dedupTypes, ...$dedupParams);
-                $st->execute();
+                if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };
                 if ($st->get_result()->num_rows > 0) {
                     $isDuplicate = true;
                 }
@@ -429,7 +429,7 @@ function processFile($path, $conn) {
     return ['imported' => $imported, 'skipped' => $skipped, 'errors' => $errors, 'file' => $filename];
 }
 
-// ── Main ──
+// â”€â”€ Main â”€â”€
 echo "=== ISNM Student Data CLI Import ===\n\n";
 
 $dir = __DIR__ . '/students_data/';

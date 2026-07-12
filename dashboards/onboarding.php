@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr', 'manager', 'director']);
 $conn = $ctx['staff'];
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_i
         $stmt = $conn->prepare("INSERT INTO onboarding_checklist (item_name, department, created_by) VALUES (?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param('ssi', $item, $dept, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }

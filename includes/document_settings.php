@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Document Settings Loader
  * Loads transcript/certificate settings from document_settings table
@@ -89,7 +89,7 @@ function saveDocumentSetting($key, $value) {
         $stmt = $db->prepare("INSERT INTO document_settings (setting_key, setting_value, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value=?, updated_at=NOW()");
         if ($stmt) {
             $stmt->bind_param("sss", $key, $value, $value);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $db->close();

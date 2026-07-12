@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Professional Hierarchical Sidebar Navigation
  * Collapsible accordion, smooth animations, role-filtered, auto-expand active.
@@ -11,7 +11,7 @@
  */
 
 // Session is already started by bootstrapStaffDashboard() before this file is included.
-// Do NOT call session_start() here — headers were already sent by dashboard_head.php.
+// Do NOT call session_start() here â€” headers were already sent by dashboard_head.php.
 if (empty($_SESSION['user_id']) || empty($_SESSION['role'])) {
     echo '<script>window.location.href="../index.php";</script>'; exit();
 }
@@ -49,7 +49,7 @@ if ($user_type === 'student') {
         if ($studentConn) {
             $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
             $q->bind_param('i', $user_id);
-            $q->execute();
+            if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
             $photoRow = $q->get_result()->fetch_assoc();
             $q->close();
             $photoFile = '';
@@ -97,7 +97,7 @@ $accordionMode = true;
 $currentDir  = dirname($_SERVER['PHP_SELF']);
 ?>
 <style>
-/* ── MOBILE SIDEBAR TOGGLE (left-side) ── */
+/* â”€â”€ MOBILE SIDEBAR TOGGLE (left-side) â”€â”€ */
 .sidebar-toggle {
   display: none;
   position: fixed;
@@ -129,7 +129,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
   box-shadow: 0 0 0 3px rgba(255,215,0,0.4), 0 2px 10px rgba(255,215,0,0.3);
 }
 @media (max-width: 768px) { .sidebar-toggle { display: flex; } }
-/* ── OVERLAY ── */
+/* â”€â”€ OVERLAY â”€â”€ */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -140,12 +140,12 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
   -webkit-backdrop-filter: blur(2px);
 }
 .sidebar-overlay.open { display: block; }
-/* ── BODY SCROLL LOCK ── */
+/* â”€â”€ BODY SCROLL LOCK â”€â”€ */
 body.menu-open { overflow: hidden !important; position: fixed !important; width: 100% !important; }
 </style>
 <?php if ($isRight): ?>
 <style>
-/* ── RIGHT-SIDED SIDEBAR OVERRIDES ── */
+/* â”€â”€ RIGHT-SIDED SIDEBAR OVERRIDES â”€â”€ */
 .isnm-sidebar.sidebar {
   right: 0 !important;
   left: auto !important;
@@ -349,7 +349,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 
     var accordion = <?= json_encode($accordionMode) ?>;
 
-    // ── Collapsible Groups ──
+    // â”€â”€ Collapsible Groups â”€â”€
     qsa('.menu-group-header[data-target]').forEach(function(header) {
         header.addEventListener('click', function(e) {
             var group = this.closest('.menu-group');
@@ -377,7 +377,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         });
     });
 
-    // ── Sidebar collapse toggle (desktop) ──
+    // â”€â”€ Sidebar collapse toggle (desktop) â”€â”€
     var collapseBtn = document.getElementById('sidebarCollapse');
     if (collapseBtn) {
         collapseBtn.addEventListener('click', function() {
@@ -385,7 +385,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         });
     }
 
-    // ── Mobile sidebar toggle (universal) ──
+    // â”€â”€ Mobile sidebar toggle (universal) â”€â”€
     function toggleSidebar() {
         var sidebar = document.getElementById('isnmSidebar');
         var overlay = document.getElementById('sidebarOverlay');
@@ -397,7 +397,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     var rightToggle = document.getElementById('sidebarRightToggle');
     if (rightToggle) rightToggle.addEventListener('click', toggleSidebar);
 
-    // ── Sidebar mobile close buttons ──
+    // â”€â”€ Sidebar mobile close buttons â”€â”€
     var mobileClose = document.getElementById('sidebarMobileClose');
     if (mobileClose) {
         mobileClose.addEventListener('click', function() {
@@ -407,7 +407,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         });
     }
 
-    // ── Auto-expand active group ──
+    // â”€â”€ Auto-expand active group â”€â”€
     var activeLink = qs('.child-link.active');
     if (activeLink) {
         var group = activeLink.closest('.menu-group');
@@ -418,7 +418,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         }
     }
 
-    // ── Responsive: close sidebar on outside click (mobile) ──
+    // â”€â”€ Responsive: close sidebar on outside click (mobile) â”€â”€
     document.addEventListener('click', function(e) {
         var sidebar = document.getElementById('isnmSidebar');
         if (!sidebar || window.innerWidth > 768) return;
@@ -427,7 +427,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         }
     });
 
-    // ── Overlay click closes sidebar ──
+    // â”€â”€ Overlay click closes sidebar â”€â”€
     var overlay = document.getElementById('sidebarOverlay');
     if (overlay) {
         overlay.addEventListener('click', function() {
@@ -437,7 +437,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         });
     }
 
-    // ── Mark active section on page load ──
+    // â”€â”€ Mark active section on page load â”€â”€
     (function initPage() {
         var m = window.location.search.match(/[?&]page=([^&]+)/);
         var page = (m && m[1]) || 'home';
@@ -449,7 +449,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         });
     })();
 
-    // ── Intercept ACCOUNT group links ──
+    // â”€â”€ Intercept ACCOUNT group links â”€â”€
     qsa('.menu-group .child-link').forEach(function(link) {
         var href = link.getAttribute('href') || '';
         var pageParam = href.match(/page=([^&]+)/);
@@ -476,7 +476,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         }
     });
 
-    // ── Progressive enhancement: accordion ready, remove fallback class ──
+    // â”€â”€ Progressive enhancement: accordion ready, remove fallback class â”€â”€
     qs('#isnmSidebar') && qs('#isnmSidebar').classList.remove('not-init');
 })();
 </script>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 include("config.php");
 
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
             $finalStatement = $conn->prepare($rejectPendingQuery);
             $finalStatement->bind_param("s", $newColumnValue);
-            $finalStatement->execute();
+            if (!$finalStatement->execute()) { error_log('$finalStatement execute failed: ' . ($finalStatement->error ?? 'unknown')); };
             $finalStatement->close();
         }
         mysqli_stmt_close($pstmt);

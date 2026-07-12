@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Enterprise Layout Wrapper
  * Include this at the TOP of any dashboard to get the standard ERP layout:
@@ -66,7 +66,7 @@ try {
         if ($r) $elStats['approvals'] = (int)$r->fetch_assoc()['c'];
         if ($elUid) {
             $stmt = $elConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
-            if ($stmt) { $stmt->bind_param('i', $elUid); $stmt->execute(); $elStats['tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $elUid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $elStats['tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
         }
         $r = $elConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");
         if ($r) $elStats['events'] = (int)$r->fetch_assoc()['c'];
@@ -82,7 +82,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISNM — <?= htmlspecialchars($elRole) ?></title>
+    <title>ISNM â€” <?= htmlspecialchars($elRole) ?></title>
     <?php include_once __DIR__ . '/dashboard_head.php'; ?>
     <link rel="stylesheet" href="../css/enterprise-layout.css">
     <style>
@@ -103,7 +103,7 @@ try {
 </head>
 <body class="ent-layout">
 
-<!-- ═══ LEFT SIDEBAR ═══ -->
+<!-- â•â•â• LEFT SIDEBAR â•â•â• -->
 <nav class="ent-sidebar" id="entSidebar">
     <div class="ent-sidebar-brand">
         <img src="../images/school-logo.png" alt="ISNM" class="ent-sidebar-logo">
@@ -164,7 +164,7 @@ try {
     </div>
 </nav>
 
-<!-- ═══ TOP HEADER ═══ -->
+<!-- â•â•â• TOP HEADER â•â•â• -->
 <header class="ent-header" id="entHeader">
     <div class="ent-header-left">
         <button class="ent-hamburger" id="entHamburger" onclick="document.getElementById('entSidebar').classList.toggle('open')">
@@ -203,7 +203,7 @@ try {
     </div>
 </header>
 
-<!-- ═══ MAIN WORKSPACE ═══ -->
+<!-- â•â•â• MAIN WORKSPACE â•â•â• -->
 <main class="ent-main" id="entMain">
     <div class="ent-content-area" id="entContentArea">
         <!-- Dashboard content goes here -->

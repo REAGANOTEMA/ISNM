@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -165,7 +165,7 @@ function handleAddStudent() {
     $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_stmt->bind_param("s", $student_id);
-    $check_stmt->execute();
+    if (!$check_stmt->execute()) { error_log('$check_stmt execute failed: ' . ($check_stmt->error ?? 'unknown')); };
     $check_result = $check_stmt->get_result();
     
     if ($check_result->fetch_assoc()['count'] > 0) {
@@ -178,7 +178,7 @@ function handleAddStudent() {
     $check_phone_sql = "SELECT COUNT(*) as count FROM students WHERE phone = ?";
     $check_phone_stmt = $conn->prepare($check_phone_sql);
     $check_phone_stmt->bind_param("s", $phone);
-    $check_phone_stmt->execute();
+    if (!$check_phone_stmt->execute()) { error_log('$check_phone_stmt execute failed: ' . ($check_phone_stmt->error ?? 'unknown')); };
     $check_phone_result = $check_phone_stmt->get_result();
     
     if ($check_phone_result->fetch_assoc()['count'] > 0) {
@@ -1240,10 +1240,10 @@ function generateStudentId() {
                             <input type="file" class="form-control" name="passport_photo" id="passport_photo" accept="image/*" required>
                             <div class="form-text">
                                 <strong>Requirements:</strong><br>
-                                • Format: JPG, PNG, or GIF<br>
-                                • Size: Maximum 5MB<br>
-                                • Dimensions: Portrait orientation (height > width)<br>
-                                • Recommended: 350x450 pixels (passport size)
+                                â€¢ Format: JPG, PNG, or GIF<br>
+                                â€¢ Size: Maximum 5MB<br>
+                                â€¢ Dimensions: Portrait orientation (height > width)<br>
+                                â€¢ Recommended: 350x450 pixels (passport size)
                             </div>
                         </div>
                         
@@ -1367,21 +1367,21 @@ function generateStudentId() {
                             const requirements = [];
                             
                             if (img.width > img.height) {
-                                requirements.push('❌ Photo should be in portrait orientation');
+                                requirements.push('âŒ Photo should be in portrait orientation');
                             } else {
-                                requirements.push('✅ Portrait orientation OK');
+                                requirements.push('âœ… Portrait orientation OK');
                             }
                             
                             if (img.width < 200 || img.height < 250) {
-                                requirements.push('❌ Photo too small (min 200x250)');
+                                requirements.push('âŒ Photo too small (min 200x250)');
                             } else {
-                                requirements.push('✅ Size OK');
+                                requirements.push('âœ… Size OK');
                             }
                             
                             if (img.width > 800 || img.height > 1000) {
-                                requirements.push('⚠️ Large file (will be resized)');
+                                requirements.push('âš ï¸ Large file (will be resized)');
                             } else {
-                                requirements.push('✅ File size OK');
+                                requirements.push('âœ… File size OK');
                             }
                             
                             $('#photo_requirements').html(requirements.join('<br>'));

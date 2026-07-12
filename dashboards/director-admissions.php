@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Director of Admissions & Requirements � Complete Enterprise Dashboard
+ * Director of Admissions & Requirements ï¿½ Complete Enterprise Dashboard
  * Covers: Applications, Review, Requirements, Filtering, Search, Analytics,
  * Registration, Communications, WhatsApp, Reports, Security, Audit.
  */
@@ -136,8 +136,8 @@ $r = $conn->query("SELECT COUNT(*) c FROM intakes"); if ($r && (int)$r->fetch_as
 if ($stuConn) { $conn->query("INSERT IGNORE INTO academic_programs(program_code,program_name,program_type,duration_years) SELECT CONCAT('PGM-',p.id),p.program_name,p.program_type,p.duration_years FROM $studentsDb.programs p WHERE p.is_active=1 AND NOT EXISTS(SELECT 1 FROM academic_programs ap WHERE ap.program_name=p.program_name COLLATE utf8mb4_general_ci LIMIT 1)"); }
 
 // -- Helpers --
-function logAdmission($conn, $applicantId, $userId, $action, $desc) { $ip=$_SERVER['REMOTE_ADDR']??'';$ua=$_SERVER['HTTP_USER_AGENT']??'';$s=$conn->prepare("INSERT INTO admission_activity_logs(applicant_id,user_id,action,description,ip_address,user_agent) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$action,$desc,$ip,$ua);$s->execute();$s->close();} }
-function notifyAdmission($conn, $applicantId, $userId, $type, $title, $msg, $link='') { $s=$conn->prepare("INSERT INTO admission_notifications(applicant_id,user_id,type,title,message,link) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$type,$title,$msg,$link);$s->execute();$s->close();} }
+function logAdmission($conn, $applicantId, $userId, $action, $desc) { $ip=$_SERVER['REMOTE_ADDR']??'';$ua=$_SERVER['HTTP_USER_AGENT']??'';$s=$conn->prepare("INSERT INTO admission_activity_logs(applicant_id,user_id,action,description,ip_address,user_agent) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$action,$desc,$ip,$ua);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();} }
+function notifyAdmission($conn, $applicantId, $userId, $type, $title, $msg, $link='') { $s=$conn->prepare("INSERT INTO admission_notifications(applicant_id,user_id,type,title,message,link) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iissss',$applicantId,$userId,$type,$title,$msg,$link);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();} }
 function getStatusBadge($s) { $m=['New'=>'bg-primary','Under Review'=>'bg-info','Waiting for Documents'=>'bg-warning text-dark','Requirements Verified'=>'bg-success','Interview Scheduled'=>'bg-purple','Approved'=>'bg-success','Rejected'=>'bg-danger','Registered'=>'bg-dark','Withdrawn'=>'bg-secondary'];$c=$m[$s]??'bg-secondary';return "<span class=\"badge $c\">".htmlspecialchars($s).'</span>'; }
 function adCount($conn, $status) { $r=$conn->query("SELECT COUNT(*) c FROM applicants WHERE status='".$conn->real_escape_string($status)."'"); return $r?(int)$r->fetch_assoc()['c']:0; }
 
@@ -167,12 +167,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($q)<2) { echo json_encode([]); exit; }
         $qq = '%'.$conn->real_escape_string($q).'%';
         $s = $conn->prepare("SELECT id,application_number,full_name,phone,email,status,program_id,intake FROM applicants WHERE full_name LIKE ? OR application_number LIKE ? OR email LIKE ? OR phone LIKE ? LIMIT 20");
-        if ($s) { $s->bind_param('ssss',$qq,$qq,$qq,$qq); $s->execute(); $res=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); echo json_encode($res); }
+        if ($s) { $s->bind_param('ssss',$qq,$qq,$qq,$qq); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $res=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); echo json_encode($res); }
         exit;
     }
     if ($action === 'get_applicant') {
         $id=(int)($_POST['id']??0); $s=$conn->prepare("SELECT a.*,ap.program_name,ap.program_code FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.id=?"); $data=null;
-        if($s){$s->bind_param('i',$id);$s->execute();$data=$s->get_result()->fetch_assoc();$s->close();} echo json_encode($data?:[]); exit;
+        if($s){$s->bind_param('i',$id);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$data=$s->get_result()->fetch_assoc();$s->close();} echo json_encode($data?:[]); exit;
     }
     if ($action === 'update_status') {
         $id=(int)($_POST['id']??0); $st=trim($_POST['status']??'');
@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->query("UPDATE student_admission_tracking SET admission_status='Approved' WHERE applicant_id=$id");
         $dec='Approved';
         $s=$conn->prepare("INSERT INTO admission_decisions(applicant_id,decision,decision_reason,decided_by,decided_at,notified_applicant) VALUES(?,?,'',?,NOW(),1)");
-        if($s){$s->bind_param('isi',$id,$dec,$userId);$s->execute();$s->close();}
+        if($s){$s->bind_param('isi',$id,$dec,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}
         logAdmission($conn,$id,$userId,"Approved","Application approved"); notifyAdmission($conn,$id,$userId,'success','Application Approved','Congratulations! Your application has been approved.','staff-portal.php');
         echo json_encode(['success'=>true]); exit;
     }
@@ -194,16 +194,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->query("UPDATE applicants SET status='Rejected',rejection_reason='".$conn->real_escape_string($reason)."' WHERE id=$id");
         $conn->query("UPDATE student_admission_tracking SET admission_status='Rejected' WHERE applicant_id=$id");
         $s=$conn->prepare("INSERT INTO admission_decisions(applicant_id,decision,decision_reason,decided_by,decided_at,notified_applicant) VALUES(?,?,?,?,NOW(),1)");
-        if($s){$s->bind_param('issi',$id,$dec,$reason,$userId);$s->execute();$s->close();}
+        if($s){$s->bind_param('issi',$id,$dec,$reason,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}
         logAdmission($conn,$id,$userId,"Rejected","Reason: $reason"); notifyAdmission($conn,$id,$userId,'danger','Application Rejected',"Your application was rejected. Reason: $reason");
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'set_requirement') {
         $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted'); $notes=trim($_POST['notes']??'');
         $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at,director_notes) VALUES(?,?,?,?,NOW(),?) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW(),director_notes=COALESCE(NULLIF(?,''),director_notes)");
-        if($s){$s->bind_param('iississ',$aid,$rid,$st,$userId,$notes,$st,$userId,$notes);$s->execute();$s->close();}
+        if($s){$s->bind_param('iississ',$aid,$rid,$st,$userId,$notes,$st,$userId,$notes);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}
         $s=$conn->prepare("INSERT INTO requirement_history(applicant_id,requirement_id,action,new_status,performed_by) VALUES(?,?,?,?,?)");
-        if($s){$ac="Requirement: $st";$s->bind_param('iissi',$aid,$rid,$ac,$st,$userId);$s->execute();$s->close();}
+        if($s){$ac="Requirement: $st";$s->bind_param('iissi',$aid,$rid,$ac,$st,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}
         // Update tracking counts
         $tr=$conn->query("SELECT COUNT(*) tot FROM admission_requirements WHERE is_active=1")->fetch_assoc()['tot'];
         $cr=$conn->query("SELECT COUNT(*) c FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received','Not Yet Given')")->fetch_assoc()['c'];
@@ -231,10 +231,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fn=$parts[0]; $sn2=$parts[1]??'';
                 $set=trim($ap['intake']??'');
                 $ins=$stuConn->prepare("INSERT INTO students(student_number,registration_number,index_number,first_name,surname,full_name,email,phone,gender,program,date_of_birth,nationality,address,set_name,status,password,is_first_login,password_changed,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW(),NOW())");
-                if($ins){$ins->bind_param('sssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$set,$ph);$ins->execute();$ins->close();}
+                if($ins){$ins->bind_param('sssssssssssssss',$sn,$rn,$sn,$fn,$sn2,$ap['full_name'],$ap['email'],$ap['phone'],$ap['gender'],$progName,$ap['date_of_birth'],$ap['nationality'],$ap['address'],$set,$ph);if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };$ins->close();}
                 // Create academic record
                 $acStmt = $stuConn->prepare("INSERT INTO student_academic_profiles(student_number,full_name,program,academic_year,status) VALUES(?,?,?,?,?)");
-                if($acStmt){$acStmt->bind_param('sssss',$sn,$ap['full_name'],$progName,date('Y'),'Active');$acStmt->execute();$acStmt->close();}
+                if($acStmt){$acStmt->bind_param('sssss',$sn,$ap['full_name'],$progName,date('Y'),'Active');if (!$acStmt->execute()) { error_log('$acStmt execute failed: ' . ($acStmt->error ?? 'unknown')); };$acStmt->close();}
             }
             // Update applicant
             $upd1 = $conn->prepare("UPDATE applicants SET status='Registered',student_number=?,registration_number=?,portal_username=?,portal_password_hash=?,registered_at=NOW() WHERE id=?");
@@ -358,19 +358,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'send_communication') {
         $aid=(int)($_POST['applicant_id']??0); $type=trim($_POST['comm_type']??'Portal'); $subj=trim($_POST['subject']??''); $msg=trim($_POST['message']??'');
-        if($aid && $msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,?,?,?)");if($s){$s->bind_param('iisss',$aid,$userId,$type,$subj,$msg);$s->execute();$s->close();}logAdmission($conn,$aid,$userId,"Communication: $type","Sent $type: $subj");}
+        if($aid && $msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,?,?,?)");if($s){$s->bind_param('iisss',$aid,$userId,$type,$subj,$msg);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}logAdmission($conn,$aid,$userId,"Communication: $type","Sent $type: $subj");}
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'schedule_interview') {
         $aid=(int)($_POST['applicant_id']??0); $dt=$_POST['interview_date']??''; $mode=trim($_POST['interview_mode']??'In-Person'); $link=trim($_POST['interview_link']??'');
-        if($aid && $dt){$s=$conn->prepare("INSERT INTO admission_interviews(applicant_id,interviewer_id,interview_date,interview_mode,interview_link,created_by) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iisssi',$aid,$userId,$dt,$mode,$link,$userId);$s->execute();$s->close();}$conn->query("UPDATE applicants SET status='Interview Scheduled' WHERE id=$aid");$conn->query("UPDATE student_admission_tracking SET interview_scheduled=1,interview_date='$dt' WHERE applicant_id=$aid");logAdmission($conn,$aid,$userId,"Interview Scheduled","$mode interview on $dt");notifyAdmission($conn,$aid,$userId,'info','Interview Scheduled',"Your interview is scheduled for $dt ($mode).",'staff-portal.php');}
+        if($aid && $dt){$s=$conn->prepare("INSERT INTO admission_interviews(applicant_id,interviewer_id,interview_date,interview_mode,interview_link,created_by) VALUES(?,?,?,?,?,?)");if($s){$s->bind_param('iisssi',$aid,$userId,$dt,$mode,$link,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}$conn->query("UPDATE applicants SET status='Interview Scheduled' WHERE id=$aid");$conn->query("UPDATE student_admission_tracking SET interview_scheduled=1,interview_date='$dt' WHERE applicant_id=$aid");logAdmission($conn,$aid,$userId,"Interview Scheduled","$mode interview on $dt");notifyAdmission($conn,$aid,$userId,'info','Interview Scheduled',"Your interview is scheduled for $dt ($mode).",'staff-portal.php');}
         echo json_encode(['success'=>true]); exit;
     }
     if ($action === 'request_docs') {
         $aid=(int)($_POST['applicant_id']??0); $msg=trim($_POST['message']??'');
         $conn->query("UPDATE applicants SET status='Waiting for Documents' WHERE id=$aid");
         $conn->query("UPDATE student_admission_tracking SET admission_status='Requirements Pending' WHERE applicant_id=$aid");
-        if($msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,'Portal','Additional Documents Required',?)");if($s){$s->bind_param('iis',$aid,$userId,$msg);$s->execute();$s->close();}}
+        if($msg){$s=$conn->prepare("INSERT INTO admission_communications(applicant_id,sender_id,communication_type,subject,message) VALUES(?,?,'Portal','Additional Documents Required',?)");if($s){$s->bind_param('iis',$aid,$userId,$msg);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}}
         logAdmission($conn,$aid,$userId,"Documents Requested","Requested: $msg"); notifyAdmission($conn,$aid,$userId,'warning','Documents Required',"Please submit: $msg",'staff-portal.php');
         echo json_encode(['success'=>true]); exit;
     }
@@ -391,23 +391,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql="SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE $where ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
         $params[]=$lim;$params[]=$off;$types.='ii';
         $s=$conn->prepare($sql); $rows=[];
-        if($s){$s->bind_param($types,...$params);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
+        if($s){$s->bind_param($types,...$params);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
         echo json_encode($rows); exit;
     }
     if ($action === 'reports_data') {
         $from=date('Y-m-d',strtotime($_POST['from']??'-30 days'));$to=date('Y-m-d',strtotime($_POST['to']??'today'));
         $rs=$conn->prepare("SELECT status,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY status");
-        $byStatus=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r1=$rs->get_result();while($rw=$r1->fetch_assoc())$byStatus[$rw['status']]=(int)$rw['c'];$rs->close();}
+        $byStatus=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r1=$rs->get_result();while($rw=$r1->fetch_assoc())$byStatus[$rw['status']]=(int)$rw['c'];$rs->close();}
         $rs=$conn->prepare("SELECT ap.program_name,COUNT(a.id) c FROM applicants a JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN ? AND ? GROUP BY a.program_id");
-        $byProgram=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r2=$rs->get_result();while($rw=$r2->fetch_assoc())$byProgram[]=$rw;$rs->close();}
+        $byProgram=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r2=$rs->get_result();while($rw=$r2->fetch_assoc())$byProgram[]=$rw;$rs->close();}
         $rs=$conn->prepare("SELECT intake,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY intake");
-        $byIntake=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r3=$rs->get_result();while($rw=$r3->fetch_assoc())$byIntake[]=$rw;$rs->close();}
+        $byIntake=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r3=$rs->get_result();while($rw=$r3->fetch_assoc())$byIntake[]=$rw;$rs->close();}
         $rs=$conn->prepare("SELECT gender,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY gender");
-        $byGender=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r4=$rs->get_result();while($rw=$r4->fetch_assoc())$byGender[]=$rw;$rs->close();}
+        $byGender=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r4=$rs->get_result();while($rw=$r4->fetch_assoc())$byGender[]=$rw;$rs->close();}
         $rs=$conn->prepare("SELECT nationality,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY nationality ORDER BY c DESC LIMIT 10");
-        $byNationality=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r5=$rs->get_result();while($rw=$r5->fetch_assoc())$byNationality[]=$rw;$rs->close();}
+        $byNationality=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r5=$rs->get_result();while($rw=$r5->fetch_assoc())$byNationality[]=$rw;$rs->close();}
         $rs=$conn->prepare("SELECT DATE(created_at) dt,COUNT(*) c FROM applicants WHERE DATE(created_at) BETWEEN ? AND ? GROUP BY DATE(created_at) ORDER BY dt");
-        $trend=[];if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r6=$rs->get_result();while($rw=$r6->fetch_assoc())$trend[]=$rw;$rs->close();}
+        $trend=[];if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r6=$rs->get_result();while($rw=$r6->fetch_assoc())$trend[]=$rw;$rs->close();}
         echo json_encode(compact('byStatus','byProgram','byIntake','byGender','byNationality','trend')); exit;
     }
     if ($action === 'export_csv') {
@@ -417,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($type==='applicants'){
             fputcsv($out,['Application #','Full Name','Gender','Phone','Email','Program','Intake','Status','District','Nationality','Submitted']);
             $rs=$conn->prepare("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE DATE(a.created_at) BETWEEN ? AND ? ORDER BY a.created_at");
-            if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$r=$rs->get_result();while($rw=$r->fetch_assoc())fputcsv($out,[$rw['application_number'],$rw['full_name'],$rw['gender'],$rw['phone'],$rw['email'],$rw['program_name'],$rw['intake'],$rw['status'],$rw['district'],$rw['nationality'],$rw['created_at']]);$rs->close();}
+            if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$r=$rs->get_result();while($rw=$r->fetch_assoc())fputcsv($out,[$rw['application_number'],$rw['full_name'],$rw['gender'],$rw['phone'],$rw['email'],$rw['program_name'],$rw['intake'],$rw['status'],$rw['district'],$rw['nationality'],$rw['created_at']]);$rs->close();}
         }elseif($type==='requirements'){
             fputcsv($out,['Applicant','Requirement','Status','Submitted','Verified']);
             $r=$conn->query("SELECT a.full_name,ar.requirement_name,ars.status,ars.submitted_at,ars.verified_at FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id JOIN admission_requirements ar ON ars.requirement_id=ar.id ORDER BY a.full_name");
@@ -435,23 +435,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'get_communications') {
         $aid=(int)($_POST['applicant_id']??0); $s=$conn->prepare("SELECT * FROM admission_communications WHERE applicant_id=? ORDER BY sent_at DESC LIMIT 50"); $rows=[];
-        if($s){$s->bind_param('i',$aid);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+        if($s){$s->bind_param('i',$aid);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
     }
     if ($action === 'get_interviews') {
         $aid=(int)($_POST['applicant_id']??0); $s=$conn->prepare("SELECT * FROM admission_interviews WHERE applicant_id=? ORDER BY interview_date DESC"); $rows=[];
-        if($s){$s->bind_param('i',$aid);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+        if($s){$s->bind_param('i',$aid);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
     }
     if ($action === 'get_decisions') {
         $aid=(int)($_POST['applicant_id']??0); $s=$conn->prepare("SELECT * FROM admission_decisions WHERE applicant_id=? ORDER BY created_at DESC"); $rows=[];
-        if($s){$s->bind_param('i',$aid);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+        if($s){$s->bind_param('i',$aid);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
     }
     if ($action === 'get_activity') {
         $aid=(int)($_POST['applicant_id']??0); $s=$conn->prepare("SELECT * FROM admission_activity_logs WHERE applicant_id=? ORDER BY created_at DESC LIMIT 50"); $rows=[];
-        if($s){$s->bind_param('i',$aid);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+        if($s){$s->bind_param('i',$aid);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
     }
     if ($action === 'get_notifications') {
         $s=$conn->prepare("SELECT n.*,a.full_name as app_name FROM admission_notifications n LEFT JOIN applicants a ON n.applicant_id=a.id WHERE (n.user_id=? OR n.user_id IS NULL) ORDER BY n.created_at DESC LIMIT 20"); $rows=[];
-        if($s){$s->bind_param('i',$userId);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
+        if($s){$s->bind_param('i',$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();} echo json_encode($rows); exit;
     }
     
     if ($action === 'get_bulk_requirement_status') {
@@ -464,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $s = $conn->prepare("SELECT applicant_id, requirement_id, status FROM applicant_requirement_status WHERE applicant_id IN ($placeholders)");
         if ($s) {
             $s->bind_param($types, ...$appIds);
-            $s->execute();
+            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             $result = $s->get_result();
             $statusData = [];
             while ($row = $result->fetch_assoc()) {
@@ -553,7 +553,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "SELECT a.id, a.application_number, a.full_name, a.email, a.phone, a.program_id, a.intake, a.status, ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id $where ORDER BY a.full_name";
         $stmt = $conn->prepare($sql);
         if ($params) $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         header('Content-Type: text/csv; charset=utf-8');
@@ -582,7 +582,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reqStatus = [];
             $reqStmt = $conn->prepare("SELECT requirement_id, status FROM applicant_requirement_status WHERE applicant_id=?");
             $reqStmt->bind_param('i', $row['id']);
-            $reqStmt->execute();
+            if (!$reqStmt->execute()) { error_log('$reqStmt execute failed: ' . ($reqStmt->error ?? 'unknown')); };
             $reqResult = $reqStmt->get_result();
             while ($rs = $reqResult->fetch_assoc()) {
                 $reqStatus[$rs['requirement_id']] = $rs['status'];
@@ -632,7 +632,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $progId=0;
         if($progName){$pr=$conn->query("SELECT id FROM academic_programs WHERE program_name='".$conn->real_escape_string($progName)."' LIMIT 1");if($pr&&$pr->num_rows)$progId=(int)$pr->fetch_assoc()['id'];}
         $s=$conn->prepare("INSERT INTO applicants(application_number,full_name,email,phone,gender,program_id,intake,application_source,status,submitted_at) VALUES(?,?,?,?,?,?,?,'Online','New',NOW())");
-        if($s){$s->bind_param('sssssis',$appNum,$fullName,$app['email']??'',$app['phone']??'','Female',$progId,$progName);$s->execute();$newId=$conn->insert_id;$s->close();
+        if($s){$s->bind_param('sssssis',$appNum,$fullName,$app['email']??'',$app['phone']??'','Female',$progId,$progName);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$newId=$conn->insert_id;$s->close();
         $conn->query("INSERT INTO student_admission_tracking(application_number,applicant_id,admission_status) VALUES('$appNum',$newId,'Pending')");
         logAdmission($conn,$newId,$userId,"Imported Online","Imported from website application #$aid");}
         echo json_encode(['success'=>true,'id'=>$newId??0]);exit;
@@ -645,7 +645,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if(strlen($q)>=2){
                 $qq='%'.$conn->real_escape_string($q).'%';
                 $s=$stuConn->prepare("SELECT id,student_id,student_number,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture FROM {$studentsDb}.students WHERE (first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? OR email LIKE ?) AND status!='deleted' LIMIT 100");
-                if($s){$s->bind_param('sssss',$qq,$qq,$qq,$qq,$qq);$s->execute();$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
+                if($s){$s->bind_param('sssss',$qq,$qq,$qq,$qq,$qq);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();}
             } else {
                 // No search keyword - return recent active students
                 $s=$stuConn->query("SELECT id,student_id,student_number,CONCAT(first_name,' ',COALESCE(surname,'')) full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture FROM {$studentsDb}.students WHERE status!='deleted' ORDER BY id DESC LIMIT 200");
@@ -699,7 +699,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $msg="Student added. Login: $studentNum / Password: $tempPw";
                 if($conn){
                     $s2=$conn->prepare("INSERT INTO student_admission_tracking(application_number,student_number,program,intake,admission_status,requirements_total,requirements_completed) VALUES(?,?,?,?,'Registered',0,0)");
-                    if($s2){$s2->bind_param('ssss',$regNum,$studentNum,$pg,$set);$s2->execute();$s2->close();}
+                    if($s2){$s2->bind_param('ssss',$regNum,$studentNum,$pg,$set);if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };$s2->close();}
                 }
             }else{$msg='Insert failed';}
         }else{$msg='First name and surname required.';}
@@ -750,7 +750,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id=(int)($_POST['id']??0); $data=null;
         if($id&&$stuConn){
             $s=$stuConn->prepare("SELECT * FROM {$studentsDb}.students WHERE id=?");
-            if($s){$s->bind_param('i',$id);$s->execute();$data=$s->get_result()->fetch_assoc();$s->close();}
+            if($s){$s->bind_param('i',$id);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$data=$s->get_result()->fetch_assoc();$s->close();}
         }
         echo json_encode($data?:[]); exit;
     }
@@ -759,7 +759,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id=(int)($_POST['id']??0); $result=[];
         if($id&&$stuConn){
             $s=$stuConn->prepare("SELECT id,student_id,student_number,registration_number,first_name,surname,full_name,email,phone,program,level,gender,date_of_birth,set_name,status,passport_photo,profile_picture,created_at,updated_at FROM {$studentsDb}.students WHERE id=?");
-            if($s){$s->bind_param('i',$id);$s->execute();$stu=$s->get_result()->fetch_assoc();$s->close();}
+            if($s){$s->bind_param('i',$id);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$stu=$s->get_result()->fetch_assoc();$s->close();}
             if($stu){
                 $result['student']=$stu;
                 // Get requirements via applicant link
@@ -821,7 +821,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aid=(int)($_POST['applicant_id']??0); $rid=(int)($_POST['requirement_id']??0); $st=trim($_POST['status']??'Submitted');
         if($aid&&$rid&&$conn){
             $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
-            if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);$s->execute();$s->close();}
+            if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();}
             $conn->query("UPDATE student_admission_tracking SET requirements_completed=(SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received')) WHERE applicant_id=$aid");
         }
         echo json_encode(['success'=>true]); exit;
@@ -838,7 +838,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $aid=$ar['id']??0;
                 if($aid){
                     $s=$conn->prepare("INSERT INTO applicant_requirement_status(applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE status=?,submitted_by=?,submitted_at=NOW()");
-                    if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);$s->execute();$s->close();
+                    if($s){$s->bind_param('iissis',$aid,$rid,$st,$userId,$st,$userId);if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };$s->close();
                     $conn->query("UPDATE student_admission_tracking SET requirements_completed=(SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=$aid AND status IN('Submitted','Verified','Received')) WHERE applicant_id=$aid");
                     $ok=true;}
                 }
@@ -969,7 +969,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .form-select-sm,.form-control-sm{font-size:11px}
 .adm-tabs a{padding:5px 8px;font-size:10px}
 }
-/* -- Sidebar Override � ensure it works correctly -- */
+/* -- Sidebar Override ï¿½ ensure it works correctly -- */
 .isnm-sidebar.sidebar{position:fixed;top:0;left:0;z-index:1050}
 .isnm-sidebar.sidebar .sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0}
 .isnm-sidebar.sidebar .menu-group-header{cursor:pointer;user-select:none;padding:10px 16px;display:flex;align-items:center;gap:10px}
@@ -1181,7 +1181,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
         <td style="min-width:180px">
           <div class="d-flex gap-1">
             <select id="reqStatus_<?=$r['id']?>" class="form-select form-select-sm" style="width:auto;display:inline-block" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,this.value,document.getElementById('reqNote_<?=$r['id']?>').value)">
-              <option value="">�</option>
+              <option value="">ï¿½</option>
               <option value="Received" <?=$cs==='Received'?'selected':''?>>Received</option>
               <option value="Submitted" <?=$cs==='Submitted'?'selected':''?>>Submitted</option>
               <option value="Verified" <?=$cs==='Verified'?'selected':''?>>Verified</option>
@@ -1367,7 +1367,7 @@ function deleteApplicant(id, name) {
 <?php endif; ?>
 
 <?php elseif ($page === 'requirements'): ?>
-<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal � All Applicants</h3>
+<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal ï¿½ All Applicants</h3>
   <p class="text-muted small mb-3">Matrix view: each row is an applicant, each column is a requirement. Click to toggle status. Checkboxes for bulk marking.</p>
   
   <!-- Advanced Filters -->
@@ -1775,7 +1775,7 @@ loadRequirementsPortal();
     <div class="col-md-6">
       <select class="form-select" id="regSelect" size="10">
         <?php $apps=$conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.status='Approved' ORDER BY a.full_name"); if($apps)while($a=$apps->fetch_assoc()): ?>
-        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> � <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
+        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> ï¿½ <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
         <?php endwhile; ?>
       </select>
     </div>
@@ -1798,7 +1798,7 @@ loadRequirementsPortal();
         <div class="col-md-5">
           <div class="mb-3"><label class="form-label small fw-bold">Select Applicant</label>
             <select class="form-select" id="commApplicant">
-              <option value="">� Select �</option>
+              <option value="">ï¿½ Select ï¿½</option>
               <?php $allApps=$conn->query("SELECT id,full_name,application_number,email,phone FROM applicants ORDER BY full_name"); if($allApps)while($a=$allApps->fetch_assoc()): ?>
               <option value="<?=$a['id']?>" data-email="<?=htmlspecialchars($a['email'])?>" data-phone="<?=htmlspecialchars($a['phone'])?>"><?=htmlspecialchars($a['full_name'])?> (<?=htmlspecialchars($a['application_number'])?>)</option>
               <?php endwhile; ?>
@@ -2010,7 +2010,7 @@ function viewExcelStudent(name,file,id,setInfo,program,phone){
   alert(msg);
 }
 function showRequirements(stuId,stuName,stuNumber){
-  document.getElementById('reqViewTitle').textContent=stuName+' � Requirements';
+  document.getElementById('reqViewTitle').textContent=stuName+' ï¿½ Requirements';
   document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
   new bootstrap.Modal(document.getElementById('reqViewModal')).show();
   var body='action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(_tk);
@@ -2027,7 +2027,7 @@ function showRequirements(stuId,stuName,stuNumber){
         +'<td><span class="badge bg-'+statusClass+'" id="srs_'+reqId+'">'+r.status+'</span></td>'
         +'<td class="small text-muted">'+((r.director_notes||'').substring(0,50)||'-')+'</td>'
         +'<td><select class="form-select form-select-sm req-status-select" data-stuid="'+stuId+'" data-reqid="'+reqId+'" onchange="setStudentReqDirect(this)">'
-        +'<option value="">�</option>'
+        +'<option value="">ï¿½</option>'
         +'<option value="Received" '+(r.status==='Received'?'selected':'')+'>Received</option>'
         +'<option value="Submitted" '+(r.status==='Submitted'?'selected':'')+'>Submitted</option>'
         +'<option value="Verified" '+(r.status==='Verified'?'selected':'')+'>Verified</option>'
@@ -2098,7 +2098,7 @@ function viewStudentDetail(idx,id){
         reqHtml+='<tr><td class="small">'+rr.requirement_name+(rr.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td><td><span class="badge bg-'+sc+'">'+rr.status+'</span></td></tr>';
       });
       reqHtml+='</tbody></table></div>';
-    }else{reqHtml='<p class="text-muted small">No applicant record linked � cannot track requirements.</p>';}
+    }else{reqHtml='<p class="text-muted small">No applicant record linked ï¿½ cannot track requirements.</p>';}
     var payHtml='',paySum=d.payment_summary||{paid:0,total:0};
     var bal=parseFloat(paySum.total)-parseFloat(paySum.paid);
     var payStatus=bal<=0?'<span class="badge bg-success">Paid in Full</span>':bal>0?'<span class="badge bg-warning text-dark">Balance: '+bal.toLocaleString()+'</span>':'<span class="badge bg-secondary">No Data</span>';

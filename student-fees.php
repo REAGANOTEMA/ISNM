@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -29,19 +29,19 @@ if ($studentNumber && $studentsDb) {
     try {
         $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number = ?");
         $stmt->bind_param("s", $studentNumber);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $studentInfo = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
         $stmt2 = $studentsDb->prepare("SELECT si.*, fs.fee_name, fs.fee_type as fee_category, fs.amount as structure_amount FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_type COLLATE utf8mb4_unicode_ci = fs.fee_name WHERE si.student_id = ? ORDER BY si.created_at DESC");
         $stmt2->bind_param("s", $studentNumber);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $invoices = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt2->close();
 
         $stmt3 = $studentsDb->prepare("SELECT * FROM payments WHERE student_id = ? ORDER BY created_at DESC LIMIT 50");
         $stmt3->bind_param("s", $studentNumber);
-        $stmt3->execute();
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $payments = $stmt3->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt3->close();
 
@@ -292,7 +292,7 @@ $receipts = [];
 try {
     $stmt = $studentsDb->prepare("SELECT * FROM payment_receipts WHERE student_id = ? ORDER BY created_at DESC");
     $stmt->bind_param("s", $studentNumber);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } catch (Exception $e) { error_log('student-fees context: ' . $e->getMessage()); }

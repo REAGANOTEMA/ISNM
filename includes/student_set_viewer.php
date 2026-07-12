@@ -94,7 +94,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 $stmt = $conn->prepare($countSQL);
                 if ($stmt) {
                     $stmt->bind_param($bindTypes, ...$bindParams);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $res = $stmt->get_result();
                     if ($res) $totalFiltered = intval($res->fetch_row()[0]);
                     $stmt->close();
@@ -117,7 +117,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 $stmt = $conn->prepare($dataSQL);
                 if ($stmt) {
                     $stmt->bind_param($dataTypes, ...$dataParams);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $res = $stmt->get_result();
                     if ($res) {
                         while ($row = $res->fetch_assoc()) $students[] = $row;
@@ -128,7 +128,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 $stmtLimit = $conn->prepare("SELECT * FROM students WHERE $whereSQL ORDER BY set_name DESC, program, level, surname, first_name LIMIT ?, ?");
                 if ($stmtLimit) {
                     $stmtLimit->bind_param('ii', $offset, $perPage);
-                    $stmtLimit->execute();
+                    if (!$stmtLimit->execute()) { error_log('$stmtLimit execute failed: ' . ($stmtLimit->error ?? 'unknown')); };
                     $r = $stmtLimit->get_result();
                     if ($r) {
                         while ($row = $r->fetch_assoc()) $students[] = $row;
@@ -150,7 +150,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             if ($stmt) {
                 $viewStudentIdInt = intval($viewStudentId);
                 $stmt->bind_param("ssi", $viewStudentId, $viewStudentId, $viewStudentIdInt);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $viewStudent = $r->fetch_assoc();
                 $stmt->close();

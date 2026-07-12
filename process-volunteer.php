@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
@@ -46,7 +46,7 @@ try {
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO volunteer_applications (first_name, last_name, email, phone, profession, experience, opportunity, availability, duration, skills, motivation, comments, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
         $stmt->bind_param('sssssissssss', $firstName, $lastName, $email, $phone, $profession, $experience, $opportunity, $availability, $duration, $skills, $motivation, $comments);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $submissionId = $stmt->insert_id;
         $stmt->close();
     }
@@ -85,7 +85,7 @@ try {
             $notifTitle = 'New Volunteer: ' . $fullName;
             $notifMsg = $fullName . ' (' . $profession . ') applied as volunteer for "' . $opportunity . '". Email: ' . $email . ', Phone: ' . $phone;
             $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
-            $notifStmt->execute();
+            if (!$notifStmt->execute()) { error_log('$notifStmt execute failed: ' . ($notifStmt->error ?? 'unknown')); };
             $notifStmt->close();
         }
     } catch (Exception $e) {
@@ -100,7 +100,7 @@ try {
             $logDetails = $fullName . ' (' . $email . ') applied as volunteer for: ' . $opportunity;
             $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
             $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
-            $logStmt->execute();
+            if (!$logStmt->execute()) { error_log('$logStmt execute failed: ' . ($logStmt->error ?? 'unknown')); };
             $logStmt->close();
         }
     } catch (Exception $e) {

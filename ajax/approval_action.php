@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX handler for approval workflow actions.
  * Called from approval_workflow.php action buttons.
@@ -86,7 +86,7 @@ if ($result) {
                                 while ($s = $allStaff->fetch_assoc()) {
                                     $sid = (int)$s['id'];
                                     $stmt->bind_param('ii', $nid, $sid);
-                                    $stmt->execute();
+                                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                                 }
                                 $stmt->close();
                             }

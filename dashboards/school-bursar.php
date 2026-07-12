@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * School Bursar Dashboard — Complete 11-Module Interface
+ * School Bursar Dashboard â€” Complete 11-Module Interface
  * Modules: Student Billing, Payment Processing, Reports, Budgeting,
  * Payroll Integration, Ledger/Accounts, Inventory, Communications,
  * RBAC, Student Self-Service, Integration
@@ -61,7 +61,7 @@ $isSuper = $auth->hasFullInstitutionAccess($userRole);
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
 
-// ── Handle POST actions ──
+// â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $mlc = strtolower($method); $method = in_array($mlc, ['mobile_money','mobile']) ? 'Mobile Money' : (in_array($mlc, ['bank','bank_deposit','bank_transfer']) ? 'Bank Transfer' : (in_array($mlc, ['cash']) ? 'Cash' : (in_array($mlc, ['cheque']) ? 'Cheque' : (in_array($mlc, ['card']) ? 'Card' : 'Cash'))));
             $stmt = $stuConn->prepare("INSERT INTO payments (payment_reference, student_id, amount_received, payment_method, transaction_ref, slip_number, payment_date, status, received_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); $stmt->execute(); $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; }
+            if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; }
         }
         header('Location: school-bursar.php?page=payments'); exit;
     }
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $year = (int)($_POST['year'] ?? date('Y'));
         if ($name && $amount > 0) {
             $stmt = $stuConn->prepare("INSERT INTO fee_structures (fee_name, fee_type, amount, program_id, academic_year, is_active) VALUES (?,?,?,?,?,1)");
-            if ($stmt) { $stmt->bind_param('ssdii', $name, $feeType, $amount, $progId, $year); $stmt->execute(); $_SESSION['success'] = 'Fee structure added.'; }
+            if ($stmt) { $stmt->bind_param('ssdii', $name, $feeType, $amount, $progId, $year); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Fee structure added.'; }
         }
         header('Location: school-bursar.php?page=billing'); exit;
     }
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cat = trim($_POST['category'] ?? 'General'); $date = $_POST['expense_date'] ?? date('Y-m-d');
         if ($desc && $amount > 0) {
             $stmt = $staffConn->prepare("INSERT INTO expenses (title, expense_title, amount, category, description, expense_date, status, created_by) VALUES (?,?,?,?,?,?,'approved',?)");
-            if ($stmt) { $stmt->bind_param('ssdsssi', $desc, $desc, $amount, $cat, $desc, $date, $userId); $stmt->execute(); $_SESSION['success'] = 'Expense recorded.'; }
+            if ($stmt) { $stmt->bind_param('ssdsssi', $desc, $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Expense recorded.'; }
         }
         header('Location: school-bursar.php?page=budget'); exit;
     }
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $budgetConn = $stuConn ?? $staffConn;
         if ($name && $amount > 0) {
             $stmt = $budgetConn->prepare("INSERT INTO budgets (budget_name, total_amount, fiscal_year, status, created_by) VALUES (?,?,?,'Draft',?)");
-            if ($stmt) { $stmt->bind_param('sdsi', $name, $amount, $year, $userId); $stmt->execute(); $_SESSION['success'] = 'Budget created.'; }
+            if ($stmt) { $stmt->bind_param('sdsi', $name, $amount, $year, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Budget created.'; }
         }
         header('Location: school-bursar.php?page=budget'); exit;
     }
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             $staffConn->commit();
-            $_SESSION['success'] = "Payroll $period processed — Gross: " . number_format($t['tg']??0) . " UGX, Net: " . number_format($t['tnet']??0) . " UGX";
+            $_SESSION['success'] = "Payroll $period processed â€” Gross: " . number_format($t['tg']??0) . " UGX, Net: " . number_format($t['tnet']??0) . " UGX";
         } catch (Exception $e) {
             $staffConn->rollback();
             $_SESSION['error'] = 'Payroll processing failed: ' . $e->getMessage();
@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $diff = $bankBal - $bookBal;
         $notes = trim($_POST['notes'] ?? '');
         $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,?,?,'completed',?)");
-        if ($stmt) { $stmt->bind_param('sddddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); $stmt->execute(); $_SESSION['success'] = 'Bank reconciled.'; }
+        if ($stmt) { $stmt->bind_param('sddddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Bank reconciled.'; }
         header('Location: school-bursar.php?page=ledger'); exit;
     }
 
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $studentId = (int)($_POST['student_id'] ?? 0); $msg = trim($_POST['message'] ?? '');
         if ($studentId && $msg) {
             $stmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?,?,?,'Fee','Medium',0)");
-            if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); $stmt->execute(); $_SESSION['success'] = 'Reminder sent.'; }
+            if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Reminder sent.'; }
         }
         header('Location: school-bursar.php?page=communications'); exit;
     }
@@ -195,14 +195,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adjNo = 'ADJ' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
         if ($studentId && $amount > 0) {
             $stmt = $stuConn->prepare("INSERT INTO fee_adjustments (adjustment_number, student_id, adjustment_type, amount, reason, created_by) VALUES (?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sisdsi', $adjNo, $studentId, $type, $amount, $reason, $userId); $stmt->execute(); $_SESSION['success'] = 'Adjustment applied.'; }
+            if ($stmt) { $stmt->bind_param('sisdsi', $adjNo, $studentId, $type, $amount, $reason, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Adjustment applied.'; }
         }
         header('Location: school-bursar.php?page=billing'); exit;
     }
 
     if ($action === 'approve_payment' && $stuConn) {
         $pid = (int)($_POST['payment_id'] ?? 0);
-        if ($pid) { $st=$stuConn->prepare("UPDATE payments SET status='Completed', received_by=? WHERE id=?"); if($st){$st->bind_param('ii',$userId,$pid);$st->execute();$st->close();$_SESSION['success']='Payment verified.';} }
+        if ($pid) { $st=$stuConn->prepare("UPDATE payments SET status='Completed', received_by=? WHERE id=?"); if($st){$st->bind_param('ii',$userId,$pid);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Payment verified.';} }
         header('Location: school-bursar.php?page=payments'); exit;
     }
 
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $life = (int)($_POST['useful_life'] ?? 5); $salvage = (float)($_POST['salvage_value'] ?? 0);
         if ($name && $cost > 0) {
             $st=$staffConn->prepare("INSERT INTO assets (asset_name, purchase_cost, value, category, purchase_date, useful_life_years, salvage_value, status, created_by) VALUES (?,?,?,?,?,?,?,'new',?)");
-            if($st){$st->bind_param('sdddssdssi', $name, $cost, $cost, $cat, $date, $life, $salvage, $userId);$st->execute();$st->close();$_SESSION['success']='Asset added with depreciation profile.';}
+            if($st){$st->bind_param('sdddssdssi', $name, $cost, $cost, $cat, $date, $life, $salvage, $userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Asset added with depreciation profile.';}
         }
         header('Location: school-bursar.php?page=inventory'); exit;
     }
@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($amount == 0) continue;
                 $txnDateFormatted = date('Y-m-d', strtotime($txnDate));
                 $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,0,?,'completed',?) ON DUPLICATE KEY UPDATE bank_balance=VALUES(bank_balance)");
-                if ($stmt) { $stmt->bind_param('sddssi', $txnDateFormatted, $balance, $balance, "CSV: $desc (UGX $amount)", $userId); $stmt->execute(); $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('sddssi', $txnDateFormatted, $balance, $balance, "CSV: $desc (UGX $amount)", $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $imported++; $totalAmount += abs($amount);
             }
             $_SESSION['success'] = "Bank CSV imported: $imported transactions, total UGX " . number_format($totalAmount);
@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = (float)($_POST['unit_price'] ?? 0); $reorder = (int)($_POST['reorder_level'] ?? 0);
         if ($name && $qty > 0) {
             $st=$staffConn->prepare("INSERT INTO inventory_items (item_name, category, quantity, unit, unit_cost, reorder_level, status) VALUES (?,?,?,?,?,?,'in_stock')");
-            if($st){$st->bind_param('ssisddsi', $name, $cat, $qty, $unit, $price, $reorder);$st->execute();$st->close();$_SESSION['success']='Stock item added.';}
+            if($st){$st->bind_param('ssisddsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Stock item added.';}
         }
         header('Location: school-bursar.php?page=inventory'); exit;
     }
@@ -279,16 +279,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $start = $period . '-01';
             $end = date('Y-m-t', strtotime($start));
             $st=$staffConn->prepare("INSERT INTO bursar_vat_reports (period_start, period_end, net_vat, status) VALUES (?,?,?,'draft')");
-            if($st){$st->bind_param('ssd', $start, $end, $amount);$st->execute();$st->close();}
+            if($st){$st->bind_param('ssd', $start, $end, $amount);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
         } else {
             $st=$staffConn->prepare("INSERT INTO bursar_withholding_tax (tax_date, payee_name, description, gross_amount, wht_rate, wht_amount, status) VALUES (?,?,?,?,6.00,?,'active')");
-            if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);$st->execute();$st->close();}
+            if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
         }
         $_SESSION['success'] = 'Tax record added.'; header('Location: school-bursar.php?page=ura'); exit;
     }
 }
 
-// ── Data ──
+// â”€â”€ Data â”€â”€
 $studentsList = []; $payments = []; $feeStructures = []; $expenses = []; $budgets = [];
 $payrollRuns = []; $bankReconciliations = []; $feeAdjustments = []; $studentFees = [];
 $pendingVerification = [];

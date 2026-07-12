@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/staff_dashboard_access.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -17,7 +17,7 @@ if ($conn) {
     $stmt = $conn->prepare($sql);
     if ($stmt) {
         $stmt->bind_param('sssssssss', $like, $like, $like, $like, $like, $like, $like, $like, $like);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($r) while ($row = $r->fetch_assoc()) $results[] = $row;
         $stmt->close();

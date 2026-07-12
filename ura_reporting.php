@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 
 class URAReporting {
@@ -13,7 +13,7 @@ class URAReporting {
         $end = date('Y-m-t', strtotime($start));
         $stmt = $conn->prepare("SELECT COALESCE(SUM(net_vat),0) total_vat, COUNT(*) cnt FROM bursar_vat_reports WHERE period_start>=? AND period_end<=? AND status='draft'");
         $stmt->bind_param("ss", $start, $end);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $conn->close();
         return [
@@ -34,7 +34,7 @@ class URAReporting {
         $end = date('Y-m-t', strtotime($start));
         $stmt = $conn->prepare("SELECT COUNT(*) cnt, COALESCE(SUM(gross_amount),0) gross, COALESCE(SUM(wht_amount),0) wht FROM bursar_withholding_tax WHERE tax_date>=? AND tax_date<=? AND status='active'");
         $stmt->bind_param("ss", $start, $end);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
         $conn->close();
         return [
@@ -59,10 +59,10 @@ class URAReporting {
             'institution' => 'Iganga School of Nursing and Midwifery',
         ];
         $s1 = $conn->prepare("SELECT COALESCE(SUM(net_vat),0) total_vat FROM bursar_vat_reports WHERE YEAR(period_start)=?");
-        $s1->bind_param('i', $year); $s1->execute();
+        $s1->bind_param('i', $year); if (!$s1->execute()) { error_log('$s1 execute failed: ' . ($s1->error ?? 'unknown')); };
         $report['total_vat_collected'] = $s1->get_result()->fetch_assoc()['total_vat'] ?? 0;
         $s2 = $conn->prepare("SELECT COALESCE(SUM(wht_amount),0) total_wht FROM bursar_withholding_tax WHERE YEAR(tax_date)=?");
-        $s2->bind_param('i', $year); $s2->execute();
+        $s2->bind_param('i', $year); if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };
         $report['total_wht_collected'] = $s2->get_result()->fetch_assoc()['total_wht'] ?? 0;
         $report['total_revenue'] = $report['total_vat_collected'] + $report['total_wht_collected'];
         $report['staff_costs'] = 0;

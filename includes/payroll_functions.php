@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ISNM Payroll Management System — Core Functions
+ * ISNM Payroll Management System â€” Core Functions
  * Tax calculations, payroll processing, payslip generation, audit logging.
  */
 
@@ -58,7 +58,7 @@ if (!function_exists('getPayrollSetting')) {
             $stmt = $conn->prepare("SELECT setting_value FROM payroll_settings WHERE setting_key = ? LIMIT 1");
             if (!$stmt) { $conn->close(); return $default; }
             $stmt->bind_param('s', $key);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -185,7 +185,7 @@ if (!function_exists('getEmployeeActiveAllowances')) {
             $stmt = $conn->prepare("SELECT pea.*, pat.allowance_code, pat.allowance_name, pat.is_taxable as type_taxable FROM payroll_employee_allowances pea JOIN payroll_allowance_types pat ON pea.allowance_type_id = pat.id WHERE pea.payroll_employee_id = ? AND pea.status = 'active' AND (pea.effective_from IS NULL OR pea.effective_from <= CURDATE()) AND (pea.effective_to IS NULL OR pea.effective_to >= CURDATE())");
             if (!$stmt) { $conn->close(); return []; }
             $stmt->bind_param('i', $payrollEmployeeId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
@@ -206,7 +206,7 @@ if (!function_exists('getEmployeeActiveDeductions')) {
             $stmt = $conn->prepare("SELECT ped.*, pdt.deduction_code, pdt.deduction_name, pdt.is_statutory, pdt.category as type_category FROM payroll_employee_deductions ped JOIN payroll_deduction_types pdt ON ped.deduction_type_id = pdt.id WHERE ped.payroll_employee_id = ? AND ped.status = 'active' AND (ped.effective_from IS NULL OR ped.effective_from <= CURDATE()) AND (ped.effective_to IS NULL OR ped.effective_to >= CURDATE())");
             if (!$stmt) { $conn->close(); return []; }
             $stmt->bind_param('i', $payrollEmployeeId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
@@ -227,7 +227,7 @@ if (!function_exists('getEmployeeOvertimeTotal')) {
             $stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM payroll_overtime WHERE payroll_employee_id = ? AND payroll_period_id = ? AND status IN ('approved', 'paid')");
             if (!$stmt) { $conn->close(); return 0; }
             $stmt->bind_param('ii', $payrollEmployeeId, $payrollPeriodId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -248,7 +248,7 @@ if (!function_exists('getEmployeeBonusTotal')) {
             $stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM payroll_bonus WHERE payroll_employee_id = ? AND payroll_period_id = ? AND status IN ('approved', 'paid')");
             if (!$stmt) { $conn->close(); return 0; }
             $stmt->bind_param('ii', $payrollEmployeeId, $payrollPeriodId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -269,7 +269,7 @@ if (!function_exists('getEmployeeLoanInstallment')) {
             $stmt = $conn->prepare("SELECT COALESCE(SUM(installment_amount), 0) as total FROM payroll_loans WHERE payroll_employee_id = ? AND status = 'active'");
             if (!$stmt) { $conn->close(); return 0; }
             $stmt->bind_param('i', $payrollEmployeeId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -352,7 +352,7 @@ th{background:#1a237e;color:#fff;font-weight:600;text-align:center}
 <div class="signature">
 <p><strong>Period:</strong> ' . $period . '</p>
 <p><strong>Generated:</strong> ' . date('Y-m-d H:i') . ' | <strong>System:</strong> ISNM Payroll</p>
-<p><em>Electronically generated payslip — valid without signature.</em></p>
+<p><em>Electronically generated payslip â€” valid without signature.</em></p>
 </div>
 <div class="footer">"' . htmlspecialchars($motto) . '"</div>
 </div></body></html>';
@@ -374,7 +374,7 @@ if (!function_exists('processPayrollRun')) {
             $periodStmt = $conn->prepare("SELECT id, period_code, period_name, month, year, start_date, end_date, status FROM payroll_periods WHERE id = ? FOR UPDATE");
             if (!$periodStmt) { $conn->rollback(); $result['message'] = 'Period query failed'; return $result; }
             $periodStmt->bind_param('i', $payrollPeriodId);
-            $periodStmt->execute();
+            if (!$periodStmt->execute()) { error_log('$periodStmt execute failed: ' . ($periodStmt->error ?? 'unknown')); };
             $period = $periodStmt->get_result()->fetch_assoc();
             $periodStmt->close();
 
@@ -391,13 +391,13 @@ if (!function_exists('processPayrollRun')) {
             $stmt = $conn->prepare("INSERT INTO payroll_runs (payroll_period_id, run_number, run_type, status, processed_by, processed_at) VALUES (?, ?, 'normal', 'processing', ?, NOW())");
             if (!$stmt) { $conn->rollback(); $result['message'] = 'Run insert failed'; return $result; }
             $stmt->bind_param('isi', $payrollPeriodId, $runNumber, $processedBy);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $payrollRunId = $stmt->insert_id;
             $stmt->close();
 
             $empStmt = $conn->prepare("SELECT pe.id as payroll_employee_id, pe.staff_id, pe.monthly_salary, pe.hourly_rate, pe.payment_method, pe.bank_account_number, pe.mobile_money_number, s.full_name, s.position FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id WHERE pe.payroll_status = 'active' AND s.status = 'Active'");
             if (!$empStmt) { $conn->rollback(); $result['message'] = 'Employee query failed'; return $result; }
-            $empStmt->execute();
+            if (!$empStmt->execute()) { error_log('$empStmt execute failed: ' . ($empStmt->error ?? 'unknown')); };
             $employees = $empStmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $empStmt->close();
 
@@ -479,7 +479,7 @@ if (!function_exists('processPayrollRun')) {
                         $loanUpdate = $conn->prepare("UPDATE payroll_loans SET amount_paid = amount_paid + ?, installments_paid = installments_paid + 1, status = CASE WHEN installments_paid + 1 >= installments THEN 'completed' ELSE 'active' END WHERE payroll_employee_id = ? AND status = 'active'");
                         if ($loanUpdate) {
                             $loanUpdate->bind_param('di', $loanInstallment, $peId);
-                            $loanUpdate->execute();
+                            if (!$loanUpdate->execute()) { error_log('$loanUpdate execute failed: ' . ($loanUpdate->error ?? 'unknown')); };
                             $loanUpdate->close();
                         }
                     }
@@ -490,7 +490,7 @@ if (!function_exists('processPayrollRun')) {
             $updateStmt = $conn->prepare("UPDATE payroll_runs SET total_employees = ?, total_gross = ?, total_allowances = ?, total_deductions = ?, total_statutory = ?, total_tax = ?, total_nssf = ?, total_employer_nssf = ?, total_net = ?, status = 'completed' WHERE id = ?");
             if ($updateStmt) {
                 $updateStmt->bind_param('idddddddddi', $processed, $totalGross, $totalAllow, $totalDed, $totalStat, $totalTax, $totalNssf, $totalEmployerNssf, $totalNet, $payrollRunId);
-                $updateStmt->execute();
+                if (!$updateStmt->execute()) { error_log('$updateStmt execute failed: ' . ($updateStmt->error ?? 'unknown')); };
                 $updateStmt->close();
             }
 
@@ -535,21 +535,21 @@ if (!function_exists('generatePayslipsForRun')) {
             $runStmt = $conn->prepare("SELECT id, run_number, payroll_period_id FROM payroll_runs WHERE id = ?");
             if (!$runStmt) { $conn->close(); $result['message'] = 'Run query failed'; return $result; }
             $runStmt->bind_param('i', $payrollRunId);
-            $runStmt->execute();
+            if (!$runStmt->execute()) { error_log('$runStmt execute failed: ' . ($runStmt->error ?? 'unknown')); };
             $run = $runStmt->get_result()->fetch_assoc();
             $runStmt->close();
             if (!$run) { $conn->close(); $result['message'] = 'Payroll run not found'; return $result; }
 
             $periodStmt = $conn->prepare("SELECT period_name FROM payroll_periods WHERE id = ?");
             $periodStmt->bind_param('i', $run['payroll_period_id']);
-            $periodStmt->execute();
+            if (!$periodStmt->execute()) { error_log('$periodStmt execute failed: ' . ($periodStmt->error ?? 'unknown')); };
             $period = $periodStmt->get_result()->fetch_assoc();
             $periodStmt->close();
 
             $itemsStmt = $conn->prepare("SELECT pi.*, pe.staff_id as pe_staff_id, pe.payroll_number, pe.tin, pe.nssf_number, s.full_name, s.position FROM payroll_items pi JOIN payroll_employees pe ON pi.payroll_employee_id = pe.id JOIN staff s ON pi.staff_id = s.id WHERE pi.payroll_run_id = ? AND pi.status = 'active'");
             if (!$itemsStmt) { $conn->close(); $result['message'] = 'Items query failed'; return $result; }
             $itemsStmt->bind_param('i', $payrollRunId);
-            $itemsStmt->execute();
+            if (!$itemsStmt->execute()) { error_log('$itemsStmt execute failed: ' . ($itemsStmt->error ?? 'unknown')); };
             $items = $itemsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $itemsStmt->close();
 
@@ -563,7 +563,7 @@ if (!function_exists('generatePayslipsForRun')) {
 
                 $existing = $conn->prepare("SELECT id FROM payroll_payslips WHERE payroll_item_id = ?");
                 $existing->bind_param('i', $piId);
-                $existing->execute();
+                if (!$existing->execute()) { error_log('$existing execute failed: ' . ($existing->error ?? 'unknown')); };
                 if ($existing->get_result()->fetch_assoc()) { $existing->close(); continue; }
                 $existing->close();
 
@@ -664,7 +664,7 @@ if (!function_exists('getPayrollPeriods')) {
                 $stmt = $conn->prepare($sql);
             }
             if (!$stmt) { $conn->close(); return []; }
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
@@ -726,7 +726,7 @@ if (!function_exists('getPayrollEmployees')) {
             $stmt = $conn->prepare("SELECT pe.*, s.full_name, s.position, s.email, s.phone FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id WHERE pe.payroll_status = ? ORDER BY s.full_name");
             if (!$stmt) { $conn->close(); return []; }
             $stmt->bind_param('s', $status);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();

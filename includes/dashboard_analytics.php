@@ -71,7 +71,7 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
                 $m = date('Y-m', strtotime("-$i months"));
                 $stmt = $studentsConn->prepare("SELECT COUNT(*) c FROM students WHERE DATE_FORMAT(created_at,'%Y-%m')=?");
                 $stmt->bind_param("s", $m);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 $data['students']['trend'][] = $r ? (int)$r->fetch_assoc()['c'] : 0;
                 $stmt->close();

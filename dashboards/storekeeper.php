@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -9,7 +9,7 @@ $user_role = $user['role'] ?? '';
 $userId = (int)($user['id'] ?? 0);
 $userName = $user['full_name'] ?? 'Store Keeper';
 
-// ── POST Handlers ──
+// â”€â”€ POST Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffConn) {
     $action = $_POST['action'];
 
@@ -18,17 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $qty = (float)($_POST['quantity'] ?? 0);
         $reason = trim($_POST['reason'] ?? $action);
         $cur = $staffConn->prepare("SELECT quantity FROM store_inventory WHERE id=?");
-        $cur->bind_param("i", $itemId); $cur->execute();
+        $cur->bind_param("i", $itemId); if (!$cur->execute()) { error_log('$cur execute failed: ' . ($cur->error ?? 'unknown')); };
         $curRow = $cur->get_result()->fetch_assoc(); $cur->close();
         $qtyBefore = $curRow ? (float)$curRow['quantity'] : 0;
         if ($action === 'add_stock') { $qtyAfter = $qtyBefore + $qty; $type = 'add'; }
         elseif ($action === 'remove_stock') { $qty = min($qty, $qtyBefore); $qtyAfter = $qtyBefore - $qty; $type = 'remove'; }
         else { $qtyAfter = max(0, $qty); $qty = $qtyAfter - $qtyBefore; $type = 'adjust'; }
         $stmt = $staffConn->prepare("UPDATE store_inventory SET quantity=? WHERE id=?");
-        $stmt->bind_param("di", $qtyAfter, $itemId); $stmt->execute(); $stmt->close();
+        $stmt->bind_param("di", $qtyAfter, $itemId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("isddddi", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
-        $stmt->execute(); $stmt->close();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Stock updated successfully.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -40,17 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $reqId = (int)($_POST['request_id'] ?? 0);
         if ($qty > 0) {
             $cur = $staffConn->prepare("SELECT quantity FROM store_inventory WHERE id=?");
-            $cur->bind_param("i", $itemId); $cur->execute();
+            $cur->bind_param("i", $itemId); if (!$cur->execute()) { error_log('$cur execute failed: ' . ($cur->error ?? 'unknown')); };
             $curRow = $cur->get_result()->fetch_assoc(); $cur->close();
             $avail = $curRow ? (float)$curRow['quantity'] : 0;
             $qty = min($qty, $avail);
             $stmt = $staffConn->prepare("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+?, status='fulfilled' WHERE id=?");
-            $stmt->bind_param("di", $qty, $reqItemId); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("di", $qty, $reqItemId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
             $stmt = $staffConn->prepare("UPDATE store_inventory SET quantity=quantity-? WHERE id=?");
-            $stmt->bind_param("di", $qty, $itemId); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("di", $qty, $itemId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
             $reason = "Fulfilled request #$reqId";
             $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (?, 'request_fulfilled', ?, ?, ?, 'request', ?)");
-            $stmt->bind_param("idssi", $itemId, $qty, $reason, $userId, $reqId); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("idssi", $itemId, $qty, $reason, $userId, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         }
         header('Location: storekeeper.php'); exit;
     }
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
     if ($action === 'submit_for_dg_approval') {
         $reqId = (int)($_POST['request_id'] ?? 0);
         $stmt = $staffConn->prepare("UPDATE store_requests SET status='pending_approval', updated_at=NOW() WHERE id=?");
-        $stmt->bind_param("i", $reqId); $stmt->execute(); $stmt->close();
+        $stmt->bind_param("i", $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request submitted for Director General approval.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
     if ($action === 'fulfill_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
         $stmt = $staffConn->prepare("UPDATE store_requests SET status='fulfilled', fulfilled_by=?, fulfilled_at=NOW(), updated_at=NOW() WHERE id=?");
-        $stmt->bind_param("ii", $userId, $reqId); $stmt->execute(); $stmt->close();
+        $stmt->bind_param("ii", $userId, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request marked as fulfilled.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $reqId = (int)($_POST['request_id'] ?? 0);
         $reason = trim($_POST['rejection_reason'] ?? 'No reason');
         $stmt = $staffConn->prepare("UPDATE store_requests SET status='rejected', rejection_reason=?, updated_at=NOW() WHERE id=?");
-        $stmt->bind_param("si", $reason, $reqId); $stmt->execute(); $stmt->close();
+        $stmt->bind_param("si", $reason, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request rejected.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $itemId = (int)($_POST['item_id'] ?? 0);
         if ($itemId > 0) {
             $stmt = $staffConn->prepare("UPDATE store_inventory SET status='inactive' WHERE id=?");
-            $stmt->bind_param("i", $itemId); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("i", $itemId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
             $_SESSION['store_msg'] = ['type'=>'success','text'=>'Item deactivated.'];
         }
         header('Location: storekeeper.php?tab=inventory'); exit;
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
                 $ins = $staffConn->prepare("INSERT INTO store_request_items (request_id, item_id, quantity_requested, notes) VALUES (?, ?, ?, ?)");
                 foreach ($reqItems as $ri) {
                     $riItemId = (int)($ri['item_id'] ?? 0); $riQty = (float)($ri['quantity'] ?? 0); $riNotes = trim($ri['notes'] ?? '');
-                    if ($riItemId > 0 && $riQty > 0) { $ins->bind_param("iids", $reqId, $riItemId, $riQty, $riNotes); $ins->execute(); }
+                    if ($riItemId > 0 && $riQty > 0) { $ins->bind_param("iids", $reqId, $riItemId, $riQty, $riNotes); if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); }; }
                 }
                 $ins->close();
                 $_SESSION['store_msg'] = ['type'=>'success','text'=>"Request <strong>$reqNum</strong> created."];
@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $catDesc = trim($_POST['description'] ?? '');
         if ($catName) {
             $stmt = $staffConn->prepare("INSERT INTO store_categories (category_name, description, status) VALUES (?, ?, 'active')");
-            $stmt->bind_param("ss", $catName, $catDesc); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("ss", $catName, $catDesc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
             $_SESSION['store_msg'] = ['type'=>'success','text'=>'Category added.'];
         }
         header('Location: storekeeper.php?tab=categories'); exit;
@@ -181,14 +181,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $catId = (int)($_POST['category_id'] ?? 0);
         if ($catId) {
             $stmt = $staffConn->prepare("UPDATE store_categories SET status='inactive' WHERE id=?");
-            $stmt->bind_param("i", $catId); $stmt->execute(); $stmt->close();
+            $stmt->bind_param("i", $catId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
             $_SESSION['store_msg'] = ['type'=>'success','text'=>'Category deactivated.'];
         }
         header('Location: storekeeper.php?tab=categories'); exit;
     }
 }
 
-// ── Load Data ──
+// â”€â”€ Load Data â”€â”€
 $msg = $_SESSION['store_msg'] ?? null; unset($_SESSION['store_msg']);
 
 $categories = []; $inventory = []; $lowStock = []; $expiringItems = []; $pendingReqs = []; $fulfilledReqs = []; $transactions = [];
@@ -317,9 +317,9 @@ $tab = $_GET['tab'] ?? $_GET['page'] ?? 'dashboard';
 
 <?php switch ($tab):
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DASHBOARD
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'dashboard': ?>
 <h1 class="sk-page-title">Store Dashboard</h1>
 <p class="sk-page-sub">Overview of inventory, requests, and stock status</p>
@@ -389,9 +389,9 @@ case 'dashboard': ?>
 </div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INVENTORY
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'inventory': ?>
 <h1 class="sk-page-title">Inventory Management <button onclick="window.print()" class="sk-btn sk-btn-outline sk-btn-sm no-print"><i class="fas fa-print"></i> Print Report</button></h1>
 <p class="sk-page-sub">Manage all stock items, expiry dates, and batch numbers</p>
@@ -570,9 +570,9 @@ case 'inventory': ?>
 </div></div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CATEGORIES
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'categories': ?>
 <h1 class="sk-page-title">Stock Categories</h1>
 <p class="sk-page-sub">Organize inventory items by category</p>
@@ -644,9 +644,9 @@ case 'categories': ?>
 </div></div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REQUESTS
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'requests': ?>
 <h1 class="sk-page-title">Store Requests</h1>
 <p class="sk-page-sub">Create, manage, and submit requests to Director General</p>
@@ -793,9 +793,9 @@ case 'requests': ?>
 </div></div>
 <?php break;
 
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TRANSACTIONS
-// ════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 case 'transactions': ?>
 <h1 class="sk-page-title">Transaction History</h1>
 <p class="sk-page-sub">Complete log of all stock movements</p>

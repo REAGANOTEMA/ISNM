@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Comprehensive Student Profile System
  * Updated to work with current ISNM database structure and role-based access control
@@ -90,7 +90,7 @@ $student_sql = "SELECT s.*, u.full_name, u.email, u.phone, u.last_login
                 WHERE s.student_id = ?";
 $stmt = $conn->prepare($student_sql);
 $stmt->bind_param("s", $student_id);
-$stmt->execute();
+if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $student_result = $stmt->get_result();
 
 if ($student_result->num_rows === 0) {
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: student_profile.php?id=$student_id");
                 exit();
 
-            // ── Change Password ─────────────────────────────────────────
+            // â”€â”€ Change Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             case 'change_password':
                 $current = $_POST['current_password'] ?? '';
                 $new = $_POST['new_password'] ?? '';
@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("SELECT password FROM students WHERE student_id = ?");
                 if ($stmt) {
                     $stmt->bind_param("s", $student_id);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $row = $stmt->get_result()->fetch_assoc();
                     $stmt->close();
                     $storedHash = $row['password'] ?? '';
@@ -247,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $upd = $conn->prepare("UPDATE students SET password = ? WHERE student_id = ?");
                     if ($upd) {
                         $upd->bind_param("ss", $newHash, $student_id);
-                        $upd->execute();
+                        if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); };
                         $upd->close();
                         $_SESSION['success'] = 'Password changed successfully.';
                     } else {
@@ -277,7 +277,7 @@ try {
     $academic_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
     $stmt = $conn->prepare($academic_sql);
     $stmt->bind_param("s", $student_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $academic_records[] = $row;
@@ -292,7 +292,7 @@ try {
     $fee_sql = "SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
     $stmt = $conn->prepare($fee_sql);
     $stmt->bind_param("s", $student_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $fee_accounts[] = $row;
@@ -307,7 +307,7 @@ try {
     $payment_sql = "SELECT * FROM fee_payments WHERE student_id = ? ORDER BY payment_date DESC LIMIT 10";
     $stmt = $conn->prepare($payment_sql);
     $stmt->bind_param("s", $student_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $payment_history[] = $row;
@@ -445,7 +445,7 @@ function handlePasswordChange() {
             $upStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
             if ($upStmt) {
                 $upStmt->bind_param('si', $newHash, $user['id']);
-                $upStmt->execute();
+                if (!$upStmt->execute()) { error_log('$upStmt execute failed: ' . ($upStmt->error ?? 'unknown')); };
                 $upStmt->close();
             }
         } else {

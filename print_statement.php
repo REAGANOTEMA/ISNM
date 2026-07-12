@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/student_auth.php';
 require_once __DIR__ . '/includes/financial_functions.php';
 
@@ -17,7 +17,7 @@ $invoice = null;
 if ($invoice_id) {
     $stmt = $conn->prepare("SELECT * FROM student_invoices WHERE id = ? AND student_id = ? LIMIT 1");
     $stmt->bind_param("ii", $invoice_id, $student_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $invoice = $stmt->get_result()->fetch_assoc();
 }
 

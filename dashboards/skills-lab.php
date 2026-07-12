@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -20,7 +20,7 @@ $q = $_GET['q'] ?? '';
 
 $db = $students;
 
-// ── AJAX Endpoints ────────────────────────────────────────────────────
+// â”€â”€ AJAX Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Equipment CRUD
 if ($view === 'equipment' && $ajax === 'get') {
@@ -32,7 +32,7 @@ if ($view === 'equipment' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_equipment WHERE equipment_name LIKE ? OR equipment_code LIKE ? ORDER BY equipment_name ASC");
                 $stmt->bind_param("ss", $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -60,12 +60,12 @@ if ($view === 'equipment' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_equipment SET equipment_code=?, equipment_name=?, category=?, condition_status=?, quantity=?, location=?, last_maintenance=?, status=? WHERE id=?");
             $stmt->bind_param("ssssisssi", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_equipment (equipment_code, equipment_name, category, condition_status, quantity, location, last_maintenance, status) VALUES (?,?,?,?,?,?,?,?)");
             $stmt->bind_param("ssssisss", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -89,7 +89,7 @@ if ($view === 'checkouts' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id WHERE c.borrower_id LIKE ? OR c.borrower_name LIKE ? OR e.equipment_name LIKE ? ORDER BY c.checkout_date DESC LIMIT 200");
                 $stmt->bind_param("sss", $like, $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -116,12 +116,12 @@ if ($view === 'checkouts' && $ajax === 'save') {
             $stat = $data['status'] ?? 'checked_out';
             $stmt = $db->prepare("UPDATE lab_checkouts SET expected_return=?, actual_return=?, status=?, notes=? WHERE id=?");
             $stmt->bind_param("ssssi", $erd, $ard, $stat, $notes, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_checkouts (equipment_id, borrower_id, borrower_name, expected_return, notes) VALUES (?,?,?,?,?)");
             $stmt->bind_param("issss", $eid, $bid, $bname, $erd, $notes);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -133,13 +133,13 @@ if ($view === 'checkouts' && $ajax === 'return' && $id) {
     try {
         $stmt = $db->prepare("SELECT equipment_id FROM lab_checkouts WHERE id=?");
         $stmt->bind_param("i", $id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         if ($c = $r->fetch_assoc()) {
             $stmt->close();
             $stmt = $db->prepare("UPDATE lab_checkouts SET actual_return=CURDATE(), status='returned' WHERE id=?");
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             echo json_encode(['success' => true]);
         } else {
@@ -166,7 +166,7 @@ if ($view === 'sessions' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_sessions WHERE session_name LIKE ? OR instructor_name LIKE ? ORDER BY scheduled_date DESC LIMIT 200");
                 $stmt->bind_param("ss", $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -196,12 +196,12 @@ if ($view === 'sessions' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_sessions SET session_name=?, instructor_id=?, instructor_name=?, scheduled_date=?, scheduled_time=?, duration_minutes=?, max_students=?, room=?, status=?, notes=? WHERE id=?");
             $stmt->bind_param("sisssiisssi", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_sessions (session_name, instructor_id, instructor_name, scheduled_date, scheduled_time, duration_minutes, max_students, room, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->bind_param("sisssiisss", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -225,7 +225,7 @@ if ($view === 'skills' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id WHERE d.skill_name LIKE ? OR d.description LIKE ? ORDER BY d.demo_date DESC LIMIT 200");
                 $stmt->bind_param("ss", $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -251,12 +251,12 @@ if ($view === 'skills' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_demonstrations SET session_id=?, skill_name=?, description=?, instructor_id=?, demo_date=?, students_count=? WHERE id=?");
             $stmt->bind_param("isssiii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_demonstrations (session_id, skill_name, description, instructor_id, demo_date, students_count) VALUES (?,?,?,?,?,?)");
             $stmt->bind_param("isssii", $sesid, $skn, $desc, $iid, $ddate, $scount);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -280,7 +280,7 @@ if ($view === 'consumables' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_consumables WHERE item_name LIKE ? OR category LIKE ? ORDER BY item_name ASC");
                 $stmt->bind_param("ss", $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -309,12 +309,12 @@ if ($view === 'consumables' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_consumables SET item_name=?, category=?, quantity=?, unit=?, min_stock_level=?, unit_cost=?, supplier=?, last_ordered_date=?, notes=? WHERE id=?");
             $stmt->bind_param("sssd ddssii", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES (?,?,?,?,?,?,?,?,?)");
             $stmt->bind_param("sssd ddsis", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -338,7 +338,7 @@ if ($view === 'attendance' && $ajax === 'get') {
             if ($sessionId) {
                 $stmt = $db->prepare("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id WHERE a.session_id=? ORDER BY a.created_at DESC LIMIT 300");
                 $stmt->bind_param("i", $sessionId);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -365,7 +365,7 @@ if ($view === 'attendance' && $ajax === 'save') {
         if (!$stid) continue;
         try {
             $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $success++;
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -402,7 +402,7 @@ if ($view === 'incidents' && $ajax === 'get') {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_incidents WHERE description LIKE ? OR incident_type LIKE ? ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
                 $stmt->bind_param("ss", $like, $like);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
@@ -432,12 +432,12 @@ if ($view === 'incidents' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_incidents SET incident_date=?, incident_time=?, incident_type=?, severity=?, description=?, equipment_involved=?, student_involved=?, action_taken=?, status=? WHERE id=?");
             $stmt->bind_param("sssssssssi", $idate, $itime, $itype, $sev, $desc, $ei, $si, $at, $stat, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->bind_param("ssiissssss", $idate, $itime, $uid, $itype, $sev, $desc, $ei, $si, $at, $stat);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['success' => true]);
@@ -469,7 +469,7 @@ if ($view === 'home' && $ajax === 'stats') {
     echo json_encode($stats); exit;
 }
 
-// ── Stats for home page (PHP-side initial) ────────────────────────────
+// â”€â”€ Stats for home page (PHP-side initial) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $equipment_count = 0; $checkout_count = 0; $overdue_count = 0; $scheduled_sessions = 0;
 $maintenance_count = 0; $low_stock_count = 0; $incident_count = 0; $total_students = 0;
 if ($db) {
@@ -816,7 +816,7 @@ if ($students) {
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 
 <script>
-// ── Shared helpers ─────────────────────────────────────────────
+// â”€â”€ Shared helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getVal(id) { return document.getElementById(id)?.value || ''; }
 function setVal(id, v) { const el = document.getElementById(id); if(el) el.value = v; }
 function showToast(msg, type) {
@@ -828,7 +828,7 @@ function showToast(msg, type) {
     setTimeout(() => c.remove(), 4000);
 }
 
-// ── Data Loader ────────────────────────────────────────────────
+// â”€â”€ Data Loader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadTable(endpoint, tableId, renderFn) {
     const search = document.getElementById(tableId.replace('table','').replace('-','') + '-search');
     const q = search ? search.value : '';
@@ -842,7 +842,7 @@ function loadTable(endpoint, tableId, renderFn) {
         });
 }
 
-// ── Equipment ──────────────────────────────────────────────────
+// â”€â”€ Equipment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadEq() { loadTable('?view=equipment&ajax=get', 'eq-table', r => `<tr>
     <td>${esc(r.equipment_code)}</td><td>${esc(r.equipment_name)}</td><td><span class="badge bg-secondary">${esc(r.category)}</span></td>
     <td>${r.quantity}</td>
@@ -890,7 +890,7 @@ function deleteEq(id) {
     });
 }
 
-// ── Checkouts ──────────────────────────────────────────────────
+// â”€â”€ Checkouts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadCo() { loadTable('?view=checkouts&ajax=get', 'co-table', r => `<tr class="${r.expected_return < todayStr() && r.status==='checked_out'?'table-danger':''}">
     <td>${r.id}</td><td>${esc(r.equipment_name||'')} (${esc(r.equipment_code||'')})</td><td>${esc(r.borrower_id)}</td>
     <td>${r.checkout_date ? r.checkout_date.substring(0,10) : ''}</td>
@@ -961,7 +961,7 @@ function deleteCo(id) {
     });
 }
 
-// ── Sessions ───────────────────────────────────────────────────
+// â”€â”€ Sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadSes() { loadTable('?view=sessions&ajax=get', 'ses-table', r => `<tr>
     <td><strong>${esc(r.session_name)}</strong></td>
     <td>${esc(r.scheduled_date)}</td>
@@ -1007,7 +1007,7 @@ function deleteSes(id) {
     });
 }
 
-// ── Skills ─────────────────────────────────────────────────────
+// â”€â”€ Skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadSk() { loadTable('?view=skills&ajax=get', 'sk-table', r => `<tr>
     <td><strong>${esc(r.skill_name)}</strong></td><td>${esc(r.description||'').substring(0,40)}</td>
     <td>${esc(r.session_name||'')}</td>
@@ -1058,7 +1058,7 @@ function deleteSk(id) {
     });
 }
 
-// ── Consumables ────────────────────────────────────────────────
+// â”€â”€ Consumables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadCon() { loadTable('?view=consumables&ajax=get', 'con-table', r => `<tr class="${parseFloat(r.quantity)<=parseFloat(r.min_stock_level)?'alert-low-stock':''}">
     <td><strong>${esc(r.item_name)}</strong></td><td>${esc(r.category||'')}</td><td>${r.quantity}</td><td>${esc(r.unit)}</td>
     <td>${r.min_stock_level}</td><td>${r.unit_cost ? Number(r.unit_cost).toLocaleString() : ''}</td>
@@ -1101,7 +1101,7 @@ function deleteCon(id) {
     });
 }
 
-// ── Attendance ──────────────────────────────────────────────────
+// â”€â”€ Attendance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadAtt() {
     const sid = document.getElementById('att-session-filter')?.value || '';
     const endpoint = '?view=attendance&ajax=get' + (sid ? '&session_id='+sid : '');
@@ -1149,7 +1149,7 @@ function deleteAtt(id) {
     });
 }
 
-// ── Incidents ───────────────────────────────────────────────────
+// â”€â”€ Incidents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadInc() { loadTable('?view=incidents&ajax=get', 'inc-table', r => `<tr>
     <td>${esc(r.incident_date)}</td><td>${r.incident_time ? r.incident_time.substring(0,5) : ''}</td>
     <td><span class="badge bg-secondary">${esc(r.incident_type.replace(/_/g,' '))}</span></td>
@@ -1194,7 +1194,7 @@ function deleteInc(id) {
     });
 }
 
-// ── Live search ────────────────────────────────────────────────
+// â”€â”€ Live search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener('keyup', function(e) {
     if (e.target.id.endsWith('-search')) {
         clearTimeout(window._searchTimer);
@@ -1206,10 +1206,10 @@ document.addEventListener('keyup', function(e) {
     }
 });
 
-// ─── Escaping ──────────────────────────────────────────────────
+// â”€â”€â”€ Escaping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// ── Init ───────────────────────────────────────────────────────
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener('DOMContentLoaded', function() {
     const view = window.location.hash.replace('#', '') || 'home';
     if (view==='equipment') loadEq();

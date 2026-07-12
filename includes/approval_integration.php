@@ -83,13 +83,13 @@ function processStoreApproval($approvalRequestId, $actionType, $comments = '', $
             $notesText = "[DG Approved: $comments]";
             $stmt = $conn->prepare("UPDATE store_requests SET status='approved', approved_by=?, notes=CONCAT(COALESCE(notes,''), CHAR(10), ?) WHERE id=?");
             $stmt->bind_param("isi", $approvedBy, $notesText, $storeReqId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } elseif ($actionType === 'reject') {
             $reason = $comments ?: 'Rejected by Director General';
             $stmt = $conn->prepare("UPDATE store_requests SET status='rejected', rejection_reason=? WHERE id=?");
             $stmt->bind_param("si", $reason, $storeReqId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         return true;
@@ -117,7 +117,7 @@ function processStudentApproval($approvalRequestId, $actionType, $comments = '',
                 $fn = $s['first_name']; $ln = $s['last_name']; $sn = $s['student_number'];
                 $prog = $s['program']; $lv = $s['level'] ?? '1'; $ph = $s['phone'] ?? ''; $em = $s['email'] ?? ''; $dob = $s['date_of_birth'] ?? '';
                 $stmt->bind_param("ssssssssss", $sn, $fn, $ln, $fullName, $prog, $lv, $intakeDate, $ph, $em, $dob);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
             $conn->query("UPDATE pending_students SET status='approved' WHERE id=$pendingId");
@@ -125,7 +125,7 @@ function processStudentApproval($approvalRequestId, $actionType, $comments = '',
             $reason = $comments ?: 'Rejected by Director General';
             $stmt = $conn->prepare("UPDATE pending_students SET status='rejected', rejection_reason=? WHERE id=?");
             $stmt->bind_param("si", $reason, $pendingId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         return true;

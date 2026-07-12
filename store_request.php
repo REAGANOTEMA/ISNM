@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $ins = $staffConn->prepare("INSERT INTO store_request_items (request_id, item_id, quantity_requested, notes) VALUES (?, ?, ?, ?)");
                 foreach ($validItems as $vi) {
                     $ins->bind_param("iids", $requestId, $vi['item_id'], $vi['quantity'], $vi['notes']);
-                    $ins->execute();
+                    if (!$ins->execute()) { error_log('$ins execute failed: ' . ($ins->error ?? 'unknown')); };
                 }
                 $ins->close();
 
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     if (submitStoreForApproval($requestId, $staffConn)) {
                         $success = "Request <strong>$reqNum</strong> submitted for <strong>Director General Approval</strong>! Track its status in the Approval Center.";
                     } else {
-                        $success = "Request <strong>$reqNum</strong> saved. Submitting for DG approval failed — the storekeeper can forward it manually.";
+                        $success = "Request <strong>$reqNum</strong> saved. Submitting for DG approval failed â€” the storekeeper can forward it manually.";
                     }
                 } else {
                     $success = "Request <strong>$reqNum</strong> submitted successfully! The storekeeper will process it.";

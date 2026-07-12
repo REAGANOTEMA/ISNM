@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($student_id && $student_name && $program) {
             $stmt = $conn->prepare("INSERT INTO nursing_students (student_id, student_name, program, year_of_study, clinical_hours, status) VALUES (?, ?, ?, ?, 0, 'Active') ON DUPLICATE KEY UPDATE student_name=VALUES(student_name), program=VALUES(program), year_of_study=VALUES(year_of_study)");
             $stmt->bind_param("sssi", $student_id, $student_name, $program, $year_of_study);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Nursing student added successfully.';
         } else {
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id && $student_name && $program) {
             $stmt = $conn->prepare("UPDATE nursing_students SET student_name=?, program=?, year_of_study=?, status=? WHERE id=?");
             $stmt->bind_param("ssisi", $student_name, $program, $year_of_study, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Student updated successfully.';
         }
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM nursing_students WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Student deleted.';
         }
         header('Location: head-nursing.php?page=students');
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($student_id && $facility_name && $start_date) {
             $stmt = $conn->prepare("INSERT INTO nursing_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, hours_completed, status, notes) VALUES (?, ?, ?, ?, ?, ?, 0, 'Active', '')");
             $stmt->bind_param("ssssss", $student_id, $facility_name, $department, $start_date, $end_date, $supervisor);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Clinical placement added.';
         } else {
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id) {
             $stmt = $conn->prepare("UPDATE nursing_clinical_placements SET status=?, notes=?, hours_completed=? WHERE id=?");
             $stmt->bind_param("ssii", $status, $notes, $hours_completed, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Placement updated.';
         }
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM nursing_clinical_placements WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Placement deleted.';
         }
         header('Location: head-nursing.php?page=clinical');
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($student_id && $skill_id) {
             $stmt = $conn->prepare("INSERT INTO nursing_practical_assessment (student_id, skill_id, assessment_date, score, grade, assessor, comments, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Completed')");
             $stmt->bind_param("sisdsss", $student_id, $skill_id, $assessment_date, $score, $grade, $assessor, $comments);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Assessment recorded.';
         } else {
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id) {
             $stmt = $conn->prepare("UPDATE nursing_practical_assessment SET score=?, grade=?, comments=?, assessor=? WHERE id=?");
             $stmt->bind_param("dsssi", $score, $grade, $comments, $assessor, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Assessment updated.';
         }

@@ -30,7 +30,7 @@ function getWorkflowStages($workflowId, $conn) {
         $stmt = $conn->prepare("SELECT * FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC");
         if (!$stmt) return $stages;
         $stmt->bind_param('i', $workflowId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) $stages[] = $row;
         $stmt->close();
@@ -62,7 +62,7 @@ function createApprovalRequest($workflowId, $title, $description, $requesterId, 
                 $actStmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'created', 'Request created', 'Pending', 0, NOW())");
                 if ($actStmt) {
                     $actStmt->bind_param('iii', $newId, $firstStage['id'], $requesterId);
-                    $actStmt->execute();
+                    if (!$actStmt->execute()) { error_log('$actStmt execute failed: ' . ($actStmt->error ?? 'unknown')); };
                     $actStmt->close();
                 }
             }
@@ -85,7 +85,7 @@ function getUserHierarchyLevel($staffId, $conn) {
         $stmt = $conn->prepare("SELECT sr.role_level as hierarchy_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
         if (!$stmt) return 99;
         $stmt->bind_param('i', $staffId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         return $r ? (int)$r['hierarchy_level'] : 99;
@@ -103,7 +103,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $reqStmt = $conn->prepare("SELECT ar.*, (SELECT COUNT(*) FROM igangaschool_staffs.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages FROM igangaschool_staffs.approval_requests ar WHERE ar.id = ?");
         if (!$reqStmt) return false;
         $reqStmt->bind_param('i', $requestId);
-        $reqStmt->execute();
+        if (!$reqStmt->execute()) { error_log('$reqStmt execute failed: ' . ($reqStmt->error ?? 'unknown')); };
         $request = $reqStmt->get_result()->fetch_assoc();
         $reqStmt->close();
         if (!$request || $request['status'] !== 'Active') return false;
@@ -113,7 +113,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $stageStmt = $conn->prepare("SELECT assigned_role_id, assigned_role_name, stage_name, stage_order, is_final FROM igangaschool_staffs.approval_stages WHERE id = ?");
         if ($stageStmt) {
             $stageStmt->bind_param('i', $request['current_stage_id']);
-            $stageStmt->execute();
+            if (!$stageStmt->execute()) { error_log('$stageStmt execute failed: ' . ($stageStmt->error ?? 'unknown')); };
             $stage = $stageStmt->get_result()->fetch_assoc();
             $stageStmt->close();
             if ($stage && !empty($stage['assigned_role_name'])) {
@@ -121,7 +121,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
                 $roleStmt = $conn->prepare("SELECT sr.role_name, sr.role_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
                 if ($roleStmt) {
                     $roleStmt->bind_param('i', $staffId);
-                    $roleStmt->execute();
+                    if (!$roleStmt->execute()) { error_log('$roleStmt execute failed: ' . ($roleStmt->error ?? 'unknown')); };
                     $userRole = $roleStmt->get_result()->fetch_assoc();
                     $roleStmt->close();
                     if ($userRole && $userRole['role_level'] > 1 && $userRole['role_name'] !== $stage['assigned_role_name']) {
@@ -158,7 +158,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         elseif ($actionType === 'return') $decision = 'Returned';
         $prevOrder = $currentOrder;
         $actStmt->bind_param('iiissssi', $requestId, $currentStageId, $staffId, $actionType, $comments, $notes, $decision, $prevOrder);
-        $actStmt->execute();
+        if (!$actStmt->execute()) { error_log('$actStmt execute failed: ' . ($actStmt->error ?? 'unknown')); };
         $actStmt->close();
 
         if ($actionType === 'reject' || $actionType === 'cancel') {
@@ -166,19 +166,19 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
             $newStatus = $actionType === 'reject' ? 'Rejected' : 'Cancelled';
             if (!$updStmt) return false;
             $updStmt->bind_param('ssi', $newStatus, $comments, $requestId);
-            $updStmt->execute();
+            if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
             $updStmt->close();
         } elseif ($actionType === 'return') {
             $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Returned', rejection_reason = ?, current_stage_id = (SELECT id FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC LIMIT 1), current_stage_order = 1, updated_at = NOW() WHERE id = ?");
             if (!$updStmt) return false;
             $updStmt->bind_param('sii', $comments, $request['workflow_id'], $requestId);
-            $updStmt->execute();
+            if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
             $updStmt->close();
         } elseif ($actionType === 'approve' && $currentOrder >= $totalStages) {
             $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Approved', final_approval_by = ?, final_approval_at = NOW(), updated_at = NOW() WHERE id = ?");
             if (!$updStmt) return false;
             $updStmt->bind_param('ii', $staffId, $requestId);
-            $updStmt->execute();
+            if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
             $updStmt->close();
         } elseif ($actionType === 'approve' || $actionType === 'escalate') {
             $nextOrder = ($actionType === 'escalate') ? $currentOrder + 2 : $currentOrder + 1;
@@ -186,14 +186,14 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
             $nextStmt = $conn->prepare("SELECT id FROM igangaschool_staffs.approval_stages WHERE workflow_id = ? AND stage_order = ? LIMIT 1");
             if (!$nextStmt) return false;
             $nextStmt->bind_param('ii', $request['workflow_id'], $nextOrder);
-            $nextStmt->execute();
+            if (!$nextStmt->execute()) { error_log('$nextStmt execute failed: ' . ($nextStmt->error ?? 'unknown')); };
             $nextStage = $nextStmt->get_result()->fetch_assoc();
             $nextStmt->close();
             if ($nextStage) {
                 $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET current_stage_id = ?, current_stage_order = ?, status = CASE WHEN ? >= ? THEN 'Approved' ELSE 'Active' END, updated_at = NOW() WHERE id = ?");
                 if (!$updStmt) return false;
                 $updStmt->bind_param('iiiii', $nextStage['id'], $nextOrder, $nextOrder, $totalStages, $requestId);
-                $updStmt->execute();
+                if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
                 $updStmt->close();
             }
         }
@@ -220,7 +220,7 @@ function resubmitApprovalRequest($requestId, $staffId, $comments = null, $conn =
         $reqStmt = $conn->prepare("SELECT ar.* FROM igangaschool_staffs.approval_requests ar WHERE ar.id = ? AND ar.status = 'Returned' AND ar.requester_id = ?");
         if (!$reqStmt) return false;
         $reqStmt->bind_param('ii', $requestId, $staffId);
-        $reqStmt->execute();
+        if (!$reqStmt->execute()) { error_log('$reqStmt execute failed: ' . ($reqStmt->error ?? 'unknown')); };
         $request = $reqStmt->get_result()->fetch_assoc();
         $reqStmt->close();
         if (!$request) return false;
@@ -228,13 +228,13 @@ function resubmitApprovalRequest($requestId, $staffId, $comments = null, $conn =
         $actStmt = $conn->prepare("INSERT INTO igangaschool_staffs.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'resubmit', ?, 'Resubmitted', ?, NOW())");
         if (!$actStmt) return false;
         $actStmt->bind_param('iiisi', $requestId, $request['current_stage_id'], $staffId, $comments, $request['current_stage_order']);
-        $actStmt->execute();
+        if (!$actStmt->execute()) { error_log('$actStmt execute failed: ' . ($actStmt->error ?? 'unknown')); };
         $actStmt->close();
 
         $updStmt = $conn->prepare("UPDATE igangaschool_staffs.approval_requests SET status = 'Active', rejection_reason = NULL, updated_at = NOW() WHERE id = ?");
         if (!$updStmt) return false;
         $updStmt->bind_param('i', $requestId);
-        $updStmt->execute();
+        if (!$updStmt->execute()) { error_log('$updStmt execute failed: ' . ($updStmt->error ?? 'unknown')); };
         $updStmt->close();
 
         if (function_exists('recordAuditTrail')) {

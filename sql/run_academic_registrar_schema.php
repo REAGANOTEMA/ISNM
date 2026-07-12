@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Academic Registrar Schema Deployment
  * Run: php run_academic_registrar_schema.php
@@ -290,7 +290,7 @@ if ($r && ($row = $r->fetch_assoc()) && $row['cnt'] == 0) {
     ];
     $st = $conn->prepare("INSERT IGNORE INTO grade_scale (grade_letter, grade_point, min_percentage, max_percentage, description) VALUES (?,?,?,?,?)");
     $st->bind_param("sddds", $l, $p, $min, $max, $d);
-    foreach ($grades as $g) { list($l,$p,$min,$max,$d)=$g; $st->execute(); }
+    foreach ($grades as $g) { list($l,$p,$min,$max,$d)=$g; if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); }; }
     echo "  Seeded " . count($grades) . " grades\n";
 } else {
     echo "  Already seeded (" . ($r ? $row['cnt'] : 0) . " rows)\n";
@@ -314,7 +314,7 @@ if ($r && ($row = $r->fetch_assoc()) && $row['cnt'] == 0) {
     ];
     $st = $conn->prepare("INSERT IGNORE INTO gpa_settings (setting_key, setting_value, description) VALUES (?,?,?)");
     $st->bind_param("sss", $k, $v, $d);
-    foreach ($settings as $s) { list($k,$v,$d)=$s; $st->execute(); }
+    foreach ($settings as $s) { list($k,$v,$d)=$s; if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); }; }
     echo "  Seeded " . count($settings) . " settings\n";
 } else {
     echo "  Already seeded\n";

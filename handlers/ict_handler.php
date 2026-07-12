@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Director ICT unified AJAX/Form POST handler.
  * Returns JSON: {success: bool, message: string, data: mixed}
@@ -45,12 +45,12 @@ function ictAudit($ict, $userId, $userName, $action, $resourceType, $resourceId,
     $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
     $stmt = $ict->prepare("INSERT INTO ict_audit_logs (user_id, username, action, resource_type, resource_id, description, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param('isssssss', $userId, $userName, $action, $resourceType, $resourceId, $desc, $ip, $ua);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 }
 
 try {
     switch ($action) {
-        // ── GETTERS (for edit modals) ──
+        // â”€â”€ GETTERS (for edit modals) â”€â”€
         case 'get_asset':
             $id = (int)($_GET['id'] ?? 0);
             if (!$id) ictRespond(false, 'ID required');
@@ -73,7 +73,7 @@ try {
             ictRespond(true, 'OK', $r->fetch_assoc());
             break;
 
-        // ── ASSETS ──
+        // â”€â”€ ASSETS â”€â”€
         case 'add_asset':
             $num = $_POST['asset_number'] ?? '';
             $name = $_POST['asset_name'] ?? '';
@@ -91,7 +91,7 @@ try {
             if (!$num || !$name) ictRespond(false, 'Asset number and name required');
             $stmt = $ict->prepare("INSERT INTO ict_assets (asset_number, asset_name, asset_type, brand, model, serial_number, barcode, category_id, purchase_date, warranty_expiry, current_location, purchase_cost, assigned_department, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('ssssssssssdsi', $num, $name, $type, $brand, $model, $serial, $barcode, $category, $purchase, $warranty, $location, $cost, $dept, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $id = $ict->insert_id;
             ictAudit($ict, $userId, $userName, 'create', 'asset', $id, "Created asset $num - $name");
             ictRespond(true, 'Asset added', ['id' => $id]);
@@ -114,7 +114,7 @@ try {
             $params[] = $id; $types .= 'i';
             $stmt = $ict->prepare("UPDATE ict_assets SET " . implode(',', $sets) . " WHERE id=?");
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictAudit($ict, $userId, $userName, 'update', 'asset', $id, "Updated asset #$id");
             ictRespond(true, 'Asset updated');
             break;
@@ -124,7 +124,7 @@ try {
             if (!$id) ictRespond(false, 'Asset ID required');
             $stmt = $ict->prepare("UPDATE ict_assets SET current_status='retired' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictAudit($ict, $userId, $userName, 'retire', 'asset', $id, "Retired asset #$id");
             ictRespond(true, 'Asset retired');
             break;
@@ -137,10 +137,10 @@ try {
             if (!$aid) ictRespond(false, 'Asset ID required');
             $stmt = $ict->prepare("INSERT INTO ict_asset_assignments (asset_id, assigned_to_staff_id, assigned_department, assignment_date, assigned_by) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param('iissi', $aid, $sid, $dept, $date, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE ict_assets SET assigned_staff_id=?, assigned_department=?, current_status='active' WHERE id=?");
             $stmt->bind_param('isi', $sid, $dept, $aid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictAudit($ict, $userId, $userName, 'assign', 'asset', $aid, "Assigned asset #$aid");
             ictRespond(true, 'Asset assigned');
             break;
@@ -154,14 +154,14 @@ try {
             if (!$aid || !$desc) ictRespond(false, 'Asset and description required');
             $stmt = $ict->prepare("INSERT INTO ict_asset_maintenance (asset_id, maintenance_type, description, performed_by, cost, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('isssdi', $aid, $type, $desc, $by, $cost, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE ict_assets SET current_status='in_maintenance' WHERE id=?");
             $stmt->bind_param('i', $aid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Maintenance logged');
             break;
 
-        // ── SERVERS ──
+        // â”€â”€ SERVERS â”€â”€
         case 'add_server':
             $name = $_POST['server_name'] ?? '';
             $ip = $_POST['ip_address'] ?? '';
@@ -171,7 +171,7 @@ try {
             if (!$name) ictRespond(false, 'Server name required');
             $stmt = $ict->prepare("INSERT INTO ict_servers (server_name, ip_address, server_type, os, purpose) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param('sssss', $name, $ip, $type, $os, $purpose);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Server added', ['id' => $ict->insert_id]);
             break;
 
@@ -185,7 +185,7 @@ try {
             if (!$id) ictRespond(false, 'Server ID required');
             $stmt = $ict->prepare("UPDATE ict_servers SET server_name=?, ip_address=?, server_type=?, os=?, status=? WHERE id=?");
             $stmt->bind_param('sssssi', $name, $ip, $type, $os, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Server updated');
             break;
 
@@ -194,11 +194,11 @@ try {
             if (!$id) ictRespond(false, 'Server ID required');
             $stmt = $ict->prepare("UPDATE ict_servers SET status='decommissioned' WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Server decommissioned');
             break;
 
-        // ── NETWORK ──
+        // â”€â”€ NETWORK â”€â”€
         case 'add_network_log':
             $did = (int)($_POST['device_id'] ?? 0);
             $type = $_POST['log_type'] ?? 'info';
@@ -207,7 +207,7 @@ try {
             if (!$msg) ictRespond(false, 'Message required');
             $stmt = $ict->prepare("INSERT INTO ict_network_logs (device_id, log_type, message, severity) VALUES (?, ?, ?, ?)");
             $stmt->bind_param('isss', $did, $type, $msg, $sev);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Log added');
             break;
 
@@ -219,7 +219,7 @@ try {
             if (!$name) ictRespond(false, 'Device name required');
             $stmt = $ict->prepare("INSERT INTO ict_wifi_devices (device_name, ssid, ip_address, location) VALUES (?, ?, ?, ?)");
             $stmt->bind_param('ssss', $name, $ssid, $ip, $loc);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'WiFi device added');
             break;
 
@@ -229,25 +229,25 @@ try {
             if (!$id) ictRespond(false, 'Device ID required');
             $stmt = $ict->prepare("UPDATE ict_wifi_devices SET status=? WHERE id=?");
             $stmt->bind_param('si', $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'WiFi device updated');
             break;
 
-        // ── BACKUPS ──
+        // â”€â”€ BACKUPS â”€â”€
         case 'create_backup':
             $bname = $_POST['backup_name'] ?? 'Backup-' . date('Ymd-His');
             $btype = $_POST['backup_type'] ?? 'database';
             $target = $_POST['target_database'] ?? '';
             $stmt = $ict->prepare("INSERT INTO ict_system_backups (backup_name, backup_type, target_database, status, initiated_by) VALUES (?, ?, ?, 'running', ?)");
             $stmt->bind_param('sssi', $bname, $btype, $target, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $bid = $ict->insert_id;
             $stmt = $ict->prepare("UPDATE ict_system_backups SET status='completed', completed_at=NOW(), file_size_mb=ROUND(RAND()*100+10,2) WHERE id=?");
             $stmt->bind_param('i', $bid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES (?, 'Backup completed successfully', 'info')");
             $stmt->bind_param('i', $bid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictAudit($ict, $userId, $userName, 'backup', 'system', $bid, "Created $btype backup: $bname");
             ictRespond(true, 'Backup created', ['id' => $bid]);
             break;
@@ -257,10 +257,10 @@ try {
             if (!$id) ictRespond(false, 'Backup ID required');
             $stmt = $ict->prepare("UPDATE ict_system_backups SET status='verified', verified_at=NOW() WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES (?, 'Backup verified successfully', 'info')");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Backup verified');
             break;
 
@@ -269,14 +269,14 @@ try {
             if (!$id) ictRespond(false, 'Backup ID required');
             $stmt = $ict->prepare("DELETE FROM ict_backup_logs WHERE backup_id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("DELETE FROM ict_system_backups WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Backup deleted');
             break;
 
-        // ── SECURITY ──
+        // â”€â”€ SECURITY â”€â”€
         case 'add_security_log':
             $etype = $_POST['event_type'] ?? 'other';
             $uid = (int)($_POST['user_id'] ?? 0);
@@ -287,7 +287,7 @@ try {
             $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
             $stmt = $ict->prepare("INSERT INTO ict_security_logs (event_type, user_id, username, ip_address, user_agent, description, severity) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sisssss', $etype, $uid, $uname, $ip, $ua, $desc, $sev);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Security log added');
             break;
 
@@ -299,7 +299,7 @@ try {
             if (!$title || !$msg) ictRespond(false, 'Title and message required');
             $stmt = $ict->prepare("INSERT INTO ict_system_alerts (alert_type, severity, title, message) VALUES (?, ?, ?, ?)");
             $stmt->bind_param('ssss', $atype, $sev, $title, $msg);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Alert created');
             break;
 
@@ -308,7 +308,7 @@ try {
             if (!$id) ictRespond(false, 'Alert ID required');
             $stmt = $ict->prepare("UPDATE ict_system_alerts SET status='acknowledged', acknowledged_by=?, acknowledged_at=NOW() WHERE id=?");
             $stmt->bind_param('ii', $userId, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Alert acknowledged');
             break;
 
@@ -317,11 +317,11 @@ try {
             if (!$id) ictRespond(false, 'Alert ID required');
             $stmt = $ict->prepare("UPDATE ict_system_alerts SET status='resolved', resolved_at=NOW() WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Alert resolved');
             break;
 
-        // ── NOTIFICATIONS ──
+        // â”€â”€ NOTIFICATIONS â”€â”€
         case 'add_notification':
             $title = $_POST['title'] ?? '';
             $msg = $_POST['message'] ?? '';
@@ -330,7 +330,7 @@ try {
             if (!$title || !$msg) ictRespond(false, 'Title and message required');
             $stmt = $ict->prepare("INSERT INTO ict_system_notifications (title, message, notification_type, category, created_by) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param('ssssi', $title, $msg, $type, $cat, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Notification created');
             break;
 
@@ -339,11 +339,11 @@ try {
             if (!$id) ictRespond(false, 'Notification ID required');
             $stmt = $ict->prepare("UPDATE ict_system_notifications SET is_dismissed=1 WHERE id=?");
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Notification dismissed');
             break;
 
-        // ── SETTINGS ──
+        // â”€â”€ SETTINGS â”€â”€
         case 'save_setting':
             $key = $_POST['setting_key'] ?? '';
             $value = $_POST['setting_value'] ?? '';
@@ -351,11 +351,11 @@ try {
             if (!$key) ictRespond(false, 'Setting key required');
             $stmt = $ict->prepare("INSERT INTO ict_system_settings (setting_key, setting_value, setting_group, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=?, updated_by=?");
             $stmt->bind_param('sssisi', $key, $value, $group, $userId, $value, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Setting saved');
             break;
 
-        // ── SYSTEM HEALTH ──
+        // â”€â”€ SYSTEM HEALTH â”€â”€
         case 'add_health_check':
             $type = $_POST['check_type'] ?? 'cpu';
             $name = $_POST['check_name'] ?? '';
@@ -365,11 +365,11 @@ try {
             $msg = $_POST['message'] ?? '';
             $stmt = $ict->prepare("INSERT INTO ict_system_health (check_type, check_name, status, value, threshold, message) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('ssssss', $type, $name, $status, $value, $threshold, $msg);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             ictRespond(true, 'Health check recorded');
             break;
 
-        // ── WIFI / NETWORK DEVICES (existing table) ──
+        // â”€â”€ WIFI / NETWORK DEVICES (existing table) â”€â”€
         case 'update_network_device':
             $id = (int)($_POST['id'] ?? 0);
             $status = $_POST['status'] ?? '';
@@ -382,12 +382,12 @@ try {
                 $params[] = $id; $types .= 'i';
                 $stmt = $ict->prepare("UPDATE network_devices SET " . implode(',', $sets) . " WHERE id=?");
                 $stmt->bind_param($types, ...$params);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             }
             ictRespond(true, 'Network device updated');
             break;
 
-        // ── SUPPORT TICKETS (existing table) ──
+        // â”€â”€ SUPPORT TICKETS (existing table) â”€â”€
         case 'update_ticket':
             $id = (int)($_POST['id'] ?? 0);
             $status = $_POST['status'] ?? '';
@@ -403,7 +403,7 @@ try {
                 $params[] = $id; $types .= 'i';
                 $stmt = $ict->prepare("UPDATE it_support_tickets SET " . implode(',', $sets) . " WHERE id=?");
                 $stmt->bind_param($types, ...$params);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             }
             ictRespond(true, 'Ticket updated');
             break;

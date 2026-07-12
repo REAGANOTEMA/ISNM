@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth-service.php';
@@ -124,7 +124,7 @@ if (!$stmt) {
     exit();
 }
 $stmt->bind_param('s', $effective_department);
-$stmt->execute();
+if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $result = $stmt->get_result();
 $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $stmt->close();
@@ -133,7 +133,7 @@ if (count($items) === 0) {
     $stmt = $staff_conn->prepare("SELECT *, quantity AS quantity_on_hand, unit_price AS unit_cost, unit AS unit_of_measure FROM inventory WHERE department = 'General' OR department = ? ORDER BY status DESC, quantity ASC, item_name ASC");
     if ($stmt) {
         $stmt->bind_param('s', $effective_department);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         $stmt->close();
@@ -153,7 +153,7 @@ foreach ($items as $item) {
 $stmt = $staff_conn->prepare("SELECT COUNT(*) as count FROM inventory_reports WHERE department = ? AND request_status IN ('Open', 'In Review')");
 if ($stmt) {
     $stmt->bind_param('s', $effective_department);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $report_count = $stmt->get_result()->fetch_assoc()['count'] ?? 0;
     $stmt->close();
 } else {

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Legacy configuration kept for older modules.
 // Prefer config/database.php for new code.
 
@@ -41,7 +41,7 @@ function executeQuery($database, $sql = '', $params = [], $types = '') {
         $stmt->bind_param($types, ...$params);
     }
 
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
 
     if ($result === false) { $stmt->close(); return []; }
@@ -73,7 +73,7 @@ function logActivity($user_id, $user_role, $activity_type, $activity_description
     $stmt = $conn->prepare($sql);
     if (!$stmt) return;
     $stmt->bind_param('isssss', $user_id, $activity_type, $activity_description, $module_affected, $ip_address, $user_agent);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $stmt->close();
 }
 
@@ -96,7 +96,7 @@ function getUserInfo($user_id) {
     $stmt = $conn->prepare($sql);
     if (!$stmt) return null;
     $stmt->bind_param('i', $user_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $row = $result->fetch_assoc() ?: null;
     $stmt->close();

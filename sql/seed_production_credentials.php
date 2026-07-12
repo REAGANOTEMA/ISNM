@@ -62,7 +62,7 @@ $notFound = 0;
 foreach ($accounts as [$email, $password, $name]) {
     $hash = password_hash($password, PASSWORD_BCRYPT);
     $lookupEmail = $email;
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     if ($stmt->affected_rows > 0) {
         $updated++;
         echo "  OK  $email\n";

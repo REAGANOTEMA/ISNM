@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Student Full Profile View
  * Accessible by authorized staff to view complete student records.
@@ -37,7 +37,7 @@ try {
             
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $studentId);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $student = $stmt->get_result()->fetch_assoc();
     
     if (!$student) {
@@ -83,7 +83,7 @@ try {
             </div>
             <div class="col-md-7 text-center text-md-start">
                 <h1 class="display-5 fw-bold mb-1"><?php echo htmlspecialchars($student['full_name'] ?? ($student['first_name'] . ' ' . $student['surname'])); ?></h1>
-                <p class="lead mb-2"><?php echo htmlspecialchars($student['program']); ?> • Year <?php echo htmlspecialchars($student['current_year']); ?></p>
+                <p class="lead mb-2"><?php echo htmlspecialchars($student['program']); ?> â€¢ Year <?php echo htmlspecialchars($student['current_year']); ?></p>
                 <div>
                     <span class="status-badge <?php echo $student['status'] === 'Active' ? 'bg-success' : 'bg-warning text-dark'; ?>">
                         <i class="bi bi-check-circle-fill me-1"></i> <?php echo htmlspecialchars($student['status']); ?>

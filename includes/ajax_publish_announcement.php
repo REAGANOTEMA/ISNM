@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../config/database.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -33,7 +33,7 @@ try {
     $posted_by_name = $user_name;
     $posted_by_role = $user_role;
     $stmt->bind_param('sssssssss', $title, $content, $announcement_type, $target_audience, $priority, $posted_by_name, $posted_by_role, $status, $expiry_date);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $id = $stmt->insert_id;
     $stmt->close();
     echo json_encode(['success' => true, 'id' => $id]);

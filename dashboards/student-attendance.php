@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['lecturer', 'hods', 'registrar', 'admin']);
 $conn = $ctx['students'];
@@ -35,7 +35,7 @@ if ($conn) {
     $stmt = $conn->prepare("SELECT a.*, CONCAT(s.first_name,' ',s.surname) student_name, s.index_number, s.student_number FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id WHERE $w ORDER BY a.time_in DESC");
     if ($stmt) {
         $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $q = $stmt->get_result();
         if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
@@ -57,7 +57,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number FROM students $aw ORDER BY surname LIMIT 300");
         if ($stmt) {
             if (!empty($pparams)) $stmt->bind_param($ptypes, ...$pparams);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $sr = $stmt->get_result();
             if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
             $stmt->close();
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
             $stmt = $conn->prepare("DELETE FROM student_attendance WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Attendance record deleted.';
         }
         header('Location: student-attendance.php?date=' . urlencode($dateFilter)); exit;

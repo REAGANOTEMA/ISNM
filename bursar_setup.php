@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Bursar Setup & Initialization Script
  * Creates bursar user, sets up database, and initializes system
@@ -20,7 +20,7 @@ try {
     // Check if user exists
     $stmt = $conn->prepare("SELECT id FROM bursar_users WHERE email = ?");
     $stmt->bind_param('s', $bursar_email);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
@@ -35,15 +35,15 @@ try {
         
         $stmt->bind_param('sssss', $bursar_email, $bursar_password_hash, $name, $role, $status);
         if ($stmt->execute()) {
-            $messages[] = '✓ Bursar user created successfully';
+            $messages[] = 'âœ“ Bursar user created successfully';
             $messages[] = 'Email: ' . $bursar_email;
             $messages[] = 'Password: ' . $bursar_password;
         } else {
-            $messages[] = '✗ Error creating bursar user: ' . $stmt->error;
+            $messages[] = 'âœ— Error creating bursar user: ' . $stmt->error;
         }
         $stmt->close();
     } else {
-        $messages[] = '✓ Bursar user already exists';
+        $messages[] = 'âœ“ Bursar user already exists';
     }
     
     // 2. Verify tables exist
@@ -63,9 +63,9 @@ try {
     }
     
     if (empty($tables_missing)) {
-        $messages[] = '✓ All required database tables exist';
+        $messages[] = 'âœ“ All required database tables exist';
     } else {
-        $messages[] = '⚠ Missing tables: ' . implode(', ', $tables_missing);
+        $messages[] = 'âš  Missing tables: ' . implode(', ', $tables_missing);
         $messages[] = 'Please run: sql/students/bursar_system.sql';
     }
     
@@ -88,19 +88,19 @@ try {
         
         foreach ($default_programs as $prog) {
             $stmt->bind_param('ssss', $prog[0], $prog[1], $prog[2], $prog[3]);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         }
         $stmt->close();
-        $messages[] = '✓ Default programs created';
+        $messages[] = 'âœ“ Default programs created';
     } else {
-        $messages[] = '✓ Programs already configured';
+        $messages[] = 'âœ“ Programs already configured';
     }
     
     $conn->close();
     $setup_complete = true;
     
 } catch (Exception $e) {
-    $messages[] = '✗ Error: ' . $e->getMessage();
+    $messages[] = 'âœ— Error: ' . $e->getMessage();
     error_log('Bursar setup error: ' . $e->getMessage());
 }
 
@@ -233,7 +233,7 @@ try {
 </head>
 <body>
     <div class="setup-container">
-        <h1>💼 Bursar System Setup</h1>
+        <h1>ðŸ’¼ Bursar System Setup</h1>
         <p class="subtitle">Financial Management System Initialization</p>
         
         <div class="messages">
@@ -244,14 +244,14 @@ try {
         
         <?php if ($setup_complete): ?>
             <div class="status success">
-                ✓ Setup Completed Successfully!
+                âœ“ Setup Completed Successfully!
             </div>
             <div class="actions">
                 <a href="bursar_login.php" class="btn btn-primary">Go to Login</a>
             </div>
         <?php else: ?>
             <div class="status error">
-                ✗ Setup encountered issues
+                âœ— Setup encountered issues
             </div>
             <div class="actions">
                 <a href="#" onclick="location.reload();" class="btn btn-primary">Retry</a>

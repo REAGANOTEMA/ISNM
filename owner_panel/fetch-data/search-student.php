@@ -1,4 +1,4 @@
-<?php
+﻿<?php
  include("../../assets/config.php");
 
 // Assuming you've already sanitized the search term
@@ -9,7 +9,7 @@ $sql = "SELECT * FROM students WHERE fname LIKE ? OR lname LIKE ? OR class LIKE 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ssss", $searchPattern, $searchPattern, $searchPattern, $searchPattern);
 $searchPattern = "%{$search}%";
-$stmt->execute();
+if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {

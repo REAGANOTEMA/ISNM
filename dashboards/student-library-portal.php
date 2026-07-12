@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['librarian', 'library', 'admin', 'student']);
 $staffDb = $ctx['staff'];
@@ -39,7 +39,7 @@ if ($staffDb) {
         $stmt = $staffDb->prepare("SELECT COUNT(*) c FROM library_books $where");
         if ($stmt) {
             if (!empty($params)) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $r = $stmt->get_result();
             if ($r) $totalBooks = (int)$r->fetch_assoc()['c'];
             $stmt->close();
@@ -47,7 +47,7 @@ if ($staffDb) {
         $stmt = $staffDb->prepare("SELECT b.*, COALESCE(br.return_status, 'Available') as avail_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.return_status IN ('Borrowed','Overdue') $where ORDER BY b.title LIMIT " . intval($limit) . " OFFSET " . intval($offset));
         if ($stmt) {
             if (!empty($params)) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $r = $stmt->get_result();
             if ($r) $books = $r->fetch_all(MYSQLI_ASSOC);
             $stmt->close();

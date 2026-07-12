@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * HR Manager Dashboard — Complete 13-Module Interface
+ * HR Manager Dashboard â€” Complete 13-Module Interface
  * Modules: Staff Records, Recruitment, Attendance, Payroll Support,
  * Performance, Training, Disciplinary, Contracts, Communication,
  * Reports, RBAC, Self-Service, Integration
@@ -24,7 +24,7 @@ $page  = $_GET['page'] ?? 'overview';
 $sub   = $_GET['sub'] ?? '';
 $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
-// ── Handle POST actions ──
+// â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $plainpw = bin2hex(random_bytes(8));
             $hash = password_hash($plainpw, PASSWORD_BCRYPT);
             $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,staff_category,gender,highest_qualification,nin,year_of_experience,date_of_birth,status,hire_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $newStaffId = $stmt->insert_id; $stmt->close(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
+            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $newStaffId = $stmt->insert_id; $stmt->close(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
             if (!empty($newStaffId) && function_exists('syncStaffRecord')) {
                 syncStaffRecord([
                     'staff_id' => $sid, 'full_name' => $fn, 'email' => $em,
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $resp = ['success' => false, 'error' => 'Invalid data'];
         if ($id && $fn && $em) {
             $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?,email=?,phone=?,position=?,department=?,role_id=?,status=?,staff_category=?,gender=?,highest_qualification=?,nin=?,year_of_experience=?,date_of_birth=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssissssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('sssssissssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } $resp = ['success'=>$ok,'error'=>$stmt->error]; $stmt->close(); }
             if ($resp['success'] && function_exists('syncStaffRecord')) {
                 syncStaffRecord([
                     'full_name' => $fn, 'email' => $em, 'phone' => $ph,
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $resp = ['success' => false, 'error' => 'Invalid'];
         if ($id && $staff_conn) {
             $stmt = $staff_conn->prepare("UPDATE staff SET status='Inactive',resignation_date=CURDATE() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i',$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i',$id); $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } $resp = ['success'=>$ok,'error'=>$stmt->error]; $stmt->close(); }
             if ($resp['success'] && function_exists('deleteStaffAcrossDatabases')) {
                 deleteStaffAcrossDatabases($id);
             }
@@ -100,19 +100,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'approve_leave' || $action === 'reject_leave') {
         $lid = (int)($_POST['leave_id'] ?? 0);
         $status = $action === 'approve_leave' ? 'approved' : 'rejected';
-        if ($lid && $staff_conn) { $stmt = $staff_conn->prepare("UPDATE leave_requests SET status=?, reviewed_by=?, updated_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('sii',$status,$user_id,$lid); $stmt->execute(); } $_SESSION['success'] = "Leave $status."; }
+        if ($lid && $staff_conn) { $stmt = $staff_conn->prepare("UPDATE leave_requests SET status=?, reviewed_by=?, updated_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('sii',$status,$user_id,$lid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; } $_SESSION['success'] = "Leave $status."; }
         header('Location: hr-manager.php?page=attendance#leave'); exit;
     }
     if ($action === 'post_vacancy') {
         $title = trim($_POST['title'] ?? ''); $dept = trim($_POST['department'] ?? '');
         $desc = trim($_POST['description'] ?? ''); $req = trim($_POST['requirements'] ?? '');
         $salary = trim($_POST['salary_range'] ?? ''); $close = $_POST['closing_date'] ?? '';
-        if ($title && $staff_conn) { $stmt = $staff_conn->prepare("INSERT INTO job_vacancies (title,department_id,description,requirements,salary_range,status,posted_date,closing_date) VALUES (?,?,?,?,?,'open',CURDATE(),?)"); if ($stmt) { $stmt->bind_param('sissss',$title,$dept,$desc,$req,$salary,$close); $stmt->execute(); $_SESSION['success'] = 'Vacancy posted.'; } }
+        if ($title && $staff_conn) { $stmt = $staff_conn->prepare("INSERT INTO job_vacancies (title,department_id,description,requirements,salary_range,status,posted_date,closing_date) VALUES (?,?,?,?,?,'open',CURDATE(),?)"); if ($stmt) { $stmt->bind_param('sissss',$title,$dept,$desc,$req,$salary,$close); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Vacancy posted.'; } }
         header('Location: hr-manager.php?page=recruitment'); exit;
     }
     if ($action === 'shortlist') {
         $appId = (int)($_POST['application_id'] ?? 0);
-        if ($appId && $staff_conn) { $st=$staff_conn->prepare("UPDATE job_applications SET application_status='shortlisted' WHERE id=?"); if($st){$st->bind_param('i',$appId);$st->execute();$st->close();$_SESSION['success']='Applicant shortlisted.';} }
+        if ($appId && $staff_conn) { $st=$staff_conn->prepare("UPDATE job_applications SET application_status='shortlisted' WHERE id=?"); if($st){$st->bind_param('i',$appId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Applicant shortlisted.';} }
         header('Location: hr-manager.php?page=recruitment'); exit;
     }
     if ($action === 'record_attendance') {
@@ -120,13 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $status = trim($_POST['attendance_status'] ?? 'present');
         if ($sid && $staff_conn) {
             $ck=$staff_conn->prepare("SELECT id FROM staff_attendance WHERE staff_id=? AND date=?");
-            if($ck){$ck->bind_param('is',$sid,$date);$ck->execute();$exists=$ck->get_result()->num_rows>0;$ck->close();}
+            if($ck){$ck->bind_param('is',$sid,$date);if (!$ck->execute()) { error_log('$ck execute failed: ' . ($ck->error ?? 'unknown')); };$exists=$ck->get_result()->num_rows>0;$ck->close();}
             if(!empty($exists)){
                 $st=$staff_conn->prepare("UPDATE staff_attendance SET status=?, recorded_by=? WHERE staff_id=? AND date=?");
-                if($st){$st->bind_param('siis',$status,$user_id,$sid,$date);$st->execute();$st->close();}
+                if($st){$st->bind_param('siis',$status,$user_id,$sid,$date);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
             } else {
                 $st=$staff_conn->prepare("INSERT INTO staff_attendance (staff_id,date,status,recorded_by) VALUES (?,?,?,?)");
-                if($st){$st->bind_param('issi',$sid,$date,$status,$user_id);$st->execute();$st->close();}
+                if($st){$st->bind_param('issi',$sid,$date,$status,$user_id);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
             }
             $_SESSION['success'] = 'Attendance recorded.';
         }
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $priority = trim($_POST['priority'] ?? 'normal');
         if ($title && $msg && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO hr_announcements (title,content,priority,created_by) VALUES (?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sssi',$title,$msg,$priority,$user_id); $stmt->execute(); $_SESSION['success'] = 'Announcement sent.'; }
+            if ($stmt) { $stmt->bind_param('sssi',$title,$msg,$priority,$user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Announcement sent.'; }
         }
         header('Location: hr-manager.php?page=communications'); exit;
     }
@@ -147,13 +147,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $incidentDate = $_POST['incident_date'] ?? date('Y-m-d');
         if ($sid && $offense && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO staff_disciplinary (staff_id,incident_date,offense_type,description,action_taken,status,reported_by) VALUES (?,?,?,?,?,'open',?)");
-            if ($stmt) { $stmt->bind_param('issssi',$sid,$incidentDate,$offense,$desc,$actionTaken,$user_id); $stmt->execute(); $_SESSION['success'] = 'Disciplinary case opened.'; }
+            if ($stmt) { $stmt->bind_param('issssi',$sid,$incidentDate,$offense,$desc,$actionTaken,$user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Disciplinary case opened.'; }
         }
         header('Location: hr-manager.php?page=disciplinary'); exit;
     }
     if ($action === 'close_case') {
         $cid = (int)($_POST['case_id'] ?? 0); $resolution = trim($_POST['resolution'] ?? '');
-        if ($cid && $staff_conn) { $st=$staff_conn->prepare("UPDATE staff_disciplinary SET status='resolved', action_taken=CONCAT(action_taken,?) WHERE id=?"); if($st){$res=' | Resolution: '.$resolution;$st->bind_param('si',$res,$cid);$st->execute();$st->close();$_SESSION['success']='Case closed.';} }
+        if ($cid && $staff_conn) { $st=$staff_conn->prepare("UPDATE staff_disciplinary SET status='resolved', action_taken=CONCAT(action_taken,?) WHERE id=?"); if($st){$res=' | Resolution: '.$resolution;$st->bind_param('si',$res,$cid);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Case closed.';} }
         header('Location: hr-manager.php?page=disciplinary'); exit;
     }
     if ($action === 'add_training') {
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $end = $_POST['end_date'] ?? ''; $type = trim($_POST['training_type'] ?? 'workshop');
         if ($sid && $tname && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO staff_training (staff_id,training_name,training_type,provider,start_date,end_date,status) VALUES (?,?,?,?,?,?,'scheduled')");
-            if ($stmt) { $stmt->bind_param('isssss', $sid, $tname, $type, $provider, $start, $end); $stmt->execute(); $_SESSION['success'] = 'Training added.'; }
+            if ($stmt) { $stmt->bind_param('isssss', $sid, $tname, $type, $provider, $start, $end); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Training added.'; }
         }
         header('Location: hr-manager.php?page=training'); exit;
     }
@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $score = (float)($_POST['overall_score'] ?? 0); $comments = trim($_POST['comments'] ?? '');
         if ($sid && $period && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO performance_reviews (staff_id,reviewer_id,review_period,overall_score,comments,status) VALUES (?,?,?,?,?,'completed')");
-            if ($stmt) { $stmt->bind_param('iisd', $sid, $user_id, $period, $score, $comments); $stmt->execute(); $_SESSION['success'] = 'Appraisal recorded.'; }
+            if ($stmt) { $stmt->bind_param('iisd', $sid, $user_id, $period, $score, $comments); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Appraisal recorded.'; }
         }
         header('Location: hr-manager.php?page=performance'); exit;
     }
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $salary = (float)($_POST['salary'] ?? 0); $terms = trim($_POST['terms'] ?? '');
         if ($sid && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO employment_contracts (staff_id,contract_type,start_date,end_date,salary,terms,status) VALUES (?,?,?,?,?,?,'active')");
-            if ($stmt) { $stmt->bind_param('issids', $sid, $ctype, $start, $end, $salary, $terms); $stmt->execute(); $_SESSION['success'] = 'Contract created.'; }
+            if ($stmt) { $stmt->bind_param('issids', $sid, $ctype, $start, $end, $salary, $terms); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Contract created.'; }
         }
         header('Location: hr-manager.php?page=contracts'); exit;
     }
@@ -198,13 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $expiry = $_POST['expiry_date'] ?? '';
         if ($sid && $ltype && $staff_conn) {
             $stmt = $staff_conn->prepare("INSERT INTO staff_licenses (staff_id,license_type,license_number,issuing_body,issue_date,expiry_date,status) VALUES (?,?,?,?,CURDATE(),?,'valid')");
-            if ($stmt) { $stmt->bind_param('issss', $sid, $ltype, $lnum, $body, $expiry); $stmt->execute(); $_SESSION['success'] = 'License recorded.'; }
+            if ($stmt) { $stmt->bind_param('issss', $sid, $ltype, $lnum, $body, $expiry); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'License recorded.'; }
         }
         header('Location: hr-manager.php?page=compliance'); exit;
     }
 }
 
-// ── Data fetching ──
+// â”€â”€ Data fetching â”€â”€
 $stats = hrGetStats($staff_conn);
 $staffList = []; $roles = []; $departments = []; $leaveReqs = []; $leaveTypes = [];
 $vacancies = []; $applications = []; $attendanceToday = []; $disciplinaryCases = [];
@@ -374,7 +374,7 @@ $pageTitle = 'HR Manager';
 </div>
 <h4 class="mt-4 mb-2 fs-6 fw-semibold">Work History</h4>
 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Position</th><th>Department</th><th>From</th><th>To</th><th>Reason</th></tr></thead><tbody>
-<?php $wh=null; $wq=$staff_conn->prepare("SELECT * FROM staff_work_history WHERE staff_id=? ORDER BY start_date DESC"); if($wq){$wq->bind_param('i',$sid);$wq->execute();$wh=$wq->get_result();$wq->close();} if ($wh) while ($w = $wh->fetch_assoc()): ?><tr><td><?=htmlspecialchars($w['position'])?></td><td><?=htmlspecialchars($w['department']??'')?></td><td><?=$w['start_date']?></td><td><?=$w['end_date']??'Current'?></td><td><?=htmlspecialchars($w['reason_for_change']??'')?></td></tr><?php endwhile; ?>
+<?php $wh=null; $wq=$staff_conn->prepare("SELECT * FROM staff_work_history WHERE staff_id=? ORDER BY start_date DESC"); if($wq){$wq->bind_param('i',$sid);if (!$wq->execute()) { error_log('$wq execute failed: ' . ($wq->error ?? 'unknown')); };$wh=$wq->get_result();$wq->close();} if ($wh) while ($w = $wh->fetch_assoc()): ?><tr><td><?=htmlspecialchars($w['position'])?></td><td><?=htmlspecialchars($w['department']??'')?></td><td><?=$w['start_date']?></td><td><?=$w['end_date']??'Current'?></td><td><?=htmlspecialchars($w['reason_for_change']??'')?></td></tr><?php endwhile; ?>
 </tbody></table></div>
 </div><?php endif; endif; ?>
 
@@ -656,7 +656,7 @@ $pageTitle = 'HR Manager';
 document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION['csrf_token'])?>';document.querySelectorAll('form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});
 function editStaff(id) {
     fetch('hr-manager.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_staff&id='+id+'&csrf_token=<?=htmlspecialchars($_SESSION['csrf_token'])?>'})
-    .then(r=>r.json()).then(d=>{if(d&&d.id){alert('Editing staff #'+id+' — use the form below.');window.location='hr-manager.php?page=staff&sub=view&id='+id;}});
+    .then(r=>r.json()).then(d=>{if(d&&d.id){alert('Editing staff #'+id+' â€” use the form below.');window.location='hr-manager.php?page=staff&sub=view&id='+id;}});
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

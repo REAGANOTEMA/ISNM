@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
@@ -40,7 +40,7 @@ try {
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO contact_submissions (first_name, last_name, email, phone, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'unread', NOW())");
         $stmt->bind_param('ssssss', $firstName, $lastName, $email, $phone, $subject, $message);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $submissionId = $stmt->insert_id;
         $stmt->close();
     } else {
@@ -70,7 +70,7 @@ try {
             $notifTitle = 'New Contact: ' . $subject;
             $notifMsg = $fullName . ' submitted a contact form regarding "' . $subject . '". Email: ' . $email . ', Phone: ' . $phone;
             $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
-            $notifStmt->execute();
+            if (!$notifStmt->execute()) { error_log('$notifStmt execute failed: ' . ($notifStmt->error ?? 'unknown')); };
             $notifStmt->close();
         }
     } catch (Exception $e) {
@@ -85,7 +85,7 @@ try {
             $logDetails = $fullName . ' (' . $email . ') submitted contact form: ' . $subject;
             $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
             $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
-            $logStmt->execute();
+            if (!$logStmt->execute()) { error_log('$logStmt execute failed: ' . ($logStmt->error ?? 'unknown')); };
             $logStmt->close();
         }
     } catch (Exception $e) {

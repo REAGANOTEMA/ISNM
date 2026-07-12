@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Student Search API
  * All dashboards can search and find students
@@ -53,7 +53,7 @@ class StudentSearch {
         if (!$stmt) return null;
         
         $stmt->bind_param('i', $studentId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $student = $result->fetch_assoc();
         $stmt->close();
@@ -72,7 +72,7 @@ class StudentSearch {
         if (!$stmt) return null;
         
         $stmt->bind_param('s', $indexNumber);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $student = $result->fetch_assoc();
         $stmt->close();
@@ -91,7 +91,7 @@ class StudentSearch {
         if (!$stmt) return [];
         
         $stmt->bind_param('i', $studentId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         $records = [];
@@ -114,7 +114,7 @@ class StudentSearch {
         if (!$stmt) return [];
         
         $stmt->bind_param('i', $studentId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         $fees = [];

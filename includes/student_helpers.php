@@ -44,7 +44,7 @@ if (!function_exists('findStudents')) {
                     $types = 'ssssssssi';
                     $params = [$like, $like, $like, $like, $like, $like, $like, $like, $limit];
                     $stmt->bind_param($types, ...$params);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $res = $stmt->get_result();
                     if ($res) {
                         while ($row = $res->fetch_assoc()) {

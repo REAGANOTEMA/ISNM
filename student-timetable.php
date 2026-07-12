@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -25,7 +25,7 @@ if ($studentsDb) {
     $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
     if ($stmt) {
         $stmt->bind_param("si", $studentNumber, $userId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $sr = $stmt->get_result();
         $studentInfo = $sr ? $sr->fetch_assoc() : [];
         $stmt->close();
@@ -43,7 +43,7 @@ if ($studentsDb) {
         $stmt2 = $studentsDb->prepare("SELECT * FROM timetable WHERE program=? AND year_of_study=?");
         if ($stmt2) {
             $stmt2->bind_param("si", $program, $year);
-            $stmt2->execute();
+            if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
             $tt2 = $stmt2->get_result();
             if ($tt2) {
                 $timetable = $tt2->fetch_all(MYSQLI_ASSOC);
@@ -91,7 +91,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
         </div>
         <div class="text-end">
             <div class="fw-semibold"><?= $fullName ?></div>
-            <small class="text-muted">Y<?= $yearOfStudy ?> · <?= $program ?></small>
+            <small class="text-muted">Y<?= $yearOfStudy ?> Â· <?= $program ?></small>
         </div>
     </div>
 
@@ -133,7 +133,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                 <div class="px-3 pt-3 pb-1 fw-semibold" style="color:#2c5f8a;font-size:.85rem"><?= $d ?></div>
                 <?php foreach ($grouped[$d] as $e): 
                     $time = $e['time_slot'] ?? ($e['start_time']??'') . ' - ' . ($e['end_time']??'');
-                    $subject = $e['subject'] ?? $e['course_name'] ?? $e['course_code'] ?? '—';
+                    $subject = $e['subject'] ?? $e['course_name'] ?? $e['course_code'] ?? 'â€”';
                     $lecturer = $e['lecturer'] ?? '';
                     $room = $e['room'] ?? $e['classroom'] ?? $e['venue'] ?? '';
                 ?>

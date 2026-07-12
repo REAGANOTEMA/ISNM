@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'Staff Attendance';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($staff_id) {
             $stmt = $conn->prepare("UPDATE attendance SET check_out=? WHERE staff_id=? AND date=? AND check_out IS NULL");
             $stmt->bind_param('sis', $now, $staff_id, $today);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             if ($stmt->affected_rows > 0) {
                 $response['success'] = true;
             } else {

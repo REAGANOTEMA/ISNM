@@ -64,7 +64,7 @@ function connectDatabase() {
 function studentExists($conn, $registrationNumber) {
     $stmt = $conn->prepare("SELECT id FROM students WHERE registration_number = ?");
     $stmt->bind_param("s", $registrationNumber);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $exists = $result->num_rows > 0;
     $stmt->close();

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Mobile Money Payment Processor - Integration for MTN MoMo & Airtel Money
  */
@@ -33,7 +33,7 @@ class PaymentProcessor {
                 $stmt = $staffsDb->prepare("INSERT INTO activity_log (user_id, activity, details, ip_address, created_at) VALUES (?, ?, ?, ?, NOW())");
                 $userId = $_SESSION['user_id'] ?? 0;
                 $stmt->bind_param('isss', $userId, $activityType, $description, $ip);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
         } catch (Exception $e) {
@@ -48,7 +48,7 @@ class PaymentProcessor {
                 $stmt = $staffsDb->prepare("INSERT INTO notifications (title, message, type, priority, audience, created_by, created_at) VALUES (?, ?, 'payment', ?, 'finance', ?, NOW())");
                 $userId = $_SESSION['user_id'] ?? 0;
                 $stmt->bind_param('sssii', $title, $message, $priority, $userId);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
         } catch (Exception $e) {
@@ -225,7 +225,7 @@ class PaymentProcessor {
             SELECT invoice_id FROM payments WHERE payment_reference = ?
         ");
         $stmt->bind_param("s", $payment_reference);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {

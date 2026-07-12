@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
@@ -50,7 +50,7 @@ try {
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO donations (donor_name, donor_email, donor_phone, donor_address, amount, payment_method, purpose, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
         $stmt->bind_param('sssdssss', $donorName, $donorEmail, $donorPhone, $donorAddress, $amount, $paymentMethod, $purpose, $notes);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $donationId = $stmt->insert_id;
         $stmt->close();
     }
@@ -83,7 +83,7 @@ try {
             $notifTitle = 'New Donation: UGX ' . number_format($amount, 0);
             $notifMsg = $donorName . ' donated UGX ' . number_format($amount, 0) . ' via ' . $methodLabel . '. Purpose: ' . $purpose;
             $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
-            $notifStmt->execute();
+            if (!$notifStmt->execute()) { error_log('$notifStmt execute failed: ' . ($notifStmt->error ?? 'unknown')); };
             $notifStmt->close();
         }
     } catch (Exception $e) {
@@ -98,7 +98,7 @@ try {
             $logDetails = $donorName . ' (' . $donorEmail . ') donated UGX ' . number_format($amount, 0);
             $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
             $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
-            $logStmt->execute();
+            if (!$logStmt->execute()) { error_log('$logStmt execute failed: ' . ($logStmt->error ?? 'unknown')); };
             $logStmt->close();
         }
     } catch (Exception $e) {

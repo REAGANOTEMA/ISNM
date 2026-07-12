@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'secretary', 'ict', 'hr', 'admin']);
 $websiteConn = $ctx['website'];
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $websiteConn->prepare("UPDATE volunteer_applications SET status=?, reviewed_at=NOW(), reviewed_by=? WHERE id=?");
         if ($stmt) {
             $stmt->bind_param('sii', $action, $userId, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Volunteer application status updated to '" . ucfirst($action) . "'.";
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'delete') {
         $stmt = $websiteConn->prepare("DELETE FROM volunteer_applications WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Volunteer application deleted.';
         header('Location: volunteer-applications.php'); exit;
     }

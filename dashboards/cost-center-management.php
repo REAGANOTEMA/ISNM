@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['bursar', 'finance', 'director', 'registrar', 'secretary', 'ict']);
 $conn = $ctx['students'];
@@ -16,14 +16,14 @@ if ($conn) {
             if ($action === 'add') {
                 $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("ssss", $code, $name, $dept, $desc);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 $_SESSION['success'] = "Cost center '$name' added.";
             } else {
                 $id = (int)($_POST['id'] ?? 0);
                 $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
                 $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 $_SESSION['success'] = "Cost center '$name' updated.";
             }
@@ -33,7 +33,7 @@ if ($conn) {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Cost center status toggled.';
             header('Location: cost-center-management.php'); exit;
@@ -42,7 +42,7 @@ if ($conn) {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Cost center deleted.';
             header('Location: cost-center-management.php'); exit;

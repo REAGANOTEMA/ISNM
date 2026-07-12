@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 $dash = bootstrapStaffDashboard();
 
@@ -10,13 +10,13 @@ $userName = $_SESSION['full_name'] ?? 'User';
 
 header('Content-Type: text/html; charset=utf-8');
 
-// ─── UPLOAD DIRECTORY ───
+// â”€â”€â”€ UPLOAD DIRECTORY â”€â”€â”€
 $UPLOAD_DIR = __DIR__ . '/uploads/student_photos/';
 if (!is_dir($UPLOAD_DIR)) {
     @mkdir($UPLOAD_DIR, 0755, true);
 }
 
-// ─── AJAX HANDLERS ───
+// â”€â”€â”€ AJAX HANDLERS â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     $action = $_POST['action'] ?? '';
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Handle file upload ──
+    // â”€â”€ Handle file upload â”€â”€
     $photo_path = '';
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt = $conn->prepare("SELECT * FROM students WHERE id = ?");
         $stmt->bind_param('i', $id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $student = $result->fetch_assoc();
         $stmt->close();
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// ─── FETCH ALL STUDENTS (DB + Excel files) ───
+// â”€â”€â”€ FETCH ALL STUDENTS (DB + Excel files) â”€â”€â”€
 $loader = new StudentDataLoader();
 $allLoaderStudents = $loader->loadAllStudents();
 $loaderFilterOptions = $loader->getFilterOptions();
@@ -471,7 +471,7 @@ body {
       <div class="col-12">
         <div class="search-input-group">
           <i class="fas fa-search"></i>
-          <input type="text" id="searchInput" class="form-control" placeholder="Search by name, index number, NSIN, phone, email, program, level…" autofocus>
+          <input type="text" id="searchInput" class="form-control" placeholder="Search by name, index number, NSIN, phone, email, program, levelâ€¦" autofocus>
           <button class="clear-btn" id="clearBtn" onclick="clearSearch()">&times;</button>
         </div>
       </div>
@@ -595,6 +595,7 @@ body {
       <div class="modal-body p-4">
         <form id="studentForm" onsubmit="return saveStudent(event)" enctype="multipart/form-data">
           <input type="hidden" name="id" id="formId" value="0">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -716,7 +717,7 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ─── DATA ───
+// â”€â”€â”€ DATA â”€â”€â”€
 const ALL_STUDENTS = <?= $studentsJson ?>;
 const PROGRAMS = <?= $programsJson ?>;
 const LEVELS = <?= $levelsJson ?>;
@@ -724,7 +725,7 @@ const SETS = <?= $setsJson ?>;
 const GENDERS = <?= $gendersJson ?>;
 const YEARS = <?= $yearsJson ?>;
 
-// ─── STATE ───
+// â”€â”€â”€ STATE â”€â”€â”€
 const PER_PAGE = 48;
 let currentPage = 1;
 let filtered = [];
@@ -735,7 +736,7 @@ let formModalInstance = null;
 let profileModalInstance = null;
 let deleteModalInstance = null;
 
-// ─── TOAST ───
+// â”€â”€â”€ TOAST â”€â”€â”€
 function showToast(message, type = 'success') {
   const bg = type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#f59e0b';
   const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
@@ -750,7 +751,7 @@ function showToast(message, type = 'success') {
   el.addEventListener('hidden.bs.toast', () => el.remove());
 }
 
-// ─── INIT ───
+// â”€â”€â”€ INIT â”€â”€â”€
 document.addEventListener('DOMContentLoaded', function() {
   populateFilters();
   filtered = ALL_STUDENTS;
@@ -928,7 +929,7 @@ function render() {
     container.innerHTML = html;
   }
 
-  document.getElementById('resultCount').textContent = `Showing ${start + 1}–${end} of ${total} student${total !== 1 ? 's' : ''}`;
+  document.getElementById('resultCount').textContent = `Showing ${start + 1}â€“${end} of ${total} student${total !== 1 ? 's' : ''}`;
   document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${pages}`;
   let btns = '';
   if (pages > 1) {
@@ -956,7 +957,7 @@ function toggleView() {
   render();
 }
 
-// ─── PROFILE ───
+// â”€â”€â”€ PROFILE â”€â”€â”€
 function showProfile(id) {
   currentProfileId = id;
   const s = ALL_STUDENTS.find(x => x.id === id);
@@ -1081,7 +1082,7 @@ function printProfile() {
   setTimeout(() => { printWindow.focus(); printWindow.print(); }, 300);
 }
 
-// ─── ADD / EDIT ───
+// â”€â”€â”€ ADD / EDIT â”€â”€â”€
 function populateDatalists() {
   const progList = document.getElementById('programList'); progList.innerHTML = '';
   PROGRAMS.forEach(p => { const o = document.createElement('option'); o.value = p; progList.appendChild(o); });
@@ -1184,7 +1185,7 @@ function saveStudent(e) {
   return false;
 }
 
-// ─── DELETE ───
+// â”€â”€â”€ DELETE â”€â”€â”€
 let deleteTargetId = null;
 
 function confirmDelete(id, name) {
@@ -1233,7 +1234,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
     });
 });
 
-// ─── PHOTO PREVIEW ───
+// â”€â”€â”€ PHOTO PREVIEW â”€â”€â”€
 document.addEventListener('change', function(e) {
   if (e.target && e.target.id === 'fPhoto') {
     const file = e.target.files[0];
@@ -1254,7 +1255,7 @@ function clearPhoto() {
   document.getElementById('photoPreview').src = '';
 }
 
-// ─── HELPERS ───
+// â”€â”€â”€ HELPERS â”€â”€â”€
 function escHtml(str) {
   if (!str && str !== 0) return '';
   const d = document.createElement('div');

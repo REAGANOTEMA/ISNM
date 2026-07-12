@@ -1,5 +1,5 @@
-<?php
-// ── Production-safe error handling: log all errors but never display them ──
+﻿<?php
+// â”€â”€ Production-safe error handling: log all errors but never display them â”€â”€
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);
@@ -10,7 +10,7 @@ ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
  * Shared staff dashboard authentication and multi-database bootstrap.
  */
 
-// ── Fatal error catcher (prevents blank pages on production) ──
+// â”€â”€ Fatal error catcher (prevents blank pages on production) â”€â”€
 register_shutdown_function(function () {
     $err = error_get_last();
     if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
@@ -77,12 +77,12 @@ if (!function_exists('bootstrapStaffDashboard')) {
             exit();
         }
 
-        // ── Ensure CSRF token exists before validating ──
+        // â”€â”€ Ensure CSRF token exists before validating â”€â”€
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
-        // ── Centralized CSRF validation for all POST requests ──
+        // â”€â”€ Centralized CSRF validation for all POST requests â”€â”€
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
             if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
@@ -107,7 +107,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
                         if ($rs) {
                             $uid = (int)$_SESSION['user_id'];
                             $rs->bind_param('i', $uid);
-                            $rs->execute();
+                            if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };
                             $rw = $rs->get_result()->fetch_assoc();
                             $rs->close();
                             if ($rw && !empty($rw['role_name']) && $rw['role_name'] !== $role) {
@@ -203,12 +203,12 @@ if (!function_exists('staffRequireRole')) {
     }
 }
 
-// ── Normalize URL parameters: sidebar uses ?page= but many dashboards read ?section= ──
+// â”€â”€ Normalize URL parameters: sidebar uses ?page= but many dashboards read ?section= â”€â”€
 // This ensures both always work regardless of what the sidebar or dashboard code uses.
 $_GET['section'] = $_GET['section'] ?? $_GET['page'] ?? null;
 $_GET['page']    = $_GET['page']    ?? $_GET['section'] ?? null;
 
-// ── Fallback for renderEmptyState if dashboard_components.php wasn't loaded ──
+// â”€â”€ Fallback for renderEmptyState if dashboard_components.php wasn't loaded â”€â”€
 if (!function_exists('renderEmptyState')) {
     function renderEmptyState($message, $icon = 'fas fa-inbox', $extra = '') {
         return '<div class="empty-state text-center py-5"><i class="' . htmlspecialchars($icon) . ' fa-3x text-muted mb-3"></i><p class="text-muted">' . htmlspecialchars($message) . '</p>' . ($extra ? '<p>' . $extra . '</p>' : '') . '</div>';

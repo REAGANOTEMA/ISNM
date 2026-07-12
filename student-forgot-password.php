@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth-service.php';
 require_once 'config/database.php';
 
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         // Look up student by index_number, student_number, or email
         $stmt = $conn->prepare("SELECT id, index_number, student_number, CONCAT(first_name,' ',surname) full_name, email, phone FROM students WHERE (index_number = ? OR student_number = ? OR email = ?) AND status = 'Active' LIMIT 1");
         $stmt->bind_param('sss', $identifier, $identifier, $identifier);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         $student = $r->fetch_assoc();
         $stmt->close();
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         // Store in student_password_resets table
         $insert = $conn->prepare("INSERT INTO student_password_resets (student_id, reset_token, expires_at, is_used, created_at) VALUES (?, ?, ?, 0, NOW())");
         $insert->bind_param('iss', $studentId, $token, $expires);
-        $insert->execute();
+        if (!$insert->execute()) { error_log('$insert execute failed: ' . ($insert->error ?? 'unknown')); };
         $insert->close();
 
         // Build reset link
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($emailSent) {
             $_SESSION['success'] = 'Password reset instructions have been sent to your registered email address.';
         } else {
-            // No email capability or no email on file — display the link directly
+            // No email capability or no email on file â€” display the link directly
             $_SESSION['reset_token_display'] = $token;
             $_SESSION['success'] = 'Password reset link generated.';
         }

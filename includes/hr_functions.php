@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * HR Module Helper Functions for ISNM ERP
  * Provides reusable HR utilities across all HR pages.
@@ -33,7 +33,7 @@ if (!function_exists('hrGetStaff')) {
         $stmt = $conn->prepare($sql);
         if ($stmt) {
             if ($params) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             return $id ? $result->fetch_assoc() : $result->fetch_all(MYSQLI_ASSOC);
         }
@@ -121,7 +121,7 @@ if (!function_exists('hrLogActivity')) {
         $stmt = $conn->prepare("INSERT INTO hr_activity_log (staff_id, action, module, description, ip_address) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param('issss', $staff_id, $action, $module, $description, $ip);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         }
     }
 }
@@ -223,7 +223,7 @@ if (!function_exists('hrGetLeaveBalances')) {
         ");
         if ($stmt) {
             $stmt->bind_param('i', $staff_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
         return [];
@@ -240,7 +240,7 @@ if (!function_exists('hrCheckLicenseCompliance')) {
         ");
         if ($stmt) {
             $stmt->bind_param('i', $staff_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
         return [];
@@ -255,7 +255,7 @@ if (!function_exists('hrCanAssignClinical')) {
         ");
         if ($stmt) {
             $stmt->bind_param('i', $staff_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $count = (int)$stmt->get_result()->fetch_assoc()['c'];
             return $count > 0;
         }

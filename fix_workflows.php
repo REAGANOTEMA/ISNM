@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Fix approval_workflows duplicate entries and add unique index.
  * Run ONCE from browser/CLI to fix the SQL migration failure.
@@ -17,7 +17,7 @@ echo "Connected to " . STAFF_DB_NAME . "\n";
 $conn->query("DELETE FROM approval_stages");
 echo "Stages cleared.\n";
 
-// 2. Remove duplicate workflows — keep lowest id per name
+// 2. Remove duplicate workflows â€” keep lowest id per name
 $conn->query("DELETE t1 FROM approval_workflows t1
   INNER JOIN approval_workflows t2
   ON t1.workflow_name = t2.workflow_name AND t1.id > t2.id");
@@ -60,7 +60,7 @@ $workflows = [
 $stmt = $conn->prepare("INSERT IGNORE INTO approval_workflows (workflow_name, category, description, is_active) VALUES (?, ?, ?, 1)");
 foreach ($workflows as $w) {
     $stmt->bind_param('sss', $w[0], $w[1], $w[2]);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 }
 $stmt->close();
 echo "Seed workflows inserted.\n";
@@ -85,16 +85,16 @@ foreach ($stagesData as $sd) {
     $wfName = $sd[0];
     $stageList = $sd[1];
     $rStmt = $conn->prepare("SELECT id FROM approval_workflows WHERE workflow_name = ? LIMIT 1");
-    if ($rStmt) { $rStmt->bind_param('s', $wfName); $rStmt->execute(); $r = $rStmt->get_result(); $rStmt->close(); } else { $r = false; }
+    if ($rStmt) { $rStmt->bind_param('s', $wfName); if (!$rStmt->execute()) { error_log('$rStmt execute failed: ' . ($rStmt->error ?? 'unknown')); }; $r = $rStmt->get_result(); $rStmt->close(); } else { $r = false; }
     $wfId = $r ? $r->fetch_assoc()['id'] : null;
     if (!$wfId) { echo "Warning: workflow '$wfName' not found, skipping stages.\n"; continue; }
     foreach ($stageList as $s) {
         $stmt2->bind_param('isissi', $wfId, $s[0], $s[1], $s[2], $s[3], $s[4]);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     }
 }
 $stmt2->close();
 echo "Seed stages inserted.\n";
 
 $conn->close();
-echo "\n✓ DONE. All workflows and stages seeded successfully.\n";
+echo "\nâœ“ DONE. All workflows and stages seeded successfully.\n";

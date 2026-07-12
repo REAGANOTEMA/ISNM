@@ -842,6 +842,7 @@ function openCommunicationModal() {
       </div>
       <form id="changePasswordForm" onsubmit="return saveChangePassword()">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+        <input type="text" name="username" value="<?= htmlspecialchars($_SESSION['username'] ?? $_SESSION['full_name'] ?? '') ?>" autocomplete="username" style="display:none;">
         <div class="modal-body">
           <div id="cpwAlert" class="alert d-none"></div>
           <div class="mb-3">

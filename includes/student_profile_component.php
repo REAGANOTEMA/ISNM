@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Professional Student Profile Component
  * Complete with:
@@ -42,7 +42,7 @@ function displayStudentProfileCard($student_id = null, $view_mode = 'compact') {
         
         if ($stmt) {
             $stmt->bind_param("sssss", $student_id, $student_id, $student_id, $student_id, $student_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             if ($result && $result->num_rows > 0) {
                 $student = $result->fetch_assoc();
@@ -241,7 +241,7 @@ function displayStudentProfileCard($student_id = null, $view_mode = 'compact') {
                         </button>
                     </div>
                     <div class="text-muted small">
-                        ISNM Student Profile • Generated: <?= date('d M Y H:i') ?>
+                        ISNM Student Profile â€¢ Generated: <?= date('d M Y H:i') ?>
                     </div>
                 </div>
             </div>
@@ -385,7 +385,7 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
                      onclick="selectStudent_<?= $container_id ?>('${escapeHtml(id)}')">
                     <div>
                         <div class="fw-bold">${escapeHtml(name)}</div>
-                        <small class="text-muted">${escapeHtml(id)} • ${escapeHtml(program)}</small>
+                        <small class="text-muted">${escapeHtml(id)} â€¢ ${escapeHtml(program)}</small>
                     </div>
                     <i class="fas fa-chevron-right text-muted"></i>
                 </div>
@@ -538,7 +538,7 @@ function displayStudentProfileModal($modal_id = 'student_profile_modal') {
                     </button>
                 </div>
                 <div class="text-muted small">
-                    ISNM Student Profile • Generated: ${new Date().toLocaleString()}
+                    ISNM Student Profile â€¢ Generated: ${new Date().toLocaleString()}
                 </div>
             </div>
         `;

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $authData = bootstrapStaffDashboard(['alumni relations','alumni','alumni officer']);
 $auth = $authData['auth'];
@@ -8,7 +8,7 @@ $userId = $user['id'] ?? 0;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// â”€â”€ Ensure tables exist â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Ensure tables exist Ã¢â€â‚¬Ã¢â€â‚¬
 $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `student_id` varchar(50) DEFAULT NULL,
@@ -99,7 +99,7 @@ $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_jobs` (
     KEY `idx_jobs_current` (`is_current`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-// â”€â”€ AJAX Handlers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ AJAX Handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
@@ -139,17 +139,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if ($id > 0) {
                     $s = $staffConn->prepare("UPDATE alumni SET first_name=?, surname=?, other_name=?, full_name=?, email=?, phone=?, gender=?, date_of_birth=?, nationality=?, address=?, program=?, graduation_year=?, graduation_class=?, current_employer=?, current_position=?, employment_status=?, industry=?, location_city=?, location_country=?, linkedin=?, bio=?, skills=?, interests=?, membership_status=?, newsletter_optin=?, notes=? WHERE id=?");
                     $s->bind_param('ssssssssssssssssssssssssssi', $first_name, $surname, $other_name, $full_name, $email, $phone, $gender, $date_of_birth, $nationality, $address, $program, $graduation_year, $graduation_class, $current_employer, $current_position, $employment_status, $industry, $location_city, $location_country, $linkedin, $bio, $skills, $interests, $membership_status, $newsletter_optin, $notes, $id);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     echo json_encode(['success' => true, 'message' => 'Alumni record updated.']);
                 } else {
                     $chk = $staffConn->prepare("SELECT id FROM alumni WHERE email=? LIMIT 1");
                     $chk->bind_param('s', $email);
-                    $chk->execute();
+                    if (!$chk->execute()) { error_log('$chk execute failed: ' . ($chk->error ?? 'unknown')); };
                     if ($chk->get_result()->num_rows > 0) throw new Exception('An alumni with this email already exists.');
                     $chk->close();
                     $s = $staffConn->prepare("INSERT INTO alumni (first_name, surname, other_name, full_name, email, phone, gender, date_of_birth, nationality, address, program, graduation_year, graduation_class, current_employer, current_position, employment_status, industry, location_city, location_country, linkedin, bio, skills, interests, membership_status, newsletter_optin, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $s->bind_param('ssssssssssssssssssssssssssi', $first_name, $surname, $other_name, $full_name, $email, $phone, $gender, $date_of_birth, $nationality, $address, $program, $graduation_year, $graduation_class, $current_employer, $current_position, $employment_status, $industry, $location_city, $location_country, $linkedin, $bio, $skills, $interests, $membership_status, $newsletter_optin, $notes, $userId);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     echo json_encode(['success' => true, 'message' => 'Alumni added successfully.', 'id' => $s->insert_id]);
                 }
                 $s->close();
@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                     $s = $staffConn->prepare($sql);
                     if (!$s) throw new Exception('Prepare failed: ' . $staffConn->error);
                     $s->bind_param($types, ...$params);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
                     $s->close();
                 }
@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if ($alumni_id <= 0) throw new Exception('Invalid alumni.');
                 $s = $staffConn->prepare("INSERT INTO alumni_contributions (alumni_id, contribution_type, amount, currency, description, contribution_date, payment_method, transaction_ref, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $s->bind_param('isdsssssi', $alumni_id, $contribution_type, $amount, $currency, $description, $contribution_date, $payment_method, $transaction_ref, $userId);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Contribution recorded.']);
                 break;
             }
@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if (empty($company) || empty($position) || $alumni_id <= 0) throw new Exception('Company and position are required.');
                 $s = $staffConn->prepare("INSERT INTO alumni_jobs (alumni_id, company, position, start_date, end_date, is_current, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $s->bind_param('issssis', $alumni_id, $company, $position, $start_date, $end_date, $is_current, $description);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Job added.']);
                 break;
             }
@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if (empty($event_name) || $alumni_id <= 0) throw new Exception('Event name is required.');
                 $s = $staffConn->prepare("INSERT INTO alumni_events (alumni_id, event_name, event_date, attended, notes) VALUES (?, ?, ?, ?, ?)");
                 $s->bind_param('issis', $alumni_id, $event_name, $event_date, $attended, $notes);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Event recorded.']);
                 break;
             }
@@ -288,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Alumni Management â€” ISNM</title>
+<title>Alumni Management Ã¢â‚¬â€ ISNM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -662,7 +662,7 @@ function deleteAlumni(id) {
     });
 }
 
-// â”€â”€ Contributions â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Contributions Ã¢â€â‚¬Ã¢â€â‚¬
 function loadContributions(alumniId) {
     $.post('', { action: 'list_contributions', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;
@@ -691,7 +691,7 @@ function addContribution() {
     }, 'json');
 }
 
-// â”€â”€ Jobs â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Jobs Ã¢â€â‚¬Ã¢â€â‚¬
 function loadJobs(alumniId) {
     $.post('', { action: 'list_jobs', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;
@@ -721,7 +721,7 @@ function addJob() {
     }, 'json');
 }
 
-// â”€â”€ Alumni Events â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Alumni Events Ã¢â€â‚¬Ã¢â€â‚¬
 function loadAlumniEvents(alumniId) {
     $.post('', { action: 'list_alumni_events', csrf_token: CSRF, alumni_id: alumniId }, function(r) {
         if (!r.success) return;

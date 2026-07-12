@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Form Router & Notification System
  * Routes all forms to correct recipients based on type
@@ -126,7 +126,7 @@ class FormRouter {
                 "SELECT id, email, full_name FROM staff WHERE role = ? AND status = 'active' LIMIT 1"
             );
             $stmt->bind_param('s', $role);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             
             if ($row = $result->fetch_assoc()) {
@@ -155,7 +155,7 @@ class FormRouter {
         
         if ($stmt) {
             $stmt->bind_param('isssss', $staffId, $type, $title, $message, $relatedId, $fromEmail);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }
@@ -203,7 +203,7 @@ class NotificationManager {
         if (!$stmt) return [];
         
         $stmt->bind_param('ii', $staffId, $limit);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         $notifications = [];
@@ -226,7 +226,7 @@ class NotificationManager {
         if (!$stmt) return 0;
         
         $stmt->bind_param('i', $staffId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
         $stmt->close();
@@ -283,7 +283,7 @@ class NotificationManager {
         if (!$stmt) return [];
         
         $stmt->bind_param('ii', $staffId, $limit);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         $notifications = [];

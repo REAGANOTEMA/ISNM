@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head', 'lecturer']);
 $conn = $ctx['staff'];
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $status = trim($_POST['status'] ?? 'proposed');
         $desc = trim($_POST['description'] ?? '');
         $stmt = $conn->prepare("INSERT INTO research_projects (title, researcher, department, status, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        if ($stmt) { $stmt->bind_param('sssss', $title, $researcher, $dept, $status, $desc); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('sssss', $title, $researcher, $dept, $status, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         header('Location: research-projects.php'); exit;
     }
 }

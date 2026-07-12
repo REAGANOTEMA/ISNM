@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -26,7 +26,7 @@ if ($studentsDb) {
     $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
     if ($stmt) {
         $stmt->bind_param("si", $studentNumber, $userId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $sr = $stmt->get_result();
         $studentInfo = $sr ? $sr->fetch_assoc() : [];
         $stmt->close();
@@ -113,9 +113,9 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 
     <div class="row g-3 mb-4">
         <div class="col-md-3"><div class="stat-box"><div class="num"><?= count($examResults) ?></div><div class="lbl">Courses Taken</div></div></div>
-        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:<?= $gpaBySemester[0]['gpa'] >= 3.0 ? '#1a9e6e' : '#d97706' ?>"><?= $gpaBySemester[0]['gpa'] ?? '—' ?></div><div class="lbl">Current GPA</div></div></div>
+        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:<?= $gpaBySemester[0]['gpa'] >= 3.0 ? '#1a9e6e' : '#d97706' ?>"><?= $gpaBySemester[0]['gpa'] ?? 'â€”' ?></div><div class="lbl">Current GPA</div></div></div>
         <div class="col-md-3"><div class="stat-box"><div class="num"><?= count(array_filter($examResults, fn($r)=>($r['grade']??'')==='A')) ?></div><div class="lbl">Grade A's</div></div></div>
-        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:#1a9e6e"><?= $programCode ?: '—' ?></div><div class="lbl"><?= htmlspecialchars(explode(' ',$program)[0]??'') ?></div></div></div>
+        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:#1a9e6e"><?= $programCode ?: 'â€”' ?></div><div class="lbl"><?= htmlspecialchars(explode(' ',$program)[0]??'') ?></div></div></div>
     </div>
 
     <div class="result-card">
@@ -158,11 +158,11 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                             elseif (in_array($g, ['D','D+','D-'])) { $gClass = 'grade-D'; }
                             elseif ($g === 'F') { $gClass = 'grade-F'; }
                             else { $gClass = ''; }
-                            $marks = $r['marks_obtained'] ?? $r['final_exam_marks'] ?? $r['marks'] ?? '—';
+                            $marks = $r['marks_obtained'] ?? $r['final_exam_marks'] ?? $r['marks'] ?? 'â€”';
                         ?>
                         <tr>
                             <td><?= $i++ ?></td>
-                            <td><?= htmlspecialchars($r['course_name'] ?? $r['subject'] ?? '—') ?></td>
+                            <td><?= htmlspecialchars($r['course_name'] ?? $r['subject'] ?? 'â€”') ?></td>
                             <td><?= htmlspecialchars($r['course_code']??'') ?></td>
                             <td><?= is_numeric($marks) ? $marks : $marks ?></td>
                             <td class="<?= $gClass ?>"><?= htmlspecialchars($g) ?></td>

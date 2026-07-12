@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','principal']);
 $staff_conn = $ctx['staff'];
@@ -16,7 +16,7 @@ if ($student_id <= 0) {
 
 $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $student_id);
-$stmt->execute();
+if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $student_result = $stmt->get_result();
 $student = $student_result ? $student_result->fetch_assoc() : null;
 $stmt->close();
@@ -31,7 +31,7 @@ $student['registration_number'] = $student['registration_number'] ?: $student['s
 
 $stmt = $staff_conn->prepare("SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year, semester");
 $stmt->bind_param("i", $student_id);
-$stmt->execute();
+if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $records_result = $stmt->get_result();
 $records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
 $stmt->close();

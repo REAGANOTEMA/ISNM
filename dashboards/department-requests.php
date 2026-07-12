@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $ug = $_POST['urgency'] ?? 'Normal';
         $stmt = $conn->prepare("INSERT INTO department_requests (request_number, from_department, to_department, item_name, quantity, unit, purpose, urgency, status, requested_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
         $stmt->bind_param("ssssissii", $rn, $fd, $td, $in, $qty, $un, $pr, $ug, $userId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
         $msg = ['t' => 'success', 'm' => "Request <strong>$rn</strong> created."];
         header('Location: department-requests.php'); exit;
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id > 0) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Approved', approved_by=?, updated_at=NOW() WHERE id=? AND status='Pending'");
             $stmt->bind_param("ii", $userId, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request approved.'];
         }
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         if ($id > 0) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Rejected', notes=?, updated_at=NOW() WHERE id=? AND status='Pending'");
             $stmt->bind_param("si", $nt, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request rejected.'];
         }
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $stmt = $conn->prepare("UPDATE department_requests SET status='Fulfilled', approved_by=?, updated_at=NOW() WHERE id=? AND status='Approved'");
                 $stmt->bind_param("ii", $userId, $id);
             }
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request fulfilled.'];
         }

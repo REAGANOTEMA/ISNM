@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Document Generator for Academic Registrar
  * Handles student lookup, document generation, and preview
@@ -29,7 +29,7 @@ if ($action === 'lookup_student') {
     $like = "%$q%";
     $stmt = $students_conn->prepare("SELECT id, full_name, student_number, registration_number, program, gender, date_of_birth, phone, email, level, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? ORDER BY surname,first_name LIMIT 30");
     $stmt->bind_param("ssss", $like, $like, $like, $like);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $students = [];
     while ($row = $result->fetch_assoc()) {
@@ -85,7 +85,7 @@ if ($action === 'get_student_detail') {
     
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
     $stmt->close();
@@ -94,7 +94,7 @@ if ($action === 'get_student_detail') {
     // Get exam records count
     $stmt2 = $staff_conn->prepare("SELECT COUNT(*) c FROM examination_records WHERE student_id = ?");
     $stmt2->bind_param("i", $sid);
-    $stmt2->execute();
+    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $er = $stmt2->get_result();
     $er_row = $er ? $er->fetch_assoc() : null;
     $exam_count = $er_row ? intval($er_row['c']) : 0;
@@ -103,7 +103,7 @@ if ($action === 'get_student_detail') {
     // Get courses
     $stmt3 = $staff_conn->prepare("SELECT COUNT(*) c FROM course_registrations WHERE student_id = ?");
     $stmt3->bind_param("i", $sid);
-    $stmt3->execute();
+    if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
     $cr = $stmt3->get_result();
     $cr_row = $cr ? $cr->fetch_assoc() : null;
     $course_count = $cr_row ? intval($cr_row['c']) : 0;
@@ -112,7 +112,7 @@ if ($action === 'get_student_detail') {
     // Get invoices/payments summary
     $stmt4 = $students_conn->prepare("SELECT COALESCE(SUM(total_amount),0) ti FROM student_invoices WHERE student_id = ?");
     $stmt4->bind_param("i", $sid);
-    $stmt4->execute();
+    if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
     $inv_r = $stmt4->get_result();
     $inv_row = $inv_r ? $inv_r->fetch_assoc() : null;
     $total_inv = $inv_row ? floatval($inv_row['ti']) : 0;
@@ -120,7 +120,7 @@ if ($action === 'get_student_detail') {
     
     $stmt5 = $students_conn->prepare("SELECT COALESCE(SUM(amount_received),0) tp FROM payments WHERE student_id = ?");
     $stmt5->bind_param("i", $sid);
-    $stmt5->execute();
+    if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
     $pay_r = $stmt5->get_result();
     $pay_row = $pay_r ? $pay_r->fetch_assoc() : null;
     $total_pay = $pay_row ? floatval($pay_row['tp']) : 0;
@@ -143,7 +143,7 @@ if ($action === 'generate_transcript') {
     // Fetch student
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
     $stmt->close();
@@ -153,7 +153,7 @@ if ($action === 'generate_transcript') {
     $courses = [];
     $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
     $stmt2->bind_param("i", $sid);
-    $stmt2->execute();
+    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $er = $stmt2->get_result();
     if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
     $stmt2->close();
@@ -162,7 +162,7 @@ if ($action === 'generate_transcript') {
     if (empty($courses)) {
         $stmt3 = $staff_conn->prepare("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id = ? AND cr.status='Approved'");
         $stmt3->bind_param("i", $sid);
-        $stmt3->execute();
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $cr = $stmt3->get_result();
         if ($cr) while ($row = $cr->fetch_assoc()) $courses[] = $row;
         $stmt3->close();
@@ -192,7 +192,7 @@ if ($action === 'generate_transcript') {
         $title = "Academic Transcript - ".($student['full_name']??'');
         $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
         $stmt4->bind_param("iss", $sid, $title, $html);
-        $stmt4->execute();
+        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
         $doc_id = $staff_conn->insert_id;
         $stmt4->close();
         
@@ -201,7 +201,7 @@ if ($action === 'generate_transcript') {
         $academic_year = date('Y');
         $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
         $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
-        $stmt5->execute();
+        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
         $stmt5->close();
         
         $staff_conn->commit();
@@ -227,7 +227,7 @@ if ($action === 'generate_certificate') {
     // Fetch student
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
     $stmt->close();
@@ -245,7 +245,7 @@ if ($action === 'generate_certificate') {
     $class_of_award = '';
     $stmt2 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
     $stmt2->bind_param("i", $sid);
-    $stmt2->execute();
+    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $gpa_r = $stmt2->get_result();
     if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
         $avg = floatval($gpa_row['avg_m'] ?? 0);
@@ -269,7 +269,7 @@ if ($action === 'generate_certificate') {
         $title = "Certificate of $cert_type - ".($student['full_name']??'');
         $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title, $html);
-        $stmt3->execute();
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $doc_id = $staff_conn->insert_id;
         $stmt3->close();
         
@@ -278,7 +278,7 @@ if ($action === 'generate_certificate') {
         $course_val = $student['program']??'';
         $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
         $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
-        $stmt4->execute();
+        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
         $stmt4->close();
         
         $staff_conn->commit();
@@ -302,7 +302,7 @@ if ($action === 'preview_document') {
     
     $stmt = $staff_conn->prepare("SELECT document_content, document_title, document_type FROM generated_documents WHERE id = ?");
     $stmt->bind_param("i", $doc_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $doc = $r ? $r->fetch_assoc() : null;
     $stmt->close();
@@ -326,7 +326,7 @@ if ($action === 'auto_generate_all') {
     
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
     $stmt->close();
@@ -341,7 +341,7 @@ if ($action === 'auto_generate_all') {
     $courses = [];
     $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
     $stmt2->bind_param("i", $sid);
-    $stmt2->execute();
+    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $er = $stmt2->get_result();
     if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
     $stmt2->close();
@@ -353,7 +353,7 @@ if ($action === 'auto_generate_all') {
         $title_t = "Academic Transcript - ".($student['full_name']??'');
         $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title_t, $t_html);
-        $stmt3->execute();
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $t_doc_id = $staff_conn->insert_id;
         $stmt3->close();
         
@@ -361,7 +361,7 @@ if ($action === 'auto_generate_all') {
         $class_of_award = '';
         $stmt4 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
         $stmt4->bind_param("i", $sid);
-        $stmt4->execute();
+        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
         $gpa_r = $stmt4->get_result();
         if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
             $avg = floatval($gpa_row['avg_m'] ?? 0);
@@ -378,7 +378,7 @@ if ($action === 'auto_generate_all') {
         $title_c = "Certificate - ".($student['full_name']??'');
         $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
         $stmt5->bind_param("iss", $sid, $title_c, $c_html);
-        $stmt5->execute();
+        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
         $c_doc_id = $staff_conn->insert_id;
         $stmt5->close();
         

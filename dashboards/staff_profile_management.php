@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['staff','director','secretary','registrar','lecturer']);
@@ -11,27 +11,27 @@ $staff_id    = (int)($user['id'] ?? $_SESSION['user_id'] ?? 0);
 $staff_email = $user['email'] ?? $_SESSION['email'] ?? '';
 $staff_role  = $user['role'] ?? $_SESSION['role'] ?? '';
 
-// ── Fetch staff record ──────────────────────────────────────────
+// â”€â”€ Fetch staff record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $staff = null;
 $stmt = $staffDb->prepare("SELECT * FROM staff WHERE id = ?");
 if ($stmt) {
     $stmt->bind_param("i", $staff_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $staff = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
 
-// ── Fetch staff profile (extended) ──────────────────────────────
+// â”€â”€ Fetch staff profile (extended) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $profile = null;
 $stmt = $staffDb->prepare("SELECT * FROM staff_profiles WHERE staff_id = ?");
 if ($stmt) {
     $stmt->bind_param("i", $staff_id);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $profile = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
 
-// ── Handle Profile Photo Upload ─────────────────────────────────
+// â”€â”€ Handle Profile Photo Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) {
     $upload_dir = __DIR__ . '/../uploads/staff_profiles/';
     if (!is_dir($upload_dir)) {
@@ -68,19 +68,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
             if ($profile) {
                 $u = $staffDb->prepare("UPDATE staff_profiles SET profile_picture = ?, updated_at = NOW() WHERE staff_id = ?");
                 $u->bind_param("si", $relative_path, $staff_id);
-                $u->execute();
+                if (!$u->execute()) { error_log('$u execute failed: ' . ($u->error ?? 'unknown')); };
                 $u->close();
             } else {
                 $i = $staffDb->prepare("INSERT INTO staff_profiles (staff_id, profile_picture, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
                 $i->bind_param("is", $staff_id, $relative_path);
-                $i->execute();
+                if (!$i->execute()) { error_log('$i execute failed: ' . ($i->error ?? 'unknown')); };
                 $i->close();
             }
 
             // Also update staff.profile_photo for backward compatibility
             $updStaff = $staffDb->prepare("UPDATE staff SET profile_photo = ? WHERE id = ?");
             $updStaff->bind_param("si", $relative_path, $staff_id);
-            $updStaff->execute();
+            if (!$updStaff->execute()) { error_log('$updStaff execute failed: ' . ($updStaff->error ?? 'unknown')); };
             $updStaff->close();
 
             // Delete old photo file
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
             // Refresh profile data
             $stmt = $staffDb->prepare("SELECT * FROM staff_profiles WHERE staff_id = ?");
             $stmt->bind_param("i", $staff_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $profile = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
     exit;
 }
 
-// ── Handle Profile Update ───────────────────────────────────────
+// â”€â”€ Handle Profile Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $full_name  = trim($_POST['full_name'] ?? '');
     $email      = trim($_POST['email'] ?? '');
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             // Refresh staff data
             $stmt = $staffDb->prepare("SELECT * FROM staff WHERE id = ?");
             $stmt->bind_param("i", $staff_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $staff = $stmt->get_result()->fetch_assoc();
             $stmt->close();
         } else {
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     exit;
 }
 
-// ── Derived values ──────────────────────────────────────────────
+// â”€â”€ Derived values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $photo_path = ($profile && !empty($profile['profile_picture']))
     ? '../' . htmlspecialchars($profile['profile_picture'])
     : null;
@@ -196,7 +196,7 @@ $staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
     </div>
 
     <div class="row g-4">
-        <!-- ═══ LEFT COLUMN: PHOTO ═══ -->
+        <!-- â•â•â• LEFT COLUMN: PHOTO â•â•â• -->
         <div class="col-lg-4">
             <div class="profile-card">
                 <div class="profile-card-header">
@@ -242,7 +242,7 @@ $staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
             </div>
         </div>
 
-        <!-- ═══ RIGHT COLUMN: EDIT FORM ═══ -->
+        <!-- â•â•â• RIGHT COLUMN: EDIT FORM â•â•â• -->
         <div class="col-lg-8">
             <div class="profile-card">
                 <div class="profile-card-header">

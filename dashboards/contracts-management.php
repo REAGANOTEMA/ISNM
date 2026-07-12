@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr', 'manager', 'director']);
 $staffDb = $ctx['staff'];
@@ -26,7 +26,7 @@ if ($staffDb) {
     $ws = $where ? 'WHERE '.implode(' AND ', $where) : '';
     if ($bindTypes) {
         $stmt = $staffDb->prepare("SELECT c.*, s.full_name, s.staff_id, s.department sd, s.position FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id $ws ORDER BY c.created_at DESC LIMIT 100");
-        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row; $stmt->close(); }
     } else {
         $r = $staffDb->query("SELECT c.*, s.full_name, s.staff_id, s.department sd, s.position FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id $ws ORDER BY c.created_at DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row;
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             $stmt = $staffDb->prepare("INSERT INTO staff_contracts (contract_number,staff_id,contract_type,start_date,end_date,job_title,department,salary,probation_period,notice_period,contract_terms,benefits,signed_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");
             if ($stmt) {
                 $stmt->bind_param('sisssssdiisss',$cnum,$staff_id,$type,$start,$end,$job,$dept,$salary,$probation,$notice,$terms,$benefits,$signed);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $eid = $stmt->insert_id;
                 $stmt->close();
                 if (function_exists('logActivity')) logActivity($staffDb, $user['id']??0, "Added contract $cnum for staff ID $staff_id");
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                 if ($stmt) {
                     $newNum = 'CTR-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
                     $stmt->bind_param('sisssssdiisss',$newNum,$old['staff_id'],$old['contract_type'],date('Y-m-d'),$newEnd,$old['job_title'],$old['department'],$old['salary'],$old['probation_period'],$old['notice_period'],$old['contract_terms'],$old['benefits'],date('Y-m-d'));
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
             }
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                     <?php $expR = $staffDb ? $staffDb->query("SELECT c.*,s.full_name,s.staff_id,s.phone FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id WHERE c.status='Active' AND c.end_date IS NOT NULL AND c.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY) ORDER BY c.end_date LIMIT 10") : null; ?>
                     <?php if ($expR && $expR->num_rows): $first=true; while ($e = $expR->fetch_assoc()): ?>
                     <div class="d-flex justify-content-between align-items-center border-bottom py-2 <?= $first?'':'mt-1' ?>">
-                        <div><strong><?= htmlspecialchars($e['full_name']??'') ?></strong><br><small class="text-muted"><?= htmlspecialchars($e['contract_number']) ?> — <?= htmlspecialchars($e['contract_type']) ?></small></div>
+                        <div><strong><?= htmlspecialchars($e['full_name']??'') ?></strong><br><small class="text-muted"><?= htmlspecialchars($e['contract_number']) ?> â€” <?= htmlspecialchars($e['contract_type']) ?></small></div>
                         <div class="text-end"><span class="badge bg-warning text-dark"><?= date('d M Y',strtotime($e['end_date'])) ?></span><br><small class="text-muted"><?= ceil((strtotime($e['end_date'])-time())/86400) ?> days left</small></div>
                     </div>
                     <?php $first=false; endwhile; else: ?>
@@ -271,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function viewContract(id) { alert('View contract #' + id + ' — full detail view coming with document generation.'); }
+function viewContract(id) { alert('View contract #' + id + ' â€” full detail view coming with document generation.'); }
 function renewContract(id, num) { document.getElementById('renewId').value = id; document.getElementById('renewNum').textContent = num; new bootstrap.Modal(document.getElementById('renewModal')).show(); }
 function terminateContract(id, num) { document.getElementById('termId').value = id; document.getElementById('termNum').textContent = num; new bootstrap.Modal(document.getElementById('terminateModal')).show(); }
 </script>

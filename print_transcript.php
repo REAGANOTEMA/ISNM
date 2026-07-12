@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM Academic Transcript Portal
  * Full-featured transcript viewer with download, print, and editing
@@ -63,7 +63,7 @@ if ($action === 'lookup' && $is_staff && $studentsDb && isset($_GET['q'])) {
     $stmt = $studentsDb->prepare("SELECT id, first_name, surname, other_name, full_name, student_number, registration_number, program, course FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? LIMIT 20");
     if ($stmt) {
         $stmt->bind_param("sss", $q, $q, $q);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $res = $stmt->get_result();
         $out = [];
         if ($res) while ($row = $res->fetch_assoc()) {
@@ -177,7 +177,7 @@ if ($action === 'save_draft' && $is_registrar && $_SERVER['REQUEST_METHOD'] === 
                     ON DUPLICATE KEY UPDATE course_name=?, credits=?, marks=?, grade=?, updated_at=NOW()");
                 if ($stmt) {
                     $stmt->bind_param("issssdsssds", $sid, $cc, $cn, $cr, $sem, $yr, $mk, $gr, $cn, $cr, $mk, $gr);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
             }
@@ -225,7 +225,7 @@ function loadStudentData($db, $id) {
     if ($stmt) {
         $idStr = (string)$id;
         $stmt->bind_param("ss", $idStr, $idStr);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $q = $stmt->get_result();
         if ($q && ($s = $q->fetch_assoc())) {
             $s['full_name'] = $s['full_name'] ?: trim(($s['first_name']??'') . ' ' . ($s['surname']??'') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
@@ -265,7 +265,7 @@ function loadExaminationRecords($db, $studentNumber) {
     $sn = (string)$studentNumber;
     $snInt = (int)$studentNumber;
     $stmt->bind_param("ssi", $sn, $sn, $snInt);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $s = $stmt->get_result();
     if (!$s || !($srow = $s->fetch_assoc())) { $stmt->close(); return $records; }
     $stmt->close();

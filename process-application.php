@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uceResults ?: null,
             $uaceResults ?: null
         );
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $applicationDbId = $stmt->insert_id;
         $stmt->close();
 
@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notifTitle = 'New Application: ' . $fullName;
                 $notifMsg = 'Application #' . $applicationId . ' submitted by ' . $fullName . ' for ' . $course . ' (' . $level . '). Phone: ' . $contactNumber . ', Email: ' . $appEmail;
                 $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
-                $notifStmt->execute();
+                if (!$notifStmt->execute()) { error_log('$notifStmt execute failed: ' . ($notifStmt->error ?? 'unknown')); };
                 $notifStmt->close();
             }
         } catch (Exception $e) {
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $logDetails = $fullName . ' (' . $appEmail . ') submitted application #' . $applicationId . ' for ' . $course;
                 $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
                 $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
-                $logStmt->execute();
+                if (!$logStmt->execute()) { error_log('$logStmt execute failed: ' . ($logStmt->error ?? 'unknown')); };
                 $logStmt->close();
             }
         } catch (Exception $e) {

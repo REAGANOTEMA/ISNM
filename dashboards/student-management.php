@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name && $program) {
             $stmt = $conn->prepare("INSERT INTO student_admissions (application_number,applicant_name,program,academic_year,admission_status,application_date,decided_by,remarks) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE applicant_name=VALUES(applicant_name),program=VALUES(program),admission_status=VALUES(admission_status)");
             $stmt->bind_param("ssssssi", $app, $name, $program, $year, $status, $date, $uid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Admission record saved.';
         }
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($sid && $cid) {
             $stmt = $conn->prepare("INSERT INTO course_registrations (student_id,course_id,academic_year,semester,registration_status) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE registration_status='Registered'");
             $stmt->bind_param("iisss", $sid, $cid, $ay, $sem);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Course registration saved.';
             $nid = createNotification('Course Registration', "Student #$sid registered for course #$cid.", 'student-management.php', 'info', 'fas fa-book');
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($session && $sid) {
             $stmt = $conn->prepare("INSERT INTO assessment_scores (examination_session_id,student_id,score,max_score,entered_by) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE score=VALUES(score),max_score=VALUES(max_score)");
             $stmt->bind_param("iiddd", $session, $sid, $score, $max, $uid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Score saved.';
         }

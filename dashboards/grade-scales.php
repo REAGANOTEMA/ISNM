@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['academics', 'registrar', 'director', 'principal', 'head', 'lecturer']);
 $conn = $ctx['staff'];
@@ -24,14 +24,14 @@ if ($conn) {
             $gp = (float)($_POST['grade_point'] ?? 0);
             $remark = trim($_POST['remark'] ?? '');
             $stmt = $conn->prepare("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
-            if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $userId); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = "Grade scale '$grade' added.";
             header('Location: grade-scales.php'); exit;
         }
         if ($action === 'delete_scale') {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("DELETE FROM grade_scales WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Grade scale deleted.';
             header('Location: grade-scales.php'); exit;
         }

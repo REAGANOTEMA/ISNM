@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * HR System Setup & Initialization Script
  * Creates HR user and initializes database
@@ -20,7 +20,7 @@ try {
     // Check if user exists
     $stmt = $conn->prepare("SELECT id FROM hr_users WHERE email = ?");
     $stmt->bind_param('s', $hr_email);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
@@ -35,15 +35,15 @@ try {
         
         $stmt->bind_param('sssss', $hr_email, $hr_password_hash, $name, $role, $status);
         if ($stmt->execute()) {
-            $messages[] = '✓ HR user created successfully';
+            $messages[] = 'âœ“ HR user created successfully';
             $messages[] = 'Email: ' . $hr_email;
             $messages[] = 'Password: ' . $hr_password;
         } else {
-            $messages[] = '✗ Error creating HR user: ' . $stmt->error;
+            $messages[] = 'âœ— Error creating HR user: ' . $stmt->error;
         }
         $stmt->close();
     } else {
-        $messages[] = '✓ HR user already exists';
+        $messages[] = 'âœ“ HR user already exists';
     }
     
     // 2. Verify tables exist
@@ -63,9 +63,9 @@ try {
     }
     
     if (empty($tables_missing)) {
-        $messages[] = '✓ All required database tables exist';
+        $messages[] = 'âœ“ All required database tables exist';
     } else {
-        $messages[] = '⚠ Missing tables: ' . implode(', ', $tables_missing);
+        $messages[] = 'âš  Missing tables: ' . implode(', ', $tables_missing);
         $messages[] = 'Please run: sql/staffs/hr_system.sql';
     }
     
@@ -73,7 +73,7 @@ try {
     $setup_complete = true;
     
 } catch (Exception $e) {
-    $messages[] = '✗ Error: ' . $e->getMessage();
+    $messages[] = 'âœ— Error: ' . $e->getMessage();
     error_log('HR setup error: ' . $e->getMessage());
 }
 
@@ -206,7 +206,7 @@ try {
 </head>
 <body>
     <div class="setup-container">
-        <h1>👥 HR System Setup</h1>
+        <h1>ðŸ‘¥ HR System Setup</h1>
         <p class="subtitle">Human Resources Management System Initialization</p>
         
         <div class="messages">
@@ -217,14 +217,14 @@ try {
         
         <?php if ($setup_complete): ?>
             <div class="status success">
-                ✓ Setup Completed Successfully!
+                âœ“ Setup Completed Successfully!
             </div>
             <div class="actions">
                 <a href="staff-login.php" class="btn btn-primary">Go to Login</a>
             </div>
         <?php else: ?>
             <div class="status error">
-                ✗ Setup encountered issues
+                âœ— Setup encountered issues
             </div>
             <div class="actions">
                 <a href="#" onclick="location.reload();" class="btn btn-primary">Retry</a>

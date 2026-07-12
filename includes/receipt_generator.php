@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Receipt Generation and Printing System
  */
@@ -16,7 +16,7 @@ class ReceiptGenerator {
             WHERE p.id = ?
         ");
         $stmt->bind_param("i", $payment_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $payment = $stmt->get_result()->fetch_assoc();
         
         if (!$payment) {
@@ -154,7 +154,7 @@ class ReceiptGenerator {
         
         $staff_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
         $staff_stmt->bind_param("i", $staff_id);
-        $staff_stmt->execute();
+        if (!$staff_stmt->execute()) { error_log('$staff_stmt execute failed: ' . ($staff_stmt->error ?? 'unknown')); };
         $staff = $staff_stmt->get_result()->fetch_assoc();
         
         if (!$staff) {

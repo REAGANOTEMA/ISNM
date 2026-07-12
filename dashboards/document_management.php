@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','registrar','ict','it']);
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get template name
             $tq = $conn->prepare("SELECT template_name FROM $table WHERE id = ?");
             $tq->bind_param('i', $id);
-            $tq->execute();
+            if (!$tq->execute()) { error_log('$tq execute failed: ' . ($tq->error ?? 'unknown')); };
             $tr = $tq->get_result()->fetch_assoc();
             $tq->close();
             $tname = $tr['template_name'] ?? 'Unnamed';
@@ -117,7 +117,7 @@ if ($action === 'edit' && $template_id) {
     $stmt = $conn->prepare("SELECT * FROM $current_table WHERE id = ?");
     if ($stmt) {
         $stmt->bind_param('i', $template_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $editing = $result ? $result->fetch_assoc() : null;
         $stmt->close();
@@ -150,7 +150,7 @@ if ($current_table === 'receipt_templates') {
         $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE 1=1$deletedFilter ORDER BY rt.is_active DESC, rt.template_name ASC");
     }
     if ($stmt) {
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         $stmt->close();
@@ -164,7 +164,7 @@ if ($current_table === 'receipt_templates') {
         $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id WHERE 1=1$deletedFilterDt ORDER BY dt.is_default DESC, dt.template_name ASC");
     }
     if ($stmt) {
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         $stmt->close();

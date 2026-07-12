@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX endpoint for staff communication system.
  * Handles sending messages from the dashboard communication modal.
@@ -69,7 +69,7 @@ if ($recipient_type === 'department' && $conn) {
     $deptCode = $recipient_id;
     $stmt = $conn->prepare("SELECT department_name FROM communication_channels WHERE department_code = ? AND is_active = 1 LIMIT 1");
     $stmt->bind_param("s", $deptCode);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
     if ($r && ($row = $r->fetch_assoc())) {
         $recipient_name = $row['department_name'];

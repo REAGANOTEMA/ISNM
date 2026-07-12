@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
 $conn = $ctx['staff'];
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
             $stmt = $conn->prepare("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES (?, ?, NULL, 'pending', ?)");
             $stmt->bind_param("ssi", $name, $desc, $userId);
         }
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
         header('Location: accreditation.php'); exit;
     }

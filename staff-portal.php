@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Staff Self-Service Portal
  * - View payslips, apply for leave, check leave balance
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
         $reason = trim($_POST['reason'] ?? '');
         if ($typeId && $start && $end) {
             $stmt = $staffConn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?,?,?,?,?,'pending')");
-            if ($stmt) { $stmt->bind_param('iisss', $userId, $typeId, $start, $end, $reason); $stmt->execute(); $_SESSION['success'] = 'Leave application submitted.';
+            if ($stmt) { $stmt->bind_param('iisss', $userId, $typeId, $start, $end, $reason); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Leave application submitted.';
                 $nid = createNotification('Leave Application', "Staff #$userId submitted a leave request.", 'hr-manager.php?page=leave', 'info', 'fas fa-calendar-alt');
                 if ($nid) notifyAllStaff($nid);
             }
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
             $stmt = $staffConn->prepare("UPDATE staff SET phone=?, address=?, emergency_contact_name=?, emergency_contact_phone=?, next_of_kin_name=?, next_of_kin_phone=?, next_of_kin_relationship=? WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param('sssssssi', $phone, $address, $emergencyName, $emergencyPhone, $nextKin, $nextKinPhone, $nextKinRel, $userId);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $_SESSION['success'] = 'Profile updated.';
             }
         }
@@ -70,37 +70,37 @@ if ($staffConn) {
 $leaveBalances = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT lt.id,lt.type_name,lt.days_per_year,COALESCE(lb.used_days,0) as used_days,(COALESCE(lb.total_days,lt.days_per_year)-COALESCE(lb.used_days,0)) as remaining FROM leave_types lt LEFT JOIN leave_balances lb ON lt.id=lb.leave_type_id AND lb.staff_id=? AND lb.year=YEAR(CURDATE()) ORDER BY lt.type_name");
-    if($st){$st->bind_param('i',$userId);$st->execute();$leaveBalances=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$leaveBalances=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $myLeaves = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT lr.*,lt.type_name FROM leave_requests lr JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE lr.staff_id=? ORDER BY lr.created_at DESC LIMIT 20");
-    if($st){$st->bind_param('i',$userId);$st->execute();$myLeaves=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myLeaves=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $myPayslips = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT id,payslip_number,salary_month,basic_salary,gross_pay,net_pay,status FROM payslips WHERE staff_id=? ORDER BY salary_month DESC LIMIT 12");
-    if($st){$st->bind_param('i',$userId);$st->execute();$myPayslips=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myPayslips=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $myDuties = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM duty_rosters WHERE staff_id=? AND duty_date>=CURDATE() ORDER BY duty_date LIMIT 10");
-    if($st){$st->bind_param('i',$userId);$st->execute();$myDuties=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDuties=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $myDocuments = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM staff_documents WHERE staff_id=? ORDER BY created_at DESC");
-    if($st){$st->bind_param('i',$userId);$st->execute();$myDocuments=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDocuments=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $myNotifications = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM staff_notifications WHERE (target_user_id=? OR target_role='all') ORDER BY created_at DESC LIMIT 10");
-    if($st){$st->bind_param('i',$userId);$st->execute();$myNotifications=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myNotifications=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
 }
 
 $pageTitle = 'Staff Portal';

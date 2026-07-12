@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
         exit();
     }
     $student_stmt->bind_param("i", $student_id);
-    $student_stmt->execute();
+    if (!$student_stmt->execute()) { error_log('$student_stmt execute failed: ' . ($student_stmt->error ?? 'unknown')); };
     $student_result = $student_stmt->get_result();
     $student = $student_result ? $student_result->fetch_assoc() : null;
     $student_stmt->close();
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
         exit();
     }
     $records_stmt->bind_param($types, ...$params);
-    $records_stmt->execute();
+    if (!$records_stmt->execute()) { error_log('$records_stmt execute failed: ' . ($records_stmt->error ?? 'unknown')); };
     $records_result = $records_stmt->get_result();
     $academic_records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
     $records_stmt->close();
@@ -295,7 +295,7 @@ function getStudentsForDropdown() {
     
     $stmt = $ctx['students']->prepare("SELECT id, full_name, registration_number, COALESCE(program, course) AS program FROM students WHERE status = 'Active' ORDER BY full_name");
     if (!$stmt) return [];
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $students = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     $stmt->close();
@@ -309,7 +309,7 @@ function getAcademicYears() {
     $staff_conn = $ctx['staff'];
     $stmt = $staff_conn->prepare("SELECT DISTINCT academic_year FROM igangaschool_staffs.academic_records ORDER BY academic_year DESC");
     if (!$stmt) return [];
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $years = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     $stmt->close();
@@ -323,7 +323,7 @@ function getSemesters() {
     $staff_conn = $ctx['staff'];
     $stmt = $staff_conn->prepare("SELECT DISTINCT semester FROM igangaschool_staffs.academic_records ORDER BY semester");
     if (!$stmt) return [];
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     $semesters = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     $stmt->close();

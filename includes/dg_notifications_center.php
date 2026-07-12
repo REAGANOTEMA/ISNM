@@ -65,7 +65,7 @@ function dgHandleMarkRead($conn, $userId): void {
         if ($conn) {
             $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
             $stmt->bind_param("si", $key, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['ok' => true]);
@@ -77,7 +77,7 @@ function dgHandleMarkRead($conn, $userId): void {
             $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
             foreach ($keys as $k) {
                 $stmt->bind_param("si", $k, $userId);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             }
             $stmt->close();
         }
@@ -89,7 +89,7 @@ function dgHandleMarkRead($conn, $userId): void {
         if ($conn) {
             $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
             $stmt->bind_param("si", $key, $userId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         echo json_encode(['ok' => true]);
@@ -115,7 +115,7 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
     if ($conn) {
         $rkStmt = $conn->prepare("SELECT notification_key FROM dg_read_notifications WHERE user_id = ?");
         $rkStmt->bind_param("i", $userId);
-        $rkStmt->execute();
+        if (!$rkStmt->execute()) { error_log('$rkStmt execute failed: ' . ($rkStmt->error ?? 'unknown')); };
         $rk = $rkStmt->get_result();
         if ($rk) {
             while ($row = $rk->fetch_assoc()) {

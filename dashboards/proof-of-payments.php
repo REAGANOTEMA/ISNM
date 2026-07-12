@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['bursar', 'finance', 'director', 'registrar', 'secretary', 'ict']);
 $conn = $ctx['students'];
@@ -11,21 +11,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)($_POST['id'] ?? 0);
         $notes = trim($_POST['notes'] ?? '');
         $stmt = $conn->prepare("UPDATE proof_of_payments SET verified=1, verified_by=?, verified_at=NOW(), notes=? WHERE id=?");
-        if ($stmt) { $stmt->bind_param('isi', $userId, $notes, $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('isi', $userId, $notes, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Payment proof verified.';
         header('Location: proof-of-payments.php'); exit;
     }
     if ($action === 'unverify') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt = $conn->prepare("UPDATE proof_of_payments SET verified=0, verified_by=NULL, verified_at=NULL, notes='' WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Payment proof unverified.';
         header('Location: proof-of-payments.php'); exit;
     }
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt = $conn->prepare("SELECT document_path FROM proof_of_payments WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $qrRow = $stmt->get_result(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $qrRow = $stmt->get_result(); $stmt->close(); }
         else $qrRow = null;
         $row = $qrRow ? $qrRow->fetch_assoc() : null;
         if ($row && $row['document_path']) {
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (file_exists($file)) @unlink($file);
         }
         $stmt = $conn->prepare("DELETE FROM proof_of_payments WHERE id=?");
-        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Proof of payment deleted.';
         header('Location: proof-of-payments.php'); exit;
     }

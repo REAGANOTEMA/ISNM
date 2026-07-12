@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ISNM Payroll Management System — AJAX/Form POST Handler
+ * ISNM Payroll Management System â€” AJAX/Form POST Handler
  * All payroll CRUD operations, processing, and approvals via a single endpoint.
  */
 
@@ -20,7 +20,7 @@ $referrer = $_SERVER['HTTP_REFERER'] ?? '../payroll.php';
 try {
     switch ($action) {
 
-        // ── Employee Payroll Profiles ──
+        // â”€â”€ Employee Payroll Profiles â”€â”€
         case 'create_employee_profile':
             $staffIdParam = (int)($_POST['staff_id'] ?? 0);
             $employmentType = $_POST['employment_type'] ?? 'permanent';
@@ -72,7 +72,7 @@ try {
             $_SESSION['success'] = 'Payroll profile updated.';
             break;
 
-        // ── Allowance Assignment ──
+        // â”€â”€ Allowance Assignment â”€â”€
         case 'assign_allowance':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
             $typeId = (int)($_POST['allowance_type_id'] ?? 0);
@@ -86,7 +86,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_employee_allowances (payroll_employee_id, allowance_type_id, amount, is_taxable, is_recurring, effective_from, status, created_by) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('iidissi', $peId, $typeId, $amount, $isTaxable, $isRecurring, $effectiveFrom, $staffId);
-            $stmt->execute() ? $_SESSION['success'] = 'Allowance assigned.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Allowance assigned.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -97,13 +97,13 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_employee_allowances SET status='inactive' WHERE id=?");
             $stmt->bind_param('i', $allowanceId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             $_SESSION['success'] = 'Allowance removed.';
             break;
 
-        // ── Deduction Assignment ──
+        // â”€â”€ Deduction Assignment â”€â”€
         case 'assign_deduction':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
             $typeId = (int)($_POST['deduction_type_id'] ?? 0);
@@ -116,7 +116,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_employee_deductions (payroll_employee_id, deduction_type_id, amount, is_recurring, effective_from, status, created_by) VALUES (?, ?, ?, ?, ?, 'active', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('iidisi', $peId, $typeId, $amount, $isRecurring, $effectiveFrom, $staffId);
-            $stmt->execute() ? $_SESSION['success'] = 'Deduction assigned.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Deduction assigned.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -127,13 +127,13 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_employee_deductions SET status='inactive' WHERE id=?");
             $stmt->bind_param('i', $dedId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             $_SESSION['success'] = 'Deduction removed.';
             break;
 
-        // ── Overtime ──
+        // â”€â”€ Overtime â”€â”€
         case 'add_overtime':
             $staffIdParam = (int)($_POST['payroll_employee_id'] ?? $_POST['staff_id'] ?? 0);
             $hours = (float)($_POST['hours_worked'] ?? 0);
@@ -145,7 +145,7 @@ try {
 
             $empStmt = $pconn->prepare("SELECT basic_salary FROM payroll_employees WHERE staff_id=?");
             $empStmt->bind_param('i', $staffIdParam);
-            $empStmt->execute();
+            if (!$empStmt->execute()) { error_log('$empStmt execute failed: ' . ($empStmt->error ?? 'unknown')); };
             $empRow = $empStmt->get_result()->fetch_assoc();
             $empStmt->close();
             $basicSalary = (float)($empRow['basic_salary'] ?? 0);
@@ -158,7 +158,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_overtime (staff_id, hours, rate, total_pay, month, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('idddsi', $staffIdParam, $hours, $hourlyRate, $totalPay, $month, $staffId);
-            $stmt->execute() ? $_SESSION['success'] = 'Overtime recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Overtime recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -169,14 +169,14 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_overtime SET status='approved', approved_by=?, approved_at=NOW() WHERE id=?");
             $stmt->bind_param('ii', $staffId, $otId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollApproval('overtime', $otId, 'approved', 'Approval', 'Approved by ' . $userRole, $staffId);
             $_SESSION['success'] = 'Overtime approved.';
             break;
 
-        // ── Bonus ──
+        // â”€â”€ Bonus â”€â”€
         case 'add_bonus':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
             $name = $_POST['bonus_name'] ?? '';
@@ -190,12 +190,12 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_bonus (payroll_employee_id, bonus_type, bonus_name, amount, is_taxable, bonus_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('issdisi', $peId, $type, $name, $amount, $isTaxable, $date, $staffId);
-            $stmt->execute() ? $_SESSION['success'] = 'Bonus recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Bonus recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
 
-        // ── Loan ──
+        // â”€â”€ Loan â”€â”€
         case 'add_loan':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
             $principal = (float)($_POST['principal_amount'] ?? 0);
@@ -213,7 +213,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_loans (payroll_employee_id, loan_number, loan_type, principal_amount, interest_rate, installments, installment_amount, loan_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('issididisi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
-            $stmt->execute() ? $_SESSION['success'] = 'Loan recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Loan recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -224,14 +224,14 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_loans SET status='active', approved_by=?, approved_at=NOW() WHERE id=?");
             $stmt->bind_param('ii', $staffId, $loanId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollApproval('loan', $loanId, 'approved', 'Approval', null, $staffId);
             $_SESSION['success'] = 'Loan approved.';
             break;
 
-        // ── Payroll Period ──
+        // â”€â”€ Payroll Period â”€â”€
         case 'create_period':
             $month = (int)($_POST['month'] ?? 0);
             $year = (int)($_POST['year'] ?? 0);
@@ -250,7 +250,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_periods SET status='open' WHERE id=?");
             $stmt->bind_param("i", $periodId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollAudit($staffId, 'period_opened', 'payroll_period', $periodId, null, null);
@@ -263,13 +263,13 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_periods SET status='closed', is_closed=1, closed_by=?, closed_at=NOW() WHERE id=? AND is_locked=1");
             $stmt->bind_param("ii", $staffId, $periodId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             $_SESSION['success'] = 'Payroll period closed.';
             break;
 
-        // ── Payroll Processing ──
+        // â”€â”€ Payroll Processing â”€â”€
         case 'process_payroll':
             $periodId = (int)($_POST['payroll_period_id'] ?? 0);
             if (!$periodId) throw new Exception('Payroll period ID required');
@@ -292,7 +292,7 @@ try {
             }
             break;
 
-        // ── Approval Actions ──
+        // â”€â”€ Approval Actions â”€â”€
         case 'approve_run':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
             $step = $_POST['step'] ?? 'Approval';
@@ -302,7 +302,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_runs SET status='approved', approved_by=?, approved_at=NOW() WHERE id=?");
             $stmt->bind_param("ii", $staffId, $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollApproval('payroll_run', $runId, 'approved', $step, $comments, $staffId);
@@ -316,11 +316,11 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_runs SET status='paid', paid_by=?, paid_at=NOW() WHERE id=?");
             $stmt->bind_param("ii", $staffId, $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $stmt = $pconn->prepare("UPDATE payroll_items SET payment_status='paid', payment_date=CURDATE() WHERE payroll_run_id=? AND status='active'");
             $stmt->bind_param('i', $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollApproval('payroll_run', $runId, 'authorized', 'Principal Authorization', $comments, $staffId);
@@ -334,14 +334,14 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("UPDATE payroll_runs SET status='draft' WHERE id=?");
             $stmt->bind_param("i", $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
             logPayrollApproval('payroll_run', $runId, 'rejected', 'Approval', $comments, $staffId);
             $_SESSION['error'] = 'Payroll run rejected.';
             break;
 
-        // ── Settings ──
+        // â”€â”€ Settings â”€â”€
         case 'update_setting':
             $key = $_POST['setting_key'] ?? '';
             $value = $_POST['setting_value'] ?? '';
@@ -349,14 +349,14 @@ try {
                 $pconn = getPayrollConnection();
                 $stmt = $pconn->prepare("INSERT INTO payroll_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_by=VALUES(updated_by)");
                 $stmt->bind_param('ssi', $key, $value, $staffId);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 $pconn->close();
                 $_SESSION['success'] = 'Setting updated.';
             }
             break;
 
-        // ── Settings Bulk Save ──
+        // â”€â”€ Settings Bulk Save â”€â”€
         case 'save_settings':
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -366,7 +366,7 @@ try {
                     $settingValue = (string)$value;
                     $stmt = $pconn->prepare("INSERT INTO payroll_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_by=VALUES(updated_by)");
                     $stmt->bind_param('ssi', $settingKey, $settingValue, $staffId);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
             }
@@ -374,7 +374,7 @@ try {
             $_SESSION['success'] = 'Settings saved.';
             break;
 
-        // ── Payment Processing ──
+        // â”€â”€ Payment Processing â”€â”€
         case 'record_payment':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
             $payDate = $_POST['payment_date'] ?? date('Y-m-d');
@@ -386,50 +386,50 @@ try {
 
             $stmt = $pconn->prepare("SELECT total_net, total_employees FROM payroll_runs WHERE id=?");
             $stmt->bind_param("i", $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $runData = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if (!$runData) throw new Exception('Payroll run not found');
 
             $stmt = $pconn->prepare("INSERT INTO payroll_payments (payroll_run_id, payment_date, payment_method, total_amount, employee_count, reference_number, status, processed_by) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?)");
             $stmt->bind_param('issdisi', $runId, $payDate, $payMethod, $runData['total_net'], $runData['total_employees'], $refNumber, $staffId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
 
             $stmt = $pconn->prepare("UPDATE payroll_runs SET status='paid', paid_by=?, paid_at=NOW() WHERE id=?");
             $stmt->bind_param("ii", $staffId, $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $stmt = $pconn->prepare("UPDATE payroll_items SET payment_status='paid', payment_date=?, payment_reference=? WHERE payroll_run_id=? AND status='active'");
             $stmt->bind_param("ssi", $payDate, $refNumber, $runId);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $pconn->close();
 
             $_SESSION['success'] = 'Payment recorded.';
             break;
 
-        // ── Employee Data (JSON) for Select2 / modals ──
+        // â”€â”€ Employee Data (JSON) for Select2 / modals â”€â”€
         case 'get_employees_json':
             $status = $_GET['status'] ?? 'active';
             $rows = getPayrollEmployees($status);
             jsonResponse(true, '', $rows);
             break;
 
-        // ── Dashboard Stats (JSON) ──
+        // â”€â”€ Dashboard Stats (JSON) â”€â”€
         case 'get_dashboard_stats':
             $stats = getPayrollDashboardStats();
             jsonResponse(true, '', $stats);
             break;
 
-        // ── Payroll Periods (JSON) ──
+        // â”€â”€ Payroll Periods (JSON) â”€â”€
         case 'get_periods_json':
             $status = $_GET['status'] ?? null;
             $rows = getPayrollPeriods($status);
             jsonResponse(true, '', $rows);
             break;
 
-        // ── Create Leave Request ──
+        // â”€â”€ Create Leave Request â”€â”€
         case 'create_leave_request':
             $staffIdReq = (int)($_POST['staff_id'] ?? 0);
             $leaveTypeId = (int)($_POST['leave_type_id'] ?? 0);
@@ -457,7 +457,7 @@ try {
             }
             break;
 
-        // ── Approve Leave ──
+        // â”€â”€ Approve Leave â”€â”€
         case 'approve_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
@@ -466,7 +466,7 @@ try {
                 $stmt = $pconn->prepare("UPDATE staff_leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                     $_SESSION['success'] = 'Leave request approved.';
                 } else {
@@ -476,7 +476,7 @@ try {
             }
             break;
 
-        // ── Reject Leave ──
+        // â”€â”€ Reject Leave â”€â”€
         case 'reject_leave':
             $leaveId = (int)($_POST['leave_id'] ?? 0);
             if ($leaveId) {
@@ -485,7 +485,7 @@ try {
                 $stmt = $pconn->prepare("UPDATE staff_leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
                 if ($stmt) {
                     $stmt->bind_param("ii", $staffId, $leaveId);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                     $_SESSION['success'] = 'Leave request rejected.';
                 } else {
@@ -495,7 +495,7 @@ try {
             }
             break;
 
-        // ── Add Leave Type ──
+        // â”€â”€ Add Leave Type â”€â”€
         case 'add_leave_type':
             $typeName = trim($_POST['type_name'] ?? '');
             $daysPerYear = (int)($_POST['days_per_year'] ?? 30);
@@ -506,14 +506,14 @@ try {
                 $stmt = $pconn->prepare("INSERT INTO leave_types (type_name, leave_type_name, days_per_year, description, is_active) VALUES (?, ?, ?, ?, 1)");
                 if ($stmt) {
                     $stmt->bind_param("ssis", $typeName, $typeName, $daysPerYear, $description);
-                    $stmt->execute();
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                     $_SESSION['success'] = 'Leave type added.';
                 } else {
                     $stmt2 = $pconn->prepare("INSERT INTO leave_types (type_name, days_per_year, is_active) VALUES (?, ?, 1)");
                     if ($stmt2) {
                         $stmt2->bind_param("si", $typeName, $daysPerYear);
-                        $stmt2->execute();
+                        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
                         $stmt2->close();
                         $_SESSION['success'] = 'Leave type added.';
                     }

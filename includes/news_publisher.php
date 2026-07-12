@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM News Publishing System
  * Directors publish news that automatically displays on website
@@ -141,7 +141,7 @@ class NewsPublisher {
         if (!$stmt) return null;
         
         $stmt->bind_param('i', $newsId);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $news = $result->fetch_assoc();
         $stmt->close();

@@ -66,7 +66,7 @@ if ($view === 'attendance_monitoring_data' && $ajax === '1' && $staff) {
     if (!empty($params)) {
         $stmt = $students->prepare($sql);
         $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
     } else {
         $r = $students ? $students->query($sql) : null;
@@ -233,14 +233,14 @@ if ($view === 'forward_approval' && $ajax === '1' && $staff) {
         $newMsg = "[Deputy Review by $sn at $timestamp: $comm]\n[Forwarded to Principal for final approval]";
         $stmt = $staff->prepare("UPDATE {$students_db}.communication_log SET is_read=1, message=CONCAT(message,'\n\n',?) WHERE id=?");
         $stmt->bind_param("si", $newMsg, $aid);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $stmt->close();
         
         $subject = "Forwarded by Deputy: Review";
         $body = "Item #$aid reviewed by Deputy $sn. Recommendation: $comm";
         $stmt2 = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,'$sn','principal',?,?)");
         $stmt2->bind_param("iss", $uid, $subject, $body);
-        $stmt2->execute();
+        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $stmt2->close();
         echo json_encode(['success'=>true]); exit;
     }
@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $full = trim("$fn $on $sn");
             $stmt = $students->prepare("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,program,level,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
             $stmt->bind_param("ssssssiiissssss", $snum, $fn, $sn, $on, $full, $gen, $crs, $yr, $yr, $sem, $ph, $ph, $em, $gn, $gp);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             if ($students->affected_rows > 0) { dep_success("Student $full registered."); } else { dep_error('Failed: '.$students->error); }
             $stmt->close();
         } else { dep_error('Required fields missing.'); }
@@ -412,7 +412,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $tid='TT-'.date('Ymd').'-'.mt_rand(1000,9999);
         $stmt = $staff->prepare("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("sssssssssi", $tid, $ay, $sem, $prog, $cc, $dow, $st, $et, $venue, $lid, $uid);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         if ($staff->affected_rows>0) { dep_success("Class scheduled: $cc ($dow $st-$et)"); } else { dep_error('Failed to schedule: '.$staff->error); }
         $stmt->close();
         header("Location: deputy-principal.php?section=class_monitoring"); exit;
@@ -426,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $rm=$_POST['classroom']??'';
         $stmt = $staff->prepare("INSERT INTO course_assignments (lecturer_id,course_code,course_name,semester,academic_year,classroom,assigned_by) VALUES (?,?,?,?,?,?,?)");
         $stmt->bind_param("isssssi", $lid, $cc, $cn, $sem, $ay, $rm, $uid);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         if ($staff->affected_rows>0) { dep_success("Lecturer assigned to $cn"); } else { dep_error('Assignment failed: '.$staff->error); }
         $stmt->close();
         header("Location: deputy-principal.php?section=academic_monitoring"); exit;
@@ -444,7 +444,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $fpath="uploads/teaching_materials/$fname";
                 $stmt = $staff->prepare("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES (?,?,?,?)");
                 $stmt->bind_param("siss", $dtype, $uid, $title, $fpath);
-                $stmt->execute();
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 dep_success("Material '$title' uploaded.");
             } else { dep_error('Upload failed.'); }
@@ -460,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($sid>0 && $site) {
             $stmt = $students->prepare("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
             $stmt->bind_param("issss", $sid, $site, $sup, $sd, $ed);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             if ($students->affected_rows>0) { dep_success('Clinical placement created.'); } else { dep_error('Placement failed: '.$students->error); }
             $stmt->close();
         } else { dep_error('Student and site required.'); }
@@ -473,7 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($pid>0) {
             $stmt = $students->prepare("UPDATE clinical_placements_students SET competency_score=?, supervisor_evaluation=?, logbook_submitted=1, status='Completed' WHERE id=?");
             $stmt->bind_param("dsi", $score, $eval, $pid);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             dep_success('Evaluation recorded.');
         } else { dep_error('Placement ID required.'); }

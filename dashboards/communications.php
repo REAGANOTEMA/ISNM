@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
 $pageTitle = 'Communications';
@@ -14,13 +14,13 @@ $unreadCount = 0;
 
 if ($conn && $user_id) {
     $r = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0");
-    if ($r) { $r->bind_param("i", $user_id); $r->execute(); $inboxCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
+    if ($r) { $r->bind_param("i", $user_id); if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); }; $inboxCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
 
     $r = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0");
-    if ($r) { $r->bind_param("i", $user_id); $r->execute(); $sentCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
+    if ($r) { $r->bind_param("i", $user_id); if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); }; $sentCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
 
     $r = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
-    if ($r) { $r->bind_param("i", $user_id); $r->execute(); $unreadCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
+    if ($r) { $r->bind_param("i", $user_id); if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); }; $unreadCount = (int)$r->get_result()->fetch_assoc()['c']; $r->close(); }
 }
 
 $activeTab = $_GET['tab'] ?? 'inbox';
@@ -29,10 +29,10 @@ $messages = [];
 if ($conn && $user_id) {
     if ($activeTab === 'sent') {
         $r = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT 50");
-        if ($r) { $r->bind_param("i", $user_id); $r->execute(); $res = $r->get_result(); while ($row = $res->fetch_assoc()) $messages[] = $row; $r->close(); }
+        if ($r) { $r->bind_param("i", $user_id); if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); }; $res = $r->get_result(); while ($row = $res->fetch_assoc()) $messages[] = $row; $r->close(); }
     } else {
         $r = $conn->prepare("SELECT * FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0 ORDER BY created_at DESC LIMIT 50");
-        if ($r) { $r->bind_param("i", $user_id); $r->execute(); $res = $r->get_result(); while ($row = $res->fetch_assoc()) $messages[] = $row; $r->close(); }
+        if ($r) { $r->bind_param("i", $user_id); if (!$r->execute()) { error_log('$r execute failed: ' . ($r->error ?? 'unknown')); }; $res = $r->get_result(); while ($row = $res->fetch_assoc()) $messages[] = $row; $r->close(); }
     }
 }
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -16,7 +16,7 @@ if (!$conn) {
 }
 $conn->set_charset('utf8mb4');
 
-// ── Column name normalisation map ──
+// â”€â”€ Column name normalisation map â”€â”€
 $KNOWN_COLUMNS = [
     'full_name'                       => 'full_name',
     'name'                            => 'full_name',
@@ -94,7 +94,7 @@ $KNOWN_COLUMNS = [
     'sponsor'                         => 'sponsor',
 ];
 
-// ── Helper: normalise a single header ──
+// â”€â”€ Helper: normalise a single header â”€â”€
 function normaliseHeader($raw) {
     global $KNOWN_COLUMNS;
     $key = strtolower(trim(preg_replace('/[^a-zA-Z0-9_]+/', '_', $raw)));
@@ -102,7 +102,7 @@ function normaliseHeader($raw) {
     return $KNOWN_COLUMNS[$key] ?? $key;
 }
 
-// ── Helper: guess program, level, set, year from filename ──
+// â”€â”€ Helper: guess program, level, set, year from filename â”€â”€
 function guessFromFilename($filename) {
     $info = ['program' => '', 'level' => '', 'set_name' => '', 'intake_year' => '', 'intake_period' => ''];
     $f = strtolower($filename);
@@ -138,7 +138,7 @@ function guessFromFilename($filename) {
     return $info;
 }
 
-// ── Helper: validate program value ──
+// â”€â”€ Helper: validate program value â”€â”€
 function isValidProgram($val) {
     if (empty($val)) return false;
     $known = ['Certificate in Nursing','Certificate in Midwifery','Diploma in Nursing','Diploma in Midwifery','Diploma in Nursing Education'];
@@ -151,7 +151,7 @@ function isValidProgram($val) {
     return true;
 }
 
-// ── Helper: split full_name into name parts ──
+// â”€â”€ Helper: split full_name into name parts â”€â”€
 function splitName($full) {
     $parts = array_values(array_filter(explode(' ', trim($full))));
     $first = $parts[0] ?? '';
@@ -160,7 +160,7 @@ function splitName($full) {
     return ['first_name' => $first, 'surname' => $surname, 'other_name' => $other];
 }
 
-// ── Process a single Excel file ──
+// â”€â”€ Process a single Excel file â”€â”€
 function processFile($path, $conn) {
     $filename = basename($path);
     $fileGuess = guessFromFilename($filename);
@@ -175,7 +175,7 @@ function processFile($path, $conn) {
         return ['imported' => 0, 'skipped' => 0, 'errors' => []];
     }
 
-    // ── Find header row ──
+    // â”€â”€ Find header row â”€â”€
     $headerRowIdx = 0;
     $headerMatchCount = 0;
     $knownKeys = array_keys($GLOBALS['KNOWN_COLUMNS']);
@@ -194,7 +194,7 @@ function processFile($path, $conn) {
         }
     }
 
-    // ── Parse headers ──
+    // â”€â”€ Parse headers â”€â”€
     $headers = [];
     foreach ($rows[$headerRowIdx] as $cell) {
         $headers[] = normaliseHeader($cell ?? '');
@@ -204,7 +204,7 @@ function processFile($path, $conn) {
     $skipped = 0;
     $errors = [];
 
-    // ── Process data rows ──
+    // â”€â”€ Process data rows â”€â”€
     for ($ri = $headerRowIdx + 1; $ri < count($rows); $ri++) {
         $row = $rows[$ri];
         $data = [];
@@ -264,7 +264,7 @@ function processFile($path, $conn) {
             }
         }
 
-        // Validate program — if it looks like garbage, use filename guess or level
+        // Validate program â€” if it looks like garbage, use filename guess or level
         if (!empty($rec['program']) && !isValidProgram($rec['program'])) {
             $rec['program'] = $fileGuess['program'] ?? '';
             $rec['course'] = '';
@@ -305,7 +305,7 @@ function processFile($path, $conn) {
 
         $intakeYear = $rec['intake_year'] ? (int)$rec['intake_year'] : null;
 
-        // ── Dedup check ──
+        // â”€â”€ Dedup check â”€â”€
         $dedupClauses = [];
         $dedupParams = [];
         $dedupTypes = '';
@@ -337,7 +337,7 @@ function processFile($path, $conn) {
             $st = $conn->prepare($sql);
             if ($st) {
                 $st->bind_param($dedupTypes, ...$dedupParams);
-                $st->execute();
+                if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };
                 if ($st->get_result()->num_rows > 0) {
                     $isDuplicate = true;
                 }
@@ -350,7 +350,7 @@ function processFile($path, $conn) {
             continue;
         }
 
-        // ── Insert ──
+        // â”€â”€ Insert â”€â”€
         $sql = "INSERT INTO students (
             first_name, surname, other_name, full_name,
             student_number, registration_number, index_number, national_student_id_number,
@@ -439,7 +439,7 @@ function processFile($path, $conn) {
     ];
 }
 
-// ── Handle import action ──
+// â”€â”€ Handle import action â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
     $dir = __DIR__ . '/students_data/';
     $files = [];
@@ -484,7 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
     exit;
 }
 
-// ── Gather file info for display ──
+// â”€â”€ Gather file info for display â”€â”€
 $dataDir = __DIR__ . '/students_data/';
 $excelFiles = [];
 if (is_dir($dataDir)) {

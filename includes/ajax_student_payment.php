@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX endpoint for student self-service payment requests
  */
@@ -44,7 +44,7 @@ if ($action === 'student_payment_request') {
 
         $stmt = $studentsDb->prepare("INSERT INTO payments (student_id, amount, payment_method, transaction_id, mobile_number, proof_file, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("isssssss", $studentId, $amount, $method, $reference, $phone, $proofFile, $notes, $status);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 
         $paymentId = $studentsDb->insert_id;
 

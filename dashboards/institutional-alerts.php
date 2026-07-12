@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
 $conn = $ctx['staff'];
@@ -22,7 +22,7 @@ if ($conn) {
     if ($filterPriority) { $where[] = "priority=?"; $params[] = $filterPriority; $types .= 's'; }
     $ws = implode(' AND ', $where);
     $stmt = $conn->prepare("SELECT * FROM institutional_alerts WHERE $ws ORDER BY created_at DESC LIMIT 100");
-    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     if ($r) while ($row = $r->fetch_assoc()) $alerts[] = $row;
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $expires = trim($_POST['expires_at'] ?? '');
         if ($title && $message) {
             $stmt = $conn->prepare("INSERT INTO institutional_alerts (alert_title, alert_message, priority, category, expires_at, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-            if ($stmt) { $expVal = $expires !== '' ? $expires : null; $stmt->bind_param('sssss', $title, $message, $priority, $category, $expVal); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $expVal = $expires !== '' ? $expires : null; $stmt->bind_param('sssss', $title, $message, $priority, $category, $expVal); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Alert created and broadcast.';
         }
         header('Location: institutional-alerts.php');
@@ -47,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $current = (int)($_POST['current'] ?? 0);
         if ($current) {
             $stmt = $conn->prepare("UPDATE institutional_alerts SET is_resolved=NULL, resolved_at=NULL, resolved_by=NULL WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         } else {
             $resolvedBy = (int)($user['id'] ?? 0);
             $stmt = $conn->prepare("UPDATE institutional_alerts SET is_resolved=1, resolved_at=NOW(), resolved_by=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ii', $resolvedBy, $id); $stmt->execute(); $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ii', $resolvedBy, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         }
         header('Location: institutional-alerts.php');
         exit;
@@ -59,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn && $action === 'delete_alert') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt1 = $conn->prepare("DELETE FROM alert_recipients WHERE alert_id=?");
-        if ($stmt1) { $stmt1->bind_param('i', $id); $stmt1->execute(); $stmt1->close(); }
+        if ($stmt1) { $stmt1->bind_param('i', $id); if (!$stmt1->execute()) { error_log('$stmt1 execute failed: ' . ($stmt1->error ?? 'unknown')); }; $stmt1->close(); }
         $stmt2 = $conn->prepare("DELETE FROM institutional_alerts WHERE id=?");
-        if ($stmt2) { $stmt2->bind_param('i', $id); $stmt2->execute(); $stmt2->close(); }
+        if ($stmt2) { $stmt2->bind_param('i', $id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
         $_SESSION['success'] = 'Alert deleted.';
         header('Location: institutional-alerts.php');
         exit;
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <td><span class="badge priority-<?= $a['priority'] ?>"><?= htmlspecialchars($a['priority']) ?></span></td>
                                 <td><span class="badge status-<?= $status ?>"><?= $statusLabel ?></span></td>
                                 <td class="small"><?= date('d M Y H:i', strtotime($a['created_at'])) ?></td>
-                                <td class="small"><?= $a['expires_at'] ? date('d M Y', strtotime($a['expires_at'])) : '—' ?></td>
+                                <td class="small"><?= $a['expires_at'] ? date('d M Y', strtotime($a['expires_at'])) : 'â€”' ?></td>
                                 <td class="text-end">
                                     <form method="POST" class="d-inline" onsubmit="return confirm('<?= $a['is_resolved'] ? 'Reactivate' : 'Deactivate' ?> this alert?')">
                                         <input type="hidden" name="action" value="toggle_resolved">

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Enhanced authentication functions for ISNM School Management System
 // Students login with NSIN number, name, and contact number
 // Staff login with username and password
@@ -43,7 +43,7 @@ function authenticateStudent($index_number, $full_name, $phone_number) {
                 status = 'active'";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssss", $index_number, $index_number, $first_name, $phone_number);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         if ($result->num_rows === 0) {
@@ -56,7 +56,7 @@ function authenticateStudent($index_number, $full_name, $phone_number) {
         $update_sql = "UPDATE students SET last_login = NOW() WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("i", $student['id']);
-        $update_stmt->execute();
+        if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
         
         return ['success' => true, 'user' => $student];
         
@@ -85,7 +85,7 @@ function authenticateStaff($email, $password) {
         $sql = "SELECT * FROM users WHERE email = ? AND status = 'active'";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $email);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
         if ($result->num_rows === 0) {
@@ -103,7 +103,7 @@ function authenticateStaff($email, $password) {
         $update_sql = "UPDATE users SET last_login = NOW() WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("i", $user['id']);
-        $update_stmt->execute();
+        if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
         
         return ['success' => true, 'user' => $user];
         
@@ -383,7 +383,7 @@ function resetPassword($user_type, $identifier) {
         $stmt->bind_param("ss", $identifier, $identifier);
     }
     
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 1) {
@@ -397,7 +397,7 @@ function resetPassword($user_type, $identifier) {
         $uid = (int)($user['id'] ?? 0);
         $uemail = $user['email'] ?? '';
         $stmt = $conn->prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token=VALUES(token), expires_at=VALUES(expires_at), used_at=NULL");
-        if ($stmt) { $stmt->bind_param('isss', $uid, $uemail, $token, $expires); $stmt->execute(); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('isss', $uid, $uemail, $token, $expires); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         
         return [
             'success' => true,
@@ -447,7 +447,7 @@ function getStudentByNSIN($nsin_number) {
     $sql = "SELECT * FROM students WHERE student_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $nsin_number);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     return $result->num_rows === 1 ? $result->fetch_assoc() : null;
@@ -460,7 +460,7 @@ function getStaffByUsername($username) {
     $sql = "SELECT * FROM users WHERE username = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     return $result->num_rows === 1 ? $result->fetch_assoc() : null;
@@ -483,7 +483,7 @@ function isAccountLocked($user_id, $user_type) {
     } else {
         $stmt->bind_param("i", $user_id);
     }
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 1) {
@@ -509,7 +509,7 @@ function unlockAccount($user_id, $user_type) {
         $stmt->bind_param("i", $user_id);
     }
     
-    return $stmt->execute();
+    $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } return $ok;
 }
 
 // Get login attempts
@@ -525,7 +525,7 @@ function getLoginAttempts($identifier, $user_type) {
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $identifier);
-    $stmt->execute();
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
     
     if ($result->num_rows === 1) {

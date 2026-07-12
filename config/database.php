@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ISNM database configuration.
  * Production credentials are loaded from .env and should not be committed.
@@ -155,7 +155,7 @@ if (!defined('ICT_DB_CHARSET')) {
 
 if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
-        // Connection cache — singleton per database
+        // Connection cache â€” singleton per database
         static $connections = [];
         $cacheKey = $db;
         if (isset($connections[$cacheKey]) && $connections[$cacheKey] instanceof mysqli) {
@@ -170,7 +170,7 @@ if (!function_exists('isnm_mysqli_connect')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
-        // Hardcoded hosting credentials — always try first, no .env dependency
+        // Hardcoded hosting credentials â€” always try first, no .env dependency
         $hostingCreds = [
             'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => '3i%yHc00=cP^ZXwF'],
             'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => '?e=8Dc^D_1Aq9UQd'],
@@ -365,7 +365,7 @@ if (!function_exists('studentExistsByIndexNumber')) {
         $stmt = $conn->prepare('SELECT id FROM students WHERE student_number = ? LIMIT 1');
         if (!$stmt) return false;
         $stmt->bind_param('s', $indexNumber);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $exists = $result && $result->num_rows > 0;
         $stmt->close();
@@ -382,7 +382,7 @@ if (!function_exists('userExistsByEmail')) {
         $stmt = $conn->prepare('SELECT id FROM staff WHERE email = ? LIMIT 1');
         if (!$stmt) return false;
         $stmt->bind_param('s', $email);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $exists = $result && $result->num_rows > 0;
         $stmt->close();

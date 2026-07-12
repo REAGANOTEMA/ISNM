@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['hr manager', 'school principal', 'director general', 'director finance', 'director ict', 'director academics', 'ceo', 'deputy principal']);
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_update_status) {
         $update_stmt = $conn->prepare("UPDATE inventory_reports SET request_status = ?, updated_at = NOW() WHERE id = ?");
         if ($update_stmt) {
             $update_stmt->bind_param('si', $new_status, $report_id);
-            $update_stmt->execute();
+            if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
             $update_stmt->close();
         }
     }
@@ -43,7 +43,7 @@ if ($show_all) {
 
 $reports = [];
 if ($report_stmt) {
-    $report_stmt->execute();
+    if (!$report_stmt->execute()) { error_log('$report_stmt execute failed: ' . ($report_stmt->error ?? 'unknown')); };
     $report_result = $report_stmt->get_result();
     $reports = $report_result ? $report_result->fetch_all(MYSQLI_ASSOC) : [];
     $report_stmt->close();

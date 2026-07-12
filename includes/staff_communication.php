@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Staff Communication System
  * Allows all staff to send internal communications to departments using their auth email.
@@ -109,7 +109,7 @@ if (!function_exists('sendStaffCommunication')) {
                 $stmt1 = $conn->prepare("SELECT routing_email FROM communication_channels WHERE department_code = ? AND is_active = 1 LIMIT 1");
                 if ($stmt1) {
                     $stmt1->bind_param("s", $recipient_id);
-                    $stmt1->execute();
+                    if (!$stmt1->execute()) { error_log('$stmt1 execute failed: ' . ($stmt1->error ?? 'unknown')); };
                     $r = $stmt1->get_result();
                     if ($r && ($row = $r->fetch_assoc()) && !empty($row['routing_email'])) {
                         $to_emails[] = $row['routing_email'];
@@ -119,7 +119,7 @@ if (!function_exists('sendStaffCommunication')) {
                 $stmt2 = $conn->prepare("SELECT email FROM staff WHERE department = ? AND email IS NOT NULL AND email != '' AND status = 'Active'");
                 if ($stmt2) {
                     $stmt2->bind_param("s", $recipient_name);
-                    $stmt2->execute();
+                    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
                     $sr = $stmt2->get_result();
                     if ($sr) while ($srow = $sr->fetch_assoc()) $to_emails[] = $srow['email'];
                     $stmt2->close();
@@ -173,7 +173,7 @@ if (!function_exists('getStaffRecentCommunications')) {
         $stmt = $conn->prepare("SELECT id, recipient_type, recipient_name, subject, message_body, priority, email_status, created_at FROM staff_communications WHERE sender_id = ? ORDER BY created_at DESC LIMIT ?");
         if ($stmt) {
             $stmt->bind_param("ii", $staff_id, $limit);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $res = $stmt->get_result();
             while ($row = $res->fetch_assoc()) $msgs[] = $row;
             $stmt->close();
@@ -205,7 +205,7 @@ if (!function_exists('renderCommunicationModal')) {
 
         $channels = getCommunicationChannels($conn);
         ?>
-        <!-- ═══ Staff Communication Modal ═══ -->
+        <!-- â•â•â• Staff Communication Modal â•â•â• -->
         <div class="modal fade" id="staffCommModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $authData = bootstrapStaffDashboard(['events coordinator','events manager','events']);
 $auth = $authData['auth'];
@@ -8,7 +8,7 @@ $userId = $user['id'] ?? 0;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// â”€â”€ Ensure tables exist â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Ensure tables exist Ã¢â€â‚¬Ã¢â€â‚¬
 $staffConn->query("CREATE TABLE IF NOT EXISTS `events` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `title` varchar(255) NOT NULL,
@@ -72,7 +72,7 @@ $staffConn->query("INSERT IGNORE INTO event_categories (name, description, color
     ('Meeting', 'Meetings and gatherings', '#fd7e14'),
     ('Ceremony', 'Official ceremonies', '#d63384')");
 
-// â”€â”€ AJAX Handlers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ AJAX Handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
@@ -101,14 +101,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if ($id > 0) {
                     $s = $staffConn->prepare("UPDATE events SET title=?, description=?, event_date=?, event_time=?, end_date=?, end_time=?, location=?, category=?, event_type=?, organizer=?, organizer_email=?, target_audience=?, max_attendees=?, status=? WHERE id=?");
                     $s->bind_param('ssssssssssssisi', $title, $description, $event_date, $event_time, $end_date, $end_time, $location, $category, $event_type, $organizer, $organizer_email, $target_audience, $max_attendees, $status, $id);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     if ($s->affected_rows === 0 && $s->errno > 0) throw new Exception('Update failed: ' . $s->error);
                     $s->close();
                     echo json_encode(['success' => true, 'message' => 'Event updated successfully.']);
                 } else {
                     $s = $staffConn->prepare("INSERT INTO events (title, description, event_date, event_time, end_date, end_time, location, category, event_type, organizer, organizer_email, target_audience, max_attendees, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $s->bind_param('sssssssssssssii', $title, $description, $event_date, $event_time, $end_date, $end_time, $location, $category, $event_type, $organizer, $organizer_email, $target_audience, $max_attendees, $status, $userId);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     $newId = $s->insert_id;
                     $s->close();
                     echo json_encode(['success' => true, 'message' => 'Event created successfully.', 'id' => $newId]);
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                     $s = $staffConn->prepare($sql);
                     if (!$s) throw new Exception('Prepare failed: ' . $staffConn->error);
                     $s->bind_param($types, ...$params);
-                    $s->execute();
+                    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                     $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
                     $s->close();
                 }
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if (empty($full_name) || $event_id <= 0) throw new Exception('Name and event are required.');
                 $s = $staffConn->prepare("INSERT INTO event_attendees (event_id, full_name, email, phone, organization) VALUES (?, ?, ?, ?, ?)");
                 $s->bind_param('issss', $event_id, $full_name, $email, $phone, $organization);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Attendee registered.']);
                 break;
             }
@@ -191,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 if ($id <= 0 || !in_array($status, ['registered','attended','cancelled','no_show'])) throw new Exception('Invalid parameters.');
                 $s = $staffConn->prepare("UPDATE event_attendees SET status=? WHERE id=?");
                 $s->bind_param('si', $status, $id);
-                $s->execute();
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Status updated.']);
                 break;
             }
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Events Management â€” ISNM</title>
+<title>Events Management Ã¢â‚¬â€ ISNM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -443,7 +443,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
-    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Event Attendees â€” <span id="attendeeEventTitle"></span></h5>
+    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Event Attendees Ã¢â‚¬â€ <span id="attendeeEventTitle"></span></h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
@@ -472,7 +472,7 @@ $(document).ready(function() {
     initCalendar();
 });
 
-// â”€â”€ List View â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ List View Ã¢â€â‚¬Ã¢â€â‚¬
 const eventsTable = $('#eventsTable').DataTable({
     processing: true,
     serverSide: false,
@@ -523,7 +523,7 @@ function showListView() {
     $('#listView').show();
 }
 
-// â”€â”€ Calendar â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Calendar Ã¢â€â‚¬Ã¢â€â‚¬
 let calendar = null;
 function initCalendar() {
     const el = document.getElementById('calendar');
@@ -557,7 +557,7 @@ function initCalendar() {
     calendar.render();
 }
 
-// â”€â”€ Event CRUD â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Event CRUD Ã¢â€â‚¬Ã¢â€â‚¬
 function openEventModal(data) {
     $('#eventModalTitle').text('New Event');
     $('#eventId').val(0);
@@ -642,7 +642,7 @@ function deleteEvent(id) {
     });
 }
 
-// â”€â”€ Attendees â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Attendees Ã¢â€â‚¬Ã¢â€â‚¬
 function viewAttendees(eventId, eventTitle) {
     $('#attendeeEventId').val(eventId);
     $('#attendeeEventTitle').text(eventTitle);

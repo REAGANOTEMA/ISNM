@@ -102,7 +102,7 @@ if ($view === 'exam_monitoring_data' && $ajax === '1') {
         $prog = trim($_GET['program']??'');
         if ($prog) {
             $stmt = $staff->prepare("SELECT e.*, s.surname, s.first_name, s.program FROM {$staff_db}.examination_records e LEFT JOIN {$students_db}.students s ON e.student_id=s.id WHERE s.program=? ORDER BY e.created_at DESC LIMIT 100");
-            if ($stmt) { $stmt->bind_param('s', $prog); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+            if ($stmt) { $stmt->bind_param('s', $prog); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         } else {
             $r = $staff->query("SELECT e.*, s.surname, s.first_name, s.program FROM {$staff_db}.examination_records e LEFT JOIN {$students_db}.students s ON e.student_id=s.id ORDER BY e.created_at DESC LIMIT 100");
         }
@@ -277,11 +277,11 @@ if ($view === 'submit_approval_action' && $ajax === '1') {
         $st = $statusMap[$act]??'';
         if ($st) {
             $stmt = $staff->prepare("UPDATE grading_approval_workflow SET status=?, current_stage=?, updated_at=NOW() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssi', $st, $st, $id); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+            if ($stmt) { $stmt->bind_param('ssi', $st, $st, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
             if ($ok) {
                 $nst = $act === 'escalate' ? 'escalated' : $st;
                 $stmt2 = $staff->prepare("INSERT INTO grading_approval_workflow_log (workflow_id, stage, action, comments, actor_id, actor_name, created_at) VALUES (?,?,?,?,?,?,NOW())");
-                if ($stmt2) { $stmt2->bind_param('isssis', $id, $nst, $act, $comments, $uid, $uname); $stmt2->execute(); $stmt2->close(); }
+                if ($stmt2) { $stmt2->bind_param('isssis', $id, $nst, $act, $comments, $uid, $uname); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
             }
             echo json_encode(['success'=>$ok]); exit;
         }
@@ -290,7 +290,7 @@ if ($view === 'submit_approval_action' && $ajax === '1') {
         $st = $stMap[$act]??'';
         if ($st) {
             $stmt = $students->prepare("UPDATE {$students_db}.student_appeals SET status=?, outcome=?, reviewed_by=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssii', $st, $comments, $uid, $id); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+            if ($stmt) { $stmt->bind_param('ssii', $st, $comments, $uid, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
             echo json_encode(['success'=>$ok]); exit;
         }
     }
@@ -335,7 +335,7 @@ if ($view === 'schedule_meeting' && $ajax === '1') {
                 $n = trim($n);
                 if ($n) {
                     $stmt2 = $students->prepare("INSERT INTO {$students_db}.meeting_attendees (meeting_id,attendee_name) VALUES (?,?)");
-                    if ($stmt2) { $stmt2->bind_param('is', $mid, $n); $stmt2->execute(); $stmt2->close(); }
+                    if ($stmt2) { $stmt2->bind_param('is', $mid, $n); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
                 }
             }
         }
@@ -362,7 +362,7 @@ if ($view === 'update_action_status' && $ajax === '1') {
     $aid = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
     if ($aid && $st) {
         $stmt = $students->prepare("UPDATE {$students_db}.committee_actions SET status=? WHERE id=?");
-        if ($stmt) { $stmt->bind_param('si', $st, $aid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('si', $st, $aid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false]); exit;
@@ -374,7 +374,7 @@ if ($view === 'send_communication' && $ajax === '1') {
     $subj = trim($_POST['subject']??''); $msg = trim($_POST['message']??''); $rcp = trim($_POST['recipient_role']??'staff');
     if ($subj && $msg) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('issss', $uid, $uname, $rcp, $subj, $msg); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('issss', $uid, $uname, $rcp, $subj, $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Subject and message required']); exit;
@@ -386,7 +386,7 @@ if ($view === 'publish_notice' && $ajax === '1') {
     $t = trim($_POST['title']??''); $c = trim($_POST['content']??''); $a = trim($_POST['audience']??'All');
     if ($t && $c) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.principal_notices (title,content,audience,published_by) VALUES (?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('ssss', $t, $c, $a, $uname); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('ssss', $t, $c, $a, $uname); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Title and content required']); exit;
@@ -398,7 +398,7 @@ if ($view === 'create_student_appeal' && $ajax === '1') {
     $si = (int)($_POST['student_id']??0); $at = trim($_POST['appeal_type']??''); $rs = trim($_POST['reason']??'');
     if ($si && $at && $rs) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.student_appeals (student_id,appeal_type,reason) VALUES (?,?,?)");
-        if ($stmt) { $stmt->bind_param('iss', $si, $at, $rs); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('iss', $si, $at, $rs); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Required fields missing']); exit;
@@ -410,7 +410,7 @@ if ($view === 'update_welfare_status' && $ajax === '1') {
     $id = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
     if ($id && $st) {
         $stmt = $students->prepare("UPDATE {$students_db}.student_welfare_cases SET status=? WHERE id=?");
-        if ($stmt) { $stmt->bind_param('si', $st, $id); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('si', $st, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false]); exit;
@@ -422,7 +422,7 @@ if ($view === 'create_strategic_plan' && $ajax === '1') {
     $pn = trim($_POST['plan_name']??''); $pd = trim($_POST['description']??''); $ps = trim($_POST['start_date']??''); $pe = trim($_POST['end_date']??'');
     if ($pn && $ps) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.strategic_plans (plan_name,description,start_date,end_date,created_by) VALUES (?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('ssssi', $pn, $pd, $ps, $pe, $uid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('ssssi', $pn, $pd, $ps, $pe, $uid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Name and start date required']); exit;
@@ -434,7 +434,7 @@ if ($view === 'update_kpi' && $ajax === '1') {
     $kn = trim($_POST['kpi_name']??''); $kc = trim($_POST['kpi_category']??''); $tv = (float)($_POST['target_value']??0); $cv = (float)($_POST['current_value']??0); $kp = trim($_POST['period']??date('Y-m')); $st = trim($_POST['status']??'on_track');
     if ($kn) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.institutional_kpis (kpi_name,kpi_category,target_value,current_value,period,status) VALUES (?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('ssddss', $kn, $kc, $tv, $cv, $kp, $st); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('ssddss', $kn, $kc, $tv, $cv, $kp, $st); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'KPI name required']); exit;
@@ -446,7 +446,7 @@ if ($view === 'create_qa_review' && $ajax === '1') {
     $rt = trim($_POST['review_title']??''); $rty = trim($_POST['review_type']??''); $rd = trim($_POST['department']??''); $rv = trim($_POST['reviewer']??$uname); $sc = (float)($_POST['score']??0); $rf = trim($_POST['findings']??''); $rr = trim($_POST['recommendations']??'');
     if ($rt) {
         $stmt = $students->prepare("INSERT INTO {$students_db}.quality_assurance (review_title,review_type,department,reviewer,score,findings,recommendations) VALUES (?,?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('ssssdss', $rt, $rty, $rd, $rv, $sc, $rf, $rr); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        if ($stmt) { $stmt->bind_param('ssssdss', $rt, $rty, $rd, $rv, $sc, $rf, $rr); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Review title required']); exit;
@@ -460,7 +460,7 @@ if ($view === 'record_department_review' && $ajax === '1') {
         $stmt = $staff->prepare("INSERT INTO {$staff_db}.department_reviews (department,reviewer_id,review_period,overall_score,strengths,weaknesses,recommendations,status) VALUES (?,?,?,?,'submitted')");
         // Note: original query had 6 params + 'submitted', simplified here
         $stmt2 = $staff->prepare("INSERT INTO {$staff_db}.department_reviews (department,reviewer_id,review_period,overall_score,strengths,weaknesses,recommendations,status) VALUES (?,?,?,?,?,?,?,?)");
-        if ($stmt2) { $s='submitted'; $stmt2->bind_param('sisdssss', $dep, $uid, $rp, $os, $str, $wk, $rec, $s); $stmt2->execute(); $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
+        if ($stmt2) { $s='submitted'; $stmt2->bind_param('sisdssss', $dep, $uid, $rp, $os, $str, $wk, $rec, $s); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Department and period required']); exit;
@@ -472,7 +472,7 @@ if ($view === 'submit_staff_appraisal' && $ajax === '1') {
     $si = (int)($_POST['staff_id']??0); $rd = trim($_POST['review_date']??date('Y-m-d')); $ps = (float)($_POST['performance_score']??0); $stg = trim($_POST['strengths']??''); $ai = trim($_POST['areas_improvement']??''); $or = trim($_POST['overall_rating']??'');
     if ($si && $ps) {
         $stmt2 = $staff->prepare("INSERT INTO {$staff_db}.staff_appraisals (staff_id,reviewer_id,review_date,performance_score,strengths,areas_improvement,overall_rating,status) VALUES (?,?,?,?,?,?,?,?)");
-        if ($stmt2) { $s='submitted'; $stmt2->bind_param('iisdssss', $si, $uid, $rd, $ps, $stg, $ai, $or, $s); $stmt2->execute(); $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
+        if ($stmt2) { $s='submitted'; $stmt2->bind_param('iisdssss', $si, $uid, $rd, $ps, $stg, $ai, $or, $s); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Staff ID and score required']); exit;
@@ -501,7 +501,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $t = trim($_POST['notice_title']??''); $c = trim($_POST['notice_content']??''); $a = trim($_POST['notice_audience']??'All');
         if ($t && $c) {
             $stmt = $students->prepare("INSERT INTO {$students_db}.principal_notices (title,content,audience,published_by) VALUES (?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('ssss', $t, $c, $a, $uname); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+            if ($stmt) { $stmt->bind_param('ssss', $t, $c, $a, $uname); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
             if ($ok) { psuccess('Notice published.'); } else { perror('Database write failed.'); }
         } else { perror('Title and content required.'); }
         header('Location: school-principal.php?section=notices'); exit;

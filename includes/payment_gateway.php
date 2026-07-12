@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Payment Gateway Integration for ISNM
  * Supports: MTN MoMo (Sandbox/Production), Airtel Money
@@ -61,7 +61,7 @@ if (!class_exists('PaymentGateway')) {
             return ['success' => false, 'status' => 'unknown', 'message' => 'Unsupported provider.'];
         }
 
-        // ── MTN MoMo ───────────────────────────────────────────
+        // â”€â”€ MTN MoMo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private function mtnRequest($phone, $amount, $ref, $note) {
             $payload = json_encode([
                 'amount' => ['currency' => 'EUR', 'value' => $amount / 3700], // approximate conversion for sandbox
@@ -132,7 +132,7 @@ if (!class_exists('PaymentGateway')) {
             return ['success' => false, 'status' => 'unknown', 'message' => 'Could not verify transaction.'];
         }
 
-        // ── Airtel Money ────────────────────────────────────────
+        // â”€â”€ Airtel Money â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private function airtelRequest($phone, $amount, $ref, $note) {
             $payload = json_encode([
                 'reference' => $ref,
@@ -204,7 +204,7 @@ function checkFeeClearance($stuConn, $studentId) {
 
 /**
  * Mobile Money webhook handler endpoint.
- * POST /api/momo-callback.php — processes payment callbacks from MTN/Airtel.
+ * POST /api/momo-callback.php â€” processes payment callbacks from MTN/Airtel.
  */
 function handleMobileMoneyCallback() {
     $input = json_decode(file_get_contents('php://input'), true);
@@ -219,7 +219,7 @@ function handleMobileMoneyCallback() {
     if (!$s) return ['success' => false, 'message' => 'DB error'];
     $newStatus = (strtoupper($status) === 'SUCCESSFUL' || $status === 'completed') ? 'verified' : 'failed';
     $s->bind_param('ssss', $newStatus, $txnId, $ref, $ref);
-    $s->execute();
+    if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
     $s->close();
     $conn->close();
     return ['success' => true, 'message' => 'Callback processed: ' . $newStatus];

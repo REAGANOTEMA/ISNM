@@ -99,7 +99,7 @@ function enrollmentStats($conn, $students_conn, $program_name) {
   $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE program=? AND status='Active'");
   if (!$stmt) return 0;
   $stmt->bind_param("s", $program_name);
-  $stmt->execute();
+  if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
   $r = $stmt->get_result();
   $row = $r->fetch_assoc();
   $stmt->close();
@@ -142,7 +142,7 @@ if ($report) {
         $stmt = $conn->prepare("SELECT cc.*,p.program_name FROM academic_course_catalog cc LEFT JOIN academic_programs p ON cc.program_code=p.program_code WHERE cc.program_code=? ORDER BY cc.year_of_study,cc.semester,cc.course_code");
         if (!$stmt) { echo '<div class="alert alert-warning">Query failed</div>'; } else {
         $stmt->bind_param("s", $pc);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
         echo '<table><thead><tr><th>Code</th><th>Title</th><th>Year</th><th>Semester</th><th>Credits</th><th>Status</th></tr></thead><tbody>';
         if($r && $r->num_rows>0) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['course_code']).'</td><td>'.htmlspecialchars($row['course_title']).'</td><td>'.$row['year_of_study'].'</td><td>'.$row['semester'].'</td><td>'.$row['credits'].'</td><td>'.htmlspecialchars($row['status']).'</td></tr>'; }
@@ -157,7 +157,7 @@ if ($report) {
             $stmt = $students_conn->prepare("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE program=? GROUP BY program");
             if (!$stmt) { echo '<div class="alert alert-warning">Query failed</div>'; $r = null; } else {
             $stmt->bind_param("s", $fp);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $r = $stmt->get_result(); }
         }
         else { $r=$students_conn->query("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY program"); }
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare($sql);
         if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; return false; }
         if ($types && $params) $stmt->bind_param($types, ...$params);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $ok = $conn->affected_rows >= 0;
         if (!$ok) $_SESSION['error'] = $conn->error;
         $stmt->close();
@@ -608,7 +608,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
       <?php
       $acadStaffId = 0;
       $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = 4 AND status = 'Active' LIMIT 1") : false;
-      if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
+      if ($sq) { if (!$sq->execute()) { error_log('$sq execute failed: ' . ($sq->error ?? 'unknown')); }; $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
       echo renderDirectorPerformanceCard($acadStaffId, 4, 'Director Academics', $conn);
       ?>
     </div>
@@ -779,7 +779,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                                             $ccStmt=$conn->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? ORDER BY year_of_study,semester");
                                             if($ccStmt){
                                             $ccStmt->bind_param("s",$p['program_code']);
-                                            $ccStmt->execute();
+                                            if (!$ccStmt->execute()) { error_log('$ccStmt execute failed: ' . ($ccStmt->error ?? 'unknown')); };
                                             $ccRes=$ccStmt->get_result();
                                             if($ccRes) while($row=$ccRes->fetch_assoc()) $ccs[]=$row;
                                             $ccStmt->close(); }

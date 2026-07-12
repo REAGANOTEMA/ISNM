@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 try {
     $ctx = bootstrapStaffDashboard(['computer lab', 'ict', 'it', 'lab technician', 'director ict']);
@@ -70,7 +70,7 @@ if ($students_conn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // Student handlers (students DB — works without ICT DB)
+    // Student handlers (students DB â€” works without ICT DB)
     if ($action === 'add_student' && $students_conn) {
         $index = 'ISNM/' . date('Y') . '/' . str_pad(mt_rand(0, 99999), 5, '0', STR_PAD_LEFT);
         $fn = trim($_POST['full_name'] ?? '');
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt) {
             $stmt->bind_param("ssssssssssi", $index, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $dob, $intakeYear);
             if ($stmt->execute()) {
-                $_SESSION['success'] = "Student $fn added. Index: $index — they can sign in at student-login.php";
+                $_SESSION['success'] = "Student $fn added. Index: $index â€” they can sign in at student-login.php";
             } else {
                 $_SESSION['error'] = "Error: " . $stmt->error;
             }
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $students_conn->prepare("UPDATE students SET index_number=?, first_name=?, surname=?, full_name=?, phone=?, email=?, program=?, gender=?, set_name=?, status=?, updated_at=NOW() WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("ssssssssssi", $idx, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Student $fn updated.";
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $students_conn->prepare("UPDATE students SET status='deleted' WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Student removed.";
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT IGNORE INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed) VALUES (?, ?, ?, 'online', ?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("sssssss", $cid, $name, $loc, $ip, $mac, $specs, $os);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Computer $cid added.";
@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_computers SET computer_name=?, location=?, ip_address=?, mac_address=?, specifications=?, os_installed=?, status=? WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("sssssssi", $name, $loc, $ip, $mac, $specs, $os, $status, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Computer updated.";
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_computers SET status='deleted' WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Computer removed.";
@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("sssssss", $tn, $rn, $re, $rt, $it, $pr, $desc);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Ticket $tn created.";
@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt) {
             $noteVal = "\n[$uname] $notes";
             $stmt->bind_param("si", $noteVal, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Ticket #$id resolved.";
@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, booking_date, time_slot, number_of_students, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
         if ($stmt) {
             $stmt->bind_param("sssssi", $ref, $cn, $in, $bd, $ts, $ns);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Booking $ref created.";
@@ -247,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_bookings SET status=? WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("si", $st, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Booking updated.";
@@ -264,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_equipment (equipment_name, equipment_code, category, quantity, location, status) VALUES (?, ?, ?, ?, ?, 'active')");
         if ($stmt) {
             $stmt->bind_param("sssii", $en, $ec, $cat, $qty, $loc);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Equipment added.";
@@ -277,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_equipment SET status='inactive' WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Equipment removed.";
@@ -294,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_printing_jobs (job_name, print_type, page_count, copy_count, user_name, status) VALUES (?, ?, ?, ?, ?, 'pending')");
         if ($stmt) {
             $stmt->bind_param("ssisi", $pn, $pt, $pc, $cc, $un);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Print job submitted.";
@@ -308,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_printing_jobs SET status=?, completed_at=NOW() WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("si", $st, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Print job updated.";
@@ -324,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO software_inventory (software_name, version, license_type, expiry_date, status) VALUES (?, ?, ?, ?, 'active')");
         if ($stmt) {
             $stmt->bind_param("ssss", $sn, $sv, $lic, $exp);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Software added.";
@@ -337,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE software_inventory SET status='deleted' WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Software removed.";
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_inventory_items (item_name, item_code, category, quantity, unit) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("sssii", $in, $ic, $cat, $qty, $un);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Inventory item added.";
@@ -368,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_inventory_items SET quantity=? WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("ii", $qty, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Inventory updated.";
@@ -384,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_attendance (student_id, student_name, session, status) VALUES (?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("ssss", $sid, $sn, $ss, $st);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "Attendance recorded.";
@@ -399,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("INSERT INTO lab_id_card_requests (student_id, student_name, program, status) VALUES (?, ?, ?, 'pending')");
         if ($stmt) {
             $stmt->bind_param("sss", $sid, $sn, $sp);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "ID card request submitted.";
@@ -413,7 +413,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $ict->prepare("UPDATE lab_id_card_requests SET status=? WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("si", $st, $id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         $_SESSION['success'] = "ID card status updated.";
@@ -501,7 +501,7 @@ $pageTitle = 'Computer Lab Manager';
             <li><a class="nav-link <?= $section==='settings'?'active':'' ?>" href="?section=settings"><i class="fas fa-cog me-1"></i>Settings</a></li>
         </ul>
 
-        <!-- ════════════════ DASHBOARD ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DASHBOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php if ($section === 'dashboard'): ?>
         <div class="row g-2 mb-3">
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card" onclick="location='?section=students'" style="cursor:pointer"><div class="icon-circle bg-primary-soft"><i class="fas fa-user-graduate"></i></div><div><h4><?= $total_students ?></h4><p>Total Students</p></div></div></div>
@@ -580,7 +580,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ STUDENTS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• STUDENTS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'students'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -618,7 +618,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ COMPUTERS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• COMPUTERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'computers'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -654,7 +654,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ SESSIONS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SESSIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'sessions'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -700,7 +700,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ ID CARDS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ID CARDS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'id-cards'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
@@ -770,7 +770,7 @@ $pageTitle = 'Computer Lab Manager';
                         $found = [];
                         if ($stmt) {
                             $stmt->bind_param("ss", $like, $like);
-                            $stmt->execute();
+                            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                             $res = $stmt->get_result();
                             if ($res) $found = $res->fetch_all(MYSQLI_ASSOC);
                             $stmt->close();
@@ -790,7 +790,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ EQUIPMENT ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EQUIPMENT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'equipment'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -824,7 +824,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ PRINTING ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PRINTING â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'printing'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
@@ -886,7 +886,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ SUPPORT ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SUPPORT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'support'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
@@ -940,7 +940,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ SOFTWARE ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SOFTWARE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'software'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -973,7 +973,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ INVENTORY ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INVENTORY â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'inventory'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -1013,7 +1013,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ ATTENDANCE ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ATTENDANCE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'attendance'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
@@ -1057,7 +1057,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ REPORTS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REPORTS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'reports'): ?>
         <div class="row g-3">
             <div class="col-12">
@@ -1099,7 +1099,7 @@ $pageTitle = 'Computer Lab Manager';
             </div>
         </div>
 
-        <!-- ════════════════ SETTINGS ════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SETTINGS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <?php elseif ($section === 'settings'): ?>
         <div class="row g-3">
             <div class="col-lg-6">
@@ -1133,7 +1133,7 @@ $pageTitle = 'Computer Lab Manager';
     </div>
 </div>
 
-<!-- ═══ MODALS ═══ -->
+<!-- â•â•â• MODALS â•â•â• -->
 
 <!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1">
@@ -1579,7 +1579,7 @@ $pageTitle = 'Computer Lab Manager';
     </div>
 </div>
 
-<!-- ═══ FOOTER ═══ -->
+<!-- â•â•â• FOOTER â•â•â• -->
 <?php include_once __DIR__ . '/includes/dashboard_footer.php'; ?>
 
 <script>

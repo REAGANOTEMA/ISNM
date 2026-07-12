@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 header('Content-Type: application/json');
 
@@ -39,7 +39,7 @@ case 'register_courses':
         $exists = $studentsDb->prepare("SELECT id FROM student_course_registrations WHERE student_id=? AND course_id=? AND academic_year=? AND semester=?");
         if ($exists) {
             $exists->bind_param("iiss", $student_id, $cid, $academic_year, $semester);
-            $exists->execute();
+            if (!$exists->execute()) { error_log('$exists execute failed: ' . ($exists->error ?? 'unknown')); };
             if ($exists->get_result()->num_rows > 0) { $skipped++; $exists->close(); continue; }
             $exists->close();
         }
@@ -74,7 +74,7 @@ case 'get_student_data':
     $stmt = $studentsDb->prepare("SELECT id, student_number, registration_number, full_name, program, level, current_year, year, set_name, status, email, phone, date_of_birth, gender, guardian_name, guardian_phone, profile_picture FROM students WHERE id = ?");
     if ($stmt) {
         $stmt->bind_param("i", $student_id);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $student = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         echo json_encode(['success' => true, 'data' => $student]);
@@ -125,7 +125,7 @@ case 'mark_notification_read':
         $stmt = $studentsDb->prepare("UPDATE student_notifications SET is_read=1 WHERE id=? AND student_id=?");
         if ($stmt) {
             $stmt->bind_param("ii", $nid, $student_id);
-            $stmt->execute();
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }

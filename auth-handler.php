@@ -1,13 +1,13 @@
-<?php
+﻿<?php
 /**
- * ══════════════════════════════════════════════════════════════════════════
- * Unified Authentication Handler — ISNM
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * Unified Authentication Handler â€” ISNM
  * All staff/student login requests route here.
  * Supports three authentication sources:
- *   ① staff           table  → primary, via AuthenticationService
- *   ② hr_users        table  → inline fallback (password_hash)
- *   ③ bursar_users    table  → inline fallback (password_hash)
- * ══════════════════════════════════════════════════════════════════════════
+ *   â‘  staff           table  â†’ primary, via AuthenticationService
+ *   â‘¡ hr_users        table  â†’ inline fallback (password_hash)
+ *   â‘¢ bursar_users    table  â†’ inline fallback (password_hash)
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  */
 
 require_once __DIR__ . '/config/database.php';
@@ -68,7 +68,7 @@ function validateStudentLoginAccess() {
     return true;
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────
+// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** Try unified-staff auth; return result array on success, null on failure. */
 function tryStaffAuth(string $email, string $password, AuthenticationService $auth_service) {
@@ -94,7 +94,7 @@ function tryHrAuth(string $email, string $password) {
              FROM hr_users WHERE email = ? AND status = "active" LIMIT 1'
         );
         $stmt->bind_param('s', $email);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $res = $stmt->get_result();
         if ($res->num_rows !== 1) return null;
 
@@ -150,7 +150,7 @@ function tryBursarAuth(string $email, string $password) {
              FROM bursar_users WHERE email = ? AND status = "active" LIMIT 1'
         );
         $stmt->bind_param('s', $email);
-        $stmt->execute();
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $res = $stmt->get_result();
         if ($res->num_rows !== 1) return null;
 
@@ -201,8 +201,8 @@ function applyLegacyUserSession(array $user_entry): void {
     $_SESSION['can_access_all'] = $auth_service->hasFullInstitutionAccess($user_entry['role']);
 }
 
-// ── route ──────────────────────────────────────────────────────────────────
-// ── rate limit: check_student endpoint ──────────────────────────────
+// â”€â”€ route â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ rate limit: check_student endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_student') {
     header('Content-Type: application/json');
     $indexNumber = trim($_GET['index_number'] ?? '');
@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
     $q = $conn->prepare("SELECT id, password FROM students WHERE index_number = ? LIMIT 1");
     if (!$q) { echo json_encode(['exists' => false]); exit(); }
     $q->bind_param('s', $indexNumber);
-    $q->execute();
+    if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
     $r = $q->get_result();
     $student = $r->fetch_assoc();
     $q->close();
@@ -265,13 +265,13 @@ if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
     exit();
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 switch ($action) {
 
-    // ── Staff / organogram login ────────────────────────────────────
+    // â”€â”€ Staff / organogram login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'staff_login':
         $email    = trim($_POST['email']    ?? '');
-        $password = (string)($_POST['password'] ?? ''); // raw — no trim, no sanitize
+        $password = (string)($_POST['password'] ?? ''); // raw â€” no trim, no sanitize
         $requested_position = trim($_POST['requested_position'] ?? '');
         if ($requested_position === '' && !empty($_SESSION['requested_position'])) {
             $requested_position = $_SESSION['requested_position'];
@@ -301,12 +301,12 @@ switch ($action) {
 
         $result = null;
 
-        // ① Unified staff table
+        // â‘  Unified staff table
         $result = tryStaffAuth($email, $password, $auth_service);
 
-        // ② hr_users table (only if staff table had no matching email)
+        // â‘¡ hr_users table (only if staff table had no matching email)
         if ($result !== null && !$result['success'] && strpos($result['message'] ?? '', 'Invalid email or password') !== false) {
-            // Staff auth failed — try hr_users as fallback
+            // Staff auth failed â€” try hr_users as fallback
             $hrResult = tryHrAuth($email, $password);
             if ($hrResult && $hrResult['success']) {
                 $result = $hrResult;
@@ -314,7 +314,7 @@ switch ($action) {
             }
         }
 
-        // ③ bursar_users table (only if both above failed with invalid email)
+        // â‘¢ bursar_users table (only if both above failed with invalid email)
         if ($result !== null && !$result['success'] && strpos($result['message'] ?? '', 'Invalid email or password') !== false) {
             $bursarResult = tryBursarAuth($email, $password);
             if ($bursarResult && $bursarResult['success']) {
@@ -477,7 +477,7 @@ switch ($action) {
         }
         exit();
 
-    // ── Student login ─────────────────────────────────────────────
+    // â”€â”€ Student login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'student_login':
         handleStudentLogin();
         break;
@@ -486,17 +486,17 @@ switch ($action) {
         handleStudentSetPassword();
         break;
 
-    // ── Create student account ───────────────────────────────────
+    // â”€â”€ Create student account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'create_student':
         handleCreateStudent();
         break;
 
-    // ── Create staff account ─────────────────────────────────────
+    // â”€â”€ Create staff account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'create_staff':
         handleCreateStaff();
         break;
 
-    // ── Change password ──────────────────────────────────────────
+    // â”€â”€ Change password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'change_password':
         header('Content-Type: application/json');
         $curPw  = $_POST['current_password'] ?? '';
@@ -523,7 +523,7 @@ switch ($action) {
         $s = $conn->prepare("SELECT password FROM $table WHERE $idCol = ? LIMIT 1");
         if (!$s) { echo json_encode(['success' => false, 'message' => 'Query error.']); exit; }
         $s->bind_param('i', $uid);
-        $s->execute();
+        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
         $r = $s->get_result()->fetch_assoc();
         $s->close();
         if (!$r) { echo json_encode(['success' => false, 'message' => 'User not found.']); exit; }
@@ -546,7 +546,7 @@ switch ($action) {
         }
         exit;
 
-    // ── Logout ───────────────────────────────────────────────────
+    // â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     case 'logout':
         handleLogout();
         break;
@@ -558,7 +558,7 @@ switch ($action) {
         exit();
 }
 
-// ── sub-handlers ───────────────────────────────────────────────────────────
+// â”€â”€ sub-handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function handleStudentLogin() {
     global $auth_service;

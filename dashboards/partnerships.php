@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'principal', 'ceo', 'head']);
 $conn = $ctx['staff'];
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_p
     $status = trim($_POST['status'] ?? 'active');
     $desc = trim($_POST['description'] ?? '');
     $stmt = $conn->prepare("INSERT INTO partnerships (organization_name, partnership_type, contact_person, contact_email, status, description) VALUES (?, ?, ?, ?, ?, ?)");
-    if ($stmt) { $stmt->bind_param('ssssss', $org, $type, $contact, $email, $status, $desc); $stmt->execute(); $stmt->close(); }
+    if ($stmt) { $stmt->bind_param('ssssss', $org, $type, $contact, $email, $status, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
     header('Location: partnerships.php'); exit;
 }
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -69,11 +69,11 @@ function handleSendMessage() {
     $sender_id = $_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
-    // Get recipient information — student role is always 'student'
+    // Get recipient information â€” student role is always 'student'
     $recipient_sql = "SELECT 'student' as role FROM students WHERE student_number = ? OR id = ?";
     $recipient_stmt = $conn->prepare($recipient_sql);
     $recipient_stmt->bind_param("ss", $student_id, $student_id);
-    $recipient_stmt->execute();
+    if (!$recipient_stmt->execute()) { error_log('$recipient_stmt execute failed: ' . ($recipient_stmt->error ?? 'unknown')); };
     $recipient_result = $recipient_stmt->get_result();
     
     if ($recipient_result->num_rows === 0) {
@@ -104,7 +104,7 @@ function handleSendMessage() {
         $notification_title = "New Message from $sender_role";
         $notification_message = "$subject: " . substr($message, 0, 100) . "...";
         $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
-        $notification_stmt->execute();
+        if (!$notification_stmt->execute()) { error_log('$notification_stmt execute failed: ' . ($notification_stmt->error ?? 'unknown')); };
         
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Message Sent', "Sent $message_type message to: $student_id", 'messages', $student_id);
         $_SESSION['success'] = "Message sent successfully!";
@@ -144,7 +144,7 @@ function handleSendBulkMessage() {
             $notification_title = "New Message from $sender_role";
             $notification_message = "$subject: " . substr($message, 0, 100) . "...";
             $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
-            $notification_stmt->execute();
+            if (!$notification_stmt->execute()) { error_log('$notification_stmt execute failed: ' . ($notification_stmt->error ?? 'unknown')); };
             
             $success_count++;
         } else {
