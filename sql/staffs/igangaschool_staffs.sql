@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 12, 2026 at 12:25 PM
+-- Generation Time: Jul 12, 2026 at 01:26 PM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -1594,6 +1594,26 @@ CREATE TABLE `attendence` (
   `section` varchar(100) DEFAULT NULL,
   `date` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_logs`
+--
+
+CREATE TABLE `audit_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `role` varchar(100) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `entity_type` varchar(100) DEFAULT NULL,
+  `entity_id` int(11) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -8580,6 +8600,25 @@ INSERT INTO `notifications` (`id`, `title`, `message`, `type`, `priority`, `audi
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notification_logs`
+--
+
+CREATE TABLE `notification_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text DEFAULT NULL,
+  `type` varchar(50) DEFAULT 'info',
+  `icon` varchar(100) DEFAULT NULL,
+  `link` varchar(500) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `read_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `notification_reads`
 --
 
@@ -10908,6 +10947,23 @@ INSERT INTO `semesters` (`id`, `academic_year`, `semester_name`, `start_date`, `
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `settings`
+--
+
+CREATE TABLE `settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_group` varchar(100) DEFAULT 'general',
+  `description` varchar(500) DEFAULT NULL,
+  `is_public` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sickbay_medicine_stock`
 --
 
@@ -11162,7 +11218,7 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `date_of_birth`, `gender`, `marital_status`, `nationality`, `religion`, `nin`, `password`, `role_id`, `position`, `department`, `status`, `hire_date`, `last_login`, `login_attempts`, `locked_until`, `is_first_login`, `password_changed`, `profile_photo`, `address`, `next_of_kin_name`, `next_of_kin_phone`, `next_of_kin_relationship`, `next_of_kin_address`, `emergency_contact_name`, `emergency_contact_phone`, `highest_qualification`, `year_of_experience`, `staff_category`, `contract_end_date`, `resignation_date`, `resignation_reason`, `created_at`, `updated_at`) VALUES
-(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$oyDYgwVlrVdxkuqBN1/hGei2RrBsFEU0Zx03usRpcru.OHEHFe0lC', 1, 'Director General', 'Executive', 'Active', '2026-06-09', '2026-07-12 08:13:55', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:10', '2026-07-12 05:13:55'),
+(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$oyDYgwVlrVdxkuqBN1/hGei2RrBsFEU0Zx03usRpcru.OHEHFe0lC', 1, 'Director General', 'Executive', 'Active', '2026-06-09', '2026-07-12 12:41:40', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:10', '2026-07-12 09:41:40'),
 (2, 'CEO-001', 'Chief Executive Officer', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$LfakAho0G3z3k9IO8LQ5f.ZttedFPce/Y8.gHRWZ93b4UB0.vJXsC', 2, 'CEO', 'Executive', 'Active', '2026-06-09', '2026-07-12 08:14:31', 0, NULL, 0, 1, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:10', '2026-07-12 05:14:31'),
 (3, 'DA-001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$SRiViw0a/PvxIgNS0HTdzeNVAKC6k6f6PDlTAIuUjbN5KJTeWzWRi', 3, 'Director Academics', 'Academic Affairs', 'Active', '2026-06-09', '2026-07-12 08:14:57', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:10', '2026-07-12 05:14:57'),
 (4, 'DF-001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$oyDYgwVlrVdxkuqBN1/hGei2RrBsFEU0Zx03usRpcru.OHEHFe0lC', 4, 'Director Finance', 'Finance', 'Active', '2026-06-09', '2026-07-12 08:16:11', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:10', '2026-07-12 05:16:11'),
@@ -11747,7 +11803,9 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (527, 3, 'Logout', 'User logged out', 'authentication', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:15:33'),
 (528, 4, 'Login', 'User logged in successfully', 'authentication', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:16:11'),
 (529, 4, 'Logout', 'User logged out', 'authentication', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:16:32'),
-(530, 5, 'Login', 'User logged in successfully', 'authentication', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:17:06');
+(530, 5, 'Login', 'User logged in successfully', 'authentication', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:17:06'),
+(531, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.8.166', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 09:35:06'),
+(532, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.8.166', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 09:41:40');
 
 -- --------------------------------------------------------
 
@@ -12346,7 +12404,9 @@ INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `ip_addre
 (318, 2, 'ip29rs5v7cfmlmm3khku0fla5n', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:14:31', '2026-07-12 08:44:31'),
 (319, 3, 'fddrdjf25ingdls0cn3et8legs', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:14:57', '2026-07-12 08:44:57'),
 (320, 4, 'otcftisuqai9kot5sg18o9eige', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:16:11', '2026-07-12 08:46:11'),
-(321, 5, 'vjl132100usp04pmlinb4jsul5', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:17:06', '2026-07-12 08:47:06');
+(321, 5, 'vjl132100usp04pmlinb4jsul5', '102.86.1.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 05:17:06', '2026-07-12 08:47:06'),
+(322, 1, '02t82fhku19isog8tidl34hv1j', '102.86.8.166', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 09:35:06', '2026-07-12 13:05:06'),
+(323, 1, 's4kf71kk55sdehd6ccsuga3rrm', '102.86.8.166', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-12 09:41:40', '2026-07-12 13:11:40');
 
 -- --------------------------------------------------------
 
@@ -15428,6 +15488,16 @@ ALTER TABLE `attendence`
   ADD KEY `date` (`date`);
 
 --
+-- Indexes for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `action` (`action`),
+  ADD KEY `entity_type` (`entity_type`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Indexes for table `audit_trail`
 --
 ALTER TABLE `audit_trail`
@@ -17041,6 +17111,15 @@ ALTER TABLE `notifications`
   ADD KEY `idx_notif_created` (`created_at`);
 
 --
+-- Indexes for table `notification_logs`
+--
+ALTER TABLE `notification_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `is_read` (`is_read`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Indexes for table `notification_reads`
 --
 ALTER TABLE `notification_reads`
@@ -17678,6 +17757,14 @@ ALTER TABLE `security_visitors`
 --
 ALTER TABLE `semesters`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `settings`
+--
+ALTER TABLE `settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `setting_group` (`setting_group`);
 
 --
 -- Indexes for table `sickbay_medicine_stock`
@@ -18981,6 +19068,12 @@ ALTER TABLE `attendence`
   MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `audit_trail`
 --
 ALTER TABLE `audit_trail`
@@ -19728,7 +19821,7 @@ ALTER TABLE `generated_documents`
 -- AUTO_INCREMENT for table `gpa_settings`
 --
 ALTER TABLE `gpa_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `grades`
@@ -20385,6 +20478,12 @@ ALTER TABLE `notifications`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `notification_logs`
+--
+ALTER TABLE `notification_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `notification_reads`
 --
 ALTER TABLE `notification_reads`
@@ -20967,6 +21066,12 @@ ALTER TABLE `semesters`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `settings`
+--
+ALTER TABLE `settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `sickbay_medicine_stock`
 --
 ALTER TABLE `sickbay_medicine_stock`
@@ -21030,7 +21135,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=531;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=533;
 
 --
 -- AUTO_INCREMENT for table `staff_appraisals`
@@ -21102,7 +21207,7 @@ ALTER TABLE `staff_licenses`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=322;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=324;
 
 --
 -- AUTO_INCREMENT for table `staff_messages`

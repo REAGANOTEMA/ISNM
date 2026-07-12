@@ -65,7 +65,13 @@ function renderDynamicSidebar(): void {
         'compliance' => '#ef4444', 'clinical' => '#ef4444', 'system' => '#475569',
     ];
     ?>
-    <nav class="isnm-sidebar sidebar" id="isnmSidebar">
+    <style>
+    .isnm-sidebar.sidebar.not-init .menu-children {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    </style>
+    <nav class="isnm-sidebar sidebar not-init" id="isnmSidebar">
         <div class="sidebar-brand">
             <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
                 <i class="fas fa-bars"></i>
@@ -236,10 +242,14 @@ function renderDynamicSidebar(): void {
 
         // ── Recalculate max-height after images/fonts load ──
         window.addEventListener('load', function() {
-            document.querySelectorAll('.menu-group.expanded .menu-children').forEach(function(c) {
+            Array.from(document.querySelectorAll('.menu-group.expanded .menu-children')).forEach(function(c) {
                 c.style.maxHeight = c.scrollHeight + 'px';
             });
         });
+
+        // ── Progressive enhancement: accordion ready, remove fallback class ──
+        var sb = document.getElementById('isnmSidebar');
+        if (sb) sb.classList.remove('not-init');
     })();
     </script>
     <?php

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 12, 2026 at 12:25 PM
+-- Generation Time: Jul 12, 2026 at 01:26 PM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -463,6 +463,26 @@ CREATE TABLE `audit_findings` (
   `department` varchar(200) DEFAULT NULL,
   `status` enum('open','in_progress','resolved','closed') DEFAULT 'open',
   `reported_by` varchar(200) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_logs`
+--
+
+CREATE TABLE `audit_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `role` varchar(100) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `entity_type` varchar(100) DEFAULT NULL,
+  `entity_id` int(11) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -1492,6 +1512,50 @@ CREATE TABLE `donations` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `events`
+--
+
+CREATE TABLE `events` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `event_type` varchar(100) DEFAULT 'general',
+  `start_date` datetime NOT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `all_day` tinyint(1) DEFAULT 0,
+  `location` varchar(255) DEFAULT NULL,
+  `color` varchar(20) DEFAULT '#3b82f6',
+  `created_by` int(11) DEFAULT NULL,
+  `is_public` tinyint(1) DEFAULT 1,
+  `status` varchar(50) DEFAULT 'scheduled',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `examination_records`
+--
+
+CREATE TABLE `examination_records` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `course_code` varchar(50) NOT NULL,
+  `exam_type` varchar(50) DEFAULT 'Final',
+  `marks_obtained` decimal(8,2) DEFAULT 0.00,
+  `total_marks` decimal(8,2) DEFAULT 100.00,
+  `grade` varchar(5) DEFAULT '',
+  `continuous_assessment_marks` decimal(8,2) DEFAULT 0.00,
+  `final_exam_marks` decimal(8,2) DEFAULT 0.00,
+  `grade_status` varchar(50) DEFAULT 'Pending',
+  `entered_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `exams`
 --
 
@@ -2218,6 +2282,46 @@ CREATE TABLE `general_ledger` (
   `posted_by` int(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gpa_settings`
+--
+
+CREATE TABLE `gpa_settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT 0,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `gpa_settings`
+--
+
+INSERT INTO `gpa_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
+(1, 'gpa_max', '4.00', 'Maximum GPA', 0, '2026-07-12 10:04:39'),
+(2, 'pass_mark', '50', 'Minimum passing percentage', 0, '2026-07-12 10:04:39'),
+(3, 'auto_gpa', '1', 'Auto-calculate GPA', 0, '2026-07-12 10:04:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `graduation_approvals`
+--
+
+CREATE TABLE `graduation_approvals` (
+  `id` int(11) NOT NULL,
+  `candidate_id` int(11) NOT NULL,
+  `approved_by` int(11) DEFAULT 0,
+  `approval_level` varchar(100) DEFAULT 'Registrar',
+  `status` varchar(50) DEFAULT 'Pending',
+  `remarks` text DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3119,6 +3223,45 @@ CREATE TABLE `meeting_minutes` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `messages`
+--
+
+CREATE TABLE `messages` (
+  `id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `recipient_id` int(11) DEFAULT NULL,
+  `subject` varchar(500) DEFAULT NULL,
+  `body` text DEFAULT NULL,
+  `priority` varchar(20) DEFAULT 'normal',
+  `is_read` tinyint(1) DEFAULT 0,
+  `is_archived` tinyint(1) DEFAULT 0,
+  `parent_id` int(11) DEFAULT NULL,
+  `has_attachment` tinyint(1) DEFAULT 0,
+  `attachment_path` varchar(500) DEFAULT NULL,
+  `sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `read_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `module_permissions`
+--
+
+CREATE TABLE `module_permissions` (
+  `id` int(11) NOT NULL,
+  `module_id` int(11) NOT NULL,
+  `role_id` int(11) NOT NULL,
+  `can_view` tinyint(1) DEFAULT 1,
+  `can_create` tinyint(1) DEFAULT 0,
+  `can_edit` tinyint(1) DEFAULT 0,
+  `can_delete` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `news`
 --
 
@@ -3156,6 +3299,25 @@ CREATE TABLE `notifications` (
   `sent_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notification_logs`
+--
+
+CREATE TABLE `notification_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text DEFAULT NULL,
+  `type` varchar(50) DEFAULT 'info',
+  `icon` varchar(100) DEFAULT NULL,
+  `link` varchar(500) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `read_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3649,6 +3811,24 @@ CREATE TABLE `proof_of_payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `push_subscriptions`
+--
+
+CREATE TABLE `push_subscriptions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `endpoint` varchar(500) NOT NULL,
+  `auth_key` varchar(255) DEFAULT NULL,
+  `p256dh_key` varchar(255) DEFAULT NULL,
+  `device_type` varchar(50) DEFAULT 'desktop',
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `quality_assurance`
 --
 
@@ -3855,6 +4035,23 @@ CREATE TABLE `secretary_messages` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `settings`
+--
+
+CREATE TABLE `settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_group` varchar(100) DEFAULT 'general',
+  `description` varchar(500) DEFAULT NULL,
+  `is_public` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sickness_directory`
 --
 
@@ -3944,6 +4141,32 @@ CREATE TABLE `staff` (
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_profiles`
+--
+
+CREATE TABLE `staff_profiles` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `profile_picture` varchar(500) DEFAULT NULL,
+  `bio` text DEFAULT NULL,
+  `qualifications` text DEFAULT NULL,
+  `specialization` varchar(255) DEFAULT NULL,
+  `office_location` varchar(255) DEFAULT NULL,
+  `office_phone` varchar(50) DEFAULT NULL,
+  `emergency_contact` varchar(100) DEFAULT NULL,
+  `emergency_phone` varchar(50) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` varchar(20) DEFAULT NULL,
+  `national_id` varchar(100) DEFAULT NULL,
+  `employment_date` date DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -6297,6 +6520,26 @@ CREATE TABLE `supplier_payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `system_modules`
+--
+
+CREATE TABLE `system_modules` (
+  `id` int(11) NOT NULL,
+  `module_key` varchar(100) NOT NULL,
+  `module_name` varchar(255) NOT NULL,
+  `icon` varchar(100) DEFAULT 'fas fa-puzzle-piece',
+  `parent_id` int(11) DEFAULT NULL,
+  `route` varchar(500) DEFAULT NULL,
+  `order_index` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `timetable`
 --
 
@@ -6406,6 +6649,44 @@ INSERT INTO `timetable` (`id`, `program`, `year_of_study`, `semester`, `day_of_w
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `transcripts`
+--
+
+CREATE TABLE `transcripts` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `program_id` int(11) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(100) DEFAULT NULL,
+  `generated_by` int(11) DEFAULT NULL,
+  `generated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` varchar(50) DEFAULT 'draft',
+  `pdf_path` varchar(500) DEFAULT NULL,
+  `is_official` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `transcript_items`
+--
+
+CREATE TABLE `transcript_items` (
+  `id` int(11) NOT NULL,
+  `transcript_id` int(11) NOT NULL,
+  `course_code` varchar(50) NOT NULL,
+  `course_title` varchar(300) DEFAULT '',
+  `credit_hours` decimal(5,2) DEFAULT 0.00,
+  `marks_obtained` decimal(8,2) DEFAULT 0.00,
+  `grade` varchar(5) DEFAULT '',
+  `grade_point` decimal(4,2) DEFAULT 0.00,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ura_reports`
 --
 
@@ -6424,6 +6705,24 @@ CREATE TABLE `ura_reports` (
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_sessions`
+--
+
+CREATE TABLE `user_sessions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `session_token` varchar(255) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `device_type` varchar(50) DEFAULT NULL,
+  `last_activity` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -6608,6 +6907,16 @@ ALTER TABLE `audit_findings`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `action` (`action`),
+  ADD KEY `entity_type` (`entity_type`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Indexes for table `bank_accounts`
 --
 ALTER TABLE `bank_accounts`
@@ -6739,6 +7048,22 @@ ALTER TABLE `document_tracking`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `events`
+--
+ALTER TABLE `events`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `event_type` (`event_type`),
+  ADD KEY `start_date` (`start_date`),
+  ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `examination_records`
+--
+ALTER TABLE `examination_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_student_course_exam` (`student_id`,`course_code`,`exam_type`);
+
+--
 -- Indexes for table `exams`
 --
 ALTER TABLE `exams`
@@ -6820,6 +7145,20 @@ ALTER TABLE `form_submissions`
   ADD KEY `idx_created` (`created_at`);
 
 --
+-- Indexes for table `gpa_settings`
+--
+ALTER TABLE `gpa_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`);
+
+--
+-- Indexes for table `graduation_approvals`
+--
+ALTER TABLE `graduation_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `candidate_id` (`candidate_id`);
+
+--
 -- Indexes for table `hostel_blocks`
 --
 ALTER TABLE `hostel_blocks`
@@ -6881,6 +7220,33 @@ ALTER TABLE `meeting_minutes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `messages`
+--
+ALTER TABLE `messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sender_id` (`sender_id`),
+  ADD KEY `recipient_id` (`recipient_id`),
+  ADD KEY `is_read` (`is_read`),
+  ADD KEY `parent_id` (`parent_id`);
+
+--
+-- Indexes for table `module_permissions`
+--
+ALTER TABLE `module_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `module_role` (`module_id`,`role_id`),
+  ADD KEY `role_id` (`role_id`);
+
+--
+-- Indexes for table `notification_logs`
+--
+ALTER TABLE `notification_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `is_read` (`is_read`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Indexes for table `official_letters`
 --
 ALTER TABLE `official_letters`
@@ -6917,6 +7283,13 @@ ALTER TABLE `procurement_requests`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_endpoint` (`user_id`,`endpoint`);
+
+--
 -- Indexes for table `quality_assurance`
 --
 ALTER TABLE `quality_assurance`
@@ -6949,6 +7322,14 @@ ALTER TABLE `secretary_messages`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `settings`
+--
+ALTER TABLE `settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `setting_group` (`setting_group`);
+
+--
 -- Indexes for table `staff`
 --
 ALTER TABLE `staff`
@@ -6956,6 +7337,13 @@ ALTER TABLE `staff`
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `idx_staff_role` (`role_id`),
   ADD KEY `idx_staff_email` (`email`);
+
+--
+-- Indexes for table `staff_profiles`
+--
+ALTER TABLE `staff_profiles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_roles`
@@ -7055,10 +7443,43 @@ ALTER TABLE `supplier_payments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `system_modules`
+--
+ALTER TABLE `system_modules`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `module_key` (`module_key`),
+  ADD KEY `parent_id` (`parent_id`),
+  ADD KEY `is_active` (`is_active`);
+
+--
+-- Indexes for table `transcripts`
+--
+ALTER TABLE `transcripts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `transcript_items`
+--
+ALTER TABLE `transcript_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `transcript_id` (`transcript_id`);
+
+--
 -- Indexes for table `ura_reports`
 --
 ALTER TABLE `ura_reports`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `user_sessions`
+--
+ALTER TABLE `user_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `session_token` (`session_token`),
+  ADD KEY `last_activity` (`last_activity`);
 
 --
 -- Indexes for table `volunteer_applications`
@@ -7154,6 +7575,12 @@ ALTER TABLE `appointments`
 -- AUTO_INCREMENT for table `audit_findings`
 --
 ALTER TABLE `audit_findings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -7277,6 +7704,18 @@ ALTER TABLE `document_tracking`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `events`
+--
+ALTER TABLE `events`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `examination_records`
+--
+ALTER TABLE `examination_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `exams`
 --
 ALTER TABLE `exams`
@@ -7349,6 +7788,18 @@ ALTER TABLE `form_submissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `gpa_settings`
+--
+ALTER TABLE `gpa_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `graduation_approvals`
+--
+ALTER TABLE `graduation_approvals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `hostel_blocks`
 --
 ALTER TABLE `hostel_blocks`
@@ -7403,6 +7854,24 @@ ALTER TABLE `meeting_minutes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `module_permissions`
+--
+ALTER TABLE `module_permissions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notification_logs`
+--
+ALTER TABLE `notification_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `official_letters`
 --
 ALTER TABLE `official_letters`
@@ -7430,6 +7899,12 @@ ALTER TABLE `principal_notices`
 -- AUTO_INCREMENT for table `procurement_requests`
 --
 ALTER TABLE `procurement_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -7463,9 +7938,21 @@ ALTER TABLE `secretary_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `settings`
+--
+ALTER TABLE `settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff_profiles`
+--
+ALTER TABLE `staff_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -7547,9 +8034,33 @@ ALTER TABLE `supplier_payments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `system_modules`
+--
+ALTER TABLE `system_modules`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `transcripts`
+--
+ALTER TABLE `transcripts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `transcript_items`
+--
+ALTER TABLE `transcript_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `ura_reports`
 --
 ALTER TABLE `ura_reports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_sessions`
+--
+ALTER TABLE `user_sessions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

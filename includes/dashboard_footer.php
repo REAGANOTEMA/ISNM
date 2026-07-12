@@ -22,6 +22,17 @@ if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABL
     }
 }
 
+// Global search UI (Ctrl+K) for every dashboard
+$gsFile = __DIR__ . '/global_search.php';
+if (file_exists($gsFile)) {
+    try {
+        include_once $gsFile;
+        if (function_exists('renderGlobalSearchBar')) {
+            renderGlobalSearchBar();
+        }
+    } catch (Exception $e) { error_log('dashboard_footer global_search: ' . $e->getMessage()); }
+}
+
 // Staff communication system (compose-to-department modal)
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
@@ -119,7 +130,7 @@ window.addEventListener('unhandledrejection',function(e){
     overlay.addEventListener('click', close);
 
     // Close on nav link click (mobile)
-    sidebar.querySelectorAll('.nav-link').forEach(function (link) {
+    Array.from(sidebar.querySelectorAll('.nav-link')).forEach(function (link) {
       link.addEventListener('click', function () {
         if (window.innerWidth < 769) close();
       });
@@ -136,7 +147,7 @@ window.addEventListener('unhandledrejection',function(e){
   // ── Active nav link ───────────────────────────────────────────
   function setActiveNav() {
     var path = window.location.pathname;
-    document.querySelectorAll('.sidebar .nav-link, .dashboard-sidebar .nav-link').forEach(function (link) {
+    Array.from(document.querySelectorAll('.sidebar .nav-link, .dashboard-sidebar .nav-link')).forEach(function (link) {
       var href = link.getAttribute('href') || '';
       if (href && path.includes(href.replace(/^.*\//, '').replace('.php', ''))) {
         link.classList.add('active');
@@ -231,7 +242,7 @@ window.addEventListener('unhandledrejection',function(e){
       });
       listEl.innerHTML = html;
 
-      listEl.querySelectorAll('.notif-item').forEach(function (item) {
+      Array.from(listEl.querySelectorAll('.notif-item')).forEach(function (item) {
         item.addEventListener('click', function () {
           var nid = this.getAttribute('data-id');
           markRead(nid);
@@ -346,7 +357,7 @@ window.addEventListener('unhandledrejection',function(e){
         // Try data-section elements (most common pattern)
         var targets = document.querySelectorAll('[data-section]');
         if (targets.length) {
-            targets.forEach(function(el) { el.classList.remove('active'); });
+            Array.from(targets).forEach(function(el) { el.classList.remove('active'); });
             var match = document.querySelector('[data-section="' + name + '"]');
             if (match) {
                 match.classList.add('active');
@@ -369,8 +380,8 @@ window.addEventListener('unhandledrejection',function(e){
     }
 
     // Read ?page= or ?section= from URL
-    var params = new URLSearchParams(window.location.search);
-    var sectionParam = params.get('section') || params.get('page') || '';
+    var m = window.location.search.match(/[?&](?:section|page)=([^&]+)/);
+    var sectionParam = (m && m[1]) || '';
     if (sectionParam && sectionParam !== 'home' && sectionParam !== 'overview') {
         switchToSection(sectionParam);
     }
@@ -409,7 +420,7 @@ window.addEventListener('unhandledrejection',function(e){
     // Ensure all .modal elements can be closed with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.show').forEach(function(m) {
+            Array.from(document.querySelectorAll('.modal.show')).forEach(function(m) {
                 var bsModal = bootstrap.Modal.getInstance(m);
                 if (bsModal) bsModal.hide();
             });
@@ -484,7 +495,7 @@ window.escJs = window.escJs || function(s) {
 (function() {
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.student-lookup-wrapper')) {
-            document.querySelectorAll('.lookup-results').forEach(function(el) { el.style.display = 'none'; });
+            Array.from(document.querySelectorAll('.lookup-results')).forEach(function(el) { el.style.display = 'none'; });
         }
     });
 })();

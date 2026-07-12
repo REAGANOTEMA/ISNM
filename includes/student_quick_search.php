@@ -183,6 +183,11 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
     document.addEventListener('keydown', function(e){
         if((e.ctrlKey || e.metaKey) && e.key === 'k'){
             e.preventDefault();
+            // If global search is available, use it instead of the mini search
+            if (typeof openGlobalSearch === 'function') {
+                openGlobalSearch();
+                return;
+            }
             document.getElementById(uid+'_toggle').click();
         }
         if(e.key === 'Escape'){

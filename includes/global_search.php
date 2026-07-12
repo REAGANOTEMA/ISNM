@@ -10,6 +10,7 @@
  */
 require_once __DIR__ . '/../views/student_data_loader.php';
 
+if (!function_exists('renderGlobalSearchBar')) {
 function renderGlobalSearchBar($staffDb = null, $studentsDb = null) {
     static $rendered = false;
     if ($rendered) return;
@@ -82,7 +83,7 @@ function doGlobalSearch() {
   resultsDiv.innerHTML = '<div class="global-search-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
   if (_gsCurrentRequest) { _gsCurrentRequest.abort(); }
   _gsCurrentRequest = new XMLHttpRequest();
-  _gsCurrentRequest.open('POST', window.location.href, true);
+  _gsCurrentRequest.open('POST', '../includes/ajax_global_student_search.php', true);
   _gsCurrentRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
   _gsCurrentRequest.onload = function() {
     if (this.status !== 200) { resultsDiv.innerHTML = '<div class="global-search-empty">Search failed. Try again.</div>'; return; }
@@ -154,6 +155,7 @@ function goToStudent(name, id, sid, source) {
 <?php
 }
 
+if (!function_exists('globalStudentSearchHandler')) {
 function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websiteDb = null, $ictDb = null) {
     $q = trim($_POST['q'] ?? '');
     if (strlen($q) < 2) { echo json_encode([]); return; }
@@ -227,4 +229,5 @@ function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websit
         }
     } catch (Exception $e) { error_log('global_search query: ' . $e->getMessage()); }
     echo json_encode($results);
+}
 }

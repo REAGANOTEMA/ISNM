@@ -257,7 +257,14 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 <?php if ($useDynamicSidebar): ?>
 <?php echo $dynamicSidebarOutput; ?>
 <?php else: ?>
-<nav class="isnm-sidebar sidebar" id="isnmSidebar">
+<style>
+/* Progressive enhancement: before JS runs, all groups are visible */
+.isnm-sidebar.sidebar.not-init .menu-children {
+    max-height: none !important;
+    overflow: visible !important;
+}
+</style>
+<nav class="isnm-sidebar sidebar not-init" id="isnmSidebar">
     <?php if ($isRight): ?>
     <button class="sidebar-mobile-close" id="sidebarMobileClose" aria-label="Close sidebar">
         <i class="fas fa-times"></i>
@@ -338,8 +345,13 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <script>
 (function() {
+    function qsa(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
+    function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
+
+    var accordion = <?= json_encode($accordionMode) ?>;
+
     // ── Collapsible Groups ──
-    document.querySelectorAll('.menu-group-header[data-target]').forEach(function(header) {
+    qsa('.menu-group-header[data-target]').forEach(function(header) {
         header.addEventListener('click', function(e) {
             var group = this.closest('.menu-group');
             if (!group) return;
@@ -347,8 +359,8 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
             var children = document.getElementById('childGroup-' + targetId);
             if (!children) return;
             var isExpanded = group.classList.contains('expanded');
-            if (<?= json_encode($accordionMode) ?>) {
-                document.querySelectorAll('.menu-group.expanded').forEach(function(g) {
+            if (accordion) {
+                qsa('.menu-group.expanded').forEach(function(g) {
                     if (g !== group && g.closest('.sidebar-menu') === group.closest('.sidebar-menu')) {
                         g.classList.remove('expanded');
                         var c = g.querySelector('.menu-children');
@@ -397,7 +409,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     }
 
     // ── Auto-expand active group ──
-    var activeLink = document.querySelector('.child-link.active');
+    var activeLink = qs('.child-link.active');
     if (activeLink) {
         var group = activeLink.closest('.menu-group');
         if (group && !group.classList.contains('expanded')) {
@@ -427,9 +439,9 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 
     // ── Mark active section on page load ──
     (function initPage() {
-        var params = new URLSearchParams(window.location.search);
-        var page = params.get('page') || 'home';
-        document.querySelectorAll('.child-link').forEach(function(link) {
+        var m = window.location.search.match(/[?&]page=([^&]+)/);
+        var page = (m && m[1]) || 'home';
+        qsa('.child-link').forEach(function(link) {
             link.classList.remove('active');
             if (link.getAttribute('href') && link.getAttribute('href').indexOf('page=' + page) !== -1) {
                 link.classList.add('active');
@@ -438,7 +450,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     })();
 
     // ── Intercept ACCOUNT group links ──
-    document.querySelectorAll('.menu-group .child-link').forEach(function(link) {
+    qsa('.menu-group .child-link').forEach(function(link) {
         var href = link.getAttribute('href') || '';
         var pageParam = href.match(/page=([^&]+)/);
         if (!pageParam) return;
@@ -450,7 +462,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
                 if (typeof openProfileModal === 'function') {
                     openProfileModal();
                 } else {
-                    var m = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+                    var m = bootstrap && bootstrap.Modal && bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
                     if (m) m.show();
                 }
             });
@@ -463,6 +475,9 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
             });
         }
     });
+
+    // ── Progressive enhancement: accordion ready, remove fallback class ──
+    qs('#isnmSidebar') && qs('#isnmSidebar').classList.remove('not-init');
 })();
 </script>
 <?php
