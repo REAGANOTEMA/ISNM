@@ -1408,9 +1408,9 @@ elseif ($page === 'timetable'):
 <div class="sp-card" style="max-width:500px;margin:0 auto">
 <h4><i class="fas fa-key me-2"></i>Change Password</h4>
 <form method="POST" action="?page=password">
-<div class="sp-form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" required></div>
-<div class="sp-form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" required minlength="6"></div>
-<div class="sp-form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" class="form-control" required minlength="6"></div>
+<div class="sp-form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+<div class="sp-form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" autocomplete="new-password" required minlength="6"></div>
+<div class="sp-form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" class="form-control" autocomplete="new-password" required minlength="6"></div>
 <button type="submit" name="action" value="change_password" class="sp-btn sp-btn-primary"><i class="fas fa-save me-1"></i>Update Password</button>
 </form>
 </div>

@@ -213,7 +213,7 @@ window.onerror = function(msg, url) {
     // Tier 2: Wait for CDN
     var check = setInterval(function() {
         if (typeof flatpickr === 'function') { clearInterval(check); initFlatpickr(); }
-    }, 200);
+    }, 500);
     // Tier 3: Load from fallback CDN after 3s timeout
     setTimeout(function() {
         if (typeof flatpickr !== 'function') loadFlatpickrFromFallback();
@@ -370,8 +370,8 @@ window.onerror = function(msg, url) {
         if (instant) return;
         timer = setInterval(function(){
             var w = parseFloat(bar.style.width) || 0;
-            if (w < 90) bar.style.width = Math.min(90, w + (90 - w) * 0.04) + '%';
-        }, 200);
+            if (w < 90) bar.style.width = Math.min(90, w + (90 - w) * 0.08) + '%';
+        }, 500);
     }
     function finishLoad() {
         if (!bar) return;

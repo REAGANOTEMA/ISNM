@@ -846,15 +846,15 @@ function openCommunicationModal() {
           <div id="cpwAlert" class="alert d-none"></div>
           <div class="mb-3">
             <label class="form-label">Current Password</label>
-            <input type="password" class="form-control" name="current_password" required>
+            <input type="password" class="form-control" name="current_password" autocomplete="current-password" required>
           </div>
           <div class="mb-3">
             <label class="form-label">New Password</label>
-            <input type="password" class="form-control" name="new_password" required minlength="6">
+            <input type="password" class="form-control" name="new_password" autocomplete="new-password" required minlength="6">
           </div>
           <div class="mb-3">
             <label class="form-label">Confirm New Password</label>
-            <input type="password" class="form-control" name="confirm_password" required minlength="6">
+            <input type="password" class="form-control" name="confirm_password" autocomplete="new-password" required minlength="6">
           </div>
         </div>
         <div class="modal-footer">

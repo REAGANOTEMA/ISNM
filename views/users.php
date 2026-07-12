@@ -333,7 +333,7 @@ $flashMessages = getFlashMessages();
                                             <h6>Account Settings</h6>
                                             <div class="mb-3">
                                                 <label class="form-label">Password *</label>
-                                                <input type="password" name="password" class="form-control" required minlength="6">
+                                                <input type="password" name="password" class="form-control" autocomplete="new-password" required minlength="6">
                                                 <small class="text-muted">Password must be at least 6 characters long</small>
                                             </div>
                                             <div class="mb-3">
@@ -401,7 +401,7 @@ $flashMessages = getFlashMessages();
                                             <h6>Account Settings</h6>
                                             <div class="mb-3">
                                                 <label class="form-label">New Password</label>
-                                                <input type="password" name="password" class="form-control" minlength="6">
+                                                <input type="password" name="password" class="form-control" autocomplete="new-password" minlength="6">
                                                 <small class="text-muted">Leave empty to keep current password. Min 6 characters if changed.</small>
                                             </div>
                                             <div class="mb-3">
