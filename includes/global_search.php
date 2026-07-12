@@ -231,3 +231,6 @@ function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websit
     echo json_encode($results);
 }
 }
+
+// ── Close the if (!function_exists('renderGlobalSearchBar')) wrapper ──
+}
