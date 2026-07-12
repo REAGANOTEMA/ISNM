@@ -1,12 +1,13 @@
 <?php
 /**
- * Director of Admissions & Requirements — Complete Enterprise Dashboard
+ * Director of Admissions & Requirements ï¿½ Complete Enterprise Dashboard
  * Covers: Applications, Review, Requirements, Filtering, Search, Analytics,
  * Registration, Communications, WhatsApp, Reports, Security, Audit.
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 require_once __DIR__ . '/../includes/global_search.php';
+require_once __DIR__ . '/../includes/student_sync.php';
 $ctx = bootstrapStaffDashboard(['director admissions', 'admissions', 'admissions officer', 'admissions clerk']);
 $conn = $ctx['staff'];
 $stuConn = $ctx['students'] ?? null;
@@ -255,6 +256,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($stuConn) $stuConn->commit();
             $conn->commit();
+            // Cross-database sync
+            syncStudentRecord([
+                'student_number' => $sn,
+                'registration_number' => $rn,
+                'first_name' => $fn,
+                'surname' => $sn2,
+                'full_name' => $ap['full_name'],
+                'email' => $ap['email'],
+                'phone' => $ap['phone'],
+                'gender' => $ap['gender'],
+                'program' => $progName,
+                'date_of_birth' => $ap['date_of_birth'],
+                'nationality' => $ap['nationality'],
+                'address' => $ap['address'],
+                'set_name' => $set,
+                'status' => 'Active',
+            ], 'insert');
             logAdmission($conn,$id,$userId,"Registered","Student registered: $sn ($progName)");
             notifyAdmission($conn,$id,$userId,'success','Registration Complete',"Welcome! Your student number is $sn. Username: $sn, Password: $pw",'student-login.php');
             echo json_encode(['success'=>true,'student_number'=>$sn,'username'=>$sn,'password'=>$pw,'program'=>$progName]);
@@ -829,7 +847,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success'=>$ok]); exit;
     }
     if ($action === 'global_stu_search') {
-        globalStudentSearchHandler($conn, $stuConn);
+        globalStudentSearchHandler($conn, $stuConn, $conn, $webConn);
         exit;
     }
     echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;
@@ -951,7 +969,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .form-select-sm,.form-control-sm{font-size:11px}
 .adm-tabs a{padding:5px 8px;font-size:10px}
 }
-/* -- Sidebar Override — ensure it works correctly -- */
+/* -- Sidebar Override ï¿½ ensure it works correctly -- */
 .isnm-sidebar.sidebar{position:fixed;top:0;left:0;z-index:1050}
 .isnm-sidebar.sidebar .sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0}
 .isnm-sidebar.sidebar .menu-group-header{cursor:pointer;user-select:none;padding:10px 16px;display:flex;align-items:center;gap:10px}
@@ -1163,7 +1181,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
         <td style="min-width:180px">
           <div class="d-flex gap-1">
             <select id="reqStatus_<?=$r['id']?>" class="form-select form-select-sm" style="width:auto;display:inline-block" onchange="setRequirement(<?=$aid?>,<?=$r['id']?>,this.value,document.getElementById('reqNote_<?=$r['id']?>').value)">
-              <option value="">—</option>
+              <option value="">ï¿½</option>
               <option value="Received" <?=$cs==='Received'?'selected':''?>>Received</option>
               <option value="Submitted" <?=$cs==='Submitted'?'selected':''?>>Submitted</option>
               <option value="Verified" <?=$cs==='Verified'?'selected':''?>>Verified</option>
@@ -1349,7 +1367,7 @@ function deleteApplicant(id, name) {
 <?php endif; ?>
 
 <?php elseif ($page === 'requirements'): ?>
-<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal — All Applicants</h3>
+<div class="card"><h3><i class="fas fa-check-double"></i> Requirements Portal ï¿½ All Applicants</h3>
   <p class="text-muted small mb-3">Matrix view: each row is an applicant, each column is a requirement. Click to toggle status. Checkboxes for bulk marking.</p>
   
   <!-- Advanced Filters -->
@@ -1757,7 +1775,7 @@ loadRequirementsPortal();
     <div class="col-md-6">
       <select class="form-select" id="regSelect" size="10">
         <?php $apps=$conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.status='Approved' ORDER BY a.full_name"); if($apps)while($a=$apps->fetch_assoc()): ?>
-        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> — <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
+        <option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> ï¿½ <?=htmlspecialchars($a['application_number'])?> (<?=htmlspecialchars($a['program_name']??'')?>)</option>
         <?php endwhile; ?>
       </select>
     </div>
@@ -1780,7 +1798,7 @@ loadRequirementsPortal();
         <div class="col-md-5">
           <div class="mb-3"><label class="form-label small fw-bold">Select Applicant</label>
             <select class="form-select" id="commApplicant">
-              <option value="">— Select —</option>
+              <option value="">ï¿½ Select ï¿½</option>
               <?php $allApps=$conn->query("SELECT id,full_name,application_number,email,phone FROM applicants ORDER BY full_name"); if($allApps)while($a=$allApps->fetch_assoc()): ?>
               <option value="<?=$a['id']?>" data-email="<?=htmlspecialchars($a['email'])?>" data-phone="<?=htmlspecialchars($a['phone'])?>"><?=htmlspecialchars($a['full_name'])?> (<?=htmlspecialchars($a['application_number'])?>)</option>
               <?php endwhile; ?>
@@ -1992,7 +2010,7 @@ function viewExcelStudent(name,file,id,setInfo,program,phone){
   alert(msg);
 }
 function showRequirements(stuId,stuName,stuNumber){
-  document.getElementById('reqViewTitle').textContent=stuName+' — Requirements';
+  document.getElementById('reqViewTitle').textContent=stuName+' ï¿½ Requirements';
   document.getElementById('reqViewBody').innerHTML='<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
   new bootstrap.Modal(document.getElementById('reqViewModal')).show();
   var body='action=stu_requirements&id='+stuId+'&csrf_token='+encodeURIComponent(_tk);
@@ -2009,7 +2027,7 @@ function showRequirements(stuId,stuName,stuNumber){
         +'<td><span class="badge bg-'+statusClass+'" id="srs_'+reqId+'">'+r.status+'</span></td>'
         +'<td class="small text-muted">'+((r.director_notes||'').substring(0,50)||'-')+'</td>'
         +'<td><select class="form-select form-select-sm req-status-select" data-stuid="'+stuId+'" data-reqid="'+reqId+'" onchange="setStudentReqDirect(this)">'
-        +'<option value="">—</option>'
+        +'<option value="">ï¿½</option>'
         +'<option value="Received" '+(r.status==='Received'?'selected':'')+'>Received</option>'
         +'<option value="Submitted" '+(r.status==='Submitted'?'selected':'')+'>Submitted</option>'
         +'<option value="Verified" '+(r.status==='Verified'?'selected':'')+'>Verified</option>'
@@ -2080,7 +2098,7 @@ function viewStudentDetail(idx,id){
         reqHtml+='<tr><td class="small">'+rr.requirement_name+(rr.is_mandatory==1?' <span class="text-danger">*</span>':'')+'</td><td><span class="badge bg-'+sc+'">'+rr.status+'</span></td></tr>';
       });
       reqHtml+='</tbody></table></div>';
-    }else{reqHtml='<p class="text-muted small">No applicant record linked — cannot track requirements.</p>';}
+    }else{reqHtml='<p class="text-muted small">No applicant record linked ï¿½ cannot track requirements.</p>';}
     var payHtml='',paySum=d.payment_summary||{paid:0,total:0};
     var bal=parseFloat(paySum.total)-parseFloat(paySum.paid);
     var payStatus=bal<=0?'<span class="badge bg-success">Paid in Full</span>':bal>0?'<span class="badge bg-warning text-dark">Balance: '+bal.toLocaleString()+'</span>':'<span class="badge bg-secondary">No Data</span>';

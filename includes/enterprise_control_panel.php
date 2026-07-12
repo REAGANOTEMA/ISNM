@@ -20,20 +20,34 @@ $cpConn = null;
 
 try { if (function_exists('getStaffConnection')) $cpConn = getStaffConnection(); } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
-// Gather security-specific stats
+// Determine if this user should see security-specific content
+$cpAllowSecurity = in_array(strtolower($cpRole), ['security officer', 'security', 'director ict', 'ict officer', 'system admin', 'system administrator']);
+
+// Gather stats (role-appropriate)
 $cpStats = ['visitors_today' => 0, 'incidents_today' => 0, 'active_patrols' => 0, 'critical_alerts' => 0, 'checked_in' => 0];
 try {
     if ($cpConn) {
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE()");
-        if ($r) $cpStats['visitors_today'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE() AND status = 'Checked In'");
-        if ($r) $cpStats['checked_in'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
-        if ($r) $cpStats['incidents_today'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress','Active')");
-        if ($r) $cpStats['active_patrols'] = (int)$r->fetch_assoc()['c'];
-        $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
-        if ($r) $cpStats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
+        $cpStats['total_students'] = 0; $cpStats['active_staff'] = 0; $cpStats['pending_approvals'] = 0; $cpStats['pending_tasks'] = 0; $cpStats['new_messages'] = 0;
+
+        if ($cpAllowSecurity) {
+            $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE()");
+            if ($r) $cpStats['visitors_today'] = (int)$r->fetch_assoc()['c'];
+            $r = $cpConn->query("SELECT COUNT(*)c FROM security_visitors WHERE visit_date = CURDATE() AND status = 'Checked In'");
+            if ($r) $cpStats['checked_in'] = (int)$r->fetch_assoc()['c'];
+            $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
+            if ($r) $cpStats['incidents_today'] = (int)$r->fetch_assoc()['c'];
+            $r = $cpConn->query("SELECT COUNT(*)c FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress','Active')");
+            if ($r) $cpStats['active_patrols'] = (int)$r->fetch_assoc()['c'];
+            $r = $cpConn->query("SELECT COUNT(*)c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
+            if ($r) $cpStats['critical_alerts'] = (int)$r->fetch_assoc()['c'];
+        } else {
+            $r = $cpConn->query("SELECT COUNT(*)c FROM staff WHERE status='Active'");
+            if ($r) $cpStats['active_staff'] = (int)$r->fetch_assoc()['c'];
+            $r = $cpConn->query("SELECT COUNT(*)c FROM approval_requests WHERE status IN ('Active','pending','in_review')");
+            if ($r) $cpStats['pending_approvals'] = (int)$r->fetch_assoc()['c'];
+            $stmt = $cpConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
+            if ($stmt) { $stmt->bind_param('i', $cpUid); $stmt->execute(); $cpStats['pending_tasks'] = (int)$stmt->get_result()->fetch_assoc()['c']; $stmt->close(); }
+        }
     }
 } catch (Exception $e) { error_log('enterprise_cp init: ' . $e->getMessage()); }
 
@@ -143,6 +157,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
         </div>
     </div>
 
+<?php if ($cpAllowSecurity): ?>
     <!-- Stats -->
     <div class="ent-cp-section">
         <div class="ent-cp-section-title"><i class="fas fa-chart-pie"></i> Security Stats Today</div>
@@ -181,7 +196,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
         </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Quick Actions (Security) -->
     <div class="ent-cp-section">
         <div class="ent-cp-section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
         <a href="../dashboards/security.php?page=overview" class="ent-cp-action">
@@ -200,6 +215,24 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
             <i class="fas fa-sign-out-alt" style="color:#ef4444"></i> Logout
         </a>
     </div>
+<?php else: ?>
+    <!-- Quick Actions (General) -->
+    <div class="ent-cp-section">
+        <div class="ent-cp-section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+        <a href="#" class="ent-cp-action" onclick="event.preventDefault();var m=bootstrap.Modal.getInstance(document.getElementById('settingsModal'));if(m)m.show();else if(typeof openProfileModal==='function')openProfileModal();">
+            <i class="fas fa-user-circle" style="color:#3b82f6"></i> My Profile
+        </a>
+        <a href="#" class="ent-cp-action" onclick="event.preventDefault();if(typeof openChangePasswordModal==='function')openChangePasswordModal();">
+            <i class="fas fa-key" style="color:#8b5cf6"></i> Change Password
+        </a>
+        <a href="../dashboards/<?= basename($_SESSION['role_dashboard'] ?? 'director-general.php') ?>" class="ent-cp-action">
+            <i class="fas fa-home" style="color:#10b981"></i> My Dashboard
+        </a>
+        <a href="../auth-handler.php?action=logout" class="ent-cp-action">
+            <i class="fas fa-sign-out-alt" style="color:#ef4444"></i> Logout
+        </a>
+    </div>
+<?php endif; ?>
 </div>
 
 <!-- Toggle Button -->

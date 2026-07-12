@@ -813,3 +813,82 @@ function openCommunicationModal() {
     <span class="dep-approval-fab-tooltip">Submit for Approval</span>
 </button>
 <?php endif; ?>
+
+<!-- Change Password Modal (shared) -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-key me-2"></i>Change Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="changePasswordForm" onsubmit="return saveChangePassword()">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="modal-body">
+          <div id="cpwAlert" class="alert d-none"></div>
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            <input type="password" class="form-control" name="current_password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            <input type="password" class="form-control" name="new_password" required minlength="6">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" name="confirm_password" required minlength="6">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="cpwSubmit"><i class="fas fa-save me-1"></i> Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+if (typeof openProfileModal !== 'function') {
+  function openProfileModal() {
+    var m = document.getElementById('profileSettingsModal');
+    if (m) { bootstrap.Modal.getOrCreateInstance(m).show(); }
+  }
+}
+function openChangePasswordModal() {
+  var m = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+  m.show();
+}
+function saveChangePassword() {
+  var f = document.getElementById('changePasswordForm');
+  var d = new FormData(f);
+  var a = document.getElementById('cpwAlert');
+  var b = document.getElementById('cpwSubmit');
+  a.classList.add('d-none');
+  b.disabled = true;
+  b.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+  fetch('../auth-handler.php?action=change_password', { method:'POST', body:d })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.success) {
+        a.className = 'alert alert-success';
+        a.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + (j.message || 'Password updated successfully.');
+        a.classList.remove('d-none');
+        setTimeout(function(){ location.reload(); }, 1500);
+      } else {
+        a.className = 'alert alert-danger';
+        a.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> ' + (j.message || 'Failed to update password.');
+        a.classList.remove('d-none');
+        b.disabled = false;
+        b.innerHTML = '<i class="fas fa-save me-1"></i> Update Password';
+      }
+    })
+    .catch(function(){
+      a.className = 'alert alert-danger';
+      a.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> Network error. Please try again.';
+      a.classList.remove('d-none');
+      b.disabled = false;
+      b.innerHTML = '<i class="fas fa-save me-1"></i> Update Password';
+    });
+  return false;
+}
+</script>

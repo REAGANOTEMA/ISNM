@@ -496,6 +496,56 @@ switch ($action) {
         handleCreateStaff();
         break;
 
+    // ── Change password ──────────────────────────────────────────
+    case 'change_password':
+        header('Content-Type: application/json');
+        $curPw  = $_POST['current_password'] ?? '';
+        $newPw  = $_POST['new_password'] ?? '';
+        $confPw = $_POST['confirm_password'] ?? '';
+        if (empty($curPw) || empty($newPw) || empty($confPw)) {
+            echo json_encode(['success' => false, 'message' => 'All password fields are required.']); exit;
+        }
+        if ($newPw !== $confPw) {
+            echo json_encode(['success' => false, 'message' => 'New passwords do not match.']); exit;
+        }
+        if (strlen($newPw) < 6) {
+            echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters.']); exit;
+        }
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['type'])) {
+            echo json_encode(['success' => false, 'message' => 'Not authenticated.']); exit;
+        }
+        $uid = (int)$_SESSION['user_id'];
+        $isStaff = ($_SESSION['type'] ?? '') === 'staff';
+        $conn = $isStaff ? getStaffConnection() : getStudentsConnection();
+        if (!$conn) { echo json_encode(['success' => false, 'message' => 'Database error.']); exit; }
+        $table = $isStaff ? 'users' : 'students';
+        $idCol = $isStaff ? 'id' : 'id';
+        $s = $conn->prepare("SELECT password FROM $table WHERE $idCol = ? LIMIT 1");
+        if (!$s) { echo json_encode(['success' => false, 'message' => 'Query error.']); exit; }
+        $s->bind_param('i', $uid);
+        $s->execute();
+        $r = $s->get_result()->fetch_assoc();
+        $s->close();
+        if (!$r) { echo json_encode(['success' => false, 'message' => 'User not found.']); exit; }
+        if (!password_verify($curPw, $r['password'])) {
+            echo json_encode(['success' => false, 'message' => 'Current password is incorrect.']); exit;
+        }
+        $hash = password_hash($newPw, PASSWORD_DEFAULT);
+        $up = $conn->prepare("UPDATE $table SET password = ? WHERE $idCol = ?");
+        if (!$up) { echo json_encode(['success' => false, 'message' => 'Update error.']); exit; }
+        $up->bind_param('si', $hash, $uid);
+        $ok = $up->execute();
+        $up->close();
+        if ($ok) {
+            if (function_exists('logActivity')) {
+                logActivity($uid, $isStaff ? 'Staff' : 'Student', 'Password Changed', 'User changed their password', $table, $uid);
+            }
+            echo json_encode(['success' => true, 'message' => 'Password updated successfully.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update password.']);
+        }
+        exit;
+
     // ── Logout ───────────────────────────────────────────────────
     case 'logout':
         handleLogout();
@@ -633,6 +683,14 @@ function handleCreateStudent() {
         'email'        => $_POST['email']        ?? '',
     ];
     $res = $auth_service->createStudentAccount($data);
+    if ($res['success']) {
+        require_once __DIR__ . '/includes/notification_helper.php';
+        $name = $data['full_name'] ?? '';
+        if (function_exists('createNotification')) {
+            $nid = createNotification("New Student: $name", "Student $name has been created.", '', 'info', 'fas fa-user-graduate');
+            if ($nid && function_exists('notifyAllStaff')) notifyAllStaff($nid);
+        }
+    }
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
@@ -659,6 +717,14 @@ function handleCreateStaff() {
         'department' => $_POST['department'] ?? '',
     ];
     $res = $auth_service->createStaffAccount($data);
+    if ($res['success']) {
+        require_once __DIR__ . '/includes/notification_helper.php';
+        $name = $data['full_name'] ?? '';
+        if (function_exists('createNotification')) {
+            $nid = createNotification("New Staff: $name", "Staff $name has been created.", '', 'info', 'fas fa-user-plus');
+            if ($nid && function_exists('notifyAllStaff')) notifyAllStaff($nid);
+        }
+    }
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);

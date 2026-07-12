@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['school secretary', 'secretary']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
@@ -281,6 +282,8 @@ if (isset($_REQUEST['ajax'])) {
                 $response['reg_number'] = $reg_number;
                 $response['portal_username'] = $student_number;
                 $response['portal_password'] = $temp_password;
+                $nid = createNotification('New Student Registered', "Student $full_name (#$student_number) registered.", 'school-secretary.php', 'success', 'fas fa-user-graduate');
+                if ($nid) notifyAllStaff($nid);
             } catch (Exception $e) {
                 $conn->rollback();
                 $response['message'] = 'Registration failed: ' . $e->getMessage();

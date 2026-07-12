@@ -589,6 +589,88 @@ if ($login_success) { unset($_SESSION['success']); }
     .login-body { padding: 16px 12px; }
     .form-control { padding: 12px 14px 12px 46px; font-size: 13px; }
   }
+  /* ── Ultra-Compact Mobile (480px and below) ── */
+  @media(max-width:480px){
+    body{min-height:100dvh;padding:12px}
+    .login-wrapper{padding:0}
+    .login-card{border-radius:18px}
+    .login-header{padding:28px 18px 24px}
+    .login-header h1{font-size:1.35rem}
+    .login-header p{font-size:0.82rem}
+    .logo-wrap{width:80px;height:80px;margin-bottom:14px}
+    .logo-wrap img{width:64px;height:64px}
+    .logo-wrap .ring-deco:nth-child(1){top:-6px;left:-6px;right:-6px;bottom:-6px}
+    .logo-wrap .ring-deco:nth-child(2){top:-12px;left:-12px;right:-12px;bottom:-12px}
+    .logo-wrap .ring-deco:nth-child(3){top:-18px;left:-18px;right:-18px;bottom:-18px}
+    .hint-pill{font-size:0.72rem;padding:4px 14px}
+    .login-body{padding:22px 16px 22px}
+    .form-group{margin-bottom:14px}
+    .form-label{font-size:0.82rem;margin-bottom:6px}
+    .input-group-text{width:42px;font-size:0.9rem}
+    .form-control{padding:13px 12px 13px 42px;font-size:16px;min-height:48px;border-radius:0 10px 10px 0}
+    .input-group-text{border-radius:10px 0 0 10px}
+    .first-login-section{padding:12px 14px;margin-bottom:14px}
+    .first-login-section .section-divider span{font-size:0.82rem}
+    .first-login-section .section-help{font-size:0.76rem;margin-bottom:10px}
+    .btn-login{padding:14px 20px;font-size:14px;border-radius:10px;min-height:48px}
+    .info-block{padding:14px 16px;margin-top:14px;font-size:0.78rem}
+    .info-block .block-title{font-size:0.85rem}
+    .link-row{margin-top:14px;gap:10px}
+    .link-row a:not(.btn-3d){font-size:0.82rem}
+    .btn-3d-sm{padding:10px 14px;font-size:11px;border-radius:10px;min-height:44px}
+    .alert{padding:10px 14px;font-size:0.82rem;border-radius:10px;margin-bottom:14px}
+    .back-home-link{font-size:0.8rem}
+    .form-text{font-size:0.75rem}
+    .password-toggle{width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;font-size:1.1rem;right:6px;top:50%;transform:translateY(-50%)}
+    .login-card::before,
+    .login-card::after{width:40px;height:40px}
+  }
+  /* ── Tiny screens (400px and below) ── */
+  @media(max-width:400px){
+    body{padding:8px}
+    .login-card{border-radius:14px}
+    .login-header{padding:22px 14px 20px}
+    .login-header h1{font-size:1.15rem}
+    .login-header p{font-size:0.76rem}
+    .logo-wrap{width:70px;height:70px;margin-bottom:10px}
+    .logo-wrap img{width:56px;height:56px}
+    .hint-pill{font-size:0.68rem;padding:3px 12px}
+    .login-body{padding:16px 12px 18px}
+    .form-group{margin-bottom:12px}
+    .form-label{font-size:0.78rem}
+    .input-group-text{width:38px;font-size:0.82rem}
+    .form-control{font-size:16px;padding:12px 10px 12px 38px;min-height:46px}
+    .first-login-section{padding:10px 12px}
+    .first-login-section .section-divider span{font-size:0.78rem}
+    .first-login-section .section-help{font-size:0.72rem}
+    .btn-login{padding:12px 16px;font-size:13px;min-height:46px;border-radius:10px}
+    .info-block{padding:12px 14px;font-size:0.74rem}
+    .link-row{gap:8px}
+    .btn-3d-sm{padding:8px 12px;font-size:10px;min-height:40px;border-radius:8px}
+    .alert{font-size:0.78rem;padding:8px 12px}
+    .login-card::before,
+    .login-card::after{width:30px;height:30px}
+  }
+  /* ── Extra tiny screens (360px and below) ── */
+  @media(max-width:360px){
+    body{padding:6px}
+    .login-card{border-radius:12px}
+    .login-header{padding:18px 10px 16px}
+    .login-header h1{font-size:1rem}
+    .login-header p{font-size:0.7rem}
+    .logo-wrap{width:60px;height:60px;margin-bottom:8px}
+    .logo-wrap img{width:48px;height:48px}
+    .hint-pill{font-size:0.62rem;padding:2px 10px}
+    .login-body{padding:12px 8px 14px}
+    .form-label{font-size:0.74rem}
+    .input-group-text{width:34px;font-size:0.78rem}
+    .form-control{font-size:16px;padding:10px 8px 10px 34px;min-height:44px}
+    .btn-login{padding:10px 14px;font-size:12px;min-height:44px}
+    .btn-3d-sm{padding:7px 10px;font-size:9px;min-height:36px}
+    .info-block{padding:10px 12px;font-size:0.7rem}
+    .link-row{gap:6px}
+    .form-group{margin-bottom:10px}
+  }
   </style>
 </head>
 <body>
@@ -596,7 +678,7 @@ if ($login_success) { unset($_SESSION['success']); }
 <div class="bg-particles" id="particles"></div>
 
 <div class="text-center mb-3">
-  <a href="index.php" class="text-decoration-none" style="color:#fff;font-size:0.9rem;opacity:0.8">
+  <a href="index.php" class="text-decoration-none back-home-link" style="color:#fff;font-size:0.9rem;opacity:0.8">
     <i class="fas fa-arrow-left me-1"></i> Back to Home
   </a>
 </div>

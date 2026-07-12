@@ -271,7 +271,7 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
 
 // ── Global search handler ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
-    globalStudentSearchHandler($conn, $studentsConn);
+    globalStudentSearchHandler($conn, $studentsConn, $conn, $websiteConn);
     exit;
 }
 

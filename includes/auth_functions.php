@@ -8,7 +8,10 @@ include_once 'functions.php';
 
 // Secure student authentication function - UPDATED TO USE index_number + full_name + phone_number
 function authenticateStudent($index_number, $full_name, $phone_number) {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database unavailable'];
+    }
     
     // Validate input
     if (empty($index_number) || empty($full_name) || empty($phone_number)) {
@@ -365,7 +368,8 @@ function logout() {
 
 // Password reset function
 function resetPassword($user_type, $identifier) {
-    global $conn;
+    $conn = ($user_type === 'student') ? getStudentsConnection() : getStaffConnection();
+    if (!$conn) return ['success' => false, 'message' => 'Database unavailable'];
     
     if ($user_type === 'student') {
         // For students, use NSIN number
@@ -437,7 +441,8 @@ function formatPhone($phone) {
 
 // Get student by NSIN number
 function getStudentByNSIN($nsin_number) {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) return null;
     
     $sql = "SELECT * FROM students WHERE student_id = ?";
     $stmt = $conn->prepare($sql);
@@ -463,7 +468,8 @@ function getStaffByUsername($username) {
 
 // Check if account is locked
 function isAccountLocked($user_id, $user_type) {
-    global $conn;
+    $conn = ($user_type === 'student') ? getStudentsConnection() : getStaffConnection();
+    if (!$conn) return false;
     
     if ($user_type === 'student') {
         $sql = "SELECT login_attempts, locked_until FROM students WHERE student_number = ? OR index_number = ?";
@@ -490,7 +496,8 @@ function isAccountLocked($user_id, $user_type) {
 
 // Unlock account
 function unlockAccount($user_id, $user_type) {
-    global $conn;
+    $conn = ($user_type === 'student') ? getStudentsConnection() : getStaffConnection();
+    if (!$conn) return false;
     
     if ($user_type === 'student') {
         $sql = "UPDATE students SET login_attempts = 0, locked_until = NULL WHERE student_number = ? OR index_number = ?";
@@ -507,7 +514,8 @@ function unlockAccount($user_id, $user_type) {
 
 // Get login attempts
 function getLoginAttempts($identifier, $user_type) {
-    global $conn;
+    $conn = ($user_type === 'student') ? getStudentsConnection() : getStaffConnection();
+    if (!$conn) return 0;
     
     if ($user_type === 'student') {
         $sql = "SELECT login_attempts FROM students WHERE student_id = ?";

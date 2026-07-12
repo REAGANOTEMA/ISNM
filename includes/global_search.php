@@ -154,26 +154,60 @@ function goToStudent(name, id, sid, source) {
 <?php
 }
 
-function globalStudentSearchHandler($conn, $studentsDb) {
+function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websiteDb = null, $ictDb = null) {
     $q = trim($_POST['q'] ?? '');
     if (strlen($q) < 2) { echo json_encode([]); return; }
     header('Content-Type: application/json');
     $results = [];
-    // Search students DB
-    if ($studentsDb) {
-        $qq = '%' . $studentsDb->real_escape_string($q) . '%';
-        $s = $studentsDb->prepare("SELECT id, student_id, student_number, index_number, CONCAT(first_name,' ',COALESCE(surname,'')) full_name, email, phone, program, level, set_name, status FROM students WHERE (first_name LIKE ? OR surname LIKE ? OR full_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? OR email LIKE ? OR set_name LIKE ?) AND status != 'deleted' LIMIT 100");
-        if ($s) { $s->bind_param('sssssssss', $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq); $s->execute(); $results = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+    $seenByNumber = [];
+
+    // Helper to search a single DB's students table, dedup by student_number
+    $searchDb = function($db, $source) use ($q, &$results, &$seenByNumber) {
+        if (!$db) return;
+        $qq = '%' . $db->real_escape_string($q) . '%';
+        $s = $db->prepare("SELECT id, student_id, student_number, index_number, CONCAT(first_name,' ',COALESCE(surname,'')) full_name, email, phone, program, level, set_name, status FROM students WHERE (first_name LIKE ? OR surname LIKE ? OR CONCAT(first_name,' ',COALESCE(surname,'')) LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? OR email LIKE ? OR set_name LIKE ?) AND status != 'deleted' LIMIT 100");
+        if (!$s) return;
+        $s->bind_param('sssssssss', $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq);
+        $s->execute();
+        $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+        $s->close();
+        foreach ($rows as $r) {
+            $num = $r['student_number'] ?? $r['index_number'] ?? $r['student_id'] ?? '';
+            $key = $num !== '' ? $num : strtolower(trim($r['full_name'] ?? '') . '|' . trim($r['email'] ?? ''));
+            if (!isset($seenByNumber[$key])) {
+                $r['_source'] = $source;
+                $results[] = $r;
+                $seenByNumber[$key] = true;
+            }
+        }
+    };
+
+    // Auto-acquire missing connections
+    if (!$staffDb && function_exists('getStaffConnection')) {
+        $staffDb = getStaffConnection();
     }
+    if (!$websiteDb && function_exists('getWebsiteConnection')) {
+        $websiteDb = getWebsiteConnection();
+    }
+    if (!$ictDb && function_exists('getICTConnection')) {
+        $ictDb = getICTConnection();
+    }
+
+    // Search all 4 databases
+    $searchDb($studentsDb, 'StudentsDB');
+    $searchDb($staffDb, 'StaffDB');
+    $searchDb($websiteDb, 'WebsiteDB');
+    $searchDb($ictDb, 'ICTDB');
+
     // Search Excel files
     try {
         $loader = new StudentDataLoader($studentsDb);
         $excelResults = $loader->searchStudents($q);
-        $seenDb = [];
-        foreach ($results as $r) $seenDb[strtolower(trim($r['full_name'] ?? ''))] = true;
         foreach ($excelResults as $er) {
-            $key = strtolower(trim($er['full_name'] ?? ''));
-            if (!isset($seenDb[$key])) {
+            $num = $er['student_number'] ?? $er['index_number'] ?? '';
+            $name = strtolower(trim($er['full_name'] ?? ''));
+            $key = $num !== '' ? $num : $name;
+            if (!isset($seenByNumber[$key])) {
                 $results[] = [
                     'id' => 0,
                     'student_id' => $er['index_number'] ?? $er['student_number'] ?? '',
@@ -188,7 +222,7 @@ function globalStudentSearchHandler($conn, $studentsDb) {
                     'status' => 'Active',
                     '_source' => 'Excel',
                 ];
-                $seenDb[$key] = true;
+                $seenByNumber[$key] = true;
             }
         }
     } catch (Exception $e) { error_log('global_search query: ' . $e->getMessage()); }

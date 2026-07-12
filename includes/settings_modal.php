@@ -43,7 +43,7 @@ $is_head = in_array(strtolower($s_role), [
         <div class="settings-grid">
 
           <!-- Profile Settings – everyone -->
-          <a href="../includes/profile_settings.php" class="settings-card">
+          <a href="#" class="settings-card" onclick="event.preventDefault();bootstrap.Modal.getInstance(document.getElementById('settingsModal'))?.hide();setTimeout(function(){if(typeof openProfileModal==='function')openProfileModal()},300)">
             <div class="sc-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">
               <i class="fas fa-user-circle"></i>
             </div>

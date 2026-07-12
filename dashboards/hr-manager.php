@@ -8,6 +8,8 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/hr_functions.php';
+require_once __DIR__ . '/../includes/staff_sync.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 
 $ctx          = bootstrapStaffDashboard(['hr manager', 'hr', 'director general', 'ceo']);
 $auth_service = $ctx['auth'];
@@ -40,7 +42,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $plainpw = bin2hex(random_bytes(8));
             $hash = password_hash($plainpw, PASSWORD_BCRYPT);
             $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,staff_category,gender,highest_qualification,nin,year_of_experience,date_of_birth,status,hire_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
+            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $newStaffId = $stmt->insert_id; $stmt->close(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
+            if (!empty($newStaffId) && function_exists('syncStaffRecord')) {
+                syncStaffRecord([
+                    'staff_id' => $sid, 'full_name' => $fn, 'email' => $em,
+                    'password' => $hash, 'phone' => $ph, 'position' => $pos,
+                    'department' => $dept, 'role_id' => $rid, 'staff_category' => $cat,
+                    'gender' => $gender, 'highest_qualification' => $qual,
+                    'nin' => $nin, 'year_of_experience' => $exp, 'date_of_birth' => $dob,
+                    'id' => $newStaffId
+                ], 'insert');
+            }
+            if (function_exists('createNotification') && function_exists('notifyAllStaff')) {
+                $nid = createNotification("New Staff: $fn", "Staff $fn ($sid) has been added as $pos in $dept.", 'staff', 'info', $user_id);
+                if ($nid) notifyAllStaff($nid);
+            }
         }
         header('Location: hr-manager.php?page=staff'); exit;
     }
@@ -57,12 +73,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         if ($id && $fn && $em) {
             $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?,email=?,phone=?,position=?,department=?,role_id=?,status=?,staff_category=?,gender=?,highest_qualification=?,nin=?,year_of_experience=?,date_of_birth=? WHERE id=?");
             if ($stmt) { $stmt->bind_param('sssssissssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); }
+            if ($resp['success'] && function_exists('syncStaffRecord')) {
+                syncStaffRecord([
+                    'full_name' => $fn, 'email' => $em, 'phone' => $ph,
+                    'position' => $pos, 'department' => $dept, 'role_id' => $rid,
+                    'status' => $st, 'staff_category' => $cat, 'gender' => $gender,
+                    'highest_qualification' => $qual, 'nin' => $nin,
+                    'year_of_experience' => $exp, 'date_of_birth' => $dob,
+                    'id' => $id
+                ], 'update');
+            }
         }
         header('Content-Type: application/json'); echo json_encode($resp); exit;
     }
     if ($action === 'delete_staff') {
         $resp = ['success' => false, 'error' => 'Invalid'];
-        if ($id && $staff_conn) { $stmt = $staff_conn->prepare("DELETE FROM staff WHERE id=?"); if ($stmt) { $stmt->bind_param('i',$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); } }
+        if ($id && $staff_conn) {
+            $stmt = $staff_conn->prepare("UPDATE staff SET status='Inactive',resignation_date=CURDATE() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i',$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); }
+            if ($resp['success'] && function_exists('deleteStaffAcrossDatabases')) {
+                deleteStaffAcrossDatabases($id);
+            }
+        }
         header('Content-Type: application/json'); echo json_encode($resp); exit;
     }
     if ($action === 'approve_leave' || $action === 'reject_leave') {

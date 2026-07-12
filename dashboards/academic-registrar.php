@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/global_search.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['academic registrar', 'registrar', 'director academics', 'director general']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
@@ -252,6 +253,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
                     if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); $stmt2->execute(); $stmt2->close(); }
                     $_SESSION['success'] = "Student $fullName registered (#$studentNum)."; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)");
+                    $nid = createNotification('New Student Registered', "Student $fullName (#$studentNum) was registered.", 'academic-registrar.php?page=student-records', 'success', 'fas fa-user-graduate');
+                    if ($nid) notifyAllStaff($nid);
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'First name, last name, and program are required.';
         redirectBack('student-records');
@@ -459,7 +462,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('clinical-placement');
     }
     if ($action === 'global_stu_search') {
-        globalStudentSearchHandler($staff, $students);
+        globalStudentSearchHandler($staff, $students, $staff, $website);
         exit;
     }
 }

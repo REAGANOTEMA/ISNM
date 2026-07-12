@@ -108,7 +108,6 @@ if (!function_exists('bootstrapStaffDashboard')) {
                                 $role = $rw['role_name'];
                             }
                         }
-                        $sc->close();
                     }
                 } catch (Exception $e) { error_log('staff_dashboard_access role refresh: ' . $e->getMessage()); }
             }

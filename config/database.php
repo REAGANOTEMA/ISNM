@@ -155,6 +155,18 @@ if (!defined('ICT_DB_CHARSET')) {
 
 if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
+        // Connection cache — singleton per database
+        static $connections = [];
+        $cacheKey = $db;
+        if (isset($connections[$cacheKey]) && $connections[$cacheKey] instanceof mysqli) {
+            try {
+                if (@$connections[$cacheKey]->ping()) {
+                    return $connections[$cacheKey];
+                }
+            } catch (\Throwable $e) { }
+            unset($connections[$cacheKey]);
+        }
+
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
@@ -210,6 +222,7 @@ if (!function_exists('isnm_mysqli_connect')) {
                     $conn = @new mysqli($h, $u, $p, $d, $pt);
                     if ($conn && !$conn->connect_error) {
                         $conn->set_charset($charset);
+                        $connections[$cacheKey] = $conn;
                         error_reporting($oldLevel);
                         return $conn;
                     }

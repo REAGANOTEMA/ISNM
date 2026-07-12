@@ -18,7 +18,14 @@ $role = $_SESSION['role'] ?? '';
 $page = $_GET['page'] ?? 'dashboard';
 $staff = hrGetStaff($staffConn, $userId);
 
+require_once __DIR__ . '/includes/notification_helper.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
+    $csrf = $_POST['csrf_token'] ?? '';
+    if (empty($csrf) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header('Location: staff-portal.php'); exit;
+    }
     $action = $_POST['action'] ?? '';
     if ($action === 'apply_leave') {
         $typeId = (int)($_POST['leave_type_id'] ?? 0);
@@ -27,7 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
         $reason = trim($_POST['reason'] ?? '');
         if ($typeId && $start && $end) {
             $stmt = $staffConn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?,?,?,?,?,'pending')");
-            if ($stmt) { $stmt->bind_param('iisss', $userId, $typeId, $start, $end, $reason); $stmt->execute(); $_SESSION['success'] = 'Leave application submitted.'; }
+            if ($stmt) { $stmt->bind_param('iisss', $userId, $typeId, $start, $end, $reason); $stmt->execute(); $_SESSION['success'] = 'Leave application submitted.';
+                $nid = createNotification('Leave Application', "Staff #$userId submitted a leave request.", 'hr-manager.php?page=leave', 'info', 'fas fa-calendar-alt');
+                if ($nid) notifyAllStaff($nid);
+            }
         }
         header('Location: staff-portal.php?page=leave'); exit;
     }

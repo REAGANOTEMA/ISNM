@@ -647,6 +647,80 @@ body{
   .footer-links a{font-size:11px;padding:8px 14px}
   .alert{padding:12px 16px;font-size:12px;border-radius:12px}
 }
+/* ── Ultra-Compact Mobile (480px and below) ── */
+@media(max-width:480px){
+  body{overflow-y:auto;min-height:100dvh}
+  .login-left{padding:24px 14px 10px}
+  .login-right{padding:10px 14px 24px}
+  .hero-title{font-size:1.4rem;line-height:1.15;margin-bottom:16px}
+  .hero-badge{font-size:9px;padding:6px 14px;margin-bottom:16px;gap:6px}
+  .hero-badge i{font-size:9px}
+  .hero-institution{font-size:0.82rem;margin-bottom:8px}
+  .hero-description{font-size:0.75rem;line-height:1.7}
+  .login-card{border-radius:18px;padding:22px 16px 20px}
+  .card-header-wrap{gap:12px;margin-bottom:18px}
+  .card-logo{width:44px;height:44px}
+  .card-brand h2{font-size:0.88rem}
+  .card-brand p{font-size:8px;letter-spacing:0.5px}
+  .card-title{font-size:1.2rem}
+  .card-subtitle{font-size:12px;margin-bottom:16px;line-height:1.5}
+  .role-badge{font-size:11px;padding:5px 14px;margin-top:4px;margin-bottom:14px}
+  .form-group{margin-bottom:14px}
+  .form-label{font-size:9px;margin-bottom:6px;letter-spacing:0.8px}
+  .input-wrap .form-control{font-size:16px;padding:12px 14px 12px 42px;border-radius:10px;min-height:48px}
+  .input-wrap .input-icon{left:12px;font-size:12px}
+  .password-toggle{width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;right:6px;top:50%;transform:translateY(-50%)}
+  .form-options{gap:10px;margin-bottom:20px}
+  .remember-me{font-size:12px}
+  .remember-me input[type="checkbox"]{width:20px;height:20px}
+  .forgot-link{font-size:12px}
+  .btn-3d{padding:14px 20px;font-size:13px;border-radius:12px;min-height:48px}
+  .btn-3d-sm{padding:10px 16px;font-size:11px;border-radius:10px;min-height:44px}
+  .quick-access{gap:10px;margin-top:6px}
+  .quick-access a{width:44px;height:44px;font-size:16px;border-radius:12px}
+  .footer-links{gap:10px}
+  .footer-links a{font-size:10px;padding:8px 12px;gap:6px;border-radius:10px;min-height:44px}
+  .alert{padding:10px 14px;font-size:12px;border-radius:10px;gap:8px;margin-bottom:14px}
+  .divider{margin:18px 0 16px}
+  .back-home-link{font-size:0.8rem}
+}
+/* ── Tiny screens (400px and below) ── */
+@media(max-width:400px){
+  .login-left{padding:18px 10px 8px}
+  .login-right{padding:8px 10px 18px}
+  .hero-title{font-size:1.2rem}
+  .hero-badge{font-size:8px;padding:5px 12px}
+  .hero-institution{font-size:0.76rem}
+  .hero-description{font-size:0.7rem}
+  .login-card{padding:18px 12px 16px;border-radius:14px}
+  .card-header-wrap{gap:10px;margin-bottom:14px}
+  .card-logo{width:38px;height:38px}
+  .card-brand h2{font-size:0.8rem}
+  .card-title{font-size:1.05rem}
+  .card-subtitle{font-size:11px;margin-bottom:14px}
+  .form-group{margin-bottom:12px}
+  .form-label{font-size:8.5px}
+  .input-wrap .form-control{padding:11px 12px 11px 38px;border-radius:10px;font-size:16px}
+  .input-wrap .input-icon{left:10px;font-size:11px}
+  .btn-3d{padding:12px 16px;font-size:12px;min-height:44px}
+  .btn-3d-sm{padding:8px 12px;font-size:10px;min-height:40px}
+  .quick-access a{width:40px;height:40px;font-size:14px}
+  .footer-links a{font-size:9px;padding:6px 10px;min-height:40px}
+}
+/* ── Extra tiny screens (360px and below) ── */
+@media(max-width:360px){
+  .hero-title{font-size:1.05rem}
+  .login-card{border-radius:12px;padding:14px 10px 14px}
+  .card-header-wrap{gap:8px}
+  .card-logo{width:34px;height:34px}
+  .card-brand h2{font-size:0.74rem}
+  .card-title{font-size:0.95rem}
+  .input-wrap .form-control{font-size:16px;padding:10px 10px 10px 34px}
+  .form-options{flex-direction:column;gap:8px;align-items:flex-start}
+  .quick-access{gap:8px}
+  .quick-access a{width:36px;height:36px;font-size:13px;border-radius:10px}
+  .footer-links a{font-size:8px;padding:6px 8px;min-height:36px}
+}
 </style>
 </head>
 <body>
@@ -695,7 +769,7 @@ body{
 </div>
 <div class="login-right">
   <div class="text-center mb-3">
-  <a href="index.php" class="text-decoration-none" style="color:var(--yellow);font-size:0.9rem">
+  <a href="index.php" class="text-decoration-none back-home-link" style="color:var(--yellow);font-size:0.9rem">
     <i class="fas fa-arrow-left me-1"></i> Back to Home
   </a>
 </div>

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
 $user = $ctx['user'];
 $auth_service = $ctx['auth'];
@@ -148,6 +149,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
             $_SESSION['success'] = 'Course registration saved.';
+            $nid = createNotification('Course Registration', "Student #$sid registered for course #$cid.", 'student-management.php', 'info', 'fas fa-book');
+            if ($nid) notifyAllStaff($nid);
         }
     }
     if ($conn && $action === 'enter_score') {

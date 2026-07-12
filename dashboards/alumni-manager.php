@@ -768,5 +768,6 @@ function filterTable(inputId, tableId) {
 </div>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

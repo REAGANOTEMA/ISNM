@@ -27,7 +27,7 @@ if ($conn) {
 
 // Global search AJAX handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
-    globalStudentSearchHandler($conn, $studentsConn);
+    globalStudentSearchHandler($conn, $studentsConn, $conn);
     exit;
 }
 ?>

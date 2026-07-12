@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
                 $filename = 'student_' . $student_id . '_' . time() . '.' . $ext;
                 if (move_uploaded_file($file['tmp_name'], $dir . $filename)) {
                     $stmt = $studentsDb->prepare("UPDATE students SET profile_picture = ? WHERE id = ?");
-                    if ($stmt) { $fn = 'studentUploads/profile_images/' . $filename; $stmt->bind_param("si", $fn, $student_id); $stmt->execute(); $stmt->close(); }
+                    if ($stmt) { $stmt->bind_param("si", $filename, $student_id); $stmt->execute(); $stmt->close(); }
                     $_SESSION['success'] = 'Profile photo updated.';
                 } else { $_SESSION['error'] = 'Failed to upload file.'; }
             } else { $_SESSION['error'] = 'Invalid file type or size (max 5MB).' ; }
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         if ($stmt) {
             $stmt->bind_param("i", $student_id); $stmt->execute(); $row = $stmt->get_result()->fetch_assoc(); $stmt->close();
             $storedHash = $row['password'] ?? '';
-            if (password_verify($current, $storedHash) || $current === $storedHash) {
+            if (password_verify($current, $storedHash)) {
                 $newHash = password_hash($new, PASSWORD_DEFAULT);
                 $upd = $studentsDb->prepare("UPDATE students SET password=?, password_changed=1 WHERE id=?");
                 if ($upd) { $upd->bind_param("si", $newHash, $student_id); $upd->execute(); $upd->close(); }
@@ -1195,7 +1195,10 @@ elseif ($page === 'library'):
     if (empty($borrowing)) {
         $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE CAST(lb.student_id AS UNSIGNED)=? ORDER BY lb.borrow_date DESC", "i", [$student_id]);
     }
-    $fines = safeQuery($studentsDb, "SELECT * FROM library_fines LIMIT 0");
+    $fines = safeQueryPrepared($studentsDb, "SELECT * FROM library_fines WHERE student_id = ?", "s", [$student_number]);
+    if (empty($fines)) {
+        $fines = safeQueryPrepared($studentsDb, "SELECT * FROM library_fines WHERE CAST(student_id AS UNSIGNED) = ?", "i", [$student_id]);
+    }
     $total_fines = array_sum(array_map(fn($f) => (float)($f['amount'] ?? 0), $fines));
     $unpaid_fines = array_sum(array_filter(array_map(fn($f) => (float)($f['amount'] ?? 0), $fines), fn($f) => $f > 0));
 ?>

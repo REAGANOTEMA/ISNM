@@ -50,8 +50,10 @@ if ($action === 'student_payment_request') {
 
         if (function_exists('createNotification')) {
             $msg = "New payment request of UGX " . number_format($amount) . " from student #$studentId via $method";
-            createNotification('Payment Request', $msg, 'bursar', 'payments');
-            notifyAllStaff('bursar', 'Payment Request', $msg);
+            $nid = createNotification('Payment Request', $msg, '', 'payment', 'fas fa-money-bill');
+            if ($nid && function_exists('notifyAllStaff')) {
+                notifyAllStaff($nid);
+            }
         }
 
         echo json_encode(['success' => true, 'reference' => $reference, 'payment_id' => $paymentId]);

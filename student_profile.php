@@ -213,6 +213,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 header("Location: student_profile.php?id=$student_id");
                 exit();
+
+            // ── Change Password ─────────────────────────────────────────
+            case 'change_password':
+                $current = $_POST['current_password'] ?? '';
+                $new = $_POST['new_password'] ?? '';
+                $confirm = $_POST['confirm_password'] ?? '';
+
+                if ($new !== $confirm) {
+                    $_SESSION['error'] = 'Passwords do not match.';
+                    header("Location: student_profile.php?id=$student_id");
+                    exit();
+                }
+                if (strlen($new) < 6) {
+                    $_SESSION['error'] = 'Password must be at least 6 characters.';
+                    header("Location: student_profile.php?id=$student_id");
+                    exit();
+                }
+
+                $stmt = $conn->prepare("SELECT password FROM students WHERE student_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("s", $student_id);
+                    $stmt->execute();
+                    $row = $stmt->get_result()->fetch_assoc();
+                    $stmt->close();
+                    $storedHash = $row['password'] ?? '';
+                    if (!password_verify($current, $storedHash)) {
+                        $_SESSION['error'] = 'Current password is incorrect.';
+                        header("Location: student_profile.php?id=$student_id");
+                        exit();
+                    }
+                    $newHash = password_hash($new, PASSWORD_DEFAULT);
+                    $upd = $conn->prepare("UPDATE students SET password = ? WHERE student_id = ?");
+                    if ($upd) {
+                        $upd->bind_param("ss", $newHash, $student_id);
+                        $upd->execute();
+                        $upd->close();
+                        $_SESSION['success'] = 'Password changed successfully.';
+                    } else {
+                        $_SESSION['error'] = 'Failed to update password.';
+                    }
+                }
+
+                header("Location: student_profile.php?id=$student_id");
+                exit();
         }
     }
 }

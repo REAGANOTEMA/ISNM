@@ -436,6 +436,33 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
             }
         });
     })();
+
+    // ── Intercept ACCOUNT group links ──
+    document.querySelectorAll('.menu-group .child-link').forEach(function(link) {
+        var href = link.getAttribute('href') || '';
+        var pageParam = href.match(/page=([^&]+)/);
+        if (!pageParam) return;
+        var page = pageParam[1];
+
+        if (page === 'profile' || page === 'preferences') {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (typeof openProfileModal === 'function') {
+                    openProfileModal();
+                } else {
+                    var m = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+                    if (m) m.show();
+                }
+            });
+        } else if (page === 'security') {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (typeof openChangePasswordModal === 'function') {
+                    openChangePasswordModal();
+                }
+            });
+        }
+    });
 })();
 </script>
 <?php
