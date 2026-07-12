@@ -379,11 +379,18 @@ window.addEventListener('unhandledrejection',function(e){
         return false;
     }
 
-    // Read ?page= or ?section= from URL
+    // Read ?page= or ?section= from URL — activate the correct section
+    // Default to 'home' → 'overview' → first data-section so content isn't hidden
     var m = window.location.search.match(/[?&](?:section|page)=([^&]+)/);
     var sectionParam = (m && m[1]) || '';
-    if (sectionParam && sectionParam !== 'home' && sectionParam !== 'overview') {
+    if (sectionParam) {
         switchToSection(sectionParam);
+    } else {
+        // No param: try common defaults, then first available section
+        if (!switchToSection('home') && !switchToSection('overview')) {
+            var firstSec = document.querySelector('[data-section]');
+            if (firstSec) switchToSection(firstSec.getAttribute('data-section'));
+        }
     }
 
     // Listen for hash changes (for data-section switching)
