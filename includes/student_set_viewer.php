@@ -550,7 +550,7 @@ function renderStudentSetViewer($conn, array $options = []) {
     </div>
 
     <!-- â”€â”€ EDIT STUDENT MODAL â”€â”€ -->
-    <div class="modal fade" id="editStudentModal" tabindex="-1" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+    <div id="editStudentModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
         <div class="modal-dialog" style="background:#fff;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
             <div class="modal-header" style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
                 <h5 style="margin:0;font-size:1.1rem;font-weight:600;"><i class="fas fa-edit"></i> Edit Student</h5>

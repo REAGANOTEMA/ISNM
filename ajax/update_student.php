@@ -111,7 +111,7 @@ $stmt = $conn->prepare("UPDATE students SET
     sponsor=?, marital_status=?, religion=?,
     intake_year=?, intake_period=?, student_category=?,
     updated_at=NOW() WHERE id=?");
-$stmt->bind_param("ssssssssssssssssisssssssssssssssisi",
+$stmt->bind_param("ssssssssssssssssisssssssssssssssissi",
     $first_name, $surname, $other_name,
     $full_name, $gender,
     $index_number, $registration_number,

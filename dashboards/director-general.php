@@ -2376,6 +2376,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="addStudentModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content" id="addStudentForm">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
       <div class="modal-header" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
         <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Student</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

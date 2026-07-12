@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'add') {
             $stmt = $conn->prepare("INSERT INTO students (first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, mobile_number, email, program, level, set_name, year, current_year, passport_photo, profile_picture, status, is_first_login) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
-            $stmt->bind_param('sssssssssssssssiss', $first_name, $surname, $other_name, $full_name, $gender, $index_number, $registration_number, $student_number, $national_id, $phone, $mobile_number, $email, $program, $level, $set_name, $year, $year, $photo_path, $photo_path);
+            $stmt->bind_param('sssssssssssssssiiss', $first_name, $surname, $other_name, $full_name, $gender, $index_number, $registration_number, $student_number, $national_id, $phone, $mobile_number, $email, $program, $level, $set_name, $year, $year, $photo_path, $photo_path);
         } elseif ($action === 'edit') {
             if ($photo_path !== '') {
                 $stmt = $conn->prepare("UPDATE students SET first_name=?, surname=?, other_name=?, full_name=?, gender=?, index_number=?, registration_number=?, student_number=?, national_student_id_number=?, phone=?, mobile_number=?, email=?, program=?, level=?, set_name=?, year=?, current_year=?, passport_photo=?, profile_picture=? WHERE id=?");
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             $stmt = $conn->prepare("INSERT INTO students (first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, mobile_number, email, program, level, set_name, year, current_year, passport_photo, profile_picture, status, is_first_login) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
-            $stmt->bind_param('sssssssssssssssiss', $first_name, $surname, $other_name, $full_name, $gender, $index_number, $registration_number, $student_number, $national_id, $phone, $mobile_number, $email, $program, $level, $set_name, $year, $year, $photo_path, $photo_path);
+            $stmt->bind_param('sssssssssssssssiiss', $first_name, $surname, $other_name, $full_name, $gender, $index_number, $registration_number, $student_number, $national_id, $phone, $mobile_number, $email, $program, $level, $set_name, $year, $year, $photo_path, $photo_path);
         }
 
         if ($stmt->execute()) {

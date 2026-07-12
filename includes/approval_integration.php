@@ -20,7 +20,7 @@ function submitStoreForApproval($storeReqId, $conn = null) {
         $priority = ucfirst(strtolower($req['urgency'] ?? 'Medium'));
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 
@@ -54,7 +54,7 @@ function submitStudentForApproval($pendingId, $conn = null) {
         }
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 

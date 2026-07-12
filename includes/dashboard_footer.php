@@ -400,7 +400,7 @@ window.addEventListener('unhandledrejection',function(e){
     });
 
     // Expose globally so dashboard-specific code can call it
-    window.switchSection = window.switchSection || switchToSection;
+    window.switchToSection = window.switchToSection || switchToSection;
 })();
 
 // ── 2. CLOSE ALL BOOTSTRAP MODALS ON BACKDROP / BUTTON CLICK ──
