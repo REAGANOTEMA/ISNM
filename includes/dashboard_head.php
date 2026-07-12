@@ -88,6 +88,7 @@ if (!empty($_SESSION['dashboard_profile_image_url'])) {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 window.CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
+window.AJAX_BASE = '<?= $rootPath ?? '..' ?>';
 $(document).ajaxSend(function(e, xhr, opts) {
     if (window.CSRF_TOKEN) {
         xhr.setRequestHeader('X-CSRF-Token', window.CSRF_TOKEN);

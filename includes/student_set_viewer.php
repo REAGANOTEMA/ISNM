@@ -550,16 +550,16 @@ function renderStudentSetViewer($conn, array $options = []) {
     </div>
 
     <!-- â”€â”€ EDIT STUDENT MODAL â”€â”€ -->
-    <div id="editStudentModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
-        <div class="modal-dialog" style="background:#fff;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <div class="modal-header" style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+    <div id="editStudentModal" onclick="if(event.target===this)closeEditStudentModal()" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
                 <h5 style="margin:0;font-size:1.1rem;font-weight:600;"><i class="fas fa-edit"></i> Edit Student</h5>
-                <button class="close" onclick="closeEditStudentModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">&times;</button>
+                <button onclick="closeEditStudentModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">&times;</button>
             </div>
-            <div class="modal-body" style="padding:24px;">
+            <div style="padding:24px;">
                 <div id="editStudentFormContainer"><div class="text-center" style="padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...</div></div>
             </div>
-            <div class="modal-footer" style="padding:12px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
+            <div style="padding:12px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
                 <button class="btn btn-secondary" onclick="closeEditStudentModal()" style="padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">Cancel</button>
                 <button class="btn btn-primary" onclick="saveEditStudent()" style="padding:8px 20px;border-radius:6px;border:none;cursor:pointer;background:#1e3a8a;color:#fff;"><i class="fas fa-save"></i> Save Changes</button>
             </div>
@@ -765,7 +765,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         if (allData) { s = allData.find(function(st) { return parseInt(st.id) === parseInt(id) || st.student_id == id || st.student_number == id; }); }
         if (!s) {
             // If student not in current page data, load via AJAX
-            fetch('ajax/update_student.php?fetch=1&id=' + id)
+            fetch((window.AJAX_BASE||'.') + '/ajax/update_student.php?fetch=1&id=' + id)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data && data.id) { buildEditForm(data); }
@@ -843,7 +843,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         data.append('csrf_token', window.CSRF_TOKEN || '');
         document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = true;
         document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        fetch('ajax/update_student.php', { method: 'POST', body: data })
+        fetch((window.AJAX_BASE||'.') + '/ajax/update_student.php', { method: 'POST', body: data })
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success) {

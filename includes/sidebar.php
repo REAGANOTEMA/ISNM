@@ -433,6 +433,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         overlay.addEventListener('click', function() {
             var sidebar = document.getElementById('isnmSidebar');
             if (sidebar) sidebar.classList.remove('open');
+            overlay.classList.remove('open');
         });
     }
 

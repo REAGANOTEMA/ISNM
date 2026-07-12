@@ -468,17 +468,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
                 $stmt = $conn->prepare("INSERT INTO pending_students (first_name, middle_name, last_name, student_number, program, level, intake_year, intake_period, phone, email, date_of_birth, submitted_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval')");
                 if ($stmt) {
                     $stmt->bind_param("sssssssssssi", $first_name, $middle_name, $last_name, $student_id, $program, $level, $intake_year, $intake_period, $phone, $email, $date_of_birth, $user_id);
-                    $stmt->execute();
-                    $pendingId = $stmt->insert_id;
-                    $stmt->close();
+                    if ($stmt->execute()) {
+                        $pendingId = $stmt->insert_id;
+                        $stmt->close();
 
-                    // Submit for approval workflow
-                    require_once __DIR__ . '/../includes/approval_integration.php';
-                    if (function_exists('submitStudentForApproval')) {
-                        submitStudentForApproval($pendingId, $conn);
+                        require_once __DIR__ . '/../includes/approval_integration.php';
+                        if (function_exists('submitStudentForApproval')) {
+                            submitStudentForApproval($pendingId, $conn);
+                        }
+
+                        $_SESSION['success'] = "Student $first_name $last_name submitted for DG approval.";
+                    } else {
+                        error_log("DG add student execute error: " . $conn->error);
+                        $_SESSION['error'] = "Database error adding student.";
                     }
-
-                    $_SESSION['success'] = "Student $first_name $last_name submitted for DG approval.";
+                } else {
+                    error_log("DG add student prepare error: " . $conn->error);
+                    $_SESSION['error'] = "Database error preparing query.";
                 }
             }
         } catch (Exception $e) {
@@ -505,17 +511,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $level = trim($_POST['dept_level'] ?? '');
         if ($name && $code) {
             $stmt = $conn->prepare("INSERT INTO staff_departments (department_name,department_code,department_level) VALUES (?,?,?)");
-            if ($stmt) { $stmt->bind_param('sss', $name, $code, $level); $stmt->execute(); $stmt->close(); }
-            $ok = true; $msg = "Department $name added.";
+            if ($stmt) { $stmt->bind_param('sss', $name, $code, $level); if ($stmt->execute()) { $ok = true; $msg = "Department $name added."; } else { $msg = 'Database error adding department.'; error_log('add_department: ' . $conn->error); } $stmt->close(); }
         } else { $msg = 'Name and code required.'; }
     }
 
     if ($action === 'delete_department' && $conn) {
         $id = (int)($_POST['dept_id'] ?? 0);
-        if ($id) { $conn->query("DELETE FROM staff_departments WHERE id=" . intval($id)); $ok = true; $msg = 'Department deleted.'; }
+        if ($id) { if ($conn->query("DELETE FROM staff_departments WHERE id=" . intval($id))) { $ok = true; $msg = 'Department deleted.'; } else { $msg = 'Database error deleting department.'; } }
         else {
             $code = $_POST['dept_code'] ?? '';
-            if ($code) { $stmt = $conn->prepare("DELETE FROM staff_departments WHERE department_code=?"); if ($stmt) { $stmt->bind_param('s', $code); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Department deleted.'; }
+            if ($code) { $stmt = $conn->prepare("DELETE FROM staff_departments WHERE department_code=?"); if ($stmt) { $stmt->bind_param('s', $code); if ($stmt->execute()) { $ok = true; $msg = 'Department deleted.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
         }
     }
 
@@ -529,14 +534,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $st = trim($_POST['staff_status'] ?? 'Active');
         if ($name && $sid) {
             $stmt = $conn->prepare("INSERT INTO staff (staff_id,full_name,email,phone,department,position,status) VALUES (?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sssssss', $sid, $name, $em, $ph, $dp, $ro, $st); $stmt->execute(); $stmt->close(); }
-            $ok = true; $msg = "Staff $name added.";
+            if ($stmt) { $stmt->bind_param('sssssss', $sid, $name, $em, $ph, $dp, $ro, $st); if ($stmt->execute()) { $ok = true; $msg = "Staff $name added."; } else { $msg = 'Database error adding staff.'; error_log('add_staff: ' . $conn->error); } $stmt->close(); }
         } else { $msg = 'Name and Staff ID required.'; }
     }
 
     if ($action === 'delete_staff' && $conn) {
         $sid = (int)($_POST['staff_id'] ?? 0);
-        if ($sid) { $conn->query("DELETE FROM staff WHERE id=" . intval($sid)); $ok = true; $msg = 'Staff removed.'; }
+        if ($sid) { if ($conn->query("DELETE FROM staff WHERE id=" . intval($sid))) { $ok = true; $msg = 'Staff removed.'; } else { $msg = 'Database error.'; } }
     }
 
     if ($action === 'edit_staff' && $conn) {
@@ -550,8 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $est = trim($_POST['edit_staff_status'] ?? 'Active');
         if ($eid && $ename) {
             $stmt = $conn->prepare("UPDATE staff SET full_name=?, staff_id=?, email=?, phone=?, department=?, position=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssssi', $ename, $eidno, $eem, $eph, $edp, $ero, $est, $eid); $stmt->execute(); $stmt->close(); }
-            $ok = true; $msg = "Staff $ename updated.";
+            if ($stmt) { $stmt->bind_param('sssssssi', $ename, $eidno, $eem, $eph, $edp, $ero, $est, $eid); if ($stmt->execute()) { $ok = true; $msg = "Staff $ename updated."; } else { $msg = 'Database error updating staff.'; error_log('edit_staff: ' . $conn->error); } $stmt->close(); }
         } else { $msg = 'Name required.'; }
     }
 
