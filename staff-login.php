@@ -612,114 +612,130 @@ body{
 }
 @media(max-width:900px){
   body{flex-direction:column;overflow-y:auto}
-  .login-bg{transform:none;animation:none;opacity:0.5}
-  .login-left{width:100%;min-height:auto;padding:40px 24px 16px}
-  .login-right{width:100%;min-height:auto;padding:16px 24px 40px}
-  .hero-content{max-width:100%}
-  .hero-title{font-size:2.2rem}
+  .login-bg{transform:none;animation:none;opacity:0.4}
+  .login-left{width:100%;min-height:auto;padding:28px 20px 8px}
+  .login-right{width:100%;min-height:auto;padding:8px 20px 28px}
+  .hero-content{max-width:100%;text-align:center}
+  .hero-title{font-size:2rem}
+  .hero-title .highlight{display:inline}
+  .hero-badge{margin-left:auto;margin-right:auto}
   .hero-stats{display:none}
   .hero-motto{display:none}
+  .hero-divider{margin-left:auto;margin-right:auto}
   .login-card-wrap{max-width:460px;margin:0 auto}
-  .login-card{padding:38px 32px 34px}
+  .login-card{padding:34px 28px 30px}
+  .orb{display:none}
+  .particle-field{opacity:0.3}
 }
 @media(max-width:600px){
-  .login-left{padding:32px 16px 12px}
-  .login-right{padding:12px 16px 32px}
-  .hero-title{font-size:1.6rem;letter-spacing:0.3px}
-  .hero-badge{font-size:10px;padding:8px 16px;margin-bottom:20px;letter-spacing:2px}
-  .hero-institution{font-size:0.9rem}
-  .hero-description{font-size:0.8rem}
-  .login-card{padding:28px 20px 24px;border-radius:22px}
-  .card-header-wrap{gap:14px;margin-bottom:22px}
-  .card-logo{width:50px;height:50px}
-  .card-brand h2{font-size:1rem}
+  .login-left{padding:24px 16px 6px}
+  .login-right{padding:6px 16px 24px}
+  .hero-title{font-size:1.5rem;margin-bottom:12px}
+  .hero-badge{font-size:10px;padding:6px 14px;margin-bottom:14px;letter-spacing:1.5px}
+  .hero-institution{font-size:0.82rem;margin-bottom:6px}
+  .hero-description{font-size:0.78rem;line-height:1.6}
+  .hero-sub{margin-bottom:4px}
+  .login-card{padding:24px 18px 20px;border-radius:18px}
+  .card-header-wrap{gap:12px;margin-bottom:18px}
+  .card-logo{width:46px;height:46px}
+  .card-brand h2{font-size:0.92rem}
   .card-brand p{font-size:9px}
-  .card-title{font-size:1.35rem}
-  .card-subtitle{font-size:13px;margin-bottom:20px}
-  .form-group{margin-bottom:18px}
+  .card-title{font-size:1.25rem}
+  .card-subtitle{font-size:13px;margin-bottom:16px}
+  .form-group{margin-bottom:16px}
   .form-label{font-size:10px}
-  .input-wrap .form-control{font-size:13px;padding:13px 16px 13px 46px;border-radius:12px}
+  .input-wrap .form-control{font-size:16px;padding:14px 16px 14px 44px;border-radius:12px;min-height:48px}
   .input-wrap .input-icon{left:14px;font-size:13px}
-  .form-options{flex-direction:column;gap:12px;align-items:flex-start}
-  .btn-3d{padding:14px 22px;font-size:13px;border-radius:12px}
+  .form-options{flex-direction:column;gap:10px;align-items:flex-start}
+  .btn-3d{padding:14px 22px;font-size:14px;border-radius:12px;min-height:50px}
+  .btn-3d-sm{padding:12px 18px;font-size:12px;border-radius:10px;min-height:44px}
   .role-badge{padding:6px 16px;font-size:12px}
-  .quick-access a{width:42px;height:42px;font-size:16px;border-radius:13px}
-  .footer-links a{font-size:11px;padding:8px 14px}
-  .alert{padding:12px 16px;font-size:12px;border-radius:12px}
+  .quick-access{gap:12px;margin-top:4px}
+  .quick-access a{width:46px;height:46px;font-size:18px;border-radius:14px}
+  .footer-links{gap:10px}
+  .footer-links a{font-size:11px;padding:8px 16px;border-radius:10px;min-height:44px}
+  .alert{padding:10px 14px;font-size:12px;border-radius:10px}
+  .light-sweep{animation:none;opacity:0.3}
+  .grid-overlay::before{animation:none}
 }
 /* ── Ultra-Compact Mobile (480px and below) ── */
 @media(max-width:480px){
   body{overflow-y:auto;min-height:100dvh}
-  .login-left{padding:24px 14px 10px}
-  .login-right{padding:10px 14px 24px}
-  .hero-title{font-size:1.4rem;line-height:1.15;margin-bottom:16px}
-  .hero-badge{font-size:9px;padding:6px 14px;margin-bottom:16px;gap:6px}
+  .login-left{padding:18px 12px 4px}
+  .login-right{padding:4px 12px 18px}
+  .hero-title{font-size:1.25rem;line-height:1.2;margin-bottom:10px}
+  .hero-badge{font-size:9px;padding:5px 12px;margin-bottom:12px;gap:5px;letter-spacing:1px}
   .hero-badge i{font-size:9px}
-  .hero-institution{font-size:0.82rem;margin-bottom:8px}
-  .hero-description{font-size:0.75rem;line-height:1.7}
-  .login-card{border-radius:18px;padding:22px 16px 20px}
-  .card-header-wrap{gap:12px;margin-bottom:18px}
-  .card-logo{width:44px;height:44px}
-  .card-brand h2{font-size:0.88rem}
-  .card-brand p{font-size:8px;letter-spacing:0.5px}
-  .card-title{font-size:1.2rem}
-  .card-subtitle{font-size:12px;margin-bottom:16px;line-height:1.5}
-  .role-badge{font-size:11px;padding:5px 14px;margin-top:4px;margin-bottom:14px}
+  .hero-institution{font-size:0.76rem;margin-bottom:5px}
+  .hero-description{font-size:0.72rem;line-height:1.5}
+  .login-card{border-radius:16px;padding:20px 14px 18px}
+  .card-header-wrap{gap:10px;margin-bottom:14px}
+  .card-logo{width:40px;height:40px}
+  .card-brand h2{font-size:0.82rem}
+  .card-brand p{font-size:8px;letter-spacing:0.3px}
+  .card-title{font-size:1.1rem}
+  .card-subtitle{font-size:12px;margin-bottom:14px;line-height:1.4}
+  .role-badge{font-size:11px;padding:5px 12px;margin-top:2px;margin-bottom:12px}
   .form-group{margin-bottom:14px}
-  .form-label{font-size:9px;margin-bottom:6px;letter-spacing:0.8px}
-  .input-wrap .form-control{font-size:16px;padding:12px 14px 12px 42px;border-radius:10px;min-height:48px}
+  .form-label{font-size:9px;margin-bottom:5px;letter-spacing:0.5px}
+  .input-wrap .form-control{font-size:16px;padding:12px 14px 12px 40px;border-radius:10px;min-height:48px}
   .input-wrap .input-icon{left:12px;font-size:12px}
-  .password-toggle{width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;right:6px;top:50%;transform:translateY(-50%)}
-  .form-options{gap:10px;margin-bottom:20px}
+  .password-toggle{width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;right:4px;top:50%;transform:translateY(-50%)}
+  .form-options{gap:8px;margin-bottom:16px}
   .remember-me{font-size:12px}
   .remember-me input[type="checkbox"]{width:20px;height:20px}
   .forgot-link{font-size:12px}
-  .btn-3d{padding:14px 20px;font-size:13px;border-radius:12px;min-height:48px}
-  .btn-3d-sm{padding:10px 16px;font-size:11px;border-radius:10px;min-height:44px}
-  .quick-access{gap:10px;margin-top:6px}
-  .quick-access a{width:44px;height:44px;font-size:16px;border-radius:12px}
-  .footer-links{gap:10px}
-  .footer-links a{font-size:10px;padding:8px 12px;gap:6px;border-radius:10px;min-height:44px}
-  .alert{padding:10px 14px;font-size:12px;border-radius:10px;gap:8px;margin-bottom:14px}
-  .divider{margin:18px 0 16px}
+  .btn-3d{padding:14px 18px;font-size:13px;border-radius:12px;min-height:48px}
+  .btn-3d-sm{padding:10px 14px;font-size:11px;border-radius:10px;min-height:42px}
+  .quick-access{gap:10px;margin-top:2px}
+  .quick-access a{width:42px;height:42px;font-size:16px;border-radius:12px}
+  .footer-links{gap:8px}
+  .footer-links a{font-size:10px;padding:8px 12px;gap:5px;border-radius:10px;min-height:42px}
+  .alert{padding:10px 12px;font-size:11px;border-radius:10px;gap:7px;margin-bottom:12px}
+  .divider{margin:14px 0 12px}
   .back-home-link{font-size:0.8rem}
+  .login-card:hover{box-shadow:0 2px 4px rgba(0,0,0,0.03),0 8px 24px rgba(0,0,0,0.05),0 24px 56px rgba(0,0,0,0.07)}
+  #togglePass{width:48px;height:48px;right:2px}
 }
 /* ── Tiny screens (400px and below) ── */
 @media(max-width:400px){
-  .login-left{padding:18px 10px 8px}
-  .login-right{padding:8px 10px 18px}
-  .hero-title{font-size:1.2rem}
-  .hero-badge{font-size:8px;padding:5px 12px}
-  .hero-institution{font-size:0.76rem}
-  .hero-description{font-size:0.7rem}
-  .login-card{padding:18px 12px 16px;border-radius:14px}
-  .card-header-wrap{gap:10px;margin-bottom:14px}
-  .card-logo{width:38px;height:38px}
-  .card-brand h2{font-size:0.8rem}
-  .card-title{font-size:1.05rem}
-  .card-subtitle{font-size:11px;margin-bottom:14px}
+  .login-left{padding:14px 10px 2px}
+  .login-right{padding:2px 10px 14px}
+  .hero-title{font-size:1.1rem;margin-bottom:8px}
+  .hero-badge{font-size:8px;padding:4px 10px;margin-bottom:10px}
+  .hero-institution{font-size:0.7rem}
+  .hero-description{font-size:0.67rem}
+  .login-card{padding:16px 10px 14px;border-radius:14px}
+  .card-header-wrap{gap:8px;margin-bottom:12px}
+  .card-logo{width:36px;height:36px}
+  .card-brand h2{font-size:0.76rem}
+  .card-title{font-size:1rem}
+  .card-subtitle{font-size:11px;margin-bottom:12px}
   .form-group{margin-bottom:12px}
   .form-label{font-size:8.5px}
-  .input-wrap .form-control{padding:11px 12px 11px 38px;border-radius:10px;font-size:16px}
+  .input-wrap .form-control{padding:11px 12px 11px 36px;border-radius:10px;font-size:16px;min-height:46px}
   .input-wrap .input-icon{left:10px;font-size:11px}
   .btn-3d{padding:12px 16px;font-size:12px;min-height:44px}
   .btn-3d-sm{padding:8px 12px;font-size:10px;min-height:40px}
-  .quick-access a{width:40px;height:40px;font-size:14px}
-  .footer-links a{font-size:9px;padding:6px 10px;min-height:40px}
+  .quick-access a{width:38px;height:38px;font-size:14px}
+  .footer-links a{font-size:9px;padding:6px 10px;min-height:38px}
+  #togglePass{width:44px;height:44px}
 }
 /* ── Extra tiny screens (360px and below) ── */
 @media(max-width:360px){
-  .hero-title{font-size:1.05rem}
-  .login-card{border-radius:12px;padding:14px 10px 14px}
-  .card-header-wrap{gap:8px}
-  .card-logo{width:34px;height:34px}
-  .card-brand h2{font-size:0.74rem}
-  .card-title{font-size:0.95rem}
-  .input-wrap .form-control{font-size:16px;padding:10px 10px 10px 34px}
-  .form-options{flex-direction:column;gap:8px;align-items:flex-start}
-  .quick-access{gap:8px}
-  .quick-access a{width:36px;height:36px;font-size:13px;border-radius:10px}
-  .footer-links a{font-size:8px;padding:6px 8px;min-height:36px}
+  .hero-title{font-size:0.95rem}
+  .login-card{border-radius:12px;padding:14px 8px 12px}
+  .card-header-wrap{gap:6px}
+  .card-logo{width:32px;height:32px}
+  .card-brand h2{font-size:0.7rem}
+  .card-title{font-size:0.9rem}
+  .card-subtitle{font-size:10px}
+  .input-wrap .form-control{font-size:16px;padding:10px 10px 10px 32px;min-height:44px}
+  .form-options{flex-direction:column;gap:6px;align-items:flex-start}
+  .quick-access{gap:6px}
+  .quick-access a{width:34px;height:34px;font-size:12px;border-radius:10px}
+  .footer-links a{font-size:8px;padding:6px 8px;min-height:34px}
+  #togglePass{width:40px;height:40px}
 }
 </style>
 </head>
@@ -860,12 +876,16 @@ document.addEventListener('DOMContentLoaded',function(){
   if(f&&b){f.addEventListener('submit',function(){b.classList.add('loading')})}
   var e=document.getElementById('s-email');if(e)e.focus();
   var c=document.querySelector('.login-card-wrap');
-  if(c){document.addEventListener('mousemove',function(m){
-    var r=c.getBoundingClientRect();
-    var x=(m.clientX-r.left)/r.width-0.5;
-    var y=(m.clientY-r.top)/r.height-0.5;
-    c.style.transform='perspective(1400px) rotateX('+(1.5-y*3.5)+'deg) rotateY('+(x*3.5)+'deg) translateY(0)';
-  })}
+  if(c && !('ontouchstart' in window)){
+    document.addEventListener('mousemove',function(m){
+      var r=c.getBoundingClientRect();
+      var x=(m.clientX-r.left)/r.width-0.5;
+      var y=(m.clientY-r.top)/r.height-0.5;
+      c.style.transform='perspective(1400px) rotateX('+(1.5-y*3.5)+'deg) rotateY('+(x*3.5)+'deg) translateY(0)';
+    })
+  } else if (c) {
+    c.style.transform='perspective(1400px) rotateX(1.5deg)';
+  }
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
