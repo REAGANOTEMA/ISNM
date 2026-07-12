@@ -2131,6 +2131,7 @@ a, button, .btn, input, select, textarea, .card, .form-control {
   --ent-radius: 12px;
   --ent-radius-sm: 8px;
   --ent-sidebar-w: 270px;
+  --erp-sidebar-width: 270px;
   --ent-header-h: 60px;
   --ent-control-w: 300px;
   --ent-transition: all 0.25s cubic-bezier(0.4,0,0.2,1);

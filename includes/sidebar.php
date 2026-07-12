@@ -12,7 +12,7 @@
 
 // Session is already started by bootstrapStaffDashboard() before this file is included.
 // Do NOT call session_start() here — headers were already sent by dashboard_head.php.
-if (!isset($_SESSION) || !isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+if (empty($_SESSION['user_id']) || empty($_SESSION['role'])) {
     echo '<script>window.location.href="../index.php";</script>'; exit();
 }
 
@@ -20,7 +20,7 @@ $sidebarPosition = $sidebarPosition ?? 'left';
 $isRight = ($sidebarPosition === 'right');
 
 $user_role = $_SESSION['role'];
-$user_type = $_SESSION['type'];
+$user_type = $_SESSION['type'] ?? '';
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
