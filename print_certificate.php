@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Certificate Printing Endpoint
  * Generates professional certificate HTML for printing

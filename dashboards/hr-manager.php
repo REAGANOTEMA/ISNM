@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * HR Manager Dashboard â€” Complete 13-Module Interface
  * Modules: Staff Records, Recruitment, Attendance, Payroll Support,

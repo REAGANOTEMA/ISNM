@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once 'auth-service.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Auto-Deduction / Subscription Payment Processor
  * Handles creation, management, and processing of recurring payment subscriptions.

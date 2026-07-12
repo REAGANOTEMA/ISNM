@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Academic Registrar Schema Deployment
  * Run: php run_academic_registrar_schema.php

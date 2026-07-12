@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Global Search Component â€” ISNM
  * Includes both the search UI (renderGlobalSearchBar) and the AJAX handler.

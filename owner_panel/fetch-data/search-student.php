@@ -1,4 +1,4 @@
-﻿<?php
+<?php
  include("../../assets/config.php");
 
 // Assuming you've already sanitized the search term

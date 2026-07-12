@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Staff Self-Service Portal
  * - View payslips, apply for leave, check leave balance

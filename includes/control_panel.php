@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Professional Control Panel for ISNM Staff Dashboards
  * Include this in any dashboard to render the home page.

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Staff Attendance';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal','admin']);

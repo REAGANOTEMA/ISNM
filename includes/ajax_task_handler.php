@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM AJAX Task Handler â€” Task management via AJAX
  * Handles: get tasks, create task, update status, delete task

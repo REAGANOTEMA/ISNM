@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Seed all 30 staff accounts with correct credentials on production/hosting.
  * Uses password_hash(PASSWORD_BCRYPT) matching auth-service.php.

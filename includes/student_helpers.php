@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Universal student lookup â€” searches igangaschool_students
  * and falls back to Excel data files in students_data/

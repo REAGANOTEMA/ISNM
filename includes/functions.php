@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Additional helper functions for ISNM Student Management System
 
 // Sanitize user input to prevent XSS attacks

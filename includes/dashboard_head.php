@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Universal Dashboard Head â€” include at the very top of every dashboard <head>
  * Usage: include_once __DIR__ . '/../includes/dashboard_head.php';

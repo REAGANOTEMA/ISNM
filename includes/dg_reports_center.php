@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Executive Reports Center for Director General Dashboard.
  * Provides: Academic, Financial, HR, and System reports with export & search.

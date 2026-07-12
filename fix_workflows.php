@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Fix approval_workflows duplicate entries and add unique index.
  * Run ONCE from browser/CLI to fix the SQL migration failure.

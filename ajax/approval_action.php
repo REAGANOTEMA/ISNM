@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * AJAX handler for approval workflow actions.
  * Called from approval_workflow.php action buttons.

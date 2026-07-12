@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Create Bursar Staff Account
  * Run this script to create the bursar user account

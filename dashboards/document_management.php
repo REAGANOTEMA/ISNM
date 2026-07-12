@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','registrar','ict','it']);

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Complete System Setup Script
  * Comprehensive initialization with new database credentials and staff accounts

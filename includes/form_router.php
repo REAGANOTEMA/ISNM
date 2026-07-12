@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Form Router & Notification System
  * Routes all forms to correct recipients based on type

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Staff Credentials Seeder
  * Inserts/updates all staff accounts with correct bcrypt passwords and role_id.

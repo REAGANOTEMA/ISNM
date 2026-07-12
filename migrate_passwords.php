@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM PRODUCTION SETUP â€” self-contained, no includes needed
  * Run ONCE from browser, then DELETE this file.

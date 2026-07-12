@@ -1,4 +1,4 @@
-﻿<?php include_once 'shared/_header.php'; ?>
+<?php include_once 'shared/_header.php'; ?>
 
   <main>
     <!-- Hero Page Header -->

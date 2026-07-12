@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Director General Notifications Center
  * Aggregates notifications from all system modules into a unified tabbed feed.

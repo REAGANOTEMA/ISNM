@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ISNM Unified Database Connection System
 // Connects to all four databases: staffs_db, students_db, website_db, ict
 

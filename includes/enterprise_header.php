@@ -306,7 +306,9 @@ $hCurrentPage  = basename($_SERVER['PHP_SELF']);
         if(!list)return;
         list.innerHTML='<div class="ent-notif-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         fetch('../includes/ajax_notifications.php?action=get_notifications&limit=10')
-            .then(function(r){return r.json()})
+            .then(function(r){return r.text()})
+            .then(function(t){return JSON.parse(t.replace(/^\uFEFF/,''))})
+            .catch(function(){return {success:false,notifications:[]}})
             .then(function(data){
                 if(!data||!data.success||!data.notifications||data.notifications.length===0){
                     list.innerHTML='<div class="ent-notif-loading"><i class="fas fa-check-circle" style="color:#10b981"></i> No new notifications</div>';
@@ -341,7 +343,8 @@ $hCurrentPage  = basename($_SERVER['PHP_SELF']);
         if(!list)return;
         list.innerHTML='<div class="ent-notif-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         fetch('../includes/ajax_task_handler.php?action=get_my_tasks&limit=10')
-            .then(function(r){return r.json()})
+            .then(function(r){return r.text()})
+            .then(function(t){return JSON.parse(t.replace(/^\uFEFF/,''))})
             .then(function(data){
                 if(!data||!data.success||!data.tasks||data.tasks.length===0){
                     list.innerHTML='<div class="ent-notif-loading"><i class="fas fa-check-circle" style="color:#10b981"></i> No pending tasks</div>';
@@ -366,7 +369,8 @@ $hCurrentPage  = basename($_SERVER['PHP_SELF']);
         var fd = new FormData();
         fd.append('csrf_token', window.CSRF_TOKEN || '');
         fetch('../includes/ajax_notifications.php?action=mark_all_read',{method:'POST',body:fd})
-            .then(function(){loadNotifications();var b=document.querySelector('.ent-badge-danger');if(b)b.remove();});
+            .then(function(){loadNotifications();var b=document.querySelector('.ent-badge-danger');if(b)b.remove();})
+            .catch(function(){});
     };
 
     function escHtml(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s));return d.innerHTML;}

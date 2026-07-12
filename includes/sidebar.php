@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Professional Hierarchical Sidebar Navigation
  * Collapsible accordion, smooth animations, role-filtered, auto-expand active.

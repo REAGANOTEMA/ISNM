@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * AJAX endpoint for staff communication system.
  * Handles sending messages from the dashboard communication modal.

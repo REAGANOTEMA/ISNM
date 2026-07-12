@@ -540,7 +540,8 @@ function includeCommonScripts() {
                 },
                 body: new URLSearchParams(data)
             })
-            .then(response => response.json())
+            .then(response => response.text())
+            .then(text => JSON.parse(text.replace(/^\uFEFF/, '')))
             .then(data => callback(data))
             .catch(error => {
                 console.error('AJAX Error:', error);

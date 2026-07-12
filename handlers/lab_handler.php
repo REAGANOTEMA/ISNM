@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Lab Manager unified AJAX/Form POST handler.
  * Returns JSON: {success: bool, message: string, data: mixed}

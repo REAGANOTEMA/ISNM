@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Notification Helper â€” create, fetch, and manage notifications across all dashboards.
  * Uses website_db.notifications + notification_reads tables.

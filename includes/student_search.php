@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Search API
  * All dashboards can search and find students

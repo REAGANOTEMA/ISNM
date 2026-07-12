@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (defined('PROFILE_SETTINGS_LOADED')) return;
 define('PROFILE_SETTINGS_LOADED', true);
 

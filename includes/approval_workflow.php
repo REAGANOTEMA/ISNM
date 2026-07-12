@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Approval Workflow System - Configurable multi-stage approval engine.
  * Supports: request creation, review, recommendation, approval, rejection, escalation.

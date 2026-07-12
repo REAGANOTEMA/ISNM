@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Enterprise Dashboard Analytics & KPI Center
  * Live SQL-driven analytics, auto-refresh, executive KPIs, health score, AI insights.

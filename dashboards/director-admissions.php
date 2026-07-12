@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Director of Admissions & Requirements ï¿½ Complete Enterprise Dashboard
  * Covers: Applications, Review, Requirements, Filtering, Search, Analytics,

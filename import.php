@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Data Import Script
  * 

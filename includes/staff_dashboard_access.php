@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // â”€â”€ Production-safe error handling: log all errors but never display them â”€â”€
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Professional Student Profile Component
  * Complete with:

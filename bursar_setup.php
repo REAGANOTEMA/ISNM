@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Bursar Setup & Initialization Script
  * Creates bursar user, sets up database, and initializes system

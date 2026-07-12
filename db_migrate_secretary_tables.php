@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Migration Script: School Secretary Module Tables
  * Creates all required tables for the enhanced School Secretary dashboard.

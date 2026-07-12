@@ -201,10 +201,11 @@ window.addEventListener('unhandledrejection',function(e){
     function fetchNotifications() {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', '<?= $rootPath ?>/includes/ajax_notifications.php?action=fetch&_=' + Date.now(), true);
-      xhr.onload = function () {
-        if (xhr.status !== 200) return;
-        try {
-          var d = JSON.parse(xhr.responseText);
+        xhr.onload = function () {
+          if (xhr.status !== 200) return;
+          try {
+            var txt = xhr.responseText.replace(/^\uFEFF/, '');
+            var d = JSON.parse(txt);
           if (d.unread > 0) {
             badge.textContent = d.unread > 99 ? '99+' : d.unread;
             badge.style.display = '';
@@ -886,7 +887,8 @@ function saveChangePassword() {
   b.disabled = true;
   b.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
   fetch('../auth-handler.php?action=change_password', { method:'POST', body:d })
-    .then(function(r){ return r.json(); })
+    .then(function(r){ return r.text(); })
+    .then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, '')); })
     .then(function(j){
       if (j.success) {
         a.className = 'alert alert-success';

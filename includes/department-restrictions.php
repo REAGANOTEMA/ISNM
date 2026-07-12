@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Department-Based Access Restrictions
  * Ensures users only see data assigned to their department

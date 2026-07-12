@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Financial Management Functions for ISNM
  * Uses bursar_system.sql schema (student_invoices, payments, expenditure_records, penalty_configurations)

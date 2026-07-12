@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Executive Overview Renderer for Director General Dashboard.
  * Provides: stats cards, department comparison, alerts, compliance, risks.

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Fees Statement
  * Provides a detailed financial breakdown for a specific student.

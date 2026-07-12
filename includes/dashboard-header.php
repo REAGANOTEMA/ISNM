@@ -713,7 +713,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             fetch(`/includes/student_search.php?action=search_students&q=${encodeURIComponent(query)}`)
-                .then(r => r.json())
+                .then(r => r.text())
+                .then(t => JSON.parse(t.replace(/^\uFEFF/, '')))
                 .then(data => {
                     if (data.success && data.students.length > 0) {
                         searchResults.innerHTML = data.students.map(s => `
@@ -735,7 +736,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function loadNotifications() {
     fetch(`/includes/form_router.php?action=get_notifications`)
-        .then(r => r.json())
+        .then(r => r.text())
+        .then(t => JSON.parse(t.replace(/^\uFEFF/, '')))
         .then(data => {
             if (data.success) {
                 const notificationList = document.getElementById('notificationList');

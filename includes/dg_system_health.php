@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * System Health monitoring module for the Director General dashboard.
  * Provides: server health, database status, backup info, storage usage,

@@ -8,7 +8,18 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/notification_helper.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+ob_start(function($buf) {
+    // Strip any UTF-8 BOM that might leak into output
+    if (strlen($buf) >= 3 && ord($buf[0]) === 0xEF && ord($buf[1]) === 0xBB && ord($buf[2]) === 0xBF) {
+        $buf = substr($buf, 3);
+    }
+    return $buf;
+});
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 

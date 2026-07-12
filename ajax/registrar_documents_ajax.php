@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * AJAX Document Generator for Academic Registrar
  * Handles student lookup, document generation, and preview

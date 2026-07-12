@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Enterprise Auth â€” Shared authentication & permission engine
  * Used by ALL dashboards. No duplicates â€” this is the single source of truth.

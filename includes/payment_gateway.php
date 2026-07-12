@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Payment Gateway Integration for ISNM
  * Supports: MTN MoMo (Sandbox/Production), Airtel Money

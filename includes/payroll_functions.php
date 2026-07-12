@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Payroll Management System â€” Core Functions
  * Tax calculations, payroll processing, payslip generation, audit logging.

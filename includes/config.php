@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Legacy configuration kept for older modules.
 // Prefer config/database.php for new code.
 

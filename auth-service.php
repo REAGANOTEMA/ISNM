@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Unified Authentication Service for ISNM School Management System
  */

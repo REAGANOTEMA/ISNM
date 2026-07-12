@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Academic Transcript Portal
  * Full-featured transcript viewer with download, print, and editing

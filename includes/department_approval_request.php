@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Universal Department Approval Request Module
  * Any staff dashboard can include this to submit requests to the DG Approval Center.

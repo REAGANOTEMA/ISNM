@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Unified News Management Widget
  * Embed in any staff dashboard via renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $user_role)

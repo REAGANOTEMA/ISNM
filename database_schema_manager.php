@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Database Schema Manager
  * Validates, repairs, and synchronizes database schema with SQL files

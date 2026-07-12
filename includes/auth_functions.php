@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Enhanced authentication functions for ISNM School Management System
 // Students login with NSIN number, name, and contact number
 // Staff login with username and password

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Full Profile View
  * Accessible by authorized staff to view complete student records.

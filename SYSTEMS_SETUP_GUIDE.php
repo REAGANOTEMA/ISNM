@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Comprehensive Implementation Guide for ISNM Financial & HR Management Systems
  * 

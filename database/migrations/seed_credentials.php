@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Seed all ISNM staff credentials into the staff table.
  * Run ONCE on production: php database/migrations/seed_credentials.php

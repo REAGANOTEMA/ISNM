@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM News Publishing System
  * Directors publish news that automatically displays on website

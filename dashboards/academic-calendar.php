@@ -1,4 +1,4 @@
-﻿VB <?php
+VB <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'registrar', 'principal']);
 $conn = $ctx['staff'];

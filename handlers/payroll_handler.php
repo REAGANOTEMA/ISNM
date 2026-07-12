@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Payroll Management System â€” AJAX/Form POST Handler
  * All payroll CRUD operations, processing, and approvals via a single endpoint.

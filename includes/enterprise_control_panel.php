@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Enterprise Control Panel Addon
  * Include this at the BOTTOM of any dashboard (before </body>) to add the right-side control panel.

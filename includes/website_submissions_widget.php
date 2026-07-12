@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Website Submissions Widget
  * Reusable widget for viewing website submissions across director dashboards.

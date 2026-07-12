@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Mobile Money Payment Processor - Integration for MTN MoMo & Airtel Money
  */

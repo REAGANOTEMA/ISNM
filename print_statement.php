@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/includes/student_auth.php';
 require_once __DIR__ . '/includes/financial_functions.php';
 

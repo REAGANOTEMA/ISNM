@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * COMPREHENSIVE DATABASE AUDIT â€” ISNM ERP
  * Scans all 4 databases, lists every table and its columns

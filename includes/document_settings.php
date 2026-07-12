@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Document Settings Loader
  * Loads transcript/certificate settings from document_settings table

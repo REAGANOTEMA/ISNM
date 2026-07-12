@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Credentials Documentation
  * Comprehensive staff account database

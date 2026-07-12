@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Institutional Framework: Hierarchy, Ownership, Alerts, Performance, Audit
  * Central include for director management enhancements.

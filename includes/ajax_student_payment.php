@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * AJAX endpoint for student self-service payment requests
  */

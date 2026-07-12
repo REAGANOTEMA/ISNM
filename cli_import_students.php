@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * CLI student import script â€” bypasses web session/redirect complexity.
  * Usage: php cli_import_students.php

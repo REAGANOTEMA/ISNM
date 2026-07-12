@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Staff Communication System
  * Allows all staff to send internal communications to departments using their auth email.
@@ -310,7 +310,8 @@ if (!function_exists('renderCommunicationModal')) {
                 method: 'POST',
                 body: data
             })
-            .then(function(r) { return r.json(); })
+            .then(function(r) { return r.text(); })
+            .then(function(t) { return JSON.parse(t.replace(/^\uFEFF/,'')); })
             .then(function(d) {
                 if (d.success) {
                     var rc = d.recipients_count || 0;

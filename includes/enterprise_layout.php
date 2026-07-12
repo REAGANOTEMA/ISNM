@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Enterprise Layout Wrapper
  * Include this at the TOP of any dashboard to get the standard ERP layout:

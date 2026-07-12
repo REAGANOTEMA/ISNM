@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * HR System Setup & Initialization Script
  * Creates HR user and initializes database

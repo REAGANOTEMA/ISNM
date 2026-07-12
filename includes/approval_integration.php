@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Approval Integration Hub
  * Bridges the approval_workflow system with application entities:

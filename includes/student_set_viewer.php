@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Student Set Viewer â€“ Reusable Component
  * 
@@ -766,7 +766,8 @@ function renderStudentSetViewer($conn, array $options = []) {
         if (!s) {
             // If student not in current page data, load via AJAX
             fetch((window.AJAX_BASE||'.') + '/ajax/update_student.php?fetch=1&id=' + id)
-                .then(function(r) { return r.json(); })
+                .then(function(r) { return r.text(); })
+                .then(function(t) { return JSON.parse(t.replace(/^\uFEFF/,'')); })
                 .then(function(data) {
                     if (data && data.id) { buildEditForm(data); }
                     else { alert('Student not found'); }
@@ -844,7 +845,8 @@ function renderStudentSetViewer($conn, array $options = []) {
         document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = true;
         document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         fetch((window.AJAX_BASE||'.') + '/ajax/update_student.php', { method: 'POST', body: data })
-            .then(function(r) { return r.json(); })
+            .then(function(r) { return r.text(); })
+            .then(function(t) { return JSON.parse(t.replace(/^\uFEFF/,'')); })
             .then(function(res) {
                 if (res.success) {
                     alert('Student updated successfully!');
@@ -868,7 +870,8 @@ function renderStudentSetViewer($conn, array $options = []) {
         f.set('action','delete'); f.set('id',id);
         f.append('csrf_token', window.CSRF_TOKEN || '');
         fetch('ajax/update_student.php',{method:'POST',body:f})
-        .then(function(r){return r.json()})
+        .then(function(r){return r.text()})
+        .then(function(t){return JSON.parse(t.replace(/^\uFEFF/,''))})
         .then(function(res){
             if(res.success){alert('Student deleted successfully!');location.reload();}
             else{alert('Error: '+(res.error||'Delete failed'));}

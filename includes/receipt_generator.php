@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Receipt Generation and Printing System
  */

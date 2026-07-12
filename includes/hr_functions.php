@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * HR Module Helper Functions for ISNM ERP
  * Provides reusable HR utilities across all HR pages.

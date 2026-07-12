@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * School Bursar Dashboard â€” Complete 11-Module Interface
  * Modules: Student Billing, Payment Processing, Reports, Budgeting,

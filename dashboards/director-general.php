@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/config_enhanced.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';

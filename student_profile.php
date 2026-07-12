@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Comprehensive Student Profile System
  * Updated to work with current ISNM database structure and role-based access control

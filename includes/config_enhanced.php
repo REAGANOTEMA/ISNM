@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ISNM Enhanced Configuration with Multi-Database Support
 // Credentials are loaded from config/database.php and .env.
 

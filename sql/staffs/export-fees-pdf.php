@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Fees PDF Export
  * Generates a professional PDF statement using the mPDF library.

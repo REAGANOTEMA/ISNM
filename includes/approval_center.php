@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Enterprise Director General Approval Center
  * Centralized approval authority for all institution requests.

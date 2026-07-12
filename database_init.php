@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Database Initialization and Recovery Tool
  * Initializes all databases, creates tables, and validates schema

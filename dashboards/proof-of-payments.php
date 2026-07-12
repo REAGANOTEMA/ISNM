@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['bursar', 'finance', 'director', 'registrar', 'secretary', 'ict']);
 $conn = $ctx['students'];

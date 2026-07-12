@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Director ICT unified AJAX/Form POST handler.
  * Returns JSON: {success: bool, message: string, data: mixed}

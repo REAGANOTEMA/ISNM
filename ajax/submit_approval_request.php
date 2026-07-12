@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * AJAX endpoint for submitting department approval requests to Director General.
  * Creates an approval_requests record linked to the correct workflow.
