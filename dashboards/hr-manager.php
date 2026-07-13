@@ -26,6 +26,7 @@ $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: hr-manager.php'); exit; }
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
 
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $plainpw = bin2hex(random_bytes(8));
             $hash = password_hash($plainpw, PASSWORD_BCRYPT);
             $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,staff_category,gender,highest_qualification,nin,year_of_experience,date_of_birth,status,hire_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $newStaffId = $stmt->insert_id; $stmt->close(); $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; }
+            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); if ($stmt->execute()) { $newStaffId = $stmt->insert_id; $_SESSION['success'] = "Staff $fn added. Temporary password: $plainpw"; } else { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to add staff record.'; } $stmt->close(); }
             if (!empty($newStaffId) && function_exists('syncStaffRecord')) {
                 syncStaffRecord([
                     'staff_id' => $sid, 'full_name' => $fn, 'email' => $em,
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $resp = ['success' => false, 'error' => 'Invalid data'];
         if ($id && $fn && $em) {
             $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?,email=?,phone=?,position=?,department=?,role_id=?,status=?,staff_category=?,gender=?,highest_qualification=?,nin=?,year_of_experience=?,date_of_birth=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssissssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } $resp = ['success'=>$ok,'error'=>$stmt->error]; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('sssssssssssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } $resp = ['success'=>$ok,'error'=>$ok ? '' : 'Update failed']; $stmt->close(); }
             if ($resp['success'] && function_exists('syncStaffRecord')) {
                 syncStaffRecord([
                     'full_name' => $fn, 'email' => $em, 'phone' => $ph,

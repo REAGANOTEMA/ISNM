@@ -53,7 +53,8 @@ $result = processApprovalAction($requestId, $staffId, $action, $comments, null, 
 
 if ($result) {
     try {
-        $reqInfo = $conn->query("SELECT reference_type, reference_id, status, title, requester_id, requester_name FROM approval_requests WHERE id = $requestId");
+        $stmtReq = $conn->prepare("SELECT reference_type, reference_id, status, title, requester_id, requester_name FROM approval_requests WHERE id = ?");
+        if ($stmtReq) { $stmtReq->bind_param('i', $requestId); $stmtReq->execute(); $reqInfo = $stmtReq->get_result(); }
         if ($reqInfo && ($r = $reqInfo->fetch_assoc())) {
             $refType = $r['reference_type'] ?? '';
 
@@ -85,7 +86,8 @@ if ($result) {
                     $websiteConn = getWebsiteConnection();
                     $staffConn = getStaffConnection();
                     if ($websiteConn && $staffConn) {
-                        $allStaff = $staffConn->query("SELECT id FROM staff WHERE id != $requesterId");
+                        $stmtAll = $staffConn->prepare("SELECT id FROM staff WHERE id != ?");
+                        if ($stmtAll) { $stmtAll->bind_param('i', $requesterId); $stmtAll->execute(); $allStaff = $stmtAll->get_result(); }
                         if ($allStaff) {
                             $stmt = $websiteConn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
                             if ($stmt) {

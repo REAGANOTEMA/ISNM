@@ -182,6 +182,7 @@ function redirectBack($hash = '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: academic-registrar.php'); exit; }
     // Handle website submission actions
     if (function_exists('handleWebsiteSubmissionsAction')) {
         handleWebsiteSubmissionsAction($website_conn);

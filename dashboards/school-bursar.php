@@ -28,6 +28,7 @@ $sub = $_GET['sub'] ?? '';
 
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'record_payment' && $stuConn) {
@@ -52,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $mlc = strtolower($method); $method = in_array($mlc, ['mobile_money','mobile']) ? 'Mobile Money' : (in_array($mlc, ['bank','bank_deposit','bank_transfer']) ? 'Bank Transfer' : (in_array($mlc, ['cash']) ? 'Cash' : (in_array($mlc, ['cheque']) ? 'Cheque' : (in_array($mlc, ['card']) ? 'Card' : 'Cash'))));
             $stmt = $stuConn->prepare("INSERT INTO payments (payment_reference, student_id, amount_received, payment_method, transaction_ref, slip_number, payment_date, status, received_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; }
+            if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); if ($stmt->execute()) { $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; } else { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record payment.'; } $stmt->close(); }
         }
         header('Location: school-bursar.php?page=payments'); exit;
     }
@@ -177,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $life = (int)($_POST['useful_life'] ?? 5); $salvage = (float)($_POST['salvage_value'] ?? 0);
         if ($name && $cost > 0) {
             $st=$staffConn->prepare("INSERT INTO assets (asset_name, purchase_cost, value, category, purchase_date, useful_life_years, salvage_value, status, created_by) VALUES (?,?,?,?,?,?,?,'new',?)");
-            if($st){$st->bind_param('sdddssdssi', $name, $cost, $cost, $cat, $date, $life, $salvage, $userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Asset added with depreciation profile.';}
+            if($st){$st->bind_param('sddssidi', $name, $cost, $cost, $cat, $date, $life, $salvage, $userId); if ($st->execute()) { $_SESSION['success']='Asset added with depreciation profile.'; } else { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); $_SESSION['error'] = 'Failed to add asset.'; } $st->close();}
         }
         header('Location: school-bursar.php?page=inventory'); exit;
     }
@@ -185,7 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'calculate_depreciation' && $staffConn) {
         $aid = (int)($_POST['asset_id'] ?? 0);
         if ($aid) {
-            $a = $staffConn->query("SELECT * FROM assets WHERE id=$aid")->fetch_assoc();
+            $stmt_a = $staffConn->prepare("SELECT * FROM assets WHERE id=?");
+            if ($stmt_a) { $stmt_a->bind_param('i', $aid); $stmt_a->execute(); $a = $stmt_a->get_result()->fetch_assoc(); $stmt_a->close(); }
             if ($a) {
                 $cost = (float)($a['purchase_cost']??$a['value']??0);
                 $salvage = (float)($a['salvage_value']??0);
@@ -194,7 +196,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $deprPerYear = $cost > 0 && $life > 0 ? ($cost - $salvage) / $life : 0;
                 $accumDepr = $deprPerYear * min($yearsOwned, $life);
                 $currVal = max(0, $cost - $accumDepr);
-                $staffConn->query("UPDATE assets SET depreciation_value=$accumDepr, value=$currVal WHERE id=$aid");
+                $stmt_u = $staffConn->prepare("UPDATE assets SET depreciation_value=?, value=? WHERE id=?");
+                if ($stmt_u) { $stmt_u->bind_param('ddi', $accumDepr, $currVal, $aid); $stmt_u->execute(); $stmt_u->close(); }
                 $_SESSION['success'] = "Asset depreciation updated: accumulated $accumDepr UGX, current value $currVal UGX.";
             }
         }

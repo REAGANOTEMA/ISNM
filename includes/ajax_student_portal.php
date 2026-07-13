@@ -100,13 +100,8 @@ case 'get_fee_summary':
     $total_fees = 0;
     $total_paid = 0;
     $balance = 0;
-    $r = $studentsDb->query("SELECT COALESCE(SUM(amount),0) as total, COALESCE(SUM(amount_paid),0) as paid FROM student_fee_tracking WHERE student_id=$student_id");
-    if ($r && $r->num_rows) {
-        $row = $r->fetch_assoc();
-        $total_fees = (float)$row['total'];
-        $total_paid = (float)$row['paid'];
-        $balance = $total_fees - $total_paid;
-    }
+    $stmt = $studentsDb->prepare("SELECT COALESCE(SUM(amount),0) as total, COALESCE(SUM(amount_paid),0) as paid FROM student_fee_tracking WHERE student_id=?");
+    if ($stmt) { $stmt->bind_param("i", $student_id); $stmt->execute(); $r = $stmt->get_result(); if ($r && $r->num_rows) { $row = $r->fetch_assoc(); $total_fees = (float)$row['total']; $total_paid = (float)$row['paid']; $balance = $total_fees - $total_paid; } $stmt->close(); }
     echo json_encode(['success' => true, 'total_fees' => $total_fees, 'total_paid' => $total_paid, 'balance' => $balance]);
     exit;
 
@@ -114,20 +109,15 @@ case 'get_attendance_summary':
     $total = 0;
     $present = 0;
     $pct = 0;
-    $r = $studentsDb->query("SELECT COUNT(*) as total, COUNT(CASE WHEN status='Present' THEN 1 END) as present FROM student_attendance WHERE student_id=$student_id");
-    if ($r && $r->num_rows) {
-        $row = $r->fetch_assoc();
-        $total = (int)$row['total'];
-        $present = (int)$row['present'];
-        $pct = $total > 0 ? round($present * 100 / $total, 1) : 0;
-    }
+    $stmt = $studentsDb->prepare("SELECT COUNT(*) as total, COUNT(CASE WHEN status='Present' THEN 1 END) as present FROM student_attendance WHERE student_id=?");
+    if ($stmt) { $stmt->bind_param("i", $student_id); $stmt->execute(); $r = $stmt->get_result(); if ($r && $r->num_rows) { $row = $r->fetch_assoc(); $total = (int)$row['total']; $present = (int)$row['present']; $pct = $total > 0 ? round($present * 100 / $total, 1) : 0; } $stmt->close(); }
     echo json_encode(['success' => true, 'total' => $total, 'present' => $present, 'percentage' => $pct]);
     exit;
 
 case 'get_notifications':
     $notifs = [];
-    $r = $studentsDb->query("SELECT * FROM student_notifications WHERE student_id=$student_id AND is_read=0 ORDER BY created_at DESC LIMIT 10");
-    if ($r) while ($row = $r->fetch_assoc()) $notifs[] = $row;
+    $stmt = $studentsDb->prepare("SELECT * FROM student_notifications WHERE student_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 10");
+    if ($stmt) { $stmt->bind_param("i", $student_id); $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $notifs[] = $row; $stmt->close(); }
     $count = count($notifs);
     echo json_encode(['success' => true, 'count' => $count, 'notifications' => $notifs]);
     exit;

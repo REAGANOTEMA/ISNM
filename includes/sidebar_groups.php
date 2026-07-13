@@ -339,7 +339,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Quality Assurance',    'icon'=>'fas fa-shield-alt',  'page'=>'quality'],
             ['label' => 'Audit Trail',          'icon'=>'fas fa-clipboard-check','page'=>'audit'],
             ['label' => 'System Health',        'icon'=>'fas fa-heartbeat',   'page'=>'system-health'],
-            ['label' => 'Executive Reports',    'icon'=>'fas fa-file-alt',    'page'=>'reports', 'href'=>'dashboards/financial-reports.php'],
+            ['label' => 'Executive Reports',    'icon'=>'fas fa-file-alt',    'page'=>'reports', 'href'=>'financial-reports.php'],
         ],
         'non_teaching' => [
             ['label' => 'Overview',             'icon'=>'fas fa-home',             'page'=>'overview'],

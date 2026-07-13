@@ -517,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
 
     if ($action === 'delete_department' && $conn) {
         $id = (int)($_POST['dept_id'] ?? 0);
-        if ($id) { if ($conn->query("DELETE FROM staff_departments WHERE id=" . intval($id))) { $ok = true; $msg = 'Department deleted.'; } else { $msg = 'Database error deleting department.'; } }
+        if ($id) { $stmt = $conn->prepare("DELETE FROM staff_departments WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $id); if ($stmt->execute()) { $ok = true; $msg = 'Department deleted.'; } else { $msg = 'Database error deleting department.'; } $stmt->close(); } }
         else {
             $code = $_POST['dept_code'] ?? '';
             if ($code) { $stmt = $conn->prepare("DELETE FROM staff_departments WHERE department_code=?"); if ($stmt) { $stmt->bind_param('s', $code); if ($stmt->execute()) { $ok = true; $msg = 'Department deleted.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
@@ -540,7 +540,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
 
     if ($action === 'delete_staff' && $conn) {
         $sid = (int)($_POST['staff_id'] ?? 0);
-        if ($sid) { if ($conn->query("DELETE FROM staff WHERE id=" . intval($sid))) { $ok = true; $msg = 'Staff removed.'; } else { $msg = 'Database error.'; } }
+        if ($sid) { $stmt = $conn->prepare("UPDATE staff SET status='Inactive',resignation_date=CURDATE() WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $sid); if ($stmt->execute()) { $ok = true; $msg = 'Staff deactivated.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
 
     if ($action === 'edit_staff' && $conn) {

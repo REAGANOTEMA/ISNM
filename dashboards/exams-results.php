@@ -53,6 +53,7 @@ if ($conn) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: exams-results.php'); exit; }
     $action = $_POST['action'] ?? '';
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header('Location: exams-results.php'); exit; }
 
@@ -119,6 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete_exam') {
+        if (!$isSuper && !in_array($user_role, ['academic registrar', 'registrar', 'director academics', 'system admin'])) {
+            $_SESSION['error'] = 'Only Registrar or Director can delete exams.';
+            header('Location: exams-results.php'); exit;
+        }
         $exam_number = trim($_POST['exam_number'] ?? '');
         if ($exam_number) {
             $stmt = $conn->prepare("DELETE FROM examination_records WHERE exam_number=?");

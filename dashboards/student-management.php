@@ -120,6 +120,7 @@ $overdue_attendance = acad_q($conn, "SELECT COUNT(*) v FROM student_attendance W
 $fee_not_cleared = acad_q($conn, "SELECT COUNT(DISTINCT student_id) v FROM student_invoices WHERE status IN('Pending','Partially Paid','Overdue')");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: student-management.php'); exit; }
     $action = $_POST['action'] ?? '';
     if ($conn && $action === 'record_admission') {
         if (!$canEditAdmission) { $_SESSION['error'] = 'Permission denied.'; header('Location: student-management.php'); exit; }
