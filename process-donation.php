@@ -4,9 +4,20 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
 require_once __DIR__ . '/includes/financial_functions.php';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid request method.']); exit; }
+    header('Location: donation.php');
+    exit;
+}
+
+if (!verifyCSRFToken()) {
+    $msg = 'Invalid security token. Please try again.';
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+    $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
     exit;
 }
@@ -21,25 +32,33 @@ $purpose      = sanitizeInput(trim($_POST['purpose'] ?? 'General Donation'));
 $notes        = sanitizeInput(trim($_POST['notes'] ?? ''));
 
 if (!$donorName || !$donorEmail || !$donorPhone || $amount <= 0 || !$paymentMethod) {
-    $_SESSION['error_message'] = 'Please fill in all required fields with valid values.';
+    $msg = 'Please fill in all required fields with valid values.';
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+    $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
     exit;
 }
 
 if (!validateEmail($donorEmail)) {
-    $_SESSION['error_message'] = 'Please enter a valid email address.';
+    $msg = 'Please enter a valid email address.';
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+    $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
     exit;
 }
 
 if (!validatePhone($donorPhone)) {
-    $_SESSION['error_message'] = 'Please enter a valid phone number (e.g., 0700123456 or +256700123456).';
+    $msg = 'Please enter a valid phone number (e.g., 0700123456 or +256700123456).';
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+    $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
     exit;
 }
 
 if ($amount < 100) {
-    $_SESSION['error_message'] = 'Donation amount must be at least UGX 100.';
+    $msg = 'Donation amount must be at least UGX 100.';
+    if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+    $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
     exit;
 }
@@ -105,13 +124,26 @@ try {
         error_log('Donation activity log error: ' . $e->getMessage());
     }
 
-    $_SESSION['success_message'] = 'Thank you, ' . $donorName . '! Your generous donation of UGX ' . number_format($amount, 0) . ' has been recorded. A confirmation will be sent to your email.';
+    $donorDisplay = $donorName;
+    $successMsg = 'Thank you, ' . $donorDisplay . '! Your generous donation of UGX ' . number_format($amount, 0) . ' has been recorded. A confirmation will be sent to your email.';
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => $successMsg, 'reference' => 'DON-' . ($donationId ?? 0), 'donation_id' => $donationId]);
+        exit;
+    }
+    $_SESSION['success_message'] = $successMsg;
     header('Location: donation.php');
     exit;
 
 } catch (Exception $e) {
     error_log('Donation form error: ' . $e->getMessage());
-    $_SESSION['error_message'] = 'Sorry, there was an error recording your donation. Please try again or contact us directly.';
+    $errMsg = 'Sorry, there was an error recording your donation. Please try again or contact us directly.';
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $errMsg]);
+        exit;
+    }
+    $_SESSION['error_message'] = $errMsg;
     header('Location: donation.php');
     exit;
 }

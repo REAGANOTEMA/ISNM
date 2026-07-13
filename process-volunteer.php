@@ -3,9 +3,15 @@ require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: volunteer.php');
+    exit;
+}
+
+if (!verifyCSRFToken()) {
+    $_SESSION['error_message'] = 'Invalid security token. Please try again.';
     header('Location: volunteer.php');
     exit;
 }
@@ -45,7 +51,7 @@ try {
     $websiteDb = getWebsiteConnection();
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO volunteer_applications (first_name, last_name, email, phone, profession, experience, opportunity, availability, duration, skills, motivation, comments, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
-        $stmt->bind_param('sssssissssss', $firstName, $lastName, $email, $phone, $profession, $experience, $opportunity, $availability, $duration, $skills, $motivation, $comments);
+        $stmt->bind_param('ssssisssssss', $firstName, $lastName, $email, $phone, $profession, $experience, $opportunity, $availability, $duration, $skills, $motivation, $comments);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $submissionId = $stmt->insert_id;
         $stmt->close();

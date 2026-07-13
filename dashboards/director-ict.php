@@ -1342,32 +1342,32 @@ $('#alertForm').submit(e=>{ e.preventDefault(); doAjax('alertForm'); });
 
 // Single-click actions
 function updateTicketStatus(id, status) {
-    $.post(ICT_HANDLER, { action: 'update_ticket', id, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'update_ticket', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function updateNetDevice(id, status) {
-    $.post(ICT_HANDLER, { action: 'update_network_device', id, status }).done(r => { if(r.success) showAlert('Updated','success'); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'update_network_device', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) showAlert('Updated','success'); else showAlert(r.message,'danger'); });
 }
 function updateWifi(id, status) {
-    $.post(ICT_HANDLER, { action: 'edit_wifi', id, status }).done(r => { if(r.success) showAlert('Updated','success'); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'edit_wifi', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) showAlert('Updated','success'); else showAlert(r.message,'danger'); });
 }
 function verifyBackup(id) {
-    $.post(ICT_HANDLER, { action: 'verify_backup', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'verify_backup', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function deleteBackup(id) {
     if(!confirm('Delete this backup?')) return;
-    $.post(ICT_HANDLER, { action: 'delete_backup', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'delete_backup', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function acknowledgeAlert(id) {
-    $.post(ICT_HANDLER, { action: 'acknowledge_alert', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'acknowledge_alert', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function resolveAlert(id) {
-    $.post(ICT_HANDLER, { action: 'resolve_alert', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'resolve_alert', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function dismissNotif(id) {
-    $.post(ICT_HANDLER, { action: 'dismiss_notification', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'dismiss_notification', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message,'danger'); });
 }
 function saveSetting(key, value, group) {
-    $.post(ICT_HANDLER, { action: 'save_setting', setting_key: key, setting_value: value, setting_group: group || 'general' }).done(r => { if(r.success) showAlert('Setting saved','success'); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'save_setting', setting_key: key, setting_value: value, setting_group: group || 'general', csrf_token: CSRF_TOKEN }).done(r => { if(r.success) showAlert('Setting saved','success'); else showAlert(r.message,'danger'); });
 }
 function saveBackupSetting(key, value) { saveSetting(key, value, 'backup'); }
 function editAsset(id) {
@@ -1435,7 +1435,7 @@ function showBootstrapModal(title, body, id) {
 }
 
 function createQuickBackup() {
-    $.post(ICT_HANDLER, { action: 'create_backup', backup_name: 'QuickBackup-'+new Date().toISOString().slice(0,19), backup_type: 'full', target_database: 'all' }).done(r => { if(r.success) { showAlert('Quick backup started','success'); setTimeout(()=>location.reload(),600); } else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'create_backup', backup_name: 'QuickBackup-'+new Date().toISOString().slice(0,19), backup_type: 'full', target_database: 'all', csrf_token: CSRF_TOKEN }).done(r => { if(r.success) { showAlert('Quick backup started','success'); setTimeout(()=>location.reload(),600); } else showAlert(r.message,'danger'); });
 }
 function addHealthCheck() {
     const checks = [
@@ -1448,12 +1448,12 @@ function addHealthCheck() {
     let i = 0;
     checks.forEach(c => {
         setTimeout(() => {
-            $.post(ICT_HANDLER, { action: 'add_health_check', check_type: c.type, check_name: c.name, status: c.status, value: c.value, threshold: c.threshold, message: c.name + ' is ' + c.status }).done(r => { i++; if(i===checks.length) { showAlert('Health check complete','success'); setTimeout(()=>location.reload(),500); } });
+            $.post(ICT_HANDLER, { action: 'add_health_check', check_type: c.type, check_name: c.name, status: c.status, value: c.value, threshold: c.threshold, message: c.name + ' is ' + c.status, csrf_token: CSRF_TOKEN }).done(r => { i++; if(i===checks.length) { showAlert('Health check complete','success'); setTimeout(()=>location.reload(),500); } });
         }, 200 * checks.indexOf(c));
     });
 }
 function addSecurityLog() {
-    $.post(ICT_HANDLER, { action: 'add_security_log', event_type: 'other', description: 'Manual security check by ' + '<?= htmlspecialchars($user_name, ENT_QUOTES) ?>', severity: 'info' }).done(r => { if(r.success) showAlert('Security event logged','success'); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'add_security_log', event_type: 'other', description: 'Manual security check by ' + '<?= htmlspecialchars($user_name, ENT_QUOTES) ?>', severity: 'info', csrf_token: CSRF_TOKEN }).done(r => { if(r.success) showAlert('Security event logged','success'); else showAlert(r.message,'danger'); });
 }
 function filterTickets(s) { $('#ticketTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('backup-row-'+s)); }); }

@@ -21,13 +21,16 @@ if (!$studentsDb) {
 switch ($action) {
 
 case 'register_courses':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit(); }
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) { echo json_encode(['success' => false, 'error' => 'Invalid security token']); exit(); }
     $course_ids = $_POST['course_ids'] ?? [];
     $academic_year = trim($_POST['academic_year'] ?? date('Y'));
     $semester = trim($_POST['semester'] ?? 'Semester 1');
 
     if (empty($course_ids)) {
         $_SESSION['error'] = 'Please select at least one course.';
-        header('Location: student-portal.php?page=courses');
+        header('Location: ../dashboards/student-portal.php?page=courses');
         exit();
     }
 
@@ -51,16 +54,26 @@ case 'register_courses':
         }
     }
     $_SESSION['success'] = "$registered course(s) registered." . ($skipped > 0 ? " $skipped already registered." : '');
-    header('Location: student-portal.php?page=courses');
+    header('Location: ../dashboards/student-portal.php?page=courses');
     exit();
 
 case 'request_transcript':
-    $transcript_number = 'TRN-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
-    $stmt = $studentsDb->prepare("INSERT INTO student_transcripts (student_id, transcript_number, request_type, purpose, status, requested_by, created_at) VALUES (?, ?, 'Official', 'Student self-request', 'Requested', ?, NOW())");
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit(); }
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) { echo json_encode(['success' => false, 'error' => 'Invalid security token']); exit(); }
+    $request_number = 'TRN-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+    $studentFullName = '';
+    $getName = $studentsDb->prepare("SELECT CONCAT(first_name, ' ', surname) AS full_name FROM students WHERE id = ?");
+    if ($getName) {
+        $getName->bind_param("i", $student_id);
+        if ($getName->execute()) { $nr = $getName->get_result()->fetch_assoc(); $studentFullName = $nr['full_name'] ?? ''; }
+        $getName->close();
+    }
+    $stmt = $studentsDb->prepare("INSERT INTO registrar_transcript_requests (request_number, student_id, full_name, purpose, status, requested_by, request_date, created_at) VALUES (?, ?, ?, 'Student self-request', 'Pending', ?, NOW(), NOW())");
     if ($stmt) {
-        $stmt->bind_param("isi", $student_id, $transcript_number, $student_id);
+        $stmt->bind_param("siss", $request_number, $student_id, $studentFullName, $studentFullName);
         if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => "Transcript request submitted. Number: $transcript_number"]);
+            echo json_encode(['success' => true, 'message' => "Transcript request submitted. Number: $request_number"]);
         } else {
             echo json_encode(['success' => false, 'error' => 'Failed to submit request']);
         }
@@ -120,6 +133,9 @@ case 'get_notifications':
     exit;
 
 case 'mark_notification_read':
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit(); }
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) { echo json_encode(['success' => false, 'error' => 'Invalid security token']); exit(); }
     $nid = (int)($_POST['notification_id'] ?? 0);
     if ($nid > 0) {
         $stmt = $studentsDb->prepare("UPDATE student_notifications SET is_read=1 WHERE id=? AND student_id=?");
@@ -133,6 +149,6 @@ case 'mark_notification_read':
     exit;
 
 default:
-    echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
+    echo json_encode(['success' => false, 'error' => 'Unknown action']);
     exit;
 }

@@ -2,6 +2,12 @@
 require_once __DIR__ . '/../config/database.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
 // Only allow specific roles to publish
 $allowed_roles = ['Director General', 'Director', 'CEO', 'Principal', 'Director Admissions', 'Administrator', 'Secretary', 'School Secretary', 'HR Manager'];
 $user_role = $_SESSION['role'] ?? '';
@@ -10,6 +16,18 @@ $user_name = $_SESSION['full_name'] ?? ($_SESSION['user'] ?? 'Staff');
 if (!in_array($user_role, $allowed_roles)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    echo json_encode(['success' => false, 'message' => 'Invalid security token']);
     exit;
 }
 

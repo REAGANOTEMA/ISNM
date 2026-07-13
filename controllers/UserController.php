@@ -25,6 +25,11 @@ class UserController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('users.php?action=create');
         }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
+            redirect('users.php?action=create');
+        }
         
         // Validate required fields
         $requiredFields = ['username', 'password', 'full_name', 'email', 'role'];
@@ -80,6 +85,11 @@ class UserController {
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id'])) {
+            redirect('users.php');
+        }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
             redirect('users.php');
         }
         
@@ -139,11 +149,20 @@ class UserController {
             redirect('users.php');
         }
         
-        if (empty($_GET['id'])) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            flashMessage('error', 'Delete requires POST request.');
+            redirect('users.php');
+        }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
             redirect('users.php');
         }
         
-        $id = (int)$_GET['id'];
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            redirect('users.php');
+        }
         
         // Prevent self-deletion
         if ($id == $_SESSION['user_id']) {

@@ -171,6 +171,10 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'POST required']);
             exit;
         }
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+            echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+            exit;
+        }
         $taskId = (int)($_POST['task_id'] ?? 0);
         if (!$taskId) {
             echo json_encode(['success' => false, 'error' => 'Invalid task ID']);

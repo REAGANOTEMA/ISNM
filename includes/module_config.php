@@ -156,6 +156,7 @@ function getModuleConfig(): array {
                 ['title' => 'Refunds',               'route' => 'school-bursar.php?section=refunds','roles' => '*'],
                 ['title' => 'Late Payment',          'route' => 'school-bursar.php?section=late_payment','roles' => '*'],
                 ['title' => 'Payment Approvals',     'route' => 'school-bursar.php?section=payment_approvals','roles' => '*'],
+                ['title' => 'Payment Providers',     'route' => 'school-bursar.php?page=payment-providers','roles' => '*'],
             ],
         ],
         [

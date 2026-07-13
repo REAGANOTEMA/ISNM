@@ -34,6 +34,12 @@ if (!$requestId || !$action) {
     exit;
 }
 
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+    exit;
+}
+
 $conn = getStaffConnection();
 if (!$conn) {
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);

@@ -5,6 +5,14 @@ require_once __DIR__ . '/includes/email_notifications.php';
 
 session_start();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $_SESSION['error_message'] = 'Invalid security token. Please try again.';
+        header('Location: application.php');
+        exit;
+    }
+}
+
 function generateApplicationId() {
     $prefix = 'ISNM';
     $year = date('Y');
@@ -23,7 +31,13 @@ function handleFileUpload($file, $allowedTypes, $maxSize, $uploadDir) {
     if (!in_array($fileType, $allowedTypes)) {
         return ['success' => false, 'message' => 'Invalid file type'];
     }
-    $fileName = uniqid() . '.' . $fileType;
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($file['tmp_name']);
+    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'application/pdf' => 'pdf', 'application/msword' => 'doc', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx'];
+    if (!isset($allowedMimes[$mimeType])) {
+        return ['success' => false, 'message' => 'Invalid file content type'];
+    }
+    $fileName = uniqid() . '.' . $allowedMimes[$mimeType];
     $filePath = $uploadDir . '/' . $fileName;
     if (move_uploaded_file($file['tmp_name'], $filePath)) {
         return ['success' => true, 'path' => $filePath];

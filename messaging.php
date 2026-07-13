@@ -3,21 +3,21 @@ $pageTitle = 'Messaging';
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
-$conn = getDatabaseConnection('website');
+$conn = getStaffConnection();
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
 $totalMessages = 0; $sentMessages = 0; $receivedMessages = 0; $unreadMessages = 0;
 $messages = [];
 if ($conn) {
-    $r = $conn->query("SELECT COUNT(*) c FROM portal_messages WHERE sender_id = $userId OR recipient_id = $userId");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = $userId OR recipient_id = $userId");
     if ($r) $totalMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM portal_messages WHERE sender_id = $userId");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = $userId AND is_deleted_sender = 0");
     if ($r) $sentMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM portal_messages WHERE recipient_id = $userId");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = $userId AND is_deleted_recipient = 0");
     if ($r) $receivedMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM portal_messages WHERE recipient_id = $userId AND is_read = 0");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = $userId AND is_read = 0 AND is_deleted_recipient = 0");
     if ($r) $unreadMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT id, subject, sender_name, recipient_name, sent_at, is_read FROM portal_messages WHERE sender_id = $userId OR recipient_id = $userId ORDER BY sent_at DESC LIMIT 100");
+    $r = $conn->query("SELECT id, subject, sender_name, recipient_name, created_at AS sent_at, is_read FROM staff_inbox WHERE (sender_id = $userId AND is_deleted_sender = 0) OR (recipient_id = $userId AND is_deleted_recipient = 0) ORDER BY created_at DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $messages[] = $row;
 }
 ?>

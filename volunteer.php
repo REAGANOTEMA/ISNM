@@ -1,4 +1,8 @@
-<?php include('shared/_header.php');?>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+include('shared/_header.php');
+?>
 
   <main>
     <!-- Page Header -->
@@ -346,6 +350,7 @@
               <p class="text-center mb-4">Fill out the form below and we'll contact you about available opportunities</p>
               
               <form id="volunteerForm" method="POST" action="process-volunteer.php">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label for="volunteerFirstName" class="form-label">First Name *</label>

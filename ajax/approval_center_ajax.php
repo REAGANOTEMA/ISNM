@@ -127,7 +127,8 @@ if ($action === 'get_detail') {
         echo json_encode(['success' => true, 'data' => $data]);
         exit;
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+        error_log('approval_center_ajax error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'An error occurred loading approval details']);
         exit;
     }
 }

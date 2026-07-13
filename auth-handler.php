@@ -83,14 +83,24 @@ function tryHrAuth(string $email, string $password) {
     try {
         $conn = getStaffConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable. Please contact the system administrator.';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('tryHrAuth: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
+        // Account lockout check for hr_users
+        $conn->query("UPDATE hr_users SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
+        $lockCheck = $conn->prepare('SELECT id FROM hr_users WHERE email = ? AND status = "active" AND locked_until > NOW() LIMIT 1');
+        if ($lockCheck) {
+            $lockCheck->bind_param('s', $email);
+            if (!$lockCheck->execute()) { error_log('lockCheck execute failed: ' . ($lockCheck->error ?? 'unknown')); };
+            if ($lockCheck->get_result()->num_rows > 0) {
+                $lockCheck->close();
+                return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
+            }
+            $lockCheck->close();
+        }
+
         $stmt = $conn->prepare(
-            'SELECT id, email, password_hash, full_name, role, status
+            'SELECT id, email, password_hash, full_name, role, status, login_attempts
              FROM hr_users WHERE email = ? AND status = "active" LIMIT 1'
         );
         $stmt->bind_param('s', $email);
@@ -100,7 +110,20 @@ function tryHrAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
-        if (!$ok) return null;
+        if (!$ok) {
+            // Record failed attempt
+            $attempts = ($u['login_attempts'] ?? 0) + 1;
+            if ($attempts >= 10) {
+                $lock = date('Y-m-d H:i:s', time() + 300);
+                $conn->prepare("UPDATE hr_users SET login_attempts = ?, locked_until = ? WHERE id = ?")->execute([$attempts, $lock, $u['id']]);
+            } else {
+                $conn->prepare("UPDATE hr_users SET login_attempts = ? WHERE id = ?")->execute([$attempts, $u['id']]);
+            }
+            return null;
+        }
+
+        // Reset failed attempts on success
+        $conn->prepare("UPDATE hr_users SET login_attempts = 0, locked_until = NULL WHERE id = ?")->execute([$u['id']]);
 
         $map = [
             'hr_manager'         => 'HR Manager',
@@ -139,14 +162,24 @@ function tryBursarAuth(string $email, string $password) {
     try {
         $conn = getStudentsConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable. Please contact the system administrator.';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('tryBursarAuth: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
+        // Account lockout check for bursar_users
+        $conn->query("UPDATE bursar_users SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
+        $lockCheck = $conn->prepare('SELECT id FROM bursar_users WHERE email = ? AND status = "active" AND locked_until > NOW() LIMIT 1');
+        if ($lockCheck) {
+            $lockCheck->bind_param('s', $email);
+            if (!$lockCheck->execute()) { error_log('lockCheck execute failed: ' . ($lockCheck->error ?? 'unknown')); };
+            if ($lockCheck->get_result()->num_rows > 0) {
+                $lockCheck->close();
+                return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
+            }
+            $lockCheck->close();
+        }
+
         $stmt = $conn->prepare(
-            'SELECT id, email, password_hash, full_name, role, status
+            'SELECT id, email, password_hash, full_name, role, status, login_attempts
              FROM bursar_users WHERE email = ? AND status = "active" LIMIT 1'
         );
         $stmt->bind_param('s', $email);
@@ -156,7 +189,20 @@ function tryBursarAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
-        if (!$ok) return null;
+        if (!$ok) {
+            // Record failed attempt
+            $attempts = ($u['login_attempts'] ?? 0) + 1;
+            if ($attempts >= 10) {
+                $lock = date('Y-m-d H:i:s', time() + 300);
+                $conn->prepare("UPDATE bursar_users SET login_attempts = ?, locked_until = ? WHERE id = ?")->execute([$attempts, $lock, $u['id']]);
+            } else {
+                $conn->prepare("UPDATE bursar_users SET login_attempts = ? WHERE id = ?")->execute([$attempts, $u['id']]);
+            }
+            return null;
+        }
+
+        // Reset failed attempts on success
+        $conn->prepare("UPDATE bursar_users SET login_attempts = 0, locked_until = NULL WHERE id = ?")->execute([$u['id']]);
 
         $map = [
             'bursar'            => 'School Bursar',
@@ -518,8 +564,8 @@ switch ($action) {
         $isStaff = ($_SESSION['type'] ?? '') === 'staff';
         $conn = $isStaff ? getStaffConnection() : getStudentsConnection();
         if (!$conn) { echo json_encode(['success' => false, 'message' => 'Database error.']); exit; }
-        $table = $isStaff ? 'users' : 'students';
-        $idCol = $isStaff ? 'id' : 'id';
+        $table = $isStaff ? 'staff' : 'students';
+        $idCol = 'id';
         $s = $conn->prepare("SELECT password FROM $table WHERE $idCol = ? LIMIT 1");
         if (!$s) { echo json_encode(['success' => false, 'message' => 'Query error.']); exit; }
         $s->bind_param('i', $uid);
@@ -737,12 +783,17 @@ function handleCreateStaff() {
 function handleLogout() {
     global $auth_service;
     if (session_status() === PHP_SESSION_NONE) session_start();
+    $userType = $_SESSION['type'] ?? '';
     $auth_service->logout();
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
     session_write_close();
-    header('Location: staff-login.php');
+    if ($userType === 'student') {
+        header('Location: student-login.php');
+    } else {
+        header('Location: staff-login.php');
+    }
     exit();
 }

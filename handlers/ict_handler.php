@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$data = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
+$data = bootstrapStaffDashboard(['director ict', 'system admin', 'computer department', 'ict officer']);
 $staff = $data['staff'];
 $ict = getICTConnection();
 $students = getStudentsConnection();
@@ -18,7 +18,7 @@ $userName = $user['full_name'] ?? 'ICT Director';
 header('Content-Type: application/json');
 
 // CSRF protection (skip for simple status updates and single-click actions)
-$csrfFreeActions = ['update_ticket', 'update_network_device', 'edit_wifi', 'verify_backup', 'delete_backup', 'acknowledge_alert', 'resolve_alert', 'dismiss_notification', 'save_setting', 'toggle_status', 'get_asset', 'get_server', 'get_ticket'];
+$csrfFreeActions = ['get_asset', 'get_server', 'get_ticket'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 if (!in_array($action, $csrfFreeActions)) {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -49,27 +49,43 @@ function ictAudit($ict, $userId, $userName, $action, $resourceType, $resourceId,
 }
 
 try {
+    if (!$ict) ictRespond(false, 'ICT database connection unavailable');
     switch ($action) {
         // â”€â”€ GETTERS (for edit modals) â”€â”€
         case 'get_asset':
             $id = (int)($_GET['id'] ?? 0);
             if (!$id) ictRespond(false, 'ID required');
-            $r = $ict->query("SELECT * FROM ict_assets WHERE id=" . $id);
-            if (!$r || !$r->num_rows) ictRespond(false, 'Asset not found');
+            $stmt = $ict->prepare("SELECT * FROM ict_assets WHERE id=?");
+            if (!$stmt) ictRespond(false, 'Query failed');
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Asset not found'); }
+            $stmt->close();
             ictRespond(true, 'OK', $r->fetch_assoc());
             break;
         case 'get_server':
             $id = (int)($_GET['id'] ?? 0);
             if (!$id) ictRespond(false, 'ID required');
-            $r = $ict->query("SELECT * FROM ict_servers WHERE id=" . $id);
-            if (!$r || !$r->num_rows) ictRespond(false, 'Server not found');
+            $stmt = $ict->prepare("SELECT * FROM ict_servers WHERE id=?");
+            if (!$stmt) ictRespond(false, 'Query failed');
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Server not found'); }
+            $stmt->close();
             ictRespond(true, 'OK', $r->fetch_assoc());
             break;
         case 'get_ticket':
             $id = (int)($_GET['id'] ?? 0);
             if (!$id) ictRespond(false, 'ID required');
-            $r = $ict->query("SELECT * FROM it_support_tickets WHERE id=" . $id);
-            if (!$r || !$r->num_rows) ictRespond(false, 'Ticket not found');
+            $stmt = $ict->prepare("SELECT * FROM it_support_tickets WHERE id=?");
+            if (!$stmt) ictRespond(false, 'Query failed');
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Ticket not found'); }
+            $stmt->close();
             ictRespond(true, 'OK', $r->fetch_assoc());
             break;
 
@@ -152,7 +168,7 @@ try {
             $by = $_POST['performed_by'] ?? '';
             $cost = (float)($_POST['cost'] ?? 0);
             if (!$aid || !$desc) ictRespond(false, 'Asset and description required');
-            $stmt = $ict->prepare("INSERT INTO ict_asset_maintenance (asset_id, maintenance_type, description, performed_by, cost, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $ict->prepare("INSERT INTO ict_asset_maintenance (asset_id, maintenance_type, description, performed_by, cost, status, created_by) VALUES (?, ?, ?, ?, ?, 'completed', ?)");
             $stmt->bind_param('isssdi', $aid, $type, $desc, $by, $cost, $userId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt = $ict->prepare("UPDATE ict_assets SET current_status='in_maintenance' WHERE id=?");
@@ -411,6 +427,7 @@ try {
         default:
             ictRespond(false, 'Unknown action: ' . $action);
     }
-} catch (Exception $e) {
-    ictRespond(false, $e->getMessage());
+} catch (Throwable $e) {
+    error_log('ict_handler error: ' . $e->getMessage());
+    ictRespond(false, 'An error occurred processing your request');
 }

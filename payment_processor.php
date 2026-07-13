@@ -238,6 +238,21 @@ class PaymentProcessor {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
+
+    if (empty($_SESSION['user_id']) || empty($_SESSION['type'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Authentication required']);
+        exit();
+    }
+
+    // CSRF validation
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh and try again.']);
+        exit();
+    }
+
     $processor = new PaymentProcessor();
     
     if (isset($_POST['action'])) {
@@ -278,6 +293,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'verify_payment':
                 $result = $processor->verifyPayment($_POST['payment_reference'] ?? '');
+                echo json_encode($result);
+                break;
+
+            case 'initiate_payment':
+                require_once __DIR__ . '/includes/payment_gateway/PaymentService.php';
+                $service = new PaymentService();
+                $providerKey = trim($_POST['provider'] ?? '');
+                $result = $service->initiatePayment($providerKey, [
+                    'amount'          => (float)($_POST['amount'] ?? 0),
+                    'phone'           => trim($_POST['phone'] ?? ''),
+                    'email'           => trim($_POST['email'] ?? ''),
+                    'payer_name'      => trim($_POST['payer_name'] ?? ''),
+                    'payment_type'    => trim($_POST['payment_type'] ?? 'student_fees'),
+                    'reference_type'  => trim($_POST['reference_type'] ?? ''),
+                    'reference_id'    => (int)($_POST['reference_id'] ?? 0),
+                    'student_id'      => (int)($_POST['student_id'] ?? 0),
+                    'currency'        => trim($_POST['currency'] ?? 'UGX'),
+                    'description'     => trim($_POST['description'] ?? ''),
+                    'success_url'     => trim($_POST['success_url'] ?? ''),
+                    'cancel_url'      => trim($_POST['cancel_url'] ?? ''),
+                    'metadata'        => ['source' => 'payment_processor'],
+                    'initiated_by'    => $_SESSION['user_id'] ?? 0,
+                ]);
+                echo json_encode($result);
+                break;
+
+            case 'check_payment_status':
+                require_once __DIR__ . '/includes/payment_gateway/PaymentService.php';
+                $service = new PaymentService();
+                $result = $service->checkStatus(trim($_POST['transaction_ref'] ?? ''));
                 echo json_encode($result);
                 break;
 

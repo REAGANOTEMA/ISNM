@@ -20,6 +20,11 @@ if (!$conn) {
 
 // DELETE action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $id = intval($_POST['id'] ?? 0);
     if ($id < 1) { echo json_encode(['success' => false, 'error' => 'Invalid ID']); exit; }
     $stmt = $conn->prepare("DELETE FROM students WHERE id = ?");
@@ -54,6 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetch']) && isset($_GET
 $id = intval($_POST['id'] ?? 0);
 if ($id < 1) {
     echo json_encode(['success' => false, 'error' => 'Invalid student ID']);
+    exit;
+}
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    echo json_encode(['success' => false, 'error' => 'Invalid security token']);
     exit;
 }
 $first_name = trim($_POST['first_name'] ?? '');

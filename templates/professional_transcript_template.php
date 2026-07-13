@@ -3,7 +3,7 @@
 // Official transcript template with school logo and professional design
 
 function generateProfessionalTranscript($student, $academic_records, $transcript_type, $academic_year, $semester) {
-    return '<!DOCTYPE html>
+    $content = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -216,31 +216,31 @@ function generateProfessionalTranscript($student, $academic_records, $transcript
                 <div class="info-grid">
                     <div class="info-item">
                         <span class="info-label">Full Name:</span>
-                        <span class="info-value">' . htmlspecialchars($student['full_name']) . '</span>
+                        <span class="info-value">' . htmlspecialchars($student['full_name'] ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Registration Number:</span>
-                        <span class="info-value">' . htmlspecialchars($student['registration_number']) . '</span>
+                        <span class="info-value">' . htmlspecialchars($student['registration_number'] ?? $student['student_number'] ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">National ID:</span>
-                        <span class="info-value">' . htmlspecialchars($student['national_student_id_number']) . '</span>
+                        <span class="info-value">' . htmlspecialchars($student['national_student_id_number'] ?? $student['index_number'] ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Program:</span>
-                        <span class="info-value">' . htmlspecialchars($student['course']) . '</span>
+                        <span class="info-value">' . htmlspecialchars($student['course'] ?? $student['program'] ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Year of Study:</span>
-                        <span class="info-value">' . htmlspecialchars($academic_year) . '</span>
+                        <span class="info-value">' . htmlspecialchars($academic_year ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Semester:</span>
-                        <span class="info-value">' . htmlspecialchars($semester) . '</span>
+                        <span class="info-value">' . htmlspecialchars($semester ?? '') . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Admission Date:</span>
-                        <span class="info-value">' . date('F j, Y', strtotime($student['intake_date'])) . '</span>
+                        <span class="info-value">' . (!empty($student['intake_date']) ? date('F j, Y', strtotime($student['intake_date'])) : ($student['intake_year'] ?? 'N/A')) . '</span>
                     </div>
                 </div>
             </div>
@@ -267,15 +267,15 @@ function generateProfessionalTranscript($student, $academic_records, $transcript
     foreach ($academic_records as $record) {
         $content .= '
                         <tr>
-                            <td>' . htmlspecialchars($record['course_code']) . '</td>
-                            <td>' . htmlspecialchars($record['course_name']) . '</td>
-                            <td>' . htmlspecialchars($record['credits']) . '</td>
-                            <td>' . htmlspecialchars($record['semester']) . '</td>
-                            <td>' . htmlspecialchars($record['academic_year']) . '</td>
-                            <td>' . htmlspecialchars($record['marks']) . '</td>
-                            <td>' . htmlspecialchars($record['grade']) . '</td>
-                            <td>' . htmlspecialchars($record['gpa']) . '</td>
-                            <td>' . htmlspecialchars($record['lecturer_name']) . '</td>
+                            <td>' . htmlspecialchars($record['course_code'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['course_name'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['credits'] ?? 0) . '</td>
+                            <td>' . htmlspecialchars($record['semester'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['academic_year'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['marks'] ?? $record['marks_obtained'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['grade'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['gpa'] ?? $record['grade_point'] ?? '') . '</td>
+                            <td>' . htmlspecialchars($record['lecturer_name'] ?? '') . '</td>
                         </tr>';
     }
     
@@ -298,11 +298,11 @@ function generateProfessionalTranscript($student, $academic_records, $transcript
                     </div>
                     <div class="info-item">
                         <span class="info-label">Cumulative GPA:</span>
-                        <span class="info-value">' . number_format($student['cumulative_gpa'], 2) . '</span>
+                        <span class="info-value">' . number_format($student['cumulative_gpa'] ?? 0, 2) . '</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Academic Standing:</span>
-                        <span class="info-value">' . ($student['cumulative_gpa'] >= 3.5 ? 'Excellent' : ($student['cumulative_gpa'] >= 3.0 ? 'Good' : 'Satisfactory')) . '</span>
+                        <span class="info-value">' . (($student['cumulative_gpa'] ?? 0) >= 3.5 ? 'Excellent' : (($student['cumulative_gpa'] ?? 0) >= 3.0 ? 'Good' : 'Satisfactory')) . '</span>
                     </div>
                 </div>
             </div>
@@ -312,8 +312,8 @@ function generateProfessionalTranscript($student, $academic_records, $transcript
             <div class="signature-line">
                 <p><strong>Transcript Number:</strong> ' . uniqid() . '</p>
                 <p><strong>Generated on:</strong> ' . date('F j, Y, H:i:s') . '</p>
-                <p><strong>Generated by:</strong> ' . $_SESSION['full_name'] . '</p>
-                <p><strong>Position:</strong> ' . $_SESSION['position'] . '</p>
+                <p><strong>Generated by:</strong> ' . htmlspecialchars($_SESSION['full_name'] ?? 'System') . '</p>
+                <p><strong>Position:</strong> ' . htmlspecialchars($_SESSION['position'] ?? $_SESSION['role'] ?? 'Staff') . '</p>
                 <p><em>This is an electronically generated academic transcript and is valid without signature.</em></p>
                 <div class="official-stamp">OFFICIAL</div>
             </div>

@@ -162,6 +162,11 @@ class AuthController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('profile.php');
         }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
+            redirect('profile.php');
+        }
         
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';

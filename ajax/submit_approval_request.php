@@ -17,6 +17,12 @@ if ($action !== 'submit_approval_request') {
     exit;
 }
 
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+    exit;
+}
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 
@@ -114,5 +120,6 @@ try {
         echo json_encode(['success' => false, 'error' => 'Failed to create approval request. Check that approval workflows are configured.']);
     }
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+    error_log('submit_approval_request error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'An error occurred processing your request']);
 }

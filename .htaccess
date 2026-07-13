@@ -91,7 +91,7 @@
     RewriteRule ^generate/ - [R=404,L,NC]
 
     # Also block direct file access to these paths
-    RedirectMatch 404 ^/(writing|site_integration|generate)(/|$)
+    RewriteRule ^(writing|site_integration|generate)/ - [R=404,L,NC]
 
     # Route /api/* through api/index.php
     RewriteRule ^api/(.*)$ api/index.php [L,QSA]

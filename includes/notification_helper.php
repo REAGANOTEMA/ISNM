@@ -7,11 +7,11 @@ require_once __DIR__ . '/../config/database.php';
 
 if (!function_exists('getNotifConn')) {
     function getNotifConn() {
-        if (function_exists('getDatabaseConnection')) {
-            return getDatabaseConnection('website');
+        if (function_exists('getStaffConnection')) {
+            return getStaffConnection();
         }
-        if (function_exists('getWebsiteConnection')) {
-            return getWebsiteConnection();
+        if (function_exists('getDatabaseConnection')) {
+            return getDatabaseConnection('staffs');
         }
         return null;
     }
@@ -34,9 +34,9 @@ if (!function_exists('createNotification')) {
         try {
             $conn = getNotifConn();
             if (!$conn) return false;
-            $stmt = $conn->prepare("INSERT INTO notifications (title, message, url, type, icon) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO notifications (title, message, type, audience, created_at) VALUES (?, ?, ?, 'all', NOW())");
             if (!$stmt) return false;
-            $stmt->bind_param("sssss", $title, $message, $url, $type, $icon);
+            $stmt->bind_param("sss", $title, $message, $type);
             $ok = $stmt->execute();
             $id = $stmt->insert_id;
             $stmt->close();

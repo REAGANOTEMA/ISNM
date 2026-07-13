@@ -25,6 +25,11 @@ class StudentController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('students.php?action=create');
         }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
+            redirect('students.php?action=create');
+        }
         
         // Validate required fields
         $requiredFields = ['full_name', 'registration_number', 'national_student_id_number', 
@@ -152,11 +157,20 @@ class StudentController {
             redirect('students.php');
         }
         
-        if (empty($_GET['id'])) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            flashMessage('error', 'Delete requires POST request.');
+            redirect('students.php');
+        }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            flashMessage('error', 'Invalid security token. Please try again.');
             redirect('students.php');
         }
         
-        $id = (int)$_GET['id'];
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            redirect('students.php');
+        }
         
         // Delete student
         $result = $this->student->softDelete($id);

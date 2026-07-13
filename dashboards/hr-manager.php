@@ -255,7 +255,7 @@ $pageTitle = 'HR Manager';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root{--hr-primary:#dc2626;--hr-dark:#991b1b}
-.hr-content{margin-left:270px;padding:24px;min-height:100vh;background:#f8fafc}
+.hr-content{margin-left:var(--sidebar-w, 270px);padding:24px;min-height:100vh;background:#f8fafc}
 .hr-header{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;padding:20px 28px;border-radius:14px;margin-bottom:20px}
 .hr-header h1{margin:0;font-size:22px}
 .hr-header p{margin:2px 0 0;opacity:.85;font-size:13px}
@@ -584,7 +584,7 @@ $pageTitle = 'HR Manager';
     </form>
   </div>
 </div>
-<?php elseif ($page === 'communications'): ?>';
+<?php elseif ($page === 'communications'): ?>
 
 <div class="row">
   <div class="col-md-5">

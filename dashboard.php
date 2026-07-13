@@ -11,7 +11,7 @@ if (!isLoggedIn()) {
 
 // Get user information
 $user = getUserInfo($_SESSION['user_id']);
-$access_level = $_SESSION['access_level'] ?? 1;
+$access_level = $_SESSION['access_level'] ?? (in_array(strtolower($_SESSION['role'] ?? ''), ['director general', 'ceo', 'system admin']) ? 10 : 1);
 
 // Redirect top administrators to student accounts management
 if ($access_level >= 8) {
@@ -293,7 +293,7 @@ $role = $_SESSION['role'] ?? '';
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '')); ?>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="includes/profile_settings.php">

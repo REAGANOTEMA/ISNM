@@ -299,7 +299,33 @@ class NotificationManager {
 // API endpoint for processing forms
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'submit_form') {
     header('Content-Type: application/json');
-    
+
+    // CSRF validation for logged-in users; rate-limit by IP for public submissions
+    if (!empty($_SESSION['user_id'])) {
+        $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh and try again.']);
+            exit();
+        }
+    } else {
+        // Rate-limit public submissions by IP (max 10 per minute)
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $rateKey = 'form_submit_' . md5($ip);
+        if (!isset($_SESSION[$rateKey])) {
+            $_SESSION[$rateKey] = ['count' => 0, 'window' => time()];
+        }
+        if (time() - $_SESSION[$rateKey]['window'] > 60) {
+            $_SESSION[$rateKey] = ['count' => 0, 'window' => time()];
+        }
+        $_SESSION[$rateKey]['count']++;
+        if ($_SESSION[$rateKey]['count'] > 10) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Too many submissions. Please try again later.']);
+            exit();
+        }
+    }
+
     $type = $_POST['form_type'] ?? null;
     $data = $_POST;
     unset($data['form_type']);
@@ -342,6 +368,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 // API endpoint for marking notification as read
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'mark_notification_read') {
     header('Content-Type: application/json');
+
+    // CSRF validation
+    if (!empty($_SESSION['user_id'])) {
+        $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh and try again.']);
+            exit();
+        }
+    }
     
     $notificationId = $_POST['notification_id'] ?? null;
     

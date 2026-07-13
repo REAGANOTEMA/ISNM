@@ -210,7 +210,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-md-5">
                 <div class="section-card">
                     <h2><i class="fas fa-id-card me-2 text-primary"></i>Generate ID Card</h2>
-                    <form id="idCardForm">
+                    <form id="idCardForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="generate_id_card">
                         <div class="mb-2"><label class="form-label">Search Student</label>
                             <select name="student_id" class="form-select" id="studentSelect" required>
@@ -225,7 +226,8 @@ $section = $_GET['section'] ?? 'dashboard';
                     </form>
                     <hr>
                     <h6 class="mt-3"><i class="fas fa-exchange-alt me-1"></i>Replace Card</h6>
-                    <form id="replaceCardForm">
+                    <form id="replaceCardForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="replace_id_card">
                         <div class="mb-2"><input type="text" name="card_id" class="form-control" placeholder="Card ID or number" required></div>
                         <div class="mb-2">
@@ -241,7 +243,8 @@ $section = $_GET['section'] ?? 'dashboard';
                 </div>
                 <div class="section-card">
                     <h2><i class="fas fa-search me-2 text-success"></i>Verify Card</h2>
-                    <form id="verifyCardForm">
+                    <form id="verifyCardForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="verify_id_card">
                         <div class="mb-2"><input type="text" name="card_number" class="form-control" placeholder="Scan QR or enter card number" required></div>
                         <button type="submit" class="btn btn-success w-100"><i class="fas fa-check-circle me-1"></i>Verify</button>
@@ -427,7 +430,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-4">
                 <div class="section-card">
                     <h2><i class="fas fa-plus-circle me-2 text-success"></i>New Session</h2>
-                    <form id="sessionForm">
+                    <form id="sessionForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="add_practical_session">
                         <div class="mb-2"><label class="form-label">Session Code</label><input type="text" name="session_code" class="form-control" placeholder="e.g., CS101-PRAC-01" required></div>
                         <div class="mb-2"><label class="form-label">Course</label><input type="text" name="course_name" class="form-control" required></div>
@@ -560,7 +564,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-4">
                 <div class="section-card">
                     <h2><i class="fas fa-sign-in-alt me-2 text-success"></i>Check Out</h2>
-                    <form id="checkoutForm">
+                    <form id="checkoutForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="checkout_equipment">
                         <input type="hidden" name="equipment_id" id="checkoutEqId">
                         <div class="mb-2"><label class="form-label">Equipment</label>
@@ -601,7 +606,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-5">
                 <div class="section-card">
                     <h2><i class="fas fa-plus-circle me-2 text-primary"></i>New Print Job</h2>
-                    <form id="printJobForm">
+                    <form id="printJobForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="create_print_job">
                         <div class="mb-2"><label class="form-label">Requester Name *</label><input type="text" name="requester_name" class="form-control" required></div>
                         <div class="row g-2 mb-2">
@@ -686,7 +692,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-4">
                 <div class="section-card">
                     <h2><i class="fas fa-bug me-2 text-danger"></i>Report Issue</h2>
-                    <form id="repairForm">
+                    <form id="repairForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="report_repair">
                         <div class="mb-2"><label class="form-label">Computer</label>
                             <select name="computer_id" class="form-select">
@@ -756,7 +763,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-4">
                 <div class="section-card">
                     <h2><i class="fas fa-plus-circle me-2 text-success"></i>Add Software</h2>
-                    <form id="softwareForm">
+                    <form id="softwareForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="add_software">
                         <div class="mb-2"><label class="form-label">Software Name *</label><input type="text" name="software_name" class="form-control" required></div>
                         <div class="row g-2 mb-2">
@@ -771,7 +779,8 @@ $section = $_GET['section'] ?? 'dashboard';
                 </div>
                 <div class="section-card">
                     <h2><i class="fas fa-download me-2 text-info"></i>Record Installation</h2>
-                    <form id="installForm">
+                    <form id="installForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="install_software">
                         <div class="mb-2"><label class="form-label">Software</label>
                             <select name="software_id" class="form-select">
@@ -898,7 +907,8 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-lg-4">
                 <div class="section-card">
                     <h2><i class="fas fa-clipboard-check me-2 text-success"></i>Mark Attendance</h2>
-                    <form id="attendanceForm">
+                    <form id="attendanceForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="mark_attendance">
                         <div class="mb-2"><label class="form-label">Student</label>
                             <select name="student_id" class="form-select" required>
@@ -1054,7 +1064,8 @@ $section = $_GET['section'] ?? 'dashboard';
 
 <!-- ====== MODALS ====== -->
 <div class="modal fade" id="addRoomModal" tabindex="-1"><div class="modal-dialog modal-sm">
-<form class="modal-content" id="addRoomForm">
+<form class="modal-content" id="addRoomForm" method="POST">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <input type="hidden" name="action" value="add_lab_room">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-door-open me-2"></i>Add Lab Room</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1071,7 +1082,8 @@ $section = $_GET['section'] ?? 'dashboard';
 </div></div>
 
 <div class="modal fade" id="addComputerModal" tabindex="-1"><div class="modal-dialog">
-<form class="modal-content" id="addComputerForm">
+<form class="modal-content" id="addComputerForm" method="POST">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <input type="hidden" name="action" value="add_computer">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add Computer</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1090,7 +1102,8 @@ $section = $_GET['section'] ?? 'dashboard';
 </div></div>
 
 <div class="modal fade" id="addEquipmentModal" tabindex="-1"><div class="modal-dialog">
-<form class="modal-content" id="addEquipmentForm">
+<form class="modal-content" id="addEquipmentForm" method="POST">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <input type="hidden" name="action" value="add_equipment">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-toolbox me-2"></i>Add Equipment</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1109,7 +1122,8 @@ $section = $_GET['section'] ?? 'dashboard';
 </div></div>
 
 <div class="modal fade" id="addConsumableModal" tabindex="-1"><div class="modal-dialog modal-sm">
-<form class="modal-content" id="addConsumableForm">
+<form class="modal-content" id="addConsumableForm" method="POST">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <input type="hidden" name="action" value="add_consumable">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-cube me-2"></i>Add Consumable</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1138,6 +1152,7 @@ $section = $_GET['section'] ?? 'dashboard';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const LAB_HANDLER = '../handlers/lab_handler.php';
+const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 
 function showAlert(msg, type) {
     const c = $('.content-area');
@@ -1149,6 +1164,7 @@ function doAjax(formId, successMsg, callback) {
     const f = $(`#${formId}`);
     if (f.length && f[0].checkValidity && !f[0].checkValidity()) { f[0].reportValidity(); return; }
     const data = f.serializeArray().reduce((o, x) => (o[x.name] = x.value, o), {});
+    data.csrf_token = CSRF_TOKEN;
     $.post(LAB_HANDLER, data).done(r => {
         if (r.success) { showAlert(r.message, 'success'); if (callback) callback(r.data); else setTimeout(() => location.reload(), 800); }
         else showAlert(r.message || 'Error', 'danger');
@@ -1161,6 +1177,7 @@ $('#replaceCardForm').submit(e => { e.preventDefault(); doAjax('replaceCardForm'
 $('#verifyCardForm').submit(e => {
     e.preventDefault();
     const data = $('#verifyCardForm').serializeArray().reduce((o, x) => (o[x.name] = x.value, o), {});
+    data.csrf_token = CSRF_TOKEN;
     $.post(LAB_HANDLER, data).done(r => {
         if (r.success) {
             const s = r.data;
@@ -1195,7 +1212,7 @@ $('#printTypeSelect, #printJobForm select[name=paper_size], #printJobForm input[
 // Single-click actions
 function reprintCard(id) {
     if (!confirm('Log a reprint for this card?')) return;
-    $.post(LAB_HANDLER, { action: 'reprint_id_card', card_id: id, reason: 'reprint' }).done(r => {
+    $.post(LAB_HANDLER, { action: 'reprint_id_card', card_id: id, reason: 'reprint', csrf_token: CSRF_TOKEN }).done(r => {
         if (r.success) { showAlert('Reprint logged', 'success'); setTimeout(() => location.reload(), 500); }
         else showAlert(r.message, 'danger');
     });
@@ -1204,12 +1221,12 @@ function reprintCard(id) {
 function printCardDirect(id) { window.open(`?section=id-cards&section=preview&card=${id}`, '_blank'); }
 
 function setComputerStatus(id, status) {
-    $.post(LAB_HANDLER, { action: 'edit_computer', id, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'edit_computer', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 
 function deleteComputer(id) {
     if (!confirm('Remove this computer?')) return;
-    $.post(LAB_HANDLER, { action: 'delete_computer', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'delete_computer', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 
 function editComputer(id) {
@@ -1226,15 +1243,15 @@ function editComputer(id) {
 }
 
 function completePrint(id) {
-    $.post(LAB_HANDLER, { action: 'complete_print_job', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'complete_print_job', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function cancelPrint(id) {
     if (!confirm('Cancel this print job?')) return;
-    $.post(LAB_HANDLER, { action: 'cancel_print_job', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'cancel_print_job', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function updateCharge(id) {
     const v = $(`#charge_${id}`).val() || $(`#set_charge_${id}`).val();
-    $.post(LAB_HANDLER, { action: 'update_printing_charge', id, charge_per_page: v }).done(r => { if(r.success) showAlert('Charge updated', 'success'); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'update_printing_charge', id, charge_per_page: v, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) showAlert('Charge updated', 'success'); else showAlert(r.message, 'danger'); });
 }
 
 function updateRepair(id) {
@@ -1242,7 +1259,8 @@ function updateRepair(id) {
     const r = repairs.find(x => x.id == id);
     if (!r) return;
     $('#repairUpdateBody').html(`
-        <form id="repairUpdateForm">
+        <form id="repairUpdateForm" method="POST">
+            <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
             <input type="hidden" name="action" value="update_repair_status">
             <input type="hidden" name="id" value="${id}">
             <p><strong>Repair #${r.repair_number}</strong><br><small>${r.issue_description || ''}</small></p>
@@ -1272,11 +1290,11 @@ function updateRepair(id) {
 function checkoutEquipment(id) { $('#checkoutEqId').val(id); $('#checkoutEqSelect').val(id); $('#checkoutForm')[0].scrollIntoView({behavior:'smooth'}); }
 function returnEquipment(id) {
     if (!confirm('Confirm return?')) return;
-    $.post(LAB_HANDLER, { action: 'return_equipment', checkout_id: id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'return_equipment', checkout_id: id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function deleteEquipment(id) {
     if (!confirm('Retire this equipment?')) return;
-    $.post(LAB_HANDLER, { action: 'delete_equipment', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'delete_equipment', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function editEquipment(id) {
     const name = prompt('Equipment name:') || '';
@@ -1285,7 +1303,7 @@ function editEquipment(id) {
     const brand = prompt('Brand:') || '';
     const condition = prompt('Condition (excellent/good/fair/poor):') || 'good';
     const status = prompt('Status (available/in_use/retired):') || 'available';
-    $.post(LAB_HANDLER, { action: 'edit_equipment', id, equipment_name: name, equipment_type: type, brand, model: '', serial_number: '', lab_room_id: 0, condition_status: condition, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'edit_equipment', id, equipment_name: name, equipment_type: type, brand, model: '', serial_number: '', lab_room_id: 0, condition_status: condition, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function editSoftware(id) {
     const name = prompt('Software name:') || '';
@@ -1294,24 +1312,24 @@ function editSoftware(id) {
     const license = prompt('License key:') || '';
     const type = prompt('License type (opensource/commercial/academic):') || '';
     const expiry = prompt('License expiry (YYYY-MM-DD) or leave blank:');
-    $.post(LAB_HANDLER, { action: 'edit_software', id, software_name: name, version: ver, license_key: license, license_type: type, license_expiry: expiry || null }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'edit_software', id, software_name: name, version: ver, license_key: license, license_type: type, license_expiry: expiry || null, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function deleteSoftware(id) {
     if (!confirm('Delete this software?')) return;
-    $.post(LAB_HANDLER, { action: 'delete_software', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'delete_software', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function editConsumable(id) { showAlert('Edit feature coming soon', 'info'); }
 function deleteConsumable(id) {
     if (!confirm('Delete this consumable?')) return;
-    $.post(LAB_HANDLER, { action: 'delete_consumable', id }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'delete_consumable', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function adjustConsumable(id, curQty) {
     const q = prompt('New quantity:', curQty);
     if (q === null) return;
-    $.post(LAB_HANDLER, { action: 'update_consumable_stock', id, quantity: parseInt(q) }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'update_consumable_stock', id, quantity: parseInt(q), csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function updateSessionStatus(id, status) {
-    $.post(LAB_HANDLER, { action: 'edit_practical_session', id, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
+    $.post(LAB_HANDLER, { action: 'edit_practical_session', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
 function editSession(id) { showAlert('Edit via modal coming soon', 'info'); }
 function markAttendance(id) { showAlert(`Open attendance for session #${id}`, 'info'); }

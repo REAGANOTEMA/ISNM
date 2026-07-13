@@ -41,6 +41,15 @@ if ($action === 'lookup_student') {
 }
 
 if ($action === 'create_student') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'error' => 'POST required']);
+        exit;
+    }
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $fn  = trim($_POST['first_name'] ?? '');
     $sn  = trim($_POST['surname'] ?? '');
     $on  = trim($_POST['other_name'] ?? '');
@@ -73,7 +82,8 @@ if ($action === 'create_student') {
             'email' => $em
         ]]);
     } else {
-        echo json_encode(['success' => false, 'error' => $students_conn->error]);
+        error_log('create_student insert failed: ' . ($students_conn->error ?? 'unknown'));
+        echo json_encode(['success' => false, 'error' => 'Failed to create student record']);
     }
     $stmt->close();
     exit;
@@ -214,7 +224,8 @@ if ($action === 'generate_transcript') {
         ]);
     } catch (Exception $e) {
         $staff_conn->rollback();
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        error_log('generate_transcript error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'Failed to generate transcript']);
     }
     exit;
 }
@@ -291,7 +302,8 @@ if ($action === 'generate_certificate') {
         ]);
     } catch (Exception $e) {
         $staff_conn->rollback();
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        error_log('generate_certificate error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'Failed to generate certificate']);
     }
     exit;
 }
@@ -302,14 +314,18 @@ if ($action === 'preview_document') {
     
     $stmt = $staff_conn->prepare("SELECT document_content, document_title, document_type FROM generated_documents WHERE id = ?");
     $stmt->bind_param("i", $doc_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+    if (!$stmt->execute()) { error_log('preview_document execute failed'); };
     $r = $stmt->get_result();
     $doc = $r ? $r->fetch_assoc() : null;
     $stmt->close();
     if (!$doc) { echo "Document not found"; exit; }
     
     header('Content-Type: text/html; charset=utf-8');
-    echo $doc['document_content'];
+    header("Content-Security-Policy: default-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+    $content = $doc['document_content'];
+    $content = preg_replace('/<script\b[^>]*(?:>(.*?)<\/script>|\/>)/is', '', $content);
+    $content = preg_replace('/\bon\w+\s*=/i', 'data-blocked=', $content);
+    echo $content;
     exit;
 }
 
@@ -393,7 +409,8 @@ if ($action === 'auto_generate_all') {
         ]);
     } catch (Exception $e) {
         $staff_conn->rollback();
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        error_log('auto_generate_all error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'Failed to generate documents']);
     }
     exit;
 }

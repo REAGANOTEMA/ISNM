@@ -10,6 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    $_SESSION['error_message'] = 'Invalid security token. Please try again.';
+    header('Location: contact.php');
+    exit;
+}
+
 $firstName = sanitizeInput(trim($_POST['firstName'] ?? ''));
 $lastName  = sanitizeInput(trim($_POST['lastName'] ?? ''));
 $email     = trim($_POST['email'] ?? '');

@@ -10,41 +10,6 @@ require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/payment_gateway.php';
 require_once __DIR__ . '/../includes/payroll_functions.php';
 
-/**
- * TEMP DEBUG (REMOVE AFTER FIX)
- * Logs session/cookie/security signals to diagnose redirect loop.
- */
-try {
-    if (!defined('ISNM_SESSION_DEBUG_DONE')) {
-        define('ISNM_SESSION_DEBUG_DONE', true);
-
-        $logDir = __DIR__ . '/../logs';
-        if (!is_dir($logDir)) {
-            @mkdir($logDir, 0775, true);
-        }
-
-        $payload = [
-            'ts' => date('c'),
-            'session_logged_in' => $_SESSION['logged_in'] ?? null,
-            'session_type' => $_SESSION['type'] ?? null,
-            'session_user_id' => $_SESSION['user_id'] ?? null,
-            'session_role' => $_SESSION['role'] ?? null,
-            'https' => $_SERVER['HTTPS'] ?? null,
-            'http_x_forwarded_proto' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null,
-            'session_cookie_secure_ini' => ini_get('session.cookie_secure'),
-            'script' => $_SERVER['SCRIPT_NAME'] ?? null,
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? null,
-        ];
-
-        @file_put_contents(
-            $logDir . '/session_debug.log',
-            '[' . $payload['ts'] . '] ' . json_encode($payload, JSON_UNESCAPED_SLASHES) . PHP_EOL,
-            FILE_APPEND
-        );
-    }
-} catch (Throwable $e) {
-    // ignore debug failures
-}
 
 $ctx = bootstrapStaffDashboard(['bursar', 'school bursar', 'finance', 'director finance', 'director general', 'ceo']);
 $auth = $ctx['auth'];
@@ -286,6 +251,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $_SESSION['success'] = 'Tax record added.'; header('Location: school-bursar.php?page=ura'); exit;
     }
+
+    if ($action === 'update_provider_config' && $stuConn) {
+        require_once __DIR__ . '/../includes/payment_gateway/PaymentService.php';
+        $service = new PaymentService($stuConn);
+        $providerKey = trim($_POST['provider_key'] ?? '');
+        if ($providerKey) {
+            $updates = [
+                'is_enabled'              => (int)($_POST['is_enabled'] ?? 0),
+                'api_key'                 => trim($_POST['api_key'] ?? ''),
+                'api_secret'              => trim($_POST['api_secret'] ?? ''),
+                'api_url'                 => trim($_POST['api_url'] ?? ''),
+                'webhook_secret'          => trim($_POST['webhook_secret'] ?? ''),
+                'transaction_fee_percent' => (float)($_POST['transaction_fee_percent'] ?? 0),
+                'transaction_fee_fixed'   => (float)($_POST['transaction_fee_fixed'] ?? 0),
+                'min_amount'              => (float)($_POST['min_amount'] ?? 0),
+                'max_amount'              => (float)($_POST['max_amount'] ?? 10000000),
+                'status'                  => trim($_POST['status'] ?? 'sandbox'),
+            ];
+            if (!empty($_POST['callback_url'])) {
+                $updates['callback_url'] = trim($_POST['callback_url']);
+            }
+            $ok = $service->updateProviderConfig($providerKey, $updates);
+            $_SESSION[$ok ? 'success' : 'error'] = $ok ? "Provider '$providerKey' updated." : 'Update failed.';
+        }
+        header('Location: school-bursar.php?page=payment-providers'); exit;
+    }
 }
 
 // â”€â”€ Data â”€â”€
@@ -340,7 +331,7 @@ $pageTitle = 'Bursar Dashboard';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root{--bs-primary:#059669}
-.brs-content{margin-left:270px;padding:24px;min-height:100vh;background:#f0fdf4}
+.brs-content{margin-left:var(--sidebar-w, 270px);padding:24px;min-height:100vh;background:#f0fdf4}
 .brs-header{background:linear-gradient(135deg,#059669,#34d399);color:#fff;padding:20px 28px;border-radius:14px;margin-bottom:20px}
 .brs-header h1{margin:0;font-size:22px}
 .brs-header p{margin:2px 0 0;opacity:.85;font-size:13px}
@@ -768,6 +759,119 @@ $pageTitle = 'Bursar Dashboard';
     </div>
   </div>
 </div>
+<?php elseif ($page === 'payment-providers'): ?>
+<?php require_once __DIR__ . '/../includes/payment_gateway/PaymentService.php';
+$pgService = new PaymentService($stuConn);
+$pgProviders = $pgService->getEnabledProviders();
+$pgAll = $stuConn ? $stuConn->query("SELECT * FROM payment_providers ORDER BY provider_type ASC, provider_name ASC") : null;
+$pgStats = $pgService->getTransactionStats('month');
+?>
+<div class="row mb-3">
+  <div class="col-md-3"><div class="brs-card text-center"><h4 class="fs-5 mb-1"><?= number_format($pgStats['total_transactions'] ?? 0) ?></h4><small class="text-muted">Transactions (Month)</small></div></div>
+  <div class="col-md-3"><div class="brs-card text-center"><h4 class="fs-5 mb-1"><?= number_format($pgStats['total_amount'] ?? 0) ?></h4><small class="text-muted">Total Amount (UGX)</small></div></div>
+  <div class="col-md-3"><div class="brs-card text-center"><h4 class="fs-5 mb-1"><?= number_format($pgStats['successful_count'] ?? 0) ?></h4><small class="text-muted">Successful</small></div></div>
+  <div class="col-md-3"><div class="brs-card text-center"><h4 class="fs-5 mb-1"><?= number_format($pgStats['pending_count'] ?? 0) ?></h4><small class="text-muted">Pending</small></div></div>
+</div>
+<?php if (!empty($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible fade show" role="alert"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
+<?php if (!empty($_SESSION['error'])): ?><div class="alert alert-danger alert-dismissible fade show" role="alert"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
+<div class="row">
+  <div class="col-md-12">
+    <div class="brs-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0" style="font-size:16px"><i class="fas fa-credit-card me-1"></i> Payment Providers</h3>
+        <span class="badge bg-info"><?= count($pgAll ? $pgAll->fetch_all(MYSQLI_ASSOC) : []) ?> configured</span>
+      </div>
+      <p class="text-muted small mb-3">Manage payment gateway integrations. Enable providers, enter API credentials, and configure fees. Bank Transfer is always available as manual verification.</p>
+      <?php if ($pgAll && $pgAll->num_rows > 0): ?>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover" id="tblPG">
+          <thead class="table-light"><tr>
+            <th>Provider</th><th>Type</th><th>Currencies</th><th>Fee %</th><th>Fee Fixed</th><th>Min</th><th>Max</th><th>Status</th><th>Enabled</th><th>Action</th>
+          </tr></thead>
+          <tbody>
+          <?php while ($pg = $pgAll->fetch_assoc()): ?>
+          <tr>
+            <td><strong><?= htmlspecialchars($pg['provider_name']) ?></strong><br><small class="text-muted"><?= htmlspecialchars($pg['provider_key']) ?></small></td>
+            <td><span class="badge bg-secondary"><?= htmlspecialchars(ucfirst(str_replace('_',' ',$pg['provider_type']))) ?></span></td>
+            <td><small><?= htmlspecialchars($pg['supported_currencies'] ?? 'UGX') ?></small></td>
+            <td><?= number_format((float)$pg['transaction_fee_percent'], 2) ?>%</td>
+            <td><?= number_format((float)$pg['transaction_fee_fixed'], 0) ?></td>
+            <td><small><?= number_format((float)$pg['min_amount'], 0) ?></small></td>
+            <td><small><?= number_format((float)$pg['max_amount'], 0) ?></small></td>
+            <td><span class="badge bg-<?= $pg['status']==='active'?'success':($pg['status']==='sandbox'?'warning':'secondary') ?>"><?= ucfirst($pg['status']) ?></span></td>
+            <td><?= $pg['is_enabled'] ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-muted"></i>' ?></td>
+            <td><button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pgModal<?= htmlspecialchars($pg['provider_key']) ?>"><i class="fas fa-cog"></i> Configure</button></td>
+          </tr>
+          <?php endwhile; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php else: ?>
+        <p class="text-muted">No payment providers found.</p>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+<?php
+// Generate config modals
+$pgAll2 = $stuConn ? $stuConn->query("SELECT * FROM payment_providers ORDER BY provider_name ASC") : null;
+if ($pgAll2):
+while ($pg = $pgAll2->fetch_assoc()):
+  $pk = htmlspecialchars($pg['provider_key']);
+?>
+<div class="modal fade" id="pgModal<?= $pk ?>" tabindex="-1" aria-labelledby="pgModalLabel<?= $pk ?>" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <form method="post" action="school-bursar.php?page=payment-providers">
+      <input type="hidden" name="action" value="update_provider_config">
+      <input type="hidden" name="provider_key" value="<?= $pk ?>">
+      <div class="modal-header"><h5 class="modal-title" id="pgModalLabel<?= $pk ?>"><i class="fas fa-cog me-1"></i> <?= htmlspecialchars($pg['provider_name']) ?> Configuration</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Status</label>
+            <select name="status" class="form-select form-select-sm">
+              <option value="sandbox" <?= $pg['status']==='sandbox'?'selected':'' ?>>Sandbox (Testing)</option>
+              <option value="active" <?= $pg['status']==='active'?'selected':'' ?>>Active (Live)</option>
+              <option value="inactive" <?= $pg['status']==='inactive'?'selected':'' ?>>Inactive (Disabled)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Enabled</label>
+            <select name="is_enabled" class="form-select form-select-sm">
+              <option value="0" <?= !$pg['is_enabled']?'selected':'' ?>>No</option>
+              <option value="1" <?= $pg['is_enabled']?'selected':'' ?>>Yes</option>
+            </select>
+          </div>
+          <div class="col-12"><hr><strong class="text-primary">API Credentials</strong></div>
+          <div class="col-md-6"><label class="form-label">API Key / App ID</label><input type="text" class="form-control form-control-sm" name="api_key" value="<?= htmlspecialchars($pg['api_key'] ?? '') ?>" placeholder="Enter API key"></div>
+          <div class="col-md-6"><label class="form-label">API Secret / App Secret</label><input type="password" class="form-control form-control-sm" name="api_secret" value="<?= htmlspecialchars($pg['api_secret'] ?? '') ?>" placeholder="Enter API secret"></div>
+          <div class="col-md-8"><label class="form-label">API URL</label><input type="url" class="form-control form-control-sm" name="api_url" value="<?= htmlspecialchars($pg['api_url'] ?? '') ?>" placeholder="https://api.provider.com"></div>
+          <div class="col-md-4"><label class="form-label">Webhook Secret</label><input type="text" class="form-control form-control-sm" name="webhook_secret" value="<?= htmlspecialchars($pg['webhook_secret'] ?? '') ?>" placeholder="Optional"></div>
+          <div class="col-12"><hr><strong class="text-primary">Callback URL</strong><br><small class="text-muted">Set this URL in your provider dashboard as the webhook/callback endpoint:</small><br><code class="text-break"><?= htmlspecialchars(('http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ISNM/includes/payment_gateway/handlers/webhook_handler.php?provider=' . $pg['provider_key'])) ?></code></div>
+          <div class="col-12"><hr><strong class="text-primary">Fee Configuration</strong></div>
+          <div class="col-md-4"><label class="form-label">Fee Percent (%)</label><input type="number" class="form-control form-control-sm" name="transaction_fee_percent" value="<?= htmlspecialchars($pg['transaction_fee_percent'] ?? '0') ?>" step="0.01" min="0" max="100"></div>
+          <div class="col-md-4"><label class="form-label">Fixed Fee (UGX)</label><input type="number" class="form-control form-control-sm" name="transaction_fee_fixed" value="<?= htmlspecialchars($pg['transaction_fee_fixed'] ?? '0') ?>" step="1" min="0"></div>
+          <div class="col-md-4"><label class="form-label">Currencies</label><input type="text" class="form-control form-control-sm" value="<?= htmlspecialchars($pg['supported_currencies'] ?? 'UGX') ?>" disabled></div>
+          <div class="col-md-6"><label class="form-label">Min Amount</label><input type="number" class="form-control form-control-sm" name="min_amount" value="<?= htmlspecialchars($pg['min_amount'] ?? '0') ?>" step="1" min="0"></div>
+          <div class="col-md-6"><label class="form-label">Max Amount</label><input type="number" class="form-control form-control-sm" name="max_amount" value="<?= htmlspecialchars($pg['max_amount'] ?? '10000000') ?>" step="1" min="0"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Save Configuration</button></div>
+    </form>
+  </div></div>
+</div>
+<?php endwhile; endif; ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var forms = document.querySelectorAll('#pgModalmtn_momo form, #pgModalairtel_money form, #pgModalairstripe form, #pgModalstripe form, #pgModalfpesapal form, #pgModalbank_transfer form, .modal form');
+    forms.forEach(function(f) {
+        var t = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
+        if (!f.querySelector('input[name="csrf_token"]')) {
+            var i = document.createElement('input'); i.type='hidden'; i.name='csrf_token'; i.value=t; f.appendChild(i);
+        }
+    });
+});
+</script>
 <?php endif; ?>
 </div>
 <script>

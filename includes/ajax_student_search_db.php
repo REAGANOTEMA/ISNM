@@ -1,26 +1,27 @@
 <?php
+/**
+ * Student Search (DB-only) — Legacy bridge
+ *
+ * All new code should call includes/ajax_student_search.php directly.
+ * This file is kept for backward compatibility with dashboards that
+ * still reference it. It validates auth then delegates to the centralized endpoint.
+ */
 header('Content-Type: application/json');
 require_once __DIR__ . '/staff_dashboard_access.php';
+
 if (session_status() === PHP_SESSION_NONE) session_start();
-if (!isset($_SESSION['user_id'])) { echo json_encode(['success'=>false,'message'=>'Unauthorized']); exit; }
-$ctx = bootstrapStaffDashboard([]);
-$conn = $ctx['students'];
-$term = trim($_GET['term'] ?? $_GET['q'] ?? '');
-if (strlen($term) < 1) { echo json_encode(['success'=>false,'students'=>[]]); exit; }
-$results = [];
-if ($conn) {
-    $like = '%' . $term . '%';
-    $sql = "SELECT student_id, student_number, index_number, registration_number, full_name, first_name, surname, other_name, program, level, set_name, phone, mobile_number, email, gender, status, passport_photo, profile_picture
-            FROM students
-            WHERE full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR index_number LIKE ? OR phone LIKE ? OR mobile_number LIKE ?
-            LIMIT 30";
-    $stmt = $conn->prepare($sql);
-    if ($stmt) {
-        $stmt->bind_param('sssssssss', $like, $like, $like, $like, $like, $like, $like, $like, $like);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $r = $stmt->get_result();
-        if ($r) while ($row = $r->fetch_assoc()) $results[] = $row;
-        $stmt->close();
-    }
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'students' => [], 'count' => 0, 'message' => 'Unauthorized']);
+    exit;
 }
-echo json_encode(['success'=>true, 'students'=>$results, 'count'=>count($results)]);
+
+$ctx = bootstrapStaffDashboard([]);
+
+$term = trim($_GET['term'] ?? $_GET['q'] ?? $_GET['query'] ?? '');
+if (strlen($term) < 1) {
+    echo json_encode(['success' => true, 'students' => [], 'count' => 0]);
+    exit;
+}
+
+require_once __DIR__ . '/ajax_student_search.php';
+exit;

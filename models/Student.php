@@ -50,7 +50,7 @@ class Student {
                 return ['success' => false, 'error' => 'Registration number already exists'];
             }
             error_log('Student create: ' . $e->getMessage());
-            return ['success' => false, 'error' => 'Failed to create student: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Failed to create student'];
         }
     }
     
@@ -69,7 +69,7 @@ class Student {
             
         } catch (Exception $e) {
             error_log('Student getById: ' . $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
+            return ['success' => false, 'error' => 'Student not found'];
         }
     }
     
@@ -132,7 +132,7 @@ class Student {
             
         } catch (Exception $e) {
             error_log('Student update: ' . $e->getMessage());
-            return ['success' => false, 'error' => 'Failed to update student: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Failed to update student'];
         }
     }
     

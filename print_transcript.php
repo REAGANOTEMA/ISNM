@@ -23,8 +23,8 @@ $role = '';
 if ($is_staff && function_exists('getStaffConnection')) {
     $sdb = getStaffConnection();
     if ($sdb) {
-        $r = $sdb->query("SELECT role FROM staff WHERE id = $user_id LIMIT 1");
-        if ($r) { $row = $r->fetch_assoc(); $role = $row['role'] ?? ''; }
+        $r = $sdb->query("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = $user_id LIMIT 1");
+        if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
     }
 }
 $is_registrar = stripos($role, 'registrar') !== false;
@@ -54,6 +54,16 @@ $studentId = $_GET['student_id'] ?? $_GET['id'] ?? null;
 // Student auto-load: use session
 if (!$studentId && $is_student && !empty($_SESSION['user_id'])) {
     $studentId = (int)$_SESSION['user_id'];
+}
+
+// Access control: students can only view their own transcripts
+if ($is_student && $studentId && !$is_staff) {
+    $ownId = (int)($_SESSION['user_id'] ?? 0);
+    if ($ownId > 0 && (int)$studentId !== $ownId) {
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><title>Access Denied</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center;padding:40px"><h2 style="color:#dc2626">Access Denied</h2><p>You can only view your own transcript.</p></div></body></html>';
+        exit;
+    }
 }
 
 // AJAX student lookup for staff
@@ -144,6 +154,12 @@ if ($action === 'editdata' && $is_staff && $studentId && $studentsDb) {
 // Save settings (registrar/director)
 $settingsSaved = false;
 if ($action === 'save_settings' && $can_manage_settings && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $allowed_keys = ['institution_name','institution_short_name','institution_address','institution_phone','institution_email','institution_motto','principal_name','director_name','registrar_name','transcript_fee','transcript_purposes','transcript_default_type','transcript_footer','transcript_verify_url','logo_path','background_color','accent_color','font_family'];
     $to_save = [];
     foreach ($allowed_keys as $k) {
@@ -159,6 +175,12 @@ if ($action === 'save_settings' && $can_manage_settings && $_SERVER['REQUEST_MET
 // Update draft (registrar only)
 $saveMsg = '';
 if ($action === 'save_draft' && $is_registrar && $_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $sid = (int)($_POST['student_id'] ?? 0);
     $courses_json = $_POST['courses'] ?? '[]';
     $courses = json_decode($courses_json, true);
@@ -172,11 +194,10 @@ if ($action === 'save_draft' && $is_registrar && $_SERVER['REQUEST_METHOD'] === 
             $mk  = (float)($c['marks'] ?? 0);
             $gr  = $c['grade'] ?? '';
             if ($cc) {
-                $stmt = $studentsDb->prepare("INSERT INTO student_academic_records (student_id, course_code, course_name, credits, semester, academic_year, marks, grade, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                    ON DUPLICATE KEY UPDATE course_name=?, credits=?, marks=?, grade=?, updated_at=NOW()");
+                $stmt = $studentsDb->prepare("INSERT INTO student_academic_records (student_id, course_code, subject, credits, semester, academic_year, marks, grade, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                 if ($stmt) {
-                    $stmt->bind_param("issssdsssds", $sid, $cc, $cn, $cr, $sem, $yr, $mk, $gr, $cn, $cr, $mk, $gr);
+                    $stmt->bind_param("issssdss", $sid, $cc, $cn, $cr, $sem, $yr, $mk, $gr);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
@@ -244,7 +265,7 @@ function loadAcademicRecords($db, $student, $id) {
     // Try student_academic_records first
     $tables = $db->query("SHOW TABLES LIKE 'student_academic_records'");
     if ($tables && $tables->num_rows > 0) {
-        $r = $db->query("SELECT * FROM student_academic_records WHERE student_id = $id ORDER BY academic_year, semester");
+        $r = $db->query("SELECT *, subject AS course_name FROM student_academic_records WHERE student_id = $id ORDER BY academic_year, semester");
         if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
         if (!empty($records)) return $records;
     }
@@ -259,12 +280,13 @@ function loadAcademicRecords($db, $student, $id) {
 
 function loadExaminationRecords($db, $studentNumber) {
     $records = [];
-    // Find student in staffs_db
-    $stmt = $db->prepare("SELECT id FROM students WHERE student_number = ? OR registration_number = ? OR id = ? LIMIT 1");
-    if (!$stmt) return $records;
+    // Find student in staffs_db (staff DB students table has limited columns)
     $sn = (string)$studentNumber;
     $snInt = (int)$studentNumber;
-    $stmt->bind_param("ssi", $sn, $sn, $snInt);
+    // First try by student_number
+    $stmt = $db->prepare("SELECT id FROM students WHERE student_number = ? OR id = ? LIMIT 1");
+    if (!$stmt) return $records;
+    $stmt->bind_param("si", $sn, $snInt);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $s = $stmt->get_result();
     if (!$s || !($srow = $s->fetch_assoc())) { $stmt->close(); return $records; }

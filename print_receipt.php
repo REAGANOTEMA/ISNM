@@ -8,7 +8,7 @@ require_once __DIR__ . '/includes/financial_functions.php';
 require_once __DIR__ . '/includes/receipt_generator.php';
 
 if (!isset($_GET['type'])) {
-    header('Location: ../dashboards/school-bursar.php');
+    header('Location: dashboards/school-bursar.php');
     exit();
 }
 
@@ -23,7 +23,7 @@ if ($type === 'payment' && isset($_GET['id'])) {
     $year = $_GET['year'] ?? null;
     echo ReceiptGenerator::generatePayslipHTML($staff_id, $month, $year);
 } else {
-    header('Location: ../dashboards/school-bursar.php');
+    header('Location: dashboards/school-bursar.php');
     exit();
 }
 ?>

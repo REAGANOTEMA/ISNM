@@ -109,10 +109,21 @@ class SecurityMiddleware {
     public function requireMessagingPermission($recipient_role) {
         $this->requireAuthentication();
         
-        if (!$this->auth_service->canSendMessageTo($recipient_role, $_SESSION['role'])) {
-            $_SESSION['error'] = 'Access denied. You do not have permission to send messages to this recipient.';
-            $this->redirectToUserDashboard();
-            exit();
+        if (!function_exists('canSendMessageToRole')) {
+            $senderRole = strtolower($_SESSION['role'] ?? '');
+            $recipientRole = strtolower($recipient_role);
+            $allowed = ($senderRole === $recipientRole || in_array($senderRole, ['director general', 'ceo', 'system admin', 'hr manager', 'school secretary']));
+            if (!$allowed) {
+                $_SESSION['error'] = 'Access denied. You do not have permission to send messages to this recipient.';
+                $this->redirectToUserDashboard();
+                exit();
+            }
+        } else {
+            if (!canSendMessageToRole($_SESSION['role'] ?? '', $recipient_role)) {
+                $_SESSION['error'] = 'Access denied. You do not have permission to send messages to this recipient.';
+                $this->redirectToUserDashboard();
+                exit();
+            }
         }
         
         return true;

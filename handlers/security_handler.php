@@ -6,8 +6,23 @@ $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? '';
 
+// CSRF validation
+if (!empty($_SESSION['user_id'])) {
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh and try again.']);
+        exit();
+    }
+}
+
 $action = $_POST['action'] ?? '';
 $referrer = $_SERVER['HTTP_REFERER'] ?? '../dashboards/security.php';
+$allowedHost = $_SERVER['SERVER_NAME'] ?? '';
+if (!empty($allowedHost) && isset(parse_url($referrer)['host']) && parse_url($referrer)['host'] !== $allowedHost) {
+    $referrer = '../dashboards/security.php';
+}
 
 if (!$conn) {
     $_SESSION['error'] = 'Database connection failed.';

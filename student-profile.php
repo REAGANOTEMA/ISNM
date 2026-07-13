@@ -24,7 +24,7 @@ if ($studentsDb) {
 $fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname']??'') . ' ' . ($studentInfo['firstname'] ?? $studentInfo['first_name']??'')) : ($_SESSION['full_name'] ?? 'Student');
 $indexNumber = htmlspecialchars($studentInfo['index_number'] ?? $_SESSION['index_number'] ?? '');
 $program = htmlspecialchars($studentInfo['program'] ?? 'N/A');
-$yearOfStudy = (int)($studentInfo['year_of_study'] ?? 1);
+$yearOfStudy = (int)($studentInfo['current_year'] ?? $studentInfo['year'] ?? 1);
 $email = htmlspecialchars($studentInfo['email'] ?? '');
 $phone = htmlspecialchars($studentInfo['phone'] ?? $studentInfo['mobile_number'] ?? '');
 $gender = htmlspecialchars($studentInfo['gender'] ?? '');
@@ -33,9 +33,9 @@ $setName = htmlspecialchars($studentInfo['set_name'] ?? '');
 
 $profilePic = '';
 if (!empty($studentInfo['profile_picture'])) {
-    $profilePic = $studentInfo['profile_picture'];
+    $profilePic = 'studentUploads/profile_images/' . $studentInfo['profile_picture'];
 } elseif (!empty($studentInfo['passport_photo'])) {
-    $profilePic = $studentInfo['passport_photo'];
+    $profilePic = 'studentUploads/profile_images/' . $studentInfo['passport_photo'];
 }
 
 $pageTitle = 'My Profile';

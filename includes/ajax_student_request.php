@@ -17,6 +17,11 @@ try {
         throw new Exception('Invalid request');
     }
     
+    $token = $input['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        throw new Exception('Invalid security token');
+    }
+    
     $action = sanitizeInput($input['action']);
     $student_id = $_SESSION['user_id'];
     

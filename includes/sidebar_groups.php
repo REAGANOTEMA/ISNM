@@ -327,6 +327,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Inventory & Assets',   'icon'=>'fas fa-boxes',        'page'=>'inventory'],
             ['label' => 'Communications',       'icon'=>'fas fa-comments',     'page'=>'communications'],
             ['label' => 'URA Tax',              'icon'=>'fas fa-calculator',   'page'=>'ura'],
+            ['label' => 'Payment Providers',    'icon'=>'fas fa-credit-card',  'page'=>'payment-providers'],
         ],
         'ceo' => [
             ['label' => 'Overview',             'icon'=>'fas fa-chart-pie',    'page'=>'overview'],

@@ -33,27 +33,17 @@ if ($studentsDb) {
     }
     $sidInt = (int)($studentInfo['id'] ?? $userId);
 
-    $er = $studentsDb->query("SELECT * FROM examination_records WHERE student_id=$sidInt ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");
+    $er = $studentsDb->query("SELECT * FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, semester DESC");
     $examResults = $er ? $er->fetch_all(MYSQLI_ASSOC) : [];
 
-    $se = $studentsDb->query("SELECT DISTINCT academic_year, semester FROM examination_records WHERE student_id=$sidInt ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");
+    $se = $studentsDb->query("SELECT DISTINCT academic_year, semester FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, semester DESC");
     $semesters = $se ? $se->fetch_all(MYSQLI_ASSOC) : [];
 
-    $gp = $studentsDb->query("SELECT semester, academic_year, ROUND(AVG(CASE WHEN grade='A' THEN 4.0 WHEN grade='B' THEN 3.0 WHEN grade='C' THEN 2.0 WHEN grade='D' THEN 1.0 ELSE 0 END),2) as gpa FROM examination_records WHERE student_id=$sidInt GROUP BY academic_year, semester ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");
+    $gp = $studentsDb->query("SELECT semester, academic_year, ROUND(AVG(CASE WHEN grade='A' THEN 4.0 WHEN grade='B' THEN 3.0 WHEN grade='C' THEN 2.0 WHEN grade='D' THEN 1.0 ELSE 0 END),2) as gpa FROM student_academic_records WHERE student_id=$sidInt GROUP BY academic_year, semester ORDER BY academic_year DESC, semester DESC");
     $gpaBySemester = $gp ? $gp->fetch_all(MYSQLI_ASSOC) : [];
-
-    // Fallback to student_academic_records if examination_records is empty
-    if (empty($examResults)) {
-        $er2 = $studentsDb->query("SELECT * FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");
-        $examResults = $er2 ? $er2->fetch_all(MYSQLI_ASSOC) : [];
-    }
-    if (empty($semesters)) {
-        $se2 = $studentsDb->query("SELECT DISTINCT academic_year, semester FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");
-        $semesters = $se2 ? $se2->fetch_all(MYSQLI_ASSOC) : [];
-    }
 }
 
-$fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname']??'') . ' ' . ($studentInfo['firstname']??'')) : 'Student';
+$fullName = $studentInfo ? htmlspecialchars(trim(($studentInfo['surname']??'') . ' ' . ($studentInfo['first_name'] ?? $studentInfo['firstname'] ?? ''))) : 'Student';
 $program = $studentInfo ? htmlspecialchars($studentInfo['program']??'N/A') : 'N/A';
 $programCode = $studentInfo ? htmlspecialchars($studentInfo['program_code']??'') : '';
 $yearOfStudy = $studentInfo ? (int)($studentInfo['year_of_study']??1) : 1;

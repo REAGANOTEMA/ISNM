@@ -25,7 +25,8 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 $student_role = isset($_GET['student_role']) ? trim($_GET['student_role']) : '';
-if ($student_role !== '') {
+$allowed_student_roles = ['student', 'nursing', 'midwifery'];
+if ($student_role !== '' && in_array(strtolower($student_role), $allowed_student_roles)) {
     $_SESSION['student_role'] = urldecode($student_role);
 }
 

@@ -13,9 +13,24 @@ $user = $ctx['user'];
 $staffId = (int)($user['id'] ?? 0);
 $userRole = $user['role'] ?? '';
 
+// CSRF validation
+if (!empty($_SESSION['user_id'])) {
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh and try again.']);
+        exit();
+    }
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $isAjax = (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') || (($_POST['format'] ?? '') === 'json');
 $referrer = $_SERVER['HTTP_REFERER'] ?? '../payroll.php';
+$allowedHost = $_SERVER['SERVER_NAME'] ?? '';
+if (!empty($allowedHost) && isset(parse_url($referrer)['host']) && parse_url($referrer)['host'] !== $allowedHost) {
+    $referrer = '../payroll.php';
+}
 
 try {
     switch ($action) {
@@ -86,7 +101,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_employee_allowances (payroll_employee_id, allowance_type_id, amount, is_taxable, is_recurring, effective_from, status, created_by) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('iidissi', $peId, $typeId, $amount, $isTaxable, $isRecurring, $effectiveFrom, $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Allowance assigned.'; }
+            if (!$stmt->execute()) { error_log('payroll assign_allowance failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to assign allowance.'; } else { $_SESSION['success'] = 'Allowance assigned.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -116,7 +131,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_employee_deductions (payroll_employee_id, deduction_type_id, amount, is_recurring, effective_from, status, created_by) VALUES (?, ?, ?, ?, ?, 'active', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('iidisi', $peId, $typeId, $amount, $isRecurring, $effectiveFrom, $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Deduction assigned.'; }
+            if (!$stmt->execute()) { error_log('payroll assign_deduction failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to assign deduction.'; } else { $_SESSION['success'] = 'Deduction assigned.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -158,7 +173,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_overtime (staff_id, hours, rate, total_pay, month, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('idddsi', $staffIdParam, $hours, $hourlyRate, $totalPay, $month, $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Overtime recorded.'; }
+            if (!$stmt->execute()) { error_log('payroll record_overtime failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record overtime.'; } else { $_SESSION['success'] = 'Overtime recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -190,7 +205,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_bonus (payroll_employee_id, bonus_type, bonus_name, amount, is_taxable, bonus_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('issdisi', $peId, $type, $name, $amount, $isTaxable, $date, $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Bonus recorded.'; }
+            if (!$stmt->execute()) { error_log('payroll add_bonus failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record bonus.'; } else { $_SESSION['success'] = 'Bonus recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -213,7 +228,7 @@ try {
             $stmt = $pconn->prepare("INSERT INTO payroll_loans (payroll_employee_id, loan_number, loan_type, principal_amount, interest_rate, installments, installment_amount, loan_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
             $stmt->bind_param('issididisi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed: ' . $stmt->error; } else { $_SESSION['success'] = 'Loan recorded.'; }
+            if (!$stmt->execute()) { error_log('payroll add_loan failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record loan.'; } else { $_SESSION['success'] = 'Loan recorded.'; }
             $stmt->close();
             $pconn->close();
             break;
@@ -445,7 +460,7 @@ try {
                     if ($stmt->execute()) {
                         $_SESSION['success'] = 'Leave request submitted.';
                     } else {
-                        $_SESSION['error'] = 'Failed to submit leave request: ' . $stmt->error;
+                        $_SESSION['error'] = 'Failed to submit leave request.';
                     }
                     $stmt->close();
                 } else {
@@ -532,9 +547,9 @@ try {
 } catch (Exception $e) {
     error_log('Payroll handler error: ' . $e->getMessage());
     if ($isAjax) {
-        jsonResponse(false, $e->getMessage());
+        jsonResponse(false, 'An error occurred processing your request');
     }
-    $_SESSION['error'] = 'Error: ' . $e->getMessage();
+    $_SESSION['error'] = 'An error occurred processing your request';
 }
 
 // Non-AJAX: redirect back

@@ -24,9 +24,11 @@ register_shutdown_function(function () {
         echo '.card{background:#fff;border-radius:12px;padding:24px;border:1px solid #fecaca;max-width:700px;margin:40px auto}';
         echo 'h2{color:#dc2626;margin:0 0 10px}pre{background:#fef2f2;padding:12px;border-radius:6px;overflow:auto;font-size:13px}</style></head>';
         echo '<body><div class="card"><h2>Internal Server Error</h2>';
-        echo '<p>The system encountered a PHP error on your hosting platform.</p>';
-        echo '<p><strong>PHP Version:</strong> ' . $phpVer . ' (ISNM requires PHP 8.0+)</p>';
-        echo '<pre>' . $msg . "\nFile: $file\nLine: $line" . '</pre>';
+        echo '<p>The system encountered an internal error. Our team has been notified.</p>';
+        if (defined('APP_DEBUG') && APP_DEBUG) {
+            echo '<p><strong>PHP Version:</strong> ' . $phpVer . '</p>';
+            echo '<pre>' . $msg . "\nFile: $file\nLine: $line" . '</pre>';
+        }
         echo '<p><a href="health-check.php" style="color:#2563eb">Run Health Check</a></p></div></body></html>';
         exit;
     }

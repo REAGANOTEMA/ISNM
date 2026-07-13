@@ -1,4 +1,8 @@
-<?php include('shared/_header.php');?>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+include('shared/_header.php');
+?>
 
 
   <main>
@@ -264,6 +268,7 @@
           </div>
           <div class="modal-body">
             <form id="donationForm" method="POST" action="process-donation.php">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
               <!-- Personal Information -->
               <div class="row mb-4">
                 <div class="col-12">
@@ -698,6 +703,7 @@
       // Send AJAX request to process-donation.php
       fetch('process-donation.php', {
         method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData
       })
       .then(response => response.json())

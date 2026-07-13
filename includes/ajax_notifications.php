@@ -58,12 +58,30 @@ switch ($action) {
         break;
 
     case 'mark_read':
-        $nid = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'POST required']);
+            exit;
+        }
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+            echo json_encode(['error' => 'Invalid security token']);
+            exit;
+        }
+        $nid = (int)($_POST['id'] ?? 0);
         if ($nid) markNotificationRead($nid, $user_id, $user_type);
         echo json_encode(['ok' => true]);
         break;
 
     case 'mark_all_read':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'POST required']);
+            exit;
+        }
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+            echo json_encode(['error' => 'Invalid security token']);
+            exit;
+        }
         markAllNotificationsRead($user_id, $user_type);
         echo json_encode(['ok' => true]);
         break;

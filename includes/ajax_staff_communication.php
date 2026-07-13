@@ -25,6 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['action']) || $_POST['
     exit;
 }
 
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    echo json_encode(['success' => false, 'error' => 'Invalid security token.']);
+    exit;
+}
+
 // Validate required fields
 $sender_id    = (int)($_POST['sender_id'] ?? 0);
 $sender_email = trim($_POST['sender_email'] ?? '');

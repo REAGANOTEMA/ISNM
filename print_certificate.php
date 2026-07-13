@@ -9,8 +9,36 @@ require_once __DIR__ . '/includes/certificate_generator.php';
 session_start();
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['student_id'])) {
     header('Content-Type: text/html; charset=utf-8');
-    echo generateCertificateHTML([]);
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#334155;}.error-box{text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:480px;}.error-box h2{color:#dc2626;margin:0 0 8px;}.error-box p{color:#64748b;margin:0;}</style></head><body><div class="error-box"><h2>Authentication Required</h2><p>Please log in to access certificates.</p></div></body></html>';
     exit;
+}
+
+$is_staff = !empty($_SESSION['user_id']);
+$is_student = !empty($_SESSION['student_id']) && ($_SESSION['type'] ?? '') === 'student';
+
+// Role-based access control for staff
+if ($is_staff) {
+    require_once __DIR__ . '/config/database.php';
+    $role = $_SESSION['role'] ?? '';
+    if (empty($role) && function_exists('getStaffConnection')) {
+        $sdb = getStaffConnection();
+        if ($sdb) {
+            $uid = (int)$_SESSION['user_id'];
+            $r = $sdb->query("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = $uid LIMIT 1");
+            if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
+        }
+    }
+    $allowed_roles = ['academic registrar', 'registrar', 'director academics', 'director general', 'system admin', 'principal'];
+    $role_lower = strtolower($role);
+    $has_access = false;
+    foreach ($allowed_roles as $ar) {
+        if (strpos($role_lower, $ar) !== false) { $has_access = true; break; }
+    }
+    if (!$has_access) {
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#334155;}.error-box{text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:480px;}.error-box h2{color:#dc2626;margin:0 0 8px;}.error-box p{color:#64748b;margin:0;}</style></head><body><div class="error-box"><h2>Access Denied</h2><p>You do not have permission to access certificate generation. Required role: Academic Registrar, Director, or Principal.</p></div></body></html>';
+        exit;
+    }
 }
 
 $student_id = $_GET['student_id'] ?? $_GET['id'] ?? null;
@@ -36,14 +64,14 @@ if ($student_id) {
         }
         
         if ($studentsDb && !$studentsDb->connect_error) {
-            $q = $studentsDb->prepare("SELECT first_name, surname, other_names, student_number, program FROM students WHERE id = ? OR student_number = ? LIMIT 1");
+            $q = $studentsDb->prepare("SELECT first_name, surname, other_name, student_number, program FROM students WHERE id = ? OR student_number = ? LIMIT 1");
             if ($q) {
                 $q->bind_param('is', $student_id, $student_id);
                 if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
                 $s = $q->get_result()->fetch_assoc();
                 $q->close();
                 if ($s) {
-                    $data['student_name'] = trim($s['first_name'] . ' ' . ($s['surname'] ?? '') . ($s['other_names'] ? ' ' . $s['other_names'] : ''));
+                    $data['student_name'] = trim($s['first_name'] . ' ' . ($s['surname'] ?? '') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
                     $data['registration_number'] = $s['student_number'] ?? '';
                     $data['program'] = $s['program'] ?? '';
                 } else {

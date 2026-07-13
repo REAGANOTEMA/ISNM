@@ -40,7 +40,7 @@ class User {
             
         } catch (Exception $e) {
             error_log('User authenticate: ' . $e->getMessage());
-            return ['success' => false, 'error' => 'Authentication failed: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Authentication failed'];
         }
     }
     
@@ -75,7 +75,7 @@ class User {
                 return ['success' => false, 'error' => 'Username already exists'];
             }
             error_log('User create: ' . $e->getMessage());
-            return ['success' => false, 'error' => 'Failed to create user: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Failed to create user'];
         }
     }
     
@@ -101,7 +101,7 @@ class User {
             
         } catch (Exception $e) {
             error_log('User getById: ' . $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
+            return ['success' => false, 'error' => 'User not found'];
         }
     }
     

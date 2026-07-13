@@ -5,9 +5,9 @@ include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
 include_once 'security-middleware.php';
 
-// Override global $conn to use students_db (messages/notifications belong there)
-$studentsDb = getStudentsConnection();
-if ($studentsDb) { global $conn; $conn = $studentsDb; }
+// Override global $conn to use staffs_db (messages table lives there)
+$staffDb = getStaffConnection();
+if ($staffDb) { global $conn; $conn = $staffDb; }
 
 // Check if user is logged in
 requireAuth();
@@ -61,12 +61,12 @@ function canSendMessageTo($recipient_role, $sender_role) {
 function handleSendMessage() {
     global $conn;
     
-    $student_id = sanitizeInput($_POST['student_id']);
-    $subject = sanitizeInput($_POST['subject']);
-    $message = sanitizeInput($_POST['message']);
-    $message_type = sanitizeInput($_POST['message_type']);
-    $priority = sanitizeInput($_POST['priority']);
-    $sender_id = $_SESSION['user_id'];
+    $student_id = trim($_POST['student_id']);
+    $subject = trim($_POST['subject']);
+    $message = trim($_POST['message']);
+    $message_type = trim($_POST['message_type']);
+    $priority = trim($_POST['priority']);
+    $sender_id = (int)$_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
     // Get recipient information â€” student role is always 'student'
@@ -99,11 +99,11 @@ function handleSendMessage() {
     
     if ($stmt->execute()) {
         // Create notification for recipient
-        $notification_sql = "INSERT INTO notifications (recipient_type, recipient_id, subject, message, notification_type, created_at) VALUES ('student', ?, ?, ?, 'system', NOW())";
+        $notification_sql = "INSERT INTO notifications (title, message, type, audience, created_by, created_at) VALUES (?, ?, 'system', 'student', ?, NOW())";
         $notification_stmt = $conn->prepare($notification_sql);
         $notification_title = "New Message from $sender_role";
         $notification_message = "$subject: " . substr($message, 0, 100) . "...";
-        $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
+        $notification_stmt->bind_param("ssi", $notification_title, $notification_message, $sender_id);
         if (!$notification_stmt->execute()) { error_log('$notification_stmt execute failed: ' . ($notification_stmt->error ?? 'unknown')); };
         
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Message Sent', "Sent $message_type message to: $student_id", 'messages', $student_id);
@@ -121,11 +121,11 @@ function handleSendBulkMessage() {
     global $conn;
     
     $recipients = $_POST['recipients'] ?? [];
-    $subject = sanitizeInput($_POST['subject']);
-    $message = sanitizeInput($_POST['message']);
-    $message_type = sanitizeInput($_POST['message_type']);
-    $priority = sanitizeInput($_POST['priority']);
-    $sender_id = $_SESSION['user_id'];
+    $subject = trim($_POST['subject']);
+    $message = trim($_POST['message']);
+    $message_type = trim($_POST['message_type']);
+    $priority = trim($_POST['priority']);
+    $sender_id = (int)$_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
     $success_count = 0;
@@ -139,11 +139,11 @@ function handleSendBulkMessage() {
         
         if ($stmt->execute()) {
             // Create notification for student
-            $notification_sql = "INSERT INTO notifications (recipient_type, recipient_id, subject, message, notification_type, created_at) VALUES ('student', ?, ?, ?, 'system', NOW())";
+            $notification_sql = "INSERT INTO notifications (title, message, type, audience, created_by, created_at) VALUES (?, ?, 'system', 'student', ?, NOW())";
             $notification_stmt = $conn->prepare($notification_sql);
             $notification_title = "New Message from $sender_role";
             $notification_message = "$subject: " . substr($message, 0, 100) . "...";
-            $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
+            $notification_stmt->bind_param("ssi", $notification_title, $notification_message, $sender_id);
             if (!$notification_stmt->execute()) { error_log('$notification_stmt execute failed: ' . ($notification_stmt->error ?? 'unknown')); };
             
             $success_count++;
@@ -163,16 +163,27 @@ function handleSendBulkMessage() {
 function handleReplyMessage() {
     global $conn;
     
-    $original_message_id = sanitizeInput($_POST['original_message_id']);
-    $student_id = sanitizeInput($_POST['student_id']);
-    $reply_message = sanitizeInput($_POST['reply_message']);
-    $sender_id = $_SESSION['user_id'];
+    $original_message_id = (int)$_POST['original_message_id'];
+    $student_id = trim($_POST['student_id']);
+    $reply_message = trim($_POST['reply_message']);
+    $sender_id = (int)$_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
     // Get original message details
-    $original_sql = "SELECT * FROM messages WHERE id = ?";
-    $original_result = executeQuery($original_sql, [$original_message_id], 'i');
-    $original_msg = $original_result[0] ?? null;
+    $origStmt = $conn->prepare("SELECT * FROM messages WHERE id = ?");
+    if (!$origStmt) {
+        $_SESSION['error'] = "Error fetching original message.";
+        header("Location: student_communication_system.php");
+        exit();
+    }
+    $origStmt->bind_param("i", $original_message_id);
+    if (!$origStmt->execute()) {
+        $_SESSION['error'] = "Error fetching original message.";
+        header("Location: student_communication_system.php");
+        exit();
+    }
+    $original_msg = $origStmt->get_result()->fetch_assoc();
+    $origStmt->close();
     
     if ($original_msg) {
         $subject = "Re: " . $original_msg['subject'];
@@ -180,7 +191,9 @@ function handleReplyMessage() {
         $sql = "INSERT INTO messages (student_id, sender_id, sender_role, subject, message_content, message_type, priority, sent_date, status, parent_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 'sent', ?)";
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssssi", $student_id, $sender_id, $sender_role, $subject, $reply_message, 'reply', 'normal', $original_message_id);
+        $reply_type = 'reply';
+        $reply_priority = 'normal';
+        $stmt->bind_param("sissssii", $student_id, $sender_id, $sender_role, $subject, $reply_message, $reply_type, $reply_priority, $original_message_id);
         
         if ($stmt->execute()) {
             logActivity($_SESSION['user_id'], $_SESSION['role'], 'Message Reply', "Replied to message ID: $original_message_id", 'messages', $student_id);
@@ -198,7 +211,8 @@ function handleReplyMessage() {
 function handleMarkRead() {
     global $conn;
     
-    $message_id = sanitizeInput($_POST['message_id']);
+    header('Content-Type: application/json');
+    $message_id = (int)$_POST['message_id'];
     
     $sql = "UPDATE messages SET status = 'read', read_date = CURDATE() WHERE id = ?";
     $stmt = $conn->prepare($sql);
@@ -207,7 +221,7 @@ function handleMarkRead() {
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
-        echo json_encode(['success' => false]);
+        echo json_encode(['success' => false, 'error' => $stmt->error]);
     }
     exit();
 }
@@ -216,7 +230,7 @@ function handleMarkRead() {
 function handleDeleteMessage() {
     global $conn;
     
-    $message_id = sanitizeInput($_POST['message_id']);
+    $message_id = (int)$_POST['message_id'];
     
     $sql = "UPDATE messages SET status = 'deleted', deleted_date = CURDATE() WHERE id = ?";
     $stmt = $conn->prepare($sql);
@@ -235,24 +249,55 @@ function handleDeleteMessage() {
 
 // Get messages based on user role
 if ($_SESSION['role'] === 'Student') {
-    // Students see messages sent to them
-    $messages_sql = "SELECT * FROM messages WHERE student_id = ? AND status != 'deleted' ORDER BY sent_date DESC";
-    $messages = executeQuery($messages_sql, [$_SESSION['user_id']], 's');
+    $studentUserId = (int)$_SESSION['user_id'];
+    $stmt = $conn->prepare("SELECT * FROM messages WHERE student_id = ? AND status != 'deleted' ORDER BY sent_date DESC");
+    $messages = [];
+    if ($stmt) {
+        $stmt->bind_param("s", $studentUserId);
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) $messages[] = $row;
+        }
+        $stmt->close();
+    }
 } else {
-    // Staff see messages they've sent
-    $messages_sql = "SELECT m.*, s.first_name, s.surname FROM messages m LEFT JOIN students s ON m.student_id = s.student_id WHERE m.sender_id = ? AND m.status != 'deleted' ORDER BY m.sent_date DESC";
-    $messages = executeQuery($messages_sql, [$_SESSION['user_id']], 's');
+    $senderUserId = (int)$_SESSION['user_id'];
+    $stmt = $conn->prepare("SELECT m.*, '' AS first_name, '' AS surname FROM messages m WHERE m.sender_id = ? AND m.status != 'deleted' ORDER BY m.sent_date DESC");
+    $messages = [];
+    if ($stmt) {
+        $stmt->bind_param("i", $senderUserId);
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) $messages[] = $row;
+        }
+        $stmt->close();
+    }
 }
 
 // Get unread count
-$unread_sql = "SELECT COUNT(*) as count FROM messages WHERE student_id = ? AND status = 'sent'";
-$unread_result = executeQuery($unread_sql, [$_SESSION['user_id']], 's');
-$unread_count = $unread_result[0]['count'];
+$unread_count = 0;
+$unreadUserId = (int)$_SESSION['user_id'];
+$unreadStmt = $conn->prepare("SELECT COUNT(*) as count FROM messages WHERE student_id = ? AND status = 'sent'");
+if ($unreadStmt) {
+    $unreadStmt->bind_param("s", $unreadUserId);
+    if ($unreadStmt->execute()) {
+        $unread_result = $unreadStmt->get_result()->fetch_assoc();
+        $unread_count = (int)($unread_result['count'] ?? 0);
+    }
+    $unreadStmt->close();
+}
 
 // Get students for bulk messaging
+$all_students = [];
 if ($_SESSION['role'] !== 'Student') {
-    $students_sql = "SELECT * FROM students WHERE status = 'active' ORDER BY surname, first_name";
-    $all_students = executeQuery($students_sql);
+    $studentsConn = getStudentsConnection();
+    if ($studentsConn) {
+        $studentsResult = $studentsConn->query("SELECT * FROM students WHERE status = 'active' ORDER BY surname, first_name");
+        if ($studentsResult) {
+            while ($row = $studentsResult->fetch_assoc()) $all_students[] = $row;
+        }
+        $studentsConn->close();
+    }
 }
 ?>
 

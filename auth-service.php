@@ -155,11 +155,8 @@ class AuthenticationService {
         }
         $conn = getStaffConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable.';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('resetPasswordWithToken: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
         $stmt = $conn->prepare("SELECT id FROM staff WHERE reset_token = ? AND reset_expiry > NOW()");
         if (!$stmt) {
@@ -193,11 +190,8 @@ class AuthenticationService {
         if (strlen($password) < 8) return ['success' => false, 'message' => 'Password must be at least 8 characters long'];
         $conn = getConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('setStudentPassword: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $s = $conn->prepare("UPDATE students SET password=?,password_changed=TRUE,is_first_login=FALSE,login_attempts=0,locked_until=NULL,updated_at=NOW() WHERE id=?");
@@ -232,11 +226,8 @@ class AuthenticationService {
 
         $conn = getConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('authenticateStudent: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
 
         $q = $conn->prepare("SELECT id, index_number, TRIM(CONCAT_WS(' ', first_name, NULLIF(other_name,''), surname)) AS full_name, phone, password, is_first_login FROM students WHERE index_number = ? LIMIT 1");
@@ -327,11 +318,8 @@ class AuthenticationService {
 
         $conn = getStaffConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable. Please contact the system administrator.';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('authenticateStaff: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
         }
 
         if ($this->isStaffAccountLocked($email))
@@ -440,6 +428,8 @@ class AuthenticationService {
             ini_set('session.cookie_path', '/ISNM/');
             session_start();
         }
+        // Prevent session fixation: regenerate ID and discard old session
+        session_regenerate_id(true);
         $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
         $_SESSION['user_id']        = $user['id'];
         $_SESSION['email']          = $user['email'];
@@ -811,11 +801,8 @@ class AuthenticationService {
 
         $conn = getConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('createStudentAccount: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
 
         $chk = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
@@ -867,11 +854,8 @@ class AuthenticationService {
     public function createStaffAccount($staffData) {
         $conn = getStaffConnection();
         if (!$conn) {
-            $errMsg = 'Database unavailable.';
-            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
-                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
-            }
-            return ['success' => false, 'message' => $errMsg];
+            error_log('createStaffAccount: Database connection failed');
+            return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
         try {
             $hash  = password_hash($staffData['password'], PASSWORD_BCRYPT);

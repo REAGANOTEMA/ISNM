@@ -3,8 +3,10 @@ $pageTitle = 'Notifications';
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
-$conn = getDatabaseConnection('website');
+$conn = getStaffConnection();
 $userId = (int)($_SESSION['user_id'] ?? 0);
+
+require_once __DIR__ . '/includes/notification_helper.php';
 
 $totalNotifications = 0; $unreadNotifications = 0; $readNotifications = 0; $recentNotifications = 0;
 $notifications = [];

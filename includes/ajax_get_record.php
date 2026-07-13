@@ -11,16 +11,22 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$record_id = $_GET['id'] ?? '';
+$userType = $_SESSION['type'] ?? '';
+$userId = (int)$_SESSION['user_id'];
+$record_id = (int)($_GET['id'] ?? 0);
 
-if (empty($record_id)) {
+if ($record_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Record ID not provided']);
     exit();
 }
 
-// Get academic record details
-$record_sql = "SELECT * FROM academic_records WHERE id = ?";
-$record_result = executeQuery($record_sql, [$record_id], 'i');
+if ($userType === 'student') {
+    $record_sql = "SELECT * FROM academic_records WHERE id = ? AND student_id = ?";
+    $record_result = executeQuery($record_sql, [$record_id, $userId], 'ii');
+} else {
+    $record_sql = "SELECT * FROM academic_records WHERE id = ?";
+    $record_result = executeQuery($record_sql, [$record_id], 'i');
+}
 
 if (empty($record_result)) {
     echo json_encode(['success' => false, 'message' => 'Record not found']);

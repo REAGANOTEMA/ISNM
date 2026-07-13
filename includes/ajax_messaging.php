@@ -45,7 +45,7 @@ switch ($action) {
         $subject      = trim($_POST['subject'] ?? '');
         $message      = trim($_POST['message'] ?? '');
         $priority     = $_POST['priority'] ?? 'Normal';
-        $parent_id    = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
+        $parent_id    = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
 
         if ($sender_id !== $user_id) {
             echo json_encode(['success' => false, 'error' => 'Sender identity mismatch.']);
@@ -90,23 +90,27 @@ switch ($action) {
             exit;
         }
 
-        if (!in_array($priority, ['Low', 'Normal', 'High', 'Urgent'])) $priority = 'Normal';
+        $priority = strtolower($priority);
+        if (!in_array($priority, ['low', 'normal', 'high', 'urgent'])) $priority = 'normal';
 
         $stmt = $conn->prepare("INSERT INTO staff_inbox (sender_id, sender_name, sender_role, recipient_id, recipient_name, subject, message, priority, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Failed to prepare insert: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to send message']);
             exit;
         }
-        $stmt->bind_param("isssssssi", $sender_id, $sender_name, $sender_role, $recipient_id, $recipient_name, $subject, $message, $priority, $parent_id);
+        $stmt->bind_param("issssssi", $sender_id, $sender_name, $sender_role, $recipient_id, $recipient_name, $subject, $message, $priority, $parent_id);
 
         if ($stmt->execute()) {
             $new_id = $stmt->insert_id;
             $stmt->close();
+
+            // Queue email notification for recipient
+            queueMessageEmail($conn, $recipient_id, $recipient_name, $sender_name, $subject, $message, $priority);
+
             echo json_encode(['success' => true, 'message_id' => $new_id]);
         } else {
-            $err = $stmt->error;
             $stmt->close();
-            echo json_encode(['success' => false, 'error' => 'Send failed: ' . $err]);
+            echo json_encode(['success' => false, 'error' => 'Failed to send message']);
         }
         break;
 
@@ -118,10 +122,12 @@ switch ($action) {
 
         $stmt = $conn->prepare("SELECT * FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?");
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Query failed: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to load messages']);
             exit;
         }
-        $stmt->bind_param("iii", $rid, $limit, $offset);
+        $limitStr = (string)$limit;
+        $offsetStr = (string)$offset;
+        $stmt->bind_param("iss", $rid, $limitStr, $offsetStr);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $messages = [];
@@ -140,7 +146,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $messages, 'total' => $total]);
         break;
 
-    // â”€â”€ Get sent messages â”€â”€
+    // â"€â"€ Get sent messages â"€â"€
     case 'sent':
         $sid    = (int)($_POST['sender_id'] ?? $user_id);
         $offset = max(0, (int)($_POST['offset'] ?? 0));
@@ -148,10 +154,12 @@ switch ($action) {
 
         $stmt = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?");
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Query failed: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to load messages']);
             exit;
         }
-        $stmt->bind_param("iii", $sid, $limit, $offset);
+        $limitStr2 = (string)$limit;
+        $offsetStr2 = (string)$offset;
+        $stmt->bind_param("iss", $sid, $limitStr2, $offsetStr2);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $messages = [];
@@ -182,7 +190,7 @@ switch ($action) {
 
         $stmt = $conn->prepare("UPDATE staff_inbox SET is_read = 1, read_at = NOW() WHERE id = ? AND recipient_id = ? AND is_read = 0");
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Update failed: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to update message']);
             exit;
         }
         $stmt->bind_param("ii", $msg_id, $uid);
@@ -210,7 +218,7 @@ switch ($action) {
             $stmt = $conn->prepare("UPDATE staff_inbox SET is_deleted_recipient = 1 WHERE id = ? AND recipient_id = ?");
         }
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Delete failed: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to delete message']);
             exit;
         }
         $stmt->bind_param("ii", $msg_id, $uid);
@@ -285,7 +293,7 @@ switch ($action) {
         $like = '%' . $query . '%';
         $stmt = $conn->prepare("SELECT * FROM staff_inbox WHERE (sender_id = ? OR recipient_id = ?) AND (subject LIKE ? OR message LIKE ?) AND (is_deleted_sender = 0 AND is_deleted_recipient = 0) ORDER BY created_at DESC LIMIT 50");
         if (!$stmt) {
-            echo json_encode(['success' => false, 'error' => 'Search failed: ' . $conn->error]);
+            echo json_encode(['success' => false, 'error' => 'Failed to search messages']);
             exit;
         }
         $stmt->bind_param("iiss", $uid, $uid, $like, $like);
@@ -301,4 +309,44 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
         break;
+}
+
+/**
+ * Queue an email notification for a new message.
+ */
+function queueMessageEmail($conn, $recipientId, $recipientName, $senderName, $subject, $message, $priority) {
+    try {
+        // Get recipient email from staff table
+        $emailStmt = $conn->prepare("SELECT email FROM staff WHERE id = ?");
+        if (!$emailStmt) return;
+        $emailStmt->bind_param("i", $recipientId);
+        if (!$emailStmt->execute()) { error_log('queueMessageEmail email query failed: ' . $emailStmt->error); return; }
+        $row = $emailStmt->get_result()->fetch_assoc();
+        $emailStmt->close();
+        if (!$row || empty($row['email'])) return;
+
+        $recipientEmail = $row['email'];
+        $emailSubject = "New Message from $senderName: $subject";
+        $emailContent = "Dear $recipientName,\n\nYou have received a new message from $senderName.\n\nSubject: $subject\nPriority: $priority\n\nMessage:\n$message\n\n---\nISNM School Management System";
+
+        $prioMap = ['urgent' => 'high', 'high' => 'high', 'normal' => 'normal', 'low' => 'low'];
+        $emailPrio = $prioMap[strtolower($priority)] ?? 'normal';
+
+        // Try to use email_notifications_queue if it exists
+        $checkTable = $conn->query("SHOW TABLES LIKE 'email_notifications_queue'");
+        if ($checkTable && $checkTable->num_rows > 0) {
+            $eqStmt = $conn->prepare("INSERT INTO email_notifications_queue (recipient_email, recipient_name, subject, email_content, email_type, priority, status, scheduled_at, created_at) VALUES (?, ?, ?, ?, 'message_notification', ?, 'pending', NOW(), NOW())");
+            if ($eqStmt) {
+                $eqStmt->bind_param("sssss", $recipientEmail, $recipientName, $emailSubject, $emailContent, $emailPrio);
+                $eqStmt->execute();
+                $eqStmt->close();
+                return;
+            }
+        }
+
+        // Fallback: log to error_log if queue table not available
+        error_log("EMAIL QUEUE: To=$recipientEmail Subject=$emailSubject");
+    } catch (Exception $e) {
+        error_log('queueMessageEmail: ' . $e->getMessage());
+    }
 }

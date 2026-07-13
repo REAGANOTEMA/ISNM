@@ -24,6 +24,7 @@ $studentInfo = null;
 $invoices = [];
 $payments = [];
 $balanceInfo = ['total_billed' => 0, 'total_paid' => 0, 'balance' => 0];
+$studentIntId = 0;
 
 if ($studentNumber && $studentsDb) {
     try {
@@ -33,14 +34,16 @@ if ($studentNumber && $studentsDb) {
         $studentInfo = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+        $studentIntId = (int)($studentInfo['id'] ?? 0);
+
         $stmt2 = $studentsDb->prepare("SELECT si.*, fs.fee_name, fs.fee_type as fee_category, fs.amount as structure_amount FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_type COLLATE utf8mb4_unicode_ci = fs.fee_name WHERE si.student_id = ? ORDER BY si.created_at DESC");
-        $stmt2->bind_param("s", $studentNumber);
+        $stmt2->bind_param("i", $studentIntId);
         if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $invoices = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt2->close();
 
         $stmt3 = $studentsDb->prepare("SELECT * FROM payments WHERE student_id = ? ORDER BY created_at DESC LIMIT 50");
-        $stmt3->bind_param("s", $studentNumber);
+        $stmt3->bind_param("i", $studentIntId);
         if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $payments = $stmt3->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt3->close();
@@ -290,11 +293,13 @@ CSS;
 <?php
 $receipts = [];
 try {
-    $stmt = $studentsDb->prepare("SELECT * FROM payment_receipts WHERE student_id = ? ORDER BY created_at DESC");
-    $stmt->bind_param("s", $studentNumber);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    if ($studentIntId > 0) {
+        $stmt = $studentsDb->prepare("SELECT * FROM payment_receipts WHERE student_id = ? ORDER BY created_at DESC");
+        $stmt->bind_param("i", $studentIntId);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    }
 } catch (Exception $e) { error_log('student-fees context: ' . $e->getMessage()); }
 ?>
 <?php if (count($receipts) > 0): ?>

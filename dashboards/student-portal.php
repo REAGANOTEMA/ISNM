@@ -8,6 +8,10 @@ if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'student') {
     exit();
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $studentsDb = getStudentsConnection();
 $staffDb = getStaffConnection();
 
@@ -73,6 +77,12 @@ if (isset($_SESSION['success'])) { $msg = ['type'=>'success','text'=>$_SESSION['
 if (isset($_SESSION['error'])) { $msg = ['type'=>'danger','text'=>$_SESSION['error']]; unset($_SESSION['error']); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header("Location: student-portal.php?page=" . urlencode($page));
+        exit();
+    }
     $action = $_POST['action'] ?? '';
     if ($action === 'upload_photo') {
         if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
@@ -581,6 +591,7 @@ elseif ($page === 'profile'):
   <?php if ($profile_picture): ?>
   <form method="POST" class="sp-remove-photo-form" onsubmit="return confirm('Remove your profile photo?')">
     <input type="hidden" name="action" value="remove_photo">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
     <button type="submit" class="sp-btn-remove-photo" title="Remove photo"><i class="fas fa-times"></i></button>
   </form>
   <?php endif; ?>
@@ -590,6 +601,7 @@ elseif ($page === 'profile'):
 <p style="margin-top:4px"><span class="sp-badge sp-badge-<?= $student_status==='Active'?'success':'warning' ?>"><?= htmlspecialchars($student_status) ?></span></p>
 <form method="POST" enctype="multipart/form-data" style="margin-top:16px">
 <input type="hidden" name="action" value="upload_photo">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <div class="sp-upload-zone" id="uploadZone">
   <i class="fas fa-cloud-upload-alt" style="font-size:28px;color:#94a3b8"></i>
   <p style="font-size:13px;color:#64748b;margin:4px 0">Drag & drop or click to upload</p>
@@ -607,6 +619,7 @@ elseif ($page === 'profile'):
 <h4><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
 <form method="POST">
 <input type="hidden" name="action" value="update_profile">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <div class="sp-grid-2">
 <div class="sp-form-group"><label>Phone</label><input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>"></div>
 <div class="sp-form-group"><label>Email</label><input type="email" name="email" value="<?= htmlspecialchars($email) ?>"></div>
@@ -771,7 +784,7 @@ $current_academic_year = date('Y');
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'results'):
     $results = safeQueryPrepared($studentsDb, "SELECT * FROM student_academic_records WHERE student_id=? ORDER BY academic_year DESC, semester DESC", "i", [$student_id]);
-    $transcripts = safeQueryPrepared($studentsDb, "SELECT * FROM student_transcripts WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
+    $transcripts = safeQueryPrepared($studentsDb, "SELECT * FROM registrar_transcript_requests WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
     $approvals = safeQueryPrepared($studentsDb, "SELECT ra.*, cc.course_code, cc.course_name FROM result_approvals ra LEFT JOIN course_catalog cc ON ra.course_id=cc.id WHERE ra.final_status='Published' ORDER BY ra.published_at DESC LIMIT 10", "", []);
 ?>
 <div class="sp-tabs">
@@ -816,12 +829,11 @@ elseif ($page === 'results'):
 <div class="sp-empty"><i class="fas fa-scroll"></i><p>No transcript requests yet</p></div>
 <?php else: ?>
 <table class="sp-table">
-<thead><tr><th>Number</th><th>Type</th><th>Purpose</th><th>Status</th><th>Requested</th></tr></thead>
+<thead><tr><th>Number</th><th>Purpose</th><th>Status</th><th>Requested</th></tr></thead>
 <tbody>
 <?php foreach ($transcripts as $t): ?>
 <tr>
-<td><strong><?= htmlspecialchars($t['transcript_number'] ?? '') ?></strong></td>
-<td><?= htmlspecialchars($t['request_type'] ?? '') ?></td>
+<td><strong><?= htmlspecialchars($t['request_number'] ?? '') ?></strong></td>
 <td><?= htmlspecialchars($t['purpose'] ?? '') ?></td>
 <td><span class="sp-badge sp-badge-<?= ($t['status'] ?? '')==='Issued'?'success':(($t['status'] ?? '')==='Processing'?'warning':'info') ?>"><?= htmlspecialchars($t['status'] ?? '') ?></span></td>
 <td><?= date('M j, Y', strtotime($t['created_at'])) ?></td>
@@ -1348,6 +1360,7 @@ elseif ($page === 'requests'):
 </div>
 <form method="POST">
 <input type="hidden" name="action" value="submit_request">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <div class="sp-form-group"><label>Request Type</label>
 <select name="request_type" required>
 <option value="">Select type...</option>
@@ -1355,7 +1368,6 @@ elseif ($page === 'requests'):
 <option value="Deferral">Deferral</option>
 <option value="Transfer">Transfer</option>
 <option value="Withdrawal">Withdrawal</option>
-<option value="Transcript">Transcript Request</option>
 <option value="Other">Other</option>
 </select></div>
 <div class="sp-form-group"><label>Reason / Details</label><textarea name="reason" rows="4" required placeholder="Describe your request..."></textarea></div>
@@ -1408,6 +1420,7 @@ elseif ($page === 'timetable'):
 <div class="sp-card" style="max-width:500px;margin:0 auto">
 <h4><i class="fas fa-key me-2"></i>Change Password</h4>
 <form method="POST" action="?page=password">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <input type="text" name="username" value="<?= htmlspecialchars($_SESSION['username'] ?? $_SESSION['full_name'] ?? '') ?>" autocomplete="username" style="display:none;">
 <div class="sp-form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
 <div class="sp-form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" autocomplete="new-password" required minlength="6"></div>
