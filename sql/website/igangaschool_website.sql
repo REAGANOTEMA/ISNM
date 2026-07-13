@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 12, 2026 at 01:26 PM
+-- Generation Time: Jul 13, 2026 at 07:57 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -728,6 +728,151 @@ CREATE TABLE `notification_logs` (
   `is_read` tinyint(1) DEFAULT 0,
   `read_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_callbacks`
+--
+
+CREATE TABLE `payment_callbacks` (
+  `id` int(11) NOT NULL,
+  `transaction_id` int(11) NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `callback_type` enum('webhook','return_url','polling') NOT NULL,
+  `request_method` varchar(10) DEFAULT 'POST',
+  `request_headers` text DEFAULT NULL,
+  `request_body` longtext DEFAULT NULL,
+  `response_code` int(11) DEFAULT 0,
+  `response_body` longtext DEFAULT NULL,
+  `processed` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_providers`
+--
+
+CREATE TABLE `payment_providers` (
+  `id` int(11) NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `provider_name` varchar(100) NOT NULL,
+  `provider_type` enum('mobile_money','card','bank','wallet','crypto') NOT NULL,
+  `is_enabled` tinyint(1) DEFAULT 0,
+  `merchant_id` varchar(255) DEFAULT '',
+  `api_key` varchar(255) DEFAULT '',
+  `api_secret` varchar(512) DEFAULT '',
+  `api_url` varchar(500) DEFAULT '',
+  `callback_url` varchar(500) DEFAULT '',
+  `webhook_secret` varchar(255) DEFAULT '',
+  `config_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`config_json`)),
+  `supported_currencies` varchar(255) DEFAULT 'UGX',
+  `transaction_fee_percent` decimal(5,2) DEFAULT 0.00,
+  `transaction_fee_fixed` decimal(10,2) DEFAULT 0.00,
+  `min_amount` decimal(12,2) DEFAULT 0.00,
+  `max_amount` decimal(12,2) DEFAULT 10000000.00,
+  `status` enum('active','inactive','sandbox') DEFAULT 'sandbox',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_reconciliation`
+--
+
+CREATE TABLE `payment_reconciliation` (
+  `id` int(11) NOT NULL,
+  `reconciliation_date` date NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `total_transactions` int(11) DEFAULT 0,
+  `successful_count` int(11) DEFAULT 0,
+  `failed_count` int(11) DEFAULT 0,
+  `total_amount` decimal(14,2) DEFAULT 0.00,
+  `total_fees` decimal(12,2) DEFAULT 0.00,
+  `total_refunds` decimal(12,2) DEFAULT 0.00,
+  `net_amount` decimal(14,2) DEFAULT 0.00,
+  `status` enum('pending','completed','discrepancy') DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `reconciled_by` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_refunds`
+--
+
+CREATE TABLE `payment_refunds` (
+  `id` int(11) NOT NULL,
+  `refund_ref` varchar(100) NOT NULL,
+  `original_transaction_id` int(11) NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `provider_refund_id` varchar(255) DEFAULT '',
+  `amount` decimal(12,2) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `status` enum('pending','processing','successful','failed') DEFAULT 'pending',
+  `initiated_by` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_transactions`
+--
+
+CREATE TABLE `payment_transactions` (
+  `id` int(11) NOT NULL,
+  `transaction_ref` varchar(100) NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `provider_transaction_id` varchar(255) DEFAULT '',
+  `payment_type` enum('student_fees','application','admission','graduation','hostel','library_fine','donation','volunteer','staff','misc') NOT NULL,
+  `reference_type` varchar(50) DEFAULT '',
+  `reference_id` int(11) DEFAULT 0,
+  `student_id` int(11) DEFAULT 0,
+  `staff_id` int(11) DEFAULT 0,
+  `payer_name` varchar(255) DEFAULT '',
+  `payer_phone` varchar(50) DEFAULT '',
+  `payer_email` varchar(255) DEFAULT '',
+  `amount` decimal(12,2) NOT NULL,
+  `currency` varchar(10) DEFAULT 'UGX',
+  `fee_amount` decimal(12,2) DEFAULT 0.00,
+  `net_amount` decimal(12,2) DEFAULT 0.00,
+  `status` enum('pending','processing','successful','failed','cancelled','refunded','expired') DEFAULT 'pending',
+  `status_message` varchar(500) DEFAULT '',
+  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)),
+  `initiated_by` int(11) DEFAULT 0,
+  `ip_address` varchar(45) DEFAULT '',
+  `user_agent` text DEFAULT NULL,
+  `callback_received_at` timestamp NULL DEFAULT NULL,
+  `reconciled_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_webhook_logs`
+--
+
+CREATE TABLE `payment_webhook_logs` (
+  `id` int(11) NOT NULL,
+  `provider_key` varchar(50) NOT NULL,
+  `event_type` varchar(100) DEFAULT '',
+  `payload` longtext DEFAULT NULL,
+  `signature` varchar(512) DEFAULT '',
+  `signature_valid` tinyint(1) DEFAULT NULL,
+  `processed` tinyint(1) DEFAULT 0,
+  `error_message` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1643,6 +1788,64 @@ ALTER TABLE `notification_logs`
   ADD KEY `created_at` (`created_at`);
 
 --
+-- Indexes for table `payment_callbacks`
+--
+ALTER TABLE `payment_callbacks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_transaction` (`transaction_id`),
+  ADD KEY `idx_provider` (`provider_key`),
+  ADD KEY `idx_processed` (`processed`);
+
+--
+-- Indexes for table `payment_providers`
+--
+ALTER TABLE `payment_providers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `provider_key` (`provider_key`),
+  ADD KEY `idx_provider_type` (`provider_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `payment_reconciliation`
+--
+ALTER TABLE `payment_reconciliation`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_date_provider` (`reconciliation_date`,`provider_key`),
+  ADD KEY `idx_date` (`reconciliation_date`);
+
+--
+-- Indexes for table `payment_refunds`
+--
+ALTER TABLE `payment_refunds`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `refund_ref` (`refund_ref`),
+  ADD KEY `idx_original` (`original_transaction_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `payment_transactions`
+--
+ALTER TABLE `payment_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transaction_ref` (`transaction_ref`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_staff` (`staff_id`),
+  ADD KEY `idx_provider` (`provider_key`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_payment_type` (`payment_type`),
+  ADD KEY `idx_reference` (`reference_type`,`reference_id`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
+-- Indexes for table `payment_webhook_logs`
+--
+ALTER TABLE `payment_webhook_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_provider` (`provider_key`),
+  ADD KEY `idx_event` (`event_type`),
+  ADD KEY `idx_processed` (`processed`);
+
+--
 -- Indexes for table `push_subscriptions`
 --
 ALTER TABLE `push_subscriptions`
@@ -2074,6 +2277,42 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `notification_logs`
 --
 ALTER TABLE `notification_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_callbacks`
+--
+ALTER TABLE `payment_callbacks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_providers`
+--
+ALTER TABLE `payment_providers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_reconciliation`
+--
+ALTER TABLE `payment_reconciliation`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_refunds`
+--
+ALTER TABLE `payment_refunds`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_transactions`
+--
+ALTER TABLE `payment_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_webhook_logs`
+--
+ALTER TABLE `payment_webhook_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
