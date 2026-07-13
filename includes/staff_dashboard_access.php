@@ -1,5 +1,10 @@
 <?php
-// â”€â”€ Production-safe error handling: log all errors but never display them â”€â”€
+// â"€â"€ Buffer all output so headers are never "already sent" before session_start() â"€â"€
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
+// â"€â"€ Production-safe error handling: log all errors but never display them â"€â"€
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);

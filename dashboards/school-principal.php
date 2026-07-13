@@ -7,13 +7,13 @@ $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website']
 $website_conn = $website;
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Principal';
-// Strict role check: only exact 'school principal' or 'principal' allowed (no substring match for 'deputy principal')
-$strictAllowed = ['school principal'];
+// Strict role check: only School Principal, Director General, or CEO allowed (block Deputy Principal substring match)
+$strictAllowed = ['school principal', 'director general', 'ceo'];
 $roleNorm = strtolower(trim($role));
-$isStrictPrincipal = in_array($roleNorm, $strictAllowed, true);
-if (!$isStrictPrincipal) {
+$isStrictAllowed = in_array($roleNorm, $strictAllowed, true);
+if (!$isStrictAllowed) {
     header('HTTP/1.0 403 Forbidden');
-    echo '<!DOCTYPE html><html><head><title>403 Forbidden</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}.card{background:#fff;border-radius:12px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:420px}.card h1{color:#dc2626;font-size:48px;margin:0 0 8px}.card p{color:#64748b;margin:0 0 20px}.card .btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600}</style></head><body><div class="card"><h1>403</h1><p>Access denied. Only the School Principal may access this dashboard.</p><a href="../dashboard.php" class="btn">Go to My Dashboard</a></div></body></html>';
+    echo '<!DOCTYPE html><html><head><title>403 Forbidden</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}.card{background:#fff;border-radius:12px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:420px}.card h1{color:#dc2626;font-size:48px;margin:0 0 8px}.card p{color:#64748b;margin:0 0 20px}.card .btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600}</style></head><body><div class="card"><h1>403</h1><p>Access denied. Only the School Principal, Director General, or CEO may access this dashboard.</p><a href="../dashboard.php" class="btn">Go to My Dashboard</a></div></body></html>';
     exit;
 }
 $staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschool_staffs';
