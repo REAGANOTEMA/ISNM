@@ -425,7 +425,7 @@ class AuthenticationService {
             } else {
                 ini_set('session.cookie_secure', 0);
             }
-            ini_set('session.cookie_path', '/ISNM/');
+            ini_set('session.cookie_path', SESSION_COOKIE_PATH);
             session_start();
         }
         // Prevent session fixation: regenerate ID and discard old session

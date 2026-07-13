@@ -1,4 +1,6 @@
 <?php
+if (ob_get_level() === 0) ob_start();
+
 /**
  * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  * Unified Authentication Handler â€” ISNM
@@ -32,7 +34,7 @@ if (session_status() === PHP_SESSION_NONE) {
     } else {
         ini_set('session.cookie_secure', 0);
     }
-    ini_set('session.cookie_path', '/ISNM/');
+    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
     session_start();
 }
 

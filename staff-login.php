@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/config/database.php';
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.use_strict_mode', 1);
-    ini_set('session.cookie_path', '/ISNM/');
+    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
     $https = false;
     if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
         $https = true;
@@ -19,7 +20,6 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     session_start();
 }
-require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/auth-service.php';
 if (empty($_SESSION['csrf_token'])) {
@@ -61,7 +61,7 @@ if ($auth_service->isAuthenticated()) {
         ) {
             $auth_service->logout();
             if (session_status() === PHP_SESSION_NONE) {
-                ini_set('session.cookie_path', '/ISNM/');
+                ini_set('session.cookie_path', SESSION_COOKIE_PATH);
                 session_start();
             }
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

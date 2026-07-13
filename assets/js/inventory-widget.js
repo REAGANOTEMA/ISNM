@@ -4,6 +4,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    const APP_BASE = (function () {
+        if (typeof window.APP_BASE_PATH !== 'undefined') return window.APP_BASE_PATH;
+        var p = window.location.pathname;
+        var idx = p.indexOf('/dashboards/');
+        if (idx === -1) idx = p.indexOf('/includes/');
+        if (idx === -1) idx = p.lastIndexOf('/');
+        return p.substring(0, idx) || '/';
+    })();
+
     const widgetHost = document.createElement('div');
     widgetHost.id = 'departmentInventoryWidgetHost';
     widgetHost.className = 'dashboard-inventory-widget-wrapper mb-4';
@@ -11,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadInventoryWidget() {
         try {
-            const response = await fetch('/ISNM/includes/dashboard_inventory_widget.php', {
+            const response = await fetch(APP_BASE + '/includes/dashboard_inventory_widget.php', {
                 headers: { 'Accept': 'text/html' }
             });
             if (!response.ok) {
@@ -70,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function submitInventoryReport(payload) {
         try {
-            const response = await fetch('/ISNM/includes/dashboard_inventory_widget.php', {
+            const response = await fetch(APP_BASE + '/includes/dashboard_inventory_widget.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -92,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const shortcut = document.createElement('a');
-        shortcut.href = '/ISNM/dashboards/inventory-reports.php';
+        shortcut.href = APP_BASE + '/dashboards/inventory-reports.php';
         shortcut.className = 'inventory-report-shortcut-btn';
         shortcut.title = 'Open Inventory Report Management';
         shortcut.innerHTML = '<i class="fas fa-clipboard-list"></i> Inventory Reports';

@@ -61,6 +61,20 @@ if (is_file(__DIR__ . '/../.env.local')) {
     isnm_load_env(__DIR__ . '/../.env.local');
 }
 
+// ── Auto-detect session cookie path from actual deployment location ──
+if (!defined('APP_BASE_PATH')) {
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
+    $scriptDir  = dirname($scriptName);
+    $upDirs     = ['dashboards','includes','config','sql','views','logs','students_data'];
+    while (in_array(basename($scriptDir), $upDirs, true) && $scriptDir !== '/') {
+        $scriptDir = dirname($scriptDir);
+    }
+    define('APP_BASE_PATH', rtrim($scriptDir, '/') ?: '/');
+}
+if (!defined('SESSION_COOKIE_PATH')) {
+    define('SESSION_COOKIE_PATH', APP_BASE_PATH);
+}
+
 if (!defined('APP_DEBUG')) {
     define('APP_DEBUG', in_array(isnm_env('APP_DEBUG', 'false'), ['true', '1', 'yes'], true));
 }

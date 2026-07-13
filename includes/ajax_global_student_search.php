@@ -10,7 +10,7 @@ require_once __DIR__ . '/../auth-service.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_path', '/ISNM/');
+    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
     session_start();
 }
 

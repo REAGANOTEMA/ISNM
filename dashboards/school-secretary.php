@@ -1445,7 +1445,7 @@ $admission_status = $student['status'] ?? 'new';
                             <td><?= htmlspecialchars($doc['file_type'] ?? '') ?></td>
                             <td><small><?= $doc['created_at'] ?></small></td>
                             <td>
-                                <?php if (!empty($doc['file_path'])): ?><a href="/ISNM/<?= htmlspecialchars($doc['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a><?php endif; ?>
+                                <?php if (!empty($doc['file_path'])): ?><a href="<?= APP_BASE_PATH ?>/<?= htmlspecialchars($doc['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a><?php endif; ?>
                                 <button class="btn btn-sm btn-outline-success" onclick="verifyDoc(<?= $doc['id'] ?>,'verified')"><i class="fas fa-check"></i></button>
                             </td>
                         </tr>

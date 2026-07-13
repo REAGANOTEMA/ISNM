@@ -11,7 +11,7 @@ $_rp = $_depth > 0 ? str_repeat('../', $_depth) : './';
 <link rel="apple-touch-icon" sizes="144x144"  href="<?= $_rp ?>images/school-logo.png">
 <link rel="apple-touch-icon" sizes="120x120"  href="<?= $_rp ?>images/school-logo.png">
 <link rel="apple-touch-icon" sizes="76x76"    href="<?= $_rp ?>images/school-logo.png">
-<link rel="manifest"                          href="/ISNM/manifest.json">
+<link rel="manifest"                          href="<?= $_rp ?>manifest.json">
 <meta name="theme-color"              content="#1a237e">
 <meta name="msapplication-TileColor" content="#1a237e">
 <meta name="msapplication-TileImage" content="<?= $_rp ?>images/school-logo.png">

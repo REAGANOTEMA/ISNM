@@ -58,7 +58,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
      */
     function bootstrapStaffDashboard(array $roleKeywords = []) {
         if (session_status() === PHP_SESSION_NONE) {
-            ini_set('session.cookie_path', '/ISNM/');
+            ini_set('session.cookie_path', SESSION_COOKIE_PATH);
             session_start();
         }
 
