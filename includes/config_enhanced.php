@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.use_strict_mode', 1);
+    // ini_set('session.use_strict_mode', 1);
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         ini_set('session.cookie_secure', 1);
     }
@@ -44,7 +44,12 @@ try {
 
 // Enhanced global functions with database selection
 if (!function_exists('executeQuery')) {
-    function executeQuery($database, $sql, $params = [], $types = '') {
+    function executeQuery($database, $sql = '', $params = [], $types = '') {
+        // Backward compatibility: called as executeQuery($sql_string)
+        if (empty($sql) && is_string($database) && (strpos($database, 'SELECT') === 0 || strpos($database, 'INSERT') === 0 || strpos($database, 'UPDATE') === 0 || strpos($database, 'DELETE') === 0)) {
+            $sql = $database;
+            $database = 'staffs';
+        }
         return DatabaseConnection::executeQuery($database, $sql, $params, $types);
     }
 }

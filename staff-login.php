@@ -4,7 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.use_strict_mode', 1);
+    // Disabled strict_mode — it breaks CSRF token handoff between pages
+    // ini_set('session.use_strict_mode', 1);
     ini_set('session.cookie_path', SESSION_COOKIE_PATH);
     $https = false;
     if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
@@ -25,6 +26,7 @@ require_once __DIR__ . '/auth-service.php';
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+error_log("STAFF-LOGIN: SID=" . session_id() . " csrf=" . $_SESSION['csrf_token']);
 $auth_service = new AuthenticationService();
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
 if (!$requested_position && !empty($_SESSION['requested_position'])) {

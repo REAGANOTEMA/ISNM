@@ -21,7 +21,8 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.use_strict_mode', 1);
+    // Don't enable strict_mode — it rejects session IDs from prior page loads
+    // ini_set('session.use_strict_mode', 1);
     $https = false;
     if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
         $https = true;
@@ -54,8 +55,8 @@ if (($_GET['action'] ?? '') === 'check_student' || $_SERVER['REQUEST_METHOD'] ==
         ErrorHandler::renderDatabaseUnavailableError();
     }
     
-    if ($students_conn) $students_conn->close();
-    if ($staff_conn) $staff_conn->close();
+    // Don't close shared connections — DatabaseConnection caches them statically
+    // and closing them here would break subsequent requests within the same process.
 }
 
 $auth_service = new AuthenticationService();
@@ -282,6 +283,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+if ($action === 'staff_login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("AUTH-HANDLER: SID=" . session_id() . " COOKIE_PHPSESSID=" . ($_COOKIE['PHPSESSID'] ?? 'NONE') . " csrf_sess=" . substr($_SESSION['csrf_token'] ?? 'none', 0, 12) . " csrf_post=" . substr($_POST['csrf_token'] ?? 'none', 0, 12) . " sess_keys=" . implode(',', array_keys($_SESSION)));
+}
 
 // Logout requires POST to prevent CSRF logout attacks
 if ($action === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
