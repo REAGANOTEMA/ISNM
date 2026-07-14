@@ -7,6 +7,10 @@ $user_role = $_SESSION['role'] ?? '';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
 
 if ($conn) {
