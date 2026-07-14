@@ -4,6 +4,8 @@
  * Provides comprehensive error reporting and database diagnostics
  */
 
+if (class_exists('ErrorHandler', false)) return;
+
 require_once __DIR__ . '/../config/database.php';
 
 class ErrorHandler {
@@ -39,16 +41,24 @@ class ErrorHandler {
     
     public static function handleException($exception) {
         error_log("Exception: " . $exception->getMessage() . " in " . $exception->getFile() . " on line " . $exception->getLine());
+        error_log("Stack trace: " . $exception->getTraceAsString());
         
-        $isProduction = defined('APP_ENV') && APP_ENV === 'production';
-        
-        if (!$isProduction) {
-            echo "<pre>";
-            echo $exception->getMessage() . "\n";
-            echo $exception->getFile() . ":" . $exception->getLine() . "\n";
-            echo $exception->getTraceAsString();
-            echo "</pre>";
+        if (PHP_SAPI === 'cli') {
+            fwrite(STDERR, "Fatal: " . $exception->getMessage() . "\n");
+            exit(1);
         }
+
+        http_response_code(500);
+        if (ob_get_level()) ob_clean();
+        $msg = htmlspecialchars($exception->getMessage());
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
+        echo '<style>body{font-family:sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
+        echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:600px;text-align:center}';
+        echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b}a{color:#2563eb;text-decoration:none}</style></head>';
+        echo '<body><div class="card"><h2>Internal Server Error</h2>';
+        echo '<p>The system encountered an internal error. Our team has been notified.</p>';
+        echo '<p><a href="health-check.php">Run Health Check</a></p></div></body></html>';
+        exit(1);
     }
     
     public static function handleShutdown() {

@@ -22,19 +22,27 @@ register_shutdown_function(function () {
         $msg = htmlspecialchars($err['message']);
         $file = htmlspecialchars($err['file']);
         $line = (int)$err['line'];
-        $phpVer = phpversion();
+        error_log("FATAL: {$err['message']} in {$err['file']} on line {$err['line']}");
+        if (PHP_SAPI === 'cli') {
+            fwrite(STDERR, "FATAL: {$err['message']}\n");
+            exit(1);
+        }
         if (ob_get_level()) ob_clean();
+        http_response_code(500);
         echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
-        echo '<style>body{font-family:sans-serif;background:#fef2f2;padding:30px;color:#991b1b}';
-        echo '.card{background:#fff;border-radius:12px;padding:24px;border:1px solid #fecaca;max-width:700px;margin:40px auto}';
-        echo 'h2{color:#dc2626;margin:0 0 10px}pre{background:#fef2f2;padding:12px;border-radius:6px;overflow:auto;font-size:13px}</style></head>';
+        echo '<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
+        echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:600px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
+        echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b;line-height:1.6}a{color:#2563eb;text-decoration:none;font-weight:500}';
+        echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
         echo '<body><div class="card"><h2>Internal Server Error</h2>';
         echo '<p>The system encountered an internal error. Our team has been notified.</p>';
         if (defined('APP_DEBUG') && APP_DEBUG) {
-            echo '<p><strong>PHP Version:</strong> ' . $phpVer . '</p>';
-            echo '<pre>' . $msg . "\nFile: $file\nLine: $line" . '</pre>';
+            echo '<p style="font-size:12px;color:#999;text-align:left;background:#f8fafc;padding:12px;border-radius:6px;word-break:break-all">';
+            echo '<strong>' . $file . ':' . $line . '</strong><br>' . $msg . '</p>';
         }
-        echo '<p><a href="health-check.php" style="color:#2563eb">Run Health Check</a></p></div></body></html>';
+        echo '<a href="health-check.php" class="btn">Run Health Check</a>';
+        echo '<br><br><a href="../staff-login.php" style="font-size:13px">Back to Login</a>';
+        echo '</div></body></html>';
         exit;
     }
 });
@@ -166,11 +174,29 @@ if (!function_exists('bootstrapStaffDashboard')) {
             $user['last_name']  = $user['surname'];
         }
 
+        $staffConn    = @getStaffConnection();
+        $studentsConn = @getStudentsConnection();
+        $websiteConn  = @getWebsiteConnection();
+
+        if (!$staffConn) {
+            if (ob_get_level()) ob_clean();
+            http_response_code(503);
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Service Unavailable</title>';
+            echo '<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
+            echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:600px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
+            echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b;line-height:1.6}';
+            echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
+            echo '<body><div class="card"><h2>Database Connection Failed</h2>';
+            echo '<p>The system is unable to connect to the staff database. Please try again in a few moments, or contact the system administrator.</p>';
+            echo '<a href="../staff-login.php" class="btn">Back to Login</a></div></body></html>';
+            exit;
+        }
+
         return [
             'auth'     => $auth_service,
-            'staff'    => getStaffConnection(),
-            'students' => getStudentsConnection(),
-            'website'  => getWebsiteConnection(),
+            'staff'    => $staffConn,
+            'students' => $studentsConn,
+            'website'  => $websiteConn,
             'user'     => $user,
         ];
     }

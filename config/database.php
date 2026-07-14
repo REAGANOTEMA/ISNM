@@ -1,4 +1,4 @@
-﻿﻿<?php
+<?php
 /**
  * ISNM database configuration.
  * Production credentials are loaded from .env and should not be committed.
