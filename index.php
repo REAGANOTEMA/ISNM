@@ -294,57 +294,33 @@ include_once 'shared/_header.php';
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6 animate-on-scroll">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
               <div class="feature-icon">
                 <i class="fas fa-award"></i>
               </div>
               <h4>Accredited Programs</h4>
               <p>Fully accredited by Uganda Nurses and Midwives Council and Ministry of Education & Sports</p>
+              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-sitemap"></i> View Organogram</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-1">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
               <div class="feature-icon icon-green">
                 <i class="fas fa-user-md"></i>
               </div>
               <h4>Expert Faculty</h4>
               <p>Learn from experienced healthcare professionals and dedicated educators</p>
+              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-users"></i> Meet Our Team</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-2">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
               <div class="feature-icon icon-blue">
                 <i class="fas fa-hospital"></i>
               </div>
               <h4>Clinical Placement</h4>
               <p>Hands-on training at 6+ major hospitals and healthcare facilities across Uganda</p>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-3">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
-              <div class="feature-icon icon-gold">
-                <i class="fas fa-book-open"></i>
-              </div>
-              <h4>Modern Curriculum</h4>
-              <p>Up-to-date curriculum aligned with international healthcare education standards</p>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-4">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
-              <div class="feature-icon icon-purple">
-                <i class="fas fa-users"></i>
-              </div>
-              <h4>Small Class Sizes</h4>
-              <p>Personalized attention with manageable student-to-faculty ratios</p>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-5">
-            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
-              <div class="feature-icon icon-red">
-                <i class="fas fa-hand-holding-heart"></i>
-              </div>
-              <h4>Community Impact</h4>
-              <p>Graduates serving communities across Uganda and beyond since 2009</p>
+              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-sitemap"></i> View Organogram</a>
             </div>
           </div>
         </div>
@@ -554,7 +530,7 @@ include_once 'shared/_header.php';
     </section>
 
     <!-- Call to Action Section -->
-    <section class="cta-section py-5 bg-primary text-white">
+    <section class="cta-section py-5">
       <div class="cta-bg-shapes">
         <div class="cta-shape cta-shape-1"></div>
         <div class="cta-shape cta-shape-2"></div>
@@ -563,8 +539,8 @@ include_once 'shared/_header.php';
       <div class="container text-center position-relative">
         <div class="animate-on-scroll">
           <span class="tag tag-gold"><i class="fas fa-rocket"></i> Get Started</span>
-          <h2 class="mt-3 mb-4">Ready to Start Your Healthcare Journey?</h2>
-          <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
+          <h2 class="mt-3 mb-4" style="color:#fff !important">Ready to Start Your Healthcare Journey?</h2>
+          <p class="lead mb-4" style="color:rgba(255,255,255,0.9) !important">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
           <div class="cta-buttons">
             <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3 cta-pulse">
               <span class="shine"></span>
@@ -580,5 +556,35 @@ include_once 'shared/_header.php';
     </section>
 
   </main>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var counters = document.querySelectorAll('.stat-number[data-count]');
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var target = parseInt(el.getAttribute('data-count'), 10);
+          var suffix = el.textContent.replace(/[0-9]/g, '') || '';
+          var duration = 2000;
+          var start = 0;
+          var startTime = null;
+          function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var progress = Math.min((timestamp - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            var current = Math.floor(eased * target);
+            el.textContent = current.toLocaleString() + suffix;
+            if (progress < 1) requestAnimationFrame(animate);
+          }
+          el.textContent = '0' + suffix;
+          requestAnimationFrame(animate);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.3 });
+    counters.forEach(function(c) { observer.observe(c); });
+  });
+  </script>
 
   <?php include('shared/_footer.php'); ?>

@@ -145,25 +145,18 @@ include_once __DIR__ . '/../includes/functions.php';
             <i class="fas fa-envelope"></i> Contact
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="staff-login.php">
-            <i class="fas fa-sign-in-alt"></i> Staff Login
-          </a>
-        </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-sign-in-alt"></i> Login
+            <i class="fas fa-sign-in-alt"></i> Portal
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
-            <li><a class="dropdown-item" href="student-login.php">
-              <i class="fas fa-user-graduate"></i> Student Login
-            </a></li>
             <li><a class="dropdown-item" href="staff-login.php">
               <i class="fas fa-user-tie"></i> Staff Login
             </a></li>
-            <li><a class="dropdown-item" href="student-directory.php">
-              <i class="fas fa-address-book"></i> Student Directory
+            <li><a class="dropdown-item" href="student-login.php">
+              <i class="fas fa-user-graduate"></i> Student Login
             </a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="application.php">
               <i class="fas fa-edit"></i> Apply Now
             </a></li>

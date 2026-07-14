@@ -5043,128 +5043,130 @@ h3 {
    Ensure all text is readable on every section
    ═══════════════════════════════════════════════════════ */
 
-/* ── Dark gradient sections: white text ── */
+/* ── Dark gradient sections: dark background, white text ── */
 .hero-header,
 .hero-section,
-.page-header,
-.cta-section {
+.page-header {
   background: var(--gradient-primary) !important;
   background-image: var(--gradient-primary) !important;
 }
 
-.hero-header *,
+/* Text inside dark hero/page-header sections → white */
 .hero-header h1, .hero-header h2, .hero-header h3, .hero-header h4, .hero-header h5,
 .hero-header p, .hero-header span, .hero-header a,
-.hero-section *, .hero-section h1, .hero-section h2, .hero-section h3,
+.hero-section h1, .hero-section h2, .hero-section h3,
 .hero-section p, .hero-section span, .hero-section a,
-.page-header *, .page-header h1, .page-header h2, .page-header h3, .page-header h4, .page-header h5,
-.page-header p, .page-header span, .page-header a,
-.cta-section *, .cta-section h2, .cta-section h3, .cta-section p, .cta-section span, .cta-section a {
+.page-header h1, .page-header h2, .page-header h3, .page-header h4, .page-header h5,
+.page-header p, .page-header span, .page-header a {
   color: #fff !important;
 }
 
-.hero-header a.btn,
-.hero-header .btn,
-.hero-section a.btn,
-.hero-section .btn,
-.page-header a.btn,
-.page-header .btn,
-.cta-section a.btn,
-.cta-section .btn {
-  color: #fff !important;
-  text-decoration: none !important;
-}
-
-/* ── Stats section inside hero: always white text ── */
-.hero-stats, .hero-stats *, .hero-stats p, .hero-stats span,
-.hero-stats h3, .hero-stats h4, .hero-stats h5, .hero-stats .stat-number,
-.hero-stats .stat-label, .hero-stats a {
+/* ── CTA section: dark gradient bg + readable text + visible buttons ── */
+.cta-section {
+  background: linear-gradient(135deg, #0d1442 0%, #1a237e 50%, #3949ab 100%) !important;
   color: #fff !important;
 }
-
-.stats-section .stat-card, .stats-section .stat-card * {
+.cta-section h1, .cta-section h2, .cta-section h3, .cta-section h4,
+.cta-section p, .cta-section span, .cta-section .lead {
   color: #fff !important;
 }
-
-.stat-card { color: #fff !important; }
-.stat-card p, .stat-card span, .stat-card h3, .stat-card h4, .stat-card h5 {
+.cta-section .tag {
   color: #fff !important;
+  background: rgba(255,215,0,0.2) !important;
+  border: 1px solid rgba(255,215,0,0.4) !important;
 }
 
-/* Colored stat backgrounds — white text */
+/* CTA buttons: keep their own 3D styling intact — do NOT override btn-3d colors */
+
+/* ── Hero stats: white text on colored stat items ── */
+.hero-stats .stat-number,
+.hero-stats .stat-label,
+.hero-stats .stat-item {
+  color: #fff !important;
+}
 .stat-green, .stat-blue, .stat-chocolate, .stat-red, .stat-orange {
   color: #fff !important;
 }
-.stat-green *, .stat-blue *, .stat-chocolate *, .stat-red *, .stat-orange * {
+.stat-green .stat-number, .stat-green .stat-label,
+.stat-blue .stat-number, .stat-blue .stat-label,
+.stat-chocolate .stat-number, .stat-chocolate .stat-label,
+.stat-red .stat-number, .stat-red .stat-label,
+.stat-orange .stat-number, .stat-orange .stat-label {
   color: #fff !important;
 }
 
-/* ── Light sections: dark text (override inherited white) ── */
-.about-section, .features-section, .mission-section,
-.services-section, .team-section, .gallery-section,
-.news-section, .faq-section, .contact-info-section,
+/* ── Quick stats cards section: dark text on white card bg ── */
+.stats-section {
+  background: #f8fafc !important;
+}
+.stats-section .stat-card {
+  background: #fff !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+}
+.stats-section .stat-card .stat-number {
+  color: #1a237e !important;
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+}
+.stats-section .stat-card .stat-label {
+  color: #64748b !important;
+}
+.stats-section .stat-card .stat-card-icon {
+  color: #fff !important;
+  background: #1a237e !important;
+}
+.stats-section .stat-card .stat-card-icon.icon-green {
+  background: #059669 !important;
+}
+.stats-section .stat-card .stat-card-icon.icon-blue {
+  background: #1E88E5 !important;
+}
+.stats-section .stat-card .stat-card-icon.icon-gold {
+  background: #FFA000 !important;
+}
+
+/* ── Light sections: dark text (NO inherited white) ── */
+.programs-section, .about-section, .why-choose-section,
+.facilities-section, .testimonials-section, .news-section,
+.contact-info-section, .mission-section, .services-section,
 .section-light, .bg-white, .bg-light {
-  color: #333 !important;
+  color: #1e293b !important;
 }
-.about-section h1, .about-section h2, .about-section h3, .about-section h4, .about-section h5,
-.about-section p, .about-section span, .about-section li, .about-section a,
-.features-section h1, .features-section h2, .features-section h3, .features-section h4,
-.features-section p, .features-section span, .features-section li,
-.mission-section h1, .mission-section h2, .mission-section h3, .mission-section p,
-.services-section h1, .services-section h2, .services-section h3, .services-section h4,
-.services-section p, .services-section span, .services-section li,
-.team-section h1, .team-section h2, .team-section h3, .team-section p,
-.gallery-section h1, .gallery-section h2, .gallery-section h3, .gallery-section p,
-.news-section h1, .news-section h2, .news-section h3, .news-section p, .news-section a,
-.faq-section h1, .faq-section h2, .faq-section h3, .faq-section h4, .faq-section p,
-.contact-info-section h1, .contact-info-section h2, .contact-info-section h3, .contact-info-section p {
-  color: #333 !important;
-}
-
-/* ── All buttons: ensure text is always visible ── */
-.btn, .btn-3d, .btn-gold, .btn-primary {
-  color: #fff !important;
+.programs-section h1, .programs-section h2, .programs-section h3, .programs-section h4,
+.programs-section p, .programs-section span, .programs-section li, .programs-section a,
+.programs-section .section-title, .programs-section .section-subtitle,
+.about-section h1, .about-section h2, .about-section h3, .about-section h4,
+.about-section p, .about-section span, .about-section li,
+.about-section .section-title, .about-section .about-text,
+.why-choose-section h1, .why-choose-section h2, .why-choose-section h3, .why-choose-section h4,
+.why-choose-section p, .why-choose-section span,
+.why-choose-section .section-title, .why-choose-section .section-subtitle,
+.facilities-section h1, .facilities-section h2, .facilities-section h3, .facilities-section h4,
+.facilities-section p, .facilities-section span,
+.testimonials-section h1, .testimonials-section h2, .testimonials-section h3,
+.testimonials-section p, .testimonials-section span,
+.news-section h1, .news-section h2, .news-section h3, .news-section p, .news-section a {
+  color: #1e293b !important;
 }
 
-/* Button hover states — keep text visible */
-.btn:hover, .btn:focus, .btn-3d:hover, .btn-3d:focus {
-  color: #fff !important;
+/* ── Buttons: let 3D button system control its own colors ── */
+/* Do NOT override .btn-3d color — each variant sets its own */
+
+/* Tags/badges on light backgrounds */
+.tag {
+  color: #1a237e !important;
+}
+.tag-primary {
+  background: rgba(26,35,126,0.1) !important;
+  color: #1a237e !important;
+}
+.tag-gold {
+  background: rgba(255,160,0,0.12) !important;
+  color: #B8860B !important;
 }
 
-/* Yellow/gold buttons — dark text on gold bg */
-.btn-yellow, .btn-gold {
-  color: #1a1a2e !important;
-  text-shadow: none !important;
-}
-.btn-yellow:hover, .btn-yellow:focus, .btn-gold:hover, .btn-gold:focus {
-  color: #1a1a2e !important;
-}
-
-/* White buttons — dark text on white bg */
-.btn-white, .btn-outline-white {
-  color: #1A237E !important;
-}
-.btn-white:hover, .btn-white:focus, .btn-outline-white:hover, .btn-outline-white:focus {
-  color: #1A237E !important;
-}
-
-/* Glass / transparent buttons — white text */
-.btn-glass, .btn-outline {
-  color: #fff !important;
-}
-.btn-glass:hover, .btn-glass:focus, .btn-outline:hover, .btn-outline:focus {
-  color: #fff !important;
-}
-
-/* ── Tag badges — white text on colored backgrounds ── */
-.tag-badge, .badge, .category-badge, .level-badge {
-  color: #fff !important;
-}
-.tag-badge *, .badge *, .category-badge *, .level-badge * {
-  color: #fff !important;
-}
-
-/* ── Navigation & header links inside dark sections ── */
+/* ── Navigation & header links inside hero sections ── */
 .hero-header .navbar a,
 .hero-header .nav-link,
 .hero-section .navbar a,
@@ -5182,8 +5184,8 @@ h3 {
   color: #FFD700 !important;
 }
 
-/* ── Footer: light text on dark background ── */
-.footer, .footer *, .footer p, .footer span, .footer a, .footer h3, .footer h4, .footer h5,
+/* ── Footer: white text on dark background ── */
+.footer, .footer p, .footer span, .footer a, .footer h3, .footer h4, .footer h5,
 .footer-links a, .footer-contact p, .footer-contact a {
   color: #fff !important;
 }
@@ -5191,29 +5193,11 @@ h3 {
   color: #FFD700 !important;
 }
 
-/* ── Contact form labels / text inside dark sections ── */
-.cta-section label, .cta-section input, .cta-section textarea, .cta-section select {
-  color: #fff !important;
-}
-.cta-section input::placeholder, .cta-section textarea::placeholder {
-  color: rgba(255,255,255,0.7) !important;
-}
-
-/* ── Accordion items inside dark sections ── */
-.faq-section .accordion-button,
-.faq-section .accordion-button:not(.collapsed) {
-  color: #333 !important;
-}
-.faq-section .accordion-button::after {
-  filter: invert(0.3);
-}
-
-/* ── Table text in light sections ── */
-.table, .table th, .table td, .table thead th {
-  color: #333 !important;
-}
-
 /* ── Animate-on-scroll: ensure visibility when JS triggers ── */
+.animate-on-scroll {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
 .animate-on-scroll.visible {
   opacity: 1 !important;
 }
@@ -5221,23 +5205,7 @@ h3 {
   color: inherit !important;
 }
 
-/* ── Social links in dark sections ── */
-.hero-header .social-links a, .hero-section .social-links a, .page-header .social-links a {
-  color: #fff !important;
-}
-.hero-header .social-links a:hover, .hero-section .social-links a:hover, .page-header .social-links a:hover {
-  color: #FFD700 !important;
-}
-
-/* ── Map section — white text on map overlay ── */
-.map-section, .map-section * {
-  color: #333 !important;
-}
-.map-info, .map-info h3, .map-info p, .map-info span {
-  color: #333 !important;
-}
-
-/* ── Staff Login button (navigation CTA) ── */
+/* ── Staff Login button in navbar ── */
 .navbar .btn-staff-login,
 .navbar .btn-outline-light {
   color: #FFD700 !important;
