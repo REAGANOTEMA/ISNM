@@ -289,15 +289,15 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
 
     input.addEventListener('input', function() {
       clearTimeout(_timer);
-      _timer = setTimeout(doSearch, 350);
+      _timer = setTimeout(function() { doSearch(1); }, 350);
     });
 
     input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(_timer); doSearch(); }
+      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(_timer); doSearch(1); }
     });
 
-    document.getElementById('stuSearchLevel').addEventListener('change', function() { doSearch(); });
-    document.getElementById('stuSearchGender').addEventListener('change', function() { doSearch(); });
+    document.getElementById('stuSearchLevel').addEventListener('change', function() { doSearch(1); });
+    document.getElementById('stuSearchGender').addEventListener('change', function() { doSearch(1); });
   });
 })();
 </script>
