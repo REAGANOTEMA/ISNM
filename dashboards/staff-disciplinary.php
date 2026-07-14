@@ -1,9 +1,8 @@
 <?php
 $pageTitle = 'Staff Disciplinary';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hr','manager','director','principal']);
-require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
+$ctx = bootstrapStaffDashboard(['hr','manager','director','principal']);
+$conn = $ctx['staff'];
 
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 

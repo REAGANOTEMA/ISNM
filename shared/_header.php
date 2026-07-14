@@ -146,8 +146,8 @@ include_once __DIR__ . '/../includes/functions.php';
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="organogram.php">
-            <i class="fas fa-sitemap"></i> Portal
+          <a class="nav-link" href="staff-login.php">
+            <i class="fas fa-sign-in-alt"></i> Staff Login
           </a>
         </li>
         <li class="nav-item dropdown">

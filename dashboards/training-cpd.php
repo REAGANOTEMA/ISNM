@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hr','manager','director','principal','head']);
-require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
+$ctx = bootstrapStaffDashboard(['hr','manager','director','principal','head']);
+$conn = $ctx['staff'];
 
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 

@@ -236,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = (float)($_POST['unit_price'] ?? 0); $reorder = (int)($_POST['reorder_level'] ?? 0);
         if ($name && $qty > 0) {
             $st=$staffConn->prepare("INSERT INTO inventory_items (item_name, category, quantity, unit, unit_cost, reorder_level, status) VALUES (?,?,?,?,?,?,'in_stock')");
-            if($st){$st->bind_param('ssisddsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Stock item added.';}
+            if($st){$st->bind_param('ssidsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Stock item added.';}
         }
         header('Location: school-bursar.php?page=inventory'); exit;
     }

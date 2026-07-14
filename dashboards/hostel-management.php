@@ -1,11 +1,9 @@
 <?php
 $pageTitle = 'Hostel Management';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
-require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
-$conn2 = null;
-try { $conn2 = getDatabaseConnection('students'); } catch (Exception $e) { $conn2 = null; }
+$ctx = bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
+$conn = $ctx['staff'];
+$conn2 = $ctx['students'] ?? null;
 
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];

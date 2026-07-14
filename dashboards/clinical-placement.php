@@ -4,8 +4,8 @@ require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 $ctx = bootstrapStaffDashboard(['nursing','midwifery','head','lecturer','director']);
 $user = $ctx['user'];
-$staffConn = getStaffConnection();
-$studentsConn = getStudentsConnection();
+$staffConn = $ctx['staff'];
+$studentsConn = $ctx['students'];
 $conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Clinical Placement';
 

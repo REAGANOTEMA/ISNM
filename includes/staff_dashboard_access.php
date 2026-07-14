@@ -132,7 +132,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
                             }
                         }
                     }
-                } catch (Exception $e) { error_log('staff_dashboard_access role refresh: ' . $e->getMessage()); }
+                } catch (\Throwable $e) { error_log('staff_dashboard_access role refresh: ' . $e->getMessage()); }
             }
         }
 

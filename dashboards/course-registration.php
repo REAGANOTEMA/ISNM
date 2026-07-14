@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'academics', 'secretary']);
 $user = $ctx['user'];
-$staffConn = getStaffConnection();
-$studentsConn = getStudentsConnection();
+$staffConn = $ctx['staff'];
+$studentsConn = $ctx['students'];
 $conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Course Registration';
 

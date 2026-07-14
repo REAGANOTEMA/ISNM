@@ -6,7 +6,7 @@ $pageTitle = 'Communications';
 $user_id = (int)($_SESSION['user_id'] ?? 0);
 $user_name = $_SESSION['full_name'] ?? 'Staff';
 
-$conn = getStaffConnection();
+$conn = $ctx['staff'];
 
 $inboxCount = 0;
 $sentCount = 0;

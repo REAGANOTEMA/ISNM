@@ -51,22 +51,48 @@ class ErrorHandler {
         http_response_code(500);
         if (ob_get_level()) ob_clean();
         $msg = htmlspecialchars($exception->getMessage());
+        $file = htmlspecialchars($exception->getFile());
+        $line = (int)$exception->getLine();
         echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
-        echo '<style>body{font-family:sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
-        echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:600px;text-align:center}';
-        echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b}a{color:#2563eb;text-decoration:none}</style></head>';
+        echo '<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
+        echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:650px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
+        echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b;line-height:1.6}a{color:#2563eb;text-decoration:none;font-weight:500}';
+        echo '.err{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;text-align:left;margin:16px 0;font-size:12px;color:#9a3412;font-family:monospace;word-break:break-all}';
+        echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
         echo '<body><div class="card"><h2>Internal Server Error</h2>';
-        echo '<p>The system encountered an internal error. Our team has been notified.</p>';
+        echo '<p>An unexpected error occurred. Details below:</p>';
+        echo '<div class="err"><strong>Error:</strong> ' . $msg . '<br><br><strong>Location:</strong> ' . $file . ':' . $line . '</div>';
         $base = (basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'dashboards') ? '..' : '.';
-        echo '<p><a href="' . $base . '/health-check.php">Run Health Check</a></p></div></body></html>';
+        echo '<a href="' . $base . '/health-check.php" class="btn">Run Health Check</a>';
+        echo '<br><br><a href="' . $base . '/staff-login.php" style="font-size:13px">Back to Login</a>';
+        echo '</div></body></html>';
         exit(1);
     }
     
     public static function handleShutdown() {
         $error = error_get_last();
-        
         if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
             error_log("Fatal Error: " . $error['message'] . " in " . $error['file'] . " on line " . $error['line']);
+            if (PHP_SAPI !== 'cli') {
+                if (ob_get_level()) ob_clean();
+                http_response_code(500);
+                $base = (basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'dashboards') ? '..' : '.';
+                echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
+                echo '<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#fef2f2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
+                echo '.card{background:#fff;border-radius:12px;padding:32px;border:1px solid #fecaca;max-width:650px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
+                echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b;line-height:1.6}';
+                echo '.err{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;text-align:left;margin:16px 0;font-size:12px;color:#9a3412;font-family:monospace;word-break:break-all}';
+                echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
+                echo '<body><div class="card"><h2>Internal Server Error</h2>';
+                echo '<p>An unexpected error occurred. Details below:</p>';
+                $msg = htmlspecialchars($error['message']);
+                $file = htmlspecialchars($error['file']);
+                $line = (int)$error['line'];
+                echo '<div class="err"><strong>Error:</strong> ' . $msg . '<br><br><strong>Location:</strong> ' . $file . ':' . $line . '</div>';
+                echo '<a href="' . $base . '/health-check.php" class="btn">Run Health Check</a>';
+                echo '<br><br><a href="' . $base . '/staff-login.php" style="font-size:13px">Back to Login</a>';
+                echo '</div></body></html>';
+            }
         }
     }
     

@@ -464,7 +464,7 @@ class AuthenticationService {
                         }
                     }
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 // Keep session valid even if role_id can't be resolved
                 error_log('RBAC role_id resolve failed: ' . $e->getMessage());
             }
@@ -482,7 +482,7 @@ class AuthenticationService {
                     $s2  = $conn->prepare("INSERT INTO staff_activity_log (staff_id,activity_type,activity_description,module_accessed,ip_address,user_agent) VALUES (?,'Login','User logged in successfully','authentication',?,?)");
                     if ($s2) { $s2->bind_param('iss', $user['id'], $ip, $ua); if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); }; $s2->close(); }
                 }
-            } catch (Exception $e) { error_log('Session log skipped: ' . $e->getMessage()); }
+            } catch (\Throwable $e) { error_log('Session log skipped: ' . $e->getMessage()); }
         }
         return true;
     }
@@ -658,7 +658,7 @@ class AuthenticationService {
             $row = $s->get_result()->fetch_assoc();
             $s->close();
             return $row['email'] ?? null;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('getStaffEmailForRole: ' . $e->getMessage());
             return null;
         }
@@ -757,7 +757,7 @@ class AuthenticationService {
                         }
                     }
                 }
-            } catch (Exception $e) { error_log('getDashboardRoute DB: ' . $e->getMessage()); }
+            } catch (\Throwable $e) { error_log('getDashboardRoute DB: ' . $e->getMessage()); }
         }
         $exact = $this->getDashboardRouteFromKey($role);
         if ($exact) return $exact;
@@ -822,7 +822,7 @@ class AuthenticationService {
                     if (empty($intakePeriod) && !empty($match['intake_period'])) $intakePeriod = $match['intake_period'];
                     if (empty($email)        && !empty($match['email']))         $email        = $match['email'];
                 }
-            } catch (Exception $e) { error_log('Student data loader: ' . $e->getMessage()); }
+            } catch (\Throwable $e) { error_log('Student data loader: ' . $e->getMessage()); }
         }
 
         [$firstName, $surname] = $this->splitFullName($fullName);
@@ -835,7 +835,7 @@ class AuthenticationService {
             $s->bind_param('sssssssssss', $index, $index, $firstName, $surname, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod);
             if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level]];
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('createStudentAccount error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to create student account. Please try again or contact an administrator.'];
         }
@@ -877,7 +877,7 @@ class AuthenticationService {
             $s->bind_param('ssssiss', $staffData['full_name'], $staffData['email'], $staffData['phone'], $hash, $rid, $staffData['position'], $staffData['department']);
             if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             return ['success' => true, 'message' => 'Staff account created successfully'];
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('createStaffAccount error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to create staff account. Please try again or contact an administrator.'];
         }

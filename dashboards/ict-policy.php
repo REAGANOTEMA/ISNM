@@ -21,7 +21,7 @@ try {
         $r = $conn_ict->query("SELECT * FROM software_inventory ORDER BY software_name");
         if ($r) while ($row = $r->fetch_assoc()) $software[] = $row;
     }
-} catch (Exception $e) { $software = []; }
+} catch (\Throwable $e) { $software = []; }
 $pageTitle = 'ICT Policy';
 ?><!DOCTYPE html>
 <html lang="en">
