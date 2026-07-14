@@ -521,7 +521,7 @@ if (function_exists('handleWebsiteSubmissionsAction')) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: school-principal.php'); exit; }
+    if (!verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: school-principal.php'); exit; }
     $act = $_POST['action'];
     if ($act === 'publish_notice' && $students && $staff) {
         $t = trim($_POST['notice_title']??''); $c = trim($_POST['notice_content']??''); $a = trim($_POST['notice_audience']??'All');
@@ -1632,6 +1632,17 @@ if ($staff) {
 })();
 </script>
 
+<script>
+document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+        form.appendChild(input);
+    }
+});
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

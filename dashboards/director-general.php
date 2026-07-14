@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // â”€â”€ News Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=news'); exit;
     }
@@ -434,7 +434,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
 
 // ── Events Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['ev_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=events'); exit;
     }
@@ -518,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
 
 // ── Testimonials Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['tm_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=testimonials'); exit;
     }
@@ -603,7 +603,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action
 
 // ── FAQ Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['faq_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=faqs'); exit;
     }
@@ -691,7 +691,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
 
 // ── Website Settings POST handler ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['ws_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=web-settings'); exit;
     }
@@ -728,7 +728,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -760,7 +760,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -812,7 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 
 // â”€â”€ CRUD POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    if (!verifyCsrfToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -3472,6 +3472,17 @@ function switchToSection(section) {
 }
 </script>
 
+<script>
+document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+        form.appendChild(input);
+    }
+});
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

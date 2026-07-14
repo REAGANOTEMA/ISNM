@@ -454,6 +454,17 @@ function getSemesters() {
         endif;
         ?>
     </div>
+<script>
+document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+        form.appendChild(input);
+    }
+});
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

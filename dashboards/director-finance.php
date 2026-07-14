@@ -391,7 +391,7 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 
 // -- POST Handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-finance.php'); exit; }
+    if (!verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-finance.php'); exit; }
     $act = $_POST['action'];
     if ($act === 'add_expense' && $staff) {
         $cat=$_POST['category']??'';
@@ -2181,4 +2181,15 @@ function approvalActionModal(id,tbl,st){
 function exportTable(id){ var el=document.getElementById(id);if(!el)return; var csv=[];var rows=el.querySelectorAll('tr');rows.forEach(function(r){var cols=[];r.querySelectorAll('th,td').forEach(function(c){cols.push('"'+c.textContent.trim()+'"');});csv.push(cols.join(','));});var blob=new Blob([csv.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finance_report.csv';a.click(); }
 </script>
 </div>
+<script>
+document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+        form.appendChild(input);
+    }
+});
+</script>
 </body></html>

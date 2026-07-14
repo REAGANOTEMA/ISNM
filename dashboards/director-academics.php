@@ -210,7 +210,7 @@ if ($ajax && $ajaxSid > 0) {
 
 // â”€â”€ POST â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-academics.php'); exit; }
+    if (!verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-academics.php'); exit; }
     $action = $_POST['action'] ?? '';
     
     // Safe prepared statement helper
@@ -1425,6 +1425,17 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 })();
 </script>
 
+<script>
+document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+        form.appendChild(input);
+    }
+});
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
