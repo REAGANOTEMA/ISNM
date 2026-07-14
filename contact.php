@@ -1,4 +1,8 @@
-<?php include_once 'shared/_header.php'; ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+include_once 'shared/_header.php';
+?>
 
   <main>
     <!-- Hero Page Header -->
@@ -16,19 +20,28 @@
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Contact</li>
+      </ol>
+    </nav>
+
     <!-- Contact Information Section -->
-    <section class="contact-info-section py-5">
+    <section class="contact-info-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-address-book"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-envelope"></i> Get in Touch</span>
           <h2 class="section-title">Our Contact Information</h2>
+          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">We're here to help and answer any questions you might have</p>
         </div>
         
         <div class="contact-grid">
-          <div class="contact-card animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="contact-card animate-slide-up animate-delay-1" style="animation-delay: 0.1s; cursor:pointer;">
             <div class="contact-icon">
               <i class="fas fa-map-marker-alt"></i>
             </div>
@@ -41,7 +54,7 @@
             </div>
           </div>
           
-          <div class="contact-card animate-slide-up" style="animation-delay: 0.2s;">
+          <div class="contact-card animate-slide-up animate-delay-2" style="animation-delay: 0.2s; cursor:pointer;">
             <div class="contact-icon">
               <i class="fas fa-phone"></i>
             </div>
@@ -54,7 +67,7 @@
             </div>
           </div>
           
-          <div class="contact-card animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="contact-card animate-slide-up animate-delay-3" style="animation-delay: 0.3s; cursor:pointer;">
             <div class="contact-icon">
               <i class="fas fa-envelope"></i>
             </div>
@@ -66,7 +79,7 @@
             </div>
           </div>
           
-          <div class="contact-card animate-slide-up" style="animation-delay: 0.4s;">
+          <div class="contact-card animate-slide-up animate-delay-4" style="animation-delay: 0.4s; cursor:pointer;">
             <div class="contact-icon">
               <i class="fas fa-globe"></i>
             </div>
@@ -82,20 +95,22 @@
     </section>
 
     <!-- Contact Form Section -->
-    <section class="contact-form-section py-5">
+    <section class="contact-form-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-paper-plane"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-paper-plane"></i> Send a Message</span>
           <h2 class="section-title">Send Us a Message</h2>
+          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">Fill out the form below and we'll get back to you as soon as possible</p>
         </div>
         
         <div class="row">
           <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
             <div class="contact-form-container animate-fade-in">
-              <form id="contactForm" method="POST" action="process-contact.php">
+              <form id="contactForm" class="form-premium" method="POST" action="process-contact.php">
                 <div class="form-section">
                   <div class="section-title">
                     <i class="fas fa-user me-2"></i>
@@ -168,6 +183,7 @@
                   </div>
                 </div>
 
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="form-footer text-center">
                   <button type="submit" class="btn-3d btn-yellow btn-3d-block">
                     <span class="shine"></span>
@@ -183,19 +199,21 @@
     </section>
 
     <!-- Mobile-Friendly Office Hours Section -->
-    <section class="office-hours-section py-5">
+    <section class="office-hours-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-clock"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-clock"></i> Office Hours</span>
           <h2 class="section-title">Office Hours</h2>
+          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">When you can visit us or call</p>
         </div>
         
         <div class="row">
           <div class="col-lg-6 col-md-12 mb-4">
-            <div class="hours-card animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="hours-card animate-slide-up animate-delay-1" style="animation-delay: 0.1s;">
               <div class="card-header">
                 <div class="office-icon">
                   <i class="fas fa-building"></i>
@@ -229,7 +247,7 @@
           </div>
           
           <div class="col-lg-6 col-md-12 mb-4">
-            <div class="hours-card animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="hours-card animate-slide-up animate-delay-2" style="animation-delay: 0.2s;">
               <div class="card-header">
                 <div class="office-icon">
                   <i class="fas fa-graduation-cap"></i>
@@ -266,13 +284,15 @@
     </section>
 
     <!-- Mobile-Friendly Map Section -->
-    <section class="map-section py-5">
+    <section class="map-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-map-marked-alt"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-map-marked-alt"></i> Find Us</span>
           <h2 class="section-title">Find Us</h2>
+          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">Located in the heart of Iganga Town, Eastern Uganda</p>
         </div>
         
@@ -397,7 +417,7 @@
 
 
   <!-- Apply Now & Donate CTA Section -->
-  <section class="cta-section py-5 bg-primary text-white">
+  <section class="cta-section py-5 bg-primary text-white animate-on-scroll">
     <div class="container text-center">
       <h2 class="mb-4">Ready to Join ISNM?</h2>
       <p class="lead mb-4">Apply now or support our mission to train the next generation of healthcare professionals</p>

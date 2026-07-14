@@ -2524,6 +2524,59 @@ h3 {
 .contact-info-section { background: var(--isnm-yellow-bg, #fef9e7); }
 .py-5, .py-4, .py-3 { background: transparent !important; }
 .cta-section { background: var(--gradient-primary) !important; }
+
+.btn-isnm {
+  background: linear-gradient(135deg, #1A237E, #3949AB);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(26,35,126,0.25);
+}
+.btn-isnm:hover {
+  background: linear-gradient(135deg, #3949AB, #5C6BC0);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,35,126,0.35);
+}
+
+.btn-outline-isnm {
+  border: 2px solid #1A237E;
+  color: #1A237E;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-outline-isnm:hover {
+  background: #1A237E;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,35,126,0.25);
+}
+
+.btn-outline-isnm-light {
+  border: 2px solid rgba(255,255,255,0.6);
+  color: #fff;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-outline-isnm-light:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-color: #fff;
+  transform: translateY(-2px);
+}
+
 .programs-overview h2,
 .programs-overview p {
   color: #1a1a1a !important;
@@ -2715,7 +2768,7 @@ h3 {
 .cta-section {
   background: var(--gradient-primary);
   color: #fff;
-  padding: 3rem 0;
+  padding: 4rem 0;
 }
 
 .cta-section h2,
@@ -2726,18 +2779,14 @@ h3 {
   z-index: 10;
 }
 
-.cta-buttons .btn {
-  padding: 12px 30px;
-  font-weight: 500;
-  margin: 5px;
-  border-radius: 50px;
-  transition: all 0.3s ease;
-  background: #1e3a8a !important;
-  color: #1a1a1a;
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+.cta-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
   position: relative;
   z-index: 10;
-  border: 2px solid #1e3a8a;
+}
 }
 
 .cta-buttons .btn:hover {
@@ -4636,6 +4685,357 @@ h3 {
   .slider-wrapper { height: 260px; }
   .slider-btn { width: 30px; height: 30px; font-size: 0.8rem; }
   .indicator { width: 8px; height: 8px; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPREHENSIVE BUTTON & TITLE FIXES — All Public Pages
+   Ensures NO white-on-white, NO invisible buttons/titles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Section Titles — Always Dark & Visible ── */
+.section-title,
+.section-header h2,
+.page-title {
+  color: #0f172a !important;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 800;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #FFD700, #F59E0B);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+/* ── Subtitles — Always Visible Dark Gray ── */
+.section-subtitle,
+.section-header p,
+.page-subtitle,
+.section-header .lead {
+  color: #475569 !important;
+}
+
+/* ── CTA Section — White Text on Dark Blue ── */
+.cta-section h2,
+.cta-section h3,
+.cta-section p,
+.cta-section .lead {
+  color: #fff !important;
+}
+
+/* ── Hero Titles — Always White on Dark Overlay ── */
+.hero-title,
+.hero-section .cinematic-title,
+.hero-section-news h1,
+.hero-header .hero-title {
+  color: #fff !important;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+}
+
+.hero-subtitle,
+.hero-section .hero-subtitle p,
+.hero-header .hero-subtitle {
+  color: rgba(255,255,255,0.9) !important;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+}
+
+/* ── Page Header Titles (about, programs, donation, volunteer) ── */
+.page-header .page-title {
+  color: #fff !important;
+  text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+}
+
+.page-header .page-subtitle {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* ── All h2/h3/h4 in sections — Dark Text ── */
+.programs-section h3,
+.programs-section h4,
+.about-section h3,
+.about-section h4,
+.why-choose-section h3,
+.why-choose-section h4,
+.facilities-section h3,
+.facilities-section h4,
+.testimonials-section h3,
+.testimonials-section h5,
+.news-section h3,
+.news-section h5,
+.donation-overview h3,
+.donation-overview h4,
+.donation-options h3,
+.projects-section h3,
+.volunteer-overview h3,
+.volunteer-overview h4,
+.volunteer-benefits h3,
+.volunteer-benefits h4,
+.contact-info-section h3,
+.contact-info-section h4,
+.office-hours-section h3,
+.timeline-content-card h3,
+.achievement-card h3,
+.leader-profile h4,
+.highlight-item h4,
+.feature-card h4,
+.facility-card h4,
+.program-card h3,
+.program-card h4,
+.hospital-card h4,
+.vm-card h3,
+.vm-card h4,
+.value-item h4,
+.opportunity-card h3,
+.benefit-card h4,
+.benefit-item h4,
+.donation-card h3,
+.project-content h3,
+.contact-card h4,
+.hours-card h3,
+.map-info h3 {
+  color: #0f172a !important;
+}
+
+/* ── Button Visibility Fixes ── */
+
+/* btn-yellow — Dark text on yellow/gold (always visible) */
+.btn-3d.btn-yellow {
+  color: #1a1a2e !important;
+  text-shadow: none !important;
+}
+
+/* btn-blue — White text on blue (always visible) */
+.btn-3d.btn-blue {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+/* btn-green — White text on green (always visible) */
+.btn-3d.btn-green {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+/* btn-red — White text on red (always visible) */
+.btn-3d.btn-red {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+/* btn-chocolate — White text on brown (always visible) */
+.btn-3d.btn-chocolate {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+/* btn-glass on dark backgrounds — white text (visible on dark) */
+.cta-section .btn-glass,
+.hero-section .btn-glass,
+.hero-header .btn-glass,
+.page-header .btn-glass {
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+
+/* btn-glass on light backgrounds — use dark variant */
+.about-section .btn-glass,
+.programs-section .btn-glass,
+.news-section .btn-glass,
+.donation-overview .btn-glass,
+.volunteer-overview .btn-glass,
+.contact-info-section .btn-glass {
+  color: #1A237E !important;
+  border-color: rgba(26,35,126,0.3) !important;
+  background: rgba(26,35,126,0.08) !important;
+}
+
+/* btn-isnm — White text on navy (always visible) */
+.btn-isnm {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+/* btn-outline-isnm — Dark text, always visible */
+.btn-outline-isnm {
+  color: #1A237E !important;
+  border-color: #1A237E !important;
+  background: transparent !important;
+}
+
+.btn-outline-isnm:hover {
+  color: #fff !important;
+  background: #1A237E !important;
+}
+
+/* ── Card Text Visibility ── */
+.program-card h3,
+.program-card h4,
+.program-card p,
+.donation-card h3,
+.donation-card p,
+.opportunity-card h3,
+.opportunity-card p,
+.benefit-card h4,
+.benefit-card p,
+.news-card-body h5 a,
+.news-card-body p,
+.feature-card h4,
+.feature-card p,
+.facility-card h4,
+.facility-card p,
+.vm-card h3,
+.vm-card h4,
+.vm-card p,
+.value-item h4,
+.value-item p,
+.contact-card h4,
+.contact-card p,
+.hours-card h3,
+.hours-card p {
+  color: #0f172a !important;
+}
+
+/* ── Stats Section — Ensure numbers are visible ── */
+.stat-number {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+.stat-label {
+  color: #475569 !important;
+}
+
+/* ── Timeline Content — Visible on white backgrounds ── */
+.timeline-content-card h3,
+.timeline-content-card p,
+.timeline-content h4,
+.timeline-content p {
+  color: #0f172a !important;
+}
+
+/* ── Achievement Cards ── */
+.achievement-card h3,
+.achievement-card p {
+  color: #0f172a !important;
+}
+
+/* ── Form Labels — Always Dark ── */
+.form-label {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+/* ── Table Headers ── */
+.table thead th {
+  color: #0f172a !important;
+}
+
+/* ── Dropdown Menus ── */
+.dropdown-item {
+  color: #1e293b !important;
+}
+
+.dropdown-item:hover {
+  background: rgba(26,35,126,0.08) !important;
+  color: #1A237E !important;
+}
+
+/* ── Alert/Info Boxes in Forms ── */
+.alert-info {
+  color: #0c5460 !important;
+  background: #d1ecf1 !important;
+  border-color: #bee5eb !important;
+}
+
+/* ── CTA Buttons Container ── */
+.cta-section .cta-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta-section .btn-3d {
+  position: relative;
+  z-index: 10;
+}
+
+/* ── Program Card Buttons — Consistent Styling ── */
+.program-card .btn-3d {
+  margin-top: 8px;
+}
+
+/* ── Donation Card Buttons ── */
+.donation-card .btn-3d {
+  margin-top: 12px;
+  width: 100%;
+}
+
+/* ── Opportunity Card Buttons ── */
+.opportunity-card .btn-3d {
+  margin-top: 12px;
+  width: 100%;
+}
+
+/* ── News Card Read More ── */
+.news-card-body .btn-3d {
+  margin-top: 8px;
+}
+
+/* ── Contact Form Submit Button ── */
+.contact-form-container .btn-3d-block {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* ── Volunteer Form Submit ── */
+.volunteer-application .btn-3d-block {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* ── Map Section Buttons ── */
+.map-info .btn-3d {
+  margin-top: 12px;
+}
+
+/* ── Slider Navigation Buttons ── */
+.slider-btn {
+  background: rgba(26,35,126,0.8) !important;
+  color: #fff !important;
+  border: 2px solid rgba(255,255,255,0.3) !important;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.slider-btn:hover {
+  background: #FFD700 !important;
+  color: #1A237E !important;
+  border-color: #FFD700 !important;
+  transform: scale(1.1);
+}
+
+/* ── Gallery Captions — White text with dark overlay ── */
+.slide-caption {
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+  color: #fff !important;
+}
+
+.slide-caption h4 {
+  color: #fff !important;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5) !important;
 }
 
 

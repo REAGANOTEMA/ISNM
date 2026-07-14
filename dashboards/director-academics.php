@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/dashboard_components.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -209,6 +210,7 @@ if ($ajax && $ajaxSid > 0) {
 
 // â”€â”€ POST â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-academics.php'); exit; }
     $action = $_POST['action'] ?? '';
     
     // Safe prepared statement helper
@@ -832,9 +834,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         <?php else: foreach($exams as $e): ?>
                         <tr><td><code><?= htmlspecialchars($e['exam_number']) ?></code></td><td><?= htmlspecialchars($e['exam_type']) ?></td><td><?= htmlspecialchars($e['course_code']) ?></td><td><?= htmlspecialchars($e['program_code']??'All') ?></td><td><?= $e['exam_date'] ?></td><td><?= htmlspecialchars($e['exam_room']??'-') ?></td>
                         <td><span class="badge bg-<?= $e['status']==='Published'?'success':($e['status']==='Scheduled'?'warning':'info') ?>"><?= $e['status'] ?></span></td>
-                        <td><div class="d-flex gap-1"><?php if($e['status']!=='Published'): ?><form method="POST" class="d-inline"><input type="hidden" name="action" value="publish_results"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><button class="btn btn-sm btn-outline-success" onclick="return confirm('Publish results?')"><i class="fas fa-check"></i></button></form><?php endif; ?>
+                        <td><div class="d-flex gap-1"><?php if($e['status']!=='Published'): ?><form method="POST" class="d-inline"><input type="hidden" name="action" value="publish_results"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-success" onclick="return confirm('Publish results?')"><i class="fas fa-check"></i></button></form><?php endif; ?>
                         <button class="btn btn-sm btn-outline-warning" onclick="approveResult('<?= htmlspecialchars($e['exam_number']) ?>')"><i class="fas fa-check-double"></i></button>
-                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_exam"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this exam?')"><i class="fas fa-trash"></i></button></form></div></td></tr>
+                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_exam"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this exam?')"><i class="fas fa-trash"></i></button></form></div></td></tr>
                         <?php endforeach; endif; ?>
                         </tbody>
                     </table>
@@ -858,7 +860,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         <tr><td><?= htmlspecialchars($ar['student_name']??"ID:{$ar['student_id']}") ?></td><td><?= htmlspecialchars($ar['course_code']) ?> <?= htmlspecialchars($ar['course_title']??'') ?></td><td><?= htmlspecialchars($ar['assessment_type']) ?></td><td><strong><?= $ar['marks'] ?></strong></td><td><span class="badge bg-<?= in_array($ar['grade'],['A','B']) ? 'success' : ($ar['grade']==='F' ? 'danger' : 'warning') ?>"><?= htmlspecialchars($ar['grade']) ?></span></td><td><?= $ar['gpa'] ?? '-' ?></td>
                         <td><div class="d-flex gap-1">
                         <button class="btn btn-sm btn-outline-warning" onclick="editMarks(<?= $ar['id'] ?>,'<?= $ar['marks'] ?>','<?= $ar['grade'] ?>','<?= $ar['gpa']??0 ?>')"><i class="fas fa-edit"></i></button>
-                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_marks"><input type="hidden" name="record_id" value="<?= $ar['id'] ?>"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this record?')"><i class="fas fa-trash"></i></button></form>
+                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_marks"><input type="hidden" name="record_id" value="<?= $ar['id'] ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this record?')"><i class="fas fa-trash"></i></button></form>
                         </div></td></tr>
                         <?php endforeach; ?>
                         </tbody>
@@ -910,6 +912,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         <div class="section-card">
                             <h6 class="fw-bold mb-3">Generate Document</h6>
                             <form method="POST" class="row g-2">
+                                <?= csrfField() ?>
                                 <input type="hidden" name="action" value="transcript_request">
                                 <div class="col-12"><label class="form-label">Student</label><select name="student_id" class="form-select" required>
                                     <option value="">Select Student</option>

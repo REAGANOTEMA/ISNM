@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/config_enhanced.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -203,6 +204,10 @@ $dgPageToSection = [
     'messaging'     => 'messaging',
     'broadcast'     => 'broadcast',
     'news'          => 'news-management',
+    'events'        => 'events-mgmt',
+    'testimonials'  => 'testimonials-mgmt',
+    'faqs'          => 'faqs-mgmt',
+    'web-settings'  => 'web-settings',
     'reports'       => 'reports',
     'system-health' => 'system-health',
     'notifications' => 'notifications',
@@ -221,6 +226,17 @@ $dgPageToSection = [
     'preferences'   => 'home',
     'activity-logs' => 'audit',
     'security'      => 'system-health',
+    'committees'    => 'executive',
+    'meetings'      => 'executive',
+    'policies'      => 'executive',
+    'correspondence'=> 'communications',
+    'compliance'    => 'audit',
+    'institutional' => 'executive',
+    'training'      => 'performance',
+    'quality'       => 'executive',
+    'activities'    => 'audit',
+    'calendar'      => 'executive',
+    'emergency'     => 'audit',
 ];
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
@@ -244,6 +260,10 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
         'store'=>'Store & Assets','communications'=>'Communications',
         'audit'=>'Audit Trail','quick'=>'Quick Actions',
         'news-management'=>'News Management',
+        'events-mgmt'=>'Events Management',
+        'testimonials-mgmt'=>'Testimonials Management',
+        'faqs-mgmt'=>'FAQ Management',
+        'web-settings'=>'Website Settings',
         'reports'=>'Reports Center',
         'system-health'=>'System Health',
         'notifications'=>'Notifications Center',
@@ -409,6 +429,300 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             $_SESSION['nw_success'] = 'News article deleted.';
         }
         header('Location: director-general.php?page=news'); exit;
+    }
+}
+
+// ── Events Management POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['ev_error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php?page=events'); exit;
+    }
+    $action     = $_POST['dg_event_action'];
+    $ev_title   = trim($_POST['dg_event_title'] ?? '');
+    $ev_desc    = trim($_POST['dg_event_description'] ?? '');
+    $ev_date    = trim($_POST['dg_event_date'] ?? '');
+    $ev_type    = trim($_POST['dg_event_type'] ?? 'general');
+    $ev_location= trim($_POST['dg_event_location'] ?? '');
+    $ev_id      = (int)($_POST['dg_event_id'] ?? 0);
+
+    if (in_array($action, ['create','update']) && $ev_title && $ev_date) {
+        if ($action === 'create') {
+            $stmt = $conn->prepare("INSERT INTO cms_events (title,description,event_date,event_type,location,is_active,created_by,created_at) VALUES (?,?,?,?,?,?,?,NOW())");
+            if ($stmt) {
+                $stmt->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $_active1 = 1, $user_id);
+                if (!$stmt->execute()) { error_log('events create failed: ' . ($stmt->error ?? 'unknown')); }
+                $newId = $stmt->insert_id;
+                $stmt->close();
+                if ($websiteConn && $newId) {
+                    $ws = $websiteConn->prepare("INSERT INTO cms_events (title,description,event_date,event_type,location,is_active,created_by,created_at) VALUES (?,?,?,?,?,?,?,NOW())");
+                    if ($ws) {
+                        $ws->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, 1, $user_id);
+                        if (!$ws->execute()) { error_log('events website insert failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['ev_success'] = 'Event created successfully.';
+            }
+        } else {
+            $stmt = $conn->prepare("UPDATE cms_events SET title=?,description=?,event_date=?,event_type=?,location=?,updated_at=NOW() WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('sssssi', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $ev_id);
+                if (!$stmt->execute()) { error_log('events update failed: ' . ($stmt->error ?? 'unknown')); }
+                $stmt->close();
+                if ($websiteConn) {
+                    $ws = $websiteConn->prepare("UPDATE cms_events SET title=?,description=?,event_date=?,event_type=?,location=?,updated_at=NOW() WHERE id=?");
+                    if ($ws) {
+                        $ws->bind_param('sssssi', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $ev_id);
+                        if (!$ws->execute()) { error_log('events website update failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['ev_success'] = 'Event updated.';
+            }
+        }
+        header('Location: director-general.php?page=events'); exit;
+    }
+
+    if ($action === 'toggle_active' && $ev_id) {
+        $newVal = (int)($_POST['dg_event_active'] ?? 0);
+        $stmt = $conn->prepare("UPDATE cms_events SET is_active=?,updated_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('ii', $newVal, $ev_id);
+            if (!$stmt->execute()) { error_log('events toggle failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("UPDATE cms_events SET is_active=?,updated_at=NOW() WHERE id=?");
+                if ($ws) { $ws->bind_param('ii', $newVal, $ev_id); if (!$ws->execute()) { error_log('events ws toggle failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['ev_success'] = $newVal ? 'Event activated.' : 'Event deactivated.';
+        }
+        header('Location: director-general.php?page=events'); exit;
+    }
+
+    if ($action === 'delete' && $ev_id) {
+        $stmt = $conn->prepare("DELETE FROM cms_events WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('i', $ev_id);
+            if (!$stmt->execute()) { error_log('events delete failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("DELETE FROM cms_events WHERE id=?");
+                if ($ws) { $ws->bind_param('i', $ev_id); if (!$ws->execute()) { error_log('events ws delete failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['ev_success'] = 'Event deleted.';
+        }
+        header('Location: director-general.php?page=events'); exit;
+    }
+}
+
+// ── Testimonials Management POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['tm_error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php?page=testimonials'); exit;
+    }
+    $action     = $_POST['dg_testimonial_action'];
+    $tm_content = trim($_POST['dg_testimonial_content'] ?? '');
+    $tm_author  = trim($_POST['dg_testimonial_author'] ?? '');
+    $tm_role    = trim($_POST['dg_testimonial_role'] ?? '');
+    $tm_rating  = (int)($_POST['dg_testimonial_rating'] ?? 5);
+    $tm_id      = (int)($_POST['dg_testimonial_id'] ?? 0);
+
+    if (in_array($action, ['create','update']) && $tm_content && $tm_author) {
+        if ($tm_rating < 1) $tm_rating = 1;
+        if ($tm_rating > 5) $tm_rating = 5;
+        if ($action === 'create') {
+            $stmt = $conn->prepare("INSERT INTO cms_testimonials (content,author_name,author_role,rating,is_featured,created_at) VALUES (?,?,?,?,0,NOW())");
+            if ($stmt) {
+                $stmt->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, $_feat = 0);
+                if (!$stmt->execute()) { error_log('testimonials create failed: ' . ($stmt->error ?? 'unknown')); }
+                $newId = $stmt->insert_id;
+                $stmt->close();
+                if ($websiteConn && $newId) {
+                    $ws = $websiteConn->prepare("INSERT INTO cms_testimonials (content,author_name,author_role,rating,is_featured,created_at) VALUES (?,?,?,?,0,NOW())");
+                    if ($ws) {
+                        $ws->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, 0);
+                        if (!$ws->execute()) { error_log('testimonials ws insert failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['tm_success'] = 'Testimonial created successfully.';
+            }
+        } else {
+            $stmt = $conn->prepare("UPDATE cms_testimonials SET content=?,author_name=?,author_role=?,rating=?,updated_at=NOW() WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, $tm_id);
+                if (!$stmt->execute()) { error_log('testimonials update failed: ' . ($stmt->error ?? 'unknown')); }
+                $stmt->close();
+                if ($websiteConn) {
+                    $ws = $websiteConn->prepare("UPDATE cms_testimonials SET content=?,author_name=?,author_role=?,rating=?,updated_at=NOW() WHERE id=?");
+                    if ($ws) {
+                        $ws->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, $tm_id);
+                        if (!$ws->execute()) { error_log('testimonials ws update failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['tm_success'] = 'Testimonial updated.';
+            }
+        }
+        header('Location: director-general.php?page=testimonials'); exit;
+    }
+
+    if ($action === 'toggle_featured' && $tm_id) {
+        $newVal = (int)($_POST['dg_testimonial_featured'] ?? 0);
+        $stmt = $conn->prepare("UPDATE cms_testimonials SET is_featured=?,updated_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('ii', $newVal, $tm_id);
+            if (!$stmt->execute()) { error_log('testimonials toggle failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("UPDATE cms_testimonials SET is_featured=?,updated_at=NOW() WHERE id=?");
+                if ($ws) { $ws->bind_param('ii', $newVal, $tm_id); if (!$ws->execute()) { error_log('testimonials ws toggle failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['tm_success'] = $newVal ? 'Testimonial marked as featured.' : 'Testimonial unfeatured.';
+        }
+        header('Location: director-general.php?page=testimonials'); exit;
+    }
+
+    if ($action === 'delete' && $tm_id) {
+        $stmt = $conn->prepare("DELETE FROM cms_testimonials WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('i', $tm_id);
+            if (!$stmt->execute()) { error_log('testimonials delete failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("DELETE FROM cms_testimonials WHERE id=?");
+                if ($ws) { $ws->bind_param('i', $tm_id); if (!$ws->execute()) { error_log('testimonials ws delete failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['tm_success'] = 'Testimonial deleted.';
+        }
+        header('Location: director-general.php?page=testimonials'); exit;
+    }
+}
+
+// ── FAQ Management POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['faq_error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php?page=faqs'); exit;
+    }
+    $action    = $_POST['dg_faq_action'];
+    $faq_q     = trim($_POST['dg_faq_question'] ?? '');
+    $faq_a     = trim($_POST['dg_faq_answer'] ?? '');
+    $faq_cat   = trim($_POST['dg_faq_category'] ?? 'General');
+    $faq_order = (int)($_POST['dg_faq_sort_order'] ?? 0);
+    $faq_id    = (int)($_POST['dg_faq_id'] ?? 0);
+
+    if (in_array($action, ['create','update']) && $faq_q && $faq_a) {
+        if ($action === 'create') {
+            $maxOrder = 0;
+            if ($conn) {
+                $mo = $conn->query("SELECT COALESCE(MAX(sort_order),0)+1 AS nxt FROM cms_faqs");
+                if ($mo) $maxOrder = (int)$mo->fetch_assoc()['nxt'];
+            }
+            $stmt = $conn->prepare("INSERT INTO cms_faqs (question,answer,category,sort_order,is_active,created_at) VALUES (?,?,?,?,1,NOW())");
+            if ($stmt) {
+                $stmt->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $maxOrder, $_act = 1);
+                if (!$stmt->execute()) { error_log('faqs create failed: ' . ($stmt->error ?? 'unknown')); }
+                $newId = $stmt->insert_id;
+                $stmt->close();
+                if ($websiteConn && $newId) {
+                    $ws = $websiteConn->prepare("INSERT INTO cms_faqs (question,answer,category,sort_order,is_active,created_at) VALUES (?,?,?,?,1,NOW())");
+                    if ($ws) {
+                        $ws->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $maxOrder, 1);
+                        if (!$ws->execute()) { error_log('faqs ws insert failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['faq_success'] = 'FAQ created successfully.';
+            }
+        } else {
+            $stmt = $conn->prepare("UPDATE cms_faqs SET question=?,answer=?,category=?,sort_order=?,updated_at=NOW() WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $faq_order, $faq_id);
+                if (!$stmt->execute()) { error_log('faqs update failed: ' . ($stmt->error ?? 'unknown')); }
+                $stmt->close();
+                if ($websiteConn) {
+                    $ws = $websiteConn->prepare("UPDATE cms_faqs SET question=?,answer=?,category=?,sort_order=?,updated_at=NOW() WHERE id=?");
+                    if ($ws) {
+                        $ws->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $faq_order, $faq_id);
+                        if (!$ws->execute()) { error_log('faqs ws update failed: ' . ($ws->error ?? 'unknown')); }
+                        $ws->close();
+                    }
+                }
+                $_SESSION['faq_success'] = 'FAQ updated.';
+            }
+        }
+        header('Location: director-general.php?page=faqs'); exit;
+    }
+
+    if ($action === 'toggle_active' && $faq_id) {
+        $newVal = (int)($_POST['dg_faq_active'] ?? 0);
+        $stmt = $conn->prepare("UPDATE cms_faqs SET is_active=?,updated_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('ii', $newVal, $faq_id);
+            if (!$stmt->execute()) { error_log('faqs toggle failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("UPDATE cms_faqs SET is_active=?,updated_at=NOW() WHERE id=?");
+                if ($ws) { $ws->bind_param('ii', $newVal, $faq_id); if (!$ws->execute()) { error_log('faqs ws toggle failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['faq_success'] = $newVal ? 'FAQ activated.' : 'FAQ deactivated.';
+        }
+        header('Location: director-general.php?page=faqs'); exit;
+    }
+
+    if ($action === 'delete' && $faq_id) {
+        $stmt = $conn->prepare("DELETE FROM cms_faqs WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('i', $faq_id);
+            if (!$stmt->execute()) { error_log('faqs delete failed: ' . ($stmt->error ?? 'unknown')); }
+            $stmt->close();
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("DELETE FROM cms_faqs WHERE id=?");
+                if ($ws) { $ws->bind_param('i', $faq_id); if (!$ws->execute()) { error_log('faqs ws delete failed: ' . ($ws->error ?? 'unknown')); } $ws->close(); }
+            }
+            $_SESSION['faq_success'] = 'FAQ deleted.';
+        }
+        header('Location: director-general.php?page=faqs'); exit;
+    }
+}
+
+// ── Website Settings POST handler ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['ws_error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php?page=web-settings'); exit;
+    }
+    $settingsAction = $_POST['dg_settings_action'];
+    if ($settingsAction === 'update_settings') {
+        $keys   = $_POST['setting_key'] ?? [];
+        $values = $_POST['setting_value'] ?? [];
+        $updated = 0;
+        foreach ($keys as $idx => $sKey) {
+            $sKey   = trim($sKey);
+            $sValue = trim($values[$idx] ?? '');
+            if (!$sKey) continue;
+            if ($conn) {
+                $stmt = $conn->prepare("UPDATE cms_settings SET setting_value=?,updated_at=NOW() WHERE setting_key=?");
+                if ($stmt) {
+                    $stmt->bind_param('ss', $sValue, $sKey);
+                    if ($stmt->execute()) $updated++;
+                    $stmt->close();
+                }
+            }
+            if ($websiteConn) {
+                $ws = $websiteConn->prepare("UPDATE cms_settings SET setting_value=?,updated_at=NOW() WHERE setting_key=?");
+                if ($ws) {
+                    $ws->bind_param('ss', $sValue, $sKey);
+                    if (!$ws->execute()) { error_log('ws settings update failed: ' . ($ws->error ?? 'unknown')); }
+                    $ws->close();
+                }
+            }
+        }
+        $_SESSION['ws_success'] = "$updated setting(s) updated successfully.";
+        header('Location: director-general.php?page=web-settings'); exit;
     }
 }
 
@@ -974,6 +1288,7 @@ switch ($dgSection):
         </div>
         <div class="d-flex align-items-center gap-2">
           <form method="POST" style="display:inline;" onsubmit="return confirm('Resolve this submission?')">
+            <?= csrfField() ?>
             <input type="hidden" name="dg_action" value="resolve_alert">
             <input type="hidden" name="sub_type" value="<?= htmlspecialchars($t) ?>">
             <input type="hidden" name="sub_id" value="<?= $sub['id'] ?? 0 ?>">
@@ -1038,6 +1353,7 @@ switch ($dgSection):
             <small style="color:#94a3b8;"><?= htmlspecialchars($d['department_code']??'') ?> &middot; <?= htmlspecialchars($d['department_level']??'') ?></small>
           </div>
           <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this department?')">
+            <?= csrfField() ?>
             <input type="hidden" name="dg_action" value="delete_department">
             <input type="hidden" name="dept_id" value="<?= $d['id'] ?? 0 ?>">
             <input type="hidden" name="dept_code" value="<?= htmlspecialchars($d['department_code']??'') ?>">
@@ -1221,6 +1537,7 @@ switch ($dgSection):
               <td>
                 <button class="btn btn-sm" style="color:#2563eb;border:none;background:none;padding:0 4px;" title="Edit" onclick='openEditStaffModal(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
                 <form method="POST" style="display:inline;" onsubmit="return confirm('Remove <?= htmlspecialchars($s['full_name'],ENT_QUOTES) ?> from staff?')">
+                  <?= csrfField() ?>
                   <input type="hidden" name="dg_action" value="delete_staff">
                   <input type="hidden" name="staff_id" value="<?= $s['id'] ?>">
                   <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:0 4px;" title="Delete"><i class="fas fa-trash"></i></button>
@@ -1367,6 +1684,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="section-header" style="margin-bottom:12px;">
           <h3 class="section-title" style="font-size:14px;margin-bottom:0;"><i class="fas fa-bell" style="color:#dc2626;"></i>Active Alerts</h3>
           <form method="POST" style="display:inline;" onsubmit="return confirm('Mark all alerts as resolved?')">
+            <?= csrfField() ?>
             <input type="hidden" name="dg_action" value="resolve_alert">
             <input type="hidden" name="sub_type" value="all_alerts">
             <input type="hidden" name="sub_id" value="0">
@@ -1410,12 +1728,14 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="d-flex align-items-center gap-2">
             <?php if($sr_['status']==='pending_approval'): ?>
             <form method="POST" style="display:inline;" onsubmit="return confirm('Approve request <?= htmlspecialchars($sr_['request_number'],ENT_QUOTES) ?>?')">
+              <?= csrfField() ?>
               <input type="hidden" name="dg_action" value="approve_submission">
               <input type="hidden" name="sub_type" value="store">
               <input type="hidden" name="sub_ref" value="<?= htmlspecialchars($sr_['request_number']) ?>">
               <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 4px;" title="Approve"><i class="fas fa-check"></i></button>
             </form>
             <form method="POST" style="display:inline;" onsubmit="return confirm('Reject request <?= htmlspecialchars($sr_['request_number'],ENT_QUOTES) ?>?')">
+              <?= csrfField() ?>
               <input type="hidden" name="dg_action" value="reject_submission">
               <input type="hidden" name="sub_type" value="store">
               <input type="hidden" name="sub_ref" value="<?= htmlspecialchars($sr_['request_number']) ?>">
@@ -1511,12 +1831,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="d-flex align-items-center gap-2">
               <form method="POST" style="display:inline;" onsubmit="return confirm('Approve this trip?')">
+                <?= csrfField() ?>
                 <input type="hidden" name="dg_action" value="approve_submission">
                 <input type="hidden" name="sub_type" value="transport_trip">
                 <input type="hidden" name="sub_id" value="<?= (int)$tp_['id'] ?>">
                 <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 6px;" title="Approve"><i class="fas fa-check-circle"></i></button>
               </form>
               <form method="POST" style="display:inline;" onsubmit="return confirm('Reject this trip?')">
+                <?= csrfField() ?>
                 <input type="hidden" name="dg_action" value="reject_submission">
                 <input type="hidden" name="sub_type" value="transport_trip">
                 <input type="hidden" name="sub_id" value="<?= (int)$tp_['id'] ?>">
@@ -1851,6 +2173,353 @@ document.addEventListener('DOMContentLoaded', function() {
         </tbody>
       </table>
     </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<?php break; ?>
+    case 'events-mgmt': ?>
+<?php
+  $dgEventsList = [];
+  if ($conn) {
+    $evR = $conn->query("SELECT * FROM cms_events ORDER BY event_date DESC");
+    if ($evR) while ($row = $evR->fetch_assoc()) $dgEventsList[] = $row;
+  }
+?>
+<div id="events-mgmt" class="content-section dashboard-section active" data-section="events-mgmt">
+  <div class="section-card">
+    <?php dgToolbar('Events Management', 'fa-calendar-alt', count($dgEventsList) . ' events', 'bg-info'); ?>
+  </div>
+  <div class="row g-2 mb-3">
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#3b82f6;"><?= count($dgEventsList) ?></div>
+        <div class="small text-muted">Total Events</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#10b981;"><?= count(array_filter($dgEventsList, fn($x) => ($x['is_active'] ?? 0) == 1)) ?></div>
+        <div class="small text-muted">Active</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#f59e0b;"><?= count(array_filter($dgEventsList, fn($x) => strtotime($x['event_date'] ?? '') >= strtotime('today'))) ?></div>
+        <div class="small text-muted">Upcoming</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-semibold mb-0"><i class="fas fa-calendar-alt me-1"></i>All Events</h6>
+      <button class="btn btn-sm btn-primary" onclick="dgShowEventModal()"><i class="fas fa-plus me-1"></i>New Event</button>
+    </div>
+    <?php
+    $dgEvSuccess = $_SESSION['ev_success'] ?? '';
+    $dgEvError = $_SESSION['ev_error'] ?? '';
+    unset($_SESSION['ev_success'], $_SESSION['ev_error']);
+    if ($dgEvSuccess): ?>
+    <div class="alert alert-success alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgEvSuccess) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif;
+    if ($dgEvError): ?>
+    <div class="alert alert-danger alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgEvError) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+    <input type="text" class="form-control form-control-sm mb-2" style="max-width:300px;" placeholder="Search events..." oninput="dgFilterEvents(this.value)">
+    <?php if (empty($dgEventsList)): ?>
+    <div class="text-center py-4 text-muted"><i class="far fa-calendar fa-2x mb-2"></i><p class="small mb-0">No events yet. Click "New Event" to create one.</p></div>
+    <?php else: ?>
+    <div class="table-responsive" style="max-height:500px;overflow-y:auto;">
+      <table class="table table-sm table-hover" id="dgEventsTable" style="font-size:12px;">
+        <thead><tr><th>Title</th><th>Date</th><th>Type</th><th>Location</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody>
+          <?php foreach ($dgEventsList as $ev):
+            $ev_bc = ($ev['is_active'] ?? 0) == 1 ? 'bg-success' : 'bg-secondary';
+            $ev_label = ($ev['is_active'] ?? 0) == 1 ? 'Active' : 'Inactive';
+          ?>
+          <tr class="dg-event-row">
+            <td class="fw-semibold dg-event-title"><?= htmlspecialchars(mb_substr($ev['title'], 0, 60)) ?></td>
+            <td class="text-muted small"><?= $ev['event_date'] ? date('d M Y', strtotime($ev['event_date'])) : '-' ?></td>
+            <td><span class="badge bg-info text-dark"><?= htmlspecialchars(ucfirst($ev['event_type'] ?? 'general')) ?></span></td>
+            <td class="text-muted small"><?= htmlspecialchars($ev['location'] ?? '-') ?></td>
+            <td><span class="badge <?= $ev_bc ?> dg-event-status"><?= $ev_label ?></span></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="dgEditEvent(<?= $ev['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                <form method="POST" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_event_action" value="toggle_active">
+                  <input type="hidden" name="dg_event_id" value="<?= $ev['id'] ?>">
+                  <input type="hidden" name="dg_event_active" value="<?= ($ev['is_active'] ?? 0) == 1 ? 0 : 1 ?>">
+                  <button class="btn btn-outline-<?= ($ev['is_active'] ?? 0) == 1 ? 'warning' : 'success' ?>" title="<?= ($ev['is_active'] ?? 0) == 1 ? 'Deactivate' : 'Activate' ?>"><i class="fas fa-<?= ($ev['is_active'] ?? 0) == 1 ? 'eye-slash' : 'eye' ?>"></i></button>
+                </form>
+                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this event?')">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_event_action" value="delete">
+                  <input type="hidden" name="dg_event_id" value="<?= $ev['id'] ?>">
+                  <button class="btn btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<?php break; ?>
+    case 'testimonials-mgmt': ?>
+<?php
+  $dgTestimonialsList = [];
+  if ($conn) {
+    $tmR = $conn->query("SELECT * FROM cms_testimonials ORDER BY id DESC");
+    if ($tmR) while ($row = $tmR->fetch_assoc()) $dgTestimonialsList[] = $row;
+  }
+?>
+<div id="testimonials-mgmt" class="content-section dashboard-section active" data-section="testimonials-mgmt">
+  <div class="section-card">
+    <?php dgToolbar('Testimonials Management', 'fa-quote-right', count($dgTestimonialsList) . ' testimonials', 'bg-success'); ?>
+  </div>
+  <div class="row g-2 mb-3">
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#3b82f6;"><?= count($dgTestimonialsList) ?></div>
+        <div class="small text-muted">Total</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#f59e0b;"><?= count(array_filter($dgTestimonialsList, fn($x) => ($x['is_featured'] ?? 0) == 1)) ?></div>
+        <div class="small text-muted">Featured</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#10b981;"><?= round(array_reduce($dgTestimonialsList, fn($s,$x) => $s + ($x['rating'] ?? 0), 0) / max(count($dgTestimonialsList),1), 1) ?></div>
+        <div class="small text-muted">Avg. Rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-semibold mb-0"><i class="fas fa-quote-right me-1"></i>All Testimonials</h6>
+      <button class="btn btn-sm btn-primary" onclick="dgShowTestimonialModal()"><i class="fas fa-plus me-1"></i>New Testimonial</button>
+    </div>
+    <?php
+    $dgTmSuccess = $_SESSION['tm_success'] ?? '';
+    $dgTmError = $_SESSION['tm_error'] ?? '';
+    unset($_SESSION['tm_success'], $_SESSION['tm_error']);
+    if ($dgTmSuccess): ?>
+    <div class="alert alert-success alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgTmSuccess) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif;
+    if ($dgTmError): ?>
+    <div class="alert alert-danger alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgTmError) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+    <input type="text" class="form-control form-control-sm mb-2" style="max-width:300px;" placeholder="Search testimonials..." oninput="dgFilterTestimonials(this.value)">
+    <?php if (empty($dgTestimonialsList)): ?>
+    <div class="text-center py-4 text-muted"><i class="far fa-comment-dots fa-2x mb-2"></i><p class="small mb-0">No testimonials yet. Click "New Testimonial" to create one.</p></div>
+    <?php else: ?>
+    <div class="table-responsive" style="max-height:500px;overflow-y:auto;">
+      <table class="table table-sm table-hover" id="dgTestimonialsTable" style="font-size:12px;">
+        <thead><tr><th>Author</th><th>Role</th><th>Content</th><th>Rating</th><th>Featured</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody>
+          <?php foreach ($dgTestimonialsList as $tm):
+            $tm_bc = ($tm['is_featured'] ?? 0) == 1 ? 'bg-warning text-dark' : 'bg-secondary';
+            $tm_label = ($tm['is_featured'] ?? 0) == 1 ? 'Featured' : 'Normal';
+          ?>
+          <tr class="dg-testimonial-row">
+            <td class="fw-semibold dg-testimonial-author"><?= htmlspecialchars($tm['author_name'] ?? '') ?></td>
+            <td class="text-muted small"><?= htmlspecialchars($tm['author_role'] ?? '-') ?></td>
+            <td class="dg-testimonial-content" style="max-width:250px;"><?= htmlspecialchars(mb_substr($tm['content'] ?? '', 0, 80)) ?><?php if (strlen($tm['content'] ?? '') > 80): ?><span class="text-muted">...</span><?php endif; ?></td>
+            <td>
+              <?php for ($i = 1; $i <= 5; $i++): ?>
+                <i class="fas fa-star" style="font-size:10px;color:<?= $i <= ($tm['rating'] ?? 0) ? '#f59e0b' : '#e2e8f0' ?>;"></i>
+              <?php endfor; ?>
+            </td>
+            <td><span class="badge <?= $tm_bc ?>"><?= $tm_label ?></span></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="dgEditTestimonial(<?= $tm['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                <form method="POST" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_testimonial_action" value="toggle_featured">
+                  <input type="hidden" name="dg_testimonial_id" value="<?= $tm['id'] ?>">
+                  <input type="hidden" name="dg_testimonial_featured" value="<?= ($tm['is_featured'] ?? 0) == 1 ? 0 : 1 ?>">
+                  <button class="btn btn-outline-<?= ($tm['is_featured'] ?? 0) == 1 ? 'secondary' : 'warning' ?>" title="<?= ($tm['is_featured'] ?? 0) == 1 ? 'Unfeature' : 'Feature' ?>"><i class="fas fa-<?= ($tm['is_featured'] ?? 0) == 1 ? 'star' : 'star' ?>"></i></button>
+                </form>
+                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this testimonial?')">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_testimonial_action" value="delete">
+                  <input type="hidden" name="dg_testimonial_id" value="<?= $tm['id'] ?>">
+                  <button class="btn btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<?php break; ?>
+    case 'faqs-mgmt': ?>
+<?php
+  $dgFaqsList = [];
+  if ($conn) {
+    $faqR = $conn->query("SELECT * FROM cms_faqs ORDER BY sort_order ASC");
+    if ($faqR) while ($row = $faqR->fetch_assoc()) $dgFaqsList[] = $row;
+  }
+?>
+<div id="faqs-mgmt" class="content-section dashboard-section active" data-section="faqs-mgmt">
+  <div class="section-card">
+    <?php dgToolbar('FAQ Management', 'fa-question-circle', count($dgFaqsList) . ' FAQs', 'bg-primary'); ?>
+  </div>
+  <div class="row g-2 mb-3">
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#3b82f6;"><?= count($dgFaqsList) ?></div>
+        <div class="small text-muted">Total FAQs</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#10b981;"><?= count(array_filter($dgFaqsList, fn($x) => ($x['is_active'] ?? 0) == 1)) ?></div>
+        <div class="small text-muted">Active</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="section-card text-center p-3">
+        <div class="fw-bold" style="font-size:1.6rem;color:#8b5cf6;"><?= count(array_unique(array_map(fn($x) => $x['category'] ?? 'General', $dgFaqsList))) ?></div>
+        <div class="small text-muted">Categories</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-semibold mb-0"><i class="fas fa-question-circle me-1"></i>All FAQs</h6>
+      <button class="btn btn-sm btn-primary" onclick="dgShowFaqModal()"><i class="fas fa-plus me-1"></i>New FAQ</button>
+    </div>
+    <?php
+    $dgFaqSuccess = $_SESSION['faq_success'] ?? '';
+    $dgFaqError = $_SESSION['faq_error'] ?? '';
+    unset($_SESSION['faq_success'], $_SESSION['faq_error']);
+    if ($dgFaqSuccess): ?>
+    <div class="alert alert-success alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgFaqSuccess) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif;
+    if ($dgFaqError): ?>
+    <div class="alert alert-danger alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgFaqError) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+    <input type="text" class="form-control form-control-sm mb-2" style="max-width:300px;" placeholder="Search FAQs..." oninput="dgFilterFaqs(this.value)">
+    <?php if (empty($dgFaqsList)): ?>
+    <div class="text-center py-4 text-muted"><i class="far fa-question-circle fa-2x mb-2"></i><p class="small mb-0">No FAQs yet. Click "New FAQ" to create one.</p></div>
+    <?php else: ?>
+    <div class="table-responsive" style="max-height:500px;overflow-y:auto;">
+      <table class="table table-sm table-hover" id="dgFaqsTable" style="font-size:12px;">
+        <thead><tr><th>#</th><th>Question</th><th>Category</th><th>Answer Preview</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody>
+          <?php foreach ($dgFaqsList as $faq):
+            $faq_bc = ($faq['is_active'] ?? 0) == 1 ? 'bg-success' : 'bg-secondary';
+            $faq_label = ($faq['is_active'] ?? 0) == 1 ? 'Active' : 'Inactive';
+          ?>
+          <tr class="dg-faq-row">
+            <td class="text-muted"><?= $faq['sort_order'] ?? 0 ?></td>
+            <td class="fw-semibold dg-faq-question" style="max-width:200px;"><?= htmlspecialchars(mb_substr($faq['question'] ?? '', 0, 60)) ?></td>
+            <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($faq['category'] ?? 'General') ?></span></td>
+            <td class="text-muted small" style="max-width:200px;"><?= htmlspecialchars(mb_substr($faq['answer'] ?? '', 0, 80)) ?><?php if (strlen($faq['answer'] ?? '') > 80): ?><span>...</span><?php endif; ?></td>
+            <td><span class="badge <?= $faq_bc ?>"><?= $faq_label ?></span></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="dgEditFaq(<?= $faq['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                <form method="POST" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_faq_action" value="toggle_active">
+                  <input type="hidden" name="dg_faq_id" value="<?= $faq['id'] ?>">
+                  <input type="hidden" name="dg_faq_active" value="<?= ($faq['is_active'] ?? 0) == 1 ? 0 : 1 ?>">
+                  <button class="btn btn-outline-<?= ($faq['is_active'] ?? 0) == 1 ? 'warning' : 'success' ?>" title="<?= ($faq['is_active'] ?? 0) == 1 ? 'Deactivate' : 'Activate' ?>"><i class="fas fa-<?= ($faq['is_active'] ?? 0) == 1 ? 'eye-slash' : 'eye' ?>"></i></button>
+                </form>
+                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this FAQ?')">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+                  <input type="hidden" name="dg_faq_action" value="delete">
+                  <input type="hidden" name="dg_faq_id" value="<?= $faq['id'] ?>">
+                  <button class="btn btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<?php break; ?>
+    case 'web-settings': ?>
+<?php
+  $dgSettingsList = [];
+  if ($conn) {
+    $setR = $conn->query("SELECT * FROM cms_settings ORDER BY setting_key ASC");
+    if ($setR) while ($row = $setR->fetch_assoc()) $dgSettingsList[] = $row;
+  }
+?>
+<div id="web-settings" class="content-section dashboard-section active" data-section="web-settings">
+  <div class="section-card">
+    <?php dgToolbar('Website Settings', 'fa-cog', '', 'bg-dark'); ?>
+  </div>
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-semibold mb-0"><i class="fas fa-cog me-1"></i>Website Configuration</h6>
+    </div>
+    <?php
+    $dgWsSuccess = $_SESSION['ws_success'] ?? '';
+    $dgWsError = $_SESSION['ws_error'] ?? '';
+    unset($_SESSION['ws_success'], $_SESSION['ws_error']);
+    if ($dgWsSuccess): ?>
+    <div class="alert alert-success alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgWsSuccess) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif;
+    if ($dgWsError): ?>
+    <div class="alert alert-danger alert-dismissible fade show py-2 small"><?= htmlspecialchars($dgWsError) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+    <?php if (empty($dgSettingsList)): ?>
+    <div class="text-center py-4 text-muted"><i class="far fa-cog fa-2x mb-2"></i><p class="small mb-0">No settings found. Add settings to the cms_settings table.</p></div>
+    <?php else: ?>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+      <input type="hidden" name="dg_settings_action" value="update_settings">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover" style="font-size:12px;">
+          <thead><tr><th style="width:200px;">Setting Key</th><th>Description</th><th style="width:300px;">Value</th></tr></thead>
+          <tbody>
+            <?php foreach ($dgSettingsList as $setting): ?>
+            <tr>
+              <td>
+                <strong class="text-primary"><?= htmlspecialchars($setting['setting_key'] ?? '') ?></strong>
+                <input type="hidden" name="setting_key[]" value="<?= htmlspecialchars($setting['setting_key'] ?? '') ?>">
+              </td>
+              <td class="text-muted small"><?= htmlspecialchars($setting['description'] ?? $setting['setting_key'] ?? '') ?></td>
+              <td>
+                <?php if (strlen($setting['setting_value'] ?? '') > 100): ?>
+                <textarea name="setting_value[]" class="form-control form-control-sm" rows="3"><?= htmlspecialchars($setting['setting_value'] ?? '') ?></textarea>
+                <?php else: ?>
+                <input type="text" name="setting_value[]" class="form-control form-control-sm" value="<?= htmlspecialchars($setting['setting_value'] ?? '') ?>">
+                <?php endif; ?>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-sm" style="background:#1e293b;color:#fff;"><i class="fas fa-save me-1"></i>Save All Settings</button>
+      </div>
+    </form>
     <?php endif; ?>
   </div>
 </div>
@@ -2280,6 +2949,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
+      <?= csrfField() ?>
       <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;">
         <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Send Announcement</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -2304,6 +2974,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="addDeptModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
+      <?= csrfField() ?>
       <input type="hidden" name="dg_action" value="add_department">
       <div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;">
         <h5 class="modal-title"><i class="fas fa-building me-2"></i>Add Department</h5>
@@ -2328,6 +2999,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="addStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
+      <?= csrfField() ?>
       <input type="hidden" name="dg_action" value="add_staff">
       <div class="modal-header" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;">
         <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Staff Member</h5>
@@ -2356,6 +3028,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="editStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
+      <?= csrfField() ?>
       <input type="hidden" name="dg_action" value="edit_staff">
       <input type="hidden" name="edit_staff_id" id="editStaffId" value="0">
       <div class="modal-header" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
@@ -2457,6 +3130,147 @@ endswitch; ?>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" class="btn" style="background:#1e293b;color:#fff;"><i class="fas fa-save me-1"></i>Save Article</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ──── EVENTS MANAGEMENT MODAL ──── -->
+<div class="modal fade modern-modal" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+      <input type="hidden" name="dg_event_action" id="dgEventAction" value="create">
+      <input type="hidden" name="dg_event_id" id="dgEventId" value="0">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;">
+        <h5 class="modal-title" id="dgEventModalTitle"><i class="fas fa-plus-circle me-2"></i>Create Event</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label fw-semibold small">Title *</label>
+            <input type="text" name="dg_event_title" id="dgEventTitle" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small">Event Date *</label>
+            <input type="date" name="dg_event_date" id="dgEventDate" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Event Type</label>
+            <select name="dg_event_type" id="dgEventType" class="form-select">
+              <option value="general">General</option>
+              <option value="academic">Academic</option>
+              <option value="sports">Sports</option>
+              <option value="cultural">Cultural</option>
+              <option value="meeting">Meeting</option>
+              <option value="ceremony">Ceremony</option>
+              <option value="workshop">Workshop</option>
+              <option value="seminar">Seminar</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Location</label>
+            <input type="text" name="dg_event_location" id="dgEventLocation" class="form-control" placeholder="e.g. Main Hall">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Description</label>
+            <textarea name="dg_event_description" id="dgEventDescription" class="form-control" rows="5"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#1e293b;color:#fff;"><i class="fas fa-save me-1"></i>Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ──── TESTIMONIALS MANAGEMENT MODAL ──── -->
+<div class="modal fade modern-modal" id="testimonialModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+      <input type="hidden" name="dg_testimonial_action" id="dgTestimonialAction" value="create">
+      <input type="hidden" name="dg_testimonial_id" id="dgTestimonialId" value="0">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;">
+        <h5 class="modal-title" id="dgTestimonialModalTitle"><i class="fas fa-plus-circle me-2"></i>Create Testimonial</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label fw-semibold small">Author Name *</label>
+            <input type="text" name="dg_testimonial_author" id="dgTestimonialAuthor" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small">Author Role</label>
+            <input type="text" name="dg_testimonial_role" id="dgTestimonialRole" class="form-control" placeholder="e.g. Student">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Rating</label>
+            <select name="dg_testimonial_rating" id="dgTestimonialRating" class="form-select">
+              <option value="5">5 - Excellent</option>
+              <option value="4">4 - Very Good</option>
+              <option value="3">3 - Good</option>
+              <option value="2">2 - Fair</option>
+              <option value="1">1 - Poor</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Content *</label>
+            <textarea name="dg_testimonial_content" id="dgTestimonialContent" class="form-control" rows="6" required></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#1e293b;color:#fff;"><i class="fas fa-save me-1"></i>Save Testimonial</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ──── FAQ MANAGEMENT MODAL ──── -->
+<div class="modal fade modern-modal" id="faqModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
+      <input type="hidden" name="dg_faq_action" id="dgFaqAction" value="create">
+      <input type="hidden" name="dg_faq_id" id="dgFaqId" value="0">
+      <input type="hidden" name="dg_faq_sort_order" id="dgFaqSortOrder" value="0">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;">
+        <h5 class="modal-title" id="dgFaqModalTitle"><i class="fas fa-plus-circle me-2"></i>Create FAQ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label fw-semibold small">Question *</label>
+            <input type="text" name="dg_faq_question" id="dgFaqQuestion" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small">Category</label>
+            <input type="text" name="dg_faq_category" id="dgFaqCategory" class="form-control" placeholder="e.g. Admissions" list="faqCategoryList">
+            <datalist id="faqCategoryList">
+              <option value="General">
+              <option value="Admissions">
+              <option value="Fees">
+              <option value="Programs">
+              <option value="Facilities">
+              <option value="Student Life">
+            </datalist>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Answer *</label>
+            <textarea name="dg_faq_answer" id="dgFaqAnswer" class="form-control" rows="6" required></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#1e293b;color:#fff;"><i class="fas fa-save me-1"></i>Save FAQ</button>
       </div>
     </form>
   </div>

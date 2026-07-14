@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 
 $ctx = bootstrapStaffDashboard(['senior lecturer']);
 $auth_service = $ctx['auth'];
@@ -28,6 +29,7 @@ $studentsConn = $ctx['students'];
 $flash_msg = '';
 $flash_type = 'success';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $act = $_POST['action'];
 
     if ($act === 'add_assessment' && $conn) {
@@ -501,6 +503,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     <div id="addAssessmentForm" style="display:none" class="card card-body mb-4">
                         <form method="POST">
                             <input type="hidden" name="action" value="add_assessment">
+                            <?php csrfField(); ?>
                             <div class="row">
                                 <div class="col-md-4 mb-2"><label>Student ID</label><input type="number" name="student_id" class="form-control" required></div>
                                 <div class="col-md-4 mb-2"><label>Course Name</label><input type="text" name="course_name" class="form-control" required></div>
@@ -538,6 +541,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                                     <button class="btn btn-sm btn-warning" onclick='editAssessment(<?= json_encode($asm) ?>)'><i class="fas fa-edit"></i></button>
                                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this assessment?')">
                                         <input type="hidden" name="action" value="delete_assessment">
+                                        <?php csrfField(); ?>
                                         <input type="hidden" name="assessment_id" value="<?= (int)$asm['id'] ?>">
                                         <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                     </form>
@@ -608,6 +612,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     <div id="addResourceForm" style="display:none" class="card card-body mb-4">
                         <form method="POST">
                             <input type="hidden" name="action" value="add_resource">
+                            <?php csrfField(); ?>
                             <div class="row">
                                 <div class="col-md-4 mb-2"><label>Title</label><input type="text" name="title" class="form-control" required></div>
                                 <div class="col-md-4 mb-2"><label>Resource Type</label><select name="resource_type" class="form-control" required><option value="PDF">PDF</option><option value="Video">Video</option><option value="Document">Document</option><option value="Link">Link</option><option value="Slide">Slide</option></select></div>
@@ -639,6 +644,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                                 <td>
                                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this resource?')">
                                         <input type="hidden" name="action" value="delete_resource">
+                                        <?php csrfField(); ?>
                                         <input type="hidden" name="resource_id" value="<?= (int)$res['id'] ?>">
                                         <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                     </form>
@@ -712,6 +718,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     <div id="addAnnouncementForm" style="display:none" class="card card-body mb-4">
                         <form method="POST">
                             <input type="hidden" name="action" value="add_announcement">
+                            <?php csrfField(); ?>
                             <div class="row">
                                 <div class="col-md-6 mb-2"><label>Title</label><input type="text" name="title" class="form-control" required></div>
                                 <div class="col-md-4 mb-2"><label>Target Audience</label><select name="target_audience" class="form-control"><option value="All">All</option><option value="Students">Students</option><option value="Staff">Staff</option><option value="Department">Department</option></select></div>
@@ -896,6 +903,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const CSRF_TOKEN = '<?= $_SESSION['csrf_token'] ?? '' ?>';
         // Update current date/time
         function updateDateTime() {
             const now = new Date();
@@ -1061,6 +1069,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             document.getElementById('modalTitle').textContent = 'Edit Assessment';
             document.getElementById('modalBody').innerHTML = `
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
                     <input type="hidden" name="action" value="update_assessment">
                     <input type="hidden" name="assessment_id" value="${a.id}">
                     <div class="row">

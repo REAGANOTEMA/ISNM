@@ -348,14 +348,23 @@ include 'shared/_header.php';
     </div>
 <?php else: ?>
     <!-- News Listing / Admin View -->
-    <div class="hero-section-news">
+    <div class="hero-section-news animate-on-scroll">
         <div class="container">
+            <span class="tag tag-primary"><i class="fas fa-newspaper"></i> Latest News</span>
             <h1><i class="fas fa-newspaper me-2"></i>ISNM News</h1>
+            <div class="section-divider section-divider-center"></div>
             <p>Latest updates, announcements, and stories from Iganga School of Nursing &amp; Midwifery</p>
         </div>
     </div>
 
-    <div class="container py-4">
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">News</li>
+      </ol>
+    </nav>
+
+    <div class="container py-4 animate-on-scroll">
         <?php if ($success): ?>
         <div class="alert alert-success alert-dismissible fade show"><?= htmlspecialchars($success) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endif; ?>
@@ -434,9 +443,9 @@ include 'shared/_header.php';
         </div>
         <?php else: ?>
         <div class="row g-4">
-            <?php foreach ($newsList as $article): ?>
+            <?php $cardIndex = 0; foreach ($newsList as $article): $cardIndex++; $delayClass = 'animate-delay-' . min($cardIndex, 5); ?>
             <div class="col-12 col-sm-6 col-lg-4">
-                <div class="news-card">
+                <div class="news-card animate-on-scroll <?= $delayClass ?>">
                     <?php if ($article['featured_image']): ?>
                     <img src="<?= htmlspecialchars($article['featured_image']) ?>" alt="<?= htmlspecialchars($article['title']) ?>" class="news-card-img" loading="lazy">
                     <?php else: ?>

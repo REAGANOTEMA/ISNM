@@ -2,30 +2,40 @@
 
   <main>
     <!-- Page Header -->
-    <section class="page-header">
+    <section class="page-header animate-on-scroll">
       <div class="container">
         <div class="row align-items-center">
           <div class="col-lg-12 text-center">
             <h1 class="page-title">Academic Programs</h1>
+            <div class="section-divider section-divider-center"></div>
             <p class="page-subtitle">Quality Healthcare Education for Tomorrow's Professionals</p>
           </div>
         </div>
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Programs</li>
+      </ol>
+    </nav>
+
     <!-- Programs Overview -->
-    <section class="programs-overview py-4">
+    <section class="programs-overview py-4 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-4">
+            <span class="tag tag-primary"><i class="fas fa-graduation-cap"></i> Academic Programs</span>
             <h2 class="section-title">Our Academic Programs</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">ISNM offers comprehensive nursing and midwifery programs designed to produce competent healthcare professionals</p>
           </div>
         </div>
         
         <div class="row g-4 justify-content-center">
           <!-- Certificate in Nursing -->
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll animate-delay-1">
             <div class="program-card">
               <div class="program-header">
                 <div class="program-icon">
@@ -71,7 +81,7 @@
           </div>
 
           <!-- Certificate in Midwifery -->
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll animate-delay-2">
             <div class="program-card">
               <div class="program-header">
                 <div class="program-icon">
@@ -117,7 +127,7 @@
           </div>
 
           <!-- Diploma in Nursing - Extension -->
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll animate-delay-3">
             <div class="program-card">
               <div class="program-header">
                 <div class="program-icon">
@@ -163,7 +173,7 @@
           </div>
 
           <!-- Diploma in Midwifery - Extension -->
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll animate-delay-4">
             <div class="program-card">
               <div class="program-header">
                 <div class="program-icon">
@@ -212,11 +222,13 @@
     </section>
 
     <!-- Practicum Sites Section -->
-    <section class="practicum-section py-4">
+    <section class="practicum-section py-4 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-4">
+            <span class="tag tag-primary"><i class="fas fa-hospital"></i> Clinical Training</span>
             <h2 class="section-title">Clinical Practicum Sites</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Our students gain practical experience at leading healthcare facilities</p>
           </div>
         </div>
@@ -227,7 +239,7 @@
               <p>Iganga School of Nursing and Midwifery has entered into a Memorandum of Understanding (MOU) with major hospitals for providing our students with hands on practical experience.</p>
               
               <div class="hospitals-grid">
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll animate-delay-1" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -237,7 +249,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll animate-delay-2" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -247,7 +259,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll animate-delay-3" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -257,7 +269,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll animate-delay-4" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -267,7 +279,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll animate-delay-5" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -277,7 +289,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card">
+                <div class="hospital-card animate-on-scroll" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -288,7 +300,7 @@
                 </div>
               </div>
               
-              <div class="practicum-details">
+              <div class="practicum-details animate-on-scroll">
                 <h3>Clinical Training Structure</h3>
                 <ul class="training-structure">
                   <li>Each semester, students spend 8 weeks at practicum sites</li>
@@ -306,11 +318,13 @@
     </section>
 
     <!-- Admission Process Section -->
-    <section class="admission-process py-4">
+    <section class="admission-process py-4 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-4">
+            <span class="tag tag-primary"><i class="fas fa-clipboard-list"></i> How to Apply</span>
             <h2 class="section-title">Admission Process</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Your pathway to joining ISNM</p>
           </div>
         </div>
@@ -318,7 +332,7 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="process-timeline">
-              <div class="timeline-item">
+              <div class="timeline-item animate-on-scroll animate-delay-1">
                 <div class="timeline-marker">
                   <span>1</span>
                 </div>
@@ -328,7 +342,7 @@
                 </div>
               </div>
               
-              <div class="timeline-item">
+              <div class="timeline-item animate-on-scroll animate-delay-2">
                 <div class="timeline-marker">
                   <span>2</span>
                 </div>
@@ -338,7 +352,7 @@
                 </div>
               </div>
               
-              <div class="timeline-item">
+              <div class="timeline-item animate-on-scroll animate-delay-3">
                 <div class="timeline-marker">
                   <span>3</span>
                 </div>
@@ -348,7 +362,7 @@
                 </div>
               </div>
               
-              <div class="timeline-item">
+              <div class="timeline-item animate-on-scroll animate-delay-4">
                 <div class="timeline-marker">
                   <span>4</span>
                 </div>
@@ -358,7 +372,7 @@
                 </div>
               </div>
               
-              <div class="timeline-item">
+              <div class="timeline-item animate-on-scroll animate-delay-5">
                 <div class="timeline-marker">
                   <span>5</span>
                 </div>
@@ -377,7 +391,7 @@
 
 
   <!-- Apply Now & Donate CTA Section -->
-  <section class="cta-section py-5 bg-primary text-white">
+  <section class="cta-section py-5 bg-primary text-white animate-on-scroll">
     <div class="container text-center">
       <h2 class="mb-4">Take the Next Step in Your Healthcare Career</h2>
       <p class="lead mb-4">Apply now or support our mission to train healthcare professionals</p>

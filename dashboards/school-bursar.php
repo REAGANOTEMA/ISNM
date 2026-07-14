@@ -7,6 +7,7 @@
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/payment_gateway.php';
 require_once __DIR__ . '/../includes/payroll_functions.php';
 
@@ -399,7 +400,7 @@ $pageTitle = 'Bursar Dashboard';
     <?php $unverified = array_filter($pendingVerification, fn($p)=>$p['status']==='Pending'||$p['status']==='Completed'); foreach (array_slice($unverified,0,5) as $p): ?>
       <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
         <div><strong><?=htmlspecialchars($p['student_name'])?></strong><br><small><?=number_format($p['amount'])?> UGX via <?=htmlspecialchars(ucfirst($p['payment_method']??$p['method']??'-'))?></small></div>
-        <form method="post" class="d-inline"><input type="hidden" name="action" value="approve_payment"><input type="hidden" name="payment_id" value="<?=$p['id']?>"><button class="btn btn-sm btn-success">Verify</button></form>
+        <form method="post" class="d-inline"><input type="hidden" name="action" value="approve_payment"><input type="hidden" name="payment_id" value="<?=$p['id']?>"><?= csrfField() ?><button class="btn btn-sm btn-success">Verify</button></form>
       </div>
     <?php endforeach; if (empty($unverified)): ?><p class="text-muted small">No pending verifications.</p><?php endif; ?>
     </div>
@@ -414,7 +415,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Fee Structure Setup</h3>
-    <form method="post"><input type="hidden" name="action" value="add_fee_structure">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_fee_structure">
       <div class="mb-2"><input class="form-control form-control-sm" name="fee_name" placeholder="Fee Name (e.g. Tuition)" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="program_id" placeholder="Program ID (optional)"></div>
@@ -423,7 +424,7 @@ $pageTitle = 'Bursar Dashboard';
       <button class="btn btn-sm btn-primary">Add Fee</button>
     </form></div>
     <div class="brs-card"><h3>Discounts & Adjustments</h3>
-    <form method="post"><input type="hidden" name="action" value="add_discount">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_discount">
       <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
       <div class="mb-2"><select class="form-select form-select-sm" name="discount_type"><option value="discount">Discount</option><option value="waiver">Waiver</option><option value="refund">Refund</option></select></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
@@ -449,7 +450,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Record Payment</h3>
-    <form method="post"><input type="hidden" name="action" value="record_payment">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="record_payment">
       <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
       <div class="mb-2"><select class="form-select form-select-sm" name="payment_method" id="payMethod"><option value="cash">Cash</option><option value="bank">Bank Deposit</option><option value="mobile_money">Mobile Money</option><option value="cheque">Cheque</option></select></div>
@@ -516,7 +517,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Create Budget</h3>
-    <form method="post"><input type="hidden" name="action" value="create_budget">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="create_budget">
       <div class="mb-2"><input class="form-control form-control-sm" name="budget_title" placeholder="Budget Title" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="total_amount" placeholder="Total Amount" step="0.01" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="budget_name" placeholder="Budget Name" value="Annual Budget <?=date('Y')?>"></div>
@@ -524,7 +525,7 @@ $pageTitle = 'Bursar Dashboard';
       <button class="btn btn-sm btn-primary">Create Budget</button>
     </form></div>
     <div class="brs-card"><h3>Record Expense</h3>
-    <form method="post"><input type="hidden" name="action" value="add_expense">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_expense">
       <div class="mb-2"><input class="form-control form-control-sm" name="description" placeholder="Description" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="category" placeholder="Category (e.g. Utilities)"></div>
@@ -560,7 +561,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Quick Payroll Run</h3>
-    <form method="post"><input type="hidden" name="action" value="run_payroll">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="run_payroll">
       <div class="mb-2"><input class="form-control form-control-sm" name="period" placeholder="Period (e.g. 2026-07)" value="<?=date('Y-m')?>" required></div>
       <div class="mb-2"><textarea class="form-control form-control-sm" name="description" rows="2" placeholder="Description"></textarea></div>
       <button class="btn btn-sm btn-primary"><i class="fas fa-calculator me-1"></i>Run Payroll (with PAYE/NSSF)</button>
@@ -596,7 +597,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Bank Reconciliation</h3>
-    <form method="post"><input type="hidden" name="action" value="reconcile_bank">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="reconcile_bank">
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="bank_balance" placeholder="Bank Statement Balance" step="0.01" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="book_balance" placeholder="Book Balance" step="0.01" required></div>
       <div class="mb-2"><input type="date" class="form-control form-control-sm" name="reconciliation_date" value="<?=date('Y-m-d')?>"></div>
@@ -605,7 +606,7 @@ $pageTitle = 'Bursar Dashboard';
     </form>
     <hr>
     <div class="brs-card"><h3>Import Bank Statement (CSV)</h3>
-    <form method="post" enctype="multipart/form-data"><input type="hidden" name="action" value="import_bank_csv">
+    <form method="post" enctype="multipart/form-data"><?= csrfField() ?><input type="hidden" name="action" value="import_bank_csv">
       <div class="mb-2"><input type="file" class="form-control form-control-sm" name="bank_csv" accept=".csv" required></div>
       <div class="mb-2"><small class="text-muted">CSV columns: Date, Description, Amount, Balance</small></div>
       <button class="btn btn-sm btn-info">Upload & Auto-Reconcile</button>
@@ -630,7 +631,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Add Fixed Asset</h3>
-    <form method="post"><input type="hidden" name="action" value="add_asset">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_asset">
       <div class="mb-2"><input class="form-control form-control-sm" name="asset_name" placeholder="Asset Name" required></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="value" placeholder="Purchase Cost (UGX)" step="0.01" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="category" placeholder="Category (e.g. Furniture, IT, Vehicle)"></div>
@@ -641,7 +642,7 @@ $pageTitle = 'Bursar Dashboard';
     </form>
     <hr>
     <div class="brs-card"><h3>Add Stock Item</h3>
-    <form method="post"><input type="hidden" name="action" value="add_stock_item">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_stock_item">
       <div class="mb-2"><input class="form-control form-control-sm" name="item_name" placeholder="Item Name" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="category" placeholder="Category (e.g. Office Supplies, Cleaning)"></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="quantity" placeholder="Quantity" value="1" min="1"></div>
@@ -671,7 +672,7 @@ $pageTitle = 'Bursar Dashboard';
       <td><?=number_format($currVal)?> <small class="text-muted">(<?=$yearsOwned?>yrs)</small></td>
       <td><?=number_format($deprPerYear)?></td>
       <td><span class="badge bg-<?=in_array($a['status'],['new','available'])?'success':'warning'?>"><?=htmlspecialchars($a['status']??'new')?></span></td>
-      <td><form method="post" class="d-inline"><input type="hidden" name="action" value="calculate_depreciation"><input type="hidden" name="asset_id" value="<?=$a['id']?>"><button class="btn btn-sm btn-outline-info py-0" title="Update depreciation">Calc Depr</button></form></td>
+      <td><form method="post" class="d-inline"><input type="hidden" name="action" value="calculate_depreciation"><input type="hidden" name="asset_id" value="<?=$a['id']?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-info py-0" title="Update depreciation">Calc Depr</button></form></td>
     </tr><?php endwhile; ?>
     </tbody></table></div>
     <?php else: ?><p class="text-muted small">No assets tracked yet.</p><?php endif; ?>
@@ -700,7 +701,7 @@ $pageTitle = 'Bursar Dashboard';
 <div class="row">
   <div class="col-md-5">
     <div class="brs-card"><h3>Send Fee Reminder</h3>
-    <form method="post"><input type="hidden" name="action" value="send_reminder">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="send_reminder">
       <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?></option><?php endforeach; ?></select></div>
       <div class="mb-2"><textarea class="form-control form-control-sm" name="message" rows="4" placeholder="Reminder message" required>Dear student, your fee balance is due. Please clear to avoid penalties.</textarea></div>
       <button class="btn btn-sm btn-primary">Send Reminder</button>
@@ -724,7 +725,7 @@ $pageTitle = 'Bursar Dashboard';
       <div><h3 style="margin:0;color:#fff;font-size:16px;border:none;padding:0">Uganda Revenue Authority</h3><p style="margin:0;opacity:.8;font-size:12px">Tax Compliance &amp; Reporting</p></div>
     </div>
     <div class="brs-card"><h3><i class="fas fa-plus-circle me-1"></i> Add Tax Record</h3>
-    <form method="post"><input type="hidden" name="action" value="add_tax_record">
+    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_tax_record">
       <div class="mb-2"><select class="form-select form-select-sm" name="tax_type"><option value="withholding">Withholding Tax</option><option value="vat">VAT</option></select></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount (UGX)" step="0.01" required></div>
       <div class="mb-2"><input class="form-control form-control-sm" name="tax_period" placeholder="Period (e.g. 2026-07)" value="<?=date('Y-m')?>"></div>
@@ -825,6 +826,7 @@ while ($pg = $pgAll2->fetch_assoc()):
 <div class="modal fade" id="pgModal<?= $pk ?>" tabindex="-1" aria-labelledby="pgModalLabel<?= $pk ?>" aria-hidden="true">
   <div class="modal-dialog modal-lg"><div class="modal-content">
     <form method="post" action="school-bursar.php?page=payment-providers">
+      <?= csrfField() ?>
       <input type="hidden" name="action" value="update_provider_config">
       <input type="hidden" name="provider_key" value="<?= $pk ?>">
       <div class="modal-header"><h5 class="modal-title" id="pgModalLabel<?= $pk ?>"><i class="fas fa-cog me-1"></i> <?= htmlspecialchars($pg['provider_name']) ?> Configuration</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

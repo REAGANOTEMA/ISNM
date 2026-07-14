@@ -2,7 +2,7 @@
 
   <main>
     <!-- Page Header -->
-    <section class="page-header">
+    <section class="page-header animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">
@@ -13,13 +13,22 @@
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">About</li>
+      </ol>
+    </nav>
+
     <!-- Introduction Section -->
-    <section class="intro-section py-5">
+    <section class="intro-section py-5 animate-on-scroll">
       <div class="container">
         <div class="row align-items-center">
           <div class="col-lg-6">
             <div class="intro-content">
+              <span class="tag tag-primary"><i class="fas fa-info-circle"></i> About Us</span>
               <h2 class="section-title">Introduction</h2>
+              <div class="section-divider"></div>
               <p class="intro-text">
                 Iganga School of Nursing and Midwifery is a private Nursing School registered by the Registrar of Companies as a Limited Liability Company. The school is also registered with the Ministry of Education & Sports (MOES) and Uganda Nurses and Midwives Council (UNMC).
               </p>
@@ -43,7 +52,7 @@
     </section>
 
     <!-- Vision, Mission & Values Section -->
-    <section class="vmv-section py-5 bg-light">
+    <section class="vmv-section py-5 bg-light animate-on-scroll">
       <div class="container">
         <div class="row mb-5">
           <div class="col-lg-12 text-center">
@@ -54,7 +63,7 @@
         </div>
         <div class="row">
           <div class="col-lg-4">
-            <div class="vmv-card vision">
+            <div class="vmv-card vision animate-delay-1" style="cursor:pointer">
               <div class="vmv-icon">
                 <i class="fas fa-eye"></i>
               </div>
@@ -63,7 +72,7 @@
             </div>
           </div>
           <div class="col-lg-4">
-            <div class="vmv-card mission">
+            <div class="vmv-card mission animate-delay-2" style="cursor:pointer">
               <div class="vmv-icon">
                 <i class="fas fa-bullseye"></i>
               </div>
@@ -72,7 +81,7 @@
             </div>
           </div>
           <div class="col-lg-4">
-            <div class="vmv-card motto">
+            <div class="vmv-card motto animate-delay-3" style="cursor:pointer">
               <div class="vmv-icon">
                 <i class="fas fa-heart"></i>
               </div>
@@ -86,29 +95,31 @@
         <!-- Core Values -->
         <div class="row mt-5">
           <div class="col-lg-12">
+            <span class="tag tag-primary"><i class="fas fa-heart"></i> Our Values</span>
             <h2 class="section-title text-center">Core Values</h2>
+            <div class="section-divider"></div>
             <div class="values-grid">
-              <div class="value-item">
+              <div class="value-item animate-delay-1">
                 <i class="fas fa-balance-scale"></i>
                 <h4>Good Governance</h4>
               </div>
-              <div class="value-item">
+              <div class="value-item animate-delay-2">
                 <i class="fas fa-eye"></i>
                 <h4>Transparency & Accountability</h4>
               </div>
-              <div class="value-item">
+              <div class="value-item animate-delay-3">
                 <i class="fas fa-user-md"></i>
                 <h4>Professionalism</h4>
               </div>
-              <div class="value-item">
+              <div class="value-item animate-delay-4">
                 <i class="fas fa-users"></i>
                 <h4>Teamwork</h4>
               </div>
-              <div class="value-item">
+              <div class="value-item animate-delay-5">
                 <i class="fas fa-handshake"></i>
                 <h4>Partnerships</h4>
               </div>
-              <div class="value-item">
+              <div class="value-item animate-delay-5">
                 <i class="fas fa-globe"></i>
                 <h4>Non Partisan</h4>
               </div>
@@ -119,11 +130,13 @@
     </section>
 
     <!-- Governance Section -->
-    <section class="governance-section py-5">
+    <section class="governance-section py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12">
+            <span class="tag tag-gold"><i class="fas fa-university"></i> Leadership</span>
             <h2 class="section-title">School Governance</h2>
+            <div class="section-divider"></div>
             
             <!-- Board of Directors -->
             <div class="governance-level mb-5">
@@ -137,7 +150,7 @@
               </ul>
               
               <div class="board-members">
-                <div class="member-card">
+                <div class="member-card animate-delay-1">
              <div class="member-image">
                      <img src="images/byawaka.JPG" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
                    </div>
@@ -146,7 +159,7 @@
                     <p>Chairman Board of Directors</p>
                   </div>
                 </div>
-                <div class="member-card">
+                <div class="member-card animate-delay-2">
                   <div class="member-image">
                     <img src="images/mami.jpeg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
                   </div>
@@ -155,7 +168,7 @@
                     <p>Member Board of Directors</p>
                   </div>
                 </div>
-                <div class="member-card">
+                <div class="member-card animate-delay-3">
              <div class="member-image">
                      <img src="images/stephen.JPG" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
                    </div>
@@ -224,14 +237,16 @@
     </section>
 
     <!-- Programs Section -->
-    <section class="programs-section py-5 bg-light">
+    <section class="programs-section py-5 bg-light animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12">
+            <span class="tag tag-primary"><i class="fas fa-graduation-cap"></i> Academics</span>
             <h2 class="section-title">Programs Offered</h2>
+            <div class="section-divider"></div>
             <p>Currently, school offers four (4) programs:</p>
             <div class="programs-list">
-              <div class="program-item">
+              <div class="program-item animate-delay-1">
                 <div class="program-icon">
                   <i class="fas fa-user-nurse"></i>
                 </div>
@@ -241,7 +256,7 @@
                   <p>Comprehensive nursing program with theoretical and practical training</p>
                 </div>
               </div>
-              <div class="program-item">
+              <div class="program-item animate-delay-2">
                 <div class="program-icon">
                   <i class="fas fa-baby"></i>
                 </div>
@@ -251,7 +266,7 @@
                   <p>Specialized midwifery program with hands on delivery experience</p>
                 </div>
               </div>
-              <div class="program-item">
+              <div class="program-item animate-delay-3">
                 <div class="program-icon">
                   <i class="fas fa-user-md"></i>
                 </div>
@@ -261,7 +276,7 @@
                   <p>Advanced program for enrolled nurses seeking diploma qualification</p>
                 </div>
               </div>
-              <div class="program-item">
+              <div class="program-item animate-delay-4">
                 <div class="program-icon">
                   <i class="fas fa-stethoscope"></i>
                 </div>
@@ -278,11 +293,13 @@
     </section>
 
     <!-- Campus Life Section -->
-    <section class="campus-life-section py-5">
+    <section class="campus-life-section py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12">
+            <span class="tag tag-gold"><i class="fas fa-camera"></i> Campus Life</span>
             <h2 class="section-title">Campus Life</h2>
+            <div class="section-divider"></div>
             <div class="campus-slider">
               <!-- Slider Container -->
               <div class="slider-wrapper">
@@ -410,34 +427,36 @@
     </section>
 
     <!-- Strategic Objectives Section -->
-    <section class="objectives-section py-5">
+    <section class="objectives-section py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12">
+            <span class="tag tag-primary"><i class="fas fa-bullseye"></i> Goals</span>
             <h2 class="section-title">Strategic Objectives</h2>
+            <div class="section-divider"></div>
             <div class="objectives-grid">
-              <div class="objective-item">
+              <div class="objective-item animate-delay-1">
                 <div class="objective-number">1</div>
                 <div class="objective-content">
                   <h3>Build Institutional Capacity</h3>
                   <p>Build the Institutional capacity of the school to train quality nurses and midwives</p>
                 </div>
               </div>
-              <div class="objective-item">
+              <div class="objective-item animate-delay-2">
                 <div class="objective-number">2</div>
                 <div class="objective-content">
                   <h3>Resource Management</h3>
                   <p>Enhance resource mobilization, utilization and management for sustainable development of the school</p>
                 </div>
               </div>
-              <div class="objective-item">
+              <div class="objective-item animate-delay-3">
                 <div class="objective-number">3</div>
                 <div class="objective-content">
                   <h3>Partnerships & Networks</h3>
                   <p>Develop strategic partnerships and networks at local, national and international levels to enhance the learning/teaching environment</p>
                 </div>
               </div>
-              <div class="objective-item">
+              <div class="objective-item animate-delay-4">
                 <div class="objective-number">4</div>
                 <div class="objective-content">
                   <h3>Stakeholder Participation</h3>
@@ -453,7 +472,7 @@
   </main>
 
   <!-- Apply Now & Donate CTA Section -->
-  <section class="cta-section py-5 bg-primary text-white">
+  <section class="cta-section py-5 bg-primary text-white animate-on-scroll">
     <div class="container text-center">
       <h2 class="mb-4">Start Your Healthcare Journey Today</h2>
       <p class="lead mb-4">Join Iganga School of Nursing and Midwifery and become a healthcare professional</p>

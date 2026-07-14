@@ -3,6 +3,7 @@ error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['bursar','registrar','director','finance']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
@@ -28,6 +29,7 @@ if (!$can_generate_receipts) {
 
 // Handle receipt generation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt']) && $conn) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $receipt_type = $_POST['receipt_type'] ?? 'Fee Payment';
     $student_id = $_POST['student_id'] ?? 0;
     $amount = $_POST['amount'] ?? 0;
@@ -143,8 +145,8 @@ if ($conn) {
         <div class="receipt-form">
             <h4>Generate New Receipt</h4>
             <form method="POST">
+                <?php csrfField(); ?>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
                         <label for="receipt_type" class="form-label">Receipt Type:</label>
                         <select class="form-control" id="receipt_type" name="receipt_type" required>
                             <option value="Fee Payment">Fee Payment</option>

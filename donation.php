@@ -18,12 +18,21 @@ include('shared/_header.php');
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Donate</li>
+      </ol>
+    </nav>
+
     <!-- Enhanced Donation Overview -->
-    <section class="donation-overview py-5">
+    <section class="donation-overview py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-gold"><i class="fas fa-hand-holding-heart"></i> Support Us</span>
             <h2 class="section-title">Make a Difference</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Your generous support helps us provide quality healthcare education and improve our facilities</p>
           </div>
         </div>
@@ -35,7 +44,7 @@ include('shared/_header.php');
               <p>Iganga School of Nursing and Midwifery is committed to producing world class healthcare professionals who serve communities across Uganda and beyond. Your donation helps us:</p>
               
               <div class="impact-list">
-                <div class="impact-item">
+                <div class="impact-item animate-on-scroll animate-delay-1">
                   <div class="impact-icon">
                     <i class="fas fa-graduation-cap"></i>
                   </div>
@@ -45,7 +54,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="impact-item">
+                <div class="impact-item animate-on-scroll animate-delay-2">
                   <div class="impact-icon">
                     <i class="fas fa-hospital"></i>
                   </div>
@@ -55,7 +64,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="impact-item">
+                <div class="impact-item animate-on-scroll animate-delay-3">
                   <div class="impact-icon">
                     <i class="fas fa-laptop"></i>
                   </div>
@@ -65,7 +74,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="impact-item">
+                <div class="impact-item animate-on-scroll animate-delay-4">
                   <div class="impact-icon">
                     <i class="fas fa-user-graduate"></i>
                   </div>
@@ -88,18 +97,20 @@ include('shared/_header.php');
     </section>
 
     <!-- Donation Options -->
-    <section class="donation-options py-5">
+    <section class="donation-options py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-gold"><i class="fas fa-gift"></i> Ways to Give</span>
             <h2 class="section-title">Ways to Give</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Choose how you'd like to support our mission</p>
           </div>
         </div>
         
         <div class="row g-4">
           <div class="col-lg-4">
-            <div class="donation-card" data-card="one-time">
+            <div class="donation-card animate-on-scroll animate-delay-1" data-card="one-time">
               <div class="donation-icon">
                 <i class="fas fa-hand-holding-heart"></i>
               </div>
@@ -116,7 +127,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-4">
-            <div class="donation-card" data-card="monthly">
+            <div class="donation-card animate-on-scroll animate-delay-2" data-card="monthly">
               <div class="donation-icon">
                 <i class="fas fa-sync-alt"></i>
               </div>
@@ -133,7 +144,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-4">
-            <div class="donation-card" data-card="scholarship">
+            <div class="donation-card animate-on-scroll animate-delay-3" data-card="scholarship">
               <div class="donation-icon">
                 <i class="fas fa-award"></i>
               </div>
@@ -153,18 +164,20 @@ include('shared/_header.php');
     </section>
 
     <!-- Specific Projects -->
-    <section class="projects-section py-5">
+    <section class="projects-section py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-gold"><i class="fas fa-hammer"></i> Specific Projects</span>
             <h2 class="section-title">Support Specific Projects</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Fund our priority development initiatives</p>
           </div>
         </div>
         
         <div class="row g-4">
           <div class="col-lg-6">
-            <div class="project-card">
+            <div class="project-card animate-on-scroll animate-delay-1">
               <div class="project-image">
                 <img src="images/revision-library.jpg" alt="Library" class="img-fluid">
               </div>
@@ -187,7 +200,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="project-card">
+            <div class="project-card animate-on-scroll animate-delay-2">
               <div class="project-image">
                 <img src="images/computer-students.jpeg" alt="Computer Lab" class="img-fluid">
               </div>
@@ -210,7 +223,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="project-card">
+            <div class="project-card animate-on-scroll animate-delay-3">
               <div class="project-image">
                 <img src="images/skills-lab-nurses.jpeg" alt="Skills Lab" class="img-fluid">
               </div>
@@ -233,7 +246,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="project-card">
+            <div class="project-card animate-on-scroll animate-delay-4">
               <div class="project-image">
                 <img src="images/diploma-hostel.jpg" alt="Student Hostel" class="img-fluid">
               </div>
@@ -309,6 +322,14 @@ include('shared/_header.php');
                 </div>
                 <div class="col-md-6">
                   <label for="donationAmount" class="form-label">Amount (UGX) *</label>
+                  <input type="number" class="form-control" id="donationAmount" name="amount" min="1000" placeholder="e.g. 100000" required>
+                </div>
+                <div class="col-12 mt-3">
+                  <div class="alert alert-info mb-0">
+                    <i class="fas fa-hashtag me-1"></i> Your Donation Reference: <strong id="donationReference"></strong>
+                    <small class="d-block mt-1">Use this reference as payment narrative when transferring.</small>
+                  </div>
+                </div>
                   <input type="number" class="form-control" id="donationAmount" name="amount" min="10000" placeholder="Enter amount in UGX" required>
                 </div>
                 <div class="col-12">
@@ -444,7 +465,7 @@ include('shared/_header.php');
                 <div class="col-md-6 mb-3">
                   <div class="card border h-100">
                     <div class="card-body d-flex align-items-center gap-3">
-                      <img src="<?= htmlspecialchars($bank['logo']) ?>" alt="<?= htmlspecialchars($bank['name']) ?>" style="height: 40px; width: auto; object-fit: contain; border-radius: 4px;">
+                      <img src="<?= htmlspecialchars($bank['logo']) ?>" alt="<?= htmlspecialchars($bank['name']) ?> logo" class="img-fluid" style="height: 40px; width: auto; object-fit: contain; border-radius: 4px;">
                       <div>
                         <h6 class="fw-bold mb-1"><?= htmlspecialchars($bank['name']) ?></h6>
                         <small class="text-muted d-block">Account: <?= htmlspecialchars($bank['account']) ?></small>
@@ -653,7 +674,7 @@ include('shared/_header.php');
     // Process donation
     function processDonation() {
       const form = document.getElementById('donationForm');
-      const submitBtn = document.querySelector('.modal-footer .btn-primary');
+      const submitBtn = document.querySelector('.modal-footer .btn-yellow');
       
       // Basic validation
       const requiredFields = form.querySelectorAll('[required]');

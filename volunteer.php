@@ -17,12 +17,21 @@ include('shared/_header.php');
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Volunteer</li>
+      </ol>
+    </nav>
+
     <!-- Volunteer Overview -->
-    <section class="volunteer-overview py-5">
+    <section class="volunteer-overview py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-primary"><i class="fas fa-hands-helping"></i> Get Involved</span>
             <h2 class="section-title">Why Volunteer at ISNM?</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Join our community of passionate healthcare educators and professionals</p>
           </div>
         </div>
@@ -34,7 +43,7 @@ include('shared/_header.php');
               <p>Volunteering at Iganga School of Nursing and Midwifery offers a unique opportunity to contribute to the development of future healthcare professionals while gaining valuable experience in healthcare education.</p>
               
               <div class="benefits-list">
-                <div class="benefit-item">
+                <div class="benefit-item animate-on-scroll animate-delay-1">
                   <div class="benefit-icon">
                     <i class="fas fa-hands-helping"></i>
                   </div>
@@ -44,7 +53,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="benefit-item">
+                <div class="benefit-item animate-on-scroll animate-delay-2">
                   <div class="benefit-icon">
                     <i class="fas fa-users"></i>
                   </div>
@@ -54,7 +63,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="benefit-item">
+                <div class="benefit-item animate-on-scroll animate-delay-3">
                   <div class="benefit-icon">
                     <i class="fas fa-certificate"></i>
                   </div>
@@ -64,7 +73,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="benefit-item">
+                <div class="benefit-item animate-on-scroll animate-delay-4">
                   <div class="benefit-icon">
                     <i class="fas fa-heart"></i>
                   </div>
@@ -78,7 +87,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="volunteer-image">
+            <div class="volunteer-image animate-on-scroll">
               <img src="images/students.jpg" alt="Volunteers Teaching" class="img-fluid rounded-3">
             </div>
           </div>
@@ -87,18 +96,20 @@ include('shared/_header.php');
     </section>
 
     <!-- Volunteer Opportunities -->
-    <section class="volunteer-opportunities py-5 bg-light">
+    <section class="volunteer-opportunities py-5 bg-light animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-primary"><i class="fas fa-briefcase"></i> Opportunities</span>
             <h2 class="section-title">Volunteer Opportunities</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Find the perfect role that matches your skills and interests</p>
           </div>
         </div>
         
         <div class="row g-4">
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-1">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-chalkboard-teacher"></i>
@@ -129,7 +140,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-2">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-book-medical"></i>
@@ -160,7 +171,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-3">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-laptop-code"></i>
@@ -191,7 +202,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-4">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-users-cog"></i>
@@ -222,7 +233,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-5">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-heartbeat"></i>
@@ -253,7 +264,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="opportunity-card">
+            <div class="opportunity-card animate-on-scroll animate-delay-1">
               <div class="opportunity-header">
                 <div class="opportunity-icon">
                   <i class="fas fa-book"></i>
@@ -287,18 +298,20 @@ include('shared/_header.php');
     </section>
 
     <!-- Volunteer Benefits -->
-    <section class="volunteer-benefits py-5">
+    <section class="volunteer-benefits py-5 animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">
+            <span class="tag tag-primary"><i class="fas fa-gift"></i> Benefits</span>
             <h2 class="section-title">Volunteer Benefits</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">What you gain as an ISNM volunteer</p>
           </div>
         </div>
         
         <div class="row g-4">
           <div class="col-md-6 col-lg-3">
-            <div class="benefit-card">
+            <div class="benefit-card animate-on-scroll animate-delay-1">
               <div class="benefit-card-icon">
                 <i class="fas fa-certificate"></i>
               </div>
@@ -308,7 +321,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-md-6 col-lg-3">
-            <div class="benefit-card">
+            <div class="benefit-card animate-on-scroll animate-delay-2">
               <div class="benefit-card-icon">
                 <i class="fas fa-user-tie"></i>
               </div>
@@ -318,7 +331,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-md-6 col-lg-3">
-            <div class="benefit-card">
+            <div class="benefit-card animate-on-scroll animate-delay-3">
               <div class="benefit-card-icon">
                 <i class="fas fa-network-wired"></i>
               </div>
@@ -328,7 +341,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-md-6 col-lg-3">
-            <div class="benefit-card">
+            <div class="benefit-card animate-on-scroll animate-delay-4">
               <div class="benefit-card-icon">
                 <i class="fas fa-hands-helping"></i>
               </div>
@@ -341,12 +354,14 @@ include('shared/_header.php');
     </section>
 
     <!-- Volunteer Application Form -->
-    <section class="volunteer-application py-5 bg-light">
+    <section class="volunteer-application py-5 bg-light animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-8 mx-auto">
             <div class="application-form-container">
+              <span class="tag tag-primary"><i class="fas fa-paper-plane"></i> Apply Now</span>
               <h2 class="text-center mb-4">Apply to Volunteer</h2>
+              <div class="section-divider section-divider-center"></div>
               <p class="text-center mb-4">Fill out the form below and we'll contact you about available opportunities</p>
               
               <form id="volunteerForm" method="POST" action="process-volunteer.php">
@@ -493,7 +508,7 @@ include('shared/_header.php');
 
 
   <!-- Support CTA Section -->
-  <section class="cta-section py-5 bg-primary text-white">
+  <section class="cta-section py-5 bg-primary text-white animate-on-scroll">
     <div class="container text-center">
       <h2 class="mb-4">Support Our Mission</h2>
       <p class="lead mb-4">Your contribution helps us train the next generation of healthcare professionals</p>

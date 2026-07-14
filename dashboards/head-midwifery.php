@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 
 $ctx = bootstrapStaffDashboard(['head midwifery', 'head of midwifery']);
 $conn = $ctx['staff'];
@@ -15,6 +16,7 @@ $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangascho
 // â”€â”€ CRUD POST Handlers â”€â”€
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_student') {
@@ -365,6 +367,7 @@ if ($conn) {
                 <div class="card card-body">
                     <form method="POST" class="row g-3">
                         <input type="hidden" name="action" value="add_student">
+                        <?php csrfField(); ?>
                         <div class="col-md-3">
                             <label class="form-label">Student ID</label>
                             <input type="text" name="student_id" class="form-control" required placeholder="e.g. MW-2026-001">
@@ -415,6 +418,7 @@ if ($conn) {
                                 <button class="btn btn-sm btn-outline-primary me-1" onclick="editStudent(<?= htmlspecialchars(json_encode($s), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
                                 <form method="POST" style="display:inline" onsubmit="return confirm('Delete this student?')">
                                     <input type="hidden" name="action" value="delete_student">
+                                    <?php csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -432,6 +436,7 @@ if ($conn) {
                     <div class="modal-content">
                         <form method="POST">
                             <input type="hidden" name="action" value="update_student">
+                            <?php csrfField(); ?>
                             <input type="hidden" name="id" id="editStudentId">
                             <div class="modal-header"><h5 class="modal-title">Edit Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                             <div class="modal-body">
@@ -467,6 +472,7 @@ if ($conn) {
                 <div class="card card-body">
                     <form method="POST" class="row g-3">
                         <input type="hidden" name="action" value="add_placement">
+                        <?php csrfField(); ?>
                         <div class="col-md-3">
                             <label class="form-label">Student ID</label>
                             <select name="student_id" class="form-select" required>
@@ -536,6 +542,7 @@ if ($conn) {
                                 <button class="btn btn-sm btn-outline-primary me-1" onclick="editPlacement(<?= htmlspecialchars(json_encode($p), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
                                 <form method="POST" style="display:inline" onsubmit="return confirm('Delete this placement?')">
                                     <input type="hidden" name="action" value="delete_placement">
+                                    <?php csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= $p['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -553,6 +560,7 @@ if ($conn) {
                     <div class="modal-content">
                         <form method="POST">
                             <input type="hidden" name="action" value="update_placement">
+                            <?php csrfField(); ?>
                             <input type="hidden" name="id" id="editPlId">
                             <div class="modal-header"><h5 class="modal-title">Edit Placement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                             <div class="modal-body">
@@ -599,6 +607,7 @@ if ($conn) {
                 <div class="card card-body">
                     <form method="POST" class="row g-3">
                         <input type="hidden" name="action" value="add_skill">
+                        <?php csrfField(); ?>
                         <div class="col-md-3">
                             <label class="form-label">Skill Name</label>
                             <input type="text" name="skill_name" class="form-control" required placeholder="e.g. Normal Delivery">
@@ -640,6 +649,7 @@ if ($conn) {
                             <td>
                                 <form method="POST" style="display:inline" onsubmit="return confirm('Delete this skill?')">
                                     <input type="hidden" name="action" value="delete_skill">
+                                    <?php csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= $sk['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                 </form>

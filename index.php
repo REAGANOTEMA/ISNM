@@ -97,35 +97,43 @@ include_once 'shared/_header.php';
     </section>
 
     <!-- Quick Stats Section -->
-    <section class="stats-section py-5 bg-light">
+    <section class="stats-section py-5">
       <div class="container">
         <div class="row text-center">
-          <div class="col-md-3 mb-4">
-            <div class="stat-card">
-              <i class="fas fa-users fa-3x text-primary mb-3"></i>
-              <h3>315+</h3>
-              <p>Students Enrolled</p>
+          <div class="col-md-3 col-6 mb-4 animate-on-scroll">
+            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="stat-card-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <h3 class="stat-number" data-count="315">0</h3>
+              <p class="stat-label">Students Enrolled</p>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="stat-card">
-              <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
-              <h3>100%</h3>
-              <p>Midwifery Pass Rate</p>
+          <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-1">
+            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="stat-card-icon icon-green">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <h3 class="stat-number">100%</h3>
+              <p class="stat-label">Midwifery Pass Rate</p>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="stat-card">
-              <i class="fas fa-hospital fa-3x text-info mb-3"></i>
-              <h3>6</h3>
-              <p>Practicum Sites</p>
+          <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-2">
+            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="stat-card-icon icon-blue">
+                <i class="fas fa-hospital"></i>
+              </div>
+              <h3 class="stat-number" data-count="6">0</h3>
+              <p class="stat-label">Practicum Sites</p>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="stat-card">
-              <i class="fas fa-award fa-3x text-warning mb-3"></i>
-              <h3>15+</h3>
-              <p>Years of Excellence</p>
+          <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-3">
+            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="stat-card-icon icon-gold">
+                <i class="fas fa-award"></i>
+              </div>
+              <h3 class="stat-number" data-count="15">0</h3>
+              <p class="stat-label">Years of Excellence</p>
             </div>
           </div>
         </div>
@@ -136,14 +144,16 @@ include_once 'shared/_header.php';
     <section class="programs-section py-5">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
-            <h2 class="section-title">Our Programs</h2>
+          <div class="col-lg-12 text-center mb-5 animate-on-scroll">
+            <span class="tag tag-primary"><i class="fas fa-graduation-cap"></i> Academic Programs</span>
+            <h2 class="section-title mt-3">Our Programs</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Quality healthcare education for tomorrow's professionals</p>
           </div>
         </div>
         <div class="row g-4">
           <div class="col-lg-6">
-            <div class="program-card">
+            <div class="program-card" onclick="window.location='programs.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='programs.php'">
               <div class="program-icon">
                 <i class="fas fa-user-nurse"></i>
               </div>
@@ -161,7 +171,7 @@ include_once 'shared/_header.php';
             </div>
           </div>
           <div class="col-lg-6">
-            <div class="program-card">
+            <div class="program-card" onclick="window.location='programs.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='programs.php'">
               <div class="program-icon">
                 <i class="fas fa-baby"></i>
               </div>
@@ -179,7 +189,7 @@ include_once 'shared/_header.php';
             </div>
           </div>
           <div class="col-lg-6">
-            <div class="program-card">
+            <div class="program-card" onclick="window.location='programs.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='programs.php'">
               <div class="program-icon">
                 <i class="fas fa-user-md"></i>
               </div>
@@ -197,7 +207,7 @@ include_once 'shared/_header.php';
             </div>
           </div>
           <div class="col-lg-6">
-            <div class="program-card">
+            <div class="program-card" onclick="window.location='programs.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='programs.php'">
               <div class="program-icon">
                 <i class="fas fa-stethoscope"></i>
               </div>
@@ -219,18 +229,20 @@ include_once 'shared/_header.php';
     </section>
 
     <!-- About Section -->
-    <section class="about-section py-5 bg-light">
+    <section class="about-section py-5">
       <div class="container">
         <div class="row align-items-center">
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll">
             <div class="about-content">
-              <h2 class="section-title">About ISNM</h2>
+              <span class="tag tag-gold"><i class="fas fa-info-circle"></i> About Us</span>
+              <h2 class="section-title mt-3">About ISNM</h2>
+              <div class="section-divider"></div>
               <p class="about-text">
                 Iganga School of Nursing and Midwifery is a private Nursing School registered by the Registrar of Companies as a Limited Liability Company. The school is also registered with the Ministry of Education & Sports (MOES) and Uganda Nurses and Midwives Council (UNMC).
               </p>
               <div class="row g-3 mt-3">
                 <div class="col-md-6">
-                  <div class="vm-card">
+                  <div class="vm-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
                     <div class="vm-card-icon bg-warning">
                       <i class="fas fa-eye"></i>
                     </div>
@@ -239,7 +251,7 @@ include_once 'shared/_header.php';
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="vm-card">
+                  <div class="vm-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
                     <div class="vm-card-icon bg-success">
                       <i class="fas fa-bullseye"></i>
                     </div>
@@ -260,9 +272,79 @@ include_once 'shared/_header.php';
               </div>
             </div>
           </div>
-          <div class="col-lg-6">
+          <div class="col-lg-6 animate-on-scroll animate-delay-2">
             <div class="about-image">
               <img src="images/classroom-photo-certificates-in-nurses-and-diploma.jpeg" alt="ISNM Campus" class="img-fluid rounded-3">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose ISNM Section -->
+    <section class="why-choose-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12 text-center mb-5 animate-on-scroll">
+            <span class="tag tag-gold"><i class="fas fa-star"></i> Why Choose Us</span>
+            <h2 class="section-title mt-3">Why Choose ISNM?</h2>
+            <div class="section-divider section-divider-center"></div>
+            <p class="section-subtitle">Discover what makes us the preferred choice for healthcare education</p>
+          </div>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6 animate-on-scroll">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon">
+                <i class="fas fa-award"></i>
+              </div>
+              <h4>Accredited Programs</h4>
+              <p>Fully accredited by Uganda Nurses and Midwives Council and Ministry of Education & Sports</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-1">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon icon-green">
+                <i class="fas fa-user-md"></i>
+              </div>
+              <h4>Expert Faculty</h4>
+              <p>Learn from experienced healthcare professionals and dedicated educators</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-2">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon icon-blue">
+                <i class="fas fa-hospital"></i>
+              </div>
+              <h4>Clinical Placement</h4>
+              <p>Hands-on training at 6+ major hospitals and healthcare facilities across Uganda</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-3">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon icon-gold">
+                <i class="fas fa-book-open"></i>
+              </div>
+              <h4>Modern Curriculum</h4>
+              <p>Up-to-date curriculum aligned with international healthcare education standards</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-4">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon icon-purple">
+                <i class="fas fa-users"></i>
+              </div>
+              <h4>Small Class Sizes</h4>
+              <p>Personalized attention with manageable student-to-faculty ratios</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-5">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="feature-icon icon-red">
+                <i class="fas fa-hand-holding-heart"></i>
+              </div>
+              <h4>Community Impact</h4>
+              <p>Graduates serving communities across Uganda and beyond since 2009</p>
             </div>
           </div>
         </div>
@@ -273,38 +355,126 @@ include_once 'shared/_header.php';
     <section class="facilities-section py-5">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
-            <h2 class="section-title">Our Facilities</h2>
+          <div class="col-lg-12 text-center mb-5 animate-on-scroll">
+            <span class="tag tag-primary"><i class="fas fa-building"></i> Our Campus</span>
+            <h2 class="section-title mt-3">Our Facilities</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Modern infrastructure for quality learning</p>
           </div>
         </div>
         <div class="row g-4">
-          <div class="col-md-6 col-lg-3">
-            <div class="facility-card">
-              <i class="fas fa-school fa-3x text-primary mb-3"></i>
+          <div class="col-md-6 col-lg-3 animate-on-scroll">
+            <div class="facility-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="facility-icon">
+                <i class="fas fa-school"></i>
+              </div>
               <h4>Classrooms</h4>
               <p>Modern spacious classrooms designed for comfortable and interactive learning</p>
             </div>
           </div>
-          <div class="col-md-6 col-lg-3">
-            <div class="facility-card">
-              <i class="fas fa-desktop fa-3x text-success mb-3"></i>
+          <div class="col-md-6 col-lg-3 animate-on-scroll animate-delay-1">
+            <div class="facility-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="facility-icon icon-green">
+                <i class="fas fa-desktop"></i>
+              </div>
               <h4>Computer Lab</h4>
               <p>Fully equipped computer laboratory with high-speed internet for digital learning</p>
             </div>
           </div>
-          <div class="col-md-6 col-lg-3">
-            <div class="facility-card">
-              <i class="fas fa-book fa-3x text-info mb-3"></i>
+          <div class="col-md-6 col-lg-3 animate-on-scroll animate-delay-2">
+            <div class="facility-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="facility-icon icon-blue">
+                <i class="fas fa-book"></i>
+              </div>
               <h4>Library</h4>
               <p>Well-stocked library with extensive medical reference materials and study areas</p>
             </div>
           </div>
-          <div class="col-md-6 col-lg-3">
-            <div class="facility-card">
-              <i class="fas fa-utensils fa-3x text-warning mb-3"></i>
+          <div class="col-md-6 col-lg-3 animate-on-scroll animate-delay-3">
+            <div class="facility-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+              <div class="facility-icon icon-gold">
+                <i class="fas fa-utensils"></i>
+              </div>
               <h4>Dining Hall</h4>
               <p>Spacious multi-purpose hall accommodating 300 students for dining and events</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12 text-center mb-5 animate-on-scroll">
+            <span class="tag tag-gold"><i class="fas fa-quote-left"></i> Testimonials</span>
+            <h2 class="section-title mt-3">What Our Students Say</h2>
+            <div class="section-divider section-divider-center"></div>
+          </div>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6 animate-on-scroll">
+            <div class="testimonial-card">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <p class="testimonial-text">"ISNM gave me the foundation to become a confident midwife. The clinical training was exceptional, and the faculty truly cares about every student."</p>
+              <div class="testimonial-author">
+                <div class="author-avatar">
+                  <i class="fas fa-user-nurse"></i>
+                </div>
+                <div>
+                  <h5>Nurse Sarah</h5>
+                  <span>Midwifery Graduate 2022</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-1">
+            <div class="testimonial-card">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <p class="testimonial-text">"The practical experience I gained at ISNM prepared me for real-world healthcare challenges. I'm now working at a major hospital in Kampala."</p>
+              <div class="testimonial-author">
+                <div class="author-avatar icon-green">
+                  <i class="fas fa-user-md"></i>
+                </div>
+                <div>
+                  <h5>James Okello</h5>
+                  <span>Nursing Graduate 2021</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-2">
+            <div class="testimonial-card">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <p class="testimonial-text">"Choosing ISNM was the best decision of my life. The school's commitment to excellence in healthcare education is unmatched in the region."</p>
+              <div class="testimonial-author">
+                <div class="author-avatar icon-blue">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div>
+                  <h5>Grace Achieng</h5>
+                  <span>Diploma Graduate 2023</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -315,8 +485,10 @@ include_once 'shared/_header.php';
     <section class="news-section py-5">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
-            <h2 class="section-title">Latest News</h2>
+          <div class="col-lg-12 text-center mb-5 animate-on-scroll">
+            <span class="tag tag-primary"><i class="fas fa-newspaper"></i> Latest Updates</span>
+            <h2 class="section-title mt-3">Latest News</h2>
+            <div class="section-divider section-divider-center"></div>
             <p class="section-subtitle">Stay updated with the latest happenings at ISNM</p>
           </div>
         </div>
@@ -383,18 +555,26 @@ include_once 'shared/_header.php';
 
     <!-- Call to Action Section -->
     <section class="cta-section py-5 bg-primary text-white">
-      <div class="container text-center">
-        <h2 class="mb-4">Ready to Start Your Healthcare Journey?</h2>
-        <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
-        <div class="cta-buttons">
-          <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3 cta-pulse">
-            <span class="shine"></span>
-            <i class="fas fa-paper-plane"></i> Apply Online
-          </a>
-          <a href="contact.php" class="btn-3d btn-glass btn-3d-lg">
-            <span class="shine"></span>
-            <i class="fas fa-phone"></i> Contact Us
-          </a>
+      <div class="cta-bg-shapes">
+        <div class="cta-shape cta-shape-1"></div>
+        <div class="cta-shape cta-shape-2"></div>
+        <div class="cta-shape cta-shape-3"></div>
+      </div>
+      <div class="container text-center position-relative">
+        <div class="animate-on-scroll">
+          <span class="tag tag-gold"><i class="fas fa-rocket"></i> Get Started</span>
+          <h2 class="mt-3 mb-4">Ready to Start Your Healthcare Journey?</h2>
+          <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
+          <div class="cta-buttons">
+            <a href="application.php" class="btn-3d btn-yellow btn-3d-lg me-3 cta-pulse">
+              <span class="shine"></span>
+              <i class="fas fa-paper-plane"></i> Apply Online
+            </a>
+            <a href="contact.php" class="btn-3d btn-glass btn-3d-lg">
+              <span class="shine"></span>
+              <i class="fas fa-phone"></i> Contact Us
+            </a>
+          </div>
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','principal']);
 $students_conn = $ctx['students'];
 $staff_conn = $ctx['staff'];
@@ -30,6 +31,7 @@ if (!$can_generate_transcripts) {
 
 // Handle transcript generation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript'])) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $student_id = (int)($_POST['student_id'] ?? 0);
     $transcript_type = $_POST['transcript_type'] ?? 'Official';
     $academic_year_filter = $_POST['academic_year'] ?? '';
@@ -369,7 +371,7 @@ function getSemesters() {
         
         <div class="form-section">
             <form method="POST">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                <?php csrfField(); ?>
                 <h4>Generate Transcript</h4>
                 <div class="row">
                     <div class="col-md-6 mb-3">

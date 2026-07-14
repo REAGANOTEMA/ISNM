@@ -9,6 +9,7 @@ require_once __DIR__ . '/../providers/AirtelMoneyProvider.php';
 require_once __DIR__ . '/../providers/FlutterwaveProvider.php';
 require_once __DIR__ . '/../providers/PesaPalProvider.php';
 require_once __DIR__ . '/../providers/StripeProvider.php';
+require_once __DIR__ . '/../providers/PayPalProvider.php';
 require_once __DIR__ . '/../providers/BankTransferProvider.php';
 require_once __DIR__ . '/../providers/CashProvider.php';
 
@@ -25,6 +26,7 @@ class GatewayManager {
         'flutterwave' => FlutterwaveProvider::class,
         'pesapal' => PesaPalProvider::class,
         'stripe' => StripeProvider::class,
+        'paypal' => PayPalProvider::class,
         'bank_transfer' => BankTransferProvider::class,
         'cash' => CashProvider::class,
     ];

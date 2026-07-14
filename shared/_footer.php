@@ -16,10 +16,10 @@
           
           <!-- Social Media Links -->
           <div class="social-links">
-            <a href="#" class="social-btn"><i class="fab fa-facebook"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.facebook.com/igangaschoolofnursing" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            <a href="https://twitter.com/iganganursing" target="_blank" rel="noopener" class="social-btn" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/igangaschoolofnursing" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.linkedin.com/company/igangaschoolofnursing" target="_blank" rel="noopener" class="social-btn" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
           </div>
         </div>
       </div>
@@ -29,6 +29,7 @@
           <h5><i class="fas fa-link me-2"></i>Quick Links</h5>
           <ul class="list-unstyled">
             <li><a href="index.php"><i class="fas fa-home me-2"></i>Home</a></li>
+            <li><a href="news.php"><i class="fas fa-newspaper me-2"></i>News</a></li>
             <li><a href="about.php"><i class="fas fa-info-circle me-2"></i>About Us</a></li>
             <li><a href="history.php"><i class="fas fa-history me-2"></i>School History</a></li>
             <li><a href="programs.php"><i class="fas fa-graduation-cap me-2"></i>Programs</a></li>
@@ -556,6 +557,9 @@
       font-size: 0.68rem;
     }
   }
+
+  /* Back to Top Button */
+  #backToTop{position:fixed;bottom:90px;right:24px;z-index:9998;width:48px;height:48px;border-radius:50%;background:var(--isnm-primary,#1A237E);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 15px rgba(26,35,126,0.4);opacity:0;transform:translateY(20px);transition:all 0.3s ease;pointer-events:none}#backToTop.visible{opacity:1;transform:translateY(0);pointer-events:auto}#backToTop:hover{background:var(--isnm-secondary,#FFD700);color:var(--isnm-primary,#1A237E);transform:translateY(-3px);box-shadow:0 6px 20px rgba(255,215,0,0.4)}@media(max-width:576px){#backToTop{bottom:80px;right:16px;width:42px;height:42px;font-size:16px}}
 </style>
 
 
@@ -652,16 +656,66 @@
       deferredPrompt.userChoice.then(function(choiceResult) {
         deferredPrompt = null;
         var btn = document.getElementById('pwaInstallBtn');
-        if (btn) btn.style.display = 'none';
-      });
+      if (btn) btn.style.display = 'none';
+        });
+    }
+    // Back to Top button visibility
+    var backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) {
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 400) {
+          backToTopBtn.classList.add('visible');
+        } else {
+          backToTopBtn.classList.remove('visible');
+        }
+      }, {passive: true});
     }
   </script>
+
+<!-- Back to Top Button -->
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">
+  <i class="fas fa-chevron-up"></i>
+</button>
 
 <!-- WhatsApp Floating Button -->
 <div id="whatsappFloat" onclick="window.open('https://wa.me/256700451998','_blank')">
   <i class="fab fa-whatsapp"></i>
   <span>Chat with us</span>
 </div>
+
+<!-- Scroll Animation Observer -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Intersection Observer for scroll animations
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Animate counter numbers
+        var counter = entry.target.querySelector('[data-count]');
+        if (counter && !counter.dataset.animated) {
+          counter.dataset.animated = 'true';
+          var target = parseInt(counter.dataset.count);
+          var current = 0;
+          var increment = Math.ceil(target / 60);
+          var timer = setInterval(function() {
+            current += increment;
+            if (current >= target) {
+              current = target;
+              clearInterval(timer);
+            }
+            counter.textContent = current + (target > 100 ? '+' : '+');
+          }, 30);
+        }
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+    observer.observe(el);
+  });
+});
+</script>
 <style>
 #whatsappFloat{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:50px;padding:14px 18px;cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,0.4);transition:all 0.3s ease;font-family:'Inter','Segoe UI',sans-serif}#whatsappFloat i{font-size:26px}#whatsappFloat span{font-size:14px;font-weight:600;max-width:0;overflow:hidden;white-space:nowrap;transition:max-width 0.3s ease,opacity 0.3s ease;opacity:0}#whatsappFloat:hover{padding:14px 24px;box-shadow:0 6px 28px rgba(37,211,102,0.55)}#whatsappFloat:hover span{max-width:130px;opacity:1;margin-left:4px}#whatsappFloat::before{content:'';position:absolute;inset:0;border-radius:50px;animation:whatsappPulse 2s infinite}@keyframes whatsappPulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,0.5)}70%{box-shadow:0 0 0 14px rgba(37,211,102,0)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}}@media(max-width:576px){#whatsappFloat{bottom:16px;right:12px;padding:12px;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center}#whatsappFloat i{font-size:24px}#whatsappFloat span{display:none}#whatsappFloat::before{animation:whatsappPulse 2.5s infinite}}@media(max-width:360px){#whatsappFloat{bottom:12px;right:8px;width:44px;height:44px;padding:10px}#whatsappFloat i{font-size:20px}}</style>
 </body>

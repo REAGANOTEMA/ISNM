@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 
 $ctx = bootstrapStaffDashboard(['storekeeper']);
 $staffConn = $ctx['staff'];
@@ -11,6 +12,7 @@ $userName = $user['full_name'] ?? 'Store Keeper';
 
 // â”€â”€ POST Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffConn) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'];
 
     if (in_array($action, ['add_stock', 'remove_stock', 'adjust_stock'])) {
@@ -440,6 +442,7 @@ case 'inventory': ?>
                     <button class="sk-btn sk-btn-outline sk-btn-sm" onclick="openEditItem(<?= htmlspecialchars(json_encode($item)) ?>)" title="Edit"><i class="fas fa-edit"></i></button>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Deactivate this item?')">
                         <input type="hidden" name="action" value="delete_item">
+                        <?php csrfField(); ?>
                         <input type="hidden" name="item_id" value="<?= (int)$item['id'] ?>">
                         <button type="submit" class="sk-btn sk-btn-danger sk-btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
                     </form>
@@ -461,6 +464,7 @@ case 'inventory': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="add_item">
+            <?php csrfField(); ?>
             <div class="sk-grid-3">
                 <div class="mb-3"><label class="sk-form-label">Item Code</label><input type="text" name="item_code" class="sk-form-input" placeholder="e.g. STA-001"></div>
                 <div class="mb-3"><label class="sk-form-label">Item Name *</label><input type="text" name="item_name" class="sk-form-input" required placeholder="Enter item name"></div>
@@ -498,6 +502,7 @@ case 'inventory': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="update_item">
+            <?php csrfField(); ?>
             <input type="hidden" name="item_id" id="editItemId">
             <div class="sk-grid-3">
                 <div class="mb-3"><label class="sk-form-label">Item Code</label><input type="text" name="item_code" id="editItemCode" class="sk-form-input"></div>
@@ -536,6 +541,7 @@ case 'inventory': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="add_stock">
+            <?php csrfField(); ?>
             <input type="hidden" name="item_id" id="addStockItemId">
             <p id="addStockItemName" class="fw-bold" style="color:#1a1d29"></p>
             <div class="mb-3"><label class="sk-form-label">Quantity to Add</label><input type="number" name="quantity" class="sk-form-input" min="0.1" step="any" required></div>
@@ -556,6 +562,7 @@ case 'inventory': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="remove_stock">
+            <?php csrfField(); ?>
             <input type="hidden" name="item_id" id="rmItemId">
             <p id="rmItemName" class="fw-bold" style="color:#1a1d29"></p>
             <p id="rmCurrentQty" style="color:#6b7280;font-size:.85rem"></p>
@@ -597,6 +604,7 @@ case 'categories': ?>
                         <?php if ($c['status'] === 'active'): ?>
                         <form method="POST" style="display:inline" onsubmit="return confirm('Deactivate this category?')">
                             <input type="hidden" name="action" value="delete_category">
+                            <?php csrfField(); ?>
                             <input type="hidden" name="category_id" value="<?= (int)$c['id'] ?>">
                             <button type="submit" class="sk-btn sk-btn-danger sk-btn-sm"><i class="fas fa-trash"></i></button>
                         </form>
@@ -633,6 +641,7 @@ case 'categories': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="add_category">
+            <?php csrfField(); ?>
             <div class="mb-3"><label class="sk-form-label">Category Name *</label><input type="text" name="category_name" class="sk-form-input" required placeholder="e.g. Office Supplies"></div>
             <div class="mb-3"><label class="sk-form-label">Description</label><textarea name="description" class="sk-form-input" rows="2" placeholder="Optional description"></textarea></div>
         </div>
@@ -697,11 +706,13 @@ case 'requests': ?>
             <?php if ($req['status'] === 'pending'): ?>
             <form method="POST" style="display:inline" onsubmit="return confirm('Submit this request for DG approval?')">
                 <input type="hidden" name="action" value="submit_for_dg_approval">
+                <?php csrfField(); ?>
                 <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                 <button type="submit" class="sk-btn sk-btn-warning sk-btn-sm"><i class="fas fa-crown me-1"></i> Submit for DG Approval</button>
             </form>
             <form method="POST" style="display:inline" onsubmit="return confirm('Mark as fulfilled?')">
                 <input type="hidden" name="action" value="fulfill_request">
+                <?php csrfField(); ?>
                 <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                 <button type="submit" class="sk-btn sk-btn-success sk-btn-sm"><i class="fas fa-check me-1"></i> Mark Fulfilled</button>
             </form>
@@ -745,6 +756,7 @@ case 'requests': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="add_request">
+            <?php csrfField(); ?>
             <div class="sk-grid-2">
                 <div class="mb-3"><label class="sk-form-label">Department *</label><input type="text" name="department" class="sk-form-input" required placeholder="e.g. Nursing Department"></div>
                 <div class="mb-3"><label class="sk-form-label">Urgency</label><select name="urgency" class="sk-form-select"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
@@ -782,6 +794,7 @@ case 'requests': ?>
         </div>
         <div style="padding:24px">
             <input type="hidden" name="action" value="reject_request">
+            <?php csrfField(); ?>
             <input type="hidden" name="request_id" id="rejReqId">
             <div class="mb-3"><label class="sk-form-label">Reason for Rejection *</label><textarea name="rejection_reason" class="sk-form-input" rows="3" required placeholder="Explain why..."></textarea></div>
         </div>

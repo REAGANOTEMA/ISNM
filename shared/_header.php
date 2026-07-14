@@ -14,8 +14,8 @@ include_once __DIR__ . '/../includes/functions.php';
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ISNM">
   <meta name="application-name" content="ISNM">
-  <meta name="theme-color" content="#3E2723">
-  <meta name="msapplication-TileColor" content="#3E2723">
+  <meta name="theme-color" content="#1A237E">
+  <meta name="msapplication-TileColor" content="#1A237E">
   <meta name="msapplication-config" content="/browserconfig.xml">
   <meta name="apple-touch-fullscreen" content="yes">
   <link rel="manifest" href="manifest.json">
@@ -25,12 +25,17 @@ include_once __DIR__ . '/../includes/functions.php';
   <meta name="author" content="Iganga School of Nursing and Midwifery">
   
   <!-- Favicon and Apple Touch Icons -->
-  <link rel="icon" type="image/x-icon" href="images/school-logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/school-logo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/school-logo.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="images/school-logo.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="images/school-logo.png">
   <link rel="apple-touch-icon" href="images/school-logo.png">
+  <link rel="apple-touch-icon" sizes="57x57" href="images/school-logo.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="images/school-logo.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="images/school-logo.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="images/school-logo.png">
   <link rel="apple-touch-icon" sizes="152x152" href="images/school-logo.png">
   <link rel="apple-touch-icon" sizes="180x180" href="images/school-logo.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="images/school-logo.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="images/school-logo.png">
     
   <!-- 3D Buttons CSS -->
   <link rel="stylesheet" href="css/3d-buttons.css">
@@ -42,7 +47,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
   <!-- Critical CSS: Google Fonts with display=swap to prevent FOIT -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -52,6 +57,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
   
   <!-- Custom CSS (with cache-busting version) -->
+  <link rel="stylesheet" href="css/isnm-design-system.css?v=1" />
   <link rel="stylesheet" href="shared/style.css?v=4" />
   <link rel="stylesheet" href="css/isnm-style.css?v=4" />
   <link rel="stylesheet" href="css/responsive.css?v=3" />

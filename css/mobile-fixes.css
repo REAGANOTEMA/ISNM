@@ -1290,3 +1290,538 @@ img {
 .row, .container, .container-fluid {
   max-width: 100% !important;
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   PERFORMANCE — GPU Acceleration & Scroll Optimization
+   ══════════════════════════════════════════════════════════════ */
+.isnm-header,
+.isnm-navbar,
+.hero-section,
+.isnm-footer,
+.sidebar-overlay {
+  will-change: transform !important;
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+}
+
+.hero-section .hero-slide,
+.hero-section .cinematic-title,
+.hero-section .hero-subtitle {
+  will-change: opacity, transform !important;
+}
+
+.card,
+.stat-card,
+.btn,
+.nav-link,
+.dropdown-item,
+.gallery-item {
+  will-change: transform, box-shadow !important;
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Prevent layout shifts from lazy images */
+img[loading="lazy"],
+img[data-src] {
+  min-height: 50px !important;
+  background: linear-gradient(135deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite !important;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+img[loading="lazy"][src],
+img:not([data-src]) {
+  animation: none !important;
+  background: none !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TOUCH INTERACTIONS — Tap Highlights, Swipe, Long Press
+   ══════════════════════════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  /* Tap highlight */
+  a, button, .btn, .nav-link, .dropdown-item,
+  .card, .stat-card, .gallery-item, .news-card,
+  .program-card, .testimonial-card {
+    -webkit-tap-highlight-color: rgba(26, 35, 126, 0.12) !important;
+    tap-highlight-color: rgba(26, 35, 126, 0.12) !important;
+  }
+
+  /* Bigger touch targets */
+  .nav-link,
+  .dropdown-item,
+  .list-group-item,
+  .tab-link,
+  [role="button"] {
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+  }
+
+  /* Disable hover effects on touch */
+  .card:hover,
+  .stat-card:hover,
+  .btn:hover,
+  .program-card:hover,
+  .news-card:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+
+  /* Active press effect instead */
+  .btn:active,
+  .nav-link:active,
+  .card:active {
+    transform: scale(0.97) !important;
+    transition: transform 0.1s ease !important;
+  }
+}
+
+/* Swipeable horizontal carousels */
+.hero-section,
+.gALLERY-section .gallery-grid,
+.programs-section .programs-grid,
+.news-section .news-grid {
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-x: contain !important;
+}
+
+@media (max-width: 768px) {
+  .hero-section .hero-slides,
+  .gallery-section .gallery-grid,
+  .programs-section .programs-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 16px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .hero-section .hero-slides > *,
+  .gallery-section .gallery-grid > *,
+  .programs-section .programs-grid > * {
+    scroll-snap-align: center !important;
+    flex: 0 0 85% !important;
+    max-width: 85% !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   MICRO-INTERACTIONS — Hover, Focus, Active States
+   ══════════════════════════════════════════════════════════════ */
+@media (hover: hover) and (pointer: fine) {
+  /* Button press */
+  .btn:active {
+    transform: translateY(1px) scale(0.98) !important;
+    transition: transform 0.1s ease !important;
+  }
+
+  .btn-cinematic:active {
+    transform: translateY(2px) scale(0.96) !important;
+    box-shadow: 0 2px 8px rgba(26, 35, 126, 0.2) !important;
+  }
+
+  /* Card hover lift */
+  .card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 40px rgba(26, 35, 126, 0.12) !important;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-6px) !important;
+  }
+
+  .news-card:hover,
+  .program-card:hover,
+  .testimonial-card:hover {
+    transform: translateY(-3px) !important;
+  }
+
+  /* Nav link underline */
+  .nav-link:hover {
+    position: relative !important;
+  }
+
+  .nav-link::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: var(--isnm-secondary, #FFD700) !important;
+    transition: width 0.3s ease, left 0.3s ease !important;
+    border-radius: 2px !important;
+  }
+
+  .nav-link:hover::after {
+    width: 100% !important;
+    left: 0 !important;
+  }
+
+  .nav-link.active::after {
+    width: 100% !important;
+    left: 0 !important;
+  }
+
+  /* Gallery zoom on hover */
+  .gallery-item img {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .gallery-item:hover img {
+    transform: scale(1.08) !important;
+  }
+
+  /* Social button bounce */
+  .social-btn:hover {
+    transform: translateY(-3px) scale(1.1) !important;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  /* Dropdown fade in */
+  .dropdown-menu {
+    animation: dropdownFade 0.2s ease !important;
+  }
+
+  @keyframes dropdownFade {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   FORM VALIDATION UX — Mobile Friendly
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .form-control:invalid:not(:placeholder-shown),
+  .form-select:invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
+  }
+
+  .form-control:valid:not(:placeholder-shown),
+  .form-select:valid {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1) !important;
+  }
+
+  /* Error messages below inputs */
+  .invalid-feedback,
+  .form-text {
+    font-size: 0.78rem !important;
+    margin-top: 4px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Floating labels */
+  .form-floating > .form-control,
+  .form-floating > .form-select {
+    min-height: 52px !important;
+    padding: 16px 12px 6px !important;
+  }
+
+  .form-floating > label {
+    padding: 16px 12px !important;
+    font-size: 0.88rem !important;
+  }
+
+  /* Textarea auto-resize hint */
+  textarea.form-control {
+    min-height: 100px !important;
+    resize: vertical !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   LOADING STATES — Skeleton, Spinners, Progress
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .spinner-border {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .spinner-grow {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  .skeleton {
+    min-height: 16px !important;
+    border-radius: 6px !important;
+  }
+
+  .skeleton-text {
+    height: 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .skeleton-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+  }
+
+  .skeleton-card {
+    height: 200px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Progress bar mobile */
+  .progress {
+    height: 6px !important;
+    border-radius: 3px !important;
+  }
+
+  .progress-bar {
+    font-size: 0.65rem !important;
+    line-height: 6px !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TABLET LANDSCAPE — 768px to 1024px
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .programs-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .hero-section .cinematic-title {
+    font-size: 3rem !important;
+  }
+
+  .hero-section .hero-subtitle p {
+    font-size: 1.1rem !important;
+  }
+
+  .dashboard-header {
+    padding: 0 24px !important;
+  }
+
+  .dashboard-content {
+    padding: 20px !important;
+  }
+
+  .stat-card {
+    padding: 20px !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   LARGE SCREENS / 4K — 1920px+
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1440px !important;
+  }
+
+  .hero-section .cinematic-title {
+    font-size: 4.5rem !important;
+  }
+
+  .hero-section .hero-subtitle p {
+    font-size: 1.35rem !important;
+  }
+
+  .stats-grid {
+    gap: 28px !important;
+  }
+
+  .stat-card {
+    padding: 32px !important;
+    border-radius: 18px !important;
+  }
+
+  .stat-content h3 {
+    font-size: 2.8rem !important;
+  }
+
+  .programs-grid,
+  .news-grid {
+    gap: 28px !important;
+  }
+
+  .gallery-grid {
+    gap: 20px !important;
+  }
+
+  .btn-cinematic {
+    padding: 18px 40px !important;
+    font-size: 1.15rem !important;
+  }
+
+  .isnm-footer .container {
+    max-width: 1440px !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   SAFE AREAS — Notch Devices (iPhone X+)
+   ══════════════════════════════════════════════════════════════ */
+@supports (padding: env(safe-area-inset-top)) {
+  .isnm-header,
+  .isnm-navbar {
+    padding-top: max(12px, env(safe-area-inset-top)) !important;
+  }
+
+  .isnm-footer {
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #whatsappFloat {
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px)) !important;
+    right: max(16px, env(safe-area-inset-right)) !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   ORIENTATION — Landscape Mobile
+   ══════════════════════════════════════════════════════════════ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-section {
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+
+  .hero-section .cinematic-title {
+    font-size: 1.8rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .hero-section .hero-subtitle {
+    margin-bottom: 10px !important;
+  }
+
+  .hero-section .hero-subtitle p {
+    font-size: 0.85rem !important;
+    display: none !important;
+  }
+
+  .hero-stats {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .stat-item {
+    padding: 6px 8px !important;
+  }
+
+  .cta-buttons {
+    gap: 8px !important;
+  }
+
+  .btn-cinematic {
+    padding: 10px 20px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   HIGH CONTRAST / FORCED COLORS
+   ══════════════════════════════════════════════════════════════ */
+@media (forced-colors: active) {
+  .btn {
+    border: 2px solid ButtonText !important;
+  }
+
+  .card,
+  .stat-card {
+    border: 1px solid CanvasText !important;
+  }
+
+  .isnm-header,
+  .isnm-navbar {
+    border-bottom: 2px solid CanvasText !important;
+  }
+
+  .isnm-footer {
+    border-top: 2px solid CanvasText !important;
+  }
+
+  *:focus-visible {
+    outline: 3px solid Highlight !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════ */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")" !important;
+    font-size: 0.8em !important;
+    color: #666 !important;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "" !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  img {
+    page-break-inside: avoid !important;
+    max-width: 100% !important;
+  }
+
+  table, pre, blockquote, tr, img {
+    page-break-inside: avoid !important;
+  }
+
+  p, li, tr {
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+}

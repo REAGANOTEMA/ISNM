@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $ctx = bootstrapStaffDashboard(['school principal', 'principal', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
@@ -520,6 +521,7 @@ if (function_exists('handleWebsiteSubmissionsAction')) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: school-principal.php'); exit; }
     $act = $_POST['action'];
     if ($act === 'publish_notice' && $students && $staff) {
         $t = trim($_POST['notice_title']??''); $c = trim($_POST['notice_content']??''); $a = trim($_POST['notice_audience']??'All');
@@ -1472,6 +1474,7 @@ document.addEventListener('DOMContentLoaded',loadCommSent);
 <div class="col-md-5">
 <div class="scard"><div class="sch"><i class="fas fa-bullhorn me-2"></i>Publish Notice</div><div class="scb">
 <form method="POST">
+<?= csrfField() ?>
 <input type="hidden" name="action" value="publish_notice">
 <div class="mb-3"><label class="fl">Title *</label><input type="text" name="notice_title" class="form-control env-field" required></div>
 <div class="mb-3"><label class="fl">Content *</label><textarea name="notice_content" class="form-control env-field" rows="4" required></textarea></div>

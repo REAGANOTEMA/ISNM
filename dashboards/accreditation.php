@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     if ($_POST['action'] === 'add_requirement') {
         $name = $_POST['name'];
         $desc = $_POST['description'] ?? '';
@@ -55,6 +57,7 @@ $pageTitle = 'Accreditation & Compliance';
                 <div class="card-header"><h5>Add Compliance Requirement</h5></div>
                 <div class="card-body">
                     <form method="post" class="row g-2">
+                        <?php csrfField(); ?>
                         <div class="col-12"><input name="name" class="form-control" placeholder="Requirement Name" required></div>
                         <div class="col-8"><input name="description" class="form-control" placeholder="Description"></div>
                         <div class="col-4"><input name="deadline" class="form-control" type="date"></div>

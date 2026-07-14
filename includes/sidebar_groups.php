@@ -77,6 +77,9 @@ function getRoleOperations(string $role): array {
             ['label' => 'Financial Overview',   'icon'=>'fas fa-coins',    'page'=>'financial'],
             ['label' => 'Staff Management',     'icon'=>'fas fa-users',    'page'=>'staff'],
             ['label' => 'Student Management',   'icon'=>'fas fa-user-graduate','page'=>'student'],
+            ['label' => 'Intake Management',    'icon'=>'fas fa-door-open','page'=>'intake-management', 'href'=>'intake-management.php'],
+            ['label' => 'Donation Tracking',    'icon'=>'fas fa-hand-holding-heart','page'=>'donation-tracking', 'href'=>'donation-tracking.php'],
+            ['label' => 'Volunteer Applications','icon'=>'fas fa-hands-helping','page'=>'volunteer-applications', 'href'=>'volunteer-applications.php'],
             ['label' => 'System Health',        'icon'=>'fas fa-heartbeat','page'=>'system-health'],
         ],
         'director_ict' => [

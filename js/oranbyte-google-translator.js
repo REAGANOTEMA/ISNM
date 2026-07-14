@@ -194,7 +194,7 @@ function createUI(defaultLangCode = defaultSelectedLanguage, defaultLangLabel = 
 }
 
 function invisibleSkipTranslate() {
-    const skipTranlate = document.querySelector('skiptranslate');
+    const skipTranlate = document.querySelector('.skiptranslate');
     if (!skipTranlate?.parentNode) return;
     skipTranlate.parentNode.classList.add('translator-display-none');
 }

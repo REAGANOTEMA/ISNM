@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 
 $ctx = bootstrapStaffDashboard(['head nursing', 'head of nursing']);
 $conn = $ctx['staff'];
@@ -14,6 +15,7 @@ $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangascho
 
 // â”€â”€ POST Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_student') {
@@ -367,6 +369,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <button class="btn btn-sm btn-outline-primary me-1" onclick='editStudent(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Delete this student?')">
                                     <input type="hidden" name="action" value="delete_student">
+                                    <?php csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                     <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -456,6 +459,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <button class="btn btn-sm btn-outline-primary me-1" onclick='editPlacement(<?= json_encode($p) ?>)'><i class="fas fa-edit"></i></button>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Delete this placement?')">
                                     <input type="hidden" name="action" value="delete_placement">
+                                    <?php csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= $p['id'] ?>">
                                     <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -710,6 +714,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="add_student">
+                <?php csrfField(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Nursing Student</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -760,6 +765,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="update_student">
+                <?php csrfField(); ?>
                 <input type="hidden" name="id" id="edit_student_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Nursing Student</h5>
@@ -816,6 +822,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="add_placement">
+                <?php csrfField(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-hospital me-2"></i>Add Clinical Placement</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -863,6 +870,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="update_placement">
+                <?php csrfField(); ?>
                 <input type="hidden" name="id" id="edit_placement_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-hospital me-2"></i>Edit Clinical Placement</h5>
@@ -902,6 +910,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="add_assessment">
+                <?php csrfField(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Add Practical Assessment</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -965,6 +974,7 @@ endswitch; ?>
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="action" value="update_assessment">
+                <?php csrfField(); ?>
                 <input type="hidden" name="id" id="edit_assessment_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Edit Assessment</h5>

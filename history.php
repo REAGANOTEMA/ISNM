@@ -16,14 +16,23 @@
       </div>
     </section>
 
+    <nav aria-label="breadcrumb" class="container mt-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">History</li>
+      </ol>
+    </nav>
+
     <!-- Introduction Section -->
-    <section class="history-intro py-5">
+    <section class="history-intro py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center animate-fade-in mb-5">
           <div class="header-icon">
             <i class="fas fa-landmark"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-history"></i> Our Story</span>
           <h2 class="section-title">Our Foundation</h2>
+          <div class="section-divider section-divider-center"></div>
         </div>
         <div class="row">
           <div class="col-lg-12">
@@ -34,21 +43,21 @@
                 committed to excellence in nursing and midwifery education.
               </p>
               <div class="key-highlights">
-                <div class="highlight-item animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="highlight-item animate-slide-up animate-on-scroll animate-delay-1" style="animation-delay: 0.2s;">
                   <div class="highlight-icon">
                     <i class="fas fa-calendar-alt"></i>
                   </div>
                   <h4>Founded in 2009</h4>
                   <p>Over 15 years of excellence</p>
                 </div>
-                <div class="highlight-item animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="highlight-item animate-slide-up animate-on-scroll animate-delay-2" style="animation-delay: 0.4s;">
                   <div class="highlight-icon">
                     <i class="fas fa-users"></i>
                   </div>
                   <h4>13 to 315 Students</h4>
                   <p>Remarkable growth</p>
                 </div>
-                <div class="highlight-item animate-slide-up" style="animation-delay: 0.6s;">
+                <div class="highlight-item animate-slide-up animate-on-scroll animate-delay-3" style="animation-delay: 0.6s;">
                   <div class="highlight-icon">
                     <i class="fas fa-award"></i>
                   </div>
@@ -63,17 +72,19 @@
     </section>
 
     <!-- Timeline Section -->
-    <section class="timeline-section py-5">
+    <section class="timeline-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-route"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-road"></i> Milestones</span>
           <h2 class="section-title">Our Journey</h2>
+          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">From humble beginnings to a beacon of healthcare education — tracing the milestones that shaped ISNM</p>
         </div>
         <div class="timeline-classic">
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-1" style="animation-delay: 0.1s;">
             <div class="timeline-year-badge">2009</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-seedling me-2" style="color:#10b981;"></i>Foundation Year</h3>
@@ -86,7 +97,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.2s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-2" style="animation-delay: 0.2s;">
             <div class="timeline-year-badge">2012</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-expand-arrows-alt me-2" style="color:#2563eb;"></i>First Major Expansion</h3>
@@ -98,7 +109,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-3" style="animation-delay: 0.3s;">
             <div class="timeline-year-badge">2015</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-handshake me-2" style="color:#f59e0b;"></i>Clinical Partnerships</h3>
@@ -110,7 +121,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.4s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-4" style="animation-delay: 0.4s;">
             <div class="timeline-year-badge">2018</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-trophy me-2" style="color:#ffd700;"></i>Academic Excellence</h3>
@@ -122,7 +133,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.5s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-5" style="animation-delay: 0.5s;">
             <div class="timeline-year-badge">2020</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-building me-2" style="color:#8b5cf6;"></i>Infrastructure Growth</h3>
@@ -135,7 +146,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.6s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-1" style="animation-delay: 0.6s;">
             <div class="timeline-year-badge">2023</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-laptop-code me-2" style="color:#06b6d4;"></i>Digital Transformation</h3>
@@ -147,7 +158,7 @@
             </div>
           </div>
           
-          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.7s;">
+          <div class="timeline-entry animate-slide-up animate-on-scroll animate-delay-2" style="animation-delay: 0.7s;">
             <div class="timeline-year-badge">2025</div>
             <div class="timeline-content-card">
               <h3><i class="fas fa-gem me-2" style="color:#ec4899;"></i>Present Day</h3>
@@ -164,16 +175,18 @@
     </section>
 
     <!-- Achievements Section -->
-    <section class="achievements-section py-5">
+    <section class="achievements-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-trophy"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-trophy"></i> Achievements</span>
           <h2 class="section-title">Our Achievements</h2>
+          <div class="section-divider section-divider-center"></div>
         </div>
         <div class="achievements-grid">
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.1s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-1" style="animation-delay: 0.1s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-trophy"></i>
             </div>
@@ -181,7 +194,7 @@
             <p>100% pass rate in midwifery and over 85% in nursing in all state final examinations</p>
           </div>
           
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.2s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-2" style="animation-delay: 0.2s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-building"></i>
             </div>
@@ -189,7 +202,7 @@
             <p>Multi purpose hall, computer lab, 6 classrooms, girls' hostel, and modern facilities</p>
           </div>
           
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.3s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-3" style="animation-delay: 0.3s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-bus"></i>
             </div>
@@ -197,7 +210,7 @@
             <p>Two coaster buses for student transportation to clinical sites and school functions</p>
           </div>
           
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.4s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-4" style="animation-delay: 0.4s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-hospital"></i>
             </div>
@@ -205,7 +218,7 @@
             <p>Partnerships with 7 major hospitals including Iganga, Mbale Regional, and Tororo hospitals</p>
           </div>
           
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.5s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-5" style="animation-delay: 0.5s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-graduation-cap"></i>
             </div>
@@ -213,7 +226,7 @@
             <p>Sponsored 4 staff members for Medical Education at Health Tutors' College , Mulage</p>
           </div>
           
-          <div class="achievement-card animate-fade-in" style="animation-delay: 0.6s;">
+          <div class="achievement-card animate-fade-in animate-on-scroll animate-delay-1" style="animation-delay: 0.6s; cursor:pointer;">
             <div class="achievement-icon">
               <i class="fas fa-landmark"></i>
             </div>
@@ -225,16 +238,18 @@
     </section>
 
     <!-- Leadership Section -->
-    <section class="leadership-section py-5">
+    <section class="leadership-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-user-tie"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-crown"></i> Leadership</span>
           <h2 class="section-title">Leadership Through the Years</h2>
+          <div class="section-divider section-divider-center"></div>
         </div>
         <div class="leadership-content">
-          <div class="current-leadership content-section animate-fade-in">
+          <div class="current-leadership content-section animate-fade-in animate-on-scroll animate-delay-1">
             <div class="leadership-header">
               <div class="leadership-icon">
                 <i class="fas fa-crown"></i>
@@ -252,7 +267,7 @@
             </div>
           </div>
           
-          <div class="leadership-philosophy content-section animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="leadership-philosophy content-section animate-slide-up animate-on-scroll animate-delay-2" style="animation-delay: 0.3s;">
             <div class="philosophy-header">
               <div class="philosophy-icon">
                 <i class="fas fa-lightbulb"></i>
@@ -270,16 +285,18 @@
     </section>
 
     <!-- Future Vision Section -->
-    <section class="future-section py-5">
+    <section class="future-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-rocket"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-rocket"></i> Vision</span>
           <h2 class="section-title">Future Vision</h2>
+          <div class="section-divider section-divider-center"></div>
         </div>
         <div class="future-content">
-          <div class="future-plans animate-fade-in">
+          <div class="future-plans animate-fade-in animate-on-scroll animate-delay-1">
             <div class="plan-header">
               <div class="plan-icon">
                 <i class="fas fa-bullseye"></i>
@@ -295,7 +312,7 @@
             </ul>
           </div>
           
-          <div class="future-plans animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="future-plans animate-slide-up animate-on-scroll animate-delay-2" style="animation-delay: 0.3s;">
             <div class="plan-header">
               <div class="plan-icon">
                 <i class="fas fa-eye"></i>
@@ -315,37 +332,39 @@
     </section>
 
     <!-- Impact Section -->
-    <section class="impact-section py-5">
+    <section class="impact-section py-5 animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
           <div class="header-icon">
             <i class="fas fa-chart-line"></i>
           </div>
+          <span class="tag tag-gold"><i class="fas fa-chart-line"></i> Impact</span>
           <h2 class="section-title">Our Impact</h2>
+          <div class="section-divider section-divider-center"></div>
         </div>
         <div class="impact-stats">
-          <div class="stat-item animate-scale-in" style="animation-delay: 0.1s;">
+          <div class="stat-item animate-scale-in animate-on-scroll animate-delay-1" style="animation-delay: 0.1s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-user-graduate"></i>
             </div>
             <div class="stat-number" data-target="1000">0</div>
             <div class="stat-label">Graduates</div>
           </div>
-          <div class="stat-item animate-scale-in" style="animation-delay: 0.2s;">
+          <div class="stat-item animate-scale-in animate-on-scroll animate-delay-2" style="animation-delay: 0.2s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-hospital"></i>
             </div>
             <div class="stat-number" data-target="7">0</div>
             <div class="stat-label">Hospital Partners</div>
           </div>
-          <div class="stat-item animate-scale-in" style="animation-delay: 0.3s;">
+          <div class="stat-item animate-scale-in animate-on-scroll animate-delay-3" style="animation-delay: 0.3s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-calendar-check"></i>
             </div>
             <div class="stat-number" data-target="15">0</div>
             <div class="stat-label">Years of Excellence</div>
           </div>
-          <div class="stat-item animate-scale-in" style="animation-delay: 0.4s;">
+          <div class="stat-item animate-scale-in animate-on-scroll animate-delay-4" style="animation-delay: 0.4s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-percentage"></i>
             </div>
@@ -357,15 +376,15 @@
     </section>
 
     <!-- Apply Now & Donate CTA Section -->
-    <section class="cta-section py-5 bg-primary text-white">
+    <section class="cta-section py-5 bg-primary text-white animate-on-scroll">
       <div class="container text-center">
         <h2 class="mb-4">Be Part of Our Legacy</h2>
         <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-          <a href="application.php" class="btn btn-light btn-lg px-5">
+          <a href="application.php" class="btn-3d btn-yellow btn-3d-lg cta-pulse">
             <i class="fas fa-paper-plane me-2"></i> Apply Now
           </a>
-          <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+          <a href="donation.php" class="btn-3d btn-glass btn-3d-lg">
             <i class="fas fa-hand-holding-heart me-2"></i> Support Our Mission
           </a>
         </div>

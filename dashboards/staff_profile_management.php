@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 
 $ctx = bootstrapStaffDashboard(['staff','director','secretary','registrar','lecturer']);
 $staffDb   = $ctx['staff'];
@@ -33,6 +34,7 @@ if ($stmt) {
 
 // â”€â”€ Handle Profile Photo Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $upload_dir = __DIR__ . '/../uploads/staff_profiles/';
     if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
@@ -109,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
 
 // â”€â”€ Handle Profile Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $full_name  = trim($_POST['full_name'] ?? '');
     $email      = trim($_POST['email'] ?? '');
     $phone      = trim($_POST['phone'] ?? '');
@@ -226,6 +229,7 @@ $staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
                     <hr>
 
                     <form method="POST" enctype="multipart/form-data" id="photoForm">
+                        <?php csrfField(); ?>
                         <label class="upload-area" for="profile_picture">
                             <div>
                                 <i class="fas fa-cloud-upload-alt"></i>
@@ -250,6 +254,7 @@ $staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
                 </div>
                 <div class="profile-card-body">
                     <form method="POST">
+                        <?php csrfField(); ?>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Staff ID</label>

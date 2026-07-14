@@ -449,7 +449,12 @@ if ($page === 'dashboard'):
             $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
         }
     }
+    $first_name_greeting = explode(' ', trim($full_name))[0] ?? 'Student';
 ?>
+<div class="sp-card" style="background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;margin-bottom:20px">
+<h4 style="color:#fff;margin-bottom:4px"><i class="fas fa-hand-wave me-2"></i>Welcome <?= htmlspecialchars($first_name_greeting) ?></h4>
+<p style="opacity:.85;font-size:.85rem;margin:0"><?= htmlspecialchars($program) ?> &middot; Year <?= $current_year ?> &middot; <?= htmlspecialchars($student_number) ?></p>
+</div>
 <div class="sp-stats">
 <div class="sp-stat"><div class="icon" style="background:#dbeafe;color:#3b82f6"><i class="fas fa-graduation-cap"></i></div><h3><?= $current_year ?></h3><p>Year of Study</p></div>
 <div class="sp-stat"><div class="icon" style="background:#d1fae5;color:#059669"><i class="fas fa-chart-line"></i></div><h3><?= number_format($gpa, 2) ?></h3><p>GPA</p></div>

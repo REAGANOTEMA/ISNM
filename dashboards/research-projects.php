@@ -1,10 +1,12 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head', 'lecturer']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'];
     if ($action === 'add_project' && ($_POST['title'] ?? '')) {
         $title = trim($_POST['title']);
@@ -48,6 +50,7 @@ $pageTitle = 'Research Projects';
         <div class="card-header"><h5>New Research Project</h5></div>
         <div class="card-body">
             <form method="post" class="row g-2">
+                <?php csrfField(); ?>
                 <div class="col-md-4"><input name="title" class="form-control" placeholder="Project Title" required></div>
                 <div class="col-md-2"><input name="researcher" class="form-control" placeholder="Researcher Name"></div>
                 <div class="col-md-2"><input name="department" class="form-control" placeholder="Department"></div>

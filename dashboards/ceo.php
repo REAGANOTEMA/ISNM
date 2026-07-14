@@ -81,11 +81,46 @@ if ($students_conn) {
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Active Programs</h6><h3><?= $stats['programs'] ?></h3></div></div></div>
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Revenue</h6><h3>UGX <?= number_format($stats['revenue'], 0) ?></h3></div></div></div>
     </div>
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body text-center py-4">
             <i class="fas fa-search fa-3x mb-3 text-muted"></i>
             <h5>Student Records</h5>
             <p class="text-muted">Use the <a href="student-management.php" class="fw-bold">Student Management</a> module to search and view student records.</p>
+        </div>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <a href="intake-management.php" class="text-decoration-none">
+                <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-door-open fa-2x text-primary mb-2"></i>
+                        <h6>Intake Management</h6>
+                        <p class="text-muted small mb-0">Manage intake periods and enrollment quotas</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="donation-tracking.php" class="text-decoration-none">
+                <div class="card border-success h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-hand-holding-heart fa-2x text-success mb-2"></i>
+                        <h6>Donation Tracking</h6>
+                        <p class="text-muted small mb-0">Track and manage all donations</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="volunteer-applications.php" class="text-decoration-none">
+                <div class="card border-info h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-hands-helping fa-2x text-info mb-2"></i>
+                        <h6>Volunteer Applications</h6>
+                        <p class="text-muted small mb-0">Review and manage volunteer applications</p>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
         <?php break;

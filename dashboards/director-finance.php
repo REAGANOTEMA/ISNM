@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/director_website_panel.php';
@@ -390,6 +391,7 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 
 // -- POST Handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (function_exists('verifyCsrfToken') && !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-finance.php'); exit; }
     $act = $_POST['action'];
     if ($act === 'add_expense' && $staff) {
         $cat=$_POST['category']??'';
@@ -811,7 +813,7 @@ function loadPayments(){
         if(!d||!d.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted">No payments.</td></tr>';return;}
         var h='';d.forEach(function(p){var stCls=p.status==='approved'?'success':p.status==='pending'?'warning text-dark':'danger';
         h+='<tr><td><code>'+esc(p.payment_reference)+'</code></td><td>'+esc(p.student_name||'-')+'</td><td class="fw-bold">'+currency(p.amount_received)+'</td><td>'+esc(p.payment_method)+'</td><td class="small">'+esc(p.payment_date)+'</td><td><span class="badge bg-'+stCls+'">'+esc(p.status)+'</span></td><td>';
-        if(p.status==='pending'){h+='<form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_payment"><input type="hidden" name="payment_id" value="'+p.id+'"><button class="btn btn-sm btn-outline-success me-1" onclick="return confirm(\'Approve?\')"><i class="fas fa-check"></i></button></form><form method="POST" class="d-inline"><input type="hidden" name="action" value="reject_payment"><input type="hidden" name="payment_id" value="'+p.id+'"><button class="btn btn-sm btn-outline-danger" onclick="return confirm(\'Reject?\')"><i class="fas fa-times"></i></button></form>';}
+        if(p.status==='pending'){h+='<form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="approve_payment"><input type="hidden" name="payment_id" value="'+p.id+'"><button class="btn btn-sm btn-outline-success me-1" onclick="return confirm(\'Approve?\')"><i class="fas fa-check"></i></button></form><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="reject_payment"><input type="hidden" name="payment_id" value="'+p.id+'"><button class="btn btn-sm btn-outline-danger" onclick="return confirm(\'Reject?\')"><i class="fas fa-times"></i></button></form>';}
         h+='</td></tr>';});
         el.innerHTML=h;
     }).catch(function(){el.innerHTML='<tr><td colspan="7" class="text-center text-danger">Failed.</td></tr>';});
@@ -868,11 +870,10 @@ function loadBudgets(){
     fetch('director-finance.php?ajax=budget_list').then(function(r){return r.json()}).then(function(d){
         if(!d||!d.length){el.innerHTML='<tr><td colspan="10" class="text-center text-muted">No budgets.</td></tr>';return;}
         var h='';d.forEach(function(b){var rem=b.allocated_amount-b.spent_amount;var util=b.allocated_amount>0?round((b.spent_amount/b.allocated_amount)*100,1):0;var stCls=b.status==='Approved'?'success':b.status==='Active'?'info':b.status==='Draft'?'warning text-dark':'secondary';
-        h+='<tr><td><code>'+esc(b.budget_code)+'</code></td><td>'+esc(b.budget_name)+'</td><td>'+esc(b.budget_category)+'</td><td>'+esc(b.fiscal_year)+'</td><td>'+currency(b.allocated_amount)+'</td><td>'+currency(b.spent_amount)+'</td><td>'+currency(rem)+'</td><td>'+util+'%</td><td><span class="badge bg-'+stCls+'">'+esc(b.status)+'</span></td><td>'+(b.status==='Draft'?'<form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_budget"><input type="hidden" name="budget_id" value="'+b.id+'"><button class="btn btn-sm btn-outline-success" onclick="return confirm(\'Approve budget?\')"><i class="fas fa-check"></i></button></form>':'')+'</td></tr>';});
+        h+='<tr><td><code>'+esc(b.budget_code)+'</code></td><td>'+esc(b.budget_name)+'</td><td>'+esc(b.budget_category)+'</td><td>'+esc(b.fiscal_year)+'</td><td>'+currency(b.allocated_amount)+'</td><td>'+currency(b.spent_amount)+'</td><td>'+currency(rem)+'</td><td>'+util+'%</td><td><span class="badge bg-'+stCls+'">'+esc(b.status)+'</span></td><td>'+(b.status==='Draft'?'<form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="approve_budget"><input type="hidden" name="budget_id" value="'+b.id+'"><button class="btn btn-sm btn-outline-success" onclick="return confirm(\'Approve budget?\')"><i class="fas fa-check"></i></button></form>':'')+'</td></tr>';});
         el.innerHTML=h;
     }).catch(function(){el.innerHTML='<tr><td colspan="10" class="text-center text-danger">Failed.</td></tr>';});
 }
-function round(v,p){var m=Math.pow(10,p);return Math.round(v*m)/m;}
 document.addEventListener('DOMContentLoaded',loadBudgets);
 </script>
 <?php endif; ?>
@@ -925,11 +926,6 @@ document.addEventListener('DOMContentLoaded',function(){
         el.innerHTML=h;
     }).catch(function(){el.innerHTML='<tr><td colspan="6" class="text-center text-danger">Failed.</td></tr>';});
 });
-function approvalAction(id,tbl,st){
-    if(!confirm('Confirm '+st+'?'))return;
-    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments','');fd.append('csrf_token', window.CSRF_TOKEN);
-    fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});
-}
 </script>
 <?php endif; ?>
 
@@ -939,6 +935,7 @@ function approvalAction(id,tbl,st){
 <div class="row g-3">
 <div class="col-md-6">
 <form method="POST">
+<?= csrfField() ?>
 <input type="hidden" name="action" value="create_budget_adjustment">
 <div class="mb-3"><label class="fl">Budget</label><select name="budget_id" class="form-select env-field">
 <?php $r=$staff->query("SELECT id,budget_name,budget_code FROM {$students_db}.budget_records WHERE status IN('Approved','Active')"); if($r) while($b=$r->fetch_assoc()) echo '<option value="'.$b['id'].'">'.htmlspecialchars($b['budget_code'].' - '.$b['budget_name']).'</option>'; ?>
@@ -979,7 +976,7 @@ function loadExpenses(){
         if(!d||!d.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted">No expenses.</td></tr>';return;}
         var h='';d.forEach(function(e){var stCls=e.status==='approved'||e.status==='paid'?'success':e.status==='pending'?'warning text-dark':'danger';
         h+='<tr><td><code>'+esc(e.expense_id)+'</code></td><td>'+esc(e.expense_category)+'</td><td>'+esc(mbSubstr(e.description,50))+'</td><td class="fw-bold">'+currency(e.amount)+'</td><td class="small">'+esc(e.expense_date)+'</td><td><span class="badge bg-'+stCls+'">'+esc(e.status)+'</span></td><td>';
-        if(e.status==='pending'){h+='<form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_expense"><input type="hidden" name="expense_id" value="'+e.id+'"><button class="btn btn-sm btn-outline-success me-1" onclick="return confirm(\'Approve?\')"><i class="fas fa-check"></i></button></form><form method="POST" class="d-inline"><input type="hidden" name="action" value="reject_expense"><input type="hidden" name="expense_id" value="'+e.id+'"><button class="btn btn-sm btn-outline-danger" onclick="return confirm(\'Reject?\')"><i class="fas fa-times"></i></button></form>';}
+        if(e.status==='pending'){h+='<form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="approve_expense"><input type="hidden" name="expense_id" value="'+e.id+'"><button class="btn btn-sm btn-outline-success me-1" onclick="return confirm(\'Approve?\')"><i class="fas fa-check"></i></button></form><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="reject_expense"><input type="hidden" name="expense_id" value="'+e.id+'"><button class="btn btn-sm btn-outline-danger" onclick="return confirm(\'Reject?\')"><i class="fas fa-times"></i></button></form>';}
         h+='</td></tr>';});
         el.innerHTML=h;
     }).catch(function(){el.innerHTML='<tr><td colspan="7" class="text-center text-danger">Failed.</td></tr>';});
@@ -1953,19 +1950,13 @@ document.addEventListener('DOMContentLoaded',function(){
         el.innerHTML=h;
     }).catch(function(){el.innerHTML='<div class="col-12 text-center text-danger py-3">Failed to load.</div>';});
 });
-function approvalActionModal(id,tbl,st){
-    var cmt=prompt('Enter comments for "'+st+'" action:');
-    if(cmt===null)return;
-    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments',cmt||'');fd.append('csrf_token', window.CSRF_TOKEN);
-    if(st==='escalated'){var dg=prompt('Escalate to (DG user ID):');if(!dg)return;fd.append('escalated_to',parseInt(dg)||0);}
-    fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed: '+(d.error||'Unknown'));}).catch(function(){alert('Error');});
-}
 </script>
 <style>.btn-purple{background:#7c3aed;border-color:#7c3aed;color:#fff}.btn-purple:hover{background:#6d28d9;color:#fff}</style>
 <?php endif; ?>
 
 <!-- Modals -->
 <div class="modal fade" id="budgetModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form method="POST">
+<?= csrfField() ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Create Budget</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
 <input type="hidden" name="action" value="create_budget">
@@ -1982,6 +1973,7 @@ function approvalActionModal(id,tbl,st){
 </form></div></div></div>
 
 <div class="modal fade" id="expModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form method="POST">
+<?= csrfField() ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add Expense</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
 <input type="hidden" name="action" value="add_expense">
@@ -1997,6 +1989,7 @@ function approvalActionModal(id,tbl,st){
 </form></div></div></div>
 
 <div class="modal fade" id="payModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form method="POST">
+<?= csrfField() ?>
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Record Payment</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
 <input type="hidden" name="action" value="record_payment">
@@ -2168,9 +2161,23 @@ if ($report) {
 </script>
 
 <script>
+var CSRF_TOKEN = '<?= generateCsrfToken() ?>';
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
 function currency(n){ n=parseFloat(n)||0; return 'UGX '+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function round(v,p){var m=Math.pow(10,p);return Math.round(v*m)/m;}
+function approvalAction(id,tbl,st){
+    if(!confirm('Confirm '+st+'?'))return;
+    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments','');fd.append('csrf_token', CSRF_TOKEN);
+    fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});
+}
+function approvalActionModal(id,tbl,st){
+    var cmt=prompt('Enter comments for "'+st+'" action:');
+    if(cmt===null)return;
+    var fd=new FormData();fd.append('id',id);fd.append('table',tbl);fd.append('status',st);fd.append('comments',cmt||'');fd.append('csrf_token', CSRF_TOKEN);
+    if(st==='escalated'){var dg=prompt('Escalate to (DG user ID):');if(!dg)return;fd.append('escalated_to',parseInt(dg)||0);}
+    fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed: '+(d.error||'Unknown'));}).catch(function(){alert('Error');});
+}
 function exportTable(id){ var el=document.getElementById(id);if(!el)return; var csv=[];var rows=el.querySelectorAll('tr');rows.forEach(function(r){var cols=[];r.querySelectorAll('th,td').forEach(function(c){cols.push('"'+c.textContent.trim()+'"');});csv.push(cols.join(','));});var blob=new Blob([csv.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finance_report.csv';a.click(); }
 </script>
 </div>

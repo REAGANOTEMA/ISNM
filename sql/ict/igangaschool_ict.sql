@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 13, 2026 at 07:57 AM
+-- Generation Time: Jul 14, 2026 at 10:17 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -319,6 +319,594 @@ CREATE TABLE `audit_logs` (
   `user_agent` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_approvals`
+--
+
+CREATE TABLE `cms_approvals` (
+  `id` int(11) NOT NULL,
+  `content_type` varchar(50) NOT NULL,
+  `content_id` int(11) NOT NULL,
+  `submitted_by` int(11) NOT NULL,
+  `submitted_by_name` varchar(200) DEFAULT NULL,
+  `submitted_by_role` varchar(100) DEFAULT NULL,
+  `reviewer_id` int(11) DEFAULT NULL,
+  `reviewer_name` varchar(200) DEFAULT NULL,
+  `status` enum('draft','pending_review','approved','rejected','revision_requested','published') NOT NULL DEFAULT 'draft',
+  `priority` enum('low','normal','high','urgent') DEFAULT 'normal',
+  `notes` text DEFAULT NULL,
+  `review_notes` text DEFAULT NULL,
+  `submitted_at` datetime DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `published_at` datetime DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_audit_log`
+--
+
+CREATE TABLE `cms_audit_log` (
+  `id` bigint(20) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `user_name` varchar(200) DEFAULT NULL,
+  `user_role` varchar(100) DEFAULT NULL,
+  `action` varchar(50) NOT NULL,
+  `content_type` varchar(50) DEFAULT NULL,
+  `content_id` int(11) DEFAULT NULL,
+  `content_title` varchar(255) DEFAULT NULL,
+  `old_values` longtext DEFAULT NULL,
+  `new_values` longtext DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `session_id` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_banners`
+--
+
+CREATE TABLE `cms_banners` (
+  `id` int(11) NOT NULL,
+  `page_slug` varchar(150) DEFAULT 'home',
+  `title` varchar(255) NOT NULL,
+  `subtitle` text DEFAULT NULL,
+  `image_url` varchar(500) DEFAULT NULL,
+  `mobile_image_url` varchar(500) DEFAULT NULL,
+  `link_url` varchar(500) DEFAULT NULL,
+  `link_text` varchar(100) DEFAULT NULL,
+  `overlay_color` varchar(30) DEFAULT 'rgba(26,35,126,0.7)',
+  `text_color` varchar(20) DEFAULT '#ffffff',
+  `text_position` enum('center','left','right','bottom-left') DEFAULT 'center',
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_content_blocks`
+--
+
+CREATE TABLE `cms_content_blocks` (
+  `id` int(11) NOT NULL,
+  `page_id` int(11) DEFAULT NULL,
+  `block_key` varchar(100) NOT NULL,
+  `block_type` enum('text','html','image','gallery','video','stats','cards','timeline','testimonials','cta','faq','accordion','map','embed','custom') NOT NULL DEFAULT 'text',
+  `title` varchar(255) DEFAULT NULL,
+  `subtitle` text DEFAULT NULL,
+  `content` longtext DEFAULT NULL,
+  `settings` longtext DEFAULT NULL,
+  `animation` varchar(50) DEFAULT 'fade-up',
+  `background_style` varchar(100) DEFAULT NULL,
+  `text_color` varchar(20) DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_published` tinyint(1) DEFAULT 1,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_content_blocks`
+--
+
+INSERT INTO `cms_content_blocks` (`id`, `page_id`, `block_key`, `block_type`, `title`, `subtitle`, `content`, `settings`, `animation`, `background_style`, `text_color`, `sort_order`, `is_published`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 'welcome', 'text', 'Welcome to Iganga School of Nursing and Midwifery', 'Established to provide quality nursing and midwifery education in Uganda and the region.', '<p>Iganga School of Nursing and Midwifery (ISNM) is a premier healthcare education institution dedicated to training competent, compassionate, and skilled nurses and midwives. Located in Iganga, Eastern Uganda, we have been at the forefront of healthcare education since 1997.</p><p>Our programs are designed to equip students with the knowledge, skills, and values needed to provide quality healthcare services in diverse settings.</p>', NULL, 'fade-up', NULL, NULL, 1, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(2, 1, 'stats', 'stats', 'Our Impact in Numbers', 'Making a difference in healthcare education', NULL, NULL, 'fade-up', NULL, NULL, 2, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(3, 1, 'why_choose', 'cards', 'Why Choose ISNM', 'Discover what makes us the preferred choice for healthcare education', NULL, NULL, 'fade-up', NULL, NULL, 3, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(4, 1, 'cta', 'cta', 'Ready to Start Your Journey?', 'Join thousands of healthcare professionals trained at ISNM', NULL, NULL, 'fade-up', NULL, NULL, 10, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_events`
+--
+
+CREATE TABLE `cms_events` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `description` longtext DEFAULT NULL,
+  `short_description` text DEFAULT NULL,
+  `event_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `event_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `event_type` enum('academic','ceremony','workshop','seminar','conference','sports','social','other') DEFAULT 'other',
+  `image_url` varchar(500) DEFAULT NULL,
+  `registration_url` varchar(500) DEFAULT NULL,
+  `max_participants` int(11) DEFAULT NULL,
+  `current_participants` int(11) DEFAULT 0,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `is_published` tinyint(1) DEFAULT 1,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_events`
+--
+
+INSERT INTO `cms_events` (`id`, `title`, `slug`, `description`, `short_description`, `event_date`, `end_date`, `event_time`, `end_time`, `location`, `event_type`, `image_url`, `registration_url`, `max_participants`, `current_participants`, `is_featured`, `is_published`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'New Academic Year Orientation', 'new-academic-year-orientation-2026', 'Welcome ceremony and orientation for new and returning students for the 2026 academic year.', 'Welcome ceremony for all students', '2026-02-01', NULL, NULL, NULL, 'ISNM Main Campus', 'academic', NULL, NULL, NULL, 0, 0, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(2, 'International Nurses Day Celebration', 'international-nurses-day-2026', 'Annual celebration of International Nurses Day with guest speakers, exhibitions, and awards.', 'Celebrating nursing excellence', '2026-05-12', NULL, NULL, NULL, 'ISNM Auditorium', 'ceremony', NULL, NULL, NULL, 0, 0, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(3, 'Clinical Skills Workshop', 'clinical-skills-workshop-2026', 'Hands-on workshop for nursing students on advanced clinical skills and patient care techniques.', 'Advanced clinical skills training', '2026-06-15', NULL, NULL, NULL, 'ISNM Skills Laboratory', 'workshop', NULL, NULL, NULL, 0, 0, 1, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_faqs`
+--
+
+CREATE TABLE `cms_faqs` (
+  `id` int(11) NOT NULL,
+  `page_slug` varchar(150) DEFAULT 'general',
+  `question` varchar(500) NOT NULL,
+  `answer` longtext NOT NULL,
+  `category` varchar(100) DEFAULT 'general',
+  `sort_order` int(11) DEFAULT 0,
+  `is_published` tinyint(1) DEFAULT 1,
+  `helpful_count` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_faqs`
+--
+
+INSERT INTO `cms_faqs` (`id`, `page_slug`, `question`, `answer`, `category`, `sort_order`, `is_published`, `helpful_count`, `created_at`) VALUES
+(1, 'general', 'What programs does ISNM offer?', 'ISNM offers Certificate in Nursing, Certificate in Midwifery, Diploma in Nursing (Extension), and Diploma in Midwifery (Extension) programs.', 'admissions', 1, 1, 0, '2026-07-14 07:12:48'),
+(2, 'general', 'How do I apply to ISNM?', 'Applications can be submitted online through our application portal or in person at the admissions office. Required documents include academic certificates, national ID, and passport photos.', 'admissions', 2, 1, 0, '2026-07-14 07:12:48'),
+(3, 'general', 'What are the admission requirements?', 'Requirements vary by program. Generally, candidates need O-Level certificates with at least 5 passes including English, Mathematics, Biology, and Chemistry.', 'admissions', 3, 1, 0, '2026-07-14 07:12:48'),
+(4, 'general', 'How can I pay tuition fees?', 'Fees can be paid via Mobile Money (MTN/Airtel), bank transfer, or cash at the bursar\'s office. Online payment is also available through our payment portal.', 'finance', 4, 1, 0, '2026-07-14 07:12:48'),
+(5, 'general', 'Does ISNM offer accommodation?', 'Yes, ISNM has on-campus hostel facilities for both male and female students. Allocation is based on availability and distance from home.', 'student_life', 5, 1, 0, '2026-07-14 07:12:48'),
+(6, 'general', 'What career opportunities are available after graduation?', 'Graduates can work in hospitals, health centers, community health programs, NGOs, international organizations, and can pursue further education.', 'academic', 6, 1, 0, '2026-07-14 07:12:48'),
+(7, 'general', 'Is ISNM accredited?', 'Yes, ISNM is fully accredited by the Uganda Nurses and Midwives Council (UNMC) and the National Council for Higher Education (NCHE).', 'general', 7, 1, 0, '2026-07-14 07:12:48'),
+(8, 'general', 'How can I contact ISNM?', 'You can reach us by phone at +256 700 123 456, email at info@igangaschoolofnursing.ac.ug, or visit us at Iganga, Uganda.', 'general', 8, 1, 0, '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_gallery_categories`
+--
+
+CREATE TABLE `cms_gallery_categories` (
+  `id` int(11) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `slug` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `cover_image` varchar(500) DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_gallery_categories`
+--
+
+INSERT INTO `cms_gallery_categories` (`id`, `name`, `slug`, `description`, `cover_image`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'Campus Life', 'campus-life', NULL, NULL, 1, 1, '2026-07-14 07:12:48'),
+(2, 'Graduation', 'graduation', NULL, NULL, 2, 1, '2026-07-14 07:12:48'),
+(3, 'Clinical Training', 'clinical-training', NULL, NULL, 3, 1, '2026-07-14 07:12:48'),
+(4, 'Sports & Activities', 'sports-activities', NULL, NULL, 4, 1, '2026-07-14 07:12:48'),
+(5, 'Facilities', 'facilities', NULL, NULL, 5, 1, '2026-07-14 07:12:48'),
+(6, 'Events', 'events', NULL, NULL, 6, 1, '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_gallery_images`
+--
+
+CREATE TABLE `cms_gallery_images` (
+  `id` int(11) NOT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `caption` text DEFAULT NULL,
+  `image_url` varchar(500) NOT NULL,
+  `thumbnail_url` varchar(500) DEFAULT NULL,
+  `alt_text` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `uploaded_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_media`
+--
+
+CREATE TABLE `cms_media` (
+  `id` int(11) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_type` varchar(50) NOT NULL,
+  `file_size` bigint(20) DEFAULT 0,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `alt_text` varchar(255) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `caption` text DEFAULT NULL,
+  `folder` varchar(100) DEFAULT 'uploads',
+  `width` int(11) DEFAULT NULL,
+  `height` int(11) DEFAULT NULL,
+  `uploaded_by` int(11) DEFAULT NULL,
+  `usage_count` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_news_categories`
+--
+
+CREATE TABLE `cms_news_categories` (
+  `id` int(11) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `slug` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `icon` varchar(100) DEFAULT 'fas fa-newspaper',
+  `color` varchar(20) DEFAULT '#1A237E',
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_news_categories`
+--
+
+INSERT INTO `cms_news_categories` (`id`, `name`, `slug`, `description`, `icon`, `color`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'General', 'general', NULL, 'fas fa-newspaper', '#1A237E', 1, 1, '2026-07-14 07:12:48'),
+(2, 'Academic', 'academic', NULL, 'fas fa-graduation-cap', '#2E7D32', 2, 1, '2026-07-14 07:12:48'),
+(3, 'Admissions', 'admissions', NULL, 'fas fa-user-plus', '#E65100', 3, 1, '2026-07-14 07:12:48'),
+(4, 'Events', 'events', NULL, 'fas fa-calendar-alt', '#6A1B9A', 4, 1, '2026-07-14 07:12:48'),
+(5, 'Announcements', 'announcements', NULL, 'fas fa-bullhorn', '#C62828', 5, 1, '2026-07-14 07:12:48'),
+(6, 'Student Life', 'student-life', NULL, 'fas fa-users', '#00838F', 6, 1, '2026-07-14 07:12:48'),
+(7, 'Sports', 'sports', NULL, 'fas fa-football-ball', '#F57F17', 7, 1, '2026-07-14 07:12:48'),
+(8, 'Research', 'research', NULL, 'fas fa-flask', '#1565C0', 8, 1, '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_pages`
+--
+
+CREATE TABLE `cms_pages` (
+  `id` int(11) NOT NULL,
+  `slug` varchar(150) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `subtitle` varchar(500) DEFAULT NULL,
+  `page_type` enum('static','dynamic','system') NOT NULL DEFAULT 'static',
+  `template` varchar(100) DEFAULT 'default',
+  `hero_title` varchar(255) DEFAULT NULL,
+  `hero_subtitle` varchar(500) DEFAULT NULL,
+  `hero_image` varchar(500) DEFAULT NULL,
+  `hero_overlay_color` varchar(20) DEFAULT 'rgba(26,35,126,0.7)',
+  `content` longtext DEFAULT NULL,
+  `sidebar_content` text DEFAULT NULL,
+  `meta_title` varchar(255) DEFAULT NULL,
+  `meta_description` text DEFAULT NULL,
+  `og_title` varchar(255) DEFAULT NULL,
+  `og_description` text DEFAULT NULL,
+  `og_image` varchar(500) DEFAULT NULL,
+  `canonical_url` varchar(500) DEFAULT NULL,
+  `schema_type` varchar(50) DEFAULT NULL,
+  `schema_data` longtext DEFAULT NULL,
+  `og_type` varchar(50) DEFAULT 'website',
+  `og_locale` varchar(10) DEFAULT 'en_US',
+  `twitter_card` varchar(50) DEFAULT 'summary_large_image',
+  `twitter_site` varchar(100) DEFAULT NULL,
+  `twitter_creator` varchar(100) DEFAULT NULL,
+  `is_published` tinyint(1) DEFAULT 1,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `allow_comments` tinyint(1) DEFAULT 0,
+  `sort_order` int(11) DEFAULT 0,
+  `page_views` bigint(20) DEFAULT 0,
+  `last_viewed_at` datetime DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_pages`
+--
+
+INSERT INTO `cms_pages` (`id`, `slug`, `title`, `subtitle`, `page_type`, `template`, `hero_title`, `hero_subtitle`, `hero_image`, `hero_overlay_color`, `content`, `sidebar_content`, `meta_title`, `meta_description`, `og_title`, `og_description`, `og_image`, `canonical_url`, `schema_type`, `schema_data`, `og_type`, `og_locale`, `twitter_card`, `twitter_site`, `twitter_creator`, `is_published`, `is_featured`, `allow_comments`, `sort_order`, `page_views`, `last_viewed_at`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'home', 'Home', NULL, 'dynamic', 'default', 'Welcome to ISNM', 'Training Competent and Caring Healthcare Professionals', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Iganga School of Nursing and Midwifery | Home', 'Premier healthcare education institution in Uganda', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 1, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(2, 'about', 'About Us', NULL, 'static', 'default', 'About ISNM', 'Excellence in Healthcare Education Since 1997', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'About Us | Iganga School of Nursing and Midwifery', 'Learn about our history, mission, vision, and values', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 2, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(3, 'history', 'Our History', NULL, 'static', 'default', 'Our History', 'A Legacy of Healthcare Excellence', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Our History | Iganga School of Nursing and Midwifery', 'The rich history of ISNM since 1997', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 3, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(4, 'programs', 'Academic Programs', NULL, 'static', 'default', 'Academic Programs', 'Comprehensive Healthcare Education Programs', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Academic Programs | Iganga School of Nursing and Midwifery', 'Explore our Certificate, Diploma, and Degree programs', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 4, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(5, 'news', 'News & Events', NULL, 'dynamic', 'default', 'News & Events', 'Stay Updated with ISNM', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'News & Events | Iganga School of Nursing and Midwifery', 'Latest news, events, and announcements from ISNM', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 5, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(6, 'contact', 'Contact Us', NULL, 'static', 'default', 'Contact Us', 'Get in Touch with ISNM', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Contact Us | Iganga School of Nursing and Midwifery', 'Contact information, map, and inquiry form', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 6, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(7, 'donate', 'Donate', NULL, 'static', 'default', 'Support ISNM', 'Your Donation Transforms Healthcare Education', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Donate | Iganga School of Nursing and Midwifery', 'Support nursing education in Uganda through donations', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 7, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(8, 'volunteer', 'Volunteer', NULL, 'static', 'default', 'Volunteer With Us', 'Make a Difference in Healthcare Education', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Volunteer | Iganga School of Nursing and Midwifery', 'Volunteer opportunities at Iganga School of Nursing', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 8, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(9, 'application', 'Apply Now', NULL, 'static', 'default', 'Apply to ISNM', 'Start Your Healthcare Career Today', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Apply Now | Iganga School of Nursing and Midwifery', 'Submit your application to Iganga School of Nursing', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 9, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(10, 'portal', 'Student Portal', NULL, 'dynamic', 'default', 'Student Portal', 'Access Your Academic Dashboard', NULL, 'rgba(26,35,126,0.7)', NULL, NULL, 'Student Portal | Iganga School of Nursing and Midwifery', 'Student login portal for academic resources', NULL, NULL, NULL, NULL, NULL, NULL, 'website', 'en_US', 'summary_large_image', NULL, NULL, 1, 0, 0, 10, 0, NULL, NULL, NULL, '2026-07-14 07:12:48', '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_page_views`
+--
+
+CREATE TABLE `cms_page_views` (
+  `id` bigint(20) NOT NULL,
+  `page_slug` varchar(150) NOT NULL,
+  `visitor_ip` varchar(45) DEFAULT NULL,
+  `visitor_agent` text DEFAULT NULL,
+  `referer_url` varchar(500) DEFAULT NULL,
+  `session_id` varchar(100) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `device_type` enum('desktop','mobile','tablet','unknown') DEFAULT 'unknown',
+  `viewed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_partners`
+--
+
+CREATE TABLE `cms_partners` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `logo_url` varchar(500) DEFAULT NULL,
+  `website_url` varchar(500) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `partner_type` enum('donor','academic','healthcare','government','ngo','corporate','other') DEFAULT 'other',
+  `is_active` tinyint(1) DEFAULT 1,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_revisions`
+--
+
+CREATE TABLE `cms_revisions` (
+  `id` int(11) NOT NULL,
+  `content_type` varchar(50) NOT NULL,
+  `content_id` int(11) NOT NULL,
+  `revision_number` int(11) DEFAULT 1,
+  `title` varchar(255) DEFAULT NULL,
+  `content_snapshot` longtext DEFAULT NULL,
+  `changes_summary` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_by_name` varchar(200) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_role_permissions`
+--
+
+CREATE TABLE `cms_role_permissions` (
+  `id` int(11) NOT NULL,
+  `role_name` varchar(100) NOT NULL,
+  `permission` varchar(100) NOT NULL,
+  `page_slug` varchar(150) DEFAULT NULL,
+  `content_type` varchar(50) DEFAULT NULL,
+  `can_create` tinyint(1) DEFAULT 0,
+  `can_edit` tinyint(1) DEFAULT 0,
+  `can_delete` tinyint(1) DEFAULT 0,
+  `can_publish` tinyint(1) DEFAULT 0,
+  `can_approve` tinyint(1) DEFAULT 0,
+  `can_view` tinyint(1) DEFAULT 1,
+  `requires_approval` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_role_permissions`
+--
+
+INSERT INTO `cms_role_permissions` (`id`, `role_name`, `permission`, `page_slug`, `content_type`, `can_create`, `can_edit`, `can_delete`, `can_publish`, `can_approve`, `can_view`, `requires_approval`, `created_at`) VALUES
+(1, 'Director General', 'manage_all', NULL, NULL, 1, 1, 1, 1, 1, 1, 0, '2026-07-14 07:12:48'),
+(2, 'CEO', 'edit_homepage', 'about', 'page', 0, 1, 0, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(3, 'CEO', 'edit_ceo_message', 'about', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(4, 'Director Academics', 'manage_programs', 'programs', 'page', 1, 1, 0, 1, 0, 1, 1, '2026-07-14 07:12:48'),
+(5, 'Director Academics', 'manage_news', NULL, 'news', 1, 1, 0, 1, 0, 1, 1, '2026-07-14 07:12:48'),
+(6, 'School Principal', 'edit_principal_message', 'about', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(7, 'School Principal', 'manage_announcements', NULL, 'announcement', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(8, 'Director Finance', 'edit_tuition', 'programs', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(9, 'Director Finance', 'manage_donations', 'donate', 'page', 0, 1, 0, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(10, 'School Bursar', 'edit_payment_info', 'donate', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(11, 'Director Admissions', 'manage_admissions', 'application', 'page', 1, 1, 0, 1, 0, 1, 1, '2026-07-14 07:12:48'),
+(12, 'Academic Registrar', 'edit_registration', 'programs', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(13, 'HR Manager', 'manage_careers', 'contact', 'content_block', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(14, 'School Secretary', 'manage_notices', NULL, 'announcement', 1, 1, 0, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(15, 'School Librarian', 'edit_library', 'about', 'content_block', 0, 1, 0, 0, 0, 1, 1, '2026-07-14 07:12:48'),
+(16, 'Events Coordinator', 'manage_events', NULL, 'event', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(17, 'Events Coordinator', 'manage_gallery', NULL, 'gallery', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(18, 'Director ICT', 'manage_website_settings', NULL, 'setting', 1, 1, 0, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(19, 'Director ICT', 'manage_banners', NULL, 'banner', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48'),
+(20, 'Director ICT', 'manage_media', NULL, 'media', 1, 1, 1, 1, 0, 1, 0, '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_settings`
+--
+
+CREATE TABLE `cms_settings` (
+  `id` int(11) NOT NULL,
+  `setting_group` varchar(50) NOT NULL DEFAULT 'general',
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` longtext DEFAULT NULL,
+  `value_type` enum('text','textarea','json','image','boolean','integer','color') DEFAULT 'text',
+  `label` varchar(200) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_settings`
+--
+
+INSERT INTO `cms_settings` (`id`, `setting_group`, `setting_key`, `setting_value`, `value_type`, `label`, `description`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 'general', 'school_name', 'Iganga School of Nursing and Midwifery', 'text', 'School Name', NULL, 1, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(2, 'general', 'school_motto', 'Quality Healthcare Education', 'text', 'School Motto', NULL, 2, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(3, 'general', 'school_tagline', 'Training Competent and Caring Healthcare Professionals', 'text', 'Tagline', NULL, 3, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(4, 'general', 'school_email', 'info@igangaschoolofnursing.ac.ug', 'text', 'Primary Email', NULL, 4, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(5, 'general', 'school_phone', '+256 700 123 456', 'text', 'Primary Phone', NULL, 5, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(6, 'general', 'school_address', 'Iganga, Uganda', 'text', 'Address', NULL, 6, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(7, 'general', 'school_pobox', 'P.O Box 123, Iganga', 'text', 'P.O. Box', NULL, 7, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(8, 'contact', 'admissions_email', 'admissions@igangaschoolofnursing.ac.ug', 'text', 'Admissions Email', NULL, 10, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(9, 'contact', 'bursar_email', 'bursar@igangaschoolofnursing.ac.ug', 'text', 'Bursar Email', NULL, 11, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(10, 'contact', 'principal_email', 'principal@igangaschoolofnursing.ac.ug', 'text', 'Principal Email', NULL, 12, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(11, 'contact', 'ict_email', 'ict@igangaschoolofnursing.ac.ug', 'text', 'ICT Email', NULL, 13, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(12, 'contact', 'emergency_phone', '+256 700 987 654', 'text', 'Emergency Phone', NULL, 14, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(13, 'seo', 'meta_title_suffix', '| Iganga School of Nursing and Midwifery', 'text', 'Title Suffix', NULL, 20, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(14, 'seo', 'default_meta_description', 'Iganga School of Nursing and Midwifery - Premier healthcare education institution in Uganda, training competent nurses and midwives.', 'textarea', 'Default Meta Description', NULL, 21, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(15, 'seo', 'google_analytics_id', '', 'text', 'Google Analytics ID', NULL, 22, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(16, 'seo', 'google_search_console', '', 'text', 'Search Console Verification', NULL, 23, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(17, 'social', 'facebook_url', 'https://facebook.com/igangaschoolofnursing', 'text', 'Facebook URL', NULL, 30, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(18, 'social', 'twitter_url', 'https://twitter.com/isnm_ug', 'text', 'Twitter URL', NULL, 31, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(19, 'social', 'instagram_url', 'https://instagram.com/isnm_ug', 'text', 'Instagram URL', NULL, 32, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(20, 'social', 'linkedin_url', 'https://linkedin.com/company/isnm', 'text', 'LinkedIn URL', NULL, 33, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(21, 'social', 'youtube_url', '', 'text', 'YouTube URL', NULL, 34, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(22, 'social', 'whatsapp_number', '+256700123456', 'text', 'WhatsApp Number', NULL, 35, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(23, 'homepage', 'hero_animation', 'fade', 'text', 'Hero Animation Style', NULL, 40, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(24, 'homepage', 'stats_counter_enabled', '1', 'boolean', 'Show Stats Counter', NULL, 41, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(25, 'homepage', 'testimonials_enabled', '1', 'boolean', 'Show Testimonials', NULL, 42, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(26, 'homepage', 'partners_enabled', '1', 'boolean', 'Show Partners', NULL, 43, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(27, 'homepage', 'gallery_preview_enabled', '1', 'boolean', 'Show Gallery Preview', NULL, 44, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(28, 'footer', 'developer_name', 'Reagan Otema', 'text', 'Developer Name', NULL, 50, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(29, 'footer', 'developer_url', 'https://reaganotema.com', 'text', 'Developer URL', NULL, 51, '2026-07-14 07:12:48', '2026-07-14 07:12:48'),
+(30, 'footer', 'copyright_text', 'Iganga School of Nursing and Midwifery. All Rights Reserved.', 'text', 'Copyright Text', NULL, 52, '2026-07-14 07:12:48', '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_social_links`
+--
+
+CREATE TABLE `cms_social_links` (
+  `id` int(11) NOT NULL,
+  `platform` varchar(50) NOT NULL,
+  `url` varchar(500) NOT NULL,
+  `icon` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_social_links`
+--
+
+INSERT INTO `cms_social_links` (`id`, `platform`, `url`, `icon`, `is_active`, `sort_order`, `created_at`) VALUES
+(1, 'facebook', 'https://facebook.com/igangaschoolofnursing', 'fab fa-facebook-f', 1, 1, '2026-07-14 07:12:48'),
+(2, 'twitter', 'https://twitter.com/isnm_ug', 'fab fa-twitter', 1, 2, '2026-07-14 07:12:48'),
+(3, 'instagram', 'https://instagram.com/isnm_ug', 'fab fa-instagram', 1, 3, '2026-07-14 07:12:48'),
+(4, 'linkedin', 'https://linkedin.com/company/isnm', 'fab fa-linkedin-in', 1, 4, '2026-07-14 07:12:48'),
+(5, 'youtube', '', 'fab fa-youtube', 0, 5, '2026-07-14 07:12:48'),
+(6, 'whatsapp', 'https://wa.me/256700123456', 'fab fa-whatsapp', 1, 6, '2026-07-14 07:12:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_staff_directory`
+--
+
+CREATE TABLE `cms_staff_directory` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) DEFAULT NULL,
+  `full_name` varchar(200) NOT NULL,
+  `position` varchar(200) DEFAULT NULL,
+  `department` varchar(150) DEFAULT NULL,
+  `qualification` varchar(300) DEFAULT NULL,
+  `bio` text DEFAULT NULL,
+  `photo_url` varchar(500) DEFAULT NULL,
+  `email` varchar(200) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `office_location` varchar(200) DEFAULT NULL,
+  `office_hours` varchar(200) DEFAULT NULL,
+  `is_leadership` tinyint(1) DEFAULT 0,
+  `is_published` tinyint(1) DEFAULT 1,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cms_testimonials`
+--
+
+CREATE TABLE `cms_testimonials` (
+  `id` int(11) NOT NULL,
+  `author_name` varchar(200) NOT NULL,
+  `author_title` varchar(200) DEFAULT NULL,
+  `author_image` varchar(500) DEFAULT NULL,
+  `author_role` enum('student','alumni','staff','parent','partner') DEFAULT 'student',
+  `content` text NOT NULL,
+  `rating` tinyint(1) DEFAULT 5,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `is_published` tinyint(1) DEFAULT 1,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cms_testimonials`
+--
+
+INSERT INTO `cms_testimonials` (`id`, `author_name`, `author_title`, `author_image`, `author_role`, `content`, `rating`, `is_featured`, `is_published`, `sort_order`, `created_at`) VALUES
+(1, 'Sarah Nambogo', 'Registered Nurse, Mulago Hospital', NULL, 'alumni', 'ISNM gave me the foundation I needed to become a competent nurse. The clinical training and dedicated faculty prepared me for the real healthcare challenges.', 5, 1, 1, 1, '2026-07-14 07:12:48'),
+(2, 'James Ochieng', 'Midwife, Iganga Health Center IV', NULL, 'alumni', 'The Certificate in Midwifery program at ISNM was transformative. I now serve my community with confidence and professional expertise.', 5, 1, 1, 2, '2026-07-14 07:12:48'),
+(3, 'Grace Nakamya', 'Student, Diploma in Nursing', NULL, 'student', 'Choosing ISNM was the best decision of my life. The modern facilities, experienced lecturers, and supportive learning environment make every day worthwhile.', 5, 1, 1, 3, '2026-07-14 07:12:48'),
+(4, 'Dr. Moses Wambamba', 'Medical Director, Iganga Hospital', NULL, 'partner', 'ISNM graduates consistently demonstrate clinical excellence and compassionate care. We are proud to partner with this exceptional institution.', 5, 1, 1, 4, '2026-07-14 07:12:48');
 
 -- --------------------------------------------------------
 
@@ -1644,6 +2232,26 @@ CREATE TABLE `notification_logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `payment_audit_log`
+--
+
+CREATE TABLE `payment_audit_log` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `user_type` enum('staff','student','system') DEFAULT 'staff',
+  `action` varchar(100) NOT NULL,
+  `entity_type` varchar(50) DEFAULT NULL,
+  `entity_id` int(11) DEFAULT NULL,
+  `old_values` longtext DEFAULT NULL,
+  `new_values` longtext DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `payment_callbacks`
 --
 
@@ -1659,6 +2267,23 @@ CREATE TABLE `payment_callbacks` (
   `response_body` longtext DEFAULT NULL,
   `processed` tinyint(1) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_gateway_settings`
+--
+
+CREATE TABLE `payment_gateway_settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` longtext DEFAULT NULL,
+  `setting_group` varchar(50) DEFAULT 'general',
+  `description` varchar(255) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1688,6 +2313,30 @@ CREATE TABLE `payment_providers` (
   `status` enum('active','inactive','sandbox') DEFAULT 'sandbox',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_receipts`
+--
+
+CREATE TABLE `payment_receipts` (
+  `id` int(11) NOT NULL,
+  `receipt_number` varchar(50) NOT NULL,
+  `transaction_id` int(11) NOT NULL,
+  `receipt_type` enum('payment','refund','invoice') NOT NULL DEFAULT 'payment',
+  `student_name` varchar(200) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL,
+  `currency` varchar(10) DEFAULT 'UGX',
+  `payment_method` varchar(100) DEFAULT NULL,
+  `payment_date` datetime DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `emailed` tinyint(1) DEFAULT 0,
+  `emailed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -2822,6 +3471,171 @@ ALTER TABLE `audit_logs`
   ADD KEY `created_at` (`created_at`);
 
 --
+-- Indexes for table `cms_approvals`
+--
+ALTER TABLE `cms_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_approval_content` (`content_type`,`content_id`),
+  ADD KEY `idx_approval_status` (`status`),
+  ADD KEY `idx_approval_submitter` (`submitted_by`),
+  ADD KEY `idx_approval_reviewer` (`reviewer_id`);
+
+--
+-- Indexes for table `cms_audit_log`
+--
+ALTER TABLE `cms_audit_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_user` (`user_id`),
+  ADD KEY `idx_audit_action` (`action`),
+  ADD KEY `idx_audit_content` (`content_type`,`content_id`),
+  ADD KEY `idx_audit_date` (`created_at`);
+
+--
+-- Indexes for table `cms_banners`
+--
+ALTER TABLE `cms_banners`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_banner_page` (`page_slug`),
+  ADD KEY `idx_banner_active` (`is_active`),
+  ADD KEY `idx_banner_sort` (`sort_order`);
+
+--
+-- Indexes for table `cms_content_blocks`
+--
+ALTER TABLE `cms_content_blocks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_block_page` (`page_id`),
+  ADD KEY `idx_block_key` (`block_key`),
+  ADD KEY `idx_block_sort` (`sort_order`);
+
+--
+-- Indexes for table `cms_events`
+--
+ALTER TABLE `cms_events`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_event_date` (`event_date`),
+  ADD KEY `idx_event_type` (`event_type`),
+  ADD KEY `idx_event_published` (`is_published`);
+
+--
+-- Indexes for table `cms_faqs`
+--
+ALTER TABLE `cms_faqs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_faq_page` (`page_slug`),
+  ADD KEY `idx_faq_category` (`category`),
+  ADD KEY `idx_faq_sort` (`sort_order`);
+
+--
+-- Indexes for table `cms_gallery_categories`
+--
+ALTER TABLE `cms_gallery_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `cms_gallery_images`
+--
+ALTER TABLE `cms_gallery_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_gallery_cat` (`category_id`),
+  ADD KEY `idx_gallery_sort` (`sort_order`);
+
+--
+-- Indexes for table `cms_media`
+--
+ALTER TABLE `cms_media`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_media_type` (`file_type`),
+  ADD KEY `idx_media_folder` (`folder`),
+  ADD KEY `idx_media_uploaded` (`uploaded_by`);
+
+--
+-- Indexes for table `cms_news_categories`
+--
+ALTER TABLE `cms_news_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `cms_pages`
+--
+ALTER TABLE `cms_pages`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_page_type` (`page_type`),
+  ADD KEY `idx_published` (`is_published`),
+  ADD KEY `idx_sort` (`sort_order`);
+
+--
+-- Indexes for table `cms_page_views`
+--
+ALTER TABLE `cms_page_views`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pv_page` (`page_slug`),
+  ADD KEY `idx_pv_date` (`viewed_at`),
+  ADD KEY `idx_pv_device` (`device_type`);
+
+--
+-- Indexes for table `cms_partners`
+--
+ALTER TABLE `cms_partners`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_partner_type` (`partner_type`),
+  ADD KEY `idx_partner_active` (`is_active`);
+
+--
+-- Indexes for table `cms_revisions`
+--
+ALTER TABLE `cms_revisions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_rev_content` (`content_type`,`content_id`),
+  ADD KEY `idx_rev_created` (`created_at`);
+
+--
+-- Indexes for table `cms_role_permissions`
+--
+ALTER TABLE `cms_role_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `role_permission_page` (`role_name`,`permission`,`page_slug`),
+  ADD KEY `idx_perm_role` (`role_name`),
+  ADD KEY `idx_perm_page` (`page_slug`);
+
+--
+-- Indexes for table `cms_settings`
+--
+ALTER TABLE `cms_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `idx_setting_group` (`setting_group`);
+
+--
+-- Indexes for table `cms_social_links`
+--
+ALTER TABLE `cms_social_links`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `platform` (`platform`);
+
+--
+-- Indexes for table `cms_staff_directory`
+--
+ALTER TABLE `cms_staff_directory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_dept` (`department`),
+  ADD KEY `idx_staff_leader` (`is_leadership`),
+  ADD KEY `idx_staff_published` (`is_published`);
+
+--
+-- Indexes for table `cms_testimonials`
+--
+ALTER TABLE `cms_testimonials`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_test_featured` (`is_featured`),
+  ADD KEY `idx_test_published` (`is_published`),
+  ADD KEY `idx_test_sort` (`sort_order`);
+
+--
 -- Indexes for table `complaint_submissions`
 --
 ALTER TABLE `complaint_submissions`
@@ -3247,6 +4061,16 @@ ALTER TABLE `notification_logs`
   ADD KEY `created_at` (`created_at`);
 
 --
+-- Indexes for table `payment_audit_log`
+--
+ALTER TABLE `payment_audit_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_user` (`user_id`),
+  ADD KEY `idx_audit_action` (`action`),
+  ADD KEY `idx_audit_entity` (`entity_type`,`entity_id`),
+  ADD KEY `idx_audit_date` (`created_at`);
+
+--
 -- Indexes for table `payment_callbacks`
 --
 ALTER TABLE `payment_callbacks`
@@ -3256,6 +4080,14 @@ ALTER TABLE `payment_callbacks`
   ADD KEY `idx_processed` (`processed`);
 
 --
+-- Indexes for table `payment_gateway_settings`
+--
+ALTER TABLE `payment_gateway_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `idx_settings_group` (`setting_group`);
+
+--
 -- Indexes for table `payment_providers`
 --
 ALTER TABLE `payment_providers`
@@ -3263,6 +4095,16 @@ ALTER TABLE `payment_providers`
   ADD UNIQUE KEY `provider_key` (`provider_key`),
   ADD KEY `idx_provider_type` (`provider_type`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `payment_receipts`
+--
+ALTER TABLE `payment_receipts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `receipt_number` (`receipt_number`),
+  ADD KEY `idx_receipt_transaction` (`transaction_id`),
+  ADD KEY `idx_receipt_student` (`student_number`),
+  ADD KEY `idx_receipt_date` (`created_at`);
 
 --
 -- Indexes for table `payment_reconciliation`
@@ -3691,6 +4533,120 @@ ALTER TABLE `audit_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `cms_approvals`
+--
+ALTER TABLE `cms_approvals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_audit_log`
+--
+ALTER TABLE `cms_audit_log`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_banners`
+--
+ALTER TABLE `cms_banners`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_content_blocks`
+--
+ALTER TABLE `cms_content_blocks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `cms_events`
+--
+ALTER TABLE `cms_events`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `cms_faqs`
+--
+ALTER TABLE `cms_faqs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `cms_gallery_categories`
+--
+ALTER TABLE `cms_gallery_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `cms_gallery_images`
+--
+ALTER TABLE `cms_gallery_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_media`
+--
+ALTER TABLE `cms_media`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_news_categories`
+--
+ALTER TABLE `cms_news_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `cms_pages`
+--
+ALTER TABLE `cms_pages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `cms_page_views`
+--
+ALTER TABLE `cms_page_views`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_partners`
+--
+ALTER TABLE `cms_partners`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_revisions`
+--
+ALTER TABLE `cms_revisions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_role_permissions`
+--
+ALTER TABLE `cms_role_permissions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT for table `cms_settings`
+--
+ALTER TABLE `cms_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `cms_social_links`
+--
+ALTER TABLE `cms_social_links`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `cms_staff_directory`
+--
+ALTER TABLE `cms_staff_directory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cms_testimonials`
+--
+ALTER TABLE `cms_testimonials`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `complaint_submissions`
 --
 ALTER TABLE `complaint_submissions`
@@ -3961,15 +4917,33 @@ ALTER TABLE `notification_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `payment_audit_log`
+--
+ALTER TABLE `payment_audit_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payment_callbacks`
 --
 ALTER TABLE `payment_callbacks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `payment_gateway_settings`
+--
+ALTER TABLE `payment_gateway_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payment_providers`
 --
 ALTER TABLE `payment_providers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_receipts`
+--
+ALTER TABLE `payment_receipts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -4253,6 +5227,18 @@ ALTER TABLE `applicants`
 ALTER TABLE `applicant_requirement_status`
   ADD CONSTRAINT `applicant_requirement_status_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `applicant_requirement_status_ibfk_2` FOREIGN KEY (`requirement_id`) REFERENCES `admission_requirements` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `cms_content_blocks`
+--
+ALTER TABLE `cms_content_blocks`
+  ADD CONSTRAINT `fk_block_page` FOREIGN KEY (`page_id`) REFERENCES `cms_pages` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `cms_gallery_images`
+--
+ALTER TABLE `cms_gallery_images`
+  ADD CONSTRAINT `fk_gallery_cat` FOREIGN KEY (`category_id`) REFERENCES `cms_gallery_categories` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `requirement_history`
