@@ -10,6 +10,10 @@ $user_name = $user['full_name'] ?? 'Sickbay Staff';
 $user_role = $user['role'] ?? 'Sickbay';
 $user_id = (int)($user['id'] ?? 0);
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 function sb_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
@@ -78,6 +82,9 @@ if ($action_get === 'get_sb_medicine' && $staff_conn) {
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'save_sickness') {
@@ -926,4 +933,5 @@ function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id
 </body></html>');}).catch(()=>alert('Could not load transactions.'));}
 document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name','vb-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'},vb:{sid:'vb-sid',num:'vb-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

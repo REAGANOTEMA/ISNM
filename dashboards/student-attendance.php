@@ -6,6 +6,10 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Student Attendance';
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $present = 0; $absent = 0; $late = 0; $total = 0; $records = []; $students = [];
 $dateFilter = $_GET['date'] ?? date('Y-m-d');
 $searchFilter = trim($_GET['search'] ?? '');
@@ -66,6 +70,9 @@ if ($conn) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
     if (!$conn) { $_SESSION['error'] = 'DB connection failed'; header('Location: student-attendance.php'); exit; }
 
@@ -215,5 +222,6 @@ function openAttendanceModal() {
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

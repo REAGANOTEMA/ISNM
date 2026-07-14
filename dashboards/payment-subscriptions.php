@@ -24,6 +24,11 @@ if (in_array(strtolower($userRole), ['director general','director ict','school s
 }
 $action = $_POST['action'] ?? '';
 $result = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
+}
 if ($action === 'create' && !empty($_POST['student_id'])) {
     $result = createSubscription($_POST);
 }
@@ -322,5 +327,6 @@ function viewSubscription(id) {
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

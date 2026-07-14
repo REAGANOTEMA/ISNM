@@ -7,7 +7,18 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ?>
 <?php
-   include("../assets/config.php");
+  include("../assets/config.php");
+?>
+
+<?php
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
