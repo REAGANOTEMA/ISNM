@@ -230,6 +230,11 @@ try {
 }
 
 /* ── Trim to limit and return ── */
+$excelCount = 0;
+foreach ($results as $r) {
+    if (($r['source'] ?? '') === 'Excel') $excelCount++;
+}
+$totalCount = $totalCount + $excelCount;
 $results = array_slice($results, 0, $perPage);
 $totalPages = $totalCount > 0 ? (int)ceil($totalCount / $perPage) : 0;
 

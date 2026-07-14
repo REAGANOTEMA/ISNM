@@ -59,7 +59,7 @@ $userInitial = strtoupper(substr($currentUser, 0, 1));
       <a href="change-password.php" class="nav-item <?= $currentPage === 'change-password' ? 'active' : '' ?>">
         <i class="fas fa-key"></i><span>Change Password</span>
       </a>
-      <a href="../logout.php" class="nav-item">
+      <a href="#" class="nav-item" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();">
         <i class="fas fa-sign-out-alt"></i><span>Logout</span>
       </a>
     </div>

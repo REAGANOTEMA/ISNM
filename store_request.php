@@ -167,7 +167,7 @@ footer a { color:var(--accent); text-decoration:none; }
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="store_request.php"><i class="fas fa-clipboard-list me-2"></i>Store Request</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                     </ul>
                 </li>
             </ul>

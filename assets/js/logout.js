@@ -9,7 +9,7 @@ function logout() {
                 var data = JSON.parse(xhr.responseText);
 
                 if (data.status === 'success') {
-                    window.location.href = '../organogram.php';
+                    window.location.href = '../staff-login.php';
                     return;
                 } else {
                     console.error('Logout failed:', data.message);

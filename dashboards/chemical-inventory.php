@@ -9,6 +9,10 @@ $user_name = $user['full_name'] ?? 'Chemical Staff';
 $user_role = $user['role'] ?? '';
 $user_id = (int)($user['id'] ?? 0);
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 function ci_fetch($conn, $sql) {
     if (!$conn) return [];
     try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
@@ -19,6 +23,9 @@ $active_section = $_GET['section'] ?? 'dashboard';
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'save_chemical') {
@@ -487,6 +494,7 @@ document.getElementById('addChemicalModal')?.addEventListener('show.bs.modal', f
 });
 </script>
 
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

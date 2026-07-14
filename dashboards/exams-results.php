@@ -8,6 +8,10 @@ $studentsConn = $ctx['students'];
 $conn = $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
 // â”€â”€ AJAX endpoint for exam student list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -53,7 +57,9 @@ if ($conn) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: exams-results.php'); exit; }
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header('Location: exams-results.php'); exit; }
 
@@ -314,5 +320,6 @@ function getGrade(total) {
 }
 function esc(s) { if (!s) return ''; let d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

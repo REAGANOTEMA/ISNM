@@ -6,6 +6,10 @@ $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 $userName = $user['full_name'] ?? 'User';
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $search = trim($_GET['search'] ?? '');
 $filterType = $_GET['type'] ?? '';
 $filterStatus = $_GET['status'] ?? '';
@@ -38,6 +42,9 @@ if ($staffDb) {
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD']==='POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
     if ($staffDb && $action==='add_contract') {
         $staff_id = (int)($_POST['staff_id']??0);
@@ -275,6 +282,7 @@ function viewContract(id) { alert('View contract #' + id + ' â€” full detai
 function renewContract(id, num) { document.getElementById('renewId').value = id; document.getElementById('renewNum').textContent = num; new bootstrap.Modal(document.getElementById('renewModal')).show(); }
 function terminateContract(id, num) { document.getElementById('termId').value = id; document.getElementById('termNum').textContent = num; new bootstrap.Modal(document.getElementById('terminateModal')).show(); }
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

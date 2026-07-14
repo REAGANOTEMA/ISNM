@@ -575,7 +575,7 @@ $programs = executeQuery($programs_sql);
                             <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="logout.php">
+                            <li><a class="dropdown-item" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a></li>
                         </ul>
