@@ -159,6 +159,11 @@ foreach ($excelSources as $es) $excelRowCount += $es['students'];
 
 // -- POST / AJAX handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid security token.']);
+        exit;
+    }
     $action = $_POST['action'] ?? '';
     header('Content-Type: application/json');
 

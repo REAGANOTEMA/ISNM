@@ -17,6 +17,7 @@ if ($conn) {
     if ($r) while ($row = $r->fetch_assoc()) $calendars[] = $row;
 }
 
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_calendar') {

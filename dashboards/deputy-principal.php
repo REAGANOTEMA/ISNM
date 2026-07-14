@@ -375,6 +375,11 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 // â”€â”€ POST HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Invalid security token.']);
+        exit;
+    }
     $act = $_POST['action'];
     if ($act === 'add_student_deputy' && $students) {
         $fn  = trim($_POST['first_name'] ?? '');

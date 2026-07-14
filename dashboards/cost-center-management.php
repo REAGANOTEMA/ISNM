@@ -6,6 +6,7 @@ $user = $ctx['user'];
 
 $records = [];
 if ($conn) {
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
         if ($action === 'add' || $action === 'edit') {

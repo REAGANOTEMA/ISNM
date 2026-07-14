@@ -4,8 +4,15 @@ bootstrapStaffDashboard(['hr','manager','director','principal','head']);
 require_once __DIR__ . '/../includes/config_enhanced.php';
 $conn = getStaffConnection();
 
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
+
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Invalid security token.']);
+        exit;
+    }
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => 'Unknown action'];
     $action = $_POST['action'];

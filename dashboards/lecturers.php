@@ -26,7 +26,14 @@ $user_name = $_SESSION['full_name'] ?? '';
 // User data already available from bootstrapStaffDashboard session
 
 // â”€â”€ POST handlers â”€â”€
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Invalid security token.']);
+        exit;
+    }
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
 

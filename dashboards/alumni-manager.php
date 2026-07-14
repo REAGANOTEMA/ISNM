@@ -101,6 +101,11 @@ $staffConn->query("CREATE TABLE IF NOT EXISTS `alumni_jobs` (
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ AJAX Handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid security token.']);
+        exit;
+    }
     header('Content-Type: application/json');
     try {
         switch ($action) {
