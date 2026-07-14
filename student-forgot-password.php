@@ -73,17 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($emailSent) {
             $_SESSION['success'] = 'Password reset instructions have been sent to your registered email address.';
         } else {
-            // No email capability or no email on file â€” display the link directly
-            $_SESSION['reset_token_display'] = $token;
-            $_SESSION['success'] = 'Password reset link generated.';
+            $_SESSION['error'] = 'Unable to send email. Please contact the system administrator for assistance.';
         }
 
         header('Location: student-forgot-password.php'); exit;
     }
 }
 
-$showToken = $_SESSION['reset_token_display'] ?? null;
-unset($_SESSION['reset_token_display']);
 $studentConn = getStudentsConnection();
 ?>
 <!DOCTYPE html>
@@ -107,10 +103,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;a
 .reset-card .btn-reset:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.4)}
 .reset-card .back-link{display:block;text-align:center;margin-top:16px;font-size:.8125rem;color:#64748b;text-decoration:none}
 .reset-card .back-link:hover{color:#2563eb}
-.token-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px}
-.token-box .token-label{font-size:.75rem;color:#059669;font-weight:600;margin-bottom:4px}
-.token-box .token-value{font-size:.8125rem;color:#0f172a;word-break:break-all;font-family:monospace}
-.token-box .token-note{font-size:.75rem;color:#64748b;margin-top:4px}
 </style>
 </head>
 <body>
@@ -128,19 +120,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;a
     <?php endif; ?>
     <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-danger py-2 px-3" style="border-radius:10px;font-size:.8125rem"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
-    <?php endif; ?>
-
-    <?php if ($showToken): ?>
-    <div class="token-box">
-        <div class="token-label"><i class="fas fa-link me-1"></i>Your Reset Link</div>
-        <div class="token-value">
-            <?php
-            $base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
-            echo htmlspecialchars($base . '/student-reset-password.php?token=' . $showToken);
-            ?>
-        </div>
-        <div class="token-note"><i class="fas fa-info-circle me-1"></i>This link expires in 1 hour. Copy and share with the student.</div>
-    </div>
     <?php endif; ?>
 
     <form method="POST">

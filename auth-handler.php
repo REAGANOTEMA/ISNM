@@ -283,8 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// Allow GET for logout (sidebar link uses GET)
-if ($action === 'logout') {
+// Logout requires POST to prevent CSRF logout attacks
+if ($action === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     handleLogout();
     exit();
 }

@@ -68,6 +68,13 @@ if ($students_conn) {
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF verification
+    $csrf = $_POST['csrf_token'] ?? '';
+    if (empty($csrf) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
+        header('Location: computer_lab.php');
+        exit;
+    }
     $action = $_POST['action'] ?? '';
 
     // Student handlers (students DB â€” works without ICT DB)
@@ -678,6 +685,7 @@ $pageTitle = 'Computer Lab Manager';
                                     <td><?= $s['number_of_students'] ?></td>
                                     <td>
                                         <form method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="update_booking_status">
                                             <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                             <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
@@ -721,6 +729,7 @@ $pageTitle = 'Computer Lab Manager';
                                     <td><small><?= htmlspecialchars($r['program'] ?? '-') ?></small></td>
                                     <td>
                                         <form method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="update_id_card_status">
                                             <input type="hidden" name="id" value="<?= $r['id'] ?>">
                                             <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
@@ -847,6 +856,7 @@ $pageTitle = 'Computer Lab Manager';
                                     <td><small><?= htmlspecialchars($j['user_name']) ?></small></td>
                                     <td>
                                         <form method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="update_print_status">
                                             <input type="hidden" name="id" value="<?= $j['id'] ?>">
                                             <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
@@ -994,6 +1004,7 @@ $pageTitle = 'Computer Lab Manager';
                                     <td><small><?= htmlspecialchars($item['category'] ?? '-') ?></small></td>
                                     <td>
                                         <form method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                             <input type="hidden" name="action" value="update_inventory_qty">
                                             <input type="hidden" name="id" value="<?= $item['id'] ?>">
                                             <div class="input-group input-group-sm" style="width:120px">
@@ -1106,6 +1117,7 @@ $pageTitle = 'Computer Lab Manager';
                 <div class="section-card">
                     <h2><i class="fas fa-cog me-2"></i>Lab Settings</h2>
                     <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                         <input type="hidden" name="action" value="save_settings">
                         <div class="mb-2"><label class="form-label small">Lab Name</label><input type="text" class="form-control form-control-sm" name="lab_name" value="Computer Lab"></div>
                         <div class="mb-2"><label class="form-label small">Capacity (computers)</label><input type="number" class="form-control form-control-sm" name="capacity" value="<?= $total_computers ?>"></div>
@@ -1139,6 +1151,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_student">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Student</h5>
@@ -1179,6 +1192,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="editStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="edit_student">
             <input type="hidden" name="id" id="editStudentId">
             <div class="modal-header bg-warning text-dark">
@@ -1228,6 +1242,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="deleteStudentModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="delete_student">
             <input type="hidden" name="id" id="deleteStudentId">
             <div class="modal-header bg-danger text-white">
@@ -1249,6 +1264,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addComputerModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_computer">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Lab Computer</h5>
@@ -1277,6 +1293,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="editComputerModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="edit_computer">
             <input type="hidden" name="id" id="editComputerId">
             <div class="modal-header bg-primary text-white">
@@ -1312,6 +1329,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="deleteComputerModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="delete_computer">
             <input type="hidden" name="id" id="deleteComputerId">
             <div class="modal-header bg-danger text-white">
@@ -1333,6 +1351,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="ticketModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="create_ticket">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>New Support Ticket</h5>
@@ -1366,6 +1385,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="resolveTicketModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="resolve_ticket">
             <input type="hidden" name="ticket_id" id="resolveTicketId">
             <div class="modal-header bg-success text-white">
@@ -1387,6 +1407,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addBookingModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_booking">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>New Lab Booking</h5>
@@ -1421,6 +1442,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addEquipmentModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_equipment">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Equipment</h5>
@@ -1449,6 +1471,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="printJobModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="create_print_job">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-print me-2"></i>New Print Job</h5>
@@ -1477,6 +1500,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addSoftwareModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_software">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Software</h5>
@@ -1504,6 +1528,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="addInventoryModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="add_inventory_item">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Inventory Item</h5>
@@ -1532,6 +1557,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="attendanceModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="record_attendance">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Record Attendance</h5>
@@ -1559,6 +1585,7 @@ $pageTitle = 'Computer Lab Manager';
 <div class="modal fade" id="idCardModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <input type="hidden" name="action" value="request_id_card">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Student ID Card Request</h5>

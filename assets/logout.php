@@ -1,6 +1,14 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Require POST to prevent CSRF logout attacks
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Content-Type: application/json');
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
+    exit();
+}
+
 // Clear all session data
 $_SESSION = [];
 if (ini_get("session.use_cookies")) {

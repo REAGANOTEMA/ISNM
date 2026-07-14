@@ -1,4 +1,10 @@
-<?php include('shared/_header.php');?>
+<?php include('shared/_header.php');
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
 
   <main>
 
@@ -156,6 +162,7 @@
                 </div>
                 
                 <form id="applicationForm" method="POST" action="process-application.php" enctype="multipart/form-data">
+                  <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                   <!-- Personal Information -->
                   <div class="form-section">
                     <h4><i class="fas fa-user me-2"></i> APPLICANT'S PERSONAL DETAILS</h4>

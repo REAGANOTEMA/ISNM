@@ -1,6 +1,17 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Require POST to prevent CSRF logout attacks
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // If session exists, redirect back; otherwise redirect to login
+    if (!empty($_SESSION['type'])) {
+        header('Location: ' . ($_SESSION['type'] === 'student' ? 'student-login.php' : 'staff-login.php'));
+    } else {
+        header('Location: staff-login.php');
+    }
+    exit();
+}
+
 // Redirect to appropriate login page
 $userType = $_SESSION['type'] ?? '';
 

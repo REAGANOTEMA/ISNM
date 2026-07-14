@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 14, 2026 at 10:17 AM
+-- Generation Time: Jul 14, 2026 at 10:52 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -9578,9 +9578,12 @@ CREATE TABLE `payment_callbacks` (
   `request_method` varchar(10) DEFAULT 'POST',
   `request_headers` text DEFAULT NULL,
   `request_body` longtext DEFAULT NULL,
+  `request_ip` varchar(45) DEFAULT NULL,
   `response_code` int(11) DEFAULT 0,
   `response_body` longtext DEFAULT NULL,
   `processed` tinyint(1) DEFAULT 0,
+  `processing_error` text DEFAULT NULL,
+  `processed_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -9600,6 +9603,25 @@ CREATE TABLE `payment_gateway_settings` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment_gateway_settings`
+--
+
+INSERT INTO `payment_gateway_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'gateway_enabled', '1', 'general', 'Master switch for the payment gateway', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(2, 'default_currency', 'UGX', 'general', 'Default payment currency', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(3, 'payment_timeout_minutes', '30', 'general', 'Minutes before a pending payment expires', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(4, 'auto_verify_enabled', '1', 'general', 'Automatically verify pending payments via cron', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(5, 'receipt_prefix', 'ISNM', 'receipts', 'Prefix for receipt numbers', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(6, 'receipt_starting_number', '10001', 'receipts', 'Starting receipt sequence number', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(7, 'notification_email', 'finance@isnm.ac.ug', 'notifications', 'Email for payment notifications', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(8, 'callback_base_url', '', 'webhooks', 'Base URL for payment callbacks', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(9, 'bank_name', 'Stanbic Bank Uganda', 'bank_transfer', 'Bank name for transfers', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(10, 'bank_account_name', 'Iganga School of Nursing and Midwifery', 'bank_transfer', 'Account name', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(11, 'bank_account_number', '', 'bank_transfer', 'Bank account number', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(12, 'bank_swift_code', '', 'bank_transfer', 'SWIFT/BIC code', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(13, 'bank_branch', 'Iganga', 'bank_transfer', 'Bank branch', NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43');
 
 -- --------------------------------------------------------
 
@@ -9626,23 +9648,63 @@ CREATE TABLE `payment_providers` (
   `provider_key` varchar(50) NOT NULL,
   `provider_name` varchar(100) NOT NULL,
   `provider_type` enum('mobile_money','card','bank','wallet','crypto') NOT NULL,
+  `provider_category` enum('local','international','bank','mobile_money') NOT NULL DEFAULT 'local',
+  `logo_url` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `api_base_url` varchar(255) DEFAULT NULL,
   `is_enabled` tinyint(1) DEFAULT 0,
   `merchant_id` varchar(255) DEFAULT '',
   `api_key` varchar(255) DEFAULT '',
   `api_secret` varchar(512) DEFAULT '',
+  `public_key` text DEFAULT NULL,
+  `private_key` text DEFAULT NULL,
   `api_url` varchar(500) DEFAULT '',
   `callback_url` varchar(500) DEFAULT '',
+  `return_url` varchar(500) DEFAULT NULL,
   `webhook_secret` varchar(255) DEFAULT '',
+  `hmac_secret` text DEFAULT NULL,
+  `certificate_path` varchar(255) DEFAULT NULL,
+  `config_data` longtext DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `total_transactions` int(11) DEFAULT 0,
+  `total_volume` decimal(15,2) DEFAULT 0.00,
+  `last_transaction_at` datetime DEFAULT NULL,
   `config_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`config_json`)),
   `supported_currencies` varchar(255) DEFAULT 'UGX',
+  `fee_type` enum('fixed','percentage','both','none') DEFAULT 'none',
+  `fee_fixed` decimal(10,2) DEFAULT 0.00,
+  `fee_percentage` decimal(5,2) DEFAULT 0.00,
   `transaction_fee_percent` decimal(5,2) DEFAULT 0.00,
   `transaction_fee_fixed` decimal(10,2) DEFAULT 0.00,
   `min_amount` decimal(12,2) DEFAULT 0.00,
   `max_amount` decimal(12,2) DEFAULT 10000000.00,
   `status` enum('active','inactive','sandbox') DEFAULT 'sandbox',
+  `is_test_mode` tinyint(1) DEFAULT 1,
+  `test_api_base_url` varchar(255) DEFAULT NULL,
+  `test_api_key` text DEFAULT NULL,
+  `test_api_secret` text DEFAULT NULL,
+  `test_merchant_id` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment_providers`
+--
+
+INSERT INTO `payment_providers` (`id`, `provider_key`, `provider_name`, `provider_type`, `provider_category`, `logo_url`, `description`, `api_base_url`, `is_enabled`, `merchant_id`, `api_key`, `api_secret`, `public_key`, `private_key`, `api_url`, `callback_url`, `return_url`, `webhook_secret`, `hmac_secret`, `certificate_path`, `config_data`, `sort_order`, `total_transactions`, `total_volume`, `last_transaction_at`, `config_json`, `supported_currencies`, `fee_type`, `fee_fixed`, `fee_percentage`, `transaction_fee_percent`, `transaction_fee_fixed`, `min_amount`, `max_amount`, `status`, `is_test_mode`, `test_api_base_url`, `test_api_key`, `test_api_secret`, `test_merchant_id`, `created_at`, `updated_at`) VALUES
+(1, 'mtn_momo', 'MTN Mobile Money', 'mobile_money', 'mobile_money', NULL, 'MTN MoMo mobile money payments for Uganda', 'https://sandbox.momodeveloper.mtn.com', 0, '', '', '', NULL, NULL, 'https://proxy.momoapi.mtn.com', '', NULL, '', NULL, NULL, NULL, 1, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(2, 'airtel_money', 'Airtel Money', 'mobile_money', 'mobile_money', NULL, 'Airtel Money mobile payments for Uganda', 'https://openapi.airtel.ug/sandbox', 0, '', '', '', NULL, NULL, 'https://openapi.airtel.ug', '', NULL, '', NULL, NULL, NULL, 2, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(3, 'stanbic_bank', 'Stanbic Bank', 'bank', 'bank', NULL, 'Stanbic Bank direct transfers and EFT', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 3, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'inactive', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(4, 'centenary_bank', 'Centenary Bank', 'bank', 'bank', NULL, 'Centenary Bank transfers', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 4, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'inactive', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(5, 'stanbic_card', 'Stanbic Card Services', 'card', 'international', NULL, 'Visa/Mastercard via Stanbic', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 5, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'inactive', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(6, 'flutterwave', 'Flutterwave', 'card', 'international', NULL, 'Flutterwave - Cards, Mobile Money, Bank across Africa', 'https://api.flutterwave.com', 0, '', '', '', NULL, NULL, 'https://api.flutterwave.com', '', NULL, '', NULL, NULL, NULL, 6, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(7, 'pesapal', 'PesaPal', 'card', 'local', NULL, 'PesaPal - Cards and Mobile Money in East Africa', 'https://www.pesapal.com/api', 0, '', '', '', NULL, NULL, 'https://www.pesapal.com/api', '', NULL, '', NULL, NULL, NULL, 7, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(8, 'stripe', 'Stripe', 'card', 'international', NULL, 'Stripe - International card payments (Visa, Mastercard, AMEX)', 'https://api.stripe.com/v1', 0, '', '', '', NULL, NULL, 'https://api.stripe.com/v1', '', NULL, '', NULL, NULL, NULL, 8, 0, 0.00, NULL, NULL, 'USD', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(9, 'paypal', 'PayPal', 'wallet', 'international', NULL, 'PayPal wallet payments', 'https://api-m.sandbox.paypal.com', 0, '', '', '', NULL, NULL, 'https://api-m.paypal.com', '', NULL, '', NULL, NULL, NULL, 9, 0, 0.00, NULL, NULL, 'USD', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'sandbox', 1, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(10, 'direct_bank', 'Direct Bank Transfer', 'bank', 'bank', NULL, 'Manual bank transfer with proof-of-payment verification', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 10, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'active', 0, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(11, 'cash', 'Cash Payment', '', 'local', NULL, 'Cash payments recorded at finance office', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 11, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'active', 0, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43'),
+(12, 'cheque', 'Cheque Payment', '', 'local', NULL, 'Cheque payments', NULL, 0, '', '', '', NULL, NULL, NULL, '', NULL, '', NULL, NULL, NULL, 12, 0, 0.00, NULL, NULL, 'UGX', 'none', 0.00, 0.00, 0.00, 0.00, 0.00, 10000000.00, 'active', 0, NULL, NULL, NULL, NULL, '2026-07-14 07:51:43', '2026-07-14 07:51:43');
 
 -- --------------------------------------------------------
 
@@ -9678,6 +9740,11 @@ CREATE TABLE `payment_reconciliation` (
   `id` int(11) NOT NULL,
   `reconciliation_date` date NOT NULL,
   `provider_key` varchar(50) NOT NULL,
+  `expected_amount` decimal(15,2) DEFAULT 0.00,
+  `actual_amount` decimal(15,2) DEFAULT 0.00,
+  `difference` decimal(15,2) DEFAULT 0.00,
+  `expected_count` int(11) DEFAULT 0,
+  `actual_count` int(11) DEFAULT 0,
   `total_transactions` int(11) DEFAULT 0,
   `successful_count` int(11) DEFAULT 0,
   `failed_count` int(11) DEFAULT 0,
@@ -9688,7 +9755,9 @@ CREATE TABLE `payment_reconciliation` (
   `status` enum('pending','completed','discrepancy') DEFAULT 'pending',
   `notes` text DEFAULT NULL,
   `reconciled_by` int(11) DEFAULT 0,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `reconciled_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -9722,8 +9791,12 @@ CREATE TABLE `payment_refunds` (
   `provider_key` varchar(50) NOT NULL,
   `provider_refund_id` varchar(255) DEFAULT '',
   `amount` decimal(12,2) NOT NULL,
+  `currency` varchar(10) NOT NULL DEFAULT 'UGX',
   `reason` text DEFAULT NULL,
   `status` enum('pending','processing','successful','failed') DEFAULT 'pending',
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `processed_at` datetime DEFAULT NULL,
   `initiated_by` int(11) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -9772,24 +9845,38 @@ CREATE TABLE `payment_transactions` (
   `transaction_ref` varchar(100) NOT NULL,
   `provider_key` varchar(50) NOT NULL,
   `provider_transaction_id` varchar(255) DEFAULT '',
+  `transaction_type` enum('payment','refund','reversal','withdrawal','topup') NOT NULL DEFAULT 'payment',
   `payment_type` enum('student_fees','application','admission','graduation','hostel','library_fine','donation','volunteer','staff','misc') NOT NULL,
   `reference_type` varchar(50) DEFAULT '',
   `reference_id` int(11) DEFAULT 0,
   `student_id` int(11) DEFAULT 0,
   `staff_id` int(11) DEFAULT 0,
+  `applicant_id` int(11) DEFAULT NULL,
   `payer_name` varchar(255) DEFAULT '',
   `payer_phone` varchar(50) DEFAULT '',
   `payer_email` varchar(255) DEFAULT '',
   `amount` decimal(12,2) NOT NULL,
   `currency` varchar(10) DEFAULT 'UGX',
+  `amount_received` decimal(15,2) DEFAULT NULL,
   `fee_amount` decimal(12,2) DEFAULT 0.00,
+  `tax_amount` decimal(10,2) DEFAULT 0.00,
   `net_amount` decimal(12,2) DEFAULT 0.00,
   `status` enum('pending','processing','successful','failed','cancelled','refunded','expired') DEFAULT 'pending',
+  `status_reason` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `metadata` longtext DEFAULT NULL,
+  `initiated_at` datetime DEFAULT current_timestamp(),
+  `completed_at` datetime DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `verified_at` datetime DEFAULT NULL,
+  `verification_attempts` int(11) DEFAULT 0,
+  `last_verification_at` datetime DEFAULT NULL,
   `status_message` varchar(500) DEFAULT '',
   `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)),
   `initiated_by` int(11) DEFAULT 0,
   `ip_address` varchar(45) DEFAULT '',
   `user_agent` text DEFAULT NULL,
+  `idempotency_key` varchar(100) DEFAULT NULL,
   `callback_received_at` timestamp NULL DEFAULT NULL,
   `reconciled_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
@@ -12067,7 +12154,7 @@ INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `date_of_b
 (14, 'LEC-001', 'Lecturer', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$kR3AwtYn.Diqxi1.Xlb8tuS7I02gfN7c51DfZmy6WEx4LdE3reDiC', 15, 'Lecturer', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:34', '2026-07-13 05:57:55'),
 (15, 'MAT-001', 'Matron', 'matron@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$zghrtyzXQM.QxJ7pvB7kcOylecGg9pendgeHObrFtJE3eAitvwhtm', 16, 'Matron', 'Student Welfare', 'Active', '2026-06-09', '2026-06-29 12:12:51', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:34', '2026-07-13 05:57:55'),
 (16, 'WAR-001', 'Warden', 'warden@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$LfakAho0G3z3k9IO8LQ5f.ZttedFPce/Y8.gHRWZ93b4UB0.vJXsC', 17, 'Warden', 'Student Welfare', 'Active', '2026-06-09', '2026-06-29 12:14:49', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:34', '2026-07-13 05:57:55'),
-(17, 'SKB-001', 'Sickbay Nurse', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$kxhC.LQHBKQchcMz5aDZ1O4gEwKaj3oKPCldYC/21NJFkJDJfHiOe', 18, 'Sickbay Nurse', 'Health Services', 'Active', '2026-06-09', '2026-07-08 16:30:54', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:34', '2026-07-13 05:57:55'),
+(17, 'SKB-001', 'Sickbay Nurse', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$kxhC.LQHBKQchcMz5aDZ1O4gEwKaj3oKPCldYC/21NJFkJDJfHiOe', 18, 'Sickbay Nurse', 'Health Services', 'Active', '2026-06-09', '2026-07-14 10:48:17', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:34', '2026-07-14 07:48:17'),
 (18, 'DRV-001', 'Driver', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$qvCOefpMA9d/kDW0/qyuYesRCqBY0eHATOdBqKw6UDwa4CqKDUT1.', 19, 'Driver', 'Transport', 'Active', '2026-06-09', '2026-07-08 19:37:01', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:35', '2026-07-13 05:57:55'),
 (19, 'SEC-001', 'Security Officer', 'security@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$HFpnuTgqdCgB.a.Yv/CIhuyOvFycl4Yz342v9F20CAs9vUKr7xvNO', 20, 'Security Officer', 'Security', 'Active', '2026-06-09', '2026-07-10 06:55:31', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:35', '2026-07-13 05:57:55'),
 (20, 'STO-001', 'Storekeeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, 'Single', 'Ugandan', NULL, NULL, '$2y$10$kR3AwtYn.Diqxi1.Xlb8tuS7I02gfN7c51DfZmy6WEx4LdE3reDiC', 21, 'Storekeeper', 'Store', 'Active', '2026-06-09', '2026-06-29 12:28:45', 0, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'non-teaching', NULL, NULL, NULL, '2026-06-09 22:56:36', '2026-07-13 05:57:55'),
@@ -12678,7 +12765,8 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (569, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:21:40'),
 (570, 1, 'Logout', 'User logged out', 'authentication', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:22:59'),
 (571, 5, 'Login', 'User logged in successfully', 'authentication', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:25:22'),
-(572, 5, 'Logout', 'User logged out', 'authentication', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:28:01');
+(572, 5, 'Logout', 'User logged out', 'authentication', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:28:01'),
+(573, 17, 'Login', 'User logged in successfully', 'authentication', '213.199.62.42', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36', '2026-07-14 07:48:17');
 
 -- --------------------------------------------------------
 
@@ -13311,7 +13399,8 @@ INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `ip_addre
 (352, 1, 'bpihhsnngrnbqabmggig0j6f4f', '102.86.8.191', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 07:09:42', '2026-07-13 10:39:42'),
 (353, 1, 'ol9esth4nqvhq0mpudhptjef6k', '102.86.8.191', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-13 07:12:55', '2026-07-13 10:42:55'),
 (354, 1, 'pfod0c2lu97t57mjahclvgd0s3', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:21:40', '2026-07-13 14:51:40'),
-(355, 5, 'gnt7ngl6j44unsn9b0svmorpj5', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:25:22', '2026-07-13 14:55:22');
+(355, 5, 'gnt7ngl6j44unsn9b0svmorpj5', '41.210.154.216', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-13 11:25:22', '2026-07-13 14:55:22'),
+(356, 17, '45bah2nc3b2kel6ppqdagsocl4', '213.199.62.42', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36', '2026-07-14 07:48:17', '2026-07-14 11:18:17');
 
 -- --------------------------------------------------------
 
@@ -18321,7 +18410,9 @@ ALTER TABLE `payment_providers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `provider_key` (`provider_key`),
   ADD KEY `idx_provider_type` (`provider_type`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_provider_status` (`status`),
+  ADD KEY `idx_provider_category` (`provider_category`);
 
 --
 -- Indexes for table `payment_receipts`
@@ -18382,7 +18473,14 @@ ALTER TABLE `payment_transactions`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_payment_type` (`payment_type`),
   ADD KEY `idx_reference` (`reference_type`,`reference_id`),
-  ADD KEY `idx_created` (`created_at`);
+  ADD KEY `idx_created` (`created_at`),
+  ADD KEY `idx_payment_provider` (`provider_key`),
+  ADD KEY `idx_payment_student` (`student_id`),
+  ADD KEY `idx_payment_staff` (`staff_id`),
+  ADD KEY `idx_payment_status` (`status`),
+  ADD KEY `idx_payment_date` (`created_at`),
+  ADD KEY `idx_idempotency` (`idempotency_key`),
+  ADD KEY `idx_provider_txn` (`provider_transaction_id`);
 
 --
 -- Indexes for table `payment_webhook_logs`
@@ -21853,7 +21951,7 @@ ALTER TABLE `payment_callbacks`
 -- AUTO_INCREMENT for table `payment_gateway_settings`
 --
 ALTER TABLE `payment_gateway_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `payment_methods`
@@ -21865,7 +21963,7 @@ ALTER TABLE `payment_methods`
 -- AUTO_INCREMENT for table `payment_providers`
 --
 ALTER TABLE `payment_providers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `payment_receipts`
@@ -22459,7 +22557,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=573;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=574;
 
 --
 -- AUTO_INCREMENT for table `staff_appraisals`
@@ -22531,7 +22629,7 @@ ALTER TABLE `staff_licenses`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=356;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=357;
 
 --
 -- AUTO_INCREMENT for table `staff_messages`

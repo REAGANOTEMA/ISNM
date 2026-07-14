@@ -1,6 +1,12 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Require POST to prevent CSRF logout attacks
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ../student-login.php');
+    exit();
+}
+
 // Clear all session data
 $_SESSION = [];
 if (ini_get("session.use_cookies")) {

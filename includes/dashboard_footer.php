@@ -523,7 +523,11 @@ window.printTranscript = window.printTranscript || function(studentId) {
     function resetIdleTimer() {
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(function() {
-            window.location.href = '<?= $rootPath ?>/logout.php';
+            var f = document.createElement('form');
+            f.method = 'POST';
+            f.action = '<?= $rootPath ?>/logout.php';
+            document.body.appendChild(f);
+            f.submit();
         }, IDLE_TIMEOUT_MS);
     }
 
@@ -536,6 +540,24 @@ window.printTranscript = window.printTranscript || function(studentId) {
 })();
 </script>
 <!-- ── End Session Idle Auto-Logout ── -->
+
+<!-- ── Convert GET logout links to POST form submissions (CSRF protection) ── -->
+<script>
+(function() {
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href*="logout"]');
+        if (!link) return;
+        e.preventDefault();
+        var href = link.getAttribute('href');
+        if (!href) return;
+        var f = document.createElement('form');
+        f.method = 'POST';
+        f.action = href;
+        document.body.appendChild(f);
+        f.submit();
+    });
+})();
+</script>
 
 <?php if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff'): ?>
 <div class="isnm-loader" id="isnmLoader">

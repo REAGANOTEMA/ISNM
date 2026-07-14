@@ -73,11 +73,35 @@ function handlePasswordResetRequest() {
     $update_stmt->bind_param("ssi", $reset_token, $reset_expiry, $user['id']);
     if (!$update_stmt->execute()) { error_log('$update_stmt execute failed: ' . ($update_stmt->error ?? 'unknown')); };
     
-    // In a real system, you would send an email here
-    // For now, show the reset link directly
-    $_SESSION['reset_token'] = $reset_token;
-    $_SESSION['reset_email'] = $email;
-    $_SESSION['success'] = 'Password reset link generated. Please check below for your reset link.';
+    // Build reset link
+    $resetLink = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/staff-password-reset.php?token=' . $reset_token;
+    
+    // Send reset email
+    $emailSent = false;
+    if (!empty($email)) {
+        require_once __DIR__ . '/includes/email_notifications.php';
+        $emailSent = sendProfessionalEmail(
+            $email,
+            $user['full_name'] ?? 'Staff Member',
+            'Password Reset - Iganga School of Nursing and Midwifery',
+            buildProfessionalEmailTemplate(
+                'Password Reset Request',
+                [
+                    ['type' => 'text', 'content' => 'Hello ' . htmlspecialchars($user['full_name'] ?? 'Staff') . ','],
+                    ['type' => 'text', 'content' => 'We received a request to reset your staff portal password. Click the button below to set a new password. This link expires in 1 hour.'],
+                    ['type' => 'cta', 'content' => 'Reset Password', 'url' => $resetLink],
+                    ['type' => 'text', 'content' => 'If you did not request a password reset, please ignore this email. Your account remains secure.'],
+                ],
+                $resetLink
+            )
+        );
+    }
+    
+    if ($emailSent) {
+        $_SESSION['success'] = 'Password reset instructions have been sent to your registered email address.';
+    } else {
+        $_SESSION['error'] = 'Unable to send email. Please contact the system administrator for assistance.';
+    }
     header('Location: staff-password-reset.php');
     exit();
 }
@@ -340,15 +364,6 @@ function handlePasswordReset() {
                     </button>
                 </form>
             <?php else: ?>
-                <!-- Reset Token Display -->
-                <div class="reset-link-section">
-                    <h6><i class="fas fa-info-circle me-2"></i>Password Reset Link:</h6>
-                    <p>Use this link to reset your password:</p>
-                    <a href="staff-password-reset.php?token=<?php echo htmlspecialchars($_SESSION['reset_token']); ?>" class="reset-link">
-                        staff-password-reset.php?token=<?php echo htmlspecialchars($_SESSION['reset_token']); ?>
-                    </a>
-                </div>
-
                 <!-- Reset Form -->
                 <form method="POST" action="staff-password-reset.php">
                     <input type="hidden" name="action" value="reset_password">
