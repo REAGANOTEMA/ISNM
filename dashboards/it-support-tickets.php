@@ -161,7 +161,7 @@ $pageTitle = 'IT Support Tickets';
     <div class="d-flex align-items-center gap-3">
         <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
         <button class="btn btn-sm btn-outline-success no-print" onclick="window.print()"><i class="fas fa-print me-1"></i></button>
-        <a href="../logout.php" class="btn btn-sm btn-outline-danger no-print"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+        <a href="#" class="btn btn-sm btn-outline-danger no-print" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
     </div>
 </div>
 <div class="content-area">

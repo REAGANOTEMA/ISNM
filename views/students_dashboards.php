@@ -158,7 +158,7 @@ $flashMessages = getFlashMessages();
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="logout.php">
+                            <a class="nav-link" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
                             </a>
                         </li>
@@ -286,7 +286,7 @@ $flashMessages = getFlashMessages();
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card quick-action-card border-success" onclick="window.location.href='logout.php'">
+                        <div class="card quick-action-card border-success" onclick="var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                             <div class="card-body">
                                 <i class="fas fa-sign-out-alt text-success"></i>
                                 <h6>Logout</h6>

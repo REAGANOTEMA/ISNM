@@ -483,7 +483,7 @@ $pageTitle = 'Computer Lab Manager';
             <span class="text-muted small d-none d-md-block"><?= date('D, d M Y H:i') ?></span>
             <?php if ($pending_tickets): ?><span class="badge bg-danger"><?= $pending_tickets ?> tickets</span><?php endif; ?>
             <a href="index.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-home"></i></a>
-            <a href="logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="#" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </div>
 

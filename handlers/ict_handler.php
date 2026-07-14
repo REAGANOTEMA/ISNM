@@ -21,7 +21,8 @@ header('Content-Type: application/json');
 $csrfFreeActions = ['get_asset', 'get_server', 'get_ticket'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 if (!in_array($action, $csrfFreeActions)) {
-    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || 
+!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
         exit;

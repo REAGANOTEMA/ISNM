@@ -119,7 +119,7 @@ $pageTitle = 'Department Requests';
 <div class="d-flex align-items-center gap-2">
 <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal"><i class="fas fa-plus me-1"></i>New Request</button>
-<a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i></a>
+<a href="#" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt me-1"></i></a>
 </div>
 </div>
 

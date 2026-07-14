@@ -379,7 +379,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <a class="nav-item <?= $page==='timetable'?'active':'' ?>" href="?page=timetable"><i class="fas fa-calendar-alt"></i>Timetable</a>
 <div class="nav-section">Account</div>
 <a class="nav-item <?= $page==='password'?'active':'' ?>" href="?page=password"><i class="fas fa-key"></i>Change Password</a>
-<a class="nav-item" href="../logout.php" onclick="return confirm('Are you sure you want to logout?')"><i class="fas fa-sign-out-alt"></i>Logout</a>
+<a class="nav-item" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt"></i>Logout</a>
 </nav>
 </aside>
 
@@ -387,7 +387,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <div class="page-title"><i class="fas fa-graduation-cap me-2"></i><?= ucfirst(htmlspecialchars($page)) ?></div>
 <div class="user-info">
 <span><span class="name"><?= htmlspecialchars($full_name) ?></span><br><span class="role"><?= htmlspecialchars($program) ?> Â· Year <?= $current_year ?></span></span>
-<a href="../logout.php" class="sp-btn sp-btn-outline" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+<a href="#" class="sp-btn sp-btn-outline" title="Logout" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt"></i></a>
 </div>
 </header>
 

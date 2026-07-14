@@ -450,6 +450,9 @@ function normalizeRoleKeySidebar(string $role): string {
         'clinical placement officer' => 'academic_registrar',
         'quality assurance officer' => 'senior_lecturer',
         'lab technician' => 'skills_lab',
+        'ict officer' => 'director_ict', 'ict_officer' => 'director_ict', 'ict' => 'director_ict',
+        'events coordinator' => 'events', 'events manager' => 'events',
+        'alumni relations officer' => 'alumni', 'alumni officer' => 'alumni',
     ];
     return $map[$m] ?? 'lecturer';
 }

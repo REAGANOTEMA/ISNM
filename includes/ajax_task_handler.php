@@ -95,7 +95,7 @@ switch ($action) {
             exit;
         }
         // CSRF check
-        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+        if (!isset($_POST['csrf_token']) || !hash_equals(($_SESSION['csrf_token'] ?? ''), $_POST['csrf_token'])) {
             echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
             exit;
         }
@@ -138,7 +138,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'POST required']);
             exit;
         }
-        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+        if (!isset($_POST['csrf_token']) || !hash_equals(($_SESSION['csrf_token'] ?? ''), $_POST['csrf_token'])) {
             echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
             exit;
         }
@@ -171,7 +171,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'POST required']);
             exit;
         }
-        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+        if (!isset($_POST['csrf_token']) || !hash_equals(($_SESSION['csrf_token'] ?? ''), $_POST['csrf_token'])) {
             echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
             exit;
         }

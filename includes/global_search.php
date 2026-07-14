@@ -86,9 +86,20 @@ function doGlobalSearch() {
   _gsCurrentRequest.open('POST', '../includes/ajax_global_student_search.php', true);
   _gsCurrentRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
   _gsCurrentRequest.onload = function() {
-    if (this.status !== 200) { resultsDiv.innerHTML = '<div class="global-search-empty">Search failed. Try again.</div>'; return; }
+    if (this.status === 403 || this.status === 401) {
+      resultsDiv.innerHTML = '<div class="global-search-empty"><i class="fas fa-lock"></i><br>Authentication required. Please log in again.</div>';
+      return;
+    }
+    if (this.status !== 200) {
+      resultsDiv.innerHTML = '<div class="global-search-empty"><i class="fas fa-exclamation-triangle"></i><br>Search failed. Try again.</div>';
+      return;
+    }
     var data;
     try { data = JSON.parse(this.responseText); } catch(e) { data = []; }
+    if (data && data.error) {
+      resultsDiv.innerHTML = '<div class="global-search-empty"><i class="fas fa-exclamation-triangle"></i><br>' + data.error + '</div>';
+      return;
+    }
     if (!data || data.length === 0) {
       resultsDiv.innerHTML = '<div class="global-search-empty"><i class="fas fa-search"></i><br>No students found matching "<strong>' + q + '</strong>"</div>';
       return;
@@ -103,14 +114,17 @@ function doGlobalSearch() {
       if (s.set_name || s.set) detail += (detail ? ' &middot; ' : '') + (s.set_name || s.set);
       var badge = isExcel ? '<span class="gs-badge gs-badge-excel">Excel</span>' : '<span class="gs-badge gs-badge-db">DB</span>';
       var statusBadge = s.status === 'Active' || !s.status ? '<span class="gs-badge gs-badge-active">Active</span>' : '';
-      html += '<div class="global-search-item" onclick="goToStudent(\'' + (s.full_name||'').replace(/'/g,"") + '\',\'' + (s.id||'') + '\',\'' + (s.student_id||s.index_number||'') + '\',\'' + (isExcel ? 'excel' : 'db') + '\')">'
+      html += '<div class="global-search-item" onclick="goToStudent(' + JSON.stringify({name:s.full_name||'',id:s.id||0,sid:s.student_id||s.index_number||s.student_number||'',src:isExcel?'excel':'db'}).replace(/"/g,'&quot;') + ')">'
         + '<div class="gs-avatar">' + initial + '</div>'
-        + '<div class="gs-info"><div class="gs-name">' + s.full_name + '</div>'
+        + '<div class="gs-info"><div class="gs-name">' + (s.full_name || '') + '</div>'
         + '<div class="gs-detail">' + detail + '</div></div>'
         + '<div>' + badge + ' ' + statusBadge + '</div>'
         + '</div>';
     }
     resultsDiv.innerHTML = html;
+  };
+  _gsCurrentRequest.onerror = function() {
+    resultsDiv.innerHTML = '<div class="global-search-empty"><i class="fas fa-wifi"></i><br>Network error. Check your connection.</div>';
   };
   _gsCurrentRequest.send('action=global_stu_search&q=' + encodeURIComponent(q) + '&csrf_token=' + encodeURIComponent(_gsCsrfToken));
 }
@@ -134,22 +148,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-function goToStudent(name, id, sid, source) {
-  if (source === 'excel' || !id || id === '0') {
-    alert('Excel record: ' + name + ' (' + sid + '). Edit in the student directory.');
-    closeGlobalSearch();
+function goToStudent(opts) {
+  if (typeof opts === 'string') {
+    try { opts = JSON.parse(opts); } catch(e) { return; }
+  }
+  var name = opts.name || '';
+  var id = opts.id || 0;
+  var sid = opts.sid || '';
+  var src = opts.src || 'db';
+  closeGlobalSearch();
+  if (src === 'excel' || !id || id === '0') {
+    window.location.href = '../dashboards/student-management.php?student_search=' + encodeURIComponent(sid || name);
     return;
   }
-  var baseUrl = window.location.pathname.split('/').slice(0,-1).join('/') + '/';
-  // Try to find a students page; fall back to current page with search param
-  var possibleTargets = ['director-admissions.php','academic-registrar.php','system-admin.php','director-general.php'];
-  var targetPage = 'students';
-  for (var t = 0; t < possibleTargets.length; t++) {
-    if (baseUrl.indexOf(possibleTargets[t]) >= 0) { targetPage = possibleTargets[t]; break; }
-  }
-  // If we can't determine, use current page
-  var currentFile = window.location.pathname.split('/').pop();
-  window.location.href = '?page=' + (targetPage || currentFile) + '&s=' + encodeURIComponent(sid || name);
+  window.location.href = '../dashboards/student-management.php?student_search=' + encodeURIComponent(sid || name);
 }
 </script>
 <?php

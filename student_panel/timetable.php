@@ -42,7 +42,7 @@
                 <span class="material-icons-sharp">password</span>
                 <h3>Change Password</h3>
             </a>
-            <a href="logout.php">
+            <a href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                 <span class="material-icons-sharp">logout</span>
                 <h3>Logout</h3>
             </a>

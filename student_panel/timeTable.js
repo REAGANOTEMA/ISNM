@@ -117,7 +117,7 @@ let Saturday =[
 ]
 
 
-var message = "lskjf";
+var message = "";
 
  fetch('fetchTimetable.php', {
         method: 'POST',

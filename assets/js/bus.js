@@ -34,8 +34,6 @@ document.getElementById("select-bus-for-root").addEventListener('change', showBu
     function validateAddBusForm() {
         if (addBusForm.checkValidity()) {
 
-            alert(123);
-
             saveBus(new FormData(addBusForm));
             $("#add-bus-modal").modal("hide");
             cleanForm(addBusForm);

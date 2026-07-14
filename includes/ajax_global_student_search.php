@@ -19,20 +19,23 @@ header('Content-Type: application/json');
 /* ── CSRF validation ── */
 $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
-    echo json_encode([]);
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid security token', 'students' => []]);
     exit;
 }
 
 /* ── Auth check ── */
 $auth_service = new AuthenticationService();
 if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
-    echo json_encode([]);
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized', 'students' => []]);
     exit;
 }
 
 $role = $_SESSION['role'] ?? '';
 if (!$auth_service->canSearchStudentProfiles($role)) {
-    echo json_encode([]);
+    http_response_code(403);
+    echo json_encode(['error' => 'Insufficient permissions', 'students' => []]);
     exit;
 }
 

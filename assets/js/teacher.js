@@ -89,7 +89,6 @@ document.getElementById('addTeacherButton').addEventListener('click', function (
             document.querySelector('#general-form').classList.remove('was-validated');
             classTeacherValidated = false;
             document.getElementById("invaldClassteacher").style.display = "block";
-            console.log("here");
             return false;
           }
       }

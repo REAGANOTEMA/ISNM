@@ -105,6 +105,10 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
   var _modal  = null;
   var _profileModal = null;
   var _currentResults = [];
+  var _currentPage = 1;
+  var _lastQuery = '';
+  var _lastLevel = '';
+  var _lastGender = '';
 
   /* ── Open search modal (triggered by typing) ── */
   function openSearchModal() {
@@ -113,7 +117,8 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
   }
 
   /* ── Debounced search ── */
-  function doSearch() {
+  function doSearch(page) {
+    page = page || 1;
     var q = document.getElementById('stuSearchInput').value.trim();
     var level = document.getElementById('stuSearchLevel').value;
     var gender = document.getElementById('stuSearchGender').value;

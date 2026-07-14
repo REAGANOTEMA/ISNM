@@ -236,10 +236,3 @@ self.addEventListener('message', (event) => {
     caches.delete(API_CACHE);
   }
 });
-  e.waitUntil(
-    clients.matchAll({ type: 'window' }).then(cls => {
-      for (const c of cls) { if (c.url === url && 'focus' in c) return c.focus(); }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
-});

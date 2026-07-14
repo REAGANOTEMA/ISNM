@@ -371,6 +371,4 @@ window.ISNM = {
     handleFieldValidation
 };
 
-// Console log for debugging
-console.log('ISNM School Management System - JavaScript loaded successfully');
-console.log('Using staff-login.php and student-login.php - no more login.php references');
+

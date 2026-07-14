@@ -132,7 +132,7 @@ function renderDynamicSidebar(): void {
         </div>
 
         <div class="sidebar-footer">
-            <a href="../auth-handler.php?action=logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="#" class="logout-btn" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../auth-handler.php?action=logout';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt"></i> Logout</a>
             <div class="footer-meta"><span>v3.0</span><span>&copy; <?= date('Y') ?> ISNM</span></div>
         </div>
     </nav>

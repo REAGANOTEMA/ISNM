@@ -111,6 +111,18 @@ include_once 'shared/_header.php';
           <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
             <div class="contact-form-container animate-fade-in">
               <form id="contactForm" class="form-premium" method="POST" action="process-contact.php">
+                <?php if (!empty($_SESSION['success_message'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success_message']); unset($_SESSION['success_message']); ?>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($_SESSION['error_message'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  <i class="fas fa-exclamation-circle me-2"></i><?= htmlspecialchars($_SESSION['error_message']); unset($_SESSION['error_message']); ?>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
                 <div class="form-section">
                   <div class="section-title">
                     <i class="fas fa-user me-2"></i>
@@ -121,13 +133,13 @@ include_once 'shared/_header.php';
                       <label for="firstName" class="form-label">
                         <i class="fas fa-user me-1"></i> First Name *
                       </label>
-                      <input type="text" class="form-control" id="firstName" name="firstName" required>
+                      <input type="text" class="form-control" id="firstName" name="firstName" required maxlength="100">
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="lastName" class="form-label">
                         <i class="fas fa-user me-1"></i> Last Name *
                       </label>
-                      <input type="text" class="form-control" id="lastName" name="lastName" required>
+                      <input type="text" class="form-control" id="lastName" name="lastName" required maxlength="100">
                     </div>
                   </div>
                 </div>
@@ -142,13 +154,13 @@ include_once 'shared/_header.php';
                       <label for="email" class="form-label">
                         <i class="fas fa-envelope me-1"></i> Email Address *
                       </label>
-                      <input type="email" class="form-control" id="email" name="email" required>
+                      <input type="email" class="form-control" id="email" name="email" required maxlength="254">
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="phone" class="form-label">
                         <i class="fas fa-phone me-1"></i> Phone Number *
                       </label>
-                      <input type="tel" class="form-control" id="phone" name="phone" required>
+                      <input type="tel" class="form-control" id="phone" name="phone" required maxlength="20">
                     </div>
                   </div>
                 </div>
@@ -178,7 +190,8 @@ include_once 'shared/_header.php';
                       <label for="message" class="form-label">
                         <i class="fas fa-comment-alt me-1"></i> Message *
                       </label>
-                      <textarea class="form-control" id="message" name="message" rows="5" required placeholder="Type your message here..."></textarea>
+                      <textarea class="form-control" id="message" name="message" rows="5" required maxlength="2000"
+ placeholder="Type your message here..."></textarea>
                     </div>
                   </div>
                 </div>

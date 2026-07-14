@@ -40,7 +40,7 @@ include('../assets/config.php');
           </ul> 
         </li> -->
         <li class="nav-item">
-          <a class="nav-link" href="logout.php">logout</a>
+          <a class="nav-link" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">logout</a>
         </li>
       </ul>
       <form class="d-flex" role="search">

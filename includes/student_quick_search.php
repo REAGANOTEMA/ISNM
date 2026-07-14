@@ -100,7 +100,7 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
         }
         results.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><p class="text-muted mt-2">Searching...</p></div>';
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', '../includes/ajax_student_search_db.php?term='+encodeURIComponent(term), true);
+        xhr.open('GET', '../includes/ajax_student_search.php?term='+encodeURIComponent(term)+'&limit=20', true);
         xhr.onload = function(){
             if(xhr.status === 200){
                 try {

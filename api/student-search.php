@@ -9,7 +9,7 @@
 
 session_start();
 
-if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'staff') {
+if (empty($_SESSION['user_id']) || (($_SESSION['type'] ?? '') !== 'staff')) {
     header('Content-Type: application/json; charset=UTF-8');
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Unauthorized'], JSON_UNESCAPED_UNICODE);
@@ -40,10 +40,12 @@ if (!$conn) {
 }
 
 $searchTerm = '%' . $query . '%';
-$likeClause = "CONCAT_WS(' ', student_number, first_name, last_name, national_student_id_number, registration_number, phone, email, program) LIKE ?";
+$likeClause = "CONCAT_WS(' ', student_number, first_name, surname, other_name,
+                student_id, index_number, registration_number,
+                phone, mobile_number, email, program, set_name) LIKE ?";
 
 try {
-    $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM students WHERE $likeClause");
+    $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM students WHERE $likeClause AND status != 'deleted'");
     if (!$countStmt) {
         Response::error('Query preparation failed', 500);
     }
@@ -63,19 +65,21 @@ if ($total === 0) {
 }
 
 try {
-    $sql = "SELECT id, student_number, first_name, last_name, email, phone, gender,
-                   national_student_id_number, registration_number, program,
-                   current_semester, year, status, current_level, date_of_birth,
-                   address, emergency_contact, emergency_phone, created_at, updated_at
+    $sql = "SELECT id, student_id, student_number, index_number, registration_number,
+                   first_name, surname, other_name,
+                   CONCAT(first_name, ' ', COALESCE(surname, '')) AS full_name,
+                   email, phone, mobile_number, gender, program,
+                   level, set_name, year_of_study, status,
+                   date_of_birth, passport_photo
             FROM students
-            WHERE $likeClause
+            WHERE $likeClause AND status != 'deleted'
             ORDER BY
                 CASE WHEN student_number LIKE ? THEN 0
-                     WHEN CONCAT(first_name, ' ', last_name) LIKE ? THEN 1
-                     WHEN student_number LIKE ? THEN 2
+                     WHEN student_id LIKE ? THEN 1
+                     WHEN CONCAT(first_name, ' ', COALESCE(surname, '')) LIKE ? THEN 2
                      ELSE 3
                 END,
-                last_name ASC, first_name ASC
+                surname ASC, first_name ASC
             LIMIT ? OFFSET ?";
 
     $stmt = $conn->prepare($sql);
@@ -83,17 +87,18 @@ try {
         Response::error('Query preparation failed', 500);
     }
 
-    $matchNumber  = $query;
-    $matchName    = '%' . $query . '%';
-    $matchPartial = '%' . $query . '%';
+    $exactNumber = $query;
+    $limitInt = (int) $limit;
+    $offsetInt = (int) $offset;
     $stmt->bind_param(
-        'ssssii',
+        'sssssii',
         $searchTerm,
-        $matchNumber,
-        $matchName,
-        $matchPartial,
-        $limit,
-        $offset
+        $exactNumber,
+        $searchTerm,
+        $searchTerm,
+        $searchTerm,
+        $limitInt,
+        $offsetInt
     );
 
     $stmt->execute();
@@ -102,8 +107,6 @@ try {
 
     while ($row = $result->fetch_assoc()) {
         $row['id'] = (int)$row['id'];
-        $row['current_semester'] = (int)$row['current_semester'];
-        $row['year'] = (int)$row['year'];
         $students[] = $row;
     }
 

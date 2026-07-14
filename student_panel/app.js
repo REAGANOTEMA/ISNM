@@ -121,8 +121,6 @@ function handleShowAllSubjectMarks(examId) {
   })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
-
       if(data['status'] === "success"){
         document.getElementById("subjectiveResultTable").innerHTML = data ['data'];
       }else{

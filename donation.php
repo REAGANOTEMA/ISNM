@@ -330,8 +330,6 @@ include('shared/_header.php');
                     <small class="d-block mt-1">Use this reference as payment narrative when transferring.</small>
                   </div>
                 </div>
-                  <input type="number" class="form-control" id="donationAmount" name="amount" min="10000" placeholder="Enter amount in UGX" required>
-                </div>
                 <div class="col-12">
                   <label for="donationPurpose" class="form-label">Purpose (Optional)</label>
                   <select class="form-control" id="donationPurpose" name="purpose">

@@ -68,7 +68,7 @@
             <a href="?section=settings" class="ent-control-action" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--ent-bg);color:var(--ent-text);text-decoration:none;font-size:12px;transition:all 0.2s">
                 <i class="fas fa-cog" style="color:var(--ent-orange);width:18px;text-align:center"></i> Settings
             </a>
-            <a href="../auth-handler.php?action=logout" class="ent-control-action" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--ent-bg);color:var(--ent-text);text-decoration:none;font-size:12px;transition:all 0.2s">
+            <a href="#" class="ent-control-action" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../auth-handler.php?action=logout';document.body.appendChild(f);f.submit();" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--ent-bg);color:var(--ent-text);text-decoration:none;font-size:12px;transition:all 0.2s">
                 <i class="fas fa-sign-out-alt" style="color:var(--ent-red);width:18px;text-align:center"></i> Logout
             </a>
         </div>

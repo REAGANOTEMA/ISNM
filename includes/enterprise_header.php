@@ -116,7 +116,7 @@ $hCurrentPage  = basename($_SERVER['PHP_SELF']);
             <a href="<?= htmlspecialchars($hDashboardUrl) ?>?view=profile"><i class="fas fa-user"></i> My Profile</a>
             <a href="<?= htmlspecialchars($hDashboardUrl) ?>?view=settings"><i class="fas fa-cog"></i> Settings</a>
             <div class="ent-dropdown-divider"></div>
-            <a href="../auth-handler.php?action=logout" class="ent-logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="#" class="ent-logout-link" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../auth-handler.php?action=logout';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
 
         <!-- Notification Dropdown -->

@@ -369,19 +369,22 @@ include('shared/_header.php');
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label for="volunteerFirstName" class="form-label">First Name *</label>
-                    <input type="text" class="form-control" id="volunteerFirstName" name="firstName" required>
+                    <input type="text" class="form-control" id="volunteerFirstName" name="firstName" 
+required maxlength="100">
                   </div>
                   <div class="col-md-6">
                     <label for="volunteerLastName" class="form-label">Last Name *</label>
-                    <input type="text" class="form-control" id="volunteerLastName" name="lastName" required>
+                    <input type="text" class="form-control" id="volunteerLastName" name="lastName" 
+required maxlength="100">
                   </div>
                   <div class="col-md-6">
                     <label for="volunteerEmail" class="form-label">Email Address *</label>
-                    <input type="email" class="form-control" id="volunteerEmail" name="email" required>
+                    <input type="email" class="form-control" id="volunteerEmail" name="email" 
+required maxlength="254">
                   </div>
                   <div class="col-md-6">
                     <label for="volunteerPhone" class="form-label">Phone Number *</label>
-                    <input type="tel" class="form-control" id="volunteerPhone" name="phone" required>
+                    <input type="tel" class="form-control" id="volunteerPhone" name="phone" required maxlength="20">
                   </div>
                   <div class="col-md-6">
                     <label for="volunteerProfession" class="form-label">Profession *</label>
@@ -428,15 +431,18 @@ include('shared/_header.php');
                   </div>
                   <div class="col-12">
                     <label for="volunteerSkills" class="form-label">Relevant Skills & Qualifications *</label>
-                    <textarea class="form-control" id="volunteerSkills" name="skills" rows="3" required placeholder="Describe your relevant skills, qualifications, and experience..."></textarea>
+                    <textarea class="form-control" id="volunteerSkills" name="skills" rows="3" 
+required maxlength="1000" placeholder="Describe your relevant skills, qualifications, and experience..."></textarea>
                   </div>
                   <div class="col-12">
                     <label for="volunteerMotivation" class="form-label">Motivation for Volunteering *</label>
-                    <textarea class="form-control" id="volunteerMotivation" name="motivation" rows="3" required placeholder="Why do you want to volunteer at ISNM?"></textarea>
+                    <textarea class="form-control" id="volunteerMotivation" name="motivation" 
+rows="3" required maxlength="1000" placeholder="Why do you want to volunteer at ISNM?"></textarea>
                   </div>
                   <div class="col-12">
                     <label for="volunteerComments" class="form-label">Additional Comments</label>
-                    <textarea class="form-control" id="volunteerComments" name="comments" rows="2" placeholder="Any additional information or special requirements..."></textarea>
+                    <textarea class="form-control" id="volunteerComments" name="comments" rows="2" 
+maxlength="500" placeholder="Any additional information or special requirements..."></textarea>
                   </div>
                   <div class="col-12">
                     <div class="form-check">

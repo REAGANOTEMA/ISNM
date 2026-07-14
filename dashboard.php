@@ -13,14 +13,69 @@ if (!isLoggedIn()) {
 $user = getUserInfo($_SESSION['user_id']);
 $access_level = $_SESSION['access_level'] ?? (in_array(strtolower($_SESSION['role'] ?? ''), ['director general', 'ceo', 'system admin']) ? 10 : 1);
 
-// Redirect top administrators to student accounts management
+// Redirect to role-specific dashboards
+$role = strtolower(trim($_SESSION['role'] ?? ''));
+$roleDashboardMap = [
+    'director general' => 'dashboards/ceo.php',
+    'ceo' => 'dashboards/ceo.php',
+    'chief executive officer' => 'dashboards/ceo.php',
+    'system admin' => 'dashboards/system-admin.php',
+    'admin' => 'dashboards/system-admin.php',
+    'academic registrar' => 'dashboards/academic-registrar.php',
+    'bursar' => 'dashboards/school-bursar.php',
+    'school bursar' => 'dashboards/school-bursar.php',
+    'director finance' => 'dashboards/school-bursar.php',
+    'director admissions' => 'dashboards/director-admissions.php',
+    'admissions' => 'dashboards/director-admissions.php',
+    'director ict' => 'dashboards/director-ict.php',
+    'ict officer' => 'dashboards/director-ict.php',
+    'head nursing' => 'dashboards/head-nursing.php',
+    'head of nursing' => 'dashboards/head-nursing.php',
+    'head midwifery' => 'dashboards/head-midwifery.php',
+    'head of midwifery' => 'dashboards/head-midwifery.php',
+    'senior lecturer' => 'dashboards/senior-lecturer.php',
+    'lecturer' => 'dashboards/lecturer.php',
+    'librarian' => 'dashboards/librarian.php',
+    'school librarian' => 'dashboards/librarian.php',
+    'hr' => 'dashboards/hr-manager.php',
+    'hr manager' => 'dashboards/hr-manager.php',
+    'security' => 'dashboards/security.php',
+    'security officer' => 'dashboards/security.php',
+    'driver' => 'dashboards/drivers.php',
+    'drivers' => 'dashboards/drivers.php',
+    'warden' => 'dashboards/wardens.php',
+    'wardens' => 'dashboards/wardens.php',
+    'matron' => 'dashboards/matron.php',
+    'sickbay' => 'dashboards/sickbay.php',
+    'sickbay nurse' => 'dashboards/sickbay.php',
+    'computer lab' => 'dashboards/computer-lab.php',
+    'computer lab manager' => 'dashboards/computer-lab.php',
+    'skills lab' => 'dashboards/skills-lab.php',
+    'skills lab manager' => 'dashboards/skills-lab.php',
+    'guild president' => 'dashboards/guild-president.php',
+    'student' => 'dashboards/student-portal.php',
+    'students' => 'dashboards/student-portal.php',
+];
+
+// Check for exact match first, then partial match
+if (isset($roleDashboardMap[$role])) {
+    header("Location: " . $roleDashboardMap[$role]);
+    exit();
+}
+
+// Partial match fallback
+foreach ($roleDashboardMap as $key => $dashboard) {
+    if (strpos($role, $key) !== false || strpos($key, $role) !== false) {
+        header("Location: " . $dashboard);
+        exit();
+    }
+}
+
+// Default: show the generic dashboard
 if ($access_level >= 8) {
     header("Location: student_accounts_management.php");
     exit();
 }
-
-// For other users, show appropriate dashboard based on role
-$role = $_SESSION['role'] ?? '';
 ?>
 
 <!DOCTYPE html>

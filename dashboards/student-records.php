@@ -32,7 +32,7 @@ $isSuperAdmin = $auth_service->hasFullInstitutionAccess($user_role);
         </div>
         <div class="d-flex gap-2">
             <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
-            <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+            <a href="#" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../logout.php';document.body.appendChild(f);f.submit();"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
         </div>
     </div>
 

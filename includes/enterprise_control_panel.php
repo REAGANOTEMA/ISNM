@@ -211,7 +211,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
         <a href="../dashboards/security.php?page=visitors" class="ent-cp-action">
             <i class="fas fa-user-plus" style="color:#16a34a"></i> Check In Visitor
         </a>
-        <a href="../auth-handler.php?action=logout" class="ent-cp-action">
+        <a href="#" class="ent-cp-action" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../auth-handler.php?action=logout';document.body.appendChild(f);f.submit();">
             <i class="fas fa-sign-out-alt" style="color:#ef4444"></i> Logout
         </a>
     </div>
@@ -228,7 +228,7 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
         <a href="../dashboards/<?= basename($_SESSION['role_dashboard'] ?? 'director-general.php') ?>" class="ent-cp-action">
             <i class="fas fa-home" style="color:#10b981"></i> My Dashboard
         </a>
-        <a href="../auth-handler.php?action=logout" class="ent-cp-action">
+        <a href="#" class="ent-cp-action" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='../auth-handler.php?action=logout';document.body.appendChild(f);f.submit();">
             <i class="fas fa-sign-out-alt" style="color:#ef4444"></i> Logout
         </a>
     </div>
@@ -251,5 +251,26 @@ $cpInitial = strtoupper(substr($cpUser, 0, 1));
     }
     updateClock();
     setInterval(updateClock, 30000);
+})();
+</script>
+<script>
+// Convert any remaining GET logout links to POST form submissions
+(function(){
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href*="logout"]');
+        if (!link) return;
+        e.preventDefault();
+        var href = link.getAttribute('href');
+        if (!href || href === '#') {
+            var onclick = link.getAttribute('onclick');
+            if (onclick && onclick.indexOf("logout") !== -1) return;
+            return;
+        }
+        var f = document.createElement('form');
+        f.method = 'POST';
+        f.action = href;
+        document.body.appendChild(f);
+        f.submit();
+    });
 })();
 </script>

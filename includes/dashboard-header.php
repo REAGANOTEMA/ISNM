@@ -700,36 +700,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Student search
+    // Student search — centralized AJAX endpoint
     const searchInput = document.getElementById('globalStudentSearch');
     const searchResults = document.getElementById('searchResults');
+    let _dashSearchTimer = null;
+    let _dashSearchXhr = null;
 
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
             const query = e.target.value.trim();
+            clearTimeout(_dashSearchTimer);
             if (query.length < 2) {
                 searchResults.style.display = 'none';
+                searchResults.innerHTML = '';
                 return;
             }
-
-            fetch(`/includes/student_search.php?action=search_students&q=${encodeURIComponent(query)}`)
-                .then(r => r.text())
-                .then(t => JSON.parse(t.replace(/^\uFEFF/, '')))
-                .then(data => {
-                    if (data.success && data.students.length > 0) {
-                        searchResults.innerHTML = data.students.map(s => `
-                            <a href="/student-profile.php?id=${s.id}" class="search-result-item">
-                                <div class="search-result-name">${s.first_name} ${s.surname}</div>
-                                <div class="search-result-info">${s.index_number} • ${s.program || 'Unknown Program'}</div>
-                            </a>
-                        `).join('');
+            _dashSearchTimer = setTimeout(function() {
+                if (_dashSearchXhr) _dashSearchXhr.abort();
+                _dashSearchXhr = new XMLHttpRequest();
+                _dashSearchXhr.open('GET', '/includes/ajax_student_search.php?q=' + encodeURIComponent(query) + '&limit=15', true);
+                _dashSearchXhr.onload = function() {
+                    if (_dashSearchXhr.status !== 200) {
+                        searchResults.innerHTML = '<p class="empty-message">Search unavailable</p>';
+                        searchResults.style.display = 'block';
+                        return;
+                    }
+                    var data;
+                    try { data = JSON.parse(_dashSearchXhr.responseText); } catch(err) { data = {students: []}; }
+                    var students = data.students || [];
+                    if (students.length > 0) {
+                        searchResults.innerHTML = students.map(function(s) {
+                            var name = s.full_name || ((s.first_name || '') + ' ' + (s.surname || '')).trim() || 'Unknown';
+                            var sid = s.student_id || s.index_number || s.student_number || '';
+                            var detail = sid + (s.program ? ' \u2022 ' + s.program : '');
+                            return '<a href="/dashboards/student-management.php?student_search=' + encodeURIComponent(sid) + '" class="search-result-item">'
+                                + '<div class="search-result-name">' + name + '</div>'
+                                + '<div class="search-result-info">' + detail + '</div>'
+                                + '</a>';
+                        }).join('');
                         searchResults.style.display = 'block';
                     } else {
                         searchResults.innerHTML = '<p class="empty-message">No students found</p>';
                         searchResults.style.display = 'block';
                     }
-                })
-                .catch(err => console.error('Search error:', err));
+                };
+                _dashSearchXhr.onerror = function() {
+                    searchResults.innerHTML = '<p class="empty-message">Search failed</p>';
+                    searchResults.style.display = 'block';
+                };
+                _dashSearchXhr.send();
+            }, 300);
         });
     }
 });

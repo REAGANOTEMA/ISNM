@@ -734,8 +734,6 @@ function getStudentsFeedbacks(id) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log("the data is ",data);
-
             if (data['status'] === 'success') {
                 document.querySelector(".student-feedback").style.display = "block";
                 document.getElementById("not-selected-feedbacks").style.display = "none";
@@ -756,8 +754,6 @@ function getStudentsFeedbacks(id) {
                 document.querySelector(".student-feedback").style.display = "none";
                 document.getElementById("not-selected-feedbacks").style.display = "block";
             }
-            console.log(data['status']);
-
         })
         .catch(error => console.error('Error:', error));
 
@@ -800,8 +796,6 @@ function sendFeedback(receiver, msg) {
         .then(response => response.json())
         .then(data => {
 
-            console.log(data);
-
             if (data['status'] === 'success') {
                 document.getElementById('feedback-msg').value = "";
             }
@@ -823,8 +817,6 @@ function sendFeedback(receiver, msg) {
 }
 
 function deleteFeedback(feedbackid, receiverID){
-    console.log("reciver id",receiverID);
-
     let myToast = new bootstrap.Toast(document.getElementById('liveToast'));
     let liveToast = document.getElementById("liveToast");
 

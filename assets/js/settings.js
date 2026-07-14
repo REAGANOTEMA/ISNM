@@ -499,7 +499,6 @@ document.getElementById("upload-file").addEventListener("change", () => {
         })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 if (data['status'] === "success") {
                     liveToast.style.backgroundColor = "#BBF7D0";
                     liveToast.style.color = 'green';

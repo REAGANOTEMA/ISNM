@@ -51,7 +51,7 @@ $userInitial = strtoupper(substr($currentUser, 0, 1));
       <a href="includes/profile_settings.php" class="nav-item">
         <i class="fas fa-user-cog"></i><span>Profile Settings</span>
       </a>
-      <a href="logout.php" class="nav-item">
+      <a href="#" class="nav-item" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
         <i class="fas fa-sign-out-alt"></i><span>Logout</span>
       </a>
     </div>

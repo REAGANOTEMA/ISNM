@@ -53,7 +53,7 @@ ini_set('log_errors', 1);
           <a class="nav-link" href="change-password.php">Change Password</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="logout.php">Logout</a>
+          <a class="nav-link" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">Logout</a>
         </li>
       </ul>
       <form class="d-flex align-items-center">

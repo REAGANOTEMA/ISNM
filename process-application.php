@@ -264,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (Exception $e) {
         error_log('Application error: ' . $e->getMessage());
-        $_SESSION['error_message'] = "Error submitting application: " . $e->getMessage();
+        $_SESSION['error_message'] = 'Error submitting application. Please try again or contact support.';
         header('Location: application.php');
         exit;
     }

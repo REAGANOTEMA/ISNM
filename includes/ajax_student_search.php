@@ -60,14 +60,17 @@ $set     = trim($_REQUEST['set'] ?? '');
 $gender  = trim($_REQUEST['gender'] ?? '');
 $status  = trim($_REQUEST['status'] ?? '');
 $limit   = min(max((int)($_REQUEST['limit'] ?? 50), 1), 100);
+$page    = max(1, (int)($_REQUEST['page'] ?? 1));
+$perPage = $limit;
 
 if (strlen($q) < 2 && empty($program) && empty($level) && empty($set) && empty($gender)) {
-    echo json_encode(['success' => false, 'message' => 'Search term must be at least 2 characters', 'students' => [], 'count' => 0]);
+    echo json_encode(['success' => false, 'message' => 'Search term must be at least 2 characters', 'students' => [], 'count' => 0, 'total' => 0, 'page' => 1, 'total_pages' => 0]);
     exit;
 }
 
 $results = [];
 $seen    = [];
+$totalCount = 0;
 
 /* ── Helper: normalise a key for dedup ── */
 $dedupKey = function ($row) {
@@ -141,6 +144,23 @@ if ($stuConn) {
     }
 
     $where = implode(' AND ', $conditions);
+
+    /* ── Count query for pagination ── */
+    $countSql  = "SELECT COUNT(*) AS total FROM students WHERE $where";
+    $countStmt = $stuConn->prepare($countSql);
+    if ($countStmt) {
+        $countStmt->bind_param($types, ...$params);
+        if ($countStmt->execute()) {
+            $countRes = $countStmt->get_result();
+            if ($countRes) {
+                $countRow = $countRes->fetch_assoc();
+                $totalCount = (int)($countRow['total'] ?? 0);
+            }
+        }
+        $countStmt->close();
+    }
+
+    $offset = ($page - 1) * $perPage;
     $sql   = "SELECT id, student_id, student_number, index_number, registration_number,
                      first_name, surname, other_name,
                      CONCAT(first_name,' ',COALESCE(surname,'')) AS full_name,
@@ -155,12 +175,13 @@ if ($stuConn) {
                      WHEN index_number = ? THEN 2
                      ELSE 3 END,
                 full_name ASC
-              LIMIT ?";
+              LIMIT ? OFFSET ?";
     $params[] = $q;
     $params[] = $q;
     $params[] = $q;
-    $params[] = $limit;
-    $types   .= 'sss';
+    $params[] = $perPage;
+    $params[] = $offset;
+    $types   .= 'sssi';
 
     $stmt = $stuConn->prepare($sql);
     if ($stmt) {
@@ -209,10 +230,15 @@ try {
 }
 
 /* ── Trim to limit and return ── */
-$results = array_slice($results, 0, $limit);
+$results = array_slice($results, 0, $perPage);
+$totalPages = $totalCount > 0 ? (int)ceil($totalCount / $perPage) : 0;
 
 echo json_encode([
-    'success'  => true,
-    'students' => $results,
-    'count'    => count($results),
+    'success'     => true,
+    'students'    => $results,
+    'count'       => count($results),
+    'total'       => $totalCount,
+    'page'        => $page,
+    'per_page'    => $perPage,
+    'total_pages' => $totalPages,
 ], JSON_UNESCAPED_UNICODE);

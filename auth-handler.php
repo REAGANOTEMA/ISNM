@@ -578,6 +578,12 @@ switch ($action) {
         if (!$conn) { echo json_encode(['success' => false, 'message' => 'Database error.']); exit; }
         $table = $isStaff ? 'staff' : 'students';
         $idCol = 'id';
+        // Whitelist table and column names to prevent injection
+        $allowedTables = ['staff', 'students'];
+        $allowedCols = ['id'];
+        if (!in_array($table, $allowedTables, true) || !in_array($idCol, $allowedCols, true)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
+        }
         $s = $conn->prepare("SELECT password FROM $table WHERE $idCol = ? LIMIT 1");
         if (!$s) { echo json_encode(['success' => false, 'message' => 'Query error.']); exit; }
         $s->bind_param('i', $uid);

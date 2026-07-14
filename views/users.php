@@ -186,7 +186,7 @@ $flashMessages = getFlashMessages();
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="logout.php">
+                            <a class="nav-link" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
                             </a>
                         </li>
