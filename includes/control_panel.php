@@ -7,6 +7,10 @@
 if (!isset($ctx)) return;
 $uid = (int)($uid ?? $user_id ?? ($_SESSION['user_id'] ?? 0));
 
+if (file_exists(__DIR__ . '/notification_helper.php')) {
+    require_once __DIR__ . '/notification_helper.php';
+}
+
 // â”€â”€ Gather dashboard stats â”€â”€
 $cpStats = [
     'total_students' => 0,
@@ -47,7 +51,7 @@ try {
         }
 
         // Recent alerts (from notifications)
-        $cpStats['recent_alerts'] = getUnreadNotificationCount($cpStaffConn, $cpUid);
+        $cpStats['recent_alerts'] = getUnreadNotificationCount($cpUid);
 
         // Today's events (from calendar_events or events table)
         $r = $cpStaffConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");

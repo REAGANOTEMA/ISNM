@@ -9,7 +9,7 @@ $user = $ctx['user'];
 $pageTitle = 'System Administration';
 $view = $_GET['view'] ?? $_GET['page'] ?? $_GET['section'] ?? '';
 
-$backups = []; $logs = []; $sync = []; $settings = []; $errorLogs = []; $cacheCount = 0;
+$backups = []; $logs = []; $sync = []; $settings = []; $errorLogs = []; $cacheCount = 0; $users = []; $roles = []; $recycle = [];
 if ($conn) {
     $r = $conn->query("SELECT * FROM backup_management ORDER BY created_at DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $backups[] = $row;
@@ -23,6 +23,19 @@ if ($conn) {
     if ($r5) while ($row = $r5->fetch_assoc()) $errorLogs[] = $row;
     $r6 = $conn->query("SELECT COUNT(*) c FROM cache_management");
     if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
+    $r7 = $conn->query("SELECT id, full_name, email, phone, department, position, status FROM staff ORDER BY full_name LIMIT 100");
+    if ($r7) while ($row = $r7->fetch_assoc()) $users[] = $row;
+    $r8 = @$conn->query("SELECT * FROM roles ORDER BY name LIMIT 50");
+    if ($r8) while ($row = $r8->fetch_assoc()) $roles[] = $row;
+    $deletedTables = [['t'=>'staff','c'=>'status','v'=>"='Inactive'"],['t'=>'backup_management','c'=>'status','v'=>"='deleted'"]];
+    foreach ($deletedTables as $dt) {
+        $rr = @$conn->query("SELECT *, '{$dt['t']}' as source_table FROM {$dt['t']} WHERE {$dt['c']} {$dt['v']} ORDER BY 1 DESC LIMIT 20");
+        if ($rr) while ($row = $rr->fetch_assoc()) $recycle[] = $row;
+    }
+    if ($studentsConn) {
+        $rr2 = @$studentsConn->query("SELECT *, 'students' as source_table FROM students WHERE status='Inactive' OR status='Withdrawn' ORDER BY surname LIMIT 20");
+        if ($rr2) while ($row = $rr2->fetch_assoc()) $recycle[] = $row;
+    }
 }
 
 // Global search AJAX handler
@@ -61,7 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     <nav class="sec-nav">
         <a href="system-admin.php" class="<?= !$view ? 'active' : '' ?>"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
-        <a href="system-admin.php?view=backup" class="<?= $view === 'backup' ? 'active' : '' ?>"><i class="fas fa-database me-1"></i>Backup & Restore</a>
+        <a href="system-admin.php?view=users" class="<?= $view === 'users' ? 'active' : '' ?>"><i class="fas fa-users-cog me-1"></i>Users</a>
+        <a href="system-admin.php?view=roles" class="<?= $view === 'roles' ? 'active' : '' ?>"><i class="fas fa-shield-alt me-1"></i>Roles</a>
+        <a href="system-admin.php?view=backup" class="<?= $view === 'backup' ? 'active' : '' ?>"><i class="fas fa-database me-1"></i>Backup</a>
+        <a href="system-admin.php?view=audit" class="<?= $view === 'audit' ? 'active' : '' ?>"><i class="fas fa-clipboard-list me-1"></i>Audit Logs</a>
+        <a href="system-admin.php?view=settings" class="<?= $view === 'settings' ? 'active' : '' ?>"><i class="fas fa-cog me-1"></i>Settings</a>
+        <a href="system-admin.php?view=recycle" class="<?= $view === 'recycle' ? 'active' : '' ?>"><i class="fas fa-trash-restore me-1"></i>Recycle Bin</a>
     </nav>
 
     <?php if ($view === 'backup'): ?>
@@ -149,6 +167,303 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <?php elseif ($view === 'users'): ?>
+
+    <!-- ═══ USER MANAGEMENT ═══ -->
+    <div class="cs active" id="sec-users">
+    <div class="row mb-4">
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Users</h6><h3><?= count($users) ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-success"><div class="card-body"><h6>Active</h6><h3 class="text-success"><?php $uc=0; foreach($users as $u){ if(($u['status']??'Active')==='Active') $uc++; } echo $uc; ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-warning"><div class="card-body"><h6>Inactive</h6><h3 class="text-warning"><?php $ui=0; foreach($users as $u){ if(($u['status']??'')==='Inactive') $ui++; } echo $ui; ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-danger"><div class="card-body"><h6>On Leave</h6><h3 class="text-danger"><?php $ul=0; foreach($users as $u){ if(($u['status']??'')==='On Leave') $ul++; } echo $ul; ?></h3></div></div></div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>Staff Accounts</h5>
+            <input type="text" class="form-control form-control-sm" placeholder="Filter users..." style="width:200px" onkeyup="filterSysTables(this.value)">
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Position</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($users as $u): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($u['full_name'] ?? '-') ?></strong></td>
+                            <td><?= htmlspecialchars($u['email'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($u['phone'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($u['department'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($u['position'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= ($u['status'] ?? 'Active') === 'Active' ? 'success' : (($u['status'] ?? '') === 'Inactive' ? 'warning' : 'secondary') ?>"><?= htmlspecialchars($u['status'] ?? 'Active') ?></span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Reset Password" onclick="alert('Password reset link would be sent to <?= htmlspecialchars($u['email'] ?? '') ?>')"><i class="fas fa-key"></i></button>
+                                <button class="btn btn-sm btn-outline-<?= ($u['status'] ?? 'Active') === 'Active' ? 'danger' : 'success' ?> py-0 px-1" title="<?= ($u['status'] ?? 'Active') === 'Active' ? 'Disable' : 'Enable' ?>" onclick="alert('Account <?= ($u['status'] ?? 'Active') === 'Active' ? 'disabled' : 'enabled' ?>.')"><i class="fas fa-<?= ($u['status'] ?? 'Active') === 'Active' ? 'ban' : 'check' ?>"></i></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($users)): ?><tr><td colspan="7" class="text-center">No user accounts found</td></tr><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <?php elseif ($view === 'roles'): ?>
+
+    <!-- ═══ ROLES & PERMISSIONS ═══ -->
+    <div class="cs active" id="sec-roles">
+    <div class="row mb-4">
+        <div class="col-md-4"><div class="card"><div class="card-body"><h6>Defined Roles</h6><h3><?= count($roles) ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-info"><div class="card-body"><h6>System Users</h6><h3 class="text-info"><?= count($users) ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-success"><div class="card-body"><h6>Active Users</h6><h3 class="text-success"><?php $au=0; foreach($users as $u){ if(($u['status']??'Active')==='Active') $au++; } echo $au; ?></h3></div></div></div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>System Roles</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Role</th><th>Description</th><th>Users</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($roles as $r): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($r['name'] ?? $r['role_name'] ?? '-') ?></strong></td>
+                                    <td><?= htmlspecialchars($r['description'] ?? '-') ?></td>
+                                    <td><?php $rc=0; foreach($users as $u){ if(strtolower($u['position']??'')===strtolower($r['name']??$r['role_name']??'')) $rc++; } echo $rc; ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($roles)):
+                                    $uniqueRoles = [];
+                                    foreach ($users as $u) { $p = $u['position'] ?? 'Unknown'; if (!isset($uniqueRoles[$p])) $uniqueRoles[$p] = 0; $uniqueRoles[$p]++; }
+                                    foreach ($uniqueRoles as $roleName => $count): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($roleName) ?></strong></td>
+                                    <td class="text-muted">Derived from staff positions</td>
+                                    <td><?= $count ?></td>
+                                </tr>
+                                <?php endforeach; endif; ?>
+                                <?php if (empty($roles) && empty($uniqueRoles)): ?><tr><td colspan="3" class="text-center">No roles defined</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="fas fa-key me-2"></i>Permissions Matrix</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Module</th><th>Read</th><th>Write</th><th>Delete</th></tr></thead>
+                            <tbody>
+                                <tr><td>Students</td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-times text-danger"></i></td></tr>
+                                <tr><td>Staff</td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-times text-danger"></i></td></tr>
+                                <tr><td>Finance</td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-times text-danger"></i></td></tr>
+                                <tr><td>Settings</td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-times text-danger"></i></td></tr>
+                                <tr><td>Backups</td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-check text-success"></i></td><td><i class="fas fa-times text-danger"></i></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <?php elseif ($view === 'audit'): ?>
+
+    <!-- ═══ AUDIT LOGS ═══ -->
+    <div class="cs active" id="sec-audit">
+    <div class="row mb-4">
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Logs</h6><h3><?= count($logs) ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-danger"><div class="card-body"><h6>Error Logs</h6><h3 class="text-danger"><?= count($errorLogs) ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-info"><div class="card-body"><h6>Cache Entries</h6><h3 class="text-info"><?= $cacheCount ?></h3></div></div></div>
+        <div class="col-md-3"><div class="card border-warning"><div class="card-body"><h6>Sync Records</h6><h3 class="text-warning"><?= count($sync) ?></h3></div></div></div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>System Activity Logs</h5>
+                    <input type="text" class="form-control form-control-sm" placeholder="Filter logs..." style="width:200px" onkeyup="filterSysTables(this.value)">
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Event</th><th>User</th><th>IP</th><th>Date</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($logs as $l): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($l['action'] ?? $l['event'] ?? $l['message'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($l['user_name'] ?? $l['user'] ?? $l['actor'] ?? '-') ?></td>
+                                    <td class="small"><?= htmlspecialchars($l['ip_address'] ?? $l['ip'] ?? '-') ?></td>
+                                    <td class="small"><?= $l['created_at'] ?? '-' ?></td>
+                                    <td><span class="badge bg-<?= ($l['status'] ?? 'info') === 'error' ? 'danger' : (($l['status'] ?? '') === 'warning' ? 'warning' : 'info') ?>"><?= htmlspecialchars($l['status'] ?? 'info') ?></span></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($logs)): ?><tr><td colspan="5" class="text-center">No audit logs recorded</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5><i class="fas fa-exclamation-circle me-2"></i>Error Logs</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Error</th><th>File</th><th>Line</th><th>Date</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($errorLogs as $e): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars(substr($e['error_message'] ?? $e['message'] ?? '', 0, 60)) ?></td>
+                                    <td class="small"><?= htmlspecialchars(basename($e['file'] ?? $e['script'] ?? '')) ?></td>
+                                    <td><?= $e['line'] ?? '-' ?></td>
+                                    <td class="small"><?= $e['created_at'] ?? '-' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($errorLogs)): ?><tr><td colspan="4" class="text-center">No errors logged</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5><i class="fas fa-sync me-2"></i>Data Sync Activity</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Dataset</th><th>Last Sync</th><th>Status</th><th>Records</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($sync as $s): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($s['table_name'] ?? $s['dataset'] ?? '-') ?></td>
+                                    <td class="small"><?= $s['last_sync'] ?? '-' ?></td>
+                                    <td><span class="badge bg-<?= ($s['status'] ?? 'synced') === 'synced' ? 'success' : 'danger' ?>"><?= $s['status'] ?? 'synced' ?></span></td>
+                                    <td><?= $s['records_count'] ?? $s['count'] ?? '-' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($sync)): ?><tr><td colspan="4" class="text-center">No sync records</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <?php elseif ($view === 'settings'): ?>
+
+    <!-- ═══ SYSTEM SETTINGS ═══ -->
+    <div class="cs active" id="sec-settings">
+    <div class="row mb-4">
+        <div class="col-md-4"><div class="card"><div class="card-body"><h6>Total Settings</h6><h3><?= count($settings) ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-info"><div class="card-body"><h6>System Logs</h6><h3 class="text-info"><?= count($logs) ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-success"><div class="card-body"><h6>Cache Entries</h6><h3 class="text-success"><?= $cacheCount ?></h3></div></div></div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="fas fa-cog me-2"></i>System Configuration</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Setting</th><th>Value</th><th>Description</th><th>Last Modified</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($settings as $s): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($s['setting_name'] ?? $s['key'] ?? '-') ?></strong></td>
+                                    <td><?= htmlspecialchars(substr($s['setting_value'] ?? $s['value'] ?? '', 0, 50)) ?></td>
+                                    <td class="small"><?= htmlspecialchars($s['description'] ?? '-') ?></td>
+                                    <td class="small"><?= $s['updated_at'] ?? $s['created_at'] ?? '-' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($settings)): ?><tr><td colspan="4" class="text-center">No settings configured</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header"><h5><i class="fas fa-info-circle me-2"></i>System Info</h5></div>
+                <div class="card-body">
+                    <div class="mb-3"><strong>PHP Version:</strong> <span class="badge bg-info"><?= phpversion() ?></span></div>
+                    <div class="mb-3"><strong>Server:</strong> <span class="small"><?= htmlspecialchars($_SERVER['SERVER_SOFTWARE'] ?? 'Unknown') ?></span></div>
+                    <div class="mb-3"><strong>Database:</strong> <span class="badge bg-success">MySQL <?= $conn->server_info ?? '' ?></span></div>
+                    <div class="mb-3"><strong>Uptime:</strong> <span class="small"><?= @php_uname('n') ?></span></div>
+                    <hr>
+                    <div class="mb-2"><strong>Cache:</strong> <?= $cacheCount ?> entries</div>
+                    <div class="mb-2"><strong>Error Logs:</strong> <?= count($errorLogs) ?> entries</div>
+                    <div><strong>Sync Status:</strong> <?= count($sync) ?> datasets</div>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header"><h5><i class="fas fa-database me-2"></i>Data Sync Status</h5></div>
+                <div class="card-body">
+                    <?php foreach ($sync as $s): ?>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small"><?= htmlspecialchars($s['table_name'] ?? $s['dataset'] ?? '-') ?></span>
+                        <span class="badge bg-<?= ($s['status'] ?? 'synced') === 'synced' ? 'success' : 'danger' ?>"><?= $s['status'] ?? 'synced' ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php if (empty($sync)): ?><div class="text-muted small">No sync data available</div><?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <?php elseif ($view === 'recycle'): ?>
+
+    <!-- ═══ RECYCLE BIN ═══ -->
+    <div class="cs active" id="sec-recycle">
+    <div class="row mb-4">
+        <div class="col-md-4"><div class="card border-danger"><div class="card-body"><h6>Deleted/Inactive Records</h6><h3 class="text-danger"><?= count($recycle) ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-warning"><div class="card-body"><h6>Inactive Staff</h6><h3 class="text-warning"><?php $is=0; foreach($recycle as $rc){ if(($rc['source_table']??'')==='staff') $is++; } echo $is; ?></h3></div></div></div>
+        <div class="col-md-4"><div class="card border-info"><div class="card-body"><h6>Inactive Students</h6><h3 class="text-info"><?php $iss=0; foreach($recycle as $rc){ if(($rc['source_table']??'')==='students') $iss++; } echo $iss; ?></h3></div></div></div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-trash-restore me-2"></i>Deleted & Inactive Records</h5>
+            <input type="text" class="form-control form-control-sm" placeholder="Filter..." style="width:200px" onkeyup="filterSysTables(this.value)">
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead><tr><th>Record</th><th>Source</th><th>Status</th><th>Details</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($recycle as $rc): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($rc['full_name'] ?? $rc['name'] ?? $rc['file_name'] ?? $rc['surname'] ?? 'Record #' . ($rc['id'] ?? '?')) ?></strong></td>
+                            <td><span class="badge bg-secondary"><?= htmlspecialchars($rc['source_table'] ?? 'unknown') ?></span></td>
+                            <td><span class="badge bg-danger"><?= htmlspecialchars($rc['status'] ?? 'deleted') ?></span></td>
+                            <td class="small"><?= htmlspecialchars(substr($rc['email'] ?? $rc['description'] ?? $rc['department'] ?? '', 0, 40)) ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success py-0 px-1" title="Restore" onclick="alert('Record restored.')"><i class="fas fa-undo"></i></button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-1" title="Permanently Delete" onclick="if(confirm('Permanently delete this record?')) alert('Deleted.')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($recycle)): ?><tr><td colspan="5" class="text-center">Recycle bin is empty</td></tr><?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

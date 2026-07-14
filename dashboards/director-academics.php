@@ -29,7 +29,7 @@ if (file_exists($profileSettingsFile)) {
 
 function sc($c, $s) { if (!$c) return 0; $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
 
-$acadPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'overview','programs'=>'overview','courses'=>'overview','exams'=>'overview','timetable'=>'overview','clinical'=>'overview','attendance'=>'overview','quality'=>'overview','academic_records'=>'overview','reports'=>'overview','approvals'=>'overview','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'overview','reports-monthly'=>'overview','reports-annual'=>'overview','exports'=>'overview','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'overview','activity-logs'=>'overview'];
+$acadPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'analytics','programs'=>'programs','courses'=>'courses','exams'=>'exams','timetable'=>'timetable','clinical'=>'clinical','attendance'=>'attendance','quality'=>'quality','academic_records'=>'overview','reports'=>'reports','approvals'=>'approvals','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'reports','reports-monthly'=>'reports','reports-annual'=>'reports','exports'=>'reports','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'overview','activity-logs'=>'activity'];
 $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['section'])) $_GET['section'] = $acadPageMap[$p] ?? $p;
 $section = $_GET['section'] ?? 'overview';

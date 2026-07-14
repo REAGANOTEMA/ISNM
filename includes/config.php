@@ -54,14 +54,6 @@ function executeQuery($database, $sql = '', $params = [], $types = '') {
 }
 }
 
-function sanitizeInput($input) {
-    global $conn;
-    if (!$conn) {
-        return htmlspecialchars(trim((string) $input), ENT_QUOTES, 'UTF-8');
-    }
-    return htmlspecialchars(trim($conn->real_escape_string($input)), ENT_QUOTES, 'UTF-8');
-}
-
 function logActivity($user_id, $user_role, $activity_type, $activity_description, $module_affected, $record_id) {
     global $conn;
     if (!$conn) return;
@@ -113,7 +105,7 @@ function generatePagination($current_page, $total_pages, $base_url) {
     $pagination = '<nav aria-label="Page navigation"><ul class="pagination justify-content-center">';
 
     if ($current_page > 1) {
-        $pagination .= '<li class="page-item"><a class="page-link" href="' . $base_url . '?page=' . ($current_page - 1) . '">Previous</a></li>';
+        $pagination .= '<li class="page-item"><a class="page-link" href="' . htmlspecialchars($base_url, ENT_QUOTES, 'UTF-8') . '?page=' . ($current_page - 1) . '">Previous</a></li>';
     }
 
     $start_page = max(1, $current_page - 2);
@@ -121,11 +113,11 @@ function generatePagination($current_page, $total_pages, $base_url) {
 
     for ($i = $start_page; $i <= $end_page; $i++) {
         $active_class = $i == $current_page ? 'active' : '';
-        $pagination .= '<li class="page-item ' . $active_class . '"><a class="page-link" href="' . $base_url . '?page=' . $i . '">' . $i . '</a></li>';
+        $pagination .= '<li class="page-item ' . $active_class . '"><a class="page-link" href="' . htmlspecialchars($base_url, ENT_QUOTES, 'UTF-8') . '?page=' . $i . '">' . $i . '</a></li>';
     }
 
     if ($current_page < $total_pages) {
-        $pagination .= '<li class="page-item"><a class="page-link" href="' . $base_url . '?page=' . ($current_page + 1) . '">Next</a></li>';
+        $pagination .= '<li class="page-item"><a class="page-link" href="' . htmlspecialchars($base_url, ENT_QUOTES, 'UTF-8') . '?page=' . ($current_page + 1) . '">Next</a></li>';
     }
 
     $pagination .= '</ul></nav>';

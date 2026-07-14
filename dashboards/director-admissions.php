@@ -768,7 +768,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $aid=$app['id']??0;
                 $result['applicant_id']=$aid;
                 if($aid){
-                    $r=$conn->query("SELECT ar.id,ar.requirement_name,ar.is_mandatory,COALESCE(ars.status,'Not Submitted') as status,ars.remarks as director_notes,ars.submitted_at,ars.verified_at FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
+                    $r=$conn->query("SELECT ar.id,ar.requirement_name,ar.is_mandatory,COALESCE(ars.status,'Not Submitted') as status,ars.director_notes,ars.submitted_at,ars.verified_at FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
                     if($r)$result['requirements']=$r->fetch_all(MYSQLI_ASSOC);
                     // Counts
                     $total=count($result['requirements']);
@@ -809,7 +809,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $app=$conn->query("SELECT id FROM applicants WHERE student_number='$sn' LIMIT 1")->fetch_assoc();
                 $aid=$app['id']??0;
                 if($aid){
-                    $r=$conn->query("SELECT ar.requirement_name,ar.is_mandatory,ar.display_order,COALESCE(ars.status,'Not Submitted') as status,ars.remarks as director_notes,ars.submitted_at,ars.verified_at,ars.requirement_id FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
+                    $r=$conn->query("SELECT ar.requirement_name,ar.is_mandatory,ar.display_order,COALESCE(ars.status,'Not Submitted') as status,ars.director_notes,ars.submitted_at,ars.verified_at,ars.requirement_id FROM admission_requirements ar LEFT JOIN applicant_requirement_status ars ON ar.id=ars.requirement_id AND ars.applicant_id=$aid WHERE ar.is_active=1 ORDER BY ar.display_order");
                     if($r)$rows=$r->fetch_all(MYSQLI_ASSOC);
                 }
             }
@@ -1388,6 +1388,7 @@ function deleteApplicant(id, name) {
     </div>
     <select class="form-select form-select-sm" id="bulkStatus" style="width:150px">
       <option value="">Bulk Mark As...</option>
+      <option value="Received">Received</option>
       <option value="Verified">Verified</option>
       <option value="Submitted">Submitted</option>
       <option value="Missing">Missing</option>
@@ -1652,6 +1653,7 @@ function showQuickStatusModal(appId, reqId, currentStatus) {
                     <div class="modal-body">
                         <p class="small"><strong>${req.requirement_name}</strong></p>
                         <select class="form-select form-select-sm mb-2" id="quickStatusSelect">
+                            <option value="Received" ${currentStatus === 'Received' ? 'selected' : ''}>Received</option>
                             <option value="Verified" ${currentStatus === 'Verified' ? 'selected' : ''}>Verified</option>
                             <option value="Submitted" ${currentStatus === 'Submitted' ? 'selected' : ''}>Submitted</option>
                             <option value="Missing" ${currentStatus === 'Missing' ? 'selected' : ''}>Missing</option>

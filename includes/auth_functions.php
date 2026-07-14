@@ -123,14 +123,13 @@ function checkAuth($required_role = null) {
     }
     
     // Check session security
-    if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
+    if (!isset($_SESSION['user_ip'])) {
+        $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
+    } elseif ($_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
         session_destroy();
-    header('Location: staff-login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+        header('Location: staff-login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
         exit();
     }
-    
-    // Store user IP for security check
-    $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
     
     // Check if user has required role
     if ($required_role) {
@@ -331,8 +330,11 @@ function getUserDashboard($role) {
     } elseif (strpos($role_lower, 'student') !== false) {
         return 'dashboards/student.php';
     } else {
-        // Default fallback for admin/support staff
-        return 'dashboards/school-secretary.php';
+        // Unknown role: deny access and redirect to login
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        session_destroy();
+        header('Location: staff-login.php?error=unauthorized_role');
+        exit();
     }
 }
 
@@ -397,7 +399,7 @@ function resetPassword($user_type, $identifier) {
         $uid = (int)($user['id'] ?? 0);
         $uemail = $user['email'] ?? '';
         $stmt = $conn->prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token=VALUES(token), expires_at=VALUES(expires_at), used_at=NULL");
-        if ($stmt) { $stmt->bind_param('isss', $uid, $uemail, $token, $expires); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('iss', $uid, $token, $expires); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         
         return [
             'success' => true,
@@ -542,6 +544,9 @@ function createSession($user) {
     $_SESSION['user_id'] = $user['id'] ?? $user['user_id'] ?? $user['student_id'];
     $_SESSION['role'] = $user['role'];
     $_SESSION['type'] = ($user['role'] === 'Student') ? 'student' : 'staff';
+    $_SESSION['logged_in'] = true;
+    $_SESSION['last_activity'] = time();
+    $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
     
     // Store additional data for convenience (not required)
     $_SESSION['first_name'] = $user['first_name'];

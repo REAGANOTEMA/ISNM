@@ -47,6 +47,30 @@ $migrate($staff); $migrate($students);
 if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section']; if ($view === 'overview') $view = 'home';
+$viewAliases = [
+    'academic' => 'academic_dashboard',
+    'student-affairs' => 'student_welfare',
+    'operations' => 'institutional_operations',
+    'approvals' => 'approval_center',
+    'tasks' => 'action_tracking',
+    'schedules' => 'meetings',
+    'departments' => 'department_performance',
+    'performance' => 'department_performance',
+    'financial' => 'institutional_operations',
+    'student' => 'student_management',
+    'quality' => 'quality_assurance',
+    'audit' => 'academic_compliance',
+    'system-health' => 'institutional_operations',
+    'reports-daily' => 'academic_reports',
+    'reports-monthly' => 'institutional_reports',
+    'reports-annual' => 'institutional_reports',
+    'reports' => 'institutional_reports',
+    'exports' => 'institutional_reports',
+    'print' => 'institutional_reports',
+    'notifications' => 'communications',
+    'home' => 'home',
+];
+if (isset($viewAliases[$view])) $view = $viewAliases[$view];
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
 function pcurrency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function psuccess($m) { $_SESSION['p_success'] = $m; }

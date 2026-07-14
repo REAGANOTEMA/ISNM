@@ -105,7 +105,7 @@ if ($staff_conn) {
     } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 }
 
-$ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security','it_infrastructure'=>'dashboard','infrastructure'=>'dashboard','system_logs'=>'dashboard','backup_management'=>'dashboard','ict_policy'=>'dashboard'];
+$ictPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'overview','approvals'=>'approvals','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'overview','reports-monthly'=>'overview','reports-annual'=>'overview','exports'=>'overview','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'security','activity-logs'=>'security','it_infrastructure'=>'infrastructure','infrastructure'=>'infrastructure','system_logs'=>'infrastructure','backup_management'=>'backups','ict_policy'=>'security'];
 $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'overview';

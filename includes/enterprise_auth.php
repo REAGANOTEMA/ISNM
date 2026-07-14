@@ -258,12 +258,18 @@ if (!function_exists('getUnreadNotificationCount')) {
 function getUnreadNotificationCount($conn, int $staffId): int {
     if (!$conn || $staffId <= 0) return 0;
     try {
-        $r = $conn->query(
+        $stmt = $conn->prepare(
             "SELECT COUNT(*) cnt FROM notifications n
-             LEFT JOIN notification_reads nr ON n.id = nr.notification_id AND nr.user_id = {$staffId}
+             LEFT JOIN notification_reads nr ON n.id = nr.notification_id AND nr.user_id = ?
              WHERE nr.id IS NULL"
         );
-        if ($r) return (int)$r->fetch_assoc()['cnt'];
+        if ($stmt) {
+            $stmt->bind_param('i', $staffId);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if ($r) return (int)$r->fetch_assoc()['cnt'];
+            $stmt->close();
+        }
     } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return 0;
 }

@@ -270,14 +270,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
 
     $conn = getConnection();
     if (!$conn) { echo json_encode(['exists' => false]); exit(); }
-    $q = $conn->prepare("SELECT id, password FROM students WHERE index_number = ? LIMIT 1");
-    if (!$q) { echo json_encode(['exists' => false]); exit(); }
+    $q = $conn->prepare("SELECT id, (password IS NOT NULL AND password != '') AS has_password FROM students WHERE index_number = ? LIMIT 1");
+    if (!$q) { echo json_encode(['exists' => false, 'has_password' => false]); exit(); }
     $q->bind_param('s', $indexNumber);
     if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
     $r = $q->get_result();
     $student = $r->fetch_assoc();
     $q->close();
-    echo json_encode(['exists' => !empty($student), 'has_password' => !empty($student['password'])]);
+    echo json_encode(['exists' => !empty($student), 'has_password' => !empty($student['has_password'])]);
     exit();
 }
 

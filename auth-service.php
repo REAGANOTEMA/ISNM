@@ -859,6 +859,12 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
         try {
+            $staffData['full_name']  = sanitizeInput($staffData['full_name']);
+            $staffData['email']      = sanitizeInput($staffData['email']);
+            $staffData['phone']      = sanitizeInput($staffData['phone']);
+            $staffData['position']   = sanitizeInput($staffData['position']);
+            $staffData['department'] = sanitizeInput($staffData['department']);
+
             $hash  = password_hash($staffData['password'], PASSWORD_BCRYPT);
             $rs    = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ?");
             $rs->bind_param('s', $staffData['role']);

@@ -46,6 +46,12 @@ if (!function_exists('validateIndexNumber')) {
 function generateUniqueId($prefix, $table, $field) {
     global $conn;
     
+    $allowed_tables = ['students', 'staffs', 'users', 'courses', 'departments'];
+    $allowed_fields = ['id', 'student_id', 'staff_id', 'registration_number', 'index_number'];
+    if (!in_array($table, $allowed_tables, true) || !in_array($field, $allowed_fields, true)) {
+        return uniqid();
+    }
+
     do {
         $year = date('Y');
         $random = mt_rand(10000, 99999);
@@ -288,7 +294,7 @@ function createDatabaseBackup() {
     $pass = defined('STAFF_DB_PASS') ? STAFF_DB_PASS : '';
     $db   = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'isnm_school';
     
-    $command = sprintf('mysqldump --user=%s --host=%s --password=%s %s > %s', $user, $host, $pass, $db, $backup_file);
+    $command = sprintf('mysqldump --user=%s --host=%s --password=%s %s > %s', escapeshellarg($user), escapeshellarg($host), escapeshellarg($pass), escapeshellarg($db), escapeshellarg($backup_file));
     exec($command);
     
     return file_exists($backup_file) ? $backup_file : false;

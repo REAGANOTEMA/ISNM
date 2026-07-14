@@ -460,6 +460,14 @@ if ($page === 'dashboard'):
 <div class="sp-stat"><div class="icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-clipboard-list"></i></div><h3><?= htmlspecialchars($admissionStatus) ?></h3><p>Admission Status</p></div>
 <?php endif; ?>
 </div>
+<?php if ($reqTotal > 0 && $reqCompleted < $reqTotal): ?>
+<div class="sp-alert sp-alert-warning" style="margin-bottom:16px">
+<i class="fas fa-exclamation-triangle"></i>
+<div><strong>Admission Hold:</strong> You have <?= $reqTotal - $reqCompleted ?> incomplete requirement(s) (<?= $reqCompleted ?>/<?= $reqTotal ?> completed). Please contact the Admissions Office to resolve missing items before your admission can be finalized.
+<?php if (!empty($directorNotes)): ?><br><small style="margin-top:4px;display:block">Director's remarks are available on the <a href="?page=requirements" style="color:#92400e;font-weight:600">Requirements page</a>.</small><?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
 <div class="sp-grid-2">
 <div class="sp-card">
 <h4><i class="fas fa-user-circle me-2"></i>Quick Info</h4>

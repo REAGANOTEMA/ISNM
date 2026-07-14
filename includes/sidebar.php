@@ -264,11 +264,9 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 }
 </style>
 <nav class="isnm-sidebar sidebar not-init" id="isnmSidebar">
-    <?php if ($isRight): ?>
     <button class="sidebar-mobile-close" id="sidebarMobileClose" aria-label="Close sidebar">
         <i class="fas fa-times"></i>
     </button>
-    <?php endif; ?>
     <div class="sidebar-brand">
         <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
             <i class="fas fa-bars"></i>

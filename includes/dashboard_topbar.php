@@ -11,13 +11,13 @@ function renderDashboardTopbar(string $pageTitle = '', string $subtitle = ''): v
     ?>
     <div class="isnm-topbar">
         <div class="isnm-topbar-left">
-            <h1 class="isnm-topbar-title"><?= htmlspecialchars($pageTitle) ?></h1>
+            <h1 class="isnm-topbar-title text-truncate"><?= htmlspecialchars($pageTitle) ?></h1>
             <?php if ($subtitle): ?>
             <p class="isnm-topbar-subtitle"><?= htmlspecialchars($subtitle) ?></p>
             <?php endif; ?>
         </div>
         <div class="isnm-topbar-right">
-            <span class="isnm-topbar-date"><i class="fas fa-calendar-alt"></i> <?= $date ?></span>
+            <span class="isnm-topbar-date d-none d-sm-inline"><i class="fas fa-calendar-alt"></i> <?= $date ?></span>
             <button class="isnm-topbar-btn" onclick="window.print()" title="Print"><i class="fas fa-print"></i></button>
         </div>
     </div>

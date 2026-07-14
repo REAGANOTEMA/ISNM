@@ -147,9 +147,15 @@ if ($action === 'get_student_detail') {
 }
 
 if ($action === 'generate_transcript') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $sid = intval($_GET['student_id'] ?? 0);
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
-    
+
     // Fetch student
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
@@ -231,10 +237,16 @@ if ($action === 'generate_transcript') {
 }
 
 if ($action === 'generate_certificate') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $sid = intval($_GET['student_id'] ?? 0);
     $cert_type = $_GET['cert_type'] ?? 'Certificate';
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
-    
+
     // Fetch student
     $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
     $stmt->bind_param("i", $sid);
@@ -330,6 +342,12 @@ if ($action === 'preview_document') {
 }
 
 if ($action === 'auto_generate_all') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     $sid = intval($_GET['student_id'] ?? 0);
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
     

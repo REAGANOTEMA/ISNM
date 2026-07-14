@@ -436,14 +436,14 @@ a, button, .btn, input, select, textarea, .card, .form-control {
 /* Responsive Design */
 @media (max-width: 768px) {
     .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
+        width: var(--sidebar-width, 270px) !important;
+        height: 100vh;
+        position: fixed !important;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) ease;
     }
     
-    .sidebar.active {
+    .sidebar.open, .sidebar.active {
         transform: translateX(0);
     }
     
@@ -924,10 +924,10 @@ a, button, .btn, input, select, textarea, .card, .form-control {
 
 /* ── Section Content Area ── */
 .content-section {
-    display: none;
-}
-.content-section.active {
     display: block;
+}
+.content-section.tab-hidden {
+    display: none;
 }
 .content-area {
     animation: fadeIn 0.3s ease;
@@ -1431,36 +1431,28 @@ a, button, .btn, input, select, textarea, .card, .form-control {
 }
 
 /* Animations */
-
+@keyframes fadeIn {
+    from { opacity: 0; }
     to { opacity: 1; }
 }
-
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
 }
-
-
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Loading Spinner */
@@ -1474,20 +1466,17 @@ a, button, .btn, input, select, textarea, .card, .form-control {
     animation: spin 1s ease-in-out infinite;
 }
 
-
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
+        width: var(--sidebar-width, 270px) !important;
+        height: 100vh;
+        position: fixed !important;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) ease;
     }
     
-    .sidebar.active {
+    .sidebar.open, .sidebar.active {
         transform: translateX(0);
     }
     
@@ -1967,10 +1956,10 @@ a, button, .btn, input, select, textarea, .card, .form-control {
 
 /* ── Section Content Area ── */
 .content-section {
-    display: none;
-}
-.content-section.active {
     display: block;
+}
+.content-section.tab-hidden {
+    display: none;
 }
 .content-area {
     animation: fadeIn 0.3s ease;
@@ -4420,7 +4409,8 @@ body.erp-layout {
 }
 
 /* ─── ANIMATIONS ─── */
-
+@keyframes erpFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 .erp-animate { animation: erpFadeIn 0.2s ease; }
