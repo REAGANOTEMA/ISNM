@@ -9,6 +9,10 @@ $user_id = (int)($user['id'] ?? 0);
 
 $ict_conn = getICTConnection();
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 function tkt_q($conn, $sql) {
     if (!$conn) return 0;
     try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
@@ -23,6 +27,9 @@ function tkt_fetch($conn, $sql) {
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create_ticket') {
@@ -387,5 +394,6 @@ function filterTable(inputId, tableId) {
 
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

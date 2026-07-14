@@ -20,6 +20,9 @@ if ($conn) {
 $scales = [];
 if ($conn) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+            die('Invalid CSRF token');
+        }
         $action = $_POST['action'] ?? '';
         if ($action === 'add_scale' && ($_POST['grade'] ?? '')) {
             $grade = trim($_POST['grade']);
@@ -154,5 +157,6 @@ function filterTable(inputId, tableId) {
     }
 }
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

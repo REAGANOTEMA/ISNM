@@ -7,7 +7,14 @@ $user = $ctx['user'];
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $pageTitle = 'Professional Licenses';
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_license' && $conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $staff = trim($_POST['staff_name'] ?? '');
     $lic = trim($_POST['license_number'] ?? '');
     $type = trim($_POST['license_type'] ?? '');
@@ -103,5 +110,6 @@ $expired = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') < $
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

@@ -4,7 +4,14 @@ $ctx = bootstrapStaffDashboard(['director', 'principal', 'ceo', 'head']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_partnership') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $org = trim($_POST['organization'] ?? '');
     $type = trim($_POST['type'] ?? 'academic');
     $contact = trim($_POST['contact_person'] ?? '');
@@ -90,5 +97,6 @@ $pageTitle = 'Partnerships & Linkages';
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

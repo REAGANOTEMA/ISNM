@@ -8,10 +8,17 @@ $user = $ctx['user'];
 $user_name = $user['full_name'] ?? '';
 $user_role = strtolower($user['role'] ?? '');
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $allowed_update_roles = ['hr manager', 'school principal', 'director general', 'director finance', 'director ict'];
 $can_update_status = in_array($user_role, $allowed_update_roles, true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_update_status) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $report_id = isset($_POST['report_id']) ? (int) $_POST['report_id'] : 0;
     $new_status = trim($_POST['new_status'] ?? '');
     $valid_status = ['Open', 'In Review', 'Resolved', 'Closed'];
@@ -167,5 +174,6 @@ foreach ($reports as $report) {
         setInterval(updateDateTime, 60000);
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

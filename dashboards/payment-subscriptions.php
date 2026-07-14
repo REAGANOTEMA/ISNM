@@ -10,6 +10,10 @@ $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 $userName = $user['full_name'] ?? 'User';
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $studentId = $_GET['student_id'] ?? '';
 $subscriptions = $studentId ? getStudentSubscriptions($studentId) : [];
 $allSubscriptions = [];

@@ -6,6 +6,10 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Leave Management';
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $pending = 0; $approvedMonth = 0; $onLeave = 0; $balances = 0; $records = []; $leaveTypes = []; $staffList = [];
 if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM leave_requests WHERE status='Pending'");
@@ -35,6 +39,9 @@ if ($conn) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
     if (!$conn) { $_SESSION['error'] = 'DB connection failed'; header('Location: leave-management.php'); exit; }
 
@@ -184,5 +191,6 @@ function filterTable(inputId, tableId) {
     }
 }
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body>
 </html>

@@ -18,6 +18,10 @@ $staff_conn   = $ctx['staff'];
 $students_conn = $ctx['students'];
 $website_conn  = $ctx['website'];
 $user_id      = (int)($_SESSION['user_id'] ?? 0);
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 $user_role    = $_SESSION['role'] ?? '';
 
 $page  = $_GET['page'] ?? 'overview';
@@ -26,7 +30,9 @@ $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: hr-manager.php'); exit; }
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        die('Invalid CSRF token');
+    }
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
 
@@ -661,4 +667,5 @@ function editStaff(id) {
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </body></html>
