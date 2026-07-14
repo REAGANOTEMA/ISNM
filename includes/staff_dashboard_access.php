@@ -40,8 +40,9 @@ register_shutdown_function(function () {
             echo '<p style="font-size:12px;color:#999;text-align:left;background:#f8fafc;padding:12px;border-radius:6px;word-break:break-all">';
             echo '<strong>' . $file . ':' . $line . '</strong><br>' . $msg . '</p>';
         }
-        echo '<a href="health-check.php" class="btn">Run Health Check</a>';
-        echo '<br><br><a href="../staff-login.php" style="font-size:13px">Back to Login</a>';
+        $base = (basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'dashboards') ? '..' : '.';
+        echo '<a href="' . $base . '/health-check.php" class="btn">Run Health Check</a>';
+        echo '<br><br><a href="' . $base . '/staff-login.php" style="font-size:13px">Back to Login</a>';
         echo '</div></body></html>';
         exit;
     }

@@ -57,7 +57,8 @@ class ErrorHandler {
         echo 'h2{color:#dc2626;margin:0 0 10px}p{color:#64748b}a{color:#2563eb;text-decoration:none}</style></head>';
         echo '<body><div class="card"><h2>Internal Server Error</h2>';
         echo '<p>The system encountered an internal error. Our team has been notified.</p>';
-        echo '<p><a href="health-check.php">Run Health Check</a></p></div></body></html>';
+        $base = (basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'dashboards') ? '..' : '.';
+        echo '<p><a href="' . $base . '/health-check.php">Run Health Check</a></p></div></body></html>';
         exit(1);
     }
     
