@@ -131,16 +131,24 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
       return;
     }
 
+    if (page === 1) {
+      _lastQuery = q;
+      _lastLevel = level;
+      _lastGender = gender;
+    }
+    _currentPage = page;
+
     openSearchModal();
     resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><p class="mt-2 text-muted">Searching…</p></div>';
 
     if (_xhr) _xhr.abort();
 
     var params = new URLSearchParams();
-    params.append('q', q);
-    params.append('limit', '50');
-    if (level)  params.append('level', level);
-    if (gender) params.append('gender', gender);
+    params.append('q', _lastQuery);
+    params.append('limit', '25');
+    params.append('page', String(page));
+    if (_lastLevel)  params.append('level', _lastLevel);
+    if (_lastGender) params.append('gender', _lastGender);
 
     _xhr = new XMLHttpRequest();
     _xhr.open('GET', _endpoint + '?' + params.toString(), true);
@@ -154,10 +162,12 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
 
       var students = data.students || [];
       _currentResults = students;
-      countSpan.textContent = students.length + ' result' + (students.length !== 1 ? 's' : '');
+      var totalCount = data.total || students.length;
+      var totalPages = data.total_pages || 1;
+      countSpan.textContent = totalCount + ' total result' + (totalCount !== 1 ? 's' : '') + ' (page ' + page + ' of ' + totalPages + ')';
 
       if (students.length === 0) {
-        resultsDiv.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-search fa-2x mb-2 opacity-25"></i><p>No students found matching <strong>"' + escHtml(q) + '"</strong>.</p></div>';
+        resultsDiv.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-search fa-2x mb-2 opacity-25"></i><p>No students found matching <strong>"' + escHtml(_lastQuery) + '"</strong>.</p></div>';
         return;
       }
 
@@ -190,7 +200,7 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
         html += '<tr style="cursor:pointer" onclick="window._stuSearchOpenProfile(' + i + ')">'
           + '<td>' + photoHtml + '</td>'
           + '<td><code class="small">' + escHtml(s.student_id || s.index_number || s.student_number || '-') + '</code></td>'
-          + '<td><strong>' + escHtml(s.full_name || (s.surname + ' ' + s.first_name)) + '</strong></td>'
+          + '<td><strong>' + escHtml(s.full_name || ((s.surname || '') + ' ' + (s.first_name || '')).trim()) + '</strong></td>'
           + '<td class="small">' + escHtml(s.program || '-') + '</td>'
           + '<td>' + escHtml(s.level || '-') + '</td>'
           + '<td class="small">' + escHtml(s.set_name || '-') + '</td>'
@@ -201,6 +211,19 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
           + '</tr>';
       }
       html += '</tbody></table></div>';
+
+      if (totalPages > 1) {
+        html += '<div class="d-flex justify-content-center align-items-center gap-2 py-3 border-top">';
+        if (page > 1) {
+          html += '<button class="btn btn-sm btn-outline-primary" onclick="window._stuSearchPage(' + (page - 1) + ')"><i class="fas fa-chevron-left me-1"></i>Prev</button>';
+        }
+        html += '<span class="text-muted small">Page ' + page + ' of ' + totalPages + '</span>';
+        if (page < totalPages) {
+          html += '<button class="btn btn-sm btn-outline-primary" onclick="window._stuSearchPage(' + (page + 1) + ')">Next<i class="fas fa-chevron-right ms-1"></i></button>';
+        }
+        html += '</div>';
+      }
+
       resultsDiv.innerHTML = html;
     };
     _xhr.onerror = function() {
@@ -208,6 +231,8 @@ $_searchEndpoint = '../includes/ajax_student_search.php';
     };
     _xhr.send();
   }
+
+  window._stuSearchPage = function(page) { doSearch(page); };
 
   /* ── Open student profile ── */
   window._stuSearchOpenProfile = function(idx) {

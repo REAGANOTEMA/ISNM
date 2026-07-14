@@ -17,7 +17,17 @@ ini_set('log_errors', 1);
         if($row['role'] == 'owner'){
 
         }else{
-            include('../../logout.php');
+            // Destroy session inline (cannot rely on include with POST check during page load)
+            $_SESSION = [];
+            if (ini_get("session.use_cookies")) {
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 42000,
+                    $params["path"], $params["domain"],
+                    $params["secure"], $params["httponly"]
+                );
+            }
+            session_unset();
+            session_destroy();
             header("Location: ../../staff-login.php");
             exit();
         }
