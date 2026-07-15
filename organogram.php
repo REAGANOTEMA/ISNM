@@ -137,7 +137,6 @@ include('shared/_header.php');
                 inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
-        /* Animated gradient border ring */
         .school-header::before {
             content: '';
             position: absolute;
@@ -162,7 +161,6 @@ include('shared/_header.php');
             padding: 2px;
         }
 
-        /* Static glow behind the animated border */
         .school-header::after {
             content: '';
             position: absolute;
@@ -178,7 +176,6 @@ include('shared/_header.php');
             to { transform: rotate(360deg); }
         }
 
-        /* Logo containers with glow rings */
         .logo-container {
             position: relative;
             display: flex;
@@ -196,13 +193,8 @@ include('shared/_header.php');
             pointer-events: none;
         }
 
-        .logo-container:first-child::after {
-            animation-delay: 0s;
-        }
-
-        .logo-container:last-child::after {
-            animation-delay: 1.5s;
-        }
+        .logo-container:first-child::after { animation-delay: 0s; }
+        .logo-container:last-child::after { animation-delay: 1.5s; }
 
         @keyframes logoRingPulse {
             0%, 100% { transform: scale(1); opacity: 0.4; }
@@ -215,9 +207,7 @@ include('shared/_header.php');
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid rgba(255,255,255,0.12);
-            box-shadow:
-                0 4px 24px rgba(0,0,0,0.35),
-                0 0 40px rgba(102,126,234,0.06);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 40px rgba(102,126,234,0.06);
             position: relative;
             z-index: 1;
             transition: transform 0.4s ease, box-shadow 0.4s ease;
@@ -225,9 +215,7 @@ include('shared/_header.php');
 
         .school-header:hover .school-logo {
             transform: scale(1.04);
-            box-shadow:
-                0 6px 30px rgba(0,0,0,0.4),
-                0 0 60px rgba(102,126,234,0.1);
+            box-shadow: 0 6px 30px rgba(0,0,0,0.4), 0 0 60px rgba(102,126,234,0.1);
         }
 
         .school-info {
@@ -237,7 +225,6 @@ include('shared/_header.php');
             position: relative;
         }
 
-        /* Decorative side glow lines */
         .school-info::before,
         .school-info::after {
             content: '';
@@ -248,14 +235,8 @@ include('shared/_header.php');
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06));
         }
 
-        .school-info::before {
-            right: calc(100% + 8px);
-        }
-
-        .school-info::after {
-            left: calc(100% + 8px);
-            background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);
-        }
+        .school-info::before { right: calc(100% + 8px); }
+        .school-info::after { left: calc(100% + 8px); background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent); }
 
         .school-info h2 {
             font-size: 1.8rem;
@@ -294,7 +275,6 @@ include('shared/_header.php');
             color: rgba(255,255,255,0.75);
         }
 
-        /* Decorative floating dots near header */
         .header-deco {
             position: absolute;
             width: 4px; height: 4px;
@@ -326,9 +306,9 @@ include('shared/_header.php');
             text-align: center;
             position: relative;
             width: 238px;
-            height: 290px;
-            min-height: 290px;
-            max-height: 290px;
+            height: 240px;
+            min-height: 240px;
+            max-height: 240px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -365,41 +345,18 @@ include('shared/_header.php');
         }
 
         /* Category neon borders + glow */
-        .org-node.executive {
-            border-color: rgba(102,126,234,0.2);
-            --card-glow: rgba(102,126,234,0.12);
-        }
+        .org-node.executive { border-color: rgba(102,126,234,0.2); --card-glow: rgba(102,126,234,0.12); }
         .org-node.executive:hover { border-color: rgba(102,126,234,0.4); }
-        .org-node.management {
-            border-color: rgba(196,113,245,0.2);
-            --card-glow: rgba(196,113,245,0.12);
-        }
+        .org-node.management { border-color: rgba(196,113,245,0.2); --card-glow: rgba(196,113,245,0.12); }
         .org-node.management:hover { border-color: rgba(196,113,245,0.4); }
-        .org-node.administrative {
-            border-color: rgba(79,172,254,0.2);
-            --card-glow: rgba(79,172,254,0.12);
-        }
+        .org-node.administrative { border-color: rgba(79,172,254,0.2); --card-glow: rgba(79,172,254,0.12); }
         .org-node.administrative:hover { border-color: rgba(79,172,254,0.4); }
-        .org-node.academic {
-            border-color: rgba(67,233,123,0.2);
-            --card-glow: rgba(67,233,123,0.12);
-        }
+        .org-node.academic { border-color: rgba(67,233,123,0.2); --card-glow: rgba(67,233,123,0.12); }
         .org-node.academic:hover { border-color: rgba(67,233,123,0.4); }
-        .org-node.support {
-            border-color: rgba(246,115,168,0.2);
-            --card-glow: rgba(246,115,168,0.12);
-        }
+        .org-node.support { border-color: rgba(246,115,168,0.2); --card-glow: rgba(246,115,168,0.12); }
         .org-node.support:hover { border-color: rgba(246,115,168,0.4); }
-        .org-node.student {
-            border-color: rgba(48,207,208,0.2);
-            --card-glow: rgba(48,207,208,0.12);
-        }
+        .org-node.student { border-color: rgba(48,207,208,0.2); --card-glow: rgba(48,207,208,0.12); }
         .org-node.student:hover { border-color: rgba(48,207,208,0.4); }
-        .org-node.ict {
-            border-color: rgba(0,180,216,0.25);
-            --card-glow: rgba(0,180,216,0.15);
-        }
-        .org-node.ict:hover { border-color: rgba(0,180,216,0.5); }
 
         /* Shine sweep on hover */
         .card-shine {
@@ -412,14 +369,7 @@ include('shared/_header.php');
             pointer-events: none;
             z-index: 3;
         }
-
         .org-node:hover .card-shine { left: 130%; }
-
-        /* Button press */
-        .org-node .btn-3d:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.25) !important;
-        }
 
         /* Icon */
         .org-icon {
@@ -430,9 +380,7 @@ include('shared/_header.php');
             transition: transform 0.45s cubic-bezier(.25,.8,.25,1);
         }
 
-        .org-node:hover .org-icon {
-            transform: scale(1.12) translateY(-3px);
-        }
+        .org-node:hover .org-icon { transform: scale(1.12) translateY(-3px); }
 
         .org-node.executive .org-icon { color: #667eea; }
         .org-node.management .org-icon { color: #c471f5; text-shadow: 0 0 15px rgba(196,113,245,0.3); }
@@ -440,7 +388,6 @@ include('shared/_header.php');
         .org-node.academic .org-icon { color: #43e97b; }
         .org-node.support .org-icon { color: #f673a8; }
         .org-node.student .org-icon { color: #30cfd0; }
-        .org-node.ict .org-icon { color: #00b4d8; }
 
         /* Typography */
         .org-title {
@@ -468,10 +415,10 @@ include('shared/_header.php');
             overflow: hidden;
         }
 
-        /* Link pill */
+        /* Link pill — only login element */
         .org-link {
             display: inline-block;
-            padding: 6px 16px;
+            padding: 8px 20px;
             background: rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.8);
             text-decoration: none;
@@ -486,93 +433,9 @@ include('shared/_header.php');
 
         .org-link:hover {
             background: rgba(255,255,255,0.12);
-            transform: scale(1.03);
+            transform: scale(1.05);
             color: #fff;
             border-color: rgba(255,255,255,0.25);
-        }
-
-        /* Actions */
-        .org-actions {
-            margin-top: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .org-actions .btn-3d {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
-            padding: 7px 12px;
-            border: none;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.85);
-            position: relative;
-            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
-            box-shadow: 0 2px 0 rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.12);
-            text-transform: uppercase;
-            letter-spacing: 0.25px;
-            overflow: hidden;
-            font-size: 0.68rem;
-            width: 100%;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            cursor: pointer;
-        }
-
-        .org-actions .btn-3d::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent 60%);
-            border-radius: 14px;
-            pointer-events: none;
-        }
-
-        .org-actions .btn-3d:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18);
-            border-color: rgba(255,255,255,0.2);
-            color: #fff;
-        }
-
-        .btn-ict-primary {
-            background: rgba(0,119,182,0.2) !important;
-            border-color: rgba(0,180,216,0.25) !important;
-        }
-        .btn-ict-primary:hover {
-            background: rgba(0,119,182,0.3) !important;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18), 0 0 20px rgba(0,180,216,0.1) !important;
-        }
-
-        .btn-ict-secondary {
-            background: rgba(0,180,216,0.15) !important;
-            border-color: rgba(0,180,216,0.2) !important;
-        }
-        .btn-ict-secondary:hover {
-            background: rgba(0,180,216,0.25) !important;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18), 0 0 20px rgba(0,180,216,0.1) !important;
-        }
-
-        /* Floating levitation */
-        .floating {
-            animation: subtleFloat 6s ease-in-out infinite;
-        }
-
-        .org-level .org-branch:nth-child(1) .floating { animation-delay: 0s; }
-        .org-level .org-branch:nth-child(2) .floating { animation-delay: -1.2s; }
-        .org-level .org-branch:nth-child(3) .floating { animation-delay: -2.4s; }
-        .org-level .org-branch:nth-child(4) .floating { animation-delay: -3.6s; }
-        .org-level .org-branch:nth-child(5) .floating { animation-delay: -4.8s; }
-        .org-level .org-branch:nth-child(6) .floating { animation-delay: -6s; }
-        .org-level .org-branch:nth-child(7) .floating { animation-delay: -0.8s; }
-        .org-level .org-branch:nth-child(8) .floating { animation-delay: -2.0s; }
-
-        @keyframes subtleFloat {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-3px); }
         }
 
         /* Level + connectors (neon) */
@@ -625,6 +488,36 @@ include('shared/_header.php');
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
         }
 
+        /* Floating levitation */
+        .floating { animation: subtleFloat 6s ease-in-out infinite; }
+        .org-level .org-branch:nth-child(1) .floating { animation-delay: 0s; }
+        .org-level .org-branch:nth-child(2) .floating { animation-delay: -1.2s; }
+        .org-level .org-branch:nth-child(3) .floating { animation-delay: -2.4s; }
+        .org-level .org-branch:nth-child(4) .floating { animation-delay: -3.6s; }
+        .org-level .org-branch:nth-child(5) .floating { animation-delay: -4.8s; }
+        .org-level .org-branch:nth-child(6) .floating { animation-delay: -6s; }
+        .org-level .org-branch:nth-child(7) .floating { animation-delay: -0.8s; }
+        .org-level .org-branch:nth-child(8) .floating { animation-delay: -2.0s; }
+
+        @keyframes subtleFloat {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-3px); }
+        }
+
+        /* Level label */
+        .level-label {
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.45;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 1200px) {
             .org-level {
                 display: grid;
@@ -638,24 +531,23 @@ include('shared/_header.php');
 
         @media (max-width: 768px) {
             .organogram-container { padding: 20px 10px; }
-            .page-header h1 { font-size: 1.8rem; }
-            .page-header p { font-size: 1rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-header p { font-size: 0.9rem; }
             .org-node {
-                width: 175px;
-                height: 260px;
-                min-height: 260px;
-                max-height: 260px;
-                padding: 14px 10px;
-                margin: 8px;
+                width: 100%;
+                height: auto;
+                min-height: 200px;
+                max-height: none;
+                padding: 14px 12px;
+                margin: 8px 0;
             }
             .org-icon { font-size: 1.7rem; }
-            .org-title { font-size: 0.82rem; }
-            .org-subtitle { font-size: 0.72rem; }
-            .org-link { padding: 5px 12px; font-size: 0.75rem; }
-            .org-actions .btn-3d { padding: 5px 10px; font-size: 0.66rem; }
+            .org-title { font-size: 0.85rem; max-height: none; }
+            .org-subtitle { font-size: 0.75rem; }
+            .org-link { padding: 6px 14px; font-size: 0.78rem; }
             .org-level {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-template-columns: 1fr;
                 gap: 12px;
                 margin: 18px 0;
             }
@@ -667,30 +559,24 @@ include('shared/_header.php');
             .school-info::before,
             .school-info::after { display: none; }
             .school-logo { width: 58px; height: 58px; }
-            .school-info h2 { font-size: 1.4rem; }
+            .school-info h2 { font-size: 1.3rem; }
             .header-deco { display: none; }
+            .level-label { font-size: 0.65rem; letter-spacing: 1.5px; }
         }
 
         @media (max-width: 480px) {
             .organogram-container { padding: 12px 4px; }
-            .page-header h1 { font-size: 1.4rem; }
-            .org-level {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 10px;
-            }
+            .page-header h1 { font-size: 1.2rem; }
             .org-node {
-                width: 130px;
-                height: 230px;
-                min-height: 230px;
-                max-height: 230px;
-                padding: 10px 6px;
-                margin: 5px;
+                padding: 12px 8px;
+                margin: 6px 0;
+                min-height: 180px;
+                max-height: none;
             }
             .org-icon { font-size: 1.4rem; }
-            .org-title { font-size: 0.78rem; }
-            .org-subtitle { font-size: 0.68rem; }
-            .org-link { padding: 4px 10px; font-size: 0.70rem; }
-            .org-actions .btn-3d { padding: 4px 8px; font-size: 0.62rem; }
+            .org-title { font-size: 0.8rem; }
+            .org-subtitle { font-size: 0.7rem; }
+            .org-link { padding: 5px 12px; font-size: 0.72rem; }
             .school-logo { width: 48px; height: 48px; }
             .school-info h2 { font-size: 1.1rem; }
             .school-info p { font-size: 0.85rem; }
@@ -728,7 +614,9 @@ include('shared/_header.php');
             </div>
 
         <div class="organogram-tree">
-            <!-- Executive Leadership Level -->
+
+            <!-- ═══ EXECUTIVE ═══ -->
+            <div class="level-label">Executive</div>
             <div class="org-level executive">
                 <div class="org-branch">
                     <div class="org-node executive pulse-animation">
@@ -738,16 +626,12 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Director%20General" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button type="button" class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20General'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Management Level -->
+            <!-- ═══ MANAGEMENT ═══ -->
+            <div class="level-label">Management</div>
             <div class="org-level management">
                 <div class="org-branch">
                     <div class="org-node management floating">
@@ -757,11 +641,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Chief%20Executive%20Officer" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Chief%20Executive%20Officer'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -772,11 +651,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Director%20Academics" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Academics'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -787,95 +661,76 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Director%20Finance" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Finance'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node management floating">
+                        <i class="fas fa-laptop-code org-icon"></i>
+                        <div class="org-title">Director ICT</div>
+                        <div class="org-subtitle">ICT Department Oversight &amp; Management</div>
+                        <a href="staff-login.php?position=Director%20ICT" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
                     </div>
                 </div>
             </div>
 
-             <!-- School Management Level -->
-             <div class="org-level administrative">
-                 <div class="org-branch">
-                     <div class="org-node administrative">
-                         <i class="fas fa-chalkboard-teacher org-icon"></i>
-                         <div class="org-title">School Principal</div>
-                         <div class="org-subtitle">Chief Academic Officer</div>
-                         <a href="staff-login.php?position=School%20Principal" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Principal'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
-                     </div>
-                  </div>
-                  <div class="org-branch">
-                      <div class="org-node administrative">
-                          <i class="fas fa-user-graduate org-icon"></i>
-                          <div class="org-title">Deputy Principal</div>
-                          <div class="org-subtitle">Assistant Academic Officer</div>
-                          <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="org-branch">
-                      <div class="org-node administrative">
-                          <i class="fas fa-money-check-alt org-icon"></i>
-                          <div class="org-title">School Bursar</div>
-                          <div class="org-subtitle">Chief Financial Officer</div>
-                          <a href="staff-login.php?position=School%20Bursar" class="org-link">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="org-branch">
-                      <div class="org-node administrative">
-                          <i class="fas fa-user-check org-icon"></i>
-                          <div class="org-title">Director Admissions & Requirements</div>
-                          <div class="org-subtitle">Admissions & Requirements Clearance</div>
-                          <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
+            <!-- ═══ SCHOOL ADMINISTRATION ═══ -->
+            <div class="level-label">School Administration</div>
+            <div class="org-level administrative">
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-chalkboard-teacher org-icon"></i>
+                        <div class="org-title">School Principal</div>
+                        <div class="org-subtitle">Chief Academic Officer</div>
+                        <a href="staff-login.php?position=School%20Principal" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-user-graduate org-icon"></i>
+                        <div class="org-title">Deputy Principal</div>
+                        <div class="org-subtitle">Assistant Academic Officer</div>
+                        <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-money-check-alt org-icon"></i>
+                        <div class="org-title">School Bursar</div>
+                        <div class="org-subtitle">Chief Financial Officer</div>
+                        <a href="staff-login.php?position=School%20Bursar" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node administrative">
+                        <i class="fas fa-user-check org-icon"></i>
+                        <div class="org-title">Director Admissions &amp; Requirements</div>
+                        <div class="org-subtitle">Admissions &amp; Requirements Clearance</div>
+                        <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-            <!-- Administrative Staff Level -->
+            <!-- ═══ ADMINISTRATIVE STAFF ═══ -->
+            <div class="level-label">Administrative Staff</div>
             <div class="org-level administrative">
                 <div class="org-branch">
                     <div class="org-node administrative">
                         <i class="fas fa-file-alt org-icon"></i>
                         <div class="org-title">Academic Registrar</div>
-                        <div class="org-subtitle">Mr. Gejje William</div>
-                        <div class="org-description">Student Records</div>
+                        <div class="org-subtitle">Student Records</div>
                         <a href="staff-login.php?position=Academic%20Registrar" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Academic%20Registrar'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -886,11 +741,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=HR%20Manager" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=HR%20Manager'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -901,11 +751,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=School%20Secretary" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Secretary'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -916,46 +761,32 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=School%20Librarian" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Librarian'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
                     <div class="org-node administrative">
                         <i class="fas fa-calendar-alt org-icon"></i>
                         <div class="org-title">Events Coordinator</div>
-                        <div class="org-subtitle">Event Planning & Management</div>
+                        <div class="org-subtitle">Event Planning &amp; Management</div>
                         <a href="staff-login.php?position=Events%20Coordinator" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Events%20Coordinator'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
                     <div class="org-node administrative">
                         <i class="fas fa-user-graduate org-icon"></i>
                         <div class="org-title">Alumni Relations Officer</div>
-                        <div class="org-subtitle">Alumni Engagement & Records</div>
+                        <div class="org-subtitle">Alumni Engagement &amp; Records</div>
                         <a href="staff-login.php?position=Alumni%20Relations%20Officer" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Alumni%20Relations%20Officer'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Academic Staff Level -->
+            <!-- ═══ ACADEMIC STAFF ═══ -->
+            <div class="level-label">Academic Staff</div>
             <div class="org-level academic">
                 <div class="org-branch">
                     <div class="org-node academic">
@@ -965,11 +796,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Head%20of%20Nursing" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Head%20of%20Nursing'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -980,11 +806,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Head%20of%20Midwifery" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Head%20of%20Midwifery'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -995,11 +816,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Senior%20Lecturers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Senior%20Lecturers'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -1010,16 +826,12 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Lecturers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Lecturers'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Support Staff Level -->
+            <!-- ═══ SUPPORT STAFF ═══ -->
+            <div class="level-label">Support Staff</div>
             <div class="org-level support">
                 <div class="org-branch">
                     <div class="org-node support">
@@ -1029,26 +841,16 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Matrons" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Matrons'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
                     <div class="org-node support">
                         <i class="fas fa-shield-alt org-icon"></i>
                         <div class="org-title">Wardens</div>
-                        <div class="org-subtitle">Student Care & Support</div>
+                        <div class="org-subtitle">Student Care &amp; Support</div>
                         <a href="staff-login.php?position=Wardens" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Wardens'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -1059,11 +861,6 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Sickbay" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Sickbay'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -1074,110 +871,52 @@ include('shared/_header.php');
                         <a href="staff-login.php?position=Drivers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Drivers'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
                     </div>
                 </div>
-                 <div class="org-branch">
-                     <div class="org-node support">
-                         <i class="fas fa-user-shield org-icon"></i>
-                         <div class="org-title">Security</div>
-                         <div class="org-subtitle">Campus Security</div>
-                         <a href="staff-login.php?position=Security" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Security'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
-                     </div>
-                 </div>
-                 <div class="org-branch">
-                     <div class="org-node support">
-                         <i class="fas fa-warehouse org-icon"></i>
-                         <div class="org-title">Store Keeper</div>
-                         <div class="org-subtitle">Inventory Management</div>
-                         <a href="staff-login.php?position=Store%20Keeper" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Store%20Keeper'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
-                     </div>
-                  </div>
-                  <div class="org-branch">
-                      <div class="org-node support">
-                          <i class="fas fa-flask org-icon"></i>
-                          <div class="org-title">Skills Lab Manager</div>
-                          <div class="org-subtitle">Skills Laboratory Management</div>
-                          <a href="staff-login.php?position=Skills%20Lab%20Manager" class="org-link">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Skills%20Lab%20Manager'">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                              <button class="btn-3d" style="background:linear-gradient(135deg,#0d6efd,#0a58ca);border-color:#0a58ca" onclick="window.location.href='dashboards/skills-lab.php'">
-                                  <i class="fas fa-flask me-2"></i>Lab Dashboard
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
+                <div class="org-branch">
+                    <div class="org-node support">
+                        <i class="fas fa-user-shield org-icon"></i>
+                        <div class="org-title">Security</div>
+                        <div class="org-subtitle">Campus Security</div>
+                        <a href="staff-login.php?position=Security" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node support">
+                        <i class="fas fa-warehouse org-icon"></i>
+                        <div class="org-title">Store Keeper</div>
+                        <div class="org-subtitle">Inventory Management</div>
+                        <a href="staff-login.php?position=Store%20Keeper" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node support">
+                        <i class="fas fa-flask org-icon"></i>
+                        <div class="org-title">Skills Lab Manager</div>
+                        <div class="org-subtitle">Skills Laboratory Management</div>
+                        <a href="staff-login.php?position=Skills%20Lab%20Manager" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+                <div class="org-branch">
+                    <div class="org-node support">
+                        <i class="fas fa-desktop org-icon"></i>
+                        <div class="org-title">Computer Lab Manager</div>
+                        <div class="org-subtitle">ICT Operations &amp; Lab Support</div>
+                        <a href="staff-login.php?position=Computer%20Lab%20Manager" class="org-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-               <!-- ICT Department - Independent Authority Section -->
-              <div class="page-header" style="margin-top: 20px; margin-bottom: 15px;">
-                  <h2 style="font-size: 1.5rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                      <i class="fas fa-laptop-code"></i> ICT Department
-                  </h2>
-                  <p style="opacity: 0.85; font-size: 0.95rem;">Computer Lab & Technology Services</p>
-              </div>
-
-              <div class="org-level ict-level" style="background: linear-gradient(145deg, rgba(0,119,182,0.3) 0%, rgba(0,95,146,0.25) 100%); border-radius: 22px; padding: 28px 24px; margin: 15px 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 28px rgba(0,0,0,0.18); border: 1.5px solid rgba(144,224,239,0.2);">
-                  <div class="org-branch">
-                      <div class="org-node ict floating">
-                          <div class="card-shine"></div>
-                          <i class="fas fa-user-tie org-icon"></i>
-                          <div class="org-title">Director ICT</div>
-                          <div class="org-subtitle">Head of ICT Department , Oversight & Management</div>
-                          <a href="staff-login.php?position=Director%20ICT" class="org-link" onclick="event.preventDefault(); window.location.replace('staff-login.php?position=Director%20ICT');">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d btn-ict-primary" onclick="window.location.replace('staff-login.php?position=Director%20ICT')">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="org-branch">
-                      <div class="org-node ict floating">
-                          <div class="card-shine"></div>
-                          <i class="fas fa-desktop org-icon"></i>
-                          <div class="org-title">Computer Lab Manager</div>
-                          <div class="org-subtitle">ICT Operations , Lab Management & Support</div>
-                          <a href="staff-login.php?position=Computer%20Lab%20Manager" class="org-link">
-                              <i class="fas fa-sign-in-alt"></i> Login
-                          </a>
-                          <div class="org-actions">
-                              <button class="btn-3d btn-ict-primary" onclick="window.location.href='staff-login.php?position=Computer%20Lab%20Manager'">
-                                  <i class="fas fa-user-shield me-2"></i>Staff Login
-                              </button>
-                              <button class="btn-3d btn-ict-secondary" onclick="window.location.href='computer_lab.php'">
-                                  <i class="fas fa-desktop me-2"></i>Lab Dashboard
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-
-            <!-- Student Leadership Level -->
+            <!-- ═══ STUDENT LEVEL ═══ -->
+            <div class="level-label">Student Leadership</div>
             <div class="org-level student">
                 <div class="org-branch">
                     <div class="org-node student">
@@ -1185,13 +924,8 @@ include('shared/_header.php');
                         <div class="org-title">Students</div>
                         <div class="org-subtitle">All Student Access</div>
                         <a href="student-login.php?student_role=Students" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                            <i class="fas fa-sign-in-alt"></i> Student Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Students'">
-                                <i class="fas fa-graduation-cap me-2"></i>Student Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -1200,13 +934,8 @@ include('shared/_header.php');
                         <div class="org-title">Guild President</div>
                         <div class="org-subtitle">Student Leadership</div>
                         <a href="student-login.php?student_role=Guild%20President" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                            <i class="fas fa-sign-in-alt"></i> Student Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Guild%20President'">
-                                <i class="fas fa-graduation-cap me-2"></i>Student Login
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -1215,26 +944,21 @@ include('shared/_header.php');
                         <div class="org-title">Class Representatives</div>
                         <div class="org-subtitle">Class Leadership</div>
                         <a href="student-login.php?student_role=Class%20Representatives" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                            <i class="fas fa-sign-in-alt"></i> Student Login
                         </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Class%20Representatives'">
-                                <i class="fas fa-graduation-cap me-2"></i>Student Login
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
-    </div>
+        </div>
 
             <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ── Generate star particles ──
-            const starsContainer = document.getElementById('stars');
+            var starsContainer = document.getElementById('stars');
             if (starsContainer) {
-                for (let i = 0; i < 120; i++) {
-                    const star = document.createElement('div');
+                for (var i = 0; i < 120; i++) {
+                    var star = document.createElement('div');
                     star.className = 'star';
                     star.style.left = Math.random() * 100 + '%';
                     star.style.top = Math.random() * 100 + '%';
@@ -1245,27 +969,23 @@ include('shared/_header.php');
                 }
             }
 
-            // ── 3D tilt on cards ──
             document.querySelectorAll('.org-node').forEach(function(node) {
                 node.addEventListener('mousemove', function(e) {
-                    const rect = this.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / rect.width - 0.5;
-                    const y = (e.clientY - rect.top) / rect.height - 0.5;
-                    const rotateX = y * -6;
-                    const rotateY = x * 6;
+                    var rect = this.getBoundingClientRect();
+                    var x = (e.clientX - rect.left) / rect.width - 0.5;
+                    var y = (e.clientY - rect.top) / rect.height - 0.5;
+                    var rotateX = y * -6;
+                    var rotateY = x * 6;
                     this.style.transform =
                         'translateY(-6px) perspective(600px) rotateX(' + rotateX.toFixed(2) + 'deg) rotateY(' + rotateY.toFixed(2) + 'deg) scale(1.02)';
                 });
                 node.addEventListener('mouseleave', function() {
                     this.style.transform = '';
                 });
-                // Make entire card clickable — find the first link or button
                 node.addEventListener('click', function(e) {
                     if (e.target.closest('a') || e.target.closest('button')) return;
-                    var link = this.querySelector('a.org-link, a[href*="staff-login"], a[href*="student-login"]');
-                    if (link) { window.location.href = link.href; return; }
-                    var btn = this.querySelector('button[onclick*="location"]');
-                    if (btn) { var m = btn.getAttribute('onclick').match(/location(?:\.href)?='([^']+)'/); if (m) window.location.href = m[1]; }
+                    var link = this.querySelector('a.org-link');
+                    if (link) window.location.href = link.href;
                 });
                 node.style.cursor = 'pointer';
             });
