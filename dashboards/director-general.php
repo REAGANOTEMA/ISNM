@@ -177,7 +177,12 @@ if ($dg_cached) {
 }
 
 $recent_students = [];
-try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) { error_log('director-general context: ' . $e->getMessage()); }
+try {
+    if ($studentsConn) {
+        $rs = $studentsConn->query("SELECT id, student_number, first_name, surname, program, status FROM students ORDER BY id DESC LIMIT 6");
+        if ($rs) while ($row = $rs->fetch_assoc()) $recent_students[] = $row;
+    }
+} catch (Exception $e) { error_log('director-general context: ' . $e->getMessage()); }
 
 // â”€â”€ DG page routing â”€â”€
 // Map ?page=xxx to internal section names

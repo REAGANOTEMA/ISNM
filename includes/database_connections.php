@@ -90,7 +90,7 @@ class DatabaseConnection {
             $port = $cfg['port'] ?? 3306;
 
             $hosts = array_values(array_unique(array_filter([$cfg['host'], 'localhost', '127.0.0.1'])));
-            $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+            $ports = array_values(array_unique(array_filter([$port, 3306])));
 
             $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
 
@@ -109,14 +109,13 @@ class DatabaseConnection {
             }
             // 2. Provided credentials
             $credSet[] = ['user' => $username, 'pass' => $password];
-            // 3. Root fallbacks (local dev)
-            if ($username === 'root' || $password !== ($hostingCreds[$database]['pass'] ?? '')) {
+            // 3. Root fallbacks (local dev) - always try as final fallback
+            {
                 $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
                 if (!empty($rootPass) && $rootPass !== $password) {
                     $credSet[] = ['user' => 'root', 'pass' => $rootPass];
                 }
                 $credSet[] = ['user' => 'root', 'pass' => ''];
-                $credSet[] = ['user' => 'root', 'pass' => 'root'];
             }
 
             // Deduplicate
@@ -193,6 +192,9 @@ class DatabaseConnection {
         $database = self::resolveDatabaseName($database);
         try {
             $conn = self::getConnection($database);
+            if (!$conn) {
+                return false;
+            }
             $result = $conn->query("SELECT 1");
             return $result !== false;
         } catch (\Throwable $e) {

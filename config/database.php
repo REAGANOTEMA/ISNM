@@ -212,15 +212,12 @@ if (!function_exists('isnm_mysqli_connect')) {
         if ($user !== $db) {
             $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
         }
-        // 4. Root fallbacks (local dev)
-        if ($user === 'root' || $pass !== ($hostingCreds[$db]['pass'] ?? '')) {
-            $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
-            if (!empty($rootPass) && $rootPass !== $pass) {
-                $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
-            }
-            $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
-            $credSet[] = ['user' => 'root', 'pass' => 'root', 'db' => $db];
+        // 4. Root fallbacks (local dev) — always try as final fallback
+        $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
+        if (!empty($rootPass) && $rootPass !== $pass) {
+            $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
         }
+        $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
 
         // Deduplicate
         $seen = [];
@@ -232,7 +229,7 @@ if (!function_exists('isnm_mysqli_connect')) {
         }));
 
         $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
-        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+        $ports = array_values(array_unique(array_filter([$port, 3306])));
 
         foreach ($credSet as $cred) {
             $u = $cred['user'];

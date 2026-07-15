@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/config/database.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);

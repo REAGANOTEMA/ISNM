@@ -3,8 +3,6 @@
  * Cross-database statistics for executive dashboards.
  */
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../views/student_data_loader.php';
-
 if (!function_exists('getInstitutionOverviewStats')) {
     function getInstitutionOverviewStats() {
         $stats = [
@@ -54,10 +52,17 @@ if (!function_exists('getInstitutionOverviewStats')) {
         }
 
         try {
-            $loader = new StudentDataLoader();
             $stats['data_files'] = count(glob(__DIR__ . '/../students_data/*.xlsx') ?: []);
-            $fileStudents = $loader->loadAllStudents();
-            $stats['total_students_files'] = count($fileStudents);
+            $studentCount = 0;
+            $studentsConn = getStudentsConnection();
+            if ($studentsConn) {
+                $countResult = $studentsConn->query("SELECT COUNT(*) as cnt FROM students");
+                if ($countResult) {
+                    $row = $countResult->fetch_assoc();
+                    $studentCount = (int)($row['cnt'] ?? 0);
+                }
+            }
+            $stats['total_students_files'] = $studentCount;
         } catch (Exception $e) {
             error_log('institution_stats files: ' . $e->getMessage());
         }

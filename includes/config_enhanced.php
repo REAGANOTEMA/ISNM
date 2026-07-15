@@ -27,19 +27,18 @@ ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
 // Set timezone
 date_default_timezone_set('Africa/Kampala');
 
-// Initialize database connections
-try {
-    // Test all connections
-    $connection_tests = DatabaseConnection::testAllConnections();
-    
-    foreach ($connection_tests as $db => $status) {
-        if (!$status) {
-            error_log("Warning: Failed to connect to {$db} database");
+// Initialize database connections — only test in debug mode or via health-check
+if (defined('APP_DEBUG') && APP_DEBUG) {
+    try {
+        $connection_tests = DatabaseConnection::testAllConnections();
+        foreach ($connection_tests as $db => $status) {
+            if (!$status) {
+                error_log("Warning: Failed to connect to {$db} database");
+            }
         }
+    } catch (\Throwable $e) {
+        error_log("Database initialization error: " . $e->getMessage());
     }
-    
-} catch (\Throwable $e) {
-    error_log("Database initialization error: " . $e->getMessage());
 }
 
 // Enhanced global functions with database selection
