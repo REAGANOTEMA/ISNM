@@ -29,10 +29,15 @@ class AuthenticationService {
     private function isStaffAccountLocked($email) {
         $conn = getStaffConnection();
         if (!$conn) return false;
-        // Auto-unlock expired locks
-        $conn->query("UPDATE staff SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
-        $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active' AND locked_until > NOW()");
-        if (!$stmt) return false;
+        // Auto-unlock expired locks (try status column first, fall back to is_active)
+        @$conn->query("UPDATE staff SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
+        // Try with status column
+        $stmt = $conn->prepare("SELECT 1 FROM staff WHERE LOWER(email) = ? AND (LOWER(COALESCE(status,'active')) = 'active') AND locked_until IS NOT NULL AND locked_until > NOW() LIMIT 1");
+        if (!$stmt) {
+            // status column may not exist — skip lock check gracefully
+            error_log('isStaffAccountLocked: status/locked_until column may be missing');
+            return false;
+        }
         $stmt->bind_param('s', $email);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $locked = $stmt->get_result()->num_rows > 0;
@@ -61,9 +66,16 @@ class AuthenticationService {
     private function recordStaffFailedAttempt($email) {
         $conn = getStaffConnection();
         if (!$conn) return;
-        $s = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
-        if ($s) { $s->bind_param('s', $email); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
-        $s2 = $conn->prepare("SELECT login_attempts FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
+        // Try updating with status column, fall back to is_active
+        $s = @$conn->prepare("UPDATE staff SET login_attempts = COALESCE(login_attempts,0) + 1 WHERE LOWER(email) = ? AND (LOWER(COALESCE(status,'active')) = 'active')");
+        if (!$s) {
+            // login_attempts or status column may not exist — silently skip
+            error_log('recordStaffFailedAttempt: login_attempts/status column may be missing');
+            return;
+        }
+        $s->bind_param('s', $email);
+        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close();
+        $s2 = @$conn->prepare("SELECT COALESCE(login_attempts,0) AS login_attempts FROM staff WHERE LOWER(email) = ? AND (LOWER(COALESCE(status,'active')) = 'active')");
         if (!$s2) return;
         $s2->bind_param('s', $email);
         if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };
@@ -71,7 +83,7 @@ class AuthenticationService {
         $s2->close();
         if ($row && $row['login_attempts'] >= $this->maxLoginAttempts) {
             $lock = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
-            $s3 = $conn->prepare("UPDATE staff SET locked_until = ? WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
+            $s3 = @$conn->prepare("UPDATE staff SET locked_until = ? WHERE LOWER(email) = ? AND (LOWER(COALESCE(status,'active')) = 'active')");
             if ($s3) { $s3->bind_param('ss', $lock, $email); if (!$s3->execute()) { error_log('$s3 execute failed: ' . ($s3->error ?? 'unknown')); }; $s3->close(); }
         }
     }
@@ -79,7 +91,8 @@ class AuthenticationService {
     private function resetStaffFailedAttempts($userId) {
         $conn = getStaffConnection();
         if (!$conn) return;
-        $s = $conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
+        $s = @$conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
+        if (!$s) return; // columns may not exist
         if ($s) { $s->bind_param('i', $userId); if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
     }
 
@@ -324,12 +337,12 @@ class AuthenticationService {
 
         if ($this->isStaffAccountLocked($email)) {
             error_log("authenticateStaff: Account locked for $email");
-            return ['success' => false, 'message' => 'Invalid email or password'];
+            return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
         }
 
         // Try with staff_roles JOIN first, fall back to staff-only query if table missing
         $roleName = '';
-        $stmt = $conn->prepare(
+        $stmt = @$conn->prepare(
             "SELECT s.*, sr.role_name FROM staff s
              LEFT JOIN staff_roles sr ON s.role_id = sr.id
              WHERE LOWER(s.email) = ?
@@ -366,10 +379,7 @@ class AuthenticationService {
         if (!empty($staff['role_name'])) {
             $roleName = $staff['role_name'];
         } else {
-            $roleCheck = $conn->prepare("SELECT role_name FROM staff_roles WHERE id = ? LIMIT 1");
-            if (!$roleCheck) {
-                error_log('authenticateStaff roleCheck prepare failed: ' . $conn->error);
-            }
+            $roleCheck = @$conn->prepare("SELECT role_name FROM staff_roles WHERE id = ? LIMIT 1");
             if ($roleCheck) {
                 $roleCheck->bind_param('i', $staff['role_id']);
                 if (!$roleCheck->execute()) { error_log('$roleCheck execute failed: ' . ($roleCheck->error ?? 'unknown')); };
@@ -382,18 +392,68 @@ class AuthenticationService {
             }
         }
 
-        // Check status
-        if (strtolower($staff['status']) !== 'active') {
-            error_log("authenticateStaff: Account inactive for $email (status={$staff['status']})");
+        // Check status — support both `status` (varchar) and `is_active` (tinyint) columns
+        $isActive = true;
+        if (isset($staff['status'])) {
+            $isActive = strtolower(trim($staff['status'])) === 'active';
+        } elseif (isset($staff['is_active'])) {
+            $isActive = (bool)$staff['is_active'];
+        }
+        if (!$isActive) {
+            error_log("authenticateStaff: Account inactive for $email");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
-        // Check password - hashed only
-        if (!password_verify($password, $staff['password'])) {
+        // Check password — support bcrypt, MD5, sha1, and plain text with auto-rehash
+        $passwordVerified = false;
+        $needsRehash = false;
+
+        if (password_verify($password, $staff['password'])) {
+            // bcrypt match
+            $passwordVerified = true;
+            // Check if hash needs rehash (algorithm upgrade or cost change)
+            if (password_needs_rehash($staff['password'], PASSWORD_DEFAULT)) {
+                $needsRehash = true;
+            }
+        } elseif (strlen($staff['password']) === 32 && ctype_xdigit($staff['password'])) {
+            // MD5 hash — verify and auto-upgrade to bcrypt
+            if (md5($password) === $staff['password']) {
+                $passwordVerified = true;
+                $needsRehash = true;
+                error_log("authenticateStaff: Legacy MD5 password verified for $email — upgrading to bcrypt");
+            }
+        } elseif (strlen($staff['password']) === 40 && ctype_xdigit($staff['password'])) {
+            // SHA1 hash — verify and auto-upgrade to bcrypt
+            if (sha1($password) === $staff['password']) {
+                $passwordVerified = true;
+                $needsRehash = true;
+                error_log("authenticateStaff: Legacy SHA1 password verified for $email — upgrading to bcrypt");
+            }
+        } elseif ($password === $staff['password']) {
+            // Plain text — hash and upgrade to bcrypt
+            $passwordVerified = true;
+            $needsRehash = true;
+            error_log("authenticateStaff: Plain text password verified for $email — upgrading to bcrypt");
+        }
+
+        if (!$passwordVerified) {
             error_log("authenticateStaff: Password mismatch for $email");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
+        // Auto-upgrade legacy password to bcrypt
+        if ($needsRehash) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            $up = @$conn->prepare("UPDATE staff SET password = ? WHERE id = ?");
+            if ($up) {
+                $up->bind_param('si', $newHash, $staff['id']);
+                if (!$up->execute()) {
+                    error_log("authenticateStaff: Failed to rehash password for $email: " . $up->error);
+                }
+                $up->close();
+            }
         }
 
         error_log("authenticateStaff: Login successful for $email (role=$roleName)");
@@ -583,9 +643,24 @@ class AuthenticationService {
 
     public function resolveOrganogramPosition($position) {
         $aliases = [
-            'Chief Executive Officer' => 'CEO',
-            'Head of Nursing'         => 'Head Nursing',
-            'Head of Midwifery'       => 'Head Midwifery',
+            'Chief Executive Officer'           => 'CEO',
+            'Head of Nursing'                   => 'Head Nursing',
+            'Head of Midwifery'                 => 'Head Midwifery',
+            'Director Admissions & Requirements'=> 'Director Admissions & Requirements',
+            'Director Admissions'               => 'Director Admissions & Requirements',
+            'Academic Registrar'                => 'Academic Registrar',
+            'HR Manager'                        => 'HR Manager',
+            'School Secretary'                  => 'School Secretary',
+            'School Librarian'                  => 'School Librarian',
+            'Events Coordinator'                => 'Events Coordinator',
+            'Alumni Relations Officer'          => 'Alumni Relations Officer',
+            'Store Keeper'                      => 'Storekeeper',
+            'Skills Lab Manager'                => 'Skills Lab Manager',
+            'Skills Lab'                        => 'Skills Lab',
+            'Computer Lab Manager'              => 'Computer Lab Manager',
+            'Guild President'                   => 'Guild President',
+            'Security Officer'                  => 'Security',
+            'Director ICT'                      => 'Director ICT',
         ];
         return $aliases[trim($position)] ?? trim($position);
     }
@@ -658,8 +733,17 @@ class AuthenticationService {
         try {
             $conn = getStaffConnection();
             if (!$conn) return null;
-            $s = $conn->prepare("SELECT s.email FROM staff s INNER JOIN staff_roles sr ON s.role_id=sr.id WHERE sr.role_name=? AND s.status='Active' ORDER BY s.id ASC LIMIT 1");
-            if (!$s) return null;
+            // Try with status column first, fall back to is_active
+            $s = @$conn->prepare("SELECT s.email FROM staff s INNER JOIN staff_roles sr ON s.role_id=sr.id WHERE sr.role_name=? AND (LOWER(COALESCE(s.status,'active')) = 'active') ORDER BY s.id ASC LIMIT 1");
+            if (!$s) {
+                // staff_roles JOIN may fail — try direct query
+                $s = @$conn->prepare("SELECT email FROM staff WHERE LOWER(COALESCE(status,'active'))='active' LIMIT 1");
+                if (!$s) return null;
+                if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
+                $row = $s->get_result()->fetch_assoc();
+                $s->close();
+                return $row['email'] ?? null;
+            }
             $s->bind_param('s', $roleName);
             if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
             $row = $s->get_result()->fetch_assoc();
@@ -748,20 +832,21 @@ class AuthenticationService {
             try {
                 $conn = getStaffConnection();
                 if ($conn) {
-                    $s = $conn->prepare("SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1");
+                    // Try querying dashboard_path — column may not exist
+                    $s = @$conn->prepare("SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1");
                     if ($s && $s->bind_param('s', $roleName) && $s->execute()) {
                         $row = $s->get_result()->fetch_assoc();
                         $s->close();
                         if (!empty($row['dashboard_path'])) return ltrim($row['dashboard_path'], '/');
-                    }
+                    } elseif ($s) { $s->close(); }
                     $resolved = $this->resolveOrganogramPosition($roleName);
                     if ($resolved !== $roleName) {
-                        $s2 = $conn->prepare("SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1");
+                        $s2 = @$conn->prepare("SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1");
                         if ($s2 && $s2->bind_param('s', $resolved) && $s2->execute()) {
                             $row2 = $s2->get_result()->fetch_assoc();
                             $s2->close();
                             if (!empty($row2['dashboard_path'])) return ltrim($row2['dashboard_path'], '/');
-                        }
+                        } elseif ($s2) { $s2->close(); }
                     }
                 }
             } catch (\Throwable $e) { error_log('getDashboardRoute DB: ' . $e->getMessage()); }

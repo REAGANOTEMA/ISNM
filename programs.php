@@ -2,7 +2,9 @@
 
   <main>
     <!-- Page Header -->
-    <section class="page-header animate-on-scroll">
+    <section class="page-header page-header-bg animate-on-scroll" style="background-image: url('images/classroom-photo-certificates-in-nurses-and-diploma.jpeg');">
+      <div class="decor-shape decor-shape-1"></div>
+      <div class="decor-shape decor-shape-3"></div>
       <div class="container">
         <div class="row align-items-center">
           <div class="col-lg-12 text-center">

@@ -126,10 +126,14 @@ section.py-5 {
   display: block;
 }
 
-/* --- Consistent page header heights --- */
-.page-header,
-.hero-header {
+/* --- Consistent page header heights (skip bg-image headers) --- */
+.page-header:not(.page-header-bg),
+.hero-header:not(.hero-header-bg) {
   padding: 3rem 0 !important;
+}
+.page-header-bg,
+.hero-header-bg {
+  padding: 5rem 0 4rem !important;
 }
 
 /* --- Mobile nav collapse: ensure hamburger shows only < 992px --- */

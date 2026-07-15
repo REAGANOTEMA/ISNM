@@ -6,9 +6,9 @@ include_once 'shared/_header.php';
 
   <main>
     <!-- Hero Page Header -->
-    <section class="hero-header">
-      <div class="hero-overlay"></div>
-      <div class="hero-particles"></div>
+    <section class="hero-header hero-header-bg" style="background-image: url('images/IMG_2696.jpg');">
+      <div class="decor-shape decor-shape-1"></div>
+      <div class="decor-shape decor-shape-2"></div>
       <div class="container">
         <div class="hero-content">
           <div class="hero-text">

@@ -7,7 +7,9 @@ include('shared/_header.php');
 
   <main>
     <!-- Enhanced Page Header -->
-    <section class="page-header">
+    <section class="page-header page-header-bg" style="background-image: url('images/students-in-class.jpg');">
+      <div class="decor-shape decor-shape-1"></div>
+      <div class="decor-shape decor-shape-2"></div>
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">
@@ -44,7 +46,7 @@ include('shared/_header.php');
               <p>Iganga School of Nursing and Midwifery is committed to producing world class healthcare professionals who serve communities across Uganda and beyond. Your donation helps us:</p>
               
               <div class="impact-list">
-                <div class="impact-item animate-on-scroll animate-delay-1">
+                <div class="impact-item stripe-featured animate-on-scroll animate-delay-1">
                   <div class="impact-icon">
                     <i class="fas fa-graduation-cap"></i>
                   </div>
@@ -74,7 +76,7 @@ include('shared/_header.php');
                   </div>
                 </div>
                 
-                <div class="impact-item animate-on-scroll animate-delay-4">
+                <div class="impact-item stripe-featured animate-on-scroll animate-delay-4">
                   <div class="impact-icon">
                     <i class="fas fa-user-graduate"></i>
                   </div>
@@ -246,7 +248,7 @@ include('shared/_header.php');
           </div>
           
           <div class="col-lg-6">
-            <div class="project-card animate-on-scroll animate-delay-4">
+            <div class="project-card stripe-featured animate-on-scroll animate-delay-4">
               <div class="project-image">
                 <img src="images/diploma-hostel.jpg" alt="Student Hostel" class="img-fluid">
               </div>

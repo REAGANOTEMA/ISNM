@@ -90,8 +90,8 @@ function tryHrAuth(string $email, string $password) {
             return ['success' => false, 'message' => 'Database unavailable. Please try again later.'];
         }
         // Account lockout check for hr_users
-        $conn->query("UPDATE hr_users SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
-        $lockCheck = $conn->prepare('SELECT id FROM hr_users WHERE email = ? AND status = "active" AND locked_until > NOW() LIMIT 1');
+        @$conn->query("UPDATE hr_users SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
+        $lockCheck = @$conn->prepare('SELECT id FROM hr_users WHERE email = ? AND status = "active" AND locked_until > NOW() LIMIT 1');
         if ($lockCheck) {
             $lockCheck->bind_param('s', $email);
             if (!$lockCheck->execute()) { error_log('lockCheck execute failed: ' . ($lockCheck->error ?? 'unknown')); };
@@ -113,6 +113,14 @@ function tryHrAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
+        // Legacy password support: MD5, SHA1, plain text
+        if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
+            $ok = (md5($password) === $u['password_hash']);
+        } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
+            $ok = (sha1($password) === $u['password_hash']);
+        } elseif (!$ok && $password === $u['password_hash']) {
+            $ok = true;
+        }
         if (!$ok) {
             // Record failed attempt
             $attempts = ($u['login_attempts'] ?? 0) + 1;
@@ -127,6 +135,12 @@ function tryHrAuth(string $email, string $password) {
 
         // Reset failed attempts on success
         $conn->prepare("UPDATE hr_users SET login_attempts = 0, locked_until = NULL WHERE id = ?")->execute([$u['id']]);
+
+        // Rehash legacy password to bcrypt if successful
+        if (!password_verify($password, $u['password_hash'])) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            @$conn->prepare("UPDATE hr_users SET password_hash = ? WHERE id = ?")->execute([$newHash, $u['id']]);
+        }
 
         $map = [
             'hr_manager'         => 'HR Manager',
@@ -192,6 +206,14 @@ function tryBursarAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
+        // Legacy password support: MD5, SHA1, plain text
+        if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
+            $ok = (md5($password) === $u['password_hash']);
+        } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
+            $ok = (sha1($password) === $u['password_hash']);
+        } elseif (!$ok && $password === $u['password_hash']) {
+            $ok = true;
+        }
         if (!$ok) {
             // Record failed attempt
             $attempts = ($u['login_attempts'] ?? 0) + 1;
@@ -202,6 +224,12 @@ function tryBursarAuth(string $email, string $password) {
                 $conn->prepare("UPDATE bursar_users SET login_attempts = ? WHERE id = ?")->execute([$attempts, $u['id']]);
             }
             return null;
+        }
+
+        // Rehash legacy password to bcrypt if successful
+        if ($ok && !password_verify($password, $u['password_hash'])) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            @$conn->prepare("UPDATE bursar_users SET password_hash = ? WHERE id = ?")->execute([$newHash, $u['id']]);
         }
 
         // Reset failed attempts on success

@@ -13434,6 +13434,27 @@ CREATE TABLE `staff` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
+-- Ensure all columns required by the authentication system exist.
+-- These ALTER statements are safe to run multiple times (IF NOT EXISTS).
+-- --------------------------------------------------------
+
+ALTER TABLE `staff`
+  ADD COLUMN IF NOT EXISTS `status` varchar(20) DEFAULT 'Active' AFTER `is_active`,
+  ADD COLUMN IF NOT EXISTS `position` varchar(100) DEFAULT NULL AFTER `role_id`,
+  ADD COLUMN IF NOT EXISTS `department` varchar(100) DEFAULT NULL AFTER `position`,
+  ADD COLUMN IF NOT EXISTS `login_attempts` int(11) NOT NULL DEFAULT 0 AFTER `department`,
+  ADD COLUMN IF NOT EXISTS `locked_until` datetime DEFAULT NULL AFTER `login_attempts`,
+  ADD COLUMN IF NOT EXISTS `is_first_login` tinyint(1) NOT NULL DEFAULT 1 AFTER `locked_until`,
+  ADD COLUMN IF NOT EXISTS `password_changed` tinyint(1) NOT NULL DEFAULT 0 AFTER `is_first_login`,
+  ADD COLUMN IF NOT EXISTS `reset_token` varchar(255) DEFAULT NULL AFTER `password_changed`,
+  ADD COLUMN IF NOT EXISTS `reset_expiry` datetime DEFAULT NULL AFTER `reset_token`;
+
+-- Update existing rows: set status = 'Active' where is_active = 1
+UPDATE `staff` SET `status` = 'Active' WHERE `is_active` = 1 AND (`status` IS NULL OR `status` = '');
+
+-- --------------------------------------------------------
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `staff_activity_log`
@@ -14848,9 +14869,52 @@ CREATE TABLE `staff_roles` (
   `id` int(11) NOT NULL,
   `role_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
+  `dashboard_path` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Seed staff_roles with dashboard_path mappings
+-- --------------------------------------------------------
+
+INSERT INTO `staff_roles` (`role_name`, `description`, `dashboard_path`) VALUES
+('Director General', 'Overall Institution Leadership', 'dashboards/director-general.php'),
+('CEO', 'Chief Executive Officer', 'dashboards/ceo.php'),
+('Director Academics', 'Academic Affairs Director', 'dashboards/director-academics.php'),
+('Director Finance', 'Financial Affairs Director', 'dashboards/director-finance.php'),
+('Director ICT', 'ICT Department Head', 'dashboards/director-ict.php'),
+('Director Admissions & Requirements', 'Admissions and Requirements', 'dashboards/director-admissions.php'),
+('School Principal', 'Chief Academic Officer', 'dashboards/school-principal.php'),
+('Deputy Principal', 'Assistant Academic Officer', 'dashboards/deputy-principal.php'),
+('Academic Registrar', 'Student Records Management', 'dashboards/academic-registrar.php'),
+('HR Manager', 'Human Resources Management', 'dashboards/hr-manager.php'),
+('School Secretary', 'Administrative Support', 'dashboards/school-secretary.php'),
+('School Bursar', 'Financial Management', 'dashboards/school-bursar.php'),
+('School Librarian', 'Library Management', 'dashboards/school-librarian.php'),
+('Head Nursing', 'Nursing Department Head', 'dashboards/head-nursing.php'),
+('Head Midwifery', 'Midwifery Department Head', 'dashboards/head-midwifery.php'),
+('Senior Lecturers', 'Advanced Teaching Staff', 'dashboards/senior-lecturers.php'),
+('Lecturers', 'Teaching Staff', 'dashboards/lecturers.php'),
+('Matrons', 'Student Welfare', 'dashboards/matrons.php'),
+('Wardens', 'Student Care and Support', 'dashboards/wardens.php'),
+('Sickbay', 'Student Health Support', 'dashboards/sickbay.php'),
+('Sickbay Nurse', 'Student Health Support', 'dashboards/sickbay.php'),
+('Drivers', 'Transport Services', 'dashboards/drivers.php'),
+('Security', 'Campus Security', 'dashboards/security.php'),
+('Security Officer', 'Campus Security', 'dashboards/security.php'),
+('Storekeeper', 'Inventory Management', 'dashboards/storekeeper.php'),
+('Skills Lab Manager', 'Skills Laboratory Management', 'dashboards/skills-lab.php'),
+('Skills Lab', 'Skills Laboratory', 'dashboards/skills-lab.php'),
+('Skills Lab Technician', 'Skills Lab Technical Support', 'dashboards/skills-lab.php'),
+('Computer Lab Manager', 'Computer Lab Management', 'dashboards/computer_lab.php'),
+('Events Coordinator', 'Event Planning and Management', 'dashboards/events-manager.php'),
+('Events Manager', 'Event Planning and Management', 'dashboards/events-manager.php'),
+('Alumni Relations Officer', 'Alumni Engagement', 'dashboards/alumni-manager.php'),
+('Alumni Officer', 'Alumni Engagement', 'dashboards/alumni-manager.php'),
+('Guild President', 'Student Leadership', 'dashboards/guild-president.php'),
+('System Administrator', 'System Administration', 'dashboards/system-admin.php')
+ON DUPLICATE KEY UPDATE `dashboard_path` = VALUES(`dashboard_path`);
 
 -- --------------------------------------------------------
 

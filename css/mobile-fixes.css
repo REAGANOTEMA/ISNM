@@ -895,9 +895,31 @@ img {
   .page-header {
     padding-bottom: 0.6rem !important;
   }
+  .page-header.page-header-bg {
+    padding: 2.5rem 0 2rem !important;
+    background-position: center 40% !important;
+  }
+  .hero-header.hero-header-bg {
+    padding: 2.5rem 0 2rem !important;
+    background-position: center 40% !important;
+  }
+  .decor-shape { display: none; }
 
   .page-header h4 {
     font-size: 1rem !important;
+  }
+  
+  /* Red stripes thinner on mobile */
+  .donation-card::after,
+  .project-card::after,
+  .opportunity-card::after,
+  .benefit-card::after,
+  .vmv-card::after,
+  .member-card::after,
+  .program-item::after,
+  .impact-item::after,
+  .timeline-content-card::after {
+    height: 3px !important;
   }
 
   /* Filter bars */

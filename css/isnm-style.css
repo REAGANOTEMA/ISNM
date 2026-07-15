@@ -493,6 +493,112 @@
       100% { transform: translateX(45px); }
     }
     
+    /* ===== Animated Red Stripe Under Cards (3D Moving Effect) ===== */
+    .card-3d-stripe,
+    .donation-card,
+    .project-card,
+    .opportunity-card,
+    .benefit-card,
+    .vmv-card,
+    .member-card,
+    .program-item,
+    .impact-item,
+    .timeline-content-card {
+      position: relative;
+      overflow: visible;
+    }
+    .card-3d-stripe::after,
+    .donation-card::after,
+    .project-card::after,
+    .opportunity-card::after,
+    .benefit-card::after,
+    .vmv-card::after,
+    .member-card::after,
+    .program-item::after,
+    .impact-item::after,
+    .timeline-content-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -10%;
+      right: -10%;
+      height: 5px;
+      background: repeating-linear-gradient(
+        90deg,
+        #DC2626 0px,
+        #DC2626 12px,
+        transparent 12px,
+        transparent 16px,
+        #EF4444 16px,
+        #EF4444 28px,
+        transparent 28px,
+        transparent 32px
+      );
+      background-size: 64px 5px;
+      animation: redStripeMove 2s linear infinite;
+      z-index: 10;
+      border-radius: 0 0 12px 12px;
+      pointer-events: none;
+    }
+    @keyframes redStripeMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 64px 0; }
+    }
+    
+    /* Thicker, more vibrant red stripe for featured cards */
+    .stripe-featured::after {
+      height: 6px !important;
+      background: repeating-linear-gradient(
+        90deg,
+        #B91C1C 0px,
+        #B91C1C 10px,
+        #FCA5A5 10px,
+        #FCA5A5 20px,
+        #DC2626 20px,
+        #DC2626 30px,
+        #FCA5A5 30px,
+        #FCA5A5 40px
+      ) !important;
+      background-size: 80px 6px !important;
+      animation: redStripeMoveVivid 1.5s linear infinite !important;
+      filter: drop-shadow(0 2px 4px rgba(220,38,38,0.3));
+    }
+    @keyframes redStripeMoveVivid {
+      0% { background-position: 0 0; }
+      100% { background-position: 80px 0; }
+    }
+    
+    /* ===== Decorative floating shapes ===== */
+    .decor-shape {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.06;
+      z-index: 0;
+    }
+    .decor-shape-1 {
+      width: 300px; height: 300px;
+      background: var(--isnm-yellow, #FFD700);
+      top: -80px; right: -60px;
+      animation: floatDecor 8s ease-in-out infinite;
+    }
+    .decor-shape-2 {
+      width: 200px; height: 200px;
+      background: #EF4444;
+      bottom: -50px; left: -40px;
+      animation: floatDecor 6s ease-in-out infinite reverse;
+    }
+    .decor-shape-3 {
+      width: 150px; height: 150px;
+      background: #3949AB;
+      top: 30%; left: 60%;
+      animation: floatDecor 10s ease-in-out infinite;
+    }
+    @keyframes floatDecor {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-15px) scale(1.05); }
+    }
+    
     .header-container {
       display: flex;
       align-items: center;
@@ -3556,16 +3662,41 @@ h3 {
    about, volunteer, contact, history, application, news
    ============================================================ */
 
-/* ----- Shared Page Header — Premium 3D (donation, programs, about, volunteer) ----- */
+/* ----- Shared Page Header — Premium 3D with Background Images ----- */
 .page-header {
   background: linear-gradient(160deg, #0D1642 0%, #1A237E 40%, #283593 70%, #1A237E 100%);
   color: white;
-  padding: 4.5rem 0 3.5rem;
+  padding: 5rem 0 4rem;
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
+}
+.page-header.page-header-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.page-header.page-header-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13,22,66,0.82) 0%, rgba(26,35,126,0.75) 50%, rgba(13,22,66,0.88) 100%);
+  z-index: 0;
+}
+.page-header.page-header-bg > .container,
+.page-header.page-header-bg > .container > .row {
+  position: relative;
+  z-index: 1;
+}
+.page-header.page-header-bg .page-title {
+  color: #FFD700;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 30px rgba(255,215,0,0.15);
+}
+.page-header.page-header-bg .page-subtitle {
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.4);
 }
 .page-header::before {
   content: '';
@@ -3606,13 +3737,39 @@ h3 {
   letter-spacing: 0.3px;
 }
 
-/* ----- Hero Header (contact, history, application) ----- */
+/* ----- Hero Header (contact, history, application) with Background Image ----- */
 .hero-header {
   position: relative;
   background: var(--gradient-primary);
   color: white;
-  padding: 3.5rem 0;
+  padding: 5rem 0;
   overflow: hidden;
+}
+.hero-header.hero-header-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.hero-header.hero-header-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13,22,66,0.85) 0%, rgba(26,35,126,0.72) 50%, rgba(13,22,66,0.85) 100%);
+  z-index: 0;
+}
+.hero-header.hero-header-bg > .container,
+.hero-header.hero-header-bg > .hero-content,
+.hero-header.hero-header-bg > .hero-particles {
+  position: relative;
+  z-index: 1;
+}
+.hero-header.hero-header-bg .hero-title {
+  color: #FFD700;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 30px rgba(255,215,0,0.15);
+}
+.hero-header.hero-header-bg .hero-subtitle {
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.4);
 }
 .hero-header::before {
   content: '';
@@ -3707,23 +3864,39 @@ h3 {
 
 /* ----- Responsive Header Breakpoints ----- */
 @media (max-width: 768px) {
-  .hero-header { padding: 3rem 0; }
+  .hero-header { padding: 3.5rem 0; }
   .hero-title { font-size: 2rem !important; }
   .hero-subtitle { font-size: 1rem !important; }
   .hero-decoration { width: 70px; }
-  .page-header { padding: 3rem 0; }
+  .page-header { padding: 3.5rem 0; }
   .page-title { font-size: 2rem; }
   .page-subtitle { font-size: 1rem; }
+  .page-header.page-header-bg { background-position: center 30%; }
+  .hero-header.hero-header-bg { background-position: center 30%; }
+  .card-3d-stripe::after,
+  .donation-card::after,
+  .project-card::after,
+  .opportunity-card::after,
+  .benefit-card::after,
+  .vmv-card::after,
+  .member-card::after,
+  .program-item::after,
+  .impact-item::after,
+  .timeline-content-card::after { height: 4px; }
 }
 @media (max-width: 576px) {
   .hero-title { font-size: 1.75rem !important; }
   .page-title { font-size: 1.75rem; }
+  .page-header.page-header-bg { padding: 3rem 0 2.5rem; }
+  .hero-header.hero-header-bg { padding: 3rem 0 2.5rem; }
 }
 @media (max-width: 480px) {
   .hero-header { padding: 2.5rem 0; }
   .hero-title { font-size: 1.5rem !important; }
   .hero-subtitle { font-size: 0.9rem; }
   .page-title { font-size: 1.5rem; }
+  .page-header.page-header-bg { padding: 2.5rem 0 2rem; }
+  .hero-header.hero-header-bg { padding: 2.5rem 0 2rem; }
 }
 
 /* ============ Donation Page ============ */
@@ -3731,14 +3904,14 @@ h3 {
 .donation-content { padding: 3rem; }
 .donation-image {
   position: relative; border-radius: 20px; overflow: hidden;
-  box-shadow: 0 20px 60px rgba(26,35,126,0.15);
-  transition: all 0.5s ease; height: 450px;
+  box-shadow: 0 20px 60px rgba(26,35,126,0.18);
+  transition: all 0.5s ease; height: auto; min-height: 400px;
 }
-.donation-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-.donation-image:hover img { transform: scale(1.05); }
+.donation-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+.donation-image:hover img { transform: scale(1.03); }
 .donation-image::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(26,35,126,0.15), transparent);
+  background: linear-gradient(180deg, transparent 70%, rgba(26,35,126,0.08));
   pointer-events: none;
 }
 
@@ -3833,13 +4006,13 @@ h3 {
 
 /* Project Cards */
 .project-image {
-  height: 220px; overflow: hidden; position: relative;
+  height: 260px; overflow: hidden; position: relative;
 }
-.project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-.project-card:hover .project-image img { transform: scale(1.1); }
+.project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; display: block; }
+.project-card:hover .project-image img { transform: scale(1.05); }
 .project-image::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4));
+  background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,0.25));
   pointer-events: none;
 }
 .project-content { padding: 1.8rem; flex: 1; display: flex; flex-direction: column; }
@@ -4046,6 +4219,37 @@ h3 {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(26,35,126,0.1), transparent);
   pointer-events: none;
+}
+.vmv-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(13, 27, 62, 0.82), rgba(26, 35, 126, 0.72));
+  border-radius: 20px; z-index: 2;
+  opacity: 0; transition: opacity 0.5s ease;
+}
+.vmv-header-image:hover .vmv-overlay { opacity: 1; }
+.vmv-overlay-content { text-align: center; color: #fff; padding: 2rem; max-width: 700px; }
+.vmv-overlay-tag {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 18px;
+  background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.35);
+  border-radius: 50px; color: #FFD700; font-size: 0.78rem; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 1rem;
+}
+.vmv-overlay-title {
+  font-size: 2rem; font-weight: 800; line-height: 1.25; margin-bottom: 0.75rem;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.vmv-overlay-divider {
+  width: 60px; height: 3px; margin: 0 auto 1rem;
+  background: linear-gradient(90deg, #FFD700, #fff); border-radius: 2px;
+}
+.vmv-overlay-text {
+  font-size: 1.05rem; line-height: 1.7; opacity: 0.92; margin: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.2);
+}
+@media (max-width: 768px) {
+  .vmv-overlay { opacity: 1; }
+  .vmv-overlay-title { font-size: 1.4rem; }
+  .vmv-overlay-text { font-size: 0.92rem; }
 }
 
 /* VMV Cards */
@@ -4745,29 +4949,29 @@ h3 {
   color: #fff !important;
 }
 
-/* ── Hero Titles — Always White on Dark Overlay ── */
+/* ── Hero Titles — White on Dark Overlay (skip bg-image headers) ── */
 .hero-title,
 .hero-section .cinematic-title,
 .hero-section-news h1,
-.hero-header .hero-title {
+.hero-header:not(.hero-header-bg) .hero-title {
   color: #fff !important;
   text-shadow: 0 2px 20px rgba(0,0,0,0.4);
 }
 
 .hero-subtitle,
 .hero-section .hero-subtitle p,
-.hero-header .hero-subtitle {
+.hero-header:not(.hero-header-bg) .hero-subtitle {
   color: rgba(255,255,255,0.9) !important;
   text-shadow: 0 1px 10px rgba(0,0,0,0.3);
 }
 
 /* ── Page Header Titles (about, programs, donation, volunteer) ── */
-.page-header .page-title {
+.page-header:not(.page-header-bg) .page-title {
   color: #fff !important;
   text-shadow: 0 2px 15px rgba(0,0,0,0.3);
 }
 
-.page-header .page-subtitle {
+.page-header:not(.page-header-bg) .page-subtitle {
   color: rgba(255,255,255,0.85) !important;
 }
 
@@ -5056,21 +5260,31 @@ h3 {
    ═══════════════════════════════════════════════════════ */
 
 /* ── Dark gradient sections: dark background, white text ── */
-.hero-header,
+.hero-header:not(.hero-header-bg),
 .hero-section,
-.page-header {
+.page-header:not(.page-header-bg) {
   background: var(--gradient-primary) !important;
   background-image: var(--gradient-primary) !important;
 }
 
-/* Text inside dark hero/page-header sections → white */
-.hero-header h1, .hero-header h2, .hero-header h3, .hero-header h4, .hero-header h5,
-.hero-header p, .hero-header span, .hero-header a,
+/* Text inside dark hero/page-header sections → white (non-bg variants) */
+.hero-header:not(.hero-header-bg) h1, .hero-header:not(.hero-header-bg) h2, .hero-header:not(.hero-header-bg) h3, .hero-header:not(.hero-header-bg) h4, .hero-header:not(.hero-header-bg) h5,
+.hero-header:not(.hero-header-bg) p, .hero-header:not(.hero-header-bg) span, .hero-header:not(.hero-header-bg) a,
 .hero-section h1, .hero-section h2, .hero-section h3,
 .hero-section p, .hero-section span, .hero-section a,
-.page-header h1, .page-header h2, .page-header h3, .page-header h4, .page-header h5,
-.page-header p, .page-header span, .page-header a {
+.page-header:not(.page-header-bg) h1, .page-header:not(.page-header-bg) h2, .page-header:not(.page-header-bg) h3, .page-header:not(.page-header-bg) h4, .page-header:not(.page-header-bg) h5,
+.page-header:not(.page-header-bg) p, .page-header:not(.page-header-bg) span, .page-header:not(.page-header-bg) a {
   color: #fff !important;
+}
+
+/* Background image headers: gold title, white subtitle */
+.page-header-bg .page-title,
+.hero-header-bg .hero-title {
+  color: #FFD700 !important;
+}
+.page-header-bg .page-subtitle,
+.hero-header-bg .hero-subtitle {
+  color: rgba(255,255,255,0.95) !important;
 }
 
 /* ── CTA section: dark gradient bg + readable text + visible buttons ── */
@@ -5224,6 +5438,148 @@ h3 {
 .navbar .btn-outline-light:hover {
   color: #1A237E !important;
   background: #FFD700 !important;
+}
+
+/* ===== Enhanced Card Hover & Graphic Effects ===== */
+.donation-card,
+.project-card,
+.opportunity-card,
+.benefit-card {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.donation-card:hover,
+.project-card:hover,
+.opportunity-card:hover,
+.benefit-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 60px rgba(26,35,126,0.12), 0 0 0 1px rgba(255,215,0,0.08);
+}
+
+/* Decorative diagonal stripe on cards on hover */
+.donation-card::before,
+.project-card::before,
+.opportunity-card::before {
+  transition: height 0.3s ease;
+}
+.donation-card:hover::before,
+.project-card:hover::before,
+.opportunity-card:hover::before {
+  height: 5px;
+}
+
+/* Section decorative corner accents */
+.section-decor {
+  position: relative;
+}
+.section-decor::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated gradient border on focus cards */
+@keyframes gradientBorder {
+  0% { border-color: rgba(26,35,126,0.1); }
+  50% { border-color: rgba(255,215,0,0.3); }
+  100% { border-color: rgba(26,35,126,0.1); }
+}
+
+/* Pulse glow on donation icon */
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 10px 25px rgba(26,35,126,0.25); }
+  50% { box-shadow: 0 10px 35px rgba(255,215,0,0.3); }
+}
+.donation-card:hover .donation-icon {
+  animation: iconPulse 1.5s ease-in-out infinite;
+}
+
+/* Enhanced volunteer opportunity card stripe */
+.opportunity-card .opportunity-header {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Red stripe glow effect for featured cards */
+.stripe-featured::after {
+  box-shadow: 0 0 8px rgba(220,38,38,0.2), 0 4px 12px rgba(220,38,38,0.1);
+}
+
+/* Image zoom on project cards */
+.project-image {
+  position: relative;
+}
+.project-image img {
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.project-card:hover .project-image img {
+  transform: scale(1.05);
+}
+
+/* Floating label on donation cards */
+.donation-card .donation-icon::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 23px;
+  border: 2px solid transparent;
+  transition: border-color 0.3s ease;
+}
+.donation-card:hover .donation-icon::after {
+  border-color: rgba(255,215,0,0.3);
+}
+
+/* Enhanced progress bar animation */
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: 0; bottom: 0;
+  width: 200%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  animation: progressShine 2s ease-in-out infinite;
+}
+@keyframes progressShine {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(50%); }
+}
+
+/* Decorative dot pattern for bg-light sections */
+.bg-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(26,35,126,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-light {
+  position: relative;
+}
+
+/* Mobile adjustments for red stripes */
+@media (max-width: 768px) {
+  .donation-card::after,
+  .project-card::after,
+  .opportunity-card::after,
+  .benefit-card::after,
+  .vmv-card::after,
+  .member-card::after,
+  .program-item::after,
+  .impact-item::after,
+  .timeline-content-card::after {
+    height: 4px;
+  }
+  .stripe-featured::after {
+    height: 5px !important;
+  }
 }
 
 

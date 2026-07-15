@@ -6,7 +6,9 @@ include('shared/_header.php');
 
   <main>
     <!-- Page Header -->
-    <section class="page-header">
+    <section class="page-header page-header-bg" style="background-image: url('images/skills-lab-nurses.jpeg');">
+      <div class="decor-shape decor-shape-1"></div>
+      <div class="decor-shape decor-shape-3"></div>
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">

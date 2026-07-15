@@ -1,12 +1,14 @@
 <?php include('shared/_header.php');?>
 
   <main>
-    <!-- Page Header — Premium 3D -->
-    <section class="page-header animate-on-scroll">
+    <!-- Page Header — Premium 3D with Background Image -->
+    <section class="page-header page-header-bg animate-on-scroll" style="background-image: url('images/students-hero.jpg');">
+      <div class="decor-shape decor-shape-1"></div>
+      <div class="decor-shape decor-shape-2"></div>
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);border-radius:50px;color:#FFD700;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:1rem;">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);border-radius:50px;color:#FFD700;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:1rem;">
               <i class="fas fa-graduation-cap"></i> Est. 2009
             </div>
             <h1 class="page-title">About Iganga School of Nursing & Midwifery</h1>
@@ -61,6 +63,14 @@
           <div class="col-lg-12 text-center">
             <div class="vmv-header-image">
               <img src="images/students.jpg" alt="Students Learning" class="img-fluid rounded-3">
+              <div class="vmv-overlay">
+                <div class="vmv-overlay-content">
+                  <span class="vmv-overlay-tag"><i class="fas fa-graduation-cap"></i> Our Purpose</span>
+                  <h2 class="vmv-overlay-title">Empowering Future Healthcare Leaders</h2>
+                  <div class="vmv-overlay-divider"></div>
+                  <p class="vmv-overlay-text">Building a healthier and disease-free community through excellence in nursing and midwifery education since 2009</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
