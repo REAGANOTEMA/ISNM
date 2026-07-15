@@ -54,7 +54,7 @@ if (!function_exists('notifyAllStaff')) {
             $staffConn = getStaffConn();
             $notifConn = getNotifConn();
             if (!$staffConn || !$notifConn) return 0;
-            $r = $staffConn->query("SELECT id FROM staff WHERE is_active = 1");
+            $r = $staffConn->query("SELECT id FROM staff WHERE status = 'Active'");
             if (!$r) return 0;
             $count = 0;
             $stmt = $notifConn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");

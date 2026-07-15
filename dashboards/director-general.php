@@ -142,7 +142,7 @@ if ($dg_cached) {
         $union = $websiteConn->query("
             (SELECT 'contact' as type, id, full_name as name, subject as title, created_at FROM contact_submissions WHERE status='New')
             UNION ALL
-            (SELECT 'volunteer', id, CONCAT(first_name,' ',surname), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
+            (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
             UNION ALL
             (SELECT 'donation', id, donor_name, CONCAT('UGX ',FORMAT(amount,0)), created_at FROM donations WHERE status='pending')
             UNION ALL
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // â”€â”€ News Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=news'); exit;
     }
@@ -354,6 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                             if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); };
                             $snStmt->close();
                         }
+                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = 'News article created successfully.';
@@ -403,6 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
                         $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,'A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
                         if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); }; $snStmt->close(); }
+                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = "Status changed to $newStatus.";
@@ -432,7 +434,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
 
 // ── Events Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['ev_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=events'); exit;
     }
@@ -516,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
 
 // ── Testimonials Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['tm_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=testimonials'); exit;
     }
@@ -601,7 +603,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action
 
 // ── FAQ Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['faq_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=faqs'); exit;
     }
@@ -689,7 +691,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
 
 // ── Website Settings POST handler ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['ws_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=web-settings'); exit;
     }
@@ -726,7 +728,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -758,7 +760,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -810,7 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 
 // â”€â”€ CRUD POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
-    if (!verifyCsrfToken()) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
@@ -1439,7 +1441,7 @@ switch ($dgSection):
             <tbody>
             <?php foreach($recent_payments as $p): $pc=in_array($p['status'],['verified','approved'])?'bg-success':'bg-warning text-dark'; ?>
             <tr>
-              <td><strong style="font-size:12px;"><?= htmlspecialchars(($p['full_name']??'') ?: (($p['first_name']??'').' '.($p['surname']??''))) ?></strong><br><code style="font-size:10px;"><?= htmlspecialchars($p['student_number']??'') ?></code></td>
+              <td><strong style="font-size:12px;"><?= htmlspecialchars(($p['first_name']??'').' '.($p['last_name']??'')) ?></strong><br><code style="font-size:10px;"><?= htmlspecialchars($p['student_number']??'') ?></code></td>
               <td><strong>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></strong></td>
               <td><?= htmlspecialchars($p['payment_method']??'-') ?></td>
               <td><span style="color:#64748b;font-size:12px;"><?= isset($p['payment_date'])?date('d M',strtotime($p['payment_date'])):'-' ?></span></td>
@@ -1961,20 +1963,22 @@ document.addEventListener('DOMContentLoaded', function() {
                       }
                       $lvq->close();
                   }
-               // removed $staffConn->close() - shared connection
-           }
-       }
-   } else {
+                  $staffConn->close();
+              }
+          }
+      }
+  } else {
       if ($conn) {
         $nr = $conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT 50");
         if ($nr) while ($row = $nr->fetch_assoc()) $dgNewsList[] = $row;
       }
 
       // Fetch view stats (top 20 by views count)
-        if ($staffConn = getStaffConnection()) {
-         $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
-         if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
-       }
+      if ($staffConn = getStaffConnection()) {
+        $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
+        if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
+        $staffConn->close();
+      }
 
       $dgTotalViews = array_sum($dgNewsViews);
       $dgPublishedCount = count(array_filter($dgNewsList, fn($x) => ($x['status'] ?? null) === 'published'));
@@ -1996,10 +2000,10 @@ document.addEventListener('DOMContentLoaded', function() {
                   $lvq->close();
               }
           }
-       // removed $staffConn->close() - shared connection
-       }
+          $staffConn->close();
+      }
 
-       if ($dgNewsUseCache) {
+      if ($dgNewsUseCache) {
           setCacheData($dgNewsCacheKey, [
               'dgNewsList' => $dgNewsList,
               'dgNewsViews' => $dgNewsViews,
@@ -2926,12 +2930,12 @@ function dgExportCSV() {
 <div id="system-health" class="content-section dashboard-section active" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
 </div>
-        <?php break; ?>
+        <?php break;
     default: ?>
         <div id="home" class="content-section dashboard-section active" data-section="home">
             <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
         </div>
-        <?php break; ?>
+        <?php break;
 endswitch; ?>
 
 <?php renderApprovalModalsAndScripts(); ?>
@@ -3352,7 +3356,7 @@ function viewAcademic(id){ window.location.href='../academic_records_management.
 function viewFees(id){ window.location.href='../dashboards/school-bursar.php?section=record_payment&student_id='+id; }
 function sendMessage(id){
   var name = '';
-  try { var s = (window.allStudents||[]).find(function(x){return x.id==id;}); if(s) name = s.full_name||(s.first_name+' '+s.surname); } catch(e){}
+  try { var s = (window.allStudents||[]).find(function(x){return x.id==id;}); if(s) name = s.first_name+' '+s.last_name; } catch(e){}
   // Open messaging section with pre-filled recipient info
   switchToSection('messaging');
 }
@@ -3468,17 +3472,6 @@ function switchToSection(section) {
 }
 </script>
 
-<script>
-document.querySelectorAll('form[method="POST"]').forEach(function(form) {
-    if (!form.querySelector('input[name="csrf_token"]')) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'csrf_token';
-        input.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
-        form.appendChild(input);
-    }
-});
-</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

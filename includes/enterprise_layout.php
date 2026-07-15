@@ -33,7 +33,7 @@ $elTaskCount = 0;
 $elApprovalCount = 0;
 if ($elConn && $elUid) {
     try {
-        $elNotifCount = getUnreadNotificationCount($elUid);
+        $elNotifCount = getUnreadNotificationCount($elUid, 'staff');
         $elTaskCount = getPendingTaskCount($elConn, $elUid);
         $elApprovalCount = getPendingApprovalCount($elConn);
     } catch (Exception $e) { error_log('enterprise_layout render: ' . $e->getMessage()); }
