@@ -680,8 +680,8 @@ if ($login_success) { unset($_SESSION['success']); }
 <div class="bg-particles" id="particles"></div>
 
 <div class="text-center mb-3">
-  <a href="index.php" class="text-decoration-none back-home-link" style="color:#fff;font-size:0.9rem;opacity:0.8">
-    <i class="fas fa-arrow-left me-1"></i> Back to Home
+  <a href="organogram.php" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;font-size:0.85rem;color:#fff;text-decoration:none;border-radius:8px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);transition:all 0.3s ease;">
+    <i class="fas fa-sitemap"></i> Back to Organogram
   </a>
 </div>
 <div class="login-wrapper">

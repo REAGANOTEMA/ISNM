@@ -2926,12 +2926,12 @@ function dgExportCSV() {
 <div id="system-health" class="content-section dashboard-section active" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
 </div>
-        <?php break;
+        <?php break; ?>
     default: ?>
         <div id="home" class="content-section dashboard-section active" data-section="home">
             <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
         </div>
-        <?php break;
+        <?php break; ?>
 endswitch; ?>
 
 <?php renderApprovalModalsAndScripts(); ?>

@@ -787,8 +787,8 @@ body{
 </div>
 <div class="login-right">
   <div class="text-center mb-3">
-  <a href="index.php" class="text-decoration-none back-home-link" style="color:var(--yellow);font-size:0.9rem">
-    <i class="fas fa-arrow-left me-1"></i> Back to Home
+  <a href="organogram.php" class="btn-3d btn-yellow" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;font-size:0.85rem;text-decoration:none;border-radius:8px;">
+    <i class="fas fa-sitemap"></i> Back to Organogram
   </a>
 </div>
 <div class="login-card-wrap">

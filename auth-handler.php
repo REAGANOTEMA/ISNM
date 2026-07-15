@@ -422,6 +422,10 @@ switch ($action) {
                 'Skills Lab Technician'  => 'dashboards/skills-lab.php',
                 'Skills Lab Manager'     => 'dashboards/skills-lab.php',
                 'Skills Lab'             => 'dashboards/skills-lab.php',
+                'Events Coordinator'     => 'dashboards/events-manager.php',
+                'Events Manager'         => 'dashboards/events-manager.php',
+                'Alumni Relations Officer' => 'dashboards/alumni-manager.php',
+                'Alumni Officer'         => 'dashboards/alumni-manager.php',
                 'System Administrator'   => 'dashboards/system-admin.php',
             ];
 

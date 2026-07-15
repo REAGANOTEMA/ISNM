@@ -304,7 +304,7 @@ class AuthenticationService {
     }
 
     public function authenticateStaff($email, $password) {
-        // Raw trim only â€” no sanitization that could alter characters
+        // Raw trim only — no sanitization that could alter characters
         $email    = strtolower(trim((string) $email));
         $password = (string) $password; // Do NOT trim or decode password here to preserve exact input
 
@@ -322,8 +322,10 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
         }
 
-        if ($this->isStaffAccountLocked($email))
+        if ($this->isStaffAccountLocked($email)) {
+            error_log("authenticateStaff: Account locked for $email");
             return ['success' => false, 'message' => 'Invalid email or password'];
+        }
 
         // Try with staff_roles JOIN first, fall back to staff-only query if table missing
         $roleName = '';
@@ -335,7 +337,7 @@ class AuthenticationService {
         );
         if (!$stmt) {
             error_log('authenticateStaff JOIN prepare failed (staff_roles may be missing): ' . $conn->error);
-            // staff_roles table likely doesn't exist â€” query staff table directly
+            // staff_roles table likely doesn't exist — query staff table directly
             $stmt = $conn->prepare(
                 "SELECT * FROM staff WHERE LOWER(email) = ? LIMIT 1"
             );
@@ -346,11 +348,13 @@ class AuthenticationService {
         }
         $stmt->bind_param('s', $email);
         if (!$stmt->execute()) {
+            error_log("authenticateStaff: execute failed for $email: " . $stmt->error);
             $stmt->close();
             return ['success' => false, 'message' => 'Database error. Please try again.'];
         }
         $result = $stmt->get_result();
         if (!$result || $result->num_rows === 0) {
+            error_log("authenticateStaff: No staff found for email=$email");
             $stmt->close();
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
@@ -358,7 +362,7 @@ class AuthenticationService {
         $staff = $result->fetch_assoc();
         $stmt->close();
 
-        // Get role name â€” try staff_roles if available, otherwise use role_id
+        // Get role name — try staff_roles if available, otherwise use role_id
         if (!empty($staff['role_name'])) {
             $roleName = $staff['role_name'];
         } else {
@@ -380,16 +384,19 @@ class AuthenticationService {
 
         // Check status
         if (strtolower($staff['status']) !== 'active') {
+            error_log("authenticateStaff: Account inactive for $email (status={$staff['status']})");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
         // Check password - hashed only
         if (!password_verify($password, $staff['password'])) {
+            error_log("authenticateStaff: Password mismatch for $email");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
+        error_log("authenticateStaff: Login successful for $email (role=$roleName)");
         $this->resetStaffFailedAttempts($staff['id'] ?? 0);
         return [
             'success' => true,
