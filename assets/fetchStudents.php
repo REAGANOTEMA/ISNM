@@ -7,77 +7,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $postData = file_get_contents("php://input");
     $data = json_decode($postData, true);
 
-    $name = $data['name'];
-    $class = $data['as'];
-    $section = $data['a'];
+    $name = trim($data['name'] ?? '');
+    $course = trim($data['as'] ?? '');
+    $year = trim($data['a'] ?? '');
 
-    $query = "";
     $resultOutput = array();
+    $query = "";
+    $params = [];
+    $types = '';
 
-    if ($name == "") {
-        $query = "SELECT * FROM students  WHERE class=? AND section=?  ORDER BY fname, lname ASC;";
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, "ss", $class, $section);
+    $where = ["status != 'deleted'"];
+    if ($course !== '') { $where[] = "course = ?"; $params[] = $course; $types .= 's'; }
+    if ($year !== '') { $where[] = "year = ?"; $params[] = intval($year); $types .= 'i'; }
+
+    $whereClause = implode(" AND ", $where);
+
+    if ($name === '') {
+        $query = "SELECT * FROM students WHERE $whereClause ORDER BY first_name, surname ASC";
     } else {
-        if (stripos($name, " ") !== false) {
-            $array = explode(' ', $name, 2);
-
-            $query = "SELECT *
-            FROM (
-                SELECT *
-                FROM students
-                WHERE class=? AND section=?
-            ) AS temp_table
-            WHERE (fname LIKE ? AND lname LIKE ?)
-                OR (fname LIKE ? AND lname LIKE ?)
-            ORDER BY fname, lname ASC;";
-
-            $stmt = mysqli_prepare($conn, $query);
-            $param1 = $array[0] . '%';
-            $param2 = '%' . $array[1] . "%";
-            $param3 = $array[1] . '%';
-            $param4 = '%' . $array[0] . "%";
-            mysqli_stmt_bind_param($stmt, "ssssss", $class, $section, $param1, $param2, $param3, $param4);
-        } else {
-            $query = "SELECT *
-            FROM students
-            WHERE class=? AND section=?
-                AND (fname LIKE ? OR lname LIKE ?)
-            ORDER BY fname, lname ASC;";
-
-            $stmt = mysqli_prepare($conn, $query);
-            $param = '%' . $name . '%';
-            mysqli_stmt_bind_param($stmt, "ssss", $class, $section, $param, $param);
-        }
+        $search = '%' . $name . '%';
+        $query = "SELECT * FROM students WHERE $whereClause AND (first_name LIKE ? OR surname LIKE ? OR full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR index_number LIKE ?) ORDER BY first_name, surname ASC";
+        $params[] = $search;
+        $params[] = $search;
+        $params[] = $search;
+        $params[] = $search;
+        $params[] = $search;
+        $params[] = $search;
+        $types .= 'ssssss';
     }
 
+    $stmt = $conn->prepare($query);
     if ($stmt) {
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
+        if (!empty($params)) { $stmt->bind_param($types, ...$params); }
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if (mysqli_num_rows($result) > 0) {
+        if ($result->num_rows > 0) {
             $count = 1;
-            while ($row = mysqli_fetch_assoc($result)) {
-                $fname = $row["fname"];
-                $lname = $row["lname"];
+            while ($row = $result->fetch_assoc()) {
+                $displayName = $row["full_name"] ?: trim($row["first_name"] . " " . $row["other_name"] . " " . $row["surname"]);
+                $image = '../studentUploads/' . ($row['profile_picture'] ?: $row['passport_photo'] ?? '');
+                $image = (!empty($row['profile_picture']) && file_exists($image)) ? $image : "../images/user.png";
                 $tid = $row['id'];
-                $image = '../studentUploads/'.$row['image'];
-                $image = file_exists($image) ? $image : "../images/user.png";
 
                 $resultOutput[$count - 1] = "<tr>
-               <td>&nbsp;&nbsp;".$count.".&nbsp;&nbsp;</td>
-                <td>".$tid."</td>
+               <td>&nbsp;&nbsp;" . $count . ".&nbsp;&nbsp;</td>
+                <td>" . htmlspecialchars($row['student_number'] ?? $tid) . "</td>
                 <td class='user'>
-                    <img src='".$image."'>
-                    <p>". ucfirst(strtolower($fname)) ." ". strtolower($lname)."</p>
+                    <img src='" . $image . "'>
+                    <p>" . htmlspecialchars($displayName) . "</p>
                 </td>
+                <td>" . htmlspecialchars($row['course'] ?? '') . "</td>
+                <td>" . htmlspecialchars($row['year'] ?? '') . "</td>
                 <td class='flex-center'>
                     <div class='edit-delete'>
-                        <a onclick='editStudent(`".$tid."`)'   class='edit' >
+                        <a onclick='editStudent(`" . $tid . "`)'   class='edit' >
                             <i class='bx bxs-edit'></i>
                             <span>&nbsp;Edit</span>
                         </a>
-                        <a onclick='deleteStudentWithId(`".$tid."`)'  class='delete'>
+                        <a onclick='deleteStudentWithId(`" . $tid . "`)'  class='delete'>
                             &nbsp;&nbsp;<i class='bx bxs-trash'></i>
                             <span>&nbsp;Delete</span>
                             &nbsp;&nbsp;
@@ -92,9 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $resultOutput[0] = "No_Record";
         }
 
-        mysqli_stmt_close($stmt);
+        $stmt->close();
     } else {
-        $resultOutput[0] = "Error in preparing statement";
+        $resultOutput[0] = "Error in preparing statement: " . $conn->error;
     }
 } else {
     $resultOutput[0] = "Error";

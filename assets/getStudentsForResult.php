@@ -4,19 +4,19 @@ header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['status' => 'NODATA']); exit; }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$class = trim($input['class'] ?? '');
-$section = trim($input['section'] ?? '');
+$course = trim($input['class'] ?? '');
+$year = trim($input['section'] ?? '');
 $totalMarks = floatval($input['totalMarks'] ?? 100);
 $subject = trim($input['subject'] ?? '');
 
-if (empty($class)) { echo json_encode(['status' => 'NODATA']); exit; }
+if (empty($course)) { echo json_encode(['status' => 'NODATA']); exit; }
 
 try {
-    $params = [$class];
+    $params = [$course];
     $types = 's';
-    $sql = "SELECT id, CONCAT(fname, ' ', lname) AS full_name, class FROM students WHERE class=?";
-    if ($section) { $sql .= " AND section=?"; $params[] = $section; $types .= 's'; }
-    $sql .= " ORDER BY lname, fname";
+    $sql = "SELECT id, COALESCE(full_name, CONCAT(first_name, ' ', COALESCE(other_name, ''), ' ', surname)) AS full_name, course FROM students WHERE course=?";
+    if ($year) { $sql .= " AND year=?"; $params[] = intval($year); $types .= 'i'; }
+    $sql .= " AND status != 'deleted' ORDER BY surname, first_name";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) { echo json_encode(['status' => 'NODATA']); exit; }
@@ -36,5 +36,5 @@ try {
         $i++;
     }
     $stmt->close();
-    echo json_encode(['status' => 'DATA', 'head' => $head, 'body' => $body, 'class' => $class, 'section' => $section]);
+    echo json_encode(['status' => 'DATA', 'head' => $head, 'body' => $body, 'class' => $course, 'section' => $year]);
 } catch (Exception $e) { error_log('getStudentsForResult error: ' . $e->getMessage()); echo json_encode(['status' => 'NODATA']); }

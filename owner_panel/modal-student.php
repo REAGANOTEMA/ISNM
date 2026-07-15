@@ -20,7 +20,6 @@ ini_set('log_errors', 1);
     <script src="../js/oranbyte-google-translator.js"></script>
     <style type="text/css">
          .card{
-                
                 position: absolute;
                 margin-top: 5%;
          }
@@ -30,7 +29,6 @@ ini_set('log_errors', 1);
          	display: flex;
          	justify-content: center;
          	flex-direction: row;
-
          }
          .card{
          	width: 40%;
@@ -76,54 +74,49 @@ ini_set('log_errors', 1);
           <a class="nav-link" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">Logout</a>
         </li>
       </ul>
-      <form class="d-flex align-items-center">
-            <div id="oranbyte-google-translator" class="me-2"
-              data-default-lang="en"
-              data-lang-root-style="code-flag"
-              data-lang-list-style="code-flag"
-              ></div>
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
     </div>
   </div>
 </nav>
     </div>
 	<div class="detail">
     <?php
-  
   $data = "";
-
-  $sql="SELECT * FROM students where id = " . intval($_GET['id']);
-  $result=mysqli_query($conn,$sql);
-  if(mysqli_num_rows($result)>0){
-    while($row=mysqli_fetch_assoc($result)){
-        $data .= "<div class='card'>
-                    <img src='../studentUploads/".$row['image']."' class='card-img-top' alt='profile image of teacher'/>
-                    <div class='card-body'>
-                        <h5 class='card-title'></h5>
-                        <p class='card-text'>Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                    </div>
-                    <ul class='list-group list-group-light list-group-small'>
-                        <li class='list-group-item px-4'>Name: ".$row['fname']." ".$row['lname']."</li>
-                        <li class='list-group-item px-4'>Email : ".$row['email']."</li>
-                        <li class='list-group-item px-4'>Father Name: ".$row['father']."</li>
-                        <li class='list-group-item px-4'>Gender : ".$row['gender']."</li>
-                        <li class='list-group-item px-4'>Phone: ".$row['phone']."</li>
-                        <li class='list-group-item px-4'>D-O-B: ".$row['dob']."</li>
-                        <li class='list-group-item px-4'>Address: ".$row['address']."</li>
-                        <li class='list-group-item px-4'>city: ".$row['city']."</li>
-                        <li class='list-group-item px-4'>state: ".$row['state']."</li>
-                    </ul>
-                    <div class='card-body'>
-                        <a href='student-attendence.php?id=". $row['id'] ."' class='card-link'><button id='fee' data-id='".$row['id']."' style='height: 35px; width: 100px; background-color: green; color: white; border: none; border-radius: 8px; text-decoration: none;'>Fee Status</button></a>
-                        
-                        <a href='student-attendence.php?id=". $row['id'] ."' class='card-link'><button id='attendence' data-id='".$row['id']."' style='height: 35px; width: 100px; background-color: #4f4446; color: white; border: none; border-radius: 8px; text-decoration: none;'>Attendence</button></a>
-                    </div>
-                </div>";
-    }
-    echo $data;
+  $id = intval($_GET['id'] ?? 0);
+  if ($id > 0) {
+      $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? AND status != 'deleted'");
+      if ($stmt) {
+          $stmt->bind_param("i", $id);
+          $stmt->execute();
+          $result = $stmt->get_result();
+          if ($result && $result->num_rows > 0) {
+              while ($row = $result->fetch_assoc()) {
+                  $displayName = $row['full_name'] ?: trim($row['first_name'] . ' ' . $row['other_name'] . ' ' . $row['surname']);
+                  $image = '../studentUploads/' . ($row['profile_picture'] ?? $row['passport_photo'] ?? '');
+                  $image = (!empty($row['profile_picture']) && file_exists($image)) ? $image : "../images/user.png";
+                  $data .= "<div class='card'>
+                      <img src='" . $image . "' class='card-img-top' alt='profile image'/>
+                      <div class='card-body'>
+                          <h5 class='card-title'>" . htmlspecialchars($displayName) . "</h5>
+                          <p class='card-text'>Student No: " . htmlspecialchars($row['student_number'] ?? '') . "</p>
+                      </div>
+                      <ul class='list-group list-group-light list-group-small'>
+                          <li class='list-group-item px-4'>Name: " . htmlspecialchars($displayName) . "</li>
+                          <li class='list-group-item px-4'>Email: " . htmlspecialchars($row['email'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Course: " . htmlspecialchars($row['course'] ?? $row['program'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Year: " . htmlspecialchars($row['year'] ?? $row['current_year'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Gender: " . htmlspecialchars($row['gender'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Phone: " . htmlspecialchars($row['phone'] ?? $row['mobile_number'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>D-O-B: " . htmlspecialchars($row['date_of_birth'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Address: " . htmlspecialchars($row['address'] ?? '') . "</li>
+                          <li class='list-group-item px-4'>Status: " . htmlspecialchars($row['status'] ?? '') . "</li>
+                      </ul>
+                  </div>";
+              }
+          }
+          $stmt->close();
+      }
   }
+  echo $data;
 ?>
 </div>
 <br><br>

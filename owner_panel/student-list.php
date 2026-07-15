@@ -71,36 +71,22 @@ ini_set('log_errors', 1);
     </div>
     <div class="select">
       <select class="form-select" aria-label="Default select example" id="form-select">
-  <option value="" selected>Select Class</option>
-  <option value="12m">12 (Math)</option>
-<option value="12b">12 (Bio)</option>
-<option value="12c">12 (Commerce)</option>
-<option value="11m">11 (Math)</option>
-<option value="11b">11 (Bio)</option>
-<option value="11c">11 (Commerce)</option>
-<option value="10">10</option>
-<option value="9">9</option>
-<option value="8">8</option>
-<option value="7">7</option>
-<option value="6">6</option>
-<option value="5">5</option>
-<option value="4">4</option>
-<option value="3">3</option>
-<option value="2">2</option>
-<option value="1">1</option>
-<option value="pg">pg</option>
-<option value="lkg">lkg</option>
-<option value="ukg">ukg</option>
-
+  <option value="" selected>Select Course</option>
+  <option value="Certificate in Midwifery">Certificate in Midwifery</option>
+  <option value="Certificate in Nursing">Certificate in Nursing</option>
+  <option value="Diploma in Nursing">Diploma in Nursing</option>
+  <option value="Diploma in Midwifery">Diploma in Midwifery</option>
+  <option value="Diploma in Nursing Education">Diploma in Nursing Education</option>
+  <option value="Bachelor of Science in Nursing">Bachelor of Science in Nursing</option>
 </select>
     </div>
     <div class="teacher-list">
       <table class="table table-bordered">
   <thead>
     <tr>
-      <th scope="col">Sr_NO</th>
+      <th scope="col">#</th>
       <th scope="col">NAME</th>
-      <th scope="col">Class & Section</th>
+      <th scope="col">Course & Year</th>
       <th scope="col">MORE DETAILS</th>
     </tr>
   </thead>

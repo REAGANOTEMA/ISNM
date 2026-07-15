@@ -942,7 +942,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             <div class="col-md-5">
                 <div class="section-card">
                     <h2><i class="fas fa-user-graduate me-2 text-purple"></i>Student Accounts <span class="badge bg-secondary"><?= $student_count ?></span></h2>
-                    <?php $students_list = ict_fetch($students_conn, "SELECT id, first_name, last_name, email, status, last_login FROM students ORDER BY last_login DESC LIMIT 15"); ?>
+                    <?php $students_list = ict_fetch($students_conn, "SELECT id, first_name, surname, full_name, email, status, last_login FROM students ORDER BY last_login DESC LIMIT 15"); ?>
                     <div class="table-responsive" style="max-height:300px;overflow-y:auto">
                         <table class="table table-sm table-hover table-small">
                             <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
@@ -950,7 +950,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                                 <?php if (empty($students_list)): ?><tr><td colspan="4" class="text-center text-muted">No records</td></tr><?php endif; ?>
                                 <?php foreach ($students_list as $s): ?>
                                 <tr>
-                                    <td><small><?= htmlspecialchars($s['first_name'] . ' ' . $s['last_name']) ?></small></td>
+                                    <td><small><?= htmlspecialchars($s['full_name'] ?: $s['first_name'] . ' ' . $s['surname']) ?></small></td>
                                     <td><small><?= htmlspecialchars($s['email'] ?? '-') ?></small> <?= ict_mailto($s['email'] ?? '') ?></td>
                                     <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= $s['status'] ?? 'Active' ?></span></td>
                                     <td><small class="text-muted"><?= htmlspecialchars($s['last_login'] ?? 'Never') ?></small></td>

@@ -6,12 +6,22 @@ $studentid = intval($_POST['studentid'] ?? 0);
 if ($studentid <= 0) { echo 'Invalid student ID'; exit; }
 
 try {
-    $conn->begin_transaction();
-    $stmt = $conn->prepare("DELETE FROM student_guardian WHERE student_id=?");
-    if ($stmt) { $stmt->bind_param('i', $studentid); $stmt->execute(); $stmt->close(); }
+    $stmt = $conn->prepare("UPDATE students SET status = 'deleted', updated_at = NOW() WHERE id = ?");
+    if (!$stmt) { echo 'Database error'; exit; }
+    $stmt->bind_param('i', $studentid);
 
-    $stmt2 = $conn->prepare("DELETE FROM students WHERE id=?");
-    if ($stmt2) { $stmt2->bind_param('i', $studentid); $ok = $stmt2->execute(); $stmt2->close(); } else { $ok = false; }
-
-    if ($ok) { $conn->commit(); echo 'success'; } else { $conn->rollback(); echo 'Failed to delete student'; }
-} catch (Exception $e) { $conn->rollback(); error_log('removeStudent error: ' . $e->getMessage()); echo 'Database error'; }
+    if ($stmt->execute()) {
+        if ($stmt->affected_rows > 0) {
+            echo 'success';
+        } else {
+            echo 'Student not found or already deleted';
+        }
+    } else {
+        echo 'Failed to delete student';
+    }
+    $stmt->close();
+} catch (Exception $e) {
+    error_log('removeStudent error: ' . $e->getMessage());
+    echo 'Database error';
+}
+?>

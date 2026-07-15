@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                                         $passingMarks = $row['passing_marks'];
 
                                         // Fetch students' marks with names via JOIN
-                                        $query2 = 'SELECT m.`student_id`, m.`marks`, s.`fname`, s.`lname` FROM `marks` m JOIN `students` s ON m.student_id = s.id WHERE m.`exam_id` = ?';
+                                        $query2 = 'SELECT m.`student_id`, m.`marks`, s.`first_name`, s.`surname`, s.`other_name`, s.`full_name` FROM `marks` m JOIN `students` s ON m.student_id = s.id WHERE m.`exam_id` = ?';
                                         $stmt2 = mysqli_prepare($conn, $query2);
                                         mysqli_stmt_bind_param($stmt2, "s", $examId);
                                         mysqli_stmt_execute($stmt2);
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                                                 $passFail = ((int) ($obtainedMarks)) >= ((int) ($passingMarks)) ? "PASSED" : "FAIL";
 
-                                                $Name = $marksRow['fname'] . " " . $marksRow['lname'];
+                                                $Name = $marksRow['full_name'] ?: trim($marksRow['first_name'] . ' ' . $marksRow['other_name'] . ' ' . $marksRow['surname']);
 
                                                 echo '<tr>
                                                 <td>' . $marksRow['student_id'] . '</td>

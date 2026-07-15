@@ -93,7 +93,7 @@ $pageTitle = 'Proof of Payments';
                         <tr>
                             <td><strong><?= htmlspecialchars($p['proof_number']) ?></strong></td>
                             <td>
-                                <?= htmlspecialchars(($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? '')) ?>
+                                <?= htmlspecialchars(($p['full_name'] ?? '') ?: (($p['first_name'] ?? '') . ' ' . ($p['surname'] ?? ''))) ?>
                                 <br><small class="text-muted"><?= htmlspecialchars($p['student_number'] ?? '') ?></small>
                             </td>
                             <td><small><?= htmlspecialchars($p['payment_receipt'] ?? '-') ?></small></td>

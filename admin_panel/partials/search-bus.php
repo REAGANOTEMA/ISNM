@@ -8,26 +8,27 @@ if ($conn->connect_error) {
 $input = $_POST["val"] ?? "";
 $like = $input . "%";
 
-$stmt = $conn->prepare("SELECT * FROM students WHERE request = 'Accepted' AND fname LIKE ?");
-$stmt->bind_param("s", $like);
-$result = $stmt->execute();
+$stmt = $conn->prepare("SELECT * FROM students WHERE status != 'deleted' AND (first_name LIKE ? OR surname LIKE ? OR full_name LIKE ? OR student_number LIKE ?) LIMIT 50");
+$searchPattern = "%" . $input . "%";
+$stmt->bind_param("ssss", $searchPattern, $searchPattern, $searchPattern, $searchPattern);
+$stmt->execute();
 $result = $stmt->get_result();
 
 if ($result) {
     if(mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
+            $displayName = $row['full_name'] ?: trim($row['first_name'] . ' ' . $row['other_name'] . ' ' . $row['surname']);
             echo '<div class="alert alert-primary" role="alert">
-                    '.$row["fname"].' '.$row["lname"].' Class '.$row["class"].' section '.$row["section"].'  <br>
-                       <b>Bus Request Accepted</b>
+                    '.htmlspecialchars($displayName).' - '.htmlspecialchars($row['course'] ?? '').' Year '.htmlspecialchars($row['year'] ?? '').'  <br>
+                       <b>Student Found</b>
                 </div>';
         }
     } else {
-        echo "No pending requests.";
+        echo "No students found.";
     }
 } else {
     echo "Error: " . $conn->error;
 }
 
 $stmt->close();
-mysqli_close($conn);
 ?>

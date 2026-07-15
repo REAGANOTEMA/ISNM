@@ -13,27 +13,19 @@
 
         <div class="row g-3 align-items-center">
             <div class="col-auto">
-                <label for="inputPassword6" class="col-form-label px-1">&nbsp;Class&nbsp; </label>
+                <label class="col-form-label px-1">Course</label>
             </div>
             <div class="col-auto">
-                <select class="form-select" aria-label="Default select example" id="feedback-search-class">
-                    <option value="12c">12 (Commerce)</option>
-<option value="11c">11 (Commerce)</option>
-<option value="12s">12 (Science)</option>
-<option value="11s">11 (Science)</option>
-<option value="10">10</option>
-<option value="9">9</option>
-<option value="8">8</option>
-<option value="7">7</option>
-<option value="6">6</option>
-<option value="5">5</option>
-<option value="4">4</option>
-<option value="3">3</option>
-<option value="2">2</option>
-<option value="1">1</option>
-<option value="pg">Nursery</option>
-<option value="lkg">lkg</option>
-<option value="ukg">ukg</option>
+                <select class="form-select" id="feedback-search-class">
+                    <option value="">All Courses</option>
+                    <?php
+                        if (isset($conn) && $conn) {
+                            $programsQ = $conn->query("SELECT program_name FROM programs WHERE status='Active' ORDER BY program_name");
+                            if ($programsQ) while ($pr = $programsQ->fetch_assoc()) {
+                                echo '<option value="'.htmlspecialchars($pr['program_name']).'">'.htmlspecialchars($pr['program_name']).'</option>';
+                            }
+                        }
+                    ?>
                 </select>
             </div>
         </div>
@@ -44,13 +36,17 @@
     <div class="container" style="display: flex;">
         <div class="row g-3 align-items-center">
             <div class="col-auto">
-                <label for="inputPassword6" class="col-form-label">Section </label>
+                <label class="col-form-label">Year</label>
             </div>
             <div class="col-auto">
-                <select class="form-select" aria-label="Default select example" id="feedback-search-section">
-                    <option selected>A</option>
-                    <option>B</option>
-                    <option>C</option>
+                <select class="form-select" id="feedback-search-section">
+                    <option value="">All Years</option>
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                    <option value="5">Year 5</option>
+                    <option value="6">Year 6</option>
                 </select>
             </div>
         </div>

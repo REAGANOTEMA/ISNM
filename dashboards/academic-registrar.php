@@ -240,14 +240,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
     }
     if ($action === 'register_student') {
         if (!$students) { $_SESSION['error'] = 'Students database unavailable.'; redirectBack('student-records'); }
-        $fn = trim($_POST['first_name'] ?? ''); $ln = trim($_POST['last_name'] ?? '');
+        $fn = trim($_POST['first_name'] ?? ''); $ln = trim($_POST['surname'] ?? trim($_POST['last_name'] ?? ''));
         $gen = trim($_POST['gender'] ?? 'Other');
         $program = trim($_POST['program'] ?? ''); $level = intval($_POST['level'] ?? 1);
         $ph = trim($_POST['phone'] ?? '');
         $em = trim($_POST['email'] ?? '');
         if ($fn && $ln && $program) {
             $fullName = trim("$fn $ln"); $studentNum = 'STU-' . date('Y') . '-' . strtoupper(substr(uniqid(), -6));
-            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, last_name, program, level, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')");
+            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, surname, program, level, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')");
             if ($stmt) { $stmt->bind_param('sssssi', $studentNum, $fullName, $fn, $ln, $program, $level);
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
@@ -474,7 +474,7 @@ $ajaxSid = intval($_GET['student_id'] ?? 0);
 if ($ajaxAction === 'lookup_student' && $ajaxSid > 0) {
     header('Content-Type: application/json');
     if (!$students) { echo json_encode(['error' => 'No DB connection']); exit; }
-    $stmt = $students->prepare("SELECT id, student_number, full_name, first_name, last_name, email, phone, program, level, status, gender FROM students WHERE id = ?");
+    $stmt = $students->prepare("SELECT id, student_number, full_name, first_name, surname, email, phone, program, level, status, gender FROM students WHERE id = ?");
     if (!$stmt) { echo json_encode(['error' => $students->error]); exit; }
     $stmt->bind_param('i', $ajaxSid);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };

@@ -1,27 +1,29 @@
 <?php
  include("../../assets/config.php");
 
-// Assuming you've already sanitized the search term
-$search = $_POST['search'];
+$search = $_POST['search'] ?? '';
+$searchPattern = "%" . $search . "%";
 
-// Using prepared statement to prevent SQL injection
-$sql = "SELECT * FROM students WHERE fname LIKE ? OR lname LIKE ? OR class LIKE ? OR section LIKE ?";
+$sql = "SELECT id, first_name, surname, other_name, full_name, student_number, course, year, status FROM students WHERE status != 'deleted' AND (first_name LIKE ? OR surname LIKE ? OR full_name LIKE ? OR student_number LIKE ? OR course LIKE ?) ORDER BY first_name, surname ASC LIMIT 50";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ssss", $searchPattern, $searchPattern, $searchPattern, $searchPattern);
-$searchPattern = "%{$search}%";
-if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+if (!$stmt) { exit; }
+$stmt->bind_param("sssss", $searchPattern, $searchPattern, $searchPattern, $searchPattern, $searchPattern);
+$stmt->execute();
 $result = $stmt->get_result();
 
+$count = 1;
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
+        $displayName = $row['full_name'] ?: trim($row['first_name'] . ' ' . $row['other_name'] . ' ' . $row['surname']);
         echo "<tr>
-            <th scope='row'>" . $row['s_no'] . "</th>
-            <td>" . $row['fname'] . " " . $row['lname'] . "</td>
-            <td>" . $row['class'] . "" . $row['section'] . "</td>
+            <th scope='row'>" . $count . "</th>
+            <td>" . htmlspecialchars($displayName) . "</td>
+            <td>" . htmlspecialchars($row['course'] ?? '') . " - Year " . htmlspecialchars($row['year'] ?? '') . "</td>
             <td><a href='modal-student.php?id=". $row['id'] ."'><button id='view-more' data-id='".$row['id']."' style='height: 35px; width: 100px; background-color: skyblue; color: white; border: none; border-radius: 8px; text-decoration: none;'>View More</button>
-
           </a></td>
         </tr>";
+        $count++;
     }
 }
+$stmt->close();
 ?>

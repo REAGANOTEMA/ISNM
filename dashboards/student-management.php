@@ -185,7 +185,7 @@ if ($conn && $canEditAdmission) {
 
 $recentResults = [];
 if ($conn && $canEditAcademic) {
-    $r = $conn->query("SELECT er.*, CONCAT(s.first_name,' ',s.surname) sname, s.student_number, cc.course_code FROM examination_results er JOIN students s ON er.student_id=s.id LEFT JOIN course_catalog cc ON er.course_id=cc.id ORDER BY er.created_at DESC LIMIT 15");
+    $r = $conn->query("SELECT er.*, s.full_name as sname, s.student_number, cc.course_code FROM examination_results er JOIN students s ON er.student_id=s.id LEFT JOIN course_catalog cc ON er.course_id=cc.id ORDER BY er.created_at DESC LIMIT 15");
     if ($r) while ($row = $r->fetch_assoc()) $recentResults[] = $row;
 }
 ?>

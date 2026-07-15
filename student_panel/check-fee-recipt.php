@@ -77,7 +77,7 @@
       <div class="notice-body">
         <?php
         $student_id = $_SESSION['uid'];
-        $receipt_query = "SELECT si.*, s.fname, s.lname FROM student_invoices si JOIN students s ON si.student_id = s.id WHERE s.id = ? ORDER BY si.issue_date DESC LIMIT 1";
+        $receipt_query = "SELECT si.*, s.first_name, s.surname, s.other_name, s.full_name FROM student_invoices si JOIN students s ON si.student_id = s.id WHERE s.id = ? ORDER BY si.issue_date DESC LIMIT 1";
         $stmt = mysqli_prepare($conn, $receipt_query);
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "i", $student_id);
@@ -85,7 +85,8 @@
             $receipt_result = mysqli_stmt_get_result($stmt);
             if ($row = mysqli_fetch_assoc($receipt_result)) {
                 echo "<h2>Title: " . htmlspecialchars($row['fee_type']) . "</h2>";
-                echo "<h5>Student: " . htmlspecialchars($row['fname'] . " " . $row['lname']) . "</h5>";
+                $studentName = $row['full_name'] ?: trim($row['first_name'] . ' ' . $row['other_name'] . ' ' . $row['surname']);
+                echo "<h5>Student: " . htmlspecialchars($studentName) . "</h5>";
                 echo "<h5>Amount: " . number_format($row['total_amount'], 2) . "</h5>";
                 echo "<p>Date: " . htmlspecialchars($row['issue_date']) . "</p>";
                 echo "<p>Status: " . htmlspecialchars($row['status']) . "</p>";

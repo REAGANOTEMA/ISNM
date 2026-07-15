@@ -265,8 +265,8 @@ if (isset($_REQUEST['ajax'])) {
                     $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
                     $last_name = $parts[1] ?? $surname;
                     $year = 1; $level = 'Year 1';
-                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, last_name, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-                    $s_ins->bind_param('sssssssssssissssssssssss', $student_number, $reg_number, $first_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $hashed_password);
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                    $s_ins->bind_param('sssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $hashed_password);
                     if (!$s_ins->execute()) { error_log('$s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {

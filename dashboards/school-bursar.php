@@ -289,17 +289,17 @@ $payrollRuns = []; $bankReconciliations = []; $feeAdjustments = []; $studentFees
 $pendingVerification = [];
 
 if ($stuConn) {
-    $sl = $stuConn->query("SELECT id, student_number, first_name, last_name, program, status FROM students ORDER BY first_name LIMIT 200");
+    $sl = $stuConn->query("SELECT id, student_number, full_name, first_name, surname, program, status FROM students WHERE status != 'deleted' ORDER BY full_name LIMIT 200");
     if ($sl) while ($r = $sl->fetch_assoc()) { $studentsList[] = $r; }
-    $pm = $stuConn->query("SELECT p.*, p.amount_received as amount, CONCAT(s.first_name,' ',s.last_name) as student_name FROM payments p JOIN students s ON p.student_id=s.id ORDER BY p.created_at DESC LIMIT 50");
+    $pm = $stuConn->query("SELECT p.*, p.amount_received as amount, s.full_name as student_name FROM payments p JOIN students s ON p.student_id=s.id ORDER BY p.created_at DESC LIMIT 50");
     if ($pm) while ($r = $pm->fetch_assoc()) { $payments[] = $r; }
     $fs = $stuConn->query("SELECT * FROM fee_structures WHERE is_active=1 ORDER BY fee_name");
     if ($fs) while ($r = $fs->fetch_assoc()) { $feeStructures[] = $r; }
-    $fa = $stuConn->query("SELECT fa.*, CONCAT(s.first_name,' ',s.last_name) as student_name FROM fee_adjustments fa JOIN students s ON fa.student_id=s.id ORDER BY fa.created_at DESC LIMIT 30");
+    $fa = $stuConn->query("SELECT fa.*, s.full_name as student_name FROM fee_adjustments fa JOIN students s ON fa.student_id=s.id ORDER BY fa.created_at DESC LIMIT 30");
     if ($fa) while ($r = $fa->fetch_assoc()) { $feeAdjustments[] = $r; }
-    $pv = $stuConn->query("SELECT p.*, p.amount_received as amount, CONCAT(s.first_name,' ',s.last_name) as student_name FROM payments p JOIN students s ON p.student_id=s.id WHERE p.status='Pending' OR p.status='Completed' ORDER BY p.created_at DESC LIMIT 20");
+    $pv = $stuConn->query("SELECT p.*, p.amount_received as amount, s.full_name as student_name FROM payments p JOIN students s ON p.student_id=s.id WHERE p.status='Pending' OR p.status='Completed' ORDER BY p.created_at DESC LIMIT 20");
     if ($pv) while ($r = $pv->fetch_assoc()) { $pendingVerification[] = $r; }
-    $sf = $stuConn->query("SELECT sfe.*, CONCAT(s.first_name,' ',s.last_name) as student_name, sfe.amount as total_fees, (sfe.amount - COALESCE(sfe.paid_amount,0)) as balance FROM student_fees sfe JOIN students s ON sfe.student_id=s.id ORDER BY balance DESC LIMIT 30");
+    $sf = $stuConn->query("SELECT sfe.*, s.full_name as student_name, sfe.amount as total_fees, (sfe.amount - COALESCE(sfe.paid_amount,0)) as balance FROM student_fees sfe JOIN students s ON sfe.student_id=s.id ORDER BY balance DESC LIMIT 30");
     if ($sf) while ($r = $sf->fetch_assoc()) { $studentFees[] = $r; }
 }
 
@@ -425,7 +425,7 @@ $pageTitle = 'Bursar Dashboard';
     </form></div>
     <div class="brs-card"><h3>Discounts & Adjustments</h3>
     <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="add_discount">
-      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
       <div class="mb-2"><select class="form-select form-select-sm" name="discount_type"><option value="discount">Discount</option><option value="waiver">Waiver</option><option value="refund">Refund</option></select></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
       <div class="mb-2"><textarea class="form-control form-control-sm" name="reason" rows="2" placeholder="Reason"></textarea></div>
@@ -451,7 +451,7 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-5">
     <div class="brs-card"><h3>Record Payment</h3>
     <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="record_payment">
-      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?> (<?=htmlspecialchars($s['student_number'])?>)</option><?php endforeach; ?></select></div>
       <div class="mb-2"><input type="number" class="form-control form-control-sm" name="amount" placeholder="Amount" step="0.01" required></div>
       <div class="mb-2"><select class="form-select form-select-sm" name="payment_method" id="payMethod"><option value="cash">Cash</option><option value="bank">Bank Deposit</option><option value="mobile_money">Mobile Money</option><option value="cheque">Cheque</option></select></div>
       <div id="momoFields" style="display:none" class="mb-2 row g-1"><div class="col-6"><input class="form-control form-control-sm" name="mobile_phone" placeholder="Phone (2567XXXXXXXX)"></div><div class="col-6"><select class="form-select form-select-sm" name="mobile_provider"><option value="mtn">MTN MoMo</option><option value="airtel">Airtel Money</option></select></div></div>
@@ -702,7 +702,7 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-5">
     <div class="brs-card"><h3>Send Fee Reminder</h3>
     <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="send_reminder">
-      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['first_name'].' '.$s['last_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="student_id" required><option value="">Select Student</option><?php foreach ($studentsList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
       <div class="mb-2"><textarea class="form-control form-control-sm" name="message" rows="4" placeholder="Reminder message" required>Dear student, your fee balance is due. Please clear to avoid penalties.</textarea></div>
       <button class="btn btn-sm btn-primary">Send Reminder</button>
     </form></div>

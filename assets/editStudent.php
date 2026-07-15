@@ -4,78 +4,59 @@ include("config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $id = $_POST["id"];
-    $fname = $_POST["fname"];
-    $lname = $_POST["lname"];
-    $father = $_POST["father"];
+    $id = intval($_POST["id"] ?? 0);
+    if ($id < 1) { echo 'Invalid student ID'; exit; }
 
-    $class = $_POST["class"];
-    $section = $_POST["section"];
+    $fname = trim($_POST["fname"] ?? '');
+    $lname = trim($_POST["lname"] ?? '');
+    $otherName = trim($_POST["other_name"] ?? '');
+    $full_name = trim("$fname $otherName $lname");
+    $gender = trim($_POST["gender"] ?? '');
+    $course = trim($_POST["course"] ?? '');
+    $currentYear = intval($_POST["current_year"] ?? 1);
+    $level = trim($_POST["level"] ?? '');
+    $phone = trim($_POST["phone"] ?? '');
+    $email = trim($_POST["email"] ?? '');
+    $address = trim($_POST["address"] ?? '');
+    $nationality = trim($_POST["nationality"] ?? 'Ugandan');
+    $guardian = trim($_POST["guardian"] ?? '');
+    $gphone = trim($_POST["gphone"] ?? '');
 
-    $gender = $_POST["gender"];
+    $sql = "SELECT * FROM students WHERE id=? AND status != 'deleted'";
+    $stmt_check = $conn->prepare($sql);
+    if (!$stmt_check) { echo 'Database error'; exit; }
+    $stmt_check->bind_param("i", $id);
+    $stmt_check->execute();
+    $result = $stmt_check->get_result();
 
-    $dobString = $_POST["dob"];
-    $timestamp = strtotime($dobString);
-    $dob = date('d-m-Y', $timestamp) . "";
+    if ($result->num_rows > 0) {
+        $query = "UPDATE students SET first_name=?, surname=?, other_name=?, full_name=?, gender=?, course=?, program=?, current_year=?, year=?, level=?, set_name=?, phone=?, mobile_number=?, email=?, address=?, nationality=?, guardian_name=?, guardian_phone=?, updated_at=NOW() WHERE id=?";
 
-    $phone = $_POST["phone"];
-    $email = $_POST["email"];
-    $address = $_POST["address"];
-    $city = $_POST["city"];
-    $zip = $_POST["zip"];
-    $state = $_POST["state"];
-    $guardian = $_POST["guardian"];
-    $gphone = $_POST["gphone"];
-    $gaddress = $_POST["gaddress"];
-    $gcity = $_POST["gcity"];
-    $gzip = $_POST["gzip"];
-    $relation = $_POST["relation"];
+        $stmt = $conn->prepare($query);
+        if (!$stmt) { echo 'Database error: ' . $conn->error; exit; }
 
+        $year = $currentYear;
+        $stmt->bind_param("ssssssiiissssssssi",
+            $fname, $lname, $otherName, $full_name,
+            $gender, $course, $course, $currentYear, $year, $level, $level,
+            $phone, $phone, $email, $address, $nationality,
+            $guardian, $gphone, $id
+        );
 
-    $sql = "SELECT * FROM students WHERE id=?";
-    $stmt_check = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt_check, "s", $id);
-    mysqli_stmt_execute($stmt_check);
-    $result = mysqli_stmt_get_result($stmt_check);
-
-    if (mysqli_num_rows($result) > 0) {
-
-        $query = "UPDATE `students` SET `fname`=?, `lname`=?, `father`=?, `class`=?, `section`=?, `gender`=?, `dob`=?, `phone`=?, `email`=?, `address`=?, `city`=?, `zip`=?, `state`=? WHERE `id`=?";
-
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, "ssssssssssssss", $fname, $lname, $father, $class, $section, $gender, $dob, $phone, $email, $address, $city, $zip, $state, $id);
-     
-        
-        
-        $query2 = "UPDATE student_guardian SET gname=?, gphone=?, gaddress=?, gcity=?, gzip=?, relation=? WHERE id=?";
-
-        $stmt2 = mysqli_prepare($conn, $query2);
-        mysqli_stmt_bind_param($stmt2, "sssssss", $guardian, $gphone, $gaddress, $gcity, $gzip, $relation, $id);
-        
-        
-        $query3 = "UPDATE users SET email=? WHERE id=?";
-        
-        $stmt3 = mysqli_prepare($conn, $query3);
-        mysqli_stmt_bind_param($stmt3, "ss", $email, $id);
-        
-        
-        if (mysqli_stmt_execute($stmt) && mysqli_stmt_execute($stmt2) && mysqli_stmt_execute($stmt3)) {
+        if ($stmt->execute()) {
             echo 'success';
         } else {
-            echo "something went wrong! database";
+            echo 'Something went wrong: ' . $stmt->error;
         }
-        
-        mysqli_stmt_close($stmt);
-        mysqli_stmt_close($stmt2);
-        mysqli_stmt_close($stmt3);
 
+        $stmt->close();
     } else {
-        echo 'something went wrong!';
+        echo 'Student not found';
     }
 
+    $stmt_check->close();
+
 } else {
-    echo "something went wrong!";
+    echo "Invalid request method";
 }
-
-
 ?>

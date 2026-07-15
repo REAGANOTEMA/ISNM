@@ -488,7 +488,7 @@ if ($db) {
 $students_list = [];
 if ($students) {
     try {
-        $r = $students->query("SELECT id, admission_number, first_name, last_name FROM students WHERE status='Active' ORDER BY first_name ASC LIMIT 500");
+        $r = $students->query("SELECT id, student_number, full_name, first_name, surname FROM students WHERE status='Active' ORDER BY first_name ASC LIMIT 500");
         if ($r) $students_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
 }
@@ -809,7 +809,7 @@ if ($students) {
 <!-- Student datalist -->
 <datalist id="studentList">
 <?php foreach ($students_list as $s): ?>
-    <option value="<?= htmlspecialchars($s['admission_number']) ?>"><?= htmlspecialchars($s['first_name'] . ' ' . $s['last_name']) ?></option>
+    <option value="<?= htmlspecialchars($s['student_number']) ?>"><?= htmlspecialchars($s['full_name'] ?: $s['first_name'] . ' ' . $s['surname']) ?></option>
 <?php endforeach; ?>
 </datalist>
 

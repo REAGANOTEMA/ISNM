@@ -13,19 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $begin = (int) ($decodedData['begin']);
     $limit = (int) ($decodedData['limit']);
 
-    $dateObject = new DateTime($date);      // it gets todays date
+    $dateObject = new DateTime($date);
     $day = $dateObject->format('d');
     $month = $dateObject->format('m');
     $year = $dateObject->format('Y');
 
-
-    $limitStringPart = "LIMIT ?";       // you can make query at whole
-
-    $query = "SELECT * FROM `attendence` WHERE (`class`=? AND `section`=?) AND (Day(`date`)=? AND Month(`date`)=? AND Year(`date`)=?) ORDER BY `s_no` ASC ". $limitStringPart ." OFFSET ? ";
-   
+    $query = "SELECT * FROM `attendence` WHERE (`class`=? AND `section`=?) AND (Day(`date`)=? AND Month(`date`)=? AND Year(`date`)=?) ORDER BY `s_no` ASC LIMIT ? OFFSET ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "sssssii", $class, $section, $day, $month, $year, $limit, $begin);
-
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     mysqli_stmt_close($stmt);
@@ -36,67 +31,55 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     mysqli_stmt_execute($stmt1);
     mysqli_stmt_bind_result($stmt1, $rowCount);
     mysqli_stmt_fetch($stmt1);
-
     $response[0] = $rowCount;
     mysqli_stmt_close($stmt1);
 
-    if(mysqli_num_rows($result) > 0){
-       
+    if (mysqli_num_rows($result) > 0) {
         $counter = 1;
-        while($row = mysqli_fetch_assoc($result)){
-
+        while ($row = mysqli_fetch_assoc($result)) {
             $studentId = $row['student_id'];
 
-            $query2 = "SELECT `fname`, `lname`, `image` FROM `students` WHERE `id`=?";
+            $query2 = "SELECT `first_name`, `surname`, `other_name`, `full_name`, `profile_picture`, `passport_photo` FROM `students` WHERE `id`=?";
             $stmt2 = mysqli_prepare($conn, $query2);
-            mysqli_stmt_bind_param($stmt2, "s", $studentId);
-        
+            mysqli_stmt_bind_param($stmt2, "i", $studentId);
             mysqli_stmt_execute($stmt2);
             $result2 = mysqli_stmt_get_result($stmt2);
             mysqli_stmt_close($stmt2);
 
-            if(mysqli_num_rows($result2) > 0){
+            if (mysqli_num_rows($result2) > 0) {
                 $row2 = mysqli_fetch_assoc($result2);
-
-
-                $pathToFile = ".." . DIRECTORY_SEPARATOR . "studentUploads" . DIRECTORY_SEPARATOR . $row2['image'];
-
-                if (!file_exists($pathToFile)) {
-                    $pathToFile = "../images/user.png";
+                $pathToFile = "../images/user.png";
+                if (!empty($row2['profile_picture'])) {
+                    $pathToFile = ".." . DIRECTORY_SEPARATOR . "studentUploads" . DIRECTORY_SEPARATOR . $row2['profile_picture'];
+                } elseif (!empty($row2['passport_photo'])) {
+                    $pathToFile = ".." . DIRECTORY_SEPARATOR . "studentUploads" . DIRECTORY_SEPARATOR . $row2['passport_photo'];
                 }
+                if (!file_exists($pathToFile)) { $pathToFile = "../images/user.png"; }
 
-                $status = $row['attendence'] == "0" ? ' <div class="absent">Absent</div>':' <div class="present">Present</div>';
+                $displayName = $row2['full_name'] ?: trim($row2['first_name'] . ' ' . $row2['other_name'] . ' ' . $row2['surname']);
+                $status = $row['attendence'] == "0" ? ' <div class="absent">Absent</div>' : ' <div class="present">Present</div>';
 
-                $response[$counter] = '  <tr>
-                <td>'.((int)$begin) + 1 .'.&nbsp;&nbsp;</td>
-                <td>'.$studentId.'</td>
-                <td class="user">
-                    <img src="'.$pathToFile.'">
-                    <p>' . ucfirst(strtolower($row2['fname'])). " " .strtolower($row2['lname']) . '</p>
-                </td>
-
-                <td>
-                    '.$status.'
-                </td>
-            </tr>';
-            }else{
+                $response[$counter] = '<tr>
+                    <td>'.((int)$begin + 1).'.&nbsp;&nbsp;</td>
+                    <td>'.$studentId.'</td>
+                    <td class="user">
+                        <img src="'.$pathToFile.'">
+                        <p>' . htmlspecialchars($displayName) . '</p>
+                    </td>
+                    <td>'.$status.'</td>
+                </tr>';
+            } else {
                 $response[0] = "No_Data";
             }
             $counter++;
             $begin++;
         }
-    }else{
-
+    } else {
         $response[0] = "No_Data";
     }
-
-
 } else {
-    $response[0] = "Something went wrong!2";
+    $response[0] = "Something went wrong!";
 }
 
-
 echo json_encode($response);
-
-
 ?>

@@ -103,7 +103,7 @@ try {
         if ($r) $rcFinancialData['collection_rates'] = $r->fetch_assoc();
 
         $r = $conn->query("
-            SELECT si.student_id, s.first_name, s.last_name, s.student_number, s.program,
+            SELECT si.student_id, s.first_name, s.surname, s.student_number, s.program,
                    si.total_amount, si.amount_paid, si.balance
             FROM student_invoices si
             LEFT JOIN igangaschool_students.students s ON si.student_id = s.id
@@ -432,7 +432,7 @@ function rcFormatCurrency($v) {
                     $rows = [];
                     if (!empty($rcFinancialData['top_debtors'])) {
                         foreach ($rcFinancialData['top_debtors'] as $r) {
-                            $name = htmlspecialchars(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? ''));
+                            $name = htmlspecialchars(($r['first_name'] ?? '') . ' ' . ($r['surname'] ?? ''));
                             $sid = htmlspecialchars($r['student_number'] ?? '');
                             $rows[] = [
                                 $name . '<br><code style="font-size:10px;">' . $sid . '</code>',

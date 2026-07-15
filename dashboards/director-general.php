@@ -142,7 +142,7 @@ if ($dg_cached) {
         $union = $websiteConn->query("
             (SELECT 'contact' as type, id, full_name as name, subject as title, created_at FROM contact_submissions WHERE status='New')
             UNION ALL
-            (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
+            (SELECT 'volunteer', id, CONCAT(first_name,' ',surname), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
             UNION ALL
             (SELECT 'donation', id, donor_name, CONCAT('UGX ',FORMAT(amount,0)), created_at FROM donations WHERE status='pending')
             UNION ALL
@@ -1439,7 +1439,7 @@ switch ($dgSection):
             <tbody>
             <?php foreach($recent_payments as $p): $pc=in_array($p['status'],['verified','approved'])?'bg-success':'bg-warning text-dark'; ?>
             <tr>
-              <td><strong style="font-size:12px;"><?= htmlspecialchars(($p['first_name']??'').' '.($p['last_name']??'')) ?></strong><br><code style="font-size:10px;"><?= htmlspecialchars($p['student_number']??'') ?></code></td>
+              <td><strong style="font-size:12px;"><?= htmlspecialchars(($p['full_name']??'') ?: (($p['first_name']??'').' '.($p['surname']??''))) ?></strong><br><code style="font-size:10px;"><?= htmlspecialchars($p['student_number']??'') ?></code></td>
               <td><strong>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></strong></td>
               <td><?= htmlspecialchars($p['payment_method']??'-') ?></td>
               <td><span style="color:#64748b;font-size:12px;"><?= isset($p['payment_date'])?date('d M',strtotime($p['payment_date'])):'-' ?></span></td>
@@ -3352,7 +3352,7 @@ function viewAcademic(id){ window.location.href='../academic_records_management.
 function viewFees(id){ window.location.href='../dashboards/school-bursar.php?section=record_payment&student_id='+id; }
 function sendMessage(id){
   var name = '';
-  try { var s = (window.allStudents||[]).find(function(x){return x.id==id;}); if(s) name = s.first_name+' '+s.last_name; } catch(e){}
+  try { var s = (window.allStudents||[]).find(function(x){return x.id==id;}); if(s) name = s.full_name||(s.first_name+' '+s.surname); } catch(e){}
   // Open messaging section with pre-filled recipient info
   switchToSection('messaging');
 }
