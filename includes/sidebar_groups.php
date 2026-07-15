@@ -81,6 +81,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Donation Tracking',    'icon'=>'fas fa-hand-holding-heart','page'=>'donation-tracking', 'href'=>'donation-tracking.php'],
             ['label' => 'Volunteer Applications','icon'=>'fas fa-hands-helping','page'=>'volunteer-applications', 'href'=>'volunteer-applications.php'],
             ['label' => 'System Health',        'icon'=>'fas fa-heartbeat','page'=>'system-health'],
+            ['label' => 'Requirements Portal',   'icon'=>'fas fa-list-check','page'=>'director_requirements'],
         ],
         'director_ict' => [
             ['label' => 'Assets & Inventory',   'icon'=>'fas fa-desktop',   'page'=>'assets'],
@@ -171,6 +172,10 @@ function getRoleOperations(string $role): array {
             ['label' => 'Announcements',        'icon'=>'fas fa-bullhorn',      'page'=>'announcements'],
             ['label' => 'Contacts',             'icon'=>'fas fa-address-book',  'page'=>'contacts'],
             ['label' => 'Document Management',  'icon'=>'fas fa-file-alt',      'page'=>'documents'],
+            ['label' => 'Requirements Checklist','icon'=>'fas fa-clipboard-check','page'=>'requirements_checklist'],
+            ['label' => 'General Utilities Store','icon'=>'fas fa-store',         'page'=>'store_items'],
+            ['label' => 'Food Store Supplies',   'icon'=>'fas fa-utensils',      'page'=>'food_store'],
+            ['label' => 'Matron Requisitions',   'icon'=>'fas fa-broom',         'page'=>'matron_requisitions'],
         ],
         'hr' => [
             ['label' => 'Overview',             'icon'=>'fas fa-chart-pie',   'page'=>'overview'],

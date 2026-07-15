@@ -13,6 +13,7 @@ require_once __DIR__ . '/../views/student_data_loader.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 require_once __DIR__ . '/../includes/approval_integration.php';
+require_once __DIR__ . '/../includes/secretary_requirements_handler.php';
 require_once __DIR__ . '/../includes/approval_center.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
 require_once __DIR__ . '/../includes/dashboard_analytics.php';
@@ -242,6 +243,7 @@ $dgPageToSection = [
     'activities'    => 'audit',
     'calendar'      => 'executive',
     'emergency'     => 'audit',
+    'director_requirements' => 'director-requirements',
 ];
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
@@ -273,6 +275,7 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
         'system-health'=>'System Health',
         'notifications'=>'Notifications Center',
         'kpi'=>'Strategic KPI Dashboard',
+        'director-requirements'=>'Requirements Portal',
     ];
     $label = $sectionLabels[$GLOBALS['dgSection']] ?? 'Dashboard';
     ?>
@@ -2934,6 +2937,63 @@ function dgExportCSV() {
     case 'system-health': ?>
 <div id="system-health" class="content-section dashboard-section active" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
+</div>
+        <?php break;
+    case 'director-requirements': ?>
+<div id="director-requirements" class="content-section dashboard-section active" data-section="director-requirements">
+  <?php
+    $conn_dg = $conn;
+    $staff_db_dg = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $user_id_dg = (int)($user['id'] ?? 0);
+    $user_name_dg = $user['full_name'] ?? 'Director';
+  ?>
+  <div style="padding:20px">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-user-check me-2 text-primary"></i>Requirements Portal</h5>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-md-3"><input type="text" class="form-control form-control-sm" id="dirReqSearch" placeholder="Search by name, admission #, phone..." onkeyup="if(event.key==='Enter')loadDirectorRequirementsDG()"></div>
+      <div class="col-md-2"><select class="form-select form-select-sm" id="dirReqCategory" onchange="loadDirectorRequirementsDG()"><option value="">All Categories</option><option value="Application">Application</option><option value="General Utilities">General Utilities</option><option value="Food Store">Food Store</option><option value="Matron Items">Matron Items</option></select></div>
+      <div class="col-md-2"><select class="form-select form-select-sm" id="dirReqStatus" onchange="loadDirectorRequirementsDG()"><option value="">All Status</option><option value="Pending">Pending</option><option value="Cleared">Cleared</option><option value="Submitted">Submitted</option><option value="Missing">Missing</option></select></div>
+      <div class="col-md-2"><button class="btn btn-sm" style="background:#1a237e;color:#fff" onclick="loadDirectorRequirementsDG()"><i class="fas fa-search me-1"></i>Search</button></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead><tr><th><input type="checkbox" id="dirReqSelectAll" onchange="toggleAllDirReqDG(this)"></th><th>Student #</th><th>Name</th><th>Requirement</th><th>Category</th><th>Status</th><th>Cleared</th><th>Verified By</th></tr></thead>
+        <tbody id="dirReqBody"><tr><td colspan="8" class="text-center text-muted">Search for a student...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+  function loadDirectorRequirementsDG(){
+    var q=document.getElementById('dirReqSearch')?.value||'';
+    var cat=document.getElementById('dirReqCategory')?.value||'';
+    var st=document.getElementById('dirReqStatus')?.value||'';
+    if(!q){document.getElementById('dirReqBody').innerHTML='<tr><td colspan="8" class="text-center text-muted">Search for a student...</td></tr>';return}
+    var baseUrl=window.location.pathname.split('?')[0];
+    fetch(baseUrl+'?ajax=search_students&search='+encodeURIComponent(q)+'&page=1').then(r=>r.json()).then(d=>{
+      if(!d.success||!d.students.length){document.getElementById('dirReqBody').innerHTML='<tr><td colspan="8" class="text-center text-muted">No students found</td></tr>';return}
+      var s=d.students[0];
+      fetch(baseUrl+'?ajax=get_student_app_requirements&student_number='+encodeURIComponent(s.student_number)).then(r=>r.json()).then(r=>{
+        if(!r.success)return;
+        var reqs=r.requirements;
+        if(cat)reqs=reqs.filter(function(x){return x.category===cat});
+        if(st)reqs=reqs.filter(function(x){return x.status===st});
+        var tb=document.getElementById('dirReqBody');
+        tb.innerHTML=reqs.map(function(x){
+          var isCleared=x.status==='Cleared';
+          return'<tr><td><input type="checkbox" class="form-check-input dir-req-check" data-id="'+x.id+'" '+(isCleared?'checked':'')+' onchange="toggleDirReqDG('+x.id+',this.checked)"></td><td><small>'+esc(x.student_number)+'</small></td><td>'+esc(x.student_name||s.full_name)+'</td><td>'+esc(x.requirement_name)+'</td><td><span class="badge bg-info">'+esc(x.category)+'</span></td><td><span class="badge bg-'+(isCleared?'success':x.status==='Submitted'?'info':x.status==='Missing'?'danger':'secondary')+'">'+esc(x.status)+'</span></td><td><input type="checkbox" class="form-check-input" '+(isCleared?'checked':'')+' onchange="toggleDirReqDG('+x.id+',this.checked)"></td><td><small class="text-muted">'+esc(x.verified_by||'-')+'</small></td></tr>';
+        }).join('')||'<tr><td colspan="8" class="text-center text-muted">No requirements for this student</td></tr>';
+      });
+    });
+  }
+  function toggleDirReqDG(id,checked){
+    var baseUrl=window.location.pathname.split('?')[0];
+    fetch(baseUrl+'?ajax=clear_student_requirement',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'req_id='+id+'&cleared='+(checked?1:0)}).then(r=>r.json()).then(d=>{if(!d.success)alert(d.message);else loadDirectorRequirementsDG()});
+  }
+  function toggleAllDirReqDG(el){document.querySelectorAll('.dir-req-check').forEach(function(cb){cb.checked=el.checked;toggleDirReqDG(cb.dataset.id,el.checked)})}
+  function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  </script>
 </div>
         <?php break;
     default: ?>

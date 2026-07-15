@@ -60,6 +60,131 @@ if ($staffDb) {
     $r = $staffDb->query("SELECT COUNT(*) c FROM student_discipline_records WHERE status IN ('Pending','Open','Under Investigation')");
     if ($r) $disciplineOpen = (int)$r->fetch_assoc()['c'];
 }
+
+// ── CSRF helpers ──
+function gp_csrf_token() {
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    return $_SESSION['csrf_token'];
+}
+function gp_verify_csrf() {
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    return hash_equals($_SESSION['csrf_token'] ?? '', $token);
+}
+
+// ── AJAX POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
+    header('Content-Type: application/json');
+    $action = $_POST['action'] ?? '';
+
+    // Ensure tables
+    $staffDb->query("CREATE TABLE IF NOT EXISTS welfare_cases (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT,
+        case_type VARCHAR(100),
+        description TEXT,
+        status ENUM('open','in_progress','resolved','closed') DEFAULT 'open',
+        reported_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    $staffDb->query("CREATE TABLE IF NOT EXISTS guild_feedback (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        category VARCHAR(100),
+        subject VARCHAR(255),
+        message TEXT,
+        priority ENUM('normal','important','urgent') DEFAULT 'normal',
+        status ENUM('pending','reviewed','acted') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    $staffDb->query("CREATE TABLE IF NOT EXISTS calendar_events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        event_date DATE,
+        start_time TIME,
+        end_time TIME,
+        location VARCHAR(255),
+        event_type VARCHAR(100),
+        is_active TINYINT(1) DEFAULT 1,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // ── Welfare: Create case ──
+    if ($action === 'create_welfare') {
+        if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        $caseType  = trim($_POST['case_type'] ?? '');
+        $desc      = trim($_POST['description'] ?? '');
+        if (!$studentId || !$caseType) { echo json_encode(['success'=>false,'message'=>'Student and case type required']); exit; }
+        $stmt = $staffDb->prepare("INSERT INTO welfare_cases (student_id,case_type,description,reported_by) VALUES (?,?,?,?)");
+        $stmt->bind_param('issi', $studentId, $caseType, $desc, $user_id);
+        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case created','id'=>$staffDb->insert_id]); }
+        else { echo json_encode(['success'=>false,'message'=>'Failed to create welfare case']); }
+        $stmt->close(); exit;
+    }
+
+    // ── Welfare: Update status ──
+    if ($action === 'update_welfare') {
+        if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
+        $caseId   = (int)($_POST['case_id'] ?? 0);
+        $newState = $_POST['status'] ?? 'open';
+        if (!in_array($newState, ['open','in_progress','resolved','closed'])) { echo json_encode(['success'=>false,'message'=>'Invalid status']); exit; }
+        $stmt = $staffDb->prepare("UPDATE welfare_cases SET status=? WHERE id=?");
+        $stmt->bind_param('si', $newState, $caseId);
+        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case updated']); }
+        else { echo json_encode(['success'=>false,'message'=>'Failed to update']); }
+        $stmt->close(); exit;
+    }
+
+    // ── Feedback: Submit suggestion ──
+    if ($action === 'submit_feedback') {
+        if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
+        $category = trim($_POST['category'] ?? 'General');
+        $subject  = trim($_POST['subject'] ?? '');
+        $message  = trim($_POST['message'] ?? '');
+        $priority = $_POST['priority'] ?? 'normal';
+        if (!$subject || !$message) { echo json_encode(['success'=>false,'message'=>'Subject and message required']); exit; }
+        $stmt = $staffDb->prepare("INSERT INTO guild_feedback (staff_id,category,subject,message,priority) VALUES (?,?,?,?,?)");
+        $stmt->bind_param('issss', $user_id, $category, $subject, $message, $priority);
+        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Feedback submitted','id'=>$staffDb->insert_id]); }
+        else { echo json_encode(['success'=>false,'message'=>'Failed to submit feedback']); }
+        $stmt->close(); exit;
+    }
+
+    // ── Events: Create guild event ──
+    if ($action === 'create_event') {
+        if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
+        $title     = trim($_POST['title'] ?? '');
+        $desc      = trim($_POST['description'] ?? '');
+        $eventDate = $_POST['event_date'] ?? null;
+        $startTime = $_POST['start_time'] ?? null;
+        $endTime   = $_POST['end_time'] ?? null;
+        $location  = trim($_POST['location'] ?? '');
+        $eventType = trim($_POST['event_type'] ?? 'Guild');
+        if (!$title || !$eventDate) { echo json_encode(['success'=>false,'message'=>'Title and date required']); exit; }
+        $stmt = $staffDb->prepare("INSERT INTO calendar_events (title,description,event_date,start_time,end_time,LOCATION,event_type,created_by) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->bind_param('sssssssi', $title, $desc, $eventDate, $startTime, $endTime, $location, $eventType, $user_id);
+        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event created','id'=>$staffDb->insert_id]); }
+        else { echo json_encode(['success'=>false,'message'=>'Failed to create event']); }
+        $stmt->close(); exit;
+    }
+
+    // ── Events: Delete event ──
+    if ($action === 'delete_event') {
+        if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
+        $eventId = (int)($_POST['event_id'] ?? 0);
+        $stmt = $staffDb->prepare("DELETE FROM calendar_events WHERE id=? AND created_by=?");
+        $stmt->bind_param('ii', $eventId, $user_id);
+        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event deleted']); }
+        else { echo json_encode(['success'=>false,'message'=>'Failed to delete']); }
+        $stmt->close(); exit;
+    }
+
+    echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -92,7 +217,10 @@ if ($staffDb) {
         <?php renderStudentSetViewer($studentsDb, ['title' => 'Student Records','icon' => 'fa-user-graduate','show_all' => true,'per_page' => 50,'show_statement_link' => false]); ?>
         <?php break;
     case 'welfare': ?>
-        <div class="content-header"><h1><i class="fas fa-heart me-2"></i>Student Welfare</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header d-flex justify-content-between align-items-center"><h1><i class="fas fa-heart me-2"></i>Student Welfare</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="mb-3">
+            <button class="btn btn-primary btn-sm" onclick="openGuildModal('createWelfare')"><i class="fas fa-plus me-1"></i>Report Welfare Case</button>
+        </div>
         <div class="row g-3 mb-4">
             <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Open Cases</h6><h3 class="text-warning"><?= $welfareOpen ?></h3></div></div></div>
             <div class="col-md-3"><div class="card text-center"><div class="card-body"><h6>Resolved</h6><h3 class="text-success"><?= $welfareResolved ?></h3></div></div></div>
@@ -120,7 +248,10 @@ if ($staffDb) {
         </div>
         <?php break;
     case 'events': ?>
-        <div class="content-header"><h1><i class="fas fa-calendar-alt me-2"></i>Events</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header d-flex justify-content-between align-items-center"><h1><i class="fas fa-calendar-alt me-2"></i>Events</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="mb-3">
+            <button class="btn btn-primary btn-sm" onclick="openGuildModal('createEvent')"><i class="fas fa-plus me-1"></i>Create Guild Event</button>
+        </div>
         <div class="row g-3">
             <div class="col-md-7"><div class="card"><div class="card-body"><h5><i class="fas fa-calendar-day me-2"></i>Upcoming Events</h5>
                 <?php if (empty($upcomingEvents)): ?><p class="text-muted text-center py-3">No upcoming events scheduled.</p>
@@ -141,7 +272,10 @@ if ($staffDb) {
         </div>
         <?php break;
     case 'feedback': ?>
-        <div class="content-header"><h1><i class="fas fa-comment-dots me-2"></i>Student Feedback & Discipline</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="content-header d-flex justify-content-between align-items-center"><h1><i class="fas fa-comment-dots me-2"></i>Student Feedback & Discipline</h1><span class="text-muted"><?= date('l, d M Y') ?></span></div>
+        <div class="mb-3">
+            <button class="btn btn-primary btn-sm" onclick="openGuildModal('submitFeedback')"><i class="fas fa-paper-plane me-1"></i>Submit Suggestion/Feedback</button>
+        </div>
         <div class="row g-3 mb-4">
             <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-gavel me-2"></i>Recent Discipline Records</h5>
                 <?php if (empty($studentDiscipline)): ?><p class="text-muted text-center py-3">No discipline records found.</p>
@@ -255,17 +389,119 @@ if ($staffDb) {
         <?php break;
 endswitch; ?>
 </div>
+
+<!-- Guild Action Modal -->
+<div class="modal fade" id="guildModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="guildModalTitle">Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="guildModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="guildModalAction">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>
-function filterGuildTables(q) {
-    q = q.toLowerCase();
-    document.querySelectorAll('.gld-content .table-responsive table').forEach(function(tbl) {
-        tbl.querySelectorAll('tbody tr').forEach(function(tr) {
-            var txt = tr.textContent.toLowerCase();
-            tr.style.display = txt.indexOf(q) > -1 ? '' : 'none';
-        });
-    });
+function openGuildModal(action) {
+    const modal = new bootstrap.Modal(document.getElementById('guildModal'));
+    const title = document.getElementById('guildModalTitle');
+    const body  = document.getElementById('guildModalBody');
+    window._guildAction = action;
+
+    switch(action) {
+        case 'createWelfare':
+            title.textContent = 'Report Welfare Case';
+            body.innerHTML = `
+                <form>
+                    <div class="mb-3"><label class="form-label">Student ID</label><input type="number" class="form-control" id="gwStudentId" required></div>
+                    <div class="mb-3"><label class="form-label">Case Type</label>
+                        <select class="form-select" id="gwCaseType" required>
+                            <option value="">Select...</option>
+                            <option value="academic">Academic</option><option value="health">Health</option><option value="financial">Financial</option>
+                            <option value="psychosocial">Psychosocial</option><option value="housing">Housing</option><option value="other">Other</option>
+                        </select></div>
+                    <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="gwDesc" rows="4" required></textarea></div>
+                </form>`;
+            break;
+        case 'createEvent':
+            title.textContent = 'Create Guild Event';
+            body.innerHTML = `
+                <form>
+                    <div class="mb-3"><label class="form-label">Event Title</label><input type="text" class="form-control" id="geTitle" required></div>
+                    <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="geDesc" rows="3"></textarea></div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label class="form-label">Date</label><input type="date" class="form-control" id="geDate" required></div>
+                        <div class="col-md-3 mb-3"><label class="form-label">Start</label><input type="time" class="form-control" id="geStart"></div>
+                        <div class="col-md-3 mb-3"><label class="form-label">End</label><input type="time" class="form-control" id="geEnd"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 mb-3"><label class="form-label">Location</label><input type="text" class="form-control" id="geLocation"></div>
+                        <div class="col-md-4 mb-3"><label class="form-label">Type</label>
+                            <select class="form-select" id="geType"><option value="Guild">Guild</option><option value="Sports">Sports</option><option value="Academic">Academic</option><option value="Social">Social</option></select></div>
+                    </div>
+                </form>`;
+            break;
+        case 'submitFeedback':
+            title.textContent = 'Submit Suggestion / Feedback';
+            body.innerHTML = `
+                <form>
+                    <div class="mb-3"><label class="form-label">Category</label>
+                        <select class="form-select" id="gfCategory"><option value="General">General</option><option value="Academic">Academic</option><option value="Welfare">Welfare</option><option value="Infrastructure">Infrastructure</option><option value="Other">Other</option></select></div>
+                    <div class="mb-3"><label class="form-label">Subject</label><input type="text" class="form-control" id="gfSubject" required></div>
+                    <div class="mb-3"><label class="form-label">Priority</label>
+                        <select class="form-select" id="gfPriority"><option value="normal">Normal</option><option value="important">Important</option><option value="urgent">Urgent</option></select></div>
+                    <div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" id="gfMessage" rows="5" required></textarea></div>
+                </form>`;
+            break;
+    }
+    modal.show();
 }
+
+document.getElementById('guildModalAction').addEventListener('click', function() {
+    const action = window._guildAction;
+    const fd = new FormData();
+    fd.append('action', action === 'createWelfare' ? 'create_welfare' : action === 'createEvent' ? 'create_event' : 'submit_feedback');
+    fd.append('csrf_token', window.CSRF_TOKEN || '');
+    const body = document.getElementById('guildModalBody');
+
+    if (action === 'createWelfare') {
+        fd.append('student_id', document.getElementById('gwStudentId').value);
+        fd.append('case_type', document.getElementById('gwCaseType').value);
+        fd.append('description', document.getElementById('gwDesc').value);
+        if (!fd.get('student_id') || !fd.get('case_type')) { alert('Fill required fields.'); return; }
+    } else if (action === 'createEvent') {
+        fd.append('title', document.getElementById('geTitle').value);
+        fd.append('description', document.getElementById('geDesc').value);
+        fd.append('event_date', document.getElementById('geDate').value);
+        fd.append('start_time', document.getElementById('geStart').value);
+        fd.append('end_time', document.getElementById('geEnd').value);
+        fd.append('location', document.getElementById('geLocation').value);
+        fd.append('event_type', document.getElementById('geType').value);
+        if (!fd.get('title') || !fd.get('event_date')) { alert('Title and date required.'); return; }
+    } else if (action === 'submitFeedback') {
+        fd.append('category', document.getElementById('gfCategory').value);
+        fd.append('subject', document.getElementById('gfSubject').value);
+        fd.append('priority', document.getElementById('gfPriority').value);
+        fd.append('message', document.getElementById('gfMessage').value);
+        if (!fd.get('subject') || !fd.get('message')) { alert('Subject and message required.'); return; }
+    }
+
+    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Submitting...</p></div>';
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) { body.innerHTML = '<div class="alert alert-success">' + resp.message + '</div>'; setTimeout(()=>location.reload(), 1000); }
+            else { body.innerHTML = '<div class="alert alert-danger">' + (resp.message||'Failed') + '</div>'; }
+        })
+        .catch(() => { body.innerHTML = '<div class="alert alert-danger">Network error.</div>'; });
+});
 </script>
 </body>
 </html>

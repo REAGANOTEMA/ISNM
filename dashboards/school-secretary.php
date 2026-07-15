@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
+require_once __DIR__ . '/../includes/secretary_requirements_handler.php';
 $ctx = bootstrapStaffDashboard(['school secretary', 'secretary']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
@@ -1106,6 +1107,7 @@ if (isset($_REQUEST['ajax'])) {
             break;
 
         default:
+            if (handleSecretaryRequirementsAjax($action, $conn, $user_id, $user_name, $staff_db, $response)) break;
             $response['message'] = 'Unknown action';
     }
     echo json_encode($response);
@@ -1916,6 +1918,131 @@ if ($edit_id) {
     </div>
     <div id="incompleteList" class="mt-3"></div>
 </div>
+<?php elseif ($page === 'requirements_checklist'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2 text-primary"></i>Requirements Checklist</h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="reqSearchInput" placeholder="Search by student number..." style="width:250px" onkeyup="if(event.key==='Enter')loadStudentRequirements()">
+            <button class="btn btn-isnm btn-sm" onclick="loadStudentRequirements()"><i class="fas fa-search me-1"></i>Search</button>
+        </div>
+    </div>
+    <div id="reqChecklistResult"></div>
+    <div id="reqChecklistBody" class="mt-3"></div>
+</div>
+<?php elseif ($page === 'store_items'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-warehouse me-2 text-primary"></i>General Utilities Store</h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="storeSearchInput" placeholder="Search items..." style="width:200px" onkeyup="if(event.key==='Enter')loadStoreItems()">
+            <select class="form-select form-select-sm" id="storeCatFilter" style="width:180px" onchange="loadStoreItems()">
+                <option value="">All Categories</option>
+                <option value="General Utilities" selected>General Utilities</option>
+                <option value="Food Store">Food Store</option>
+                <option value="Matron Items">Matron Items</option>
+            </select>
+            <button class="btn btn-isnm btn-sm" onclick="showStoreItemModal()"><i class="fas fa-plus me-1"></i>Add Item</button>
+        </div>
+    </div>
+    <div id="storeStatsRow" class="row g-3 mb-3"></div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead><tr><th>#</th><th>Item Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min Level</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="storeItemsBody"><tr><td colspan="8" class="text-center text-muted">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+<div class="modal fade" id="storeItemModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="storeItemModalTitle">Add Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="storeItemForm" onsubmit="return saveStoreItem(event)">
+            <input type="hidden" name="item_id" id="si_id">
+            <div class="row g-2">
+                <div class="col-md-8 mb-2"><label class="form-label fw-bold">Item Name *</label><input type="text" class="form-control" name="item_name" id="si_name" required></div>
+                <div class="col-md-4 mb-2"><label class="form-label fw-bold">Unit</label><input type="text" class="form-control" name="unit" id="si_unit" value="piece"></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-6 mb-2"><label class="form-label fw-bold">Category</label><select class="form-select" name="category" id="si_cat"><option>General Utilities</option><option>Food Store</option><option>Matron Items</option></select></div>
+                <div class="col-md-6 mb-2"><label class="form-label fw-bold">Location</label><input type="text" class="form-control" name="location" id="si_location" placeholder="e.g. Store A"></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-4 mb-2"><label class="form-label fw-bold">Quantity</label><input type="number" class="form-control" name="quantity_in_stock" id="si_qty" min="0" value="0"></div>
+                <div class="col-md-4 mb-2"><label class="form-label fw-bold">Min Level</label><input type="number" class="form-control" name="minimum_level" id="si_min" min="0" value="0"></div>
+                <div class="col-md-4 mb-2"><label class="form-label fw-bold">Unit Price</label><input type="number" class="form-control" name="unit_price" id="si_price" min="0" step="0.01" value="0"></div>
+            </div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div></div></div>
+<?php elseif ($page === 'food_store'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-utensils me-2 text-primary"></i>Food Store Supplies</h5>
+        <button class="btn btn-isnm btn-sm" onclick="document.getElementById('storeCatFilter').value='Food Store';window.location.href='?page=store_items'"><i class="fas fa-external-link-alt me-1"></i>Manage in Store</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead><tr><th>#</th><th>Item</th><th>Unit</th><th>Stock</th><th>Min Level</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="foodStoreBody"><tr><td colspan="7" class="text-center text-muted">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+<?php elseif ($page === 'matron_requisitions'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-broom me-2 text-primary"></i>Matron Requisitions</h5>
+        <button class="btn btn-isnm btn-sm" onclick="showRequisitionModal()"><i class="fas fa-plus me-1"></i>New Requisition</button>
+    </div>
+    <div class="d-flex gap-2 mb-3">
+        <select class="form-select form-select-sm" id="reqStatusFilter" style="width:150px" onchange="loadRequisitions()">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Issued">Issued</option>
+        </select>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead><tr><th>Req No</th><th>Item</th><th>Qty</th><th>Department</th><th>Purpose</th><th>Requested By</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="requisitionBody"><tr><td colspan="8" class="text-center text-muted">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+<div class="modal fade" id="requisitionModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="requisitionModalTitle">New Requisition</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="requisitionForm" onsubmit="return saveRequisition(event)">
+            <input type="hidden" name="req_id" id="rq_id">
+            <div class="mb-2"><label class="form-label fw-bold">Item Name *</label><select class="form-select" name="item_name" id="rq_item" required><option value="">-- Select --</option></select></div>
+            <div class="row g-2">
+                <div class="col-md-6 mb-2"><label class="form-label fw-bold">Quantity *</label><input type="number" class="form-control" name="quantity_requested" id="rq_qty" min="1" value="1" required></div>
+                <div class="col-md-6 mb-2"><label class="form-label fw-bold">Department</label><input type="text" class="form-control" name="department" id="rq_dept" value="Matron"></div>
+            </div>
+            <div class="mb-2"><label class="form-label fw-bold">Purpose</label><textarea class="form-control" name="purpose" id="rq_purpose" rows="2"></textarea></div>
+            <button type="submit" class="btn btn-isnm"><i class="fas fa-save me-1"></i>Submit</button>
+        </form>
+    </div>
+</div></div></div>
+<?php elseif ($page === 'director_requirements'): ?>
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-user-check me-2 text-primary"></i>Director Requirements Portal</h5>
+    </div>
+    <div class="row g-2 mb-3">
+        <div class="col-md-3"><input type="text" class="form-control form-control-sm" id="dirReqSearch" placeholder="Search by name, admission #, phone..." onkeyup="if(event.key==='Enter')loadDirectorRequirements()"></div>
+        <div class="col-md-2"><select class="form-select form-select-sm" id="dirReqCategory" onchange="loadDirectorRequirements()"><option value="">All Categories</option><option value="Application">Application</option><option value="General Utilities">General Utilities</option><option value="Food Store">Food Store</option><option value="Matron Items">Matron Items</option></select></div>
+        <div class="col-md-2"><select class="form-select form-select-sm" id="dirReqStatus" onchange="loadDirectorRequirements()"><option value="">All Status</option><option value="Pending">Pending</option><option value="Cleared">Cleared</option><option value="Submitted">Submitted</option><option value="Missing">Missing</option></select></div>
+        <div class="col-md-2"><button class="btn btn-isnm btn-sm w-100" onclick="loadDirectorRequirements()"><i class="fas fa-search me-1"></i>Search</button></div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead><tr><th><input type="checkbox" id="dirReqSelectAll" onchange="toggleAllDirReq(this)"></th><th>Student #</th><th>Name</th><th>Requirement</th><th>Category</th><th>Status</th><th>Cleared</th><th>Actions</th></tr></thead>
+            <tbody id="dirReqBody"><tr><td colspan="8" class="text-center text-muted">Search for a student...</td></tr></tbody>
+        </table>
+    </div>
+</div>
 <?php else: ?>
 <script>window.location.replace('?page=home');</script>
 <?php endif; ?>
@@ -2067,4 +2194,147 @@ function filterTable(inputId, tableId) {
 function publishDocument(id,status){if(!confirm('Set this document to '+status+'?'))return;ajax('publish_official_document','POST',{id:id,status:status}).then(d=>{if(d.success){showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')})}
 function deleteDocument(id){if(!confirm('Delete this document permanently?'))return;ajax('delete_official_document','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')})}
 if(document.getElementById('docBody')){loadDocuments();ajax('get_document_stats','GET').then(d=>{if(d.success){var s=d.stats;var el=document.querySelector('.section-card .row.g-2.mb-3');if(el&&s){var info='<div class="col-12"><small class="text-muted">Total: '+s.total+' | ';if(s.by_status){info+=Object.entries(s.by_status).map(function(e){return e[0]+': '+e[1]}).join(' | ')}info+='</small></div>';el.insertAdjacentHTML('beforebegin','<div class="row g-2 mb-2">'+info+'</div>')}}})}
+
+/* ── Requirements Checklist ── */
+function loadStudentRequirements(){
+    var q=document.getElementById('reqSearchInput')?.value||'';
+    if(!q){document.getElementById('reqChecklistBody').innerHTML='<div class="alert alert-info">Enter a student number to search</div>';return}
+    ajax('search_students','GET',{search:q,page:1}).then(d=>{
+        if(!d.success||!d.students.length){document.getElementById('reqChecklistBody').innerHTML='<div class="alert alert-warning">No students found</div>';return}
+        var s=d.students[0];
+        document.getElementById('reqChecklistResult').innerHTML='<div class="alert alert-info"><strong>'+esc(s.full_name)+'</strong> (#'+esc(s.student_number||'')+') — '+esc(s.program||'')+'</div>';
+        ajax('get_student_app_requirements','GET',{student_number:s.student_number}).then(r=>{
+            if(!r.success)return;
+            var reqs=r.requirements;
+            var cats={};
+            reqs.forEach(function(x){if(!cats[x.category])cats[x.category]=[];cats[x.category].push(x)});
+            var html='';
+            Object.entries(cats).forEach(function([cat,items]){
+                var cleared=items.filter(function(x){return x.status==='Cleared'}).length;
+                var total=items.length;
+                var pct=total?Math.round(cleared/total*100):0;
+                html+='<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center" style="background:var(--isnm-navy);color:#fff"><strong>'+esc(cat)+'</strong><span class="badge bg-light text-dark">'+cleared+'/'+total+' cleared ('+pct+'%)</span></div><div class="card-body p-2"><table class="table table-sm table-hover mb-0"><thead><tr><th style="width:40px"></th><th>Requirement</th><th>Status</th><th>Remarks</th><th>Cleared By</th></tr></thead><tbody>';
+                items.forEach(function(x){
+                    var isCleared=x.status==='Cleared';
+                    html+='<tr><td><input type="checkbox" class="form-check-input" '+(isCleared?'checked':'')+' onchange="toggleStudentReq('+x.id+',this.checked)"></td><td>'+esc(x.requirement_name)+'</td><td><span class="badge bg-'+(isCleared?'success':x.status==='Submitted'?'info':x.status==='Missing'?'danger':'secondary')+'">'+esc(x.status)+'</span></td><td><small class="text-muted">'+esc(x.remarks||'')+'</small></td><td><small>'+esc(x.verified_by||'-')+'</small></td></tr>';
+                });
+                html+='</tbody></table></div></div>';
+            });
+            if(!reqs.length) html='<div class="alert alert-info">No requirements found. <button class="btn btn-isnm btn-sm ms-2" onclick="initStudentReqs(\''+esc(s.student_number)+'\',\''+esc(s.full_name)+'\')">Initialize Requirements</button></div>';
+            document.getElementById('reqChecklistBody').innerHTML=html;
+        });
+    });
+}
+function toggleStudentReq(id,checked){ajax('clear_student_requirement','POST',{req_id:id,cleared:checked?1:0}).then(d=>{if(!d.success)showMsg(d.message,'danger');else loadStudentRequirements()})}
+function initStudentReqs(num,name){ajax('bulk_init_student_requirements','POST',{student_number:num,student_name:name}).then(d=>{if(d.success){showMsg(d.message);loadStudentRequirements()}else showMsg(d.message,'danger')})}
+
+/* ── Store Items ── */
+function loadStoreItems(){
+    var cat=document.getElementById('storeCatFilter')?.value||'';
+    var q=document.getElementById('storeSearchInput')?.value||'';
+    ajax('get_store_items','GET',{category:cat,search:q}).then(d=>{
+        if(!d.success)return;
+        var tb=document.getElementById('storeItemsBody');
+        if(!tb)return;
+        tb.innerHTML=d.items.map(function(it,i){
+            var stClass=it.status==='Out of Stock'?'danger':it.status==='Low Stock'?'warning':'success';
+            return'<tr><td>'+(i+1)+'</td><td><strong>'+esc(it.item_name)+'</strong></td><td><span class="badge bg-info">'+esc(it.category)+'</span></td><td>'+esc(it.unit)+'</td><td><strong>'+it.quantity_in_stock+'</strong></td><td>'+it.minimum_level+'</td><td><span class="badge bg-'+stClass+'">'+esc(it.status)+'</span></td><td><button class="btn btn-sm btn-outline-warning" onclick=\'editStoreItem('+JSON.stringify(it).replace(/'/g,"\\'")+')\'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteStoreItem('+it.id+')"><i class="fas fa-trash"></i></button></td></tr>';
+        }).join('')||'<tr><td colspan="8" class="text-center text-muted">No items found</td></tr>';
+    });
+    ajax('get_store_stats','GET').then(d=>{
+        if(!d.success)return;
+        var s=d.stats;
+        document.getElementById('storeStatsRow').innerHTML='<div class="col-md-3"><div class="stat-card text-center"><div class="stat-value text-primary">'+s.total_items+'</div><div class="stat-label">Total Items</div></div></div><div class="col-md-3"><div class="stat-card text-center"><div class="stat-value text-warning">'+s.low_stock+'</div><div class="stat-label">Low Stock</div></div></div><div class="col-md-3"><div class="stat-card text-center"><div class="stat-value text-danger">'+s.out_of_stock+'</div><div class="stat-label">Out of Stock</div></div></div><div class="col-md-3"><div class="stat-card text-center"><div class="stat-value text-info">'+s.pending_requisitions+'</div><div class="stat-label">Pending Requisitions</div></div></div>';
+    });
+}
+function showStoreItemModal(it){
+    document.getElementById('storeItemModalTitle').textContent=it?'Edit Item':'Add Item';
+    document.getElementById('si_id').value=it?.id||'';
+    document.getElementById('si_name').value=it?.item_name||'';
+    document.getElementById('si_unit').value=it?.unit||'piece';
+    document.getElementById('si_cat').value=it?.category||'General Utilities';
+    document.getElementById('si_location').value=it?.location||'';
+    document.getElementById('si_qty').value=it?.quantity_in_stock||0;
+    document.getElementById('si_min').value=it?.minimum_level||0;
+    document.getElementById('si_price').value=it?.unit_price||0;
+    new bootstrap.Modal(document.getElementById('storeItemModal')).show();
+}
+function editStoreItem(it){showStoreItemModal(it)}
+function saveStoreItem(e){e.preventDefault();var fd=new FormData(document.getElementById('storeItemForm'));ajax('save_store_item','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('storeItemModal')).hide();showMsg(d.message);loadStoreItems()}else showMsg(d.message,'danger')});return false}
+function deleteStoreItem(id){if(!confirm('Delete this item?'))return;ajax('delete_store_item','POST',{item_id:id}).then(d=>{if(d.success){showMsg(d.message);loadStoreItems()}else showMsg(d.message,'danger')})}
+if(document.getElementById('storeItemsBody'))loadStoreItems();
+
+/* ── Food Store ── */
+function loadFoodStore(){
+    ajax('get_store_items','GET',{category:'Food Store'}).then(d=>{
+        if(!d.success)return;
+        var tb=document.getElementById('foodStoreBody');
+        if(!tb)return;
+        tb.innerHTML=d.items.map(function(it,i){
+            var stClass=it.status==='Out of Stock'?'danger':it.status==='Low Stock'?'warning':'success';
+            return'<tr><td>'+(i+1)+'</td><td><strong>'+esc(it.item_name)+'</strong></td><td>'+esc(it.unit)+'</td><td><strong>'+it.quantity_in_stock+'</strong></td><td>'+it.minimum_level+'</td><td><span class="badge bg-'+stClass+'">'+esc(it.status)+'</span></td><td><button class="btn btn-sm btn-outline-warning" onclick=\'editStoreItem('+JSON.stringify(it).replace(/'/g,"\\'")+')\'><i class="fas fa-edit"></i></button></td></tr>';
+        }).join('')||'<tr><td colspan="7" class="text-center text-muted">No food items</td></tr>';
+    });
+}
+if(document.getElementById('foodStoreBody'))loadFoodStore();
+
+/* ── Requisitions (Matron) ── */
+function loadRequisitions(){
+    var st=document.getElementById('reqStatusFilter')?.value||'';
+    ajax('get_requisitions','GET',{status:st}).then(d=>{
+        if(!d.success)return;
+        var tb=document.getElementById('requisitionBody');
+        if(!tb)return;
+        tb.innerHTML=d.requisitions.map(function(r){
+            var badge=r.status==='Approved'?'success':r.status==='Rejected'?'danger':r.status==='Issued'?'info':r.status==='Partially Issued'?'warning':'secondary';
+            var actions='';
+            if(r.status==='Pending'){
+                actions='<button class="btn btn-sm btn-outline-success" onclick="updateReqStatus('+r.id+',\'Approved\')"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="updateReqStatus('+r.id+',\'Rejected\')"><i class="fas fa-times"></i></button>';
+            }else if(r.status==='Approved'){
+                actions='<button class="btn btn-sm btn-outline-info" onclick="updateReqStatus('+r.id+',\'Issued\')"><i class="fas fa-truck"></i></button>';
+            }
+            return'<tr><td><small>'+esc(r.requisition_number||'-')+'</small></td><td>'+esc(r.item_name)+'</td><td>'+r.quantity_requested+'</td><td>'+esc(r.department||'-')+'</td><td><small>'+esc(r.purpose||'')+'</small></td><td><small>'+esc(r.requested_by_name||'')+'</small></td><td><span class="badge bg-'+badge+'">'+r.status+'</span></td><td>'+actions+'</td></tr>';
+        }).join('')||'<tr><td colspan="8" class="text-center text-muted">No requisitions</td></tr>';
+    });
+}
+function showRequisitionModal(r){
+    document.getElementById('requisitionModalTitle').textContent=r?'Edit Requisition':'New Requisition';
+    document.getElementById('rq_id').value=r?.id||'';
+    document.getElementById('rq_qty').value=r?.quantity_requested||1;
+    document.getElementById('rq_dept').value=r?.department||'Matron';
+    document.getElementById('rq_purpose').value=r?.purpose||'';
+    ajax('get_store_items','GET',{category:'Matron Items'}).then(d=>{
+        var sel=document.getElementById('rq_item');
+        sel.innerHTML='<option value="">-- Select --</option>';
+        if(d.success)d.items.forEach(function(it){sel.innerHTML+='<option value="'+esc(it.item_name)+'"'+(r&&r.item_name===it.item_name?' selected':'')+'>'+esc(it.item_name)+'</option>'});
+    });
+    new bootstrap.Modal(document.getElementById('requisitionModal')).show();
+}
+function saveRequisition(e){e.preventDefault();var fd=new FormData(document.getElementById('requisitionForm'));ajax('save_requisition','POST',fd).then(d=>{if(d.success){bootstrap.Modal.getInstance(document.getElementById('requisitionModal')).hide();showMsg(d.message);loadRequisitions()}else showMsg(d.message,'danger')});return false}
+function updateReqStatus(id,status){if(!confirm('Set status to '+status+'?'))return;ajax('update_requisition_status','POST',{req_id:id,new_status:status}).then(d=>{if(d.success){showMsg(d.message);loadRequisitions()}else showMsg(d.message,'danger')})}
+if(document.getElementById('requisitionBody'))loadRequisitions();
+
+/* ── Director Requirements Portal ── */
+function loadDirectorRequirements(){
+    var q=document.getElementById('dirReqSearch')?.value||'';
+    var cat=document.getElementById('dirReqCategory')?.value||'';
+    var st=document.getElementById('dirReqStatus')?.value||'';
+    if(!q){document.getElementById('dirReqBody').innerHTML='<tr><td colspan="8" class="text-center text-muted">Search for a student...</td></tr>';return}
+    ajax('search_students','GET',{search:q,page:1}).then(d=>{
+        if(!d.success||!d.students.length){document.getElementById('dirReqBody').innerHTML='<tr><td colspan="8" class="text-center text-muted">No students found</td></tr>';return}
+        var s=d.students[0];
+        ajax('get_student_app_requirements','GET',{student_number:s.student_number}).then(r=>{
+            if(!r.success)return;
+            var reqs=r.requirements;
+            if(cat)reqs=reqs.filter(function(x){return x.category===cat});
+            if(st)reqs=reqs.filter(function(x){return x.status===st});
+            var tb=document.getElementById('dirReqBody');
+            tb.innerHTML=reqs.map(function(x){
+                var isCleared=x.status==='Cleared';
+                return'<tr><td><input type="checkbox" class="form-check-input dir-req-check" data-id="'+x.id+'" '+(isCleared?'checked':'')+' onchange="toggleStudentReq('+x.id+',this.checked)"></td><td><small>'+esc(x.student_number)+'</small></td><td>'+esc(x.student_name||s.full_name)+'</td><td>'+esc(x.requirement_name)+'</td><td><span class="badge bg-info">'+esc(x.category)+'</span></td><td><span class="badge bg-'+(isCleared?'success':x.status==='Submitted'?'info':x.status==='Missing'?'danger':'secondary')+'">'+esc(x.status)+'</span></td><td><input type="checkbox" class="form-check-input" '+(isCleared?'checked':'')+' onchange="toggleStudentReq('+x.id+',this.checked)"></td><td><small class="text-muted">'+esc(x.verified_by||'-')+'</small></td></tr>';
+            }).join('')||'<tr><td colspan="8" class="text-center text-muted">No requirements for this student</td></tr>';
+        });
+    });
+}
+function toggleAllDirReq(el){document.querySelectorAll('.dir-req-check').forEach(function(cb){cb.checked=el.checked;toggleStudentReq(cb.dataset.id,el.checked)})}
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
