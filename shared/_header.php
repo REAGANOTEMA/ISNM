@@ -65,6 +65,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="stylesheet" href="css/animations.css?v=3" />
   <link rel="stylesheet" href="css/polish.css?v=2" />
   <link rel="stylesheet" href="css/mobile-fixes.css?v=2" />
+  <link rel="stylesheet" href="css/premium-enhancement.css?v=3" />
 </head>
 
 <body>

@@ -347,28 +347,28 @@
             <div class="stat-icon">
               <i class="fas fa-user-graduate"></i>
             </div>
-            <div class="stat-number" data-target="1000">0</div>
+            <div class="stat-number" data-target="1000" data-suffix="+">0</div>
             <div class="stat-label">Graduates</div>
           </div>
           <div class="stat-item animate-scale-in animate-on-scroll animate-delay-2" style="animation-delay: 0.2s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-hospital"></i>
             </div>
-            <div class="stat-number" data-target="7">0</div>
+            <div class="stat-number" data-target="7" data-suffix="">0</div>
             <div class="stat-label">Hospital Partners</div>
           </div>
           <div class="stat-item animate-scale-in animate-on-scroll animate-delay-3" style="animation-delay: 0.3s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-calendar-check"></i>
             </div>
-            <div class="stat-number" data-target="15">0</div>
+            <div class="stat-number" data-target="15" data-suffix="+">0</div>
             <div class="stat-label">Years of Excellence</div>
           </div>
           <div class="stat-item animate-scale-in animate-on-scroll animate-delay-4" style="animation-delay: 0.4s; cursor:pointer;">
             <div class="stat-icon">
               <i class="fas fa-percentage"></i>
             </div>
-            <div class="stat-number" data-target="100">0</div>
+            <div class="stat-number" data-target="100" data-suffix="%">0</div>
             <div class="stat-label">Midwifery Pass Rate</div>
           </div>
         </div>
@@ -394,12 +394,12 @@
   </main>
 
 <script>
-    // Animated Counter for Statistics
     function animateCounter() {
       const counters = document.querySelectorAll('.stat-number');
       
       counters.forEach(counter => {
         const target = parseInt(counter.getAttribute('data-target'));
+        const suffix = counter.getAttribute('data-suffix') || '';
         const duration = 2000;
         const step = target / (duration / 16);
         let current = 0;
@@ -410,19 +410,10 @@
             counter.textContent = Math.ceil(current);
             requestAnimationFrame(updateCounter);
           } else {
-            counter.textContent = target;
-            // Add special handling for percentage
-            if (target === 100) {
-              counter.textContent = '100%';
-            } else if (target === 1000) {
-              counter.textContent = '1000+';
-            } else if (target === 15) {
-              counter.textContent = '15+';
-            }
+            counter.textContent = target + suffix;
           }
         };
         
-        // Start animation when element is in viewport
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -436,7 +427,6 @@
       });
     }
 
-    // Initialize animations when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
       animateCounter();
     });

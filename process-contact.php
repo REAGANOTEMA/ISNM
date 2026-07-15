@@ -23,6 +23,14 @@ $phone     = trim($_POST['phone'] ?? '');
 $subject   = sanitizeInput(trim($_POST['subject'] ?? ''));
 $message   = sanitizeInput(trim($_POST['message'] ?? ''));
 
+// Enforce max input lengths
+$firstName = mb_substr($firstName, 0, 100);
+$lastName = mb_substr($lastName, 0, 100);
+$email = mb_substr($email, 0, 255);
+$phone = mb_substr($phone, 0, 20);
+$subject = mb_substr($subject, 0, 200);
+$message = mb_substr($message, 0, 5000);
+
 if (!$firstName || !$lastName || !$email || !$phone || !$subject || !$message) {
     $_SESSION['error_message'] = 'Please fill in all required fields.';
     header('Location: contact.php');

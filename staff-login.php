@@ -792,7 +792,7 @@ body{
   </a>
 </div>
 <div class="login-card-wrap">
-    <div class="login-card">
+    <div class="login-card animate-on-scroll">
       <div class="card-accent-top"></div>
       <div class="card-glow"></div>
       <div class="card-header-wrap">

@@ -3,10 +3,10 @@ require_once __DIR__ . '/includes/config_enhanced.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/email_notifications.php';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
         $_SESSION['error_message'] = 'Invalid security token. Please try again.';
         header('Location: application.php');
         exit;
@@ -103,8 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         if (!$academicDocResult['success'] || !$photoResult['success']) {
-            throw new Exception('File upload failed: ' .
-                ($academicDocResult['success'] ? $photoResult['message'] : $academicDocResult['message']));
+            $uploadErrors = [];
+            if (!$academicDocResult['success']) $uploadErrors[] = $academicDocResult['message'];
+            if (!$photoResult['success']) $uploadErrors[] = $photoResult['message'];
+            throw new Exception('File upload failed: ' . implode('; ', $uploadErrors));
         }
 
         $docFields = [
@@ -139,11 +141,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $otherName = sanitizeInput($_POST['otherName'] ?? '');
         $dob       = $_POST['dateOfBirth'] ?? '';
         $gender    = $_POST['gender'] ?? '';
+
+        if (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
+            throw new Exception('Invalid gender value.');
+        }
+
+        if ($dob && !strtotime($dob)) {
+            throw new Exception('Invalid date of birth.');
+        }
+
         $nationality = sanitizeInput($_POST['nationality'] ?? '');
         $contactNumber = trim($_POST['contactNumber'] ?? '');
         $appEmail  = trim($_POST['email'] ?? '');
         $course    = sanitizeInput($_POST['course'] ?? '');
         $previousSchool = sanitizeInput($_POST['previousSchool'] ?? '');
+
+        // Enforce max input lengths
+        $firstName = mb_substr($firstName, 0, 100);
+        $surname = mb_substr($surname, 0, 100);
+        $otherName = mb_substr($otherName, 0, 100);
+        $appEmail = mb_substr($appEmail, 0, 255);
+        $contactNumber = mb_substr($contactNumber, 0, 20);
+        $nationality = mb_substr($nationality, 0, 100);
+        $course = mb_substr($course, 0, 255);
+        $previousSchool = mb_substr($previousSchool, 0, 255);
 
         if (!$firstName || !$surname || !$dob || !$gender || !$contactNumber || !$appEmail || !$course) {
             throw new Exception('Please fill in all required fields.');

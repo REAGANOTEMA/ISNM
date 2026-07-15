@@ -350,12 +350,13 @@ include('shared/_header.php');
                 </div>
                 <div class="col-12">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="anonymousDonation">
+                    <input class="form-check-input" type="checkbox" id="anonymousDonation" name="anonymous">
                     <label class="form-check-label" for="anonymousDonation">
                       Make this donation anonymous
                     </label>
                   </div>
                 </div>
+                <input type="hidden" id="donationReferenceInput" name="donationReference" value="">
               </div>
 
               <!-- Payment Method Selection -->
@@ -402,23 +403,23 @@ include('shared/_header.php');
                 </div>
                 <div class="col-md-6">
                   <label for="cardNumber" class="form-label">Card Number *</label>
-                  <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                  <input type="text" class="form-control" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
                 </div>
                 <div class="col-md-6">
                   <label for="cardName" class="form-label">Name on Card *</label>
-                  <input type="text" class="form-control" id="cardName" placeholder="John Doe">
+                  <input type="text" class="form-control" id="cardName" name="cardName" placeholder="John Doe">
                 </div>
                 <div class="col-md-4">
                   <label for="expiryDate" class="form-label">Expiry Date *</label>
-                  <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                  <input type="text" class="form-control" id="expiryDate" name="expiryDate" placeholder="MM/YY" maxlength="5">
                 </div>
                 <div class="col-md-4">
                   <label for="cvv" class="form-label">CVV *</label>
-                  <input type="text" class="form-control" id="cvv" placeholder="123" maxlength="4">
+                  <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123" maxlength="4">
                 </div>
                 <div class="col-md-4">
                   <label for="billingZip" class="form-label">Billing ZIP *</label>
-                  <input type="text" class="form-control" id="billingZip" placeholder="12345">
+                  <input type="text" class="form-control" id="billingZip" name="billingZip" placeholder="12345">
                 </div>
               </div>
 
@@ -429,7 +430,7 @@ include('shared/_header.php');
                 </div>
                 <div class="col-md-6">
                   <label for="mobileProvider" class="form-label">Mobile Provider *</label>
-                  <select class="form-control" id="mobileProvider">
+                  <select class="form-control" id="mobileProvider" name="mobileProvider">
                     <option value="">Select Provider</option>
                     <option value="mtn">MTN Mobile Money</option>
                     <option value="airtel">Airtel Money</option>
@@ -438,7 +439,7 @@ include('shared/_header.php');
                 </div>
                 <div class="col-md-6">
                   <label for="mobileNumber" class="form-label">Mobile Number *</label>
-                  <input type="tel" class="form-control" id="mobileNumber" placeholder="+256 7XX XXX XXX">
+                  <input type="tel" class="form-control" id="mobileNumber" name="mobileNumber" placeholder="+256 7XX XXX XXX">
                 </div>
                 <div class="col-12">
                   <div class="alert alert-info">
@@ -523,8 +524,13 @@ include('shared/_header.php');
       
       // Generate and set reference
       const referenceField = document.getElementById('donationReference');
+      const referenceInput = document.getElementById('donationReferenceInput');
+      const reference = generateDonationReference();
       if (referenceField) {
-        referenceField.textContent = generateDonationReference();
+        referenceField.textContent = reference;
+      }
+      if (referenceInput) {
+        referenceInput.value = reference;
       }
       
       // Reset payment method selection

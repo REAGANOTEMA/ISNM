@@ -291,7 +291,7 @@
                   </div>
                 </div>
                 
-                <div class="hospital-card animate-on-scroll" style="cursor:pointer">
+                <div class="hospital-card animate-on-scroll animate-delay-1" style="cursor:pointer">
                   <div class="hospital-icon">
                     <i class="fas fa-hospital"></i>
                   </div>

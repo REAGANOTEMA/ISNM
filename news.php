@@ -37,6 +37,7 @@ if (!function_exists('ensureNewsTable')) {
             slug VARCHAR(255) NOT NULL,
             content LONGTEXT,
             excerpt TEXT,
+            category VARCHAR(100) DEFAULT 'general',
             featured_image VARCHAR(500),
             author_id INT,
             author_name VARCHAR(255),
@@ -46,6 +47,7 @@ if (!function_exists('ensureNewsTable')) {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $conn->query("ALTER TABLE news ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'general'");
         return true;
     }
 }
@@ -72,6 +74,7 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $content = trim($_POST['content'] ?? '');
         $excerpt = trim($_POST['excerpt'] ?? '');
         $status = $_POST['status'] ?? 'draft';
+        $category = preg_replace('/[^a-z0-9_-]/', '', strtolower(trim($_POST['category'] ?? 'general')));
         $news_id = (int)($_POST['news_id'] ?? 0);
 
         if (!$title) $errors[] = 'Title is required.';
@@ -129,8 +132,8 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($stmt->execute()) {
                         $newsId = $stmt->insert_id;
                         // Also insert into website DB for public display
-                        if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                            $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
+                        if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, category, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                            $ws->bind_param("ssssssissss", $title, $slug, $allContent, $excerpt, $category, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
                             if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                             $ws->close();
                         }
@@ -160,11 +163,11 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Also update website DB
                     if ($websiteConn) {
                         if ($featuredImage) {
-                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, category=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
+                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $category, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         } else {
-                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, category=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
+                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $category, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         }
                     }
                     if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
@@ -282,19 +285,119 @@ if ($view === 'single' && $slug) {
         }
     }
 } elseif ($view === 'list') {
-    if ($is_admin) {
-        // Admin sees all
-        $result = $staffConn->query("SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC");
-    } else {
-        // Public sees only published
-        $result = $staffConn->query("SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id WHERE n.status='published' ORDER BY n.published_at DESC");
+    $searchQuery = trim($_GET['q'] ?? '');
+    $filterCategory = $_GET['category'] ?? '';
+    $filterStatus = $_GET['status'] ?? '';
+    $perPage = 9;
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $offset = ($page - 1) * $perPage;
+
+    $where = [];
+    $params = [];
+    $types = '';
+
+    if (!$is_admin) {
+        $where[] = "n.status='published'";
+    } elseif ($filterStatus && in_array($filterStatus, ['draft','published','archived'])) {
+        $where[] = "n.status=?";
+        $params[] = $filterStatus;
+        $types .= 's';
     }
-    if ($result) {
-        while ($row = $result->fetch_assoc()) $newsList[] = $row;
+
+    if ($searchQuery) {
+        $where[] = "(n.title LIKE ? OR n.excerpt LIKE ?)";
+        $like = '%' . $searchQuery . '%';
+        $params[] = $like;
+        $params[] = $like;
+        $types .= 'ss';
+    }
+
+    if ($filterCategory) {
+        $where[] = "n.category=?";
+        $params[] = $filterCategory;
+        $types .= 's';
+    }
+
+    $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $orderClause = $is_admin ? 'ORDER BY n.created_at DESC' : 'ORDER BY n.published_at DESC';
+
+    // Count total for pagination
+    $countSql = "SELECT COUNT(*) as total FROM director_news n $whereClause";
+    $totalArticles = 0;
+    if (!empty($params)) {
+        $cstmt = $staffConn->prepare($countSql);
+        if ($cstmt) {
+            $cstmt->bind_param($types, ...$params);
+            $cstmt->execute();
+            $crow = $cstmt->get_result()->fetch_assoc();
+            $totalArticles = (int)($crow['total'] ?? 0);
+            $cstmt->close();
+        }
+    } else {
+        $cres = $staffConn->query($countSql);
+        if ($cres) $totalArticles = (int)$cres->fetch_assoc()['total'];
+    }
+    $totalPages = max(1, (int)ceil($totalArticles / $perPage));
+
+    $sql = "SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id $whereClause $orderClause LIMIT $perPage OFFSET $offset";
+    if (!empty($params)) {
+        $stmt = $staffConn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result) {
+                while ($row = $result->fetch_assoc()) $newsList[] = $row;
+            }
+            $stmt->close();
+        }
+    } else {
+        $result = $staffConn->query($sql);
+        if ($result) {
+            while ($row = $result->fetch_assoc()) $newsList[] = $row;
+        }
     }
 }
 
 $pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' | ISNM News' : 'News | ISNM');
+
+// AJAX partial response for Load More
+if (isset($_GET['ajax']) && $view === 'list' && !empty($newsList)) {
+    header('Content-Type: text/html; charset=utf-8');
+    foreach ($newsList as $article):
+    ?>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="news-card">
+            <?php if ($article['featured_image']): ?>
+            <img src="<?= htmlspecialchars($article['featured_image']) ?>" alt="<?= htmlspecialchars($article['title']) ?>" class="news-card-img" loading="lazy">
+            <?php else: ?>
+            <div class="news-card-img news-card-img-placeholder"><i class="far fa-image"></i></div>
+            <?php endif; ?>
+            <div class="news-card-body">
+                <?php if (!empty($article['category'])): ?>
+                <span class="news-card-category"><?= htmlspecialchars(ucfirst($article['category'])) ?></span>
+                <?php endif; ?>
+                <h5 class="news-card-title"><a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>"><?= htmlspecialchars($article['title']) ?></a></h5>
+                <?php if ($article['excerpt']): ?>
+                <p class="news-card-excerpt"><?= htmlspecialchars(substr($article['excerpt'], 0, 120)) ?><?= strlen($article['excerpt']) > 120 ? '...' : '' ?></p>
+                <?php endif; ?>
+                <div class="news-card-meta">
+                    <span class="date"><i class="far fa-calendar me-1"></i><?= date('M j, Y', strtotime($article['published_at'] ?? $article['created_at'])) ?></span>
+                    <?php if ($article['author_name']): ?>
+                    <span class="author"><i class="far fa-user me-1"></i><?= htmlspecialchars($article['author_name']) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="news-card-actions">
+                    <a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>" class="news-card-read-more">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+    endforeach;
+    exit;
+}
+
 include 'shared/_header.php';
 ?>
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
@@ -372,6 +475,10 @@ include 'shared/_header.php';
         <div class="alert alert-danger alert-dismissible fade show"><?= htmlspecialchars($e) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endforeach; ?>
 
+        <?php
+        $catOptions = ['general','announcement','event','academic','health','community','achievement'];
+        ?>
+
         <?php if ($is_admin): ?>
         <!-- Admin: Create / Edit Form (hidden by default) -->
         <div id="newsFormContainer" class="card mb-4" style="display:none">
@@ -397,6 +504,14 @@ include 'shared/_header.php';
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
                                 <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select name="category" id="newsCategory" class="form-select">
+                                <?php foreach ($catOptions as $cat): ?>
+                                <option value="<?= $cat ?>"><?= ucfirst($cat) ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-12">
@@ -434,6 +549,43 @@ include 'shared/_header.php';
         </div>
         <?php endif; ?>
 
+        <!-- Search & Filter Bar -->
+        <form method="GET" class="row g-2 mb-4 align-items-end" id="newsFilterForm">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small text-muted">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search news articles..." value="<?= htmlspecialchars($searchQuery ?? '') ?>">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-muted">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <?php foreach ($catOptions as $cat): ?>
+                    <option value="<?= $cat ?>" <?= ($filterCategory ?? '') === $cat ? 'selected' : '' ?>><?= ucfirst($cat) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php if ($is_admin): ?>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-muted">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="published" <?= ($filterStatus ?? '') === 'published' ? 'selected' : '' ?>>Published</option>
+                    <option value="draft" <?= ($filterStatus ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option>
+                    <option value="archived" <?= ($filterStatus ?? '') === 'archived' ? 'selected' : '' ?>>Archived</option>
+                </select>
+            </div>
+            <?php endif; ?>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-isnm"><i class="fas fa-filter me-1"></i>Filter</button>
+                <?php if (($searchQuery ?? '') || ($filterCategory ?? '') || ($filterStatus ?? '')): ?>
+                <a href="news.php" class="btn btn-outline-secondary ms-1"><i class="fas fa-times me-1"></i>Clear</a>
+                <?php endif; ?>
+            </div>
+        </form>
+
         <!-- News Grid -->
         <?php if (empty($newsList)): ?>
         <div class="empty-state">
@@ -449,59 +601,74 @@ include 'shared/_header.php';
                     <?php if ($article['featured_image']): ?>
                     <img src="<?= htmlspecialchars($article['featured_image']) ?>" alt="<?= htmlspecialchars($article['title']) ?>" class="news-card-img" loading="lazy">
                     <?php else: ?>
-                    <div class="news-card-img d-flex align-items-center justify-content-center bg-light text-muted"><i class="far fa-image fa-3x"></i></div>
+                    <div class="news-card-img news-card-img-placeholder"><i class="far fa-image"></i></div>
                     <?php endif; ?>
                     <div class="news-card-body">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <?php if (!empty($article['category'])): ?>
+                        <span class="news-card-category"><?= htmlspecialchars(ucfirst($article['category'])) ?></span>
+                        <?php endif; ?>
+                        <h5 class="news-card-title"><a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>"><?= htmlspecialchars($article['title']) ?></a></h5>
+                        <?php if ($article['excerpt']): ?>
+                        <p class="news-card-excerpt"><?= htmlspecialchars(substr($article['excerpt'], 0, 120)) ?><?= strlen($article['excerpt']) > 120 ? '...' : '' ?></p>
+                        <?php endif; ?>
+                        <div class="news-card-meta">
                             <span class="date"><i class="far fa-calendar me-1"></i><?= date('M j, Y', strtotime($article['published_at'] ?? $article['created_at'])) ?></span>
+                            <?php if ($article['author_name']): ?>
+                            <span class="author"><i class="far fa-user me-1"></i><?= htmlspecialchars($article['author_name']) ?></span>
+                            <?php endif; ?>
                             <?php if ($is_admin): ?>
                             <span class="badge bg-<?= $article['status'] === 'published' ? 'success' : ($article['status'] === 'draft' ? 'warning text-dark' : 'secondary') ?>"><?= $article['status'] ?></span>
                             <?php endif; ?>
                         </div>
-                        <h5><a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>" class="text-decoration-none text-dark"><?= htmlspecialchars($article['title']) ?></a></h5>
-                        <?php if ($article['excerpt']): ?>
-                        <p class="excerpt"><?= htmlspecialchars(substr($article['excerpt'], 0, 120)) ?><?= strlen($article['excerpt']) > 120 ? '...' : '' ?></p>
-                        <?php endif; ?>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <?php if ($article['author_name']): ?>
-                            <span class="author"><i class="far fa-user me-1"></i><?= htmlspecialchars($article['author_name']) ?></span>
+                        <div class="news-card-actions">
+                            <a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>" class="news-card-read-more">Read More <i class="fas fa-arrow-right"></i></a>
+                            <?php if ($is_admin): ?>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editNews(<?= $article['id'] ?>)"><i class="fas fa-edit"></i></button>
+                                <?php if ($article['status'] !== 'published'): ?>
+                                <form method="POST" class="d-inline">
+                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
+                                    <input type="hidden" name="new_status" value="published">
+                                    <button class="btn btn-sm btn-outline-success" title="Publish"><i class="fas fa-check"></i></button>
+                                </form>
+                                <?php endif; ?>
+                                <?php if ($article['status'] !== 'archived'): ?>
+                                <form method="POST" class="d-inline">
+                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
+                                    <input type="hidden" name="new_status" value="archived">
+                                    <button class="btn btn-sm btn-outline-secondary" title="Archive"><i class="fas fa-archive"></i></button>
+                                </form>
+                                <?php endif; ?>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')">
+                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
                             <?php endif; ?>
-                            <a href="news.php?view=single&slug=<?= urlencode($article['slug']) ?>" class="btn btn-sm btn-outline-isnm">Read More <i class="fas fa-arrow-right ms-1"></i></a>
                         </div>
-                        <?php if ($is_admin): ?>
-                        <div class="mt-2 pt-2 border-top d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary" onclick="editNews(<?= $article['id'] ?>)"><i class="fas fa-edit"></i></button>
-                            <?php if ($article['status'] !== 'published'): ?>
-                            <form method="POST" class="d-inline">
-                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
-                                <input type="hidden" name="action" value="toggle_status">
-                                <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
-                                <input type="hidden" name="new_status" value="published">
-                                <button class="btn btn-sm btn-outline-success" title="Publish"><i class="fas fa-check"></i></button>
-                            </form>
-                            <?php endif; ?>
-                            <?php if ($article['status'] !== 'archived'): ?>
-                            <form method="POST" class="d-inline">
-                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
-                                <input type="hidden" name="action" value="toggle_status">
-                                <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
-                                <input type="hidden" name="new_status" value="archived">
-                                <button class="btn btn-sm btn-outline-secondary" title="Archive"><i class="fas fa-archive"></i></button>
-                            </form>
-                            <?php endif; ?>
-                            <form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')">
-                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
-                                <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
-                            </form>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+        <div class="text-center mt-4" id="loadMoreContainer">
+            <?php if ($page < $totalPages): ?>
+            <button class="btn btn-isnm btn-lg" id="loadMoreBtn" data-page="<?= $page + 1 ?>" data-total="<?= $totalPages ?>">
+                <i class="fas fa-plus-circle me-1"></i>Load More
+            </button>
+            <?php else: ?>
+            <p class="text-muted">All articles loaded.</p>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 <?php endif; ?>
@@ -603,9 +770,41 @@ function editNews(id) {
         $('#currentImage').html('');
     }
     $('select[name="status"]').val(article.status);
+    if (article.category) {
+        $('#newsCategory').val(article.category);
+    }
     $('#newsFormContainer').show();
     window.scrollTo({ top: $('#newsFormContainer').offset().top - 20, behavior: 'smooth' });
 }
+
+$('#loadMoreBtn').on('click', function() {
+    var btn = $(this);
+    var nextPage = btn.data('page');
+    var total = btn.data('total');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Loading...');
+
+    var params = new URLSearchParams(window.location.search);
+    params.set('page', nextPage);
+
+    $.get('news.php?' + params.toString() + '&ajax=1', function(html) {
+        var cards = $(html).find('.row.g-4 > .col-12');
+        if (cards.length) {
+            cards.each(function(i) {
+                var card = $(this);
+                card.find('.news-card').addClass('animate-on-scroll animate-delay-' + Math.min(i + 1, 5));
+                card.appendTo('.row.g-4');
+            });
+            if (typeof initScrollAnimations === 'function') initScrollAnimations();
+        }
+        var newPage = nextPage + 1;
+        if (newPage > total) {
+            btn.replaceWith('<p class="text-muted">All articles loaded.</p>');
+        } else {
+            btn.data('page', newPage).prop('disabled', false)
+               .html('<i class="fas fa-plus-circle me-1"></i>Load More');
+        }
+    });
+});
 
 function deleteNews(id) {
     if (!confirm('Delete this news article?')) return;

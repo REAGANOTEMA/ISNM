@@ -1817,7 +1817,8 @@ if (!class_exists('PaymentGateway', false)) {
                 $r = $conn->query("SELECT setting_value FROM payment_gateway_settings WHERE setting_key = 'receipt_starting_number' LIMIT 1");
                 if ($r && $row = $r->fetch_assoc()) $next = (int) $row['setting_value'];
                 $r2 = $conn->query("SELECT MAX(CAST(SUBSTRING(receipt_number, " . (strlen($prefix) + 2) . ") AS UNSIGNED)) as mx FROM payment_receipts WHERE receipt_number LIKE '" . $prefix . "-%'");
-                if ($r2 && $row2 = $r2->fetch_assoc() && !empty($row2['mx'])) {
+                $row2 = $r2->fetch_assoc();
+                if ($r2 && !empty($row2['mx'])) {
                     $next = (int) $row2['mx'] + 1;
                 }
             }

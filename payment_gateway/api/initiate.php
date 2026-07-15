@@ -7,6 +7,12 @@
 session_start();
 header('Content-Type: application/json');
 
+if (!isset($_SESSION['staff_id']) && !isset($_SESSION['student_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Authentication required']);
+    exit;
+}
+
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../core/GatewayManager.php';
 

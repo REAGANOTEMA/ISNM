@@ -685,7 +685,7 @@ if ($login_success) { unset($_SESSION['success']); }
   </a>
 </div>
 <div class="login-wrapper">
-  <div class="login-card">
+  <div class="login-card animate-on-scroll">
     <div class="login-header">
       <div class="header-inner">
         <div class="logo-wrap">

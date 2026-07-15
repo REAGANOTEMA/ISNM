@@ -8,7 +8,7 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);border-radius:50px;color:#FFD700;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:1rem;">
+            <div class="tag tag-gold mb-3">
               <i class="fas fa-graduation-cap"></i> Est. 2009
             </div>
             <h1 class="page-title">About Iganga School of Nursing & Midwifery</h1>
@@ -144,6 +144,13 @@
         </div>
       </div>
     </section>
+
+    <!-- Decorative Section Separator -->
+    <div class="section-separator text-center py-3" aria-hidden="true">
+      <span class="separator-line"></span>
+      <span class="separator-diamond"><i class="fas fa-gem"></i></span>
+      <span class="separator-line"></span>
+    </div>
 
     <!-- Governance Section -->
     <section class="governance-section py-5 animate-on-scroll">

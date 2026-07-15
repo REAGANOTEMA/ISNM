@@ -58,7 +58,7 @@ include_once 'shared/_header.php';
         </div>
         
         <div class="hero-subtitle">
-          <p>"Chosen to Serve , Based on a disciplined mind for health action"</p>
+          <p>"Chosen to Serve, Based on a disciplined mind for health action"</p>
         </div>
         
         <div class="hero-stats">
@@ -94,10 +94,21 @@ include_once 'shared/_header.php';
           </a>
         </div>
       </div>
+      
+      <!-- Scroll Indicator -->
+      <div class="hero-scroll-indicator" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:4;text-align:center;">
+        <a href="#stats" style="color:rgba(255,255,255,0.7);text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:8px;transition:color 0.3s;">
+          <span style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;font-family:'Montserrat',sans-serif;">Explore</span>
+          <div style="width:24px;height:38px;border:2px solid rgba(255,255,255,0.4);border-radius:12px;display:flex;justify-content:center;padding-top:6px;">
+            <div style="width:3px;height:8px;background:#FFD700;border-radius:2px;animation:scrollBounce 1.5s ease-in-out infinite;"></div>
+          </div>
+        </a>
+      </div>
+      <style>@keyframes scrollBounce{0%,100%{transform:translateY(0);opacity:1;}50%{transform:translateY(8px);opacity:0.5;}}</style>
     </section>
 
     <!-- Quick Stats Section -->
-    <section class="stats-section py-5">
+    <section id="stats" class="stats-section py-5">
       <div class="container">
         <div class="row text-center">
           <div class="col-md-3 col-6 mb-4 animate-on-scroll">
@@ -286,10 +297,10 @@ include_once 'shared/_header.php';
       <div class="container" style="position:relative;z-index:1;">
         <div class="row">
           <div class="col-lg-12 text-center mb-5 animate-on-scroll">
-            <span class="tag tag-gold" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:50px;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;"><i class="fas fa-star"></i> Why Choose Us</span>
-            <h2 class="section-title mt-3" style="color:#fff;font-size:2.5rem;font-weight:800;letter-spacing:-0.02em;">Why Choose ISNM?</h2>
-            <div class="section-divider section-divider-center" style="width:80px;height:3px;margin:1rem auto;background:linear-gradient(90deg,transparent,#FFD700,transparent);border-radius:2px;"></div>
-            <p class="section-subtitle" style="color:rgba(255,255,255,0.7);font-size:1.05rem;max-width:550px;margin:0 auto;">Discover what makes us the preferred choice for healthcare education in Uganda</p>
+            <span class="tag tag-gold"><i class="fas fa-star"></i> Why Choose Us</span>
+            <h2 class="section-title mt-3" style="color:#fff;">Why Choose ISNM?</h2>
+            <div class="section-divider section-divider-center"></div>
+            <p class="section-subtitle">Discover what makes us the preferred choice for healthcare education in Uganda</p>
           </div>
         </div>
         <div class="row g-4">

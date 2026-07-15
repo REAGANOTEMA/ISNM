@@ -237,7 +237,7 @@ include_once 'shared/_header.php';
                 <div class="hour-item">
                   <div class="day-info">
                     <i class="fas fa-calendar-day me-2"></i>
-                    <span class="day">Monday , Friday</span>
+                    <span class="day">Monday to Friday</span>
                   </div>
                   <span class="time">8:00 AM to 5:00 PM</span>
                 </div>
@@ -271,7 +271,7 @@ include_once 'shared/_header.php';
                 <div class="hour-item">
                   <div class="day-info">
                     <i class="fas fa-calendar-day me-2"></i>
-                    <span class="day">Monday , Friday</span>
+                    <span class="day">Monday to Friday</span>
                   </div>
                   <span class="time">9:00 AM to 4:00 PM</span>
                 </div>

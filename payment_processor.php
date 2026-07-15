@@ -47,7 +47,7 @@ class PaymentProcessor {
             if ($staffsDb) {
                 $stmt = $staffsDb->prepare("INSERT INTO notifications (title, message, type, priority, audience, created_by, created_at) VALUES (?, ?, 'payment', ?, 'finance', ?, NOW())");
                 $userId = $_SESSION['user_id'] ?? 0;
-                $stmt->bind_param('sssii', $title, $message, $priority, $userId);
+                $stmt->bind_param('sssi', $title, $message, $priority, $userId);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
@@ -292,11 +292,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'verify_payment':
+                $userRole = $_SESSION['role'] ?? '';
+                if (!in_array($userRole, ['admin', 'bursar', 'finance'])) {
+                    echo json_encode(['success' => false, 'message' => 'Insufficient permissions']);
+                    break;
+                }
                 $result = $processor->verifyPayment($_POST['payment_reference'] ?? '');
                 echo json_encode($result);
                 break;
 
             case 'initiate_payment':
+                // Rate limit: max 5 payment initiations per hour per user
+                $userId = $_SESSION['user_id'] ?? 0;
+                $rateConn = getStudentsConnection();
+                if ($rateConn && $userId > 0) {
+                    $rateCheck = $rateConn->prepare("SELECT COUNT(*) as cnt FROM payment_transactions WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+                    if ($rateCheck) {
+                        $rateCheck->bind_param('i', $userId);
+                        $rateCheck->execute();
+                        $rateResult = $rateCheck->get_result();
+                        $rateRow = $rateResult->fetch_assoc();
+                        $rateCheck->close();
+                        if ($rateRow['cnt'] >= 5) {
+                            echo json_encode(['success' => false, 'message' => 'Too many payment attempts. Please try again later.']);
+                            exit;
+                        }
+                    }
+                }
                 require_once __DIR__ . '/includes/payment_gateway/PaymentService.php';
                 $service = new PaymentService();
                 $providerKey = trim($_POST['provider'] ?? '');

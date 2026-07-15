@@ -29,6 +29,19 @@ $skills       = sanitizeInput(trim($_POST['skills'] ?? ''));
 $motivation   = sanitizeInput(trim($_POST['motivation'] ?? ''));
 $comments     = sanitizeInput(trim($_POST['comments'] ?? ''));
 
+// Enforce max input lengths
+$firstName = mb_substr($firstName, 0, 100);
+$lastName = mb_substr($lastName, 0, 100);
+$email = mb_substr($email, 0, 255);
+$phone = mb_substr($phone, 0, 20);
+$profession = mb_substr($profession, 0, 100);
+$opportunity = mb_substr($opportunity, 0, 200);
+$skills = mb_substr($skills, 0, 500);
+$motivation = mb_substr($motivation, 0, 2000);
+$comments = mb_substr($comments ?? '', 0, 2000);
+// Validate experience range
+$experience = max(0, min(50, intval($experience)));
+
 if (!$firstName || !$lastName || !$email || !$phone || !$profession || !$opportunity || !$skills || !$motivation) {
     $_SESSION['error_message'] = 'Please fill in all required fields.';
     header('Location: volunteer.php');

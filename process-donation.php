@@ -31,6 +31,13 @@ $paymentMethod = trim($_POST['paymentMethod'] ?? '');
 $purpose      = sanitizeInput(trim($_POST['purpose'] ?? 'General Donation'));
 $notes        = sanitizeInput(trim($_POST['notes'] ?? ''));
 
+// Enforce max input lengths
+$donorName = mb_substr($donorName, 0, 100);
+$donorEmail = mb_substr($donorEmail, 0, 255);
+$donorPhone = mb_substr($donorPhone, 0, 20);
+$purpose = mb_substr($purpose ?? '', 0, 200);
+$notes = mb_substr($notes ?? '', 0, 1000);
+
 if (!$donorName || !$donorEmail || !$donorPhone || $amount <= 0 || !$paymentMethod) {
     $msg = 'Please fill in all required fields with valid values.';
     if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
@@ -60,6 +67,12 @@ if ($amount < 100) {
     if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
     $_SESSION['error_message'] = $msg;
     header('Location: donation.php');
+    exit;
+}
+
+if ($amount > 100000000) { // 100M UGX cap
+    $response = ['success' => false, 'message' => 'Donation amount exceeds maximum allowed.'];
+    echo json_encode($response);
     exit;
 }
 

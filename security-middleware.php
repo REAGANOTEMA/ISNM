@@ -181,8 +181,7 @@ class SecurityMiddleware {
             'user_id' => $_SESSION['user_id'],
             'role' => $_SESSION['role'],
             'type' => $_SESSION['type'],
-            'first_name' => $_SESSION['first_name'] ?? '',
-            'last_name' => $_SESSION['last_name'] ?? '',
+            'full_name' => $_SESSION['full_name'] ?? '',
             'email' => $_SESSION['email'] ?? '',
             'phone' => $_SESSION['phone'] ?? ''
         ];

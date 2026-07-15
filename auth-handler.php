@@ -113,13 +113,11 @@ function tryHrAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
-        // Legacy password support: MD5, SHA1, plain text
+        // Legacy support: auto-upgrade MD5/SHA1 hashes to bcrypt on successful login
         if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
             $ok = (md5($password) === $u['password_hash']);
         } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
             $ok = (sha1($password) === $u['password_hash']);
-        } elseif (!$ok && $password === $u['password_hash']) {
-            $ok = true;
         }
         if (!$ok) {
             // Record failed attempt
@@ -206,13 +204,11 @@ function tryBursarAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = password_verify($password, $u['password_hash']);
-        // Legacy password support: MD5, SHA1, plain text
+        // Legacy support: auto-upgrade MD5/SHA1 hashes to bcrypt on successful login
         if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
             $ok = (md5($password) === $u['password_hash']);
         } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
             $ok = (sha1($password) === $u['password_hash']);
-        } elseif (!$ok && $password === $u['password_hash']) {
-            $ok = true;
         }
         if (!$ok) {
             // Record failed attempt
@@ -312,9 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-if ($action === 'staff_login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("AUTH-HANDLER: SID=" . session_id() . " COOKIE_PHPSESSID=" . ($_COOKIE['PHPSESSID'] ?? 'NONE') . " csrf_sess=" . substr($_SESSION['csrf_token'] ?? 'none', 0, 12) . " csrf_post=" . substr($_POST['csrf_token'] ?? 'none', 0, 12) . " sess_keys=" . implode(',', array_keys($_SESSION)));
-}
+
 
 // Logout requires POST to prevent CSRF logout attacks
 if ($action === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -603,8 +597,8 @@ switch ($action) {
         if ($newPw !== $confPw) {
             echo json_encode(['success' => false, 'message' => 'New passwords do not match.']); exit;
         }
-        if (strlen($newPw) < 6) {
-            echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters.']); exit;
+        if (strlen($newPw) < 8) {
+            echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters.']); exit;
         }
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['type'])) {
             echo json_encode(['success' => false, 'message' => 'Not authenticated.']); exit;

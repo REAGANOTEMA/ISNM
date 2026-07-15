@@ -163,7 +163,7 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
 .lab-content, .dg-topbar, .dashboard-content, .content-section,
 .dashboard-section.content-section, .page-content {
   margin-left: 0 !important;
-  margin-right: var(--sidebar-w, 270px) !important;
+  margin-right: var(--erp-sidebar-width, 270px) !important;
 }
 
 /* Toggle button inside sidebar - keep on left inside the right-side panel */
@@ -419,9 +419,11 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
     // â”€â”€ Responsive: close sidebar on outside click (mobile) â”€â”€
     document.addEventListener('click', function(e) {
         var sidebar = document.getElementById('isnmSidebar');
+        var overlay = document.getElementById('sidebarOverlay');
         if (!sidebar || window.innerWidth > 768) return;
         if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
             sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('open');
         }
     });
 
