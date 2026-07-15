@@ -177,7 +177,6 @@ if ($current_table === 'receipt_templates') {
         $stmt->close();
     }
 }
-if ($conn) $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

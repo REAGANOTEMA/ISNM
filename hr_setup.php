@@ -69,7 +69,6 @@ try {
         $messages[] = 'Please run: sql/staffs/hr_system.sql';
     }
     
-    $conn->close();
     $setup_complete = true;
     
 } catch (Exception $e) {

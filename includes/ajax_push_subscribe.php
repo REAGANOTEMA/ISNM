@@ -75,6 +75,4 @@ if ($check) {
     }
 }
 
-$conn->close();
-
 echo json_encode(['success' => true, 'message' => 'Subscription saved']);

@@ -121,7 +121,6 @@ class ErrorHandler {
                         'status' => 'connected',
                         'host' => $conn->get_server_info(),
                     ];
-                    $conn->close();
                 } else {
                     $diagnostics['databases'][$name] = [
                         'status' => 'failed',

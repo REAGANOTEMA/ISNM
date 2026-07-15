@@ -91,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'error' => $stmt->error]);
         }
         $stmt->close();
-        $conn->close();
         exit;
     }
 
@@ -109,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'error' => $stmt->error]);
         }
         $stmt->close();
-        $conn->close();
         exit;
     }
 
@@ -125,7 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->get_result();
         $student = $result->fetch_assoc();
         $stmt->close();
-        $conn->close();
         if ($student) {
             echo json_encode(['success' => true, 'student' => $student]);
         } else {
@@ -135,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     echo json_encode(['success' => false, 'error' => 'Unknown action']);
-    $conn->close();
     exit;
 }
 
@@ -163,7 +159,6 @@ if ($conn) {
         }
         $result->free();
     }
-    $conn->close();
 }
 
 $students = [];

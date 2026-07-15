@@ -251,29 +251,7 @@ function setSystemSettingDirect($conn, string $key, $value, string $type = 'stri
 }
 }
 
-/**
- * Count unread notifications for a staff member.
- */
-if (!function_exists('getUnreadNotificationCount')) {
-function getUnreadNotificationCount($conn, int $staffId): int {
-    if (!$conn || $staffId <= 0) return 0;
-    try {
-        $stmt = $conn->prepare(
-            "SELECT COUNT(*) cnt FROM notifications n
-             LEFT JOIN notification_reads nr ON n.id = nr.notification_id AND nr.user_id = ?
-             WHERE nr.id IS NULL"
-        );
-        if ($stmt) {
-            $stmt->bind_param('i', $staffId);
-            $stmt->execute();
-            $r = $stmt->get_result();
-            if ($r) return (int)$r->fetch_assoc()['cnt'];
-            $stmt->close();
-        }
-    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
-    return 0;
-}
-}
+// getUnreadNotificationCount is defined in notification_helper.php
 
 /**
  * Count pending tasks for a staff member.

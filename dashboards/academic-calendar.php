@@ -1,4 +1,4 @@
-VB <?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'registrar', 'principal']);
 $conn = $ctx['staff'];
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $esd = $_POST['exam_start_date'] ?? null;
         $eed = $_POST['exam_end_date'] ?? null;
         if ($ay) {
-            $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,'Active')");
+            $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,?,?,'Active')");
             $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();

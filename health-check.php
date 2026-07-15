@@ -39,7 +39,6 @@ foreach ($dbNames as $label => $func) {
     if ($conn && !$conn->connect_error) {
         $info = $conn->get_server_info();
         $checks[] = ['name' => "Database: $label", 'status' => 'ok', 'detail' => "Connected ($info)"];
-        @$conn->close();
     } else {
         $err = $conn ? $conn->connect_error : ($error ?: 'Connection returned null');
         $checks[] = ['name' => "Database: $label", 'status' => 'fail', 'detail' => $err];

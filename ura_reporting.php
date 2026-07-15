@@ -15,7 +15,6 @@ class URAReporting {
         $stmt->bind_param("ss", $start, $end);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
-        $conn->close();
         return [
             'reporting_period' => date('F Y', mktime(0, 0, 0, $month, 1, $year)),
             'TIN' => '1012345678',
@@ -36,7 +35,6 @@ class URAReporting {
         $stmt->bind_param("ss", $start, $end);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result()->fetch_assoc();
-        $conn->close();
         return [
             'reporting_period' => date('F Y', mktime(0, 0, 0, $month, 1, $year)),
             'TIN' => '1012345678',
@@ -67,7 +65,6 @@ class URAReporting {
         $report['total_revenue'] = $report['total_vat_collected'] + $report['total_wht_collected'];
         $report['staff_costs'] = 0;
         $report['total_expenses'] = 0;
-        $conn->close();
         return $report;
     }
 
@@ -180,7 +177,6 @@ if ($staffConn) {
     if ($r1) while ($row = $r1->fetch_assoc()) $all[] = $row;
     if ($r2) while ($row = $r2->fetch_assoc()) $all[] = $row;
     usort($all, fn($a,$b) => strcmp($b['date'], $a['date']));
-    $staffConn->close();
 }
 ?>
 <table class="table table-sm">

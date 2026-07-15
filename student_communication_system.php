@@ -296,7 +296,6 @@ if ($_SESSION['role'] !== 'Student') {
         if ($studentsResult) {
             while ($row = $studentsResult->fetch_assoc()) $all_students[] = $row;
         }
-        $studentsConn->close();
     }
 }
 ?>

@@ -96,7 +96,6 @@ try {
         $messages[] = 'âœ“ Programs already configured';
     }
     
-    $conn->close();
     $setup_complete = true;
     
 } catch (Exception $e) {

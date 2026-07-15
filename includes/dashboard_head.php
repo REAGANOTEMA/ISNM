@@ -231,6 +231,7 @@ window.onerror = function(msg, url) {
     });
 })();
 </script>
+<?php if (defined('VAPID_PUBLIC_KEY') && VAPID_PUBLIC_KEY !== ''): ?>
 <!-- Push Notification Service Worker Registration -->
 <script>
 (function() {
@@ -240,12 +241,10 @@ window.onerror = function(msg, url) {
   var meta = document.createElement('meta'); meta.name = 'push-sw-registered'; meta.content = '1'; document.head.appendChild(meta);
 
   navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(function(reg) {
-      console.log('[SW] Registered:', reg.scope);
-
       function subscribeUser() {
         reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array('BMr-6T5vZJ5hY2X8fG3kL9pQ0rS1uV4wX7yZ6aB3cD4eF5gH6iJ7kL8mN9oP0qR1sT2uV3wX4yZ5')
+          applicationServerKey: urlBase64ToUint8Array('<?= VAPID_PUBLIC_KEY ?>')
         }).then(function(sub) {
           var data = new URLSearchParams();
           data.append('endpoint', sub.endpoint);
@@ -286,6 +285,7 @@ window.onerror = function(msg, url) {
   }
 })();
 </script>
+<?php endif; ?>
 
 <style>
 /* â”€â”€ Floating Action Button Stack (prevents overlap) â”€â”€ */

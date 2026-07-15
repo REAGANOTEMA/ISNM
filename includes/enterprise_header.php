@@ -23,7 +23,7 @@ $hNotifCount  = 0;
 $hTaskCount   = 0;
 $hApprovalCount = 0;
 if ($hStaffConn && $hUserId) {
-    $hNotifCount    = getUnreadNotificationCount($hStaffConn, $hUserId);
+    $hNotifCount    = getUnreadNotificationCount($hUserId);
     $hTaskCount     = getPendingTaskCount($hStaffConn, $hUserId);
     $hApprovalCount = getPendingApprovalCount($hStaffConn);
 }

@@ -25,14 +25,12 @@ if ($conn) {
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$row || empty($row['is_first_login'])) {
-            // Already changed password â€” redirect to dashboard
+            // Already changed password — redirect to dashboard
             $dashboard = $auth_service->getDashboardRoute($_SESSION['role'] ?? '');
-            $conn->close();
             header('Location: ' . ($dashboard ?: 'index.php'));
             exit();
         }
     }
-    $conn->close();
 } else {
     $force_reason = 'Database unavailable. Please contact the system administrator.';
 }
@@ -57,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $update->bind_param('si', $hash, $_SESSION['user_id']);
                 if ($update->execute()) {
                     $update->close();
-                    $conn->close();
                     $_SESSION['success'] = 'Password changed successfully. Welcome to the system!';
                     $dashboard = $auth_service->getDashboardRoute($_SESSION['role'] ?? '');
                     header('Location: ' . ($dashboard ?: 'index.php'));
@@ -65,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
                 $update->close();
             }
-            $conn->close();
         }
         $error = 'Failed to update password. Please try again.';
     }

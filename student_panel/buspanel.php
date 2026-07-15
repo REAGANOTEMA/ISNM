@@ -312,9 +312,7 @@ checkAuth('Student');
                 </div>";
             }
 
-            // Close the database connection
             $stmt->close();
-            $conn->close();
             ?>
         </div>
 

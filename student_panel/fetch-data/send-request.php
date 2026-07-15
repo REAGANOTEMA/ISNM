@@ -19,7 +19,6 @@ if (isset($data['id'])) {
     }
 
     $stmt->close();
-    $conn->close();
 
 } else {
     echo json_encode(["status" => "error", "message" => "ID not found"]);

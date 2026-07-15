@@ -354,7 +354,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                             if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); };
                             $snStmt->close();
                         }
-                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = 'News article created successfully.';
@@ -404,7 +403,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
                         $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,'A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
                         if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); }; $snStmt->close(); }
-                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = "Status changed to $newStatus.";
@@ -1963,22 +1961,20 @@ document.addEventListener('DOMContentLoaded', function() {
                       }
                       $lvq->close();
                   }
-                  $staffConn->close();
-              }
-          }
-      }
-  } else {
+               // removed $staffConn->close() - shared connection
+           }
+       }
+   } else {
       if ($conn) {
         $nr = $conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT 50");
         if ($nr) while ($row = $nr->fetch_assoc()) $dgNewsList[] = $row;
       }
 
       // Fetch view stats (top 20 by views count)
-      if ($staffConn = getStaffConnection()) {
-        $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
-        if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
-        $staffConn->close();
-      }
+        if ($staffConn = getStaffConnection()) {
+         $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
+         if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
+       }
 
       $dgTotalViews = array_sum($dgNewsViews);
       $dgPublishedCount = count(array_filter($dgNewsList, fn($x) => ($x['status'] ?? null) === 'published'));
@@ -2000,10 +1996,10 @@ document.addEventListener('DOMContentLoaded', function() {
                   $lvq->close();
               }
           }
-          $staffConn->close();
-      }
+       // removed $staffConn->close() - shared connection
+       }
 
-      if ($dgNewsUseCache) {
+       if ($dgNewsUseCache) {
           setCacheData($dgNewsCacheKey, [
               'dgNewsList' => $dgNewsList,
               'dgNewsViews' => $dgNewsViews,

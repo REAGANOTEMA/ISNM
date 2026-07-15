@@ -167,6 +167,11 @@ if (!defined('ICT_DB_CHARSET')) {
     define('ICT_DB_CHARSET', isnm_env('ICT_DB_CHARSET', DB_CHARSET));
 }
 
+// Push notification VAPID key (empty = push notifications disabled)
+if (!defined('VAPID_PUBLIC_KEY')) {
+    define('VAPID_PUBLIC_KEY', isnm_env('VAPID_PUBLIC_KEY', ''));
+}
+
 if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
         // Connection cache â€” singleton per database
@@ -338,9 +343,11 @@ if (!function_exists('getConnection')) {
 
 if (!function_exists('closeConnection')) {
     function closeConnection($conn) {
-        if ($conn) {
-            $conn->close();
-        }
+        // Intentionally a no-op: all get*Connection() functions return
+        // shared/cached DatabaseConnection singletons. Closing one here
+        // destroys it for every other caller in the same request, causing
+        // "MySQL server has gone away" fatal errors.
+        // PHP closes persistent connections at shutdown automatically.
     }
 }
 
