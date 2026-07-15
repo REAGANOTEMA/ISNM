@@ -77,6 +77,7 @@
         <div class="row">
           <div class="col-lg-4">
             <div class="vmv-card vision animate-delay-1" style="cursor:pointer">
+              <div class="vmv-card-bg"></div>
               <div class="vmv-icon">
                 <i class="fas fa-eye"></i>
               </div>
@@ -86,6 +87,7 @@
           </div>
           <div class="col-lg-4">
             <div class="vmv-card mission animate-delay-2" style="cursor:pointer">
+              <div class="vmv-card-bg"></div>
               <div class="vmv-icon">
                 <i class="fas fa-bullseye"></i>
               </div>
@@ -95,6 +97,7 @@
           </div>
           <div class="col-lg-4">
             <div class="vmv-card motto animate-delay-3" style="cursor:pointer">
+              <div class="vmv-card-bg"></div>
               <div class="vmv-icon">
                 <i class="fas fa-heart"></i>
               </div>
@@ -164,27 +167,36 @@
               
               <div class="board-members">
                 <div class="member-card animate-delay-1">
-             <div class="member-image">
-                     <img src="images/byawaka.JPG" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
-                   </div>
+                  <div class="member-deco-circle"></div>
+                  <div class="member-deco-circle"></div>
+                  <div class="member-image">
+                    <img src="images/byawaka.JPG" alt="Mr. Baliddawa David Byawaka">
+                  </div>
+                  <div class="member-role-badge"><i class="fas fa-crown"></i> Chairman</div>
                   <div class="member-info">
                     <h4>Mr. Baliddawa David Byawaka</h4>
                     <p>Chairman Board of Directors</p>
                   </div>
                 </div>
                 <div class="member-card animate-delay-2">
+                  <div class="member-deco-circle"></div>
+                  <div class="member-deco-circle"></div>
                   <div class="member-image">
-                    <img src="images/mami.jpeg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
+                    <img src="images/mami.jpeg" alt="Mrs. Mercy Byawaka">
                   </div>
+                  <div class="member-role-badge"><i class="fas fa-user-tie"></i> Member</div>
                   <div class="member-info">
                     <h4>Mrs. Mercy Byawaka</h4>
                     <p>Member Board of Directors</p>
                   </div>
                 </div>
                 <div class="member-card animate-delay-3">
-             <div class="member-image">
-                     <img src="images/stephen.JPG" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
-                   </div>
+                  <div class="member-deco-circle"></div>
+                  <div class="member-deco-circle"></div>
+                  <div class="member-image">
+                    <img src="images/stephen.JPG" alt="Dr. Banonya Stephen">
+                  </div>
+                  <div class="member-role-badge"><i class="fas fa-user-tie"></i> Member</div>
                   <div class="member-info">
                     <h4>Dr. Banonya Stephen</h4>
                     <p>Member Board of Directors</p>
@@ -197,9 +209,12 @@
             <div class="governance-level mb-5">
               <h3>Board of Governors</h3>
               <div class="governance-chair">
+                <div class="chairman-deco"></div>
+                <div class="chairman-deco"></div>
                 <div class="chairman-image">
-                  <img src="images/kigenyi.jpeg" alt="Mr. Naluwairo David Kigenyi" class="img-fluid rounded-3">
+                  <img src="images/kigenyi.jpeg" alt="Mr. Naluwairo David Kigenyi">
                 </div>
+                <div class="chairman-badge"><i class="fas fa-star"></i> Chairman</div>
                 <div class="chairman-info">
                   <h4>Mr. Naluwairo David Kigenyi</h4>
                   <p>Chairman Governing Council</p>
@@ -229,6 +244,7 @@
                   <div class="col-lg-8">
                     <div class="management-leader">
                       <div class="leader-info">
+                        <div class="leader-badge"><i class="fas fa-user-shield"></i> Principal</div>
                         <h4>Sr. Edith Mwebaza</h4>
                         <p>Principal of School</p>
                       </div>
@@ -238,7 +254,8 @@
                   </div>
                   <div class="col-lg-4">
                     <div class="principal-image">
-                      <img src="images/principle.jpeg" alt="Principal Office" class="img-fluid rounded-3">
+                      <img src="images/principle.jpeg" alt="Sr. Edith Mwebaza - Principal">
+                      <div class="principal-image-badge"><i class="fas fa-star"></i> Principal</div>
                     </div>
                   </div>
                 </div>
@@ -265,7 +282,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Certificate in Nursing</h3>
-                  <p>Duration: 2½ years</p>
+                  <div class="program-duration"><i class="fas fa-clock"></i> 2½ Years</div>
                   <p>Comprehensive nursing program with theoretical and practical training</p>
                 </div>
               </div>
@@ -275,7 +292,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Certificate in Midwifery</h3>
-                  <p>Duration: 2½ years</p>
+                  <div class="program-duration"><i class="fas fa-clock"></i> 2½ Years</div>
                   <p>Specialized midwifery program with hands on delivery experience</p>
                 </div>
               </div>
@@ -285,7 +302,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Diploma in Nursing – Extension</h3>
-                  <p>Duration: 1½ years</p>
+                  <div class="program-duration"><i class="fas fa-clock"></i> 1½ Years</div>
                   <p>Advanced program for enrolled nurses seeking diploma qualification</p>
                 </div>
               </div>
@@ -295,7 +312,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Diploma in Midwifery – Extension</h3>
-                  <p>Duration: 1½ years</p>
+                  <div class="program-duration"><i class="fas fa-clock"></i> 1½ Years</div>
                   <p>Advanced program for enrolled midwives</p>
                 </div>
               </div>
