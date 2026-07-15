@@ -273,7 +273,7 @@ if ($conn && $canEditAcademic) {
             <select name="gender" class="form-select"><option value="">Gender</option><option <?= $filters['gender']==='Male'?'selected':'' ?>>Male</option><option <?= $filters['gender']==='Female'?'selected':'' ?>>Female</option></select>
           </div>
           <div class="col-md-1">
-            <select name="year" class="form-select"><option value="">Year</option><?php foreach($filterOptions['intake_years'] as $y): ?><option <?= $filters['year']===$y?'selected':'' ?>><?= htmlspecialchars($y) ?></option><?php endforeach; ?></select>
+            <select name="year" class="form-select"><option value="">Year</option><?php foreach(($filterOptions['intake_years'] ?? []) as $y): ?><option <?= $filters['year']===$y?'selected':'' ?>><?= htmlspecialchars($y) ?></option><?php endforeach; ?></select>
           </div>
           <div class="col-md-2">
             <button type="submit" class="btn btn-search w-100"><i class="fas fa-search me-1"></i> Search</button>

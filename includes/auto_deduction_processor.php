@@ -252,9 +252,17 @@ if (!function_exists('getAllSubscriptions')) {
         if ($status) {
             $sql .= " WHERE ps.status = ?";
             $stmt = $conn->prepare($sql . " ORDER BY ps.created_at DESC LIMIT " . (int)$limit);
+            if (!$stmt) {
+                error_log("getAllSubscriptions: prepare failed - " . ($conn->error ?? 'unknown'));
+                return [];
+            }
             $stmt->bind_param("s", $status);
         } else {
             $stmt = $conn->prepare($sql . " ORDER BY ps.created_at DESC LIMIT " . (int)$limit);
+            if (!$stmt) {
+                error_log("getAllSubscriptions: prepare failed - " . ($conn->error ?? 'unknown'));
+                return [];
+            }
         }
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();

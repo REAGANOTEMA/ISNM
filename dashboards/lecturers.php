@@ -809,7 +809,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <h2><i class="fas fa-chart-bar me-2"></i>Student Results</h2>
         <div class="row g-3 mb-3">
             <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Total Records</h6><h3><?= count($grade_distribution??[]) > 0 ? array_sum($grade_distribution) : 0 ?></h3></div></div></div>
-            <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Pass Rate</h6><h3 class="text-success"><?= $total_grades > 0 ? round(($grade_distribution['A']+$grade_distribution['B']+$grade_distribution['C'])/$total_grades*100) : 0 ?>%</h3></div></div></div>
+            <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Pass Rate</h6><h3 class="text-success"><?= ($total_grades = array_sum($grade_distribution ?? [])) > 0 ? round(($grade_distribution['A']+$grade_distribution['B']+$grade_distribution['C'])/$total_grades*100) : 0 ?>%</h3></div></div></div>
             <div class="col-md-4"><div class="card"><div class="card-body"><p class="mb-0 text-muted">View detailed results in <a href="exams-results.php">Exams & Results</a> module.</p></div></div></div>
         </div>
     </section>

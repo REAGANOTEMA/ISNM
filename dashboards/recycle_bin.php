@@ -199,16 +199,16 @@ $pageTitle = 'Recycle Bin';
             </td>
             <td><span class="badge-table <?= $type_badge ?>"><?= $type_label ?></span></td>
             <td><span class="small"><?= htmlspecialchars($item['deleted_by_name'] ?? 'Unknown') ?></span></td>
-            <td><span class="small text-muted"><?= date('d M Y, H:i', strtotime($item['deleted_at'])) ?></span></td>
+            <td><span class="small text-muted"><?= !empty($item['deleted_at']) ? date('d M Y, H:i', strtotime($item['deleted_at'])) : '—' ?></span></td>
             <td class="text-end">
               <form method="POST" class="d-inline" onsubmit="return confirm('Restore this item?')">
                 <input type="hidden" name="action" value="restore">
-                <input type="hidden" name="item_id" value="<?= $item['id'] ?>">
+                <input type="hidden" name="item_id" value="<?= $item['id'] ?? 0 ?>">
                 <button class="btn btn-sm btn-success"><i class="fas fa-undo me-1"></i>Restore</button>
               </form>
               <form method="POST" class="d-inline" onsubmit="return confirm('Permanently delete this item? This cannot be undone.')">
                 <input type="hidden" name="action" value="delete_forever">
-                <input type="hidden" name="item_id" value="<?= $item['id'] ?>">
+                <input type="hidden" name="item_id" value="<?= $item['id'] ?? 0 ?>">
                 <button class="btn btn-sm btn-danger"><i class="fas fa-times me-1"></i>Delete</button>
               </form>
             </td>

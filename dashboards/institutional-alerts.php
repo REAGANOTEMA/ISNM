@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <td><span class="badge priority-<?= $a['priority'] ?>"><?= htmlspecialchars($a['priority']) ?></span></td>
                                 <td><span class="badge status-<?= $status ?>"><?= $statusLabel ?></span></td>
                                 <td class="small"><?= date('d M Y H:i', strtotime($a['created_at'])) ?></td>
-                                <td class="small"><?= $a['expires_at'] ? date('d M Y', strtotime($a['expires_at'])) : 'â€”' ?></td>
+                                <td class="small"><?= !empty($a['expires_at']) ? date('d M Y', strtotime($a['expires_at'])) : 'â€”' ?></td>
                                 <td class="text-end">
                                     <form method="POST" class="d-inline" onsubmit="return confirm('<?= $a['is_resolved'] ? 'Reactivate' : 'Deactivate' ?> this alert?')">
                                         <input type="hidden" name="action" value="toggle_resolved">

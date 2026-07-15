@@ -346,10 +346,18 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
     <!-- Stats -->
     <div class="row g-3 mb-4">
         <?php
-        $totalAlumni = $staffConn->query("SELECT COUNT(*) c FROM alumni")->fetch_assoc()['c'] ?? 0;
-        $active = $staffConn->query("SELECT COUNT(*) c FROM alumni WHERE membership_status='active'")->fetch_assoc()['c'] ?? 0;
-        $employed = $staffConn->query("SELECT COUNT(*) c FROM alumni WHERE employment_status='employed'")->fetch_assoc()['c'] ?? 0;
-        $totalContrib = $staffConn->query("SELECT COALESCE(SUM(amount),0) s FROM alumni_contributions")->fetch_assoc()['s'] ?? 0;
+        $r1 = $staffConn->query("SELECT COUNT(*) c FROM alumni");
+        $row1 = $r1 ? $r1->fetch_assoc() : null;
+        $totalAlumni = $row1['c'] ?? 0;
+        $r2 = $staffConn->query("SELECT COUNT(*) c FROM alumni WHERE membership_status='active'");
+        $row2 = $r2 ? $r2->fetch_assoc() : null;
+        $active = $row2['c'] ?? 0;
+        $r3 = $staffConn->query("SELECT COUNT(*) c FROM alumni WHERE employment_status='employed'");
+        $row3 = $r3 ? $r3->fetch_assoc() : null;
+        $employed = $row3['c'] ?? 0;
+        $r4 = $staffConn->query("SELECT COALESCE(SUM(amount),0) s FROM alumni_contributions");
+        $row4 = $r4 ? $r4->fetch_assoc() : null;
+        $totalContrib = $row4['s'] ?? 0;
         ?>
         <div class="col-md-3"><div class="stat-card position-relative"><div class="number"><?= $totalAlumni ?></div><div class="label">Total Alumni</div><div class="icon"><i class="fas fa-user-graduate"></i></div></div></div>
         <div class="col-md-3"><div class="stat-card position-relative"><div class="number"><?= $active ?></div><div class="label">Active Members</div><div class="icon"><i class="fas fa-check-circle"></i></div></div></div>
