@@ -281,15 +281,15 @@ include_once 'shared/_header.php';
       </div>
     </section>
 
-    <!-- Why Choose ISNM Section -->
+    <!-- Why Choose ISNM Section — Premium 3D -->
     <section class="why-choose-section py-5">
-      <div class="container">
+      <div class="container" style="position:relative;z-index:1;">
         <div class="row">
           <div class="col-lg-12 text-center mb-5 animate-on-scroll">
-            <span class="tag tag-gold"><i class="fas fa-star"></i> Why Choose Us</span>
-            <h2 class="section-title mt-3">Why Choose ISNM?</h2>
-            <div class="section-divider section-divider-center"></div>
-            <p class="section-subtitle">Discover what makes us the preferred choice for healthcare education</p>
+            <span class="tag tag-gold" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:50px;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;"><i class="fas fa-star"></i> Why Choose Us</span>
+            <h2 class="section-title mt-3" style="color:#fff;font-size:2.5rem;font-weight:800;letter-spacing:-0.02em;">Why Choose ISNM?</h2>
+            <div class="section-divider section-divider-center" style="width:80px;height:3px;margin:1rem auto;background:linear-gradient(90deg,transparent,#FFD700,transparent);border-radius:2px;"></div>
+            <p class="section-subtitle" style="color:rgba(255,255,255,0.7);font-size:1.05rem;max-width:550px;margin:0 auto;">Discover what makes us the preferred choice for healthcare education in Uganda</p>
           </div>
         </div>
         <div class="row g-4">
@@ -300,7 +300,7 @@ include_once 'shared/_header.php';
               </div>
               <h4>Accredited Programs</h4>
               <p>Fully accredited by Uganda Nurses and Midwives Council and Ministry of Education & Sports</p>
-              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-sitemap"></i> View Organogram</a>
+              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-sitemap me-1"></i> View Organogram</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-1">
@@ -310,7 +310,7 @@ include_once 'shared/_header.php';
               </div>
               <h4>Expert Faculty</h4>
               <p>Learn from experienced healthcare professionals and dedicated educators</p>
-              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-users"></i> Meet Our Team</a>
+              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-users me-1"></i> Meet Our Team</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-2">
@@ -320,7 +320,7 @@ include_once 'shared/_header.php';
               </div>
               <h4>Clinical Placement</h4>
               <p>Hands-on training at 6+ major hospitals and healthcare facilities across Uganda</p>
-              <a href="organogram.php" class="btn-3d btn-blue btn-3d-sm mt-3"><span class="shine"></span><i class="fas fa-sitemap"></i> View Organogram</a>
+              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-sitemap me-1"></i> View Organogram</a>
             </div>
           </div>
         </div>
@@ -584,6 +584,18 @@ include_once 'shared/_header.php';
       });
     }, { threshold: 0.3 });
     counters.forEach(function(c) { observer.observe(c); });
+  });
+  </script>
+
+  <script>
+  document.querySelectorAll('.feature-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width) * 100;
+      var y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty('--mouse-x', x + '%');
+      card.style.setProperty('--mouse-y', y + '%');
+    });
   });
   </script>
 

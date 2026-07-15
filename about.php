@@ -1,11 +1,14 @@
 <?php include('shared/_header.php');?>
 
   <main>
-    <!-- Page Header -->
+    <!-- Page Header — Premium 3D -->
     <section class="page-header animate-on-scroll">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center">
+            <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);border-radius:50px;color:#FFD700;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:1rem;">
+              <i class="fas fa-graduation-cap"></i> Est. 2009
+            </div>
             <h1 class="page-title">About Iganga School of Nursing & Midwifery</h1>
             <p class="page-subtitle">Excellence in Healthcare Education Since 2009</p>
           </div>
