@@ -35,7 +35,7 @@ abstract class AbstractPaymentGateway implements PaymentGatewayInterface {
         $base = rtrim($_SERVER['HTTP_HOST'] ?? 'localhost', '/');
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $path = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-        return $this->config['callback_url'] ?? "$scheme://$base{$path}/includes/payment_gateway/handlings/webhook_handler.php?provider={$this->providerKey}";
+        return $this->config['callback_url'] ?? "$scheme://$base{$path}/includes/payment_gateway/handlers/webhook_handler.php?provider={$this->providerKey}";
     }
 
     protected function getWebhookSecret(): string {
