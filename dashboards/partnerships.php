@@ -19,7 +19,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_p
     $status = trim($_POST['status'] ?? 'active');
     $desc = trim($_POST['description'] ?? '');
     $stmt = $conn->prepare("INSERT INTO partnerships (organization_name, partnership_type, contact_person, contact_email, status, description) VALUES (?, ?, ?, ?, ?, ?)");
-    if ($stmt) { $stmt->bind_param('ssssss', $org, $type, $contact, $email, $status, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+    if ($stmt) { $stmt->bind_param('ssssss', $org, $type, $contact, $email, $status, $desc); if (!$stmt->execute()) { error_log('add_partnership failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+    header('Location: partnerships.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_partnership') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) die('Invalid CSRF token');
+    $id = (int)($_POST['id'] ?? 0);
+    $org = trim($_POST['organization'] ?? '');
+    $type = trim($_POST['type'] ?? 'academic');
+    $contact = trim($_POST['contact_person'] ?? '');
+    $email = trim($_POST['contact_email'] ?? '');
+    $status = trim($_POST['status'] ?? 'active');
+    $desc = trim($_POST['description'] ?? '');
+    if ($id) { $stmt = $conn->prepare("UPDATE partnerships SET organization_name=?, partnership_type=?, contact_person=?, contact_email=?, status=?, description=? WHERE id=?"); if ($stmt) { $stmt->bind_param('ssssssi', $org, $type, $contact, $email, $status, $desc, $id); $stmt->execute(); $stmt->close(); } }
+    header('Location: partnerships.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_partnership') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) die('Invalid CSRF token');
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id) { $stmt = $conn->prepare("DELETE FROM partnerships WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); } }
     header('Location: partnerships.php'); exit;
 }
 
@@ -78,7 +98,7 @@ $pageTitle = 'Partnerships & Linkages';
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
-                    <thead><tr><th>Organization</th><th>Type</th><th>Contact</th><th>Email</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Organization</th><th>Type</th><th>Contact</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($partnerships as $p): ?>
                         <tr>
@@ -87,9 +107,13 @@ $pageTitle = 'Partnerships & Linkages';
                             <td><?= htmlspecialchars($p['contact_person'] ?? '-') ?></td>
                             <td><?= htmlspecialchars($p['contact_email'] ?? '-') ?></td>
                             <td><span class="badge bg-<?= ($p['status'] ?? '') === 'active' ? 'success' : 'secondary' ?>"><?= $p['status'] ?? 'active' ?></span></td>
+                            <td class="text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editPartnership(<?= htmlspecialchars(json_encode($p), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this partnership?')"><input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="delete_partnership"><input type="hidden" name="id" value="<?= (int)$p['id'] ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($partnerships)): ?><tr><td colspan="5" class="text-center">No partnerships recorded</td></tr><?php endif; ?>
+                        <?php if (empty($partnerships)): ?><tr><td colspan="6" class="text-center">No partnerships recorded</td></tr><?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -97,6 +121,8 @@ $pageTitle = 'Partnerships & Linkages';
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});
+function editPartnership(p){var m=document.getElementById('actionModal');if(!m)return;document.getElementById('modalTitle').textContent='Edit Partnership';document.getElementById('modalBody').innerHTML='<form method="POST"><input type="hidden" name="csrf_token" value="<?= $_SESSION["csrf_token"] ?>"><input type="hidden" name="action" value="update_partnership"><input type="hidden" name="id" value="'+p.id+'"><div class="mb-2"><label>Organization</label><input name="organization" class="form-control" value="'+(p.organization_name||'')+'" required></div><div class="row mb-2"><div class="col"><label>Type</label><select name="type" class="form-select"><option value="academic"'+(p.partnership_type==='academic'?' selected':'')+'>Academic</option><option value="research"'+(p.partnership_type==='research'?' selected':'')+'>Research</option><option value="community"'+(p.partnership_type==='community'?' selected':'')+'>Community</option><option value="corporate"'+(p.partnership_type==='corporate'?' selected':'')+'>Corporate</option></select></div><div class="col"><label>Status</label><select name="status" class="form-select"><option value="active"'+(p.status==='active'?' selected':'')+'>Active</option><option value="inactive"'+(p.status==='inactive'?' selected':'')+'>Inactive</option><option value="pending"'+(p.status==='pending'?' selected':'')+'>Pending</option></select></div></div><div class="row mb-2"><div class="col"><label>Contact</label><input name="contact_person" class="form-control" value="'+(p.contact_person||'')+'"></div><div class="col"><label>Email</label><input name="contact_email" class="form-control" value="'+(p.contact_email||'')+'"></div></div><div class="mb-2"><label>Description</label><textarea name="description" class="form-control" rows="2">'+(p.description||'')+'</textarea></div><button type="submit" class="btn btn-primary">Update</button></form>';new bootstrap.Modal(m).show();}
+</script>
 </body>
 </html>

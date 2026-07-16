@@ -24,10 +24,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_l
         $stmt = $conn->prepare("INSERT INTO professional_licenses (staff_name, license_number, license_type, expiry_date, issuing_body, created_by) VALUES (?, ?, ?, NULLIF(?, ''), ?, ?)");
         if ($stmt) {
             $stmt->bind_param('sssssi', $staff, $lic, $type, $expiry, $body, $userId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('add_license failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
     }
+    header('Location: professional-licenses.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_license' && $conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) die('Invalid CSRF token');
+    $id = (int)($_POST['id'] ?? 0);
+    $staff = trim($_POST['staff_name'] ?? '');
+    $lic = trim($_POST['license_number'] ?? '');
+    $type = trim($_POST['license_type'] ?? '');
+    $expiry = trim($_POST['expiry_date'] ?? '');
+    $body = trim($_POST['issuing_body'] ?? '');
+    if ($id && $staff && $lic) { $stmt = $conn->prepare("UPDATE professional_licenses SET staff_name=?, license_number=?, license_type=?, expiry_date=NULLIF(?, ''), issuing_body=? WHERE id=?"); if ($stmt) { $stmt->bind_param('sssssi', $staff, $lic, $type, $expiry, $body, $id); $stmt->execute(); $stmt->close(); } }
+    header('Location: professional-licenses.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_license' && $conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) die('Invalid CSRF token');
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id) { $stmt = $conn->prepare("DELETE FROM professional_licenses WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); } }
     header('Location: professional-licenses.php'); exit;
 }
 
@@ -84,7 +103,7 @@ $expired = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') < $
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
-                    <thead><tr><th>Staff</th><th>License #</th><th>Type</th><th>Issuing Body</th><th>Expiry</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Staff</th><th>License #</th><th>Type</th><th>Issuing Body</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($licenses as $l): ?>
                         <?php $exp = $l['expiry_date'] ?? ''; $isExpired = $exp && $exp < $now; $isExpiring = $exp && $exp >= $now && $exp <= date('Y-m-d', strtotime('+90 days')); ?>
@@ -100,9 +119,13 @@ $expired = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') < $
                                 <?php else: ?><span class="badge bg-success">Valid</span>
                                 <?php endif; ?>
                             </td>
+                            <td class="text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editLicense(<?= htmlspecialchars(json_encode($l), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this license?')"><input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="delete_license"><input type="hidden" name="id" value="<?= (int)$l['id'] ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($licenses)): ?><tr><td colspan="6" class="text-center">No licenses registered</td></tr><?php endif; ?>
+                        <?php if (empty($licenses)): ?><tr><td colspan="7" class="text-center">No licenses registered</td></tr><?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -110,6 +133,8 @@ $expired = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') < $
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});
+function editLicense(l){var m=document.getElementById('actionModal');if(!m)return;document.getElementById('modalTitle').textContent='Edit License';document.getElementById('modalBody').innerHTML='<form method="POST"><input type="hidden" name="csrf_token" value="<?= $_SESSION["csrf_token"] ?>"><input type="hidden" name="action" value="update_license"><input type="hidden" name="id" value="'+l.id+'"><div class="mb-2"><label>Staff Name</label><input name="staff_name" class="form-control" value="'+(l.staff_name||'')+'" required></div><div class="row mb-2"><div class="col"><label>License #</label><input name="license_number" class="form-control" value="'+(l.license_number||'')+'" required></div><div class="col"><label>Type</label><select name="license_type" class="form-select"><option value="nursing"'+(l.license_type==='nursing'?' selected':'')+'>Nursing</option><option value="midwifery"'+(l.license_type==='midwifery'?' selected':'')+'>Midwifery</option><option value="medical"'+(l.license_type==='medical'?' selected':'')+'>Medical</option><option value="teaching"'+(l.license_type==='teaching'?' selected':'')+'>Teaching</option><option value="other"'+(l.license_type==='other'?' selected':'')+'>Other</option></select></div></div><div class="row mb-2"><div class="col"><label>Expiry Date</label><input type="date" name="expiry_date" class="form-control" value="'+(l.expiry_date||'')+'"></div><div class="col"><label>Issuing Body</label><input name="issuing_body" class="form-control" value="'+(l.issuing_body||'')+'"></div></div><button type="submit" class="btn btn-primary">Update</button></form>';new bootstrap.Modal(m).show();}
+</script>
 </body>
 </html>

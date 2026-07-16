@@ -98,11 +98,78 @@ if ($conn) {
             expected_date DATE,
             requested_by INT,
             notes TEXT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_maintenance (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            book_id INT NOT NULL,
+            maintenance_type ENUM('repair','replace','withdraw') NOT NULL,
+            notes TEXT,
+            maintenance_date DATE DEFAULT (CURRENT_DATE),
+            performed_by INT,
+            status ENUM('Pending','In Progress','Completed') DEFAULT 'Pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_book (book_id),
+            INDEX idx_type (maintenance_type)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_budget (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            fiscal_year VARCHAR(10) NOT NULL,
+            allocated_budget DECIMAL(15,2) DEFAULT 0.00,
+            spent DECIMAL(15,2) DEFAULT 0.00,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_year (fiscal_year)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_vendors (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            vendor_name VARCHAR(255) NOT NULL,
+            contact_person VARCHAR(200),
+            email VARCHAR(200),
+            phone VARCHAR(50),
+            address TEXT,
+            status ENUM('Active','Inactive') DEFAULT 'Active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_name (vendor_name)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     ];
     foreach ($libTables as $sql) {
         try { @$conn->query($sql); } catch (Exception $e) { error_log('library table create: ' . $e->getMessage()); }
     }
+}
+
+// Handle POST requests for library CRUD operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action'];
+    $table = $_POST['table'] ?? '';
+
+    if ($conn && in_array($table, ['library_maintenance', 'library_budget', 'library_vendors', 'library_books', 'library_members', 'library_borrowing', 'library_acquisitions'])) {
+        try {
+            if ($action === 'create') {
+                $fields = $_POST;
+                unset($fields['action'], $fields['table']);
+                $cols = implode(',', array_map(function($k) { return "`$k`"; }, array_keys($fields)));
+                $vals = implode(',', array_map(function($v) use ($conn) { return $conn->real_escape_string($v); }, array_values($fields)));
+                $conn->query("INSERT INTO `{$students_db_name}`.$table ($cols) VALUES ('$vals')");
+                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
+            } elseif ($action === 'update') {
+                $id = (int)($_POST['id'] ?? 0);
+                unset($fields['action'], $fields['table'], $fields['id']);
+                $sets = [];
+                foreach ($fields as $k => $v) { $sets[] = "`$k`='" . $conn->real_escape_string($v) . "'"; }
+                $conn->query("UPDATE `{$students_db_name}`.$table SET " . implode(',', $sets) . " WHERE id=$id");
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'Unknown action']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    } else {
+        echo json_encode(['error' => 'Invalid request']);
+    }
+    exit;
 }
 
 // Get library statistics from database
@@ -801,6 +868,213 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         });
                     };
                     break;
+
+                case 'bookInventory':
+                    title.textContent = 'Book Inventory Management';
+                    var totalB = '<?= $total_books ?>', availB = '<?= $available_books ?>', borrowedB = '<?= $borrowed_books ?>';
+                    body.innerHTML = '<div class="row mb-3">' +
+                        '<div class="col-md-4"><div class="card text-center p-3"><h5>' + totalB + '</h5><small>Total Books</small></div></div>' +
+                        '<div class="col-md-4"><div class="card text-center p-3 bg-success text-white"><h5>' + availB + '</h5><small>Available</small></div></div>' +
+                        '<div class="col-md-4"><div class="card text-center p-3 bg-warning text-white"><h5>' + borrowedB + '</h5><small>Borrowed</small></div></div>' +
+                        '</div>' +
+                        '<hr><h6>Update Stock Count</h6>' +
+                        '<form id="frmInventory">' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Book ID *</label><input type="number" class="form-control" name="book_id" required></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">New Status</label><select class="form-select" name="status"><option value="Available">Available</option><option value="Borrowed">Borrowed</option><option value="Reserved">Reserved</option><option value="Lost">Lost</option><option value="Damaged">Damaged</option></select></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="2" placeholder="Reason for stock update..."></textarea></div>' +
+                        '</form>';
+                    saveBtn.textContent = 'Update Stock';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmInventory');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        apiPost('library_books', 'update', { id: data.book_id, status: data.status }, function(res) {
+                            if (res.success) { showNotice('Stock updated successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to update stock', 'danger');
+                        });
+                    };
+                    break;
+
+                case 'bookMaintenance':
+                    title.textContent = 'Book Maintenance';
+                    body.innerHTML = '<form id="frmMaintenance">' +
+                        '<div class="mb-3"><label class="form-label">Book ID *</label><input type="number" class="form-control" name="book_id" required placeholder="Enter book ID"></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Maintenance Type *</label><select class="form-select" name="maintenance_type" required><option value="">Select</option><option value="repair">Repair</option><option value="replace">Replace</option><option value="withdraw">Withdraw</option></select></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Date *</label><input type="date" class="form-control" name="maintenance_date" value="<?= date("Y-m-d") ?>" required></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="3" placeholder="Describe the maintenance needed..."></textarea></div>' +
+                        '</form>';
+                    saveBtn.textContent = 'Log Maintenance';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmMaintenance');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        data.status = 'Pending';
+                        apiPost('library_maintenance', 'create', data, function(res) {
+                            if (res.success) { showNotice('Maintenance record created'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to log maintenance', 'danger');
+                        });
+                    };
+                    break;
+
+                case 'overdueBooks':
+                    title.textContent = 'Overdue Books';
+                    body.innerHTML = '<div id="overdueContent"><p class="text-muted">Loading overdue books...</p></div>';
+                    fetch('../module_handler.php?action=search&module=library_borrowing&q=overdue')
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                            var el = document.getElementById('overdueContent');
+                            if (!res.results || res.results.length === 0) { el.innerHTML = '<div class="alert alert-success">No overdue books found</div>'; return; }
+                            var html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>ID</th><th>Member</th><th>Book</th><th>Due Date</th><th>Days Overdue</th></tr></thead><tbody>';
+                            var today = new Date();
+                            res.results.forEach(function(r) {
+                                var due = new Date(r.due_date);
+                                var days = Math.floor((today - due) / 86400000);
+                                html += '<tr><td>' + (r.id||'') + '</td><td>' + (r.member_id||'') + '</td><td>' + (r.book_title||'') + '</td><td>' + (r.due_date||'') + '</td><td><span class="badge bg-danger">' + days + ' days</span></td></tr>';
+                            });
+                            html += '</tbody></table></div>';
+                            el.innerHTML = html;
+                        })
+                        .catch(function() { document.getElementById('overdueContent').innerHTML = '<div class="alert alert-warning">Could not load overdue books</div>'; });
+                    saveBtn.style.display = 'none';
+                    break;
+
+                case 'memberDirectory':
+                    title.textContent = 'Member Directory';
+                    body.innerHTML = '<div class="mb-3"><input type="text" class="form-control" id="memberDirSearch" placeholder="Search by name, member ID, or email..." onkeyup="doMemberSearch(this.value)"></div><div id="memberDirResults"><p class="text-muted">Type at least 2 characters to search</p></div>';
+                    saveBtn.style.display = 'none';
+                    break;
+
+                case 'memberStatistics':
+                    title.textContent = 'Member Statistics';
+                    var mStudents = '<?= $member_students ?>', mStaff = '<?= $member_staff ?>', mFaculty = '<?= $member_faculty ?>', mNew = '<?= $new_members_month ?>';
+                    body.innerHTML = '<div class="row mb-3">' +
+                        '<div class="col-md-3"><div class="card text-center p-3"><h4>' + mStudents + '</h4><small>Student Members</small></div></div>' +
+                        '<div class="col-md-3"><div class="card text-center p-3"><h4>' + mStaff + '</h4><small>Staff Members</small></div></div>' +
+                        '<div class="col-md-3"><div class="card text-center p-3"><h4>' + mFaculty + '</h4><small>Faculty Members</small></div></div>' +
+                        '<div class="col-md-3"><div class="card text-center p-3 bg-info text-white"><h4>' + mNew + '</h4><small>New This Month</small></div></div>' +
+                        '</div>' +
+                        '<h6>Membership Breakdown</h6>' +
+                        '<div class="progress mb-2" style="height:25px;">' +
+                        '<div class="progress-bar bg-primary" style="width:' + (parseInt(mStudents)||0) + '%">' + mStudents + ' Students</div>' +
+                        '<div class="progress-bar bg-success" style="width:' + (parseInt(mStaff)||0) + '%">' + mStaff + ' Staff</div>' +
+                        '<div class="progress-bar bg-warning" style="width:' + (parseInt(mFaculty)||0) + '%">' + mFaculty + ' Faculty</div>' +
+                        '</div>';
+                    saveBtn.style.display = 'none';
+                    break;
+
+                case 'memberCards':
+                    title.textContent = 'Generate Library Card';
+                    body.innerHTML = '<form id="frmMemberCard">' +
+                        '<div class="mb-3"><label class="form-label">Member ID *</label><input type="text" class="form-control" name="member_id" required placeholder="e.g. LIB-2026-001"></div>' +
+                        '<div class="mb-3"><label class="form-label">Full Name *</label><input type="text" class="form-control" name="full_name" required></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Member Type</label><select class="form-select" name="member_type"><option value="Student">Student</option><option value="Staff">Staff</option><option value="Faculty">Faculty</option></select></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiry_date" value="<?= date("Y-m-d", strtotime("+1 year")) ?>"></div></div>' +
+                        '</form>';
+                    saveBtn.textContent = 'Generate Card';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmMemberCard');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        if (!data.member_id || !data.full_name) { showNotice('Please fill required fields', 'danger'); return; }
+                        var cardHtml = '<div id="libCard" style="border:2px solid #333;border-radius:10px;padding:20px;max-width:400px;margin:10px auto;background:#f8f9fa;">' +
+                            '<div style="text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:10px;"><h4 style="margin:0;">School Library</h4><small>Member Card</small></div>' +
+                            '<p><strong>Member ID:</strong> ' + data.member_id + '</p>' +
+                            '<p><strong>Name:</strong> ' + data.full_name + '</p>' +
+                            '<p><strong>Type:</strong> ' + (data.member_type || 'Student') + '</p>' +
+                            '<p><strong>Valid Until:</strong> ' + (data.expiry_date || 'N/A') + '</p>' +
+                            '<div style="text-align:center;margin-top:10px;font-size:11px;color:#666;">Present this card at the library checkout desk</div>' +
+                            '</div>';
+                        var existing = document.getElementById('libCard');
+                        if (existing) existing.remove();
+                        frm.insertAdjacentHTML('afterend', cardHtml);
+                        showNotice('Library card generated', 'info');
+                    };
+                    break;
+
+                case 'acquisitionBudget':
+                    title.textContent = 'Acquisition Budget';
+                    body.innerHTML = '<form id="frmBudget">' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Fiscal Year *</label><input type="text" class="form-control" name="fiscal_year" value="<?= date("Y") ?>" required placeholder="e.g. 2026"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Allocated Budget (UGX) *</label><input type="number" class="form-control" name="allocated_budget" step="0.01" required></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Amount Spent (UGX)</label><input type="number" class="form-control" name="spent" step="0.01" value="0"></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="2" placeholder="Budget allocation notes..."></textarea></div>' +
+                        '</form>';
+                    saveBtn.textContent = 'Save Budget';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmBudget');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        apiPost('library_budget', 'create', data, function(res) {
+                            if (res.success) { showNotice('Budget saved successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to save budget', 'danger');
+                        });
+                    };
+                    break;
+
+                case 'vendorManagement':
+                    title.textContent = 'Vendor Management';
+                    body.innerHTML = '<form id="frmVendor">' +
+                        '<div class="mb-3"><label class="form-label">Vendor Name *</label><input type="text" class="form-control" name="vendor_name" required placeholder="Enter vendor name"></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Contact Person</label><input type="text" class="form-control" name="contact_person"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Status</label><select class="form-select" name="status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2"></textarea></div>' +
+                        '</form>';
+                    saveBtn.textContent = 'Save Vendor';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmVendor');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        apiPost('library_vendors', 'create', data, function(res) {
+                            if (res.success) { showNotice('Vendor saved successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to save vendor', 'danger');
+                        });
+                    };
+                    break;
+
+                case 'acquisitionReport':
+                    title.textContent = 'Acquisition Report';
+                    body.innerHTML = '<div id="acqReportContent"><p class="text-muted">Loading report...</p></div>';
+                    fetch('../module_handler.php?action=search&module=library_acquisitions&q=')
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                            var el = document.getElementById('acqReportContent');
+                            var items = res.results || [];
+                            var totalSpent = 0, totalQty = 0, byCategory = {};
+                            items.forEach(function(i) {
+                                totalSpent += parseFloat(i.total_cost || 0);
+                                totalQty += parseInt(i.quantity || 0);
+                                var v = i.vendor || 'Unknown';
+                                if (!byCategory[v]) byCategory[v] = { count: 0, cost: 0 };
+                                byCategory[v].count += parseInt(i.quantity || 0);
+                                byCategory[v].cost += parseFloat(i.total_cost || 0);
+                            });
+                            var html = '<div class="row mb-3">' +
+                                '<div class="col-md-4"><div class="card text-center p-3"><h5>' + items.length + '</h5><small>Total Requests</small></div></div>' +
+                                '<div class="col-md-4"><div class="card text-center p-3"><h5>' + totalQty + '</h5><small>Books Ordered</small></div></div>' +
+                                '<div class="col-md-4"><div class="card text-center p-3 bg-success text-white"><h5>UGX ' + totalSpent.toLocaleString() + '</h5><small>Total Spending</small></div></div>' +
+                                '</div><h6>Spending by Vendor</h6>';
+                            var keys = Object.keys(byCategory);
+                            if (keys.length === 0) {
+                                html += '<p class="text-muted">No acquisition data available</p>';
+                            } else {
+                                html += '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Vendor</th><th>Items</th><th>Total Cost</th></tr></thead><tbody>';
+                                keys.forEach(function(k) {
+                                    html += '<tr><td>' + k + '</td><td>' + byCategory[k].count + '</td><td>UGX ' + byCategory[k].cost.toLocaleString() + '</td></tr>';
+                                });
+                                html += '</tbody></table></div>';
+                            }
+                            el.innerHTML = html;
+                        })
+                        .catch(function() { document.getElementById('acqReportContent').innerHTML = '<div class="alert alert-warning">Could not load report data</div>'; });
+                    saveBtn.style.display = 'none';
+                    break;
             }
             modal.show();
         }
@@ -816,6 +1090,23 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     var html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Category</th><th>Status</th></tr></thead><tbody>';
                     res.results.forEach(function(b) {
                         html += '<tr><td>' + (b.id||'') + '</td><td>' + (b.title||'') + '</td><td>' + (b.author||'') + '</td><td>' + (b.category||'') + '</td><td><span class="badge bg-' + (b.status==='Available'?'success':'warning') + '">' + (b.status||'') + '</span></td></tr>';
+                    });
+                    html += '</tbody></table></div>';
+                    el.innerHTML = html;
+                });
+        }
+
+        function doMemberSearch(q) {
+            var el = document.getElementById('memberDirResults');
+            if (!el) return;
+            if (q.length < 2) { el.innerHTML = '<p class="text-muted">Type at least 2 characters to search</p>'; return; }
+            fetch('../module_handler.php?action=search&module=library_members&q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (!res.results || res.results.length === 0) { el.innerHTML = '<p class="text-muted">No members found</p>'; return; }
+                    var html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Member ID</th><th>Name</th><th>Type</th><th>Email</th><th>Status</th></tr></thead><tbody>';
+                    res.results.forEach(function(m) {
+                        html += '<tr><td>' + (m.member_id||'') + '</td><td>' + (m.full_name||'') + '</td><td>' + (m.member_type||'') + '</td><td>' + (m.email||'') + '</td><td><span class="badge bg-' + (m.status==='Active'?'success':'secondary') + '">' + (m.status||'') + '</span></td></tr>';
                     });
                     html += '</tbody></table></div>';
                     el.innerHTML = html;

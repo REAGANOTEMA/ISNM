@@ -415,7 +415,7 @@ $total_liters = $total_cost = 0;
 if ($conn) {
     try {
         $r = $conn->query("SELECT COALESCE(SUM(liters),0), COALESCE(SUM(cost),0) FROM transport_fuel_log");
-        if ($r) { $row = $r->fetch_row(); $total_liters = (float)$row[0]; $total_cost = (float)$row[0]; }
+        if ($r) { $row = $r->fetch_row(); $total_liters = (float)$row[0]; $total_cost = (float)$row[1]; }
     } catch (Exception $e) { error_log('drivers context: ' . $e->getMessage()); }
 }
 ?>
@@ -1230,7 +1230,8 @@ default: ?>
 endswitch; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>function filterTable(inputId, tableId) {
     var input = document.getElementById(inputId);
     var filter = input.value.toUpperCase();
     var table = document.getElementById(tableId);
@@ -1245,7 +1246,6 @@ endswitch; ?>
         tr[i].style.display = found ? "" : "none";
     }
 }
-
 </script>
 <script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

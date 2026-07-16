@@ -35,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         $is_default = isset($_POST['is_default']) ? 1 : 0;
         $table = $_POST['table'] ?? 'receipt_templates';
+        $allowed_tables = ['receipt_templates', 'document_templates'];
+        if (!in_array($table, $allowed_tables, true)) { $table = 'receipt_templates'; }
         
         if (empty($template_name) || empty($template_type) || empty($template_content)) {
             $_SESSION['error'] = 'Template name, type, and content are required.';
@@ -77,6 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($post_action === 'delete_template') {
         $id = $_POST['id'] ?? null;
         $table = $_POST['table'] ?? 'receipt_templates';
+        $allowed_tables = ['receipt_templates', 'document_templates'];
+        if (!in_array($table, $allowed_tables, true)) { $table = 'receipt_templates'; }
         
         if ($id) {
             // Get template name
@@ -468,8 +472,8 @@ function filterTable(inputId, tableId) {
     }
 }
 
-<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

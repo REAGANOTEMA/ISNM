@@ -5,6 +5,12 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
+        header('Location: meal-accommodation.php');
+        exit;
+    }
     $action = $_POST['action'];
     try {
         if ($action === 'add_meal') {

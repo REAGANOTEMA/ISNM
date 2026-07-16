@@ -17,7 +17,7 @@ if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_byt
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         die('Invalid security token.');
     }
     $action = $_POST['action'] ?? '';

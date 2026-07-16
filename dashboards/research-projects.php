@@ -15,7 +15,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $status = trim($_POST['status'] ?? 'proposed');
         $desc = trim($_POST['description'] ?? '');
         $stmt = $conn->prepare("INSERT INTO research_projects (title, researcher, department, status, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        if ($stmt) { $stmt->bind_param('sssss', $title, $researcher, $dept, $status, $desc); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('sssss', $title, $researcher, $dept, $status, $desc); if (!$stmt->execute()) { error_log('add_project failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        header('Location: research-projects.php'); exit;
+    }
+    if ($action === 'update_project') {
+        $id = (int)($_POST['id'] ?? 0);
+        $title = trim($_POST['title'] ?? '');
+        $researcher = trim($_POST['researcher'] ?? '');
+        $dept = trim($_POST['department'] ?? '');
+        $status = trim($_POST['status'] ?? 'proposed');
+        $desc = trim($_POST['description'] ?? '');
+        if ($id) { $stmt = $conn->prepare("UPDATE research_projects SET title=?, researcher=?, department=?, status=?, description=? WHERE id=?"); if ($stmt) { $stmt->bind_param('sssssi', $title, $researcher, $dept, $status, $desc, $id); $stmt->execute(); $stmt->close(); } }
+        header('Location: research-projects.php'); exit;
+    }
+    if ($action === 'delete_project') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) { $stmt = $conn->prepare("DELETE FROM research_projects WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); } }
         header('Location: research-projects.php'); exit;
     }
 }
@@ -72,7 +87,7 @@ $pageTitle = 'Research Projects';
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
-                    <thead><tr><th>Title</th><th>Researcher</th><th>Department</th><th>Status</th><th>Date</th></tr></thead>
+                    <thead><tr><th>Title</th><th>Researcher</th><th>Department</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach ($projects as $p): ?>
                         <tr>
@@ -81,9 +96,13 @@ $pageTitle = 'Research Projects';
                             <td><?= htmlspecialchars($p['department'] ?? '') ?></td>
                             <td><span class="badge bg-<?= $p['status'] === 'completed' ? 'success' : ($p['status'] === 'active' ? 'primary' : 'secondary') ?>"><?= $p['status'] ?></span></td>
                             <td><?= $p['created_at'] ?? '' ?></td>
+                            <td class="text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editProject(<?= htmlspecialchars(json_encode($p), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this project?')"><input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="delete_project"><input type="hidden" name="id" value="<?= (int)$p['id'] ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($projects)): ?><tr><td colspan="5" class="text-center">No research projects found</td></tr><?php endif; ?>
+                        <?php if (empty($projects)): ?><tr><td colspan="6" class="text-center">No research projects found</td></tr><?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -91,5 +110,7 @@ $pageTitle = 'Research Projects';
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>function editProject(p){var m=document.getElementById('actionModal');if(!m)return;document.getElementById('modalTitle').textContent='Edit Project';document.getElementById('modalBody').innerHTML='<form method="POST"><input type="hidden" name="csrf_token" value="<?= $_SESSION["csrf_token"] ?>"><input type="hidden" name="action" value="update_project"><input type="hidden" name="id" value="'+p.id+'"><div class="mb-2"><label>Title</label><input name="title" class="form-control" value="'+(p.title||'')+'" required></div><div class="row mb-2"><div class="col"><label>Researcher</label><input name="researcher" class="form-control" value="'+(p.researcher||'')+'"></div><div class="col"><label>Department</label><input name="department" class="form-control" value="'+(p.department||'')+'"></div></div><div class="mb-2"><label>Status</label><select name="status" class="form-select"><option value="proposed"'+(p.status==='proposed'?' selected':'')+'>Proposed</option><option value="active"'+(p.status==='active'?' selected':'')+'>Active</option><option value="completed"'+(p.status==='completed'?' selected':'')+'>Completed</option><option value="suspended"'+(p.status==='suspended'?' selected':'')+'>Suspended</option></select></div><div class="mb-2"><label>Description</label><textarea name="description" class="form-control" rows="2">'+(p.description||'')+'</textarea></div><button type="submit" class="btn btn-primary">Update</button></form>';new bootstrap.Modal(m).show();}
+</script>
 </body>
 </html>

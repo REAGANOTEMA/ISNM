@@ -227,7 +227,286 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     $stmt->close();
                 }
             }
-            header("Location: matrons.php?page=store_requisition");
+                header("Location: matrons.php?page=store_requisition");
+                exit;
+
+        case 'add_counseling_record':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $session_date = trim($_POST['session_date'] ?? '');
+            $counselor_name = trim($_POST['counselor_name'] ?? '');
+            $session_type = trim($_POST['session_type'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
+            $action_plan = trim($_POST['action_plan'] ?? '');
+            if ($student_id && $session_date && $counselor_name) {
+                $conn->query("CREATE TABLE IF NOT EXISTS counseling_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, session_date DATE NOT NULL, counselor_name VARCHAR(255) NOT NULL, session_type VARCHAR(100), notes TEXT, action_plan TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO counseling_records (student_id, session_date, counselor_name, session_type, notes, action_plan, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("isssssi", $student_id, $session_date, $counselor_name, $session_type, $notes, $action_plan, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Counseling record saved."; } else { $_SESSION['error'] = "Error saving counseling record."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=counseling");
+            exit;
+
+        case 'add_group_counseling':
+            $topic = trim($_POST['topic'] ?? '');
+            $counselor = trim($_POST['counselor'] ?? '');
+            $participants_count = (int)($_POST['participants_count'] ?? 0);
+            $date = trim($_POST['date'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
+            if ($topic && $counselor && $date) {
+                $conn->query("CREATE TABLE IF NOT EXISTS group_counseling (id INT AUTO_INCREMENT PRIMARY KEY, topic VARCHAR(255) NOT NULL, counselor VARCHAR(255) NOT NULL, participants_count INT DEFAULT 0, session_date DATE NOT NULL, notes TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO group_counseling (topic, counselor, participants_count, session_date, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("ssisii", $topic, $counselor, $participants_count, $date, $notes, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Group counseling session recorded."; } else { $_SESSION['error'] = "Error recording group session."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=counseling");
+            exit;
+
+        case 'add_referral':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $referral_type = trim($_POST['referral_type'] ?? '');
+            $reason = trim($_POST['reason'] ?? '');
+            $referred_to = trim($_POST['referred_to'] ?? '');
+            $urgency = trim($_POST['urgency'] ?? 'Medium');
+            if ($student_id && $referral_type && $reason) {
+                $conn->query("CREATE TABLE IF NOT EXISTS student_referrals (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, referral_type VARCHAR(100) NOT NULL, reason TEXT NOT NULL, referred_to VARCHAR(255), urgency VARCHAR(50) DEFAULT 'Medium', status VARCHAR(50) DEFAULT 'Pending', created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO student_referrals (student_id, referral_type, reason, referred_to, urgency, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issssi", $student_id, $referral_type, $reason, $referred_to, $urgency, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Referral submitted."; } else { $_SESSION['error'] = "Error submitting referral."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=counseling");
+            exit;
+
+        case 'add_medical_record':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $condition_name = trim($_POST['condition'] ?? '');
+            $diagnosis = trim($_POST['diagnosis'] ?? '');
+            $treatment = trim($_POST['treatment'] ?? '');
+            $medication = trim($_POST['medication'] ?? '');
+            if ($student_id && $condition_name) {
+                $conn->query("CREATE TABLE IF NOT EXISTS student_health_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, condition_name VARCHAR(255) NOT NULL, diagnosis TEXT, treatment TEXT, medication TEXT, recorded_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO student_health_records (student_id, condition_name, diagnosis, treatment, medication, recorded_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issssi", $student_id, $condition_name, $diagnosis, $treatment, $medication, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Medical record saved."; } else { $_SESSION['error'] = "Error saving medical record."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=health");
+            exit;
+
+        case 'add_medication':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $medication_name = trim($_POST['medication_name'] ?? '');
+            $dosage = trim($_POST['dosage'] ?? '');
+            $frequency = trim($_POST['frequency'] ?? '');
+            $start_date = trim($_POST['start_date'] ?? '');
+            if ($student_id && $medication_name && $dosage) {
+                $conn->query("CREATE TABLE IF NOT EXISTS student_medications (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, medication_name VARCHAR(255) NOT NULL, dosage VARCHAR(100), frequency VARCHAR(100), start_date DATE, status VARCHAR(50) DEFAULT 'Active', recorded_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO student_medications (student_id, medication_name, dosage, frequency, start_date, recorded_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issssi", $student_id, $medication_name, $dosage, $frequency, $start_date, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Medication record saved."; } else { $_SESSION['error'] = "Error saving medication record."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=health");
+            exit;
+
+        case 'add_emergency':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $emergency_type = trim($_POST['emergency_type'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $location = trim($_POST['location'] ?? '');
+            $action_taken = trim($_POST['action_taken'] ?? '');
+            if ($student_id && $emergency_type && $description) {
+                $conn->query("CREATE TABLE IF NOT EXISTS emergency_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, emergency_type VARCHAR(100) NOT NULL, description TEXT NOT NULL, location VARCHAR(255), action_taken TEXT, reported_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO emergency_records (student_id, emergency_type, description, location, action_taken, reported_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issssi", $student_id, $emergency_type, $description, $location, $action_taken, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Emergency record saved."; } else { $_SESSION['error'] = "Error saving emergency record."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=health");
+            exit;
+
+        case 'add_room_assignment':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $room_number = trim($_POST['room_number'] ?? '');
+            $bed_number = trim($_POST['bed_number'] ?? '');
+            $hostel = trim($_POST['hostel'] ?? '');
+            if ($student_id && $room_number && $hostel) {
+                $conn->query("CREATE TABLE IF NOT EXISTS room_assignments (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, room_number VARCHAR(50) NOT NULL, bed_number VARCHAR(50), hostel VARCHAR(100) NOT NULL, status VARCHAR(50) DEFAULT 'Active', assigned_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO room_assignments (student_id, room_number, bed_number, hostel, assigned_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $student_id, $room_number, $bed_number, $hostel, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Room assignment saved."; } else { $_SESSION['error'] = "Error saving room assignment."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=accommodation");
+            exit;
+
+        case 'add_room_inspection':
+            $room_number = trim($_POST['room_number'] ?? '');
+            $inspector = trim($_POST['inspector'] ?? '');
+            $date = trim($_POST['date'] ?? '');
+            $score = (int)($_POST['score'] ?? 0);
+            $notes = trim($_POST['notes'] ?? '');
+            if ($room_number && $inspector && $date) {
+                $conn->query("CREATE TABLE IF NOT EXISTS room_inspections (id INT AUTO_INCREMENT PRIMARY KEY, room_number VARCHAR(50) NOT NULL, inspector VARCHAR(255) NOT NULL, inspection_date DATE NOT NULL, score INT DEFAULT 0, notes TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO room_inspections (room_number, inspector, inspection_date, score, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("sssisi", $room_number, $inspector, $date, $score, $notes, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Room inspection recorded."; } else { $_SESSION['error'] = "Error recording inspection."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=accommodation");
+            exit;
+
+        case 'add_maintenance_request':
+            $room_number = trim($_POST['room_number'] ?? '');
+            $issue = trim($_POST['issue'] ?? '');
+            $priority = trim($_POST['priority'] ?? 'Medium');
+            $reported_by_name = trim($_POST['reported_by'] ?? $user_name);
+            if ($room_number && $issue) {
+                $conn->query("CREATE TABLE IF NOT EXISTS maintenance_requests (id INT AUTO_INCREMENT PRIMARY KEY, room_number VARCHAR(50) NOT NULL, issue TEXT NOT NULL, priority VARCHAR(50) DEFAULT 'Medium', reported_by VARCHAR(255), status VARCHAR(50) DEFAULT 'Pending', created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO maintenance_requests (room_number, issue, priority, reported_by, created_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("ssssi", $room_number, $issue, $priority, $reported_by_name, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Maintenance request submitted."; } else { $_SESSION['error'] = "Error submitting request."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=accommodation");
+            exit;
+
+        case 'add_discipline_case':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $incident_type = trim($_POST['incident_type'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $date = trim($_POST['date'] ?? '');
+            if ($student_id && $incident_type && $description) {
+                $conn->query("CREATE TABLE IF NOT EXISTS discipline_cases (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, incident_type VARCHAR(100) NOT NULL, description TEXT NOT NULL, incident_date DATE, status VARCHAR(50) DEFAULT 'Open', reported_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO discipline_cases (student_id, incident_type, description, incident_date, reported_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $student_id, $incident_type, $description, $date, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Discipline case recorded."; } else { $_SESSION['error'] = "Error recording discipline case."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=discipline");
+            exit;
+
+        case 'add_disciplinary_action':
+            $case_id = (int)($_POST['case_id'] ?? 0);
+            $action_type = trim($_POST['action_type'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            if ($case_id && $action_type && $description) {
+                $conn->query("CREATE TABLE IF NOT EXISTS disciplinary_actions (id INT AUTO_INCREMENT PRIMARY KEY, case_id INT NOT NULL, action_type VARCHAR(100) NOT NULL, description TEXT NOT NULL, taken_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO disciplinary_actions (case_id, action_type, description, taken_by) VALUES (?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issi", $case_id, $action_type, $description, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Disciplinary action recorded."; } else { $_SESSION['error'] = "Error recording action."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=discipline");
+            exit;
+
+        case 'add_behavior_report':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $behavior_type = trim($_POST['behavior_type'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $date = trim($_POST['date'] ?? '');
+            if ($student_id && $behavior_type && $description) {
+                $conn->query("CREATE TABLE IF NOT EXISTS behavior_reports (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, behavior_type VARCHAR(100) NOT NULL, description TEXT NOT NULL, report_date DATE, recorded_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO behavior_reports (student_id, behavior_type, description, report_date, recorded_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $student_id, $behavior_type, $description, $date, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Behavior report saved."; } else { $_SESSION['error'] = "Error saving report."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=discipline");
+            exit;
+
+        case 'add_parent_meeting':
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $parent_name = trim($_POST['parent_name'] ?? '');
+            $meeting_date = trim($_POST['meeting_date'] ?? '');
+            $topic = trim($_POST['topic'] ?? '');
+            $outcome = trim($_POST['outcome'] ?? '');
+            if ($student_id && $parent_name && $meeting_date && $topic) {
+                $conn->query("CREATE TABLE IF NOT EXISTS parent_meetings (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, parent_name VARCHAR(255) NOT NULL, meeting_date DATE NOT NULL, topic VARCHAR(255) NOT NULL, outcome TEXT, recorded_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO parent_meetings (student_id, parent_name, meeting_date, topic, outcome, recorded_by) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("issssi", $student_id, $parent_name, $meeting_date, $topic, $outcome, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Parent meeting recorded."; } else { $_SESSION['error'] = "Error recording meeting."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=discipline");
+            exit;
+
+        case 'add_hostel_activity':
+            $activity_name = trim($_POST['activity_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $date = trim($_POST['date'] ?? '');
+            $location = trim($_POST['location'] ?? '');
+            if ($activity_name && $date) {
+                $conn->query("CREATE TABLE IF NOT EXISTS hostel_activities (id INT AUTO_INCREMENT PRIMARY KEY, activity_name VARCHAR(255) NOT NULL, description TEXT, activity_date DATE NOT NULL, location VARCHAR(255), status VARCHAR(50) DEFAULT 'Planned', created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO hostel_activities (activity_name, description, activity_date, location, created_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("ssssi", $activity_name, $description, $date, $location, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Activity created."; } else { $_SESSION['error'] = "Error creating activity."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=activities");
+            exit;
+
+        case 'add_activity_schedule':
+            $activity_id = (int)($_POST['activity_id'] ?? 0);
+            $schedule_date = trim($_POST['schedule_date'] ?? '');
+            $start_time = trim($_POST['start_time'] ?? '');
+            $end_time = trim($_POST['end_time'] ?? '');
+            if ($activity_id && $schedule_date && $start_time && $end_time) {
+                $conn->query("CREATE TABLE IF NOT EXISTS activity_schedules (id INT AUTO_INCREMENT PRIMARY KEY, activity_id INT NOT NULL, schedule_date DATE NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO activity_schedules (activity_id, schedule_date, start_time, end_time, created_by) VALUES (?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $activity_id, $schedule_date, $start_time, $end_time, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Activity schedule saved."; } else { $_SESSION['error'] = "Error saving schedule."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=activities");
+            exit;
+
+        case 'add_activity_participation':
+            $activity_id = (int)($_POST['activity_id'] ?? 0);
+            $student_id = (int)($_POST['student_id'] ?? 0);
+            $status = trim($_POST['status'] ?? 'Registered');
+            if ($activity_id && $student_id) {
+                $conn->query("CREATE TABLE IF NOT EXISTS activity_participation (id INT AUTO_INCREMENT PRIMARY KEY, activity_id INT NOT NULL, student_id INT NOT NULL, status VARCHAR(50) DEFAULT 'Registered', registered_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                $stmt = $conn->prepare("INSERT INTO activity_participation (activity_id, student_id, status, registered_by) VALUES (?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("iisi", $activity_id, $student_id, $status, $user_id);
+                    if ($stmt->execute()) { $_SESSION['success'] = "Participation recorded."; } else { $_SESSION['error'] = "Error recording participation."; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = "Please fill in all required fields."; }
+            header("Location: matrons.php?page=activities");
             exit;
     }
 }
@@ -903,6 +1182,536 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Submit Health Record</button>
                         </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'counselingRecord':
+                    title.textContent = 'Add Counseling Record';
+                    body.innerHTML = `
+                        <form id="counselingRecordForm" method="POST">
+                            <input type="hidden" name="action" value="add_counseling_record">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Session Date *</label><input type="date" class="form-control" name="session_date" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Counselor Name *</label><input type="text" class="form-control" name="counselor_name" required></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Session Type</label>
+                                <select class="form-select" name="session_type">
+                                    <option value="Individual">Individual</option>
+                                    <option value="Group">Group</option>
+                                    <option value="Family">Family</option>
+                                    <option value="Crisis">Crisis Intervention</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" name="notes" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Action Plan</label>
+                                <textarea class="form-control" name="action_plan" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Counseling Record</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'groupCounseling':
+                    title.textContent = 'Add Group Counseling Session';
+                    body.innerHTML = `
+                        <form id="groupCounselingForm" method="POST">
+                            <input type="hidden" name="action" value="add_group_counseling">
+                            <div class="mb-3">
+                                <label class="form-label">Topic *</label>
+                                <input type="text" class="form-control" name="topic" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Counselor *</label><input type="text" class="form-control" name="counselor" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Participants Count</label><input type="number" class="form-control" name="participants_count" min="1"></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-control" name="date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" name="notes" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Group Session</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'referral':
+                    title.textContent = 'Add Student Referral';
+                    body.innerHTML = `
+                        <form id="referralForm" method="POST">
+                            <input type="hidden" name="action" value="add_referral">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Referral Type *</label>
+                                    <select class="form-select" name="referral_type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="Medical">Medical</option>
+                                        <option value="Psychological">Psychological</option>
+                                        <option value="Academic">Academic</option>
+                                        <option value="Social Services">Social Services</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Urgency</label>
+                                    <select class="form-select" name="urgency">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Reason *</label>
+                                <textarea class="form-control" name="reason" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Referred To</label>
+                                <input type="text" class="form-control" name="referred_to">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Submit Referral</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'medicalRecord':
+                    title.textContent = 'Add Medical Record';
+                    body.innerHTML = `
+                        <form id="medicalRecordForm" method="POST">
+                            <input type="hidden" name="action" value="add_medical_record">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Condition *</label>
+                                <input type="text" class="form-control" name="condition" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Diagnosis</label>
+                                <textarea class="form-control" name="diagnosis" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Treatment</label>
+                                <textarea class="form-control" name="treatment" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Medication</label>
+                                <textarea class="form-control" name="medication" rows="2"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Medical Record</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'medication':
+                    title.textContent = 'Add Medication Record';
+                    body.innerHTML = `
+                        <form id="medicationForm" method="POST">
+                            <input type="hidden" name="action" value="add_medication">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Medication Name *</label>
+                                <input type="text" class="form-control" name="medication_name" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Dosage *</label><input type="text" class="form-control" name="dosage" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Frequency</label>
+                                    <select class="form-select" name="frequency">
+                                        <option value="Once daily">Once daily</option>
+                                        <option value="Twice daily">Twice daily</option>
+                                        <option value="Three times daily">Three times daily</option>
+                                        <option value="As needed">As needed</option>
+                                    </select>
+                                </div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" name="start_date">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Medication</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'emergency':
+                    title.textContent = 'Record Emergency';
+                    body.innerHTML = `
+                        <form id="emergencyForm" method="POST">
+                            <input type="hidden" name="action" value="add_emergency">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Emergency Type *</label>
+                                <select class="form-select" name="emergency_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Medical">Medical</option>
+                                    <option value="Fire">Fire</option>
+                                    <option value="Injury">Injury</option>
+                                    <option value="Natural Disaster">Natural Disaster</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" name="description" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" name="location">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Action Taken</label>
+                                <textarea class="form-control" name="action_taken" rows="2"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100">Submit Emergency Record</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'roomAssignment':
+                    title.textContent = 'Add Room Assignment';
+                    body.innerHTML = `
+                        <form id="roomAssignmentForm" method="POST">
+                            <input type="hidden" name="action" value="add_room_assignment">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4"><div class="mb-3"><label class="form-label">Room Number *</label><input type="text" class="form-control" name="room_number" required></div></div>
+                                <div class="col-md-4"><div class="mb-3"><label class="form-label">Bed Number</label><input type="text" class="form-control" name="bed_number"></div></div>
+                                <div class="col-md-4"><div class="mb-3"><label class="form-label">Hostel *</label>
+                                    <select class="form-select" name="hostel" required>
+                                        <option value="">Select</option>
+                                        <option value="Girls Hostel A">Girls Hostel A</option>
+                                        <option value="Girls Hostel B">Girls Hostel B</option>
+                                        <option value="Boys Hostel A">Boys Hostel A</option>
+                                        <option value="Boys Hostel B">Boys Hostel B</option>
+                                    </select>
+                                </div></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Assign Room</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'roomInspection':
+                    title.textContent = 'Record Room Inspection';
+                    body.innerHTML = `
+                        <form id="roomInspectionForm" method="POST">
+                            <input type="hidden" name="action" value="add_room_inspection">
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Room Number *</label><input type="text" class="form-control" name="room_number" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Inspector *</label><input type="text" class="form-control" name="inspector" required></div></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Date *</label><input type="date" class="form-control" name="date" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Score (0-100)</label><input type="number" class="form-control" name="score" min="0" max="100"></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" name="notes" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Inspection</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'maintenanceRequest':
+                    title.textContent = 'Submit Maintenance Request';
+                    body.innerHTML = `
+                        <form id="maintenanceForm" method="POST">
+                            <input type="hidden" name="action" value="add_maintenance_request">
+                            <div class="mb-3">
+                                <label class="form-label">Room Number *</label>
+                                <input type="text" class="form-control" name="room_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Issue *</label>
+                                <textarea class="form-control" name="issue" rows="3" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Priority</label>
+                                    <select class="form-select" name="priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Reported By</label><input type="text" class="form-control" name="reported_by" value="<?= htmlspecialchars($user_name) ?>"></div></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'accommodationReport':
+                    title.textContent = 'Accommodation Report';
+                    body.innerHTML = `
+                        <div id="accommodationReportContent" class="p-3">
+                            <p class="text-muted">Loading report...</p>
+                        </div>
+                        <script>
+                            (function() {
+                                fetch('accommodation_report_handler.php?type=stats')
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        var html = '<div class="row mb-3">';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.total_rooms || 0) + '</h5><small>Total Rooms</small></div></div>';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.occupied || 0) + '</h5><small>Occupied</small></div></div>';
+                                        html += '</div>';
+                                        html += '<div class="row mb-3">';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.vacant || 0) + '</h5><small>Vacant</small></div></div>';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.occupancy_rate || '0%') + '</h5><small>Occupancy Rate</small></div></div>';
+                                        html += '</div>';
+                                        document.getElementById('accommodationReportContent').innerHTML = html;
+                                    })
+                                    .catch(function() {
+                                        document.getElementById('accommodationReportContent').innerHTML = '<div class="text-center text-muted"><i class="fas fa-bed fa-2x mb-2"></i><p>Report data will appear here once rooms and assignments are populated.</p></div>';
+                                    });
+                            })();
+                        <\/script>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'disciplineCase':
+                    title.textContent = 'Add Discipline Case';
+                    body.innerHTML = `
+                        <form id="disciplineCaseForm" method="POST">
+                            <input type="hidden" name="action" value="add_discipline_case">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Incident Type *</label>
+                                    <select class="form-select" name="incident_type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="Late Return">Late Return</option>
+                                        <option value="Noise Disturbance">Noise Disturbance</option>
+                                        <option value="Property Damage">Property Damage</option>
+                                        <option value="Theft">Theft</option>
+                                        <option value="Bullying">Bullying</option>
+                                        <option value="Curfew Violation">Curfew Violation</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Date</label><input type="date" class="form-control" name="date"></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" name="description" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Record Discipline Case</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'disciplinaryAction':
+                    title.textContent = 'Add Disciplinary Action';
+                    body.innerHTML = `
+                        <form id="disciplinaryActionForm" method="POST">
+                            <input type="hidden" name="action" value="add_disciplinary_action">
+                            <div class="mb-3">
+                                <label class="form-label">Case ID *</label>
+                                <input type="number" class="form-control" name="case_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Action Type *</label>
+                                <select class="form-select" name="action_type" required>
+                                    <option value="">Select Action</option>
+                                    <option value="Verbal Warning">Verbal Warning</option>
+                                    <option value="Written Warning">Written Warning</option>
+                                    <option value="Community Service">Community Service</option>
+                                    <option value="Suspension">Suspension</option>
+                                    <option value="Parent Notification">Parent Notification</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" name="description" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Record Action</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'behaviorReport':
+                    title.textContent = 'Add Behavior Report';
+                    body.innerHTML = `
+                        <form id="behaviorReportForm" method="POST">
+                            <input type="hidden" name="action" value="add_behavior_report">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Behavior Type *</label>
+                                    <select class="form-select" name="behavior_type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="Positive">Positive</option>
+                                        <option value="Negative">Negative</option>
+                                        <option value="Concern">Concern</option>
+                                        <option value="Improvement">Improvement</option>
+                                    </select>
+                                </div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Date</label><input type="date" class="form-control" name="date"></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" name="description" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Behavior Report</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'parentMeeting':
+                    title.textContent = 'Record Parent Meeting';
+                    body.innerHTML = `
+                        <form id="parentMeetingForm" method="POST">
+                            <input type="hidden" name="action" value="add_parent_meeting">
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Parent Name *</label><input type="text" class="form-control" name="parent_name" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Meeting Date *</label><input type="date" class="form-control" name="meeting_date" required></div></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Topic *</label>
+                                <input type="text" class="form-control" name="topic" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Outcome</label>
+                                <textarea class="form-control" name="outcome" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Meeting Record</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'organizeActivity':
+                    title.textContent = 'Organize Activity';
+                    body.innerHTML = `
+                        <form id="organizeActivityForm" method="POST">
+                            <input type="hidden" name="action" value="add_hostel_activity">
+                            <div class="mb-3">
+                                <label class="form-label">Activity Name *</label>
+                                <input type="text" class="form-control" name="activity_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Date *</label><input type="date" class="form-control" name="date" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Location</label><input type="text" class="form-control" name="location"></div></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Activity</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'activitySchedule':
+                    title.textContent = 'Add Activity Schedule';
+                    body.innerHTML = `
+                        <form id="activityScheduleForm" method="POST">
+                            <input type="hidden" name="action" value="add_activity_schedule">
+                            <div class="mb-3">
+                                <label class="form-label">Activity ID *</label>
+                                <input type="number" class="form-control" name="activity_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Schedule Date *</label>
+                                <input type="date" class="form-control" name="schedule_date" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Start Time *</label><input type="time" class="form-control" name="start_time" required></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">End Time *</label><input type="time" class="form-control" name="end_time" required></div></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Schedule</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'participation':
+                    title.textContent = 'Record Student Participation';
+                    body.innerHTML = `
+                        <form id="participationForm" method="POST">
+                            <input type="hidden" name="action" value="add_activity_participation">
+                            <div class="mb-3">
+                                <label class="form-label">Activity ID *</label>
+                                <input type="number" class="form-control" name="activity_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Student ID *</label>
+                                <input type="number" class="form-control" name="student_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="Registered">Registered</option>
+                                    <option value="Attended">Attended</option>
+                                    <option value="Absent">Absent</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Participation</button>
+                        </form>`;
+                    document.getElementById('modalAction').style.display = 'none';
+                    break;
+
+                case 'activityReport':
+                    title.textContent = 'Activity Report';
+                    body.innerHTML = `
+                        <div id="activityReportContent" class="p-3">
+                            <p class="text-muted">Loading report...</p>
+                        </div>
+                        <script>
+                            (function() {
+                                fetch('activity_report_handler.php?type=stats')
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        var html = '<div class="row mb-3">';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.total_activities || 0) + '</h5><small>Total Activities</small></div></div>';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.upcoming || 0) + '</h5><small>Upcoming</small></div></div>';
+                                        html += '</div>';
+                                        html += '<div class="row mb-3">';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.completed || 0) + '</h5><small>Completed</small></div></div>';
+                                        html += '<div class="col-6"><div class="card text-center p-3"><h5>' + (data.total_participants || 0) + '</h5><small>Total Participants</small></div></div>';
+                                        html += '</div>';
+                                        document.getElementById('activityReportContent').innerHTML = html;
+                                    })
+                                    .catch(function() {
+                                        document.getElementById('activityReportContent').innerHTML = '<div class="text-center text-muted"><i class="fas fa-calendar-check fa-2x mb-2"></i><p>Report data will appear here once activities are created.</p></div>';
+                                    });
+                            })();
+                        <\/script>`;
                     document.getElementById('modalAction').style.display = 'none';
                     break;
             }
