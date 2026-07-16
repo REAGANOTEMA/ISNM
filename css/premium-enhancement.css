@@ -661,6 +661,9 @@ section.py-5 {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer;
   height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
 .feature-card:hover {
@@ -709,6 +712,11 @@ section.py-5 {
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.7;
   margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.feature-card .btn-3d {
+  margin-top: auto;
 }
 
 /* ── PREMIUM VM CARDS (Vision/Mission) ── */

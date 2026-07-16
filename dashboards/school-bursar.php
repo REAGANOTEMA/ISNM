@@ -29,7 +29,7 @@ $sub = $_GET['sub'] ?? '';
 
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
+    if (!function_exists('verifyCSRFToken') || !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'record_payment' && $stuConn) {
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $year = (int)($_POST['year'] ?? date('Y'));
         if ($name && $amount > 0) {
             $stmt = $stuConn->prepare("INSERT INTO fee_structures (fee_name, fee_type, amount, program_id, academic_year, is_active) VALUES (?,?,?,?,?,1)");
-            if ($stmt) { $stmt->bind_param('ssdii', $name, $feeType, $amount, $progId, $year); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Fee structure added.'; }
+            if ($stmt) { $stmt->bind_param('ssdii', $name, $feeType, $amount, $progId, $year); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Fee structure added.'; } }
         }
         header('Location: school-bursar.php?page=billing'); exit;
     }
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cat = trim($_POST['category'] ?? 'General'); $date = $_POST['expense_date'] ?? date('Y-m-d');
         if ($desc && $amount > 0) {
             $stmt = $staffConn->prepare("INSERT INTO expenses (title, expense_title, amount, category, description, expense_date, status, created_by) VALUES (?,?,?,?,?,?,'approved',?)");
-            if ($stmt) { $stmt->bind_param('ssdsssi', $desc, $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Expense recorded.'; }
+            if ($stmt) { $stmt->bind_param('ssdsssi', $desc, $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Expense recorded.'; } }
         }
         header('Location: school-bursar.php?page=budget'); exit;
     }
@@ -121,11 +121,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            $totals = $staffConn->query("SELECT COALESCE(SUM(gross_pay),0) tg, COALESCE(SUM(paye_tax + nssf_employee + other_deductions),0) td, COALESCE(SUM(net_pay),0) tnet FROM payroll_details WHERE payroll_run_id=$runId");
+            $totStmt = $staffConn->prepare("SELECT COALESCE(SUM(gross_pay),0) tg, COALESCE(SUM(paye_tax + nssf_employee + other_deductions),0) td, COALESCE(SUM(net_pay),0) tnet FROM payroll_details WHERE payroll_run_id=?");
+            if ($totStmt) { $totStmt->bind_param('i', $runId); $totStmt->execute(); $totals = $totStmt->get_result(); $totStmt->close(); } else { $totals = null; }
             if ($totals) {
                 $t = $totals->fetch_assoc();
-                if (!$staffConn->query("UPDATE payroll_runs SET total_gross={$t['tg']}, total_deductions={$t['td']}, total_net={$t['tnet']}, status='processed' WHERE id=$runId")) {
-                    throw new Exception('Failed to update payroll run totals: ' . $staffConn->error);
+                $updStmt = $staffConn->prepare("UPDATE payroll_runs SET total_gross=?, total_deductions=?, total_net=?, status='processed' WHERE id=?");
+                if ($updStmt) {
+                    $updStmt->bind_param('dddi', $t['tg'], $t['td'], $t['tnet'], $runId);
+                    if (!$updStmt->execute()) {
+                        throw new Exception('Failed to update payroll run totals: ' . $updStmt->error);
+                    }
+                    $updStmt->close();
+                } else {
+                    throw new Exception('Failed to prepare update: ' . $staffConn->error);
                 }
             }
             $staffConn->commit();
@@ -143,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $diff = $bankBal - $bookBal;
         $notes = trim($_POST['notes'] ?? '');
         $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,?,?,'completed',?)");
-        if ($stmt) { $stmt->bind_param('sddddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Bank reconciled.'; }
+        if ($stmt) { $stmt->bind_param('sddddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Bank reconciled.'; } }
         header('Location: school-bursar.php?page=ledger'); exit;
     }
 
@@ -151,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $studentId = (int)($_POST['student_id'] ?? 0); $msg = trim($_POST['message'] ?? '');
         if ($studentId && $msg) {
             $stmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?,?,?,'Fee','Medium',0)");
-            if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Reminder sent.'; }
+            if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Reminder sent.'; } }
         }
         header('Location: school-bursar.php?page=communications'); exit;
     }
@@ -162,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adjNo = 'ADJ' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
         if ($studentId && $amount > 0) {
             $stmt = $stuConn->prepare("INSERT INTO fee_adjustments (adjustment_number, student_id, adjustment_type, amount, reason, created_by) VALUES (?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sisdsi', $adjNo, $studentId, $type, $amount, $reason, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Adjustment applied.'; }
+            if ($stmt) { $stmt->bind_param('sisdsi', $adjNo, $studentId, $type, $amount, $reason, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Adjustment applied.'; } }
         }
         header('Location: school-bursar.php?page=billing'); exit;
     }
@@ -236,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = (float)($_POST['unit_price'] ?? 0); $reorder = (int)($_POST['reorder_level'] ?? 0);
         if ($name && $qty > 0) {
             $st=$staffConn->prepare("INSERT INTO inventory_items (item_name, category, quantity, unit, unit_cost, reorder_level, status) VALUES (?,?,?,?,?,?,'in_stock')");
-            if($st){$st->bind_param('ssidsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Stock item added.';}
+            if($st){$st->bind_param('ssidsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success']='Stock item added.'; }$st->close();}
         }
         header('Location: school-bursar.php?page=inventory'); exit;
     }
@@ -248,12 +256,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $start = $period . '-01';
             $end = date('Y-m-t', strtotime($start));
             $st=$staffConn->prepare("INSERT INTO bursar_vat_reports (period_start, period_end, net_vat, status) VALUES (?,?,?,'draft')");
-            if($st){$st->bind_param('ssd', $start, $end, $amount);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
+            if($st){$st->bind_param('ssd', $start, $end, $amount);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
         } else {
             $st=$staffConn->prepare("INSERT INTO bursar_withholding_tax (tax_date, payee_name, description, gross_amount, wht_rate, wht_amount, status) VALUES (?,?,?,?,6.00,?,'active')");
-            if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();}
+            if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
         }
-        $_SESSION['success'] = 'Tax record added.'; header('Location: school-bursar.php?page=ura'); exit;
+        header('Location: school-bursar.php?page=ura'); exit;
     }
 
     if ($action === 'update_provider_config' && $stuConn) {
@@ -581,7 +589,7 @@ $pageTitle = 'Bursar Dashboard';
       <td><?=number_format($p['total_paye']??$p['total_deductions']??0)?></td>
       <td><?=number_format($p['total_nssf']??0)?></td>
       <td><strong><?=number_format($p['total_net']??0)?></strong></td>
-      <td><?php if ($staffConn) { $rid=$p['id']; echo '<div class="d-flex gap-1" style="flex-wrap:wrap;min-width:160px">'; foreach ($approvalChain as $lvl) { $lvlEsc = $staffConn->real_escape_string($lvl); $pa = $staffConn->query("SELECT status FROM payroll_approvals WHERE payroll_run_id=$rid AND level='$lvlEsc'")->fetch_assoc(); $cls='secondary'; if ($pa) { $cls = $pa['status']==='approved' ? 'success' : ($pa['status']==='rejected' ? 'danger' : 'warning'); } echo '<span class="badge bg-'.$cls.'" style="font-size:9px">'.$lvl[0].'</span>'; } echo '</div>'; } else { echo '<span class="text-muted small">-</span>'; } ?></td>
+      <td><?php if ($staffConn) { $rid=$p['id']; echo '<div class="d-flex gap-1" style="flex-wrap:wrap;min-width:160px">'; $paStmt = $staffConn->prepare("SELECT status FROM payroll_approvals WHERE payroll_run_id=? AND level=?"); foreach ($approvalChain as $lvl) { if ($paStmt) { $paStmt->bind_param('is', $rid, $lvl); $paStmt->execute(); $pa = $paStmt->get_result()->fetch_assoc(); } else { $pa = null; } $cls='secondary'; if ($pa) { $cls = $pa['status']==='approved' ? 'success' : ($pa['status']==='rejected' ? 'danger' : 'warning'); } echo '<span class="badge bg-'.$cls.'" style="font-size:9px">'.$lvl[0].'</span>'; } if ($paStmt) $paStmt->close(); echo '</div>'; } else { echo '<span class="text-muted small">-</span>'; } ?></td>
       <td><span class="badge bg-<?=in_array($p['status'],['processed','completed','paid','approved'])?'success':($p['status']==='processing'?'info':'warning')?>"><?=htmlspecialchars($p['status'])?></span></td>
       <td><?=htmlspecialchars($p['run_date']??$p['start_date']??$p['created_at']??'')?></td>
     </tr><?php endforeach; if (empty($payrollRuns)): ?><tr><td colspan="8" class="text-muted text-center">No payroll runs yet.</td></tr><?php endif; ?>

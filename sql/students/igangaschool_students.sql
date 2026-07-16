@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 15, 2026 at 07:50 AM
+-- Generation Time: Jul 16, 2026 at 07:22 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -448,6 +448,24 @@ INSERT INTO `asset_categories` (`id`, `category_name`, `description`, `depreciat
 (4, 'Vehicles', 'School vehicles, ambulances', 0.00, NULL, '2026-07-03 04:33:38', '2026-07-14 16:51:36'),
 (5, 'Buildings', 'School buildings and structures', 0.00, NULL, '2026-07-03 04:33:38', '2026-07-14 16:51:36'),
 (6, 'Library', 'Books and library equipment', 0.00, NULL, '2026-07-03 04:33:38', '2026-07-14 16:51:36');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assignments`
+--
+
+CREATE TABLE `assignments` (
+  `id` int(11) NOT NULL,
+  `lecturer_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `course_id` int(11) DEFAULT NULL,
+  `course_name` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -2934,6 +2952,23 @@ CREATE TABLE `graduation_candidates` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `guild_feedback`
+--
+
+CREATE TABLE `guild_feedback` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `priority` enum('normal','important','urgent') DEFAULT 'normal',
+  `status` enum('pending','reviewed','acted') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `hostel_allocations`
 --
 
@@ -3360,6 +3395,25 @@ INSERT INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `desc
 (2, 'late_fee_percentage', '5', 'Percentage penalty on outstanding amount', NULL, '2026-06-21 08:58:13'),
 (3, 'late_fee_fixed', '20000', 'Fixed late fee amount (UGX)', NULL, '2026-06-21 08:58:13'),
 (4, 'max_late_fee', '100000', 'Maximum late fee cap (UGX)', NULL, '2026-06-21 08:58:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lesson_plans`
+--
+
+CREATE TABLE `lesson_plans` (
+  `id` int(11) NOT NULL,
+  `lecturer_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `topic` varchar(255) DEFAULT NULL,
+  `course_id` int(11) DEFAULT NULL,
+  `course_name` varchar(255) DEFAULT NULL,
+  `content` text DEFAULT NULL,
+  `objectives` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -4705,6 +4759,24 @@ CREATE TABLE `quality_assurance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `quality_assurance_reviews`
+--
+
+CREATE TABLE `quality_assurance_reviews` (
+  `id` int(11) NOT NULL,
+  `review_title` varchar(300) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `review_date` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Pending',
+  `findings` text DEFAULT NULL,
+  `recommendations` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `registrar_certificates`
 --
 
@@ -5003,6 +5075,26 @@ CREATE TABLE `staff` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `staff_leave`
+--
+
+CREATE TABLE `staff_leave` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `leave_type` varchar(50) NOT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `days_taken` int(11) DEFAULT 0,
+  `reason` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'Pending',
+  `reviewed_by` int(11) DEFAULT NULL,
+  `review_notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `staff_profiles`
 --
 
@@ -5060,6 +5152,63 @@ CREATE TABLE `staff_salaries` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_tasks`
+--
+
+CREATE TABLE `staff_tasks` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `category` varchar(100) DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `assigned_by` varchar(255) DEFAULT NULL,
+  `status` enum('pending','in_progress','completed','cancelled') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_training`
+--
+
+CREATE TABLE `staff_training` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `training_name` varchar(255) NOT NULL,
+  `training_type` varchar(100) DEFAULT NULL,
+  `provider` varchar(255) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'scheduled',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `staff_trainings`
+-- (See below for the actual view)
+--
+CREATE TABLE `staff_trainings` (
+`id` int(11)
+,`staff_id` int(11)
+,`training_name` varchar(255)
+,`training_type` varchar(100)
+,`provider` varchar(255)
+,`start_date` date
+,`end_date` date
+,`status` varchar(50)
+,`notes` text
+,`created_at` timestamp
+);
 
 -- --------------------------------------------------------
 
@@ -7782,6 +7931,14 @@ ALTER TABLE `asset_categories`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `assignments`
+--
+ALTER TABLE `assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_lecturer_id` (`lecturer_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `audit_findings`
 --
 ALTER TABLE `audit_findings`
@@ -8355,6 +8512,14 @@ ALTER TABLE `graduation_candidates`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `guild_feedback`
+--
+ALTER TABLE `guild_feedback`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `hostel_allocations`
 --
 ALTER TABLE `hostel_allocations`
@@ -8446,6 +8611,13 @@ ALTER TABLE `lab_skills_demonstrations`
 --
 ALTER TABLE `late_payment_settings`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lesson_plans`
+--
+ALTER TABLE `lesson_plans`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_lecturer_id` (`lecturer_id`);
 
 --
 -- Indexes for table `library_acquisitions`
@@ -8728,6 +8900,14 @@ ALTER TABLE `quality_assurance`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `quality_assurance_reviews`
+--
+ALTER TABLE `quality_assurance_reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_review_date` (`review_date`);
+
+--
 -- Indexes for table `registrar_certificates`
 --
 ALTER TABLE `registrar_certificates`
@@ -8807,6 +8987,15 @@ ALTER TABLE `staff`
   ADD KEY `idx_staff_email` (`email`);
 
 --
+-- Indexes for table `staff_leave`
+--
+ALTER TABLE `staff_leave`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_leave_type` (`leave_type`);
+
+--
 -- Indexes for table `staff_profiles`
 --
 ALTER TABLE `staff_profiles`
@@ -8825,6 +9014,23 @@ ALTER TABLE `staff_roles`
 --
 ALTER TABLE `staff_salaries`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `staff_tasks`
+--
+ALTER TABLE `staff_tasks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`);
+
+--
+-- Indexes for table `staff_training`
+--
+ALTER TABLE `staff_training`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `strategic_initiatives`
@@ -9195,6 +9401,12 @@ ALTER TABLE `assets`
 --
 ALTER TABLE `asset_categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `assignments`
+--
+ALTER TABLE `assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `audit_findings`
@@ -9689,6 +9901,12 @@ ALTER TABLE `graduation_candidates`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `guild_feedback`
+--
+ALTER TABLE `guild_feedback`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `hostel_allocations`
 --
 ALTER TABLE `hostel_allocations`
@@ -9777,6 +9995,12 @@ ALTER TABLE `lab_skills_demonstrations`
 --
 ALTER TABLE `late_payment_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `lesson_plans`
+--
+ALTER TABLE `lesson_plans`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `library_acquisitions`
@@ -10007,6 +10231,12 @@ ALTER TABLE `quality_assurance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `quality_assurance_reviews`
+--
+ALTER TABLE `quality_assurance_reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `registrar_certificates`
 --
 ALTER TABLE `registrar_certificates`
@@ -10079,6 +10309,12 @@ ALTER TABLE `staff`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `staff_leave`
+--
+ALTER TABLE `staff_leave`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `staff_profiles`
 --
 ALTER TABLE `staff_profiles`
@@ -10094,6 +10330,18 @@ ALTER TABLE `staff_roles`
 -- AUTO_INCREMENT for table `staff_salaries`
 --
 ALTER TABLE `staff_salaries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff_tasks`
+--
+ALTER TABLE `staff_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff_training`
+--
+ALTER TABLE `staff_training`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -10341,6 +10589,15 @@ ALTER TABLE `volunteer_applications`
 --
 ALTER TABLE `website_announcements`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `staff_trainings`
+--
+DROP TABLE IF EXISTS `staff_trainings`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `staff_trainings`  AS SELECT `staff_training`.`id` AS `id`, `staff_training`.`staff_id` AS `staff_id`, `staff_training`.`training_name` AS `training_name`, `staff_training`.`training_type` AS `training_type`, `staff_training`.`provider` AS `provider`, `staff_training`.`start_date` AS `start_date`, `staff_training`.`end_date` AS `end_date`, `staff_training`.`status` AS `status`, `staff_training`.`notes` AS `notes`, `staff_training`.`created_at` AS `created_at` FROM `staff_training` ;
 
 -- --------------------------------------------------------
 

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['matron']);
 $auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
+$stuConn = $ctx['students'];
 $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $priority = trim($_POST['priority'] ?? 'Medium');
 
             if ($student_id && $case_type) {
-                $check = $conn->prepare("SELECT id, full_name FROM students WHERE id = ?");
+                $check = $stuConn->prepare("SELECT id, full_name FROM students WHERE id = ?");
                 if ($check) {
                     $check->bind_param("i", $student_id);
                     if (!$check->execute()) { error_log('$check execute failed: ' . ($check->error ?? 'unknown')); };

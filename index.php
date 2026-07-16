@@ -3,6 +3,23 @@
 require_once 'includes/config_enhanced.php';
 include_once 'includes/functions.php';
 include_once 'shared/_header.php';
+
+// Fetch live stats from database
+$liveStats = ['students' => 315, 'programs' => 4, 'graduates' => 3000, 'practicum' => 6, 'years' => 15];
+try {
+    $studentsConn = getStudentsConnection();
+    if ($studentsConn) {
+        $r = @$studentsConn->query("SELECT COUNT(*) as c FROM students WHERE status IN ('Active','active','enrolled','Enrolled')");
+        if ($r) { $row = $r->fetch_assoc(); if ((int)$row['c'] > 0) $liveStats['students'] = (int)$row['c']; }
+    }
+    $staffConn = getStaffConnection();
+    if ($staffConn) {
+        $r = @$staffConn->query("SELECT COUNT(*) as c FROM academic_programs WHERE is_active = 1");
+        if ($r) { $row = $r->fetch_assoc(); if ((int)$row['c'] > 0) $liveStats['programs'] = (int)$row['c']; }
+        $r2 = @$staffConn->query("SELECT COUNT(*) as c FROM staff WHERE status = 'Active'");
+        if ($r2) { $row = $r2->fetch_assoc(); if ((int)$row['c'] > 0) $liveStats['staff'] = (int)$row['c']; }
+    }
+} catch (Exception $e) { error_log('index.php live stats: ' . $e->getMessage()); }
 ?>
 
   <main>
@@ -116,7 +133,7 @@ include_once 'shared/_header.php';
               <div class="stat-card-icon">
                 <i class="fas fa-users"></i>
               </div>
-              <h3 class="stat-number" data-count="315">0</h3>
+              <h3 class="stat-number" data-count="<?= $liveStats['students'] ?>">0</h3>
               <p class="stat-label">Students Enrolled</p>
             </div>
           </div>
@@ -125,8 +142,8 @@ include_once 'shared/_header.php';
               <div class="stat-card-icon icon-green">
                 <i class="fas fa-graduation-cap"></i>
               </div>
-              <h3 class="stat-number">100%</h3>
-              <p class="stat-label">Midwifery Pass Rate</p>
+              <h3 class="stat-number"><?= $liveStats['programs'] ?>+</h3>
+              <p class="stat-label">Academic Programs</p>
             </div>
           </div>
           <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-2">
@@ -134,7 +151,7 @@ include_once 'shared/_header.php';
               <div class="stat-card-icon icon-blue">
                 <i class="fas fa-hospital"></i>
               </div>
-              <h3 class="stat-number" data-count="6">0</h3>
+              <h3 class="stat-number" data-count="<?= $liveStats['practicum'] ?>">0</h3>
               <p class="stat-label">Practicum Sites</p>
             </div>
           </div>
@@ -143,7 +160,7 @@ include_once 'shared/_header.php';
               <div class="stat-card-icon icon-gold">
                 <i class="fas fa-award"></i>
               </div>
-              <h3 class="stat-number" data-count="15">0</h3>
+              <h3 class="stat-number" data-count="<?= $liveStats['years'] ?>">0</h3>
               <p class="stat-label">Years of Excellence</p>
             </div>
           </div>

@@ -26,7 +26,7 @@ if (!function_exists('findStudents')) {
                             COALESCE(set_name, intake_period) AS set_name,
                             status, created_at
                         FROM students
-                        WHERE status = 'Active'
+                        WHERE status != 'deleted'
                           AND (
                             index_number LIKE ?
                             OR student_number LIKE ?
@@ -118,7 +118,7 @@ if (!function_exists('getStudentCount')) {
         try {
             $conn = getStudentsConnection();
             if ($conn) {
-                $r = $conn->query("SELECT COUNT(*) AS c FROM students WHERE status='Active'");
+                $r = $conn->query("SELECT COUNT(*) AS c FROM students WHERE status != 'deleted'");
                 if ($r) return (int)($r->fetch_assoc()['c'] ?? 0);
             }
         } catch (Throwable $e) { error_log('student_helpers getRecords: ' . $e->getMessage()); }

@@ -171,6 +171,30 @@ class ModuleRegistry {
     }
     
     /**
+     * Get valid column names for a table (cached).
+     */
+    private function getTableColumns(string $table): array {
+        $cacheKey = "cols_{$table}";
+        if (isset(self::$cache[$cacheKey])) return self::$cache[$cacheKey];
+        $columns = [];
+        $cols = @$this->conn->query("SHOW COLUMNS FROM `{$table}`");
+        if ($cols) {
+            while ($col = $cols->fetch_assoc()) {
+                $columns[] = $col['Field'];
+            }
+        }
+        self::$cache[$cacheKey] = $columns;
+        return $columns;
+    }
+
+    /**
+     * Validate that a column name exists in the table (prevents SQL injection via column names).
+     */
+    private function isValidColumn(string $col, array $validColumns): bool {
+        return in_array($col, $validColumns, true);
+    }
+
+    /**
      * Fetch records from a module's primary table with optional filters
      */
     public function fetchRecords(string $moduleName, array $filters = [], int $limit = 50, int $offset = 0): array {
@@ -180,28 +204,26 @@ class ModuleRegistry {
         
         $primaryTable = $tables[0];
         
-        // Build WHERE clause
-        $where = [];
-        foreach ($filters as $col => $val) {
-            $escapedVal = $this->conn->real_escape_string($val);
-            $where[] = "`{$col}` = '{$escapedVal}'";
-        }
-        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-        
         // Check if table exists
         $tableCheck = @$this->conn->query("SHOW TABLES LIKE '{$primaryTable}'");
         if (!$tableCheck || $tableCheck->num_rows === 0) {
             return ['error' => "Table {$primaryTable} not found", 'data' => []];
         }
         
-        // Get columns
-        $cols = @$this->conn->query("SHOW COLUMNS FROM `{$primaryTable}`");
-        $columns = [];
-        if ($cols) {
-            while ($col = $cols->fetch_assoc()) {
-                $columns[] = $col['Field'];
-            }
+        // Get valid columns for this table
+        $validColumns = $this->getTableColumns($primaryTable);
+        
+        // Build WHERE clause with validated column names
+        $where = [];
+        foreach ($filters as $col => $val) {
+            if (!$this->isValidColumn($col, $validColumns)) continue;
+            $escapedVal = $this->conn->real_escape_string($val);
+            $where[] = "`{$col}` = '{$escapedVal}'";
         }
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+        
+        $limit = max(1, min((int)$limit, 500));
+        $offset = max(0, (int)$offset);
         
         // Fetch data
         $sql = "SELECT * FROM `{$primaryTable}` {$whereClause} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}";
@@ -213,15 +235,19 @@ class ModuleRegistry {
             $data[] = $row;
         }
         
-        // Get total count
+        // Get total count (fixed: was calling fetch_assoc twice)
         $countSql = "SELECT COUNT(*) as total FROM `{$primaryTable}` {$whereClause}";
         $countResult = @$this->conn->query($countSql);
-        $total = ($countResult && $countResult->fetch_assoc()) ? $countResult->fetch_assoc()['total'] ?? 0 : 0;
+        $total = 0;
+        if ($countResult) {
+            $countRow = $countResult->fetch_assoc();
+            $total = $countRow ? (int)$countRow['total'] : 0;
+        }
         
         return [
             'data' => $data,
-            'columns' => $columns,
-            'total' => (int)$total,
+            'columns' => $validColumns,
+            'total' => $total,
             'limit' => $limit,
             'offset' => $offset,
             'table' => $primaryTable
@@ -234,22 +260,42 @@ class ModuleRegistry {
     public function createRecord(string $moduleName, array $data): array {
         $primaryTable = $this->getPrimaryTable($moduleName);
         if (!$primaryTable) return ['error' => 'Module not found'];
+        if (!$this->conn) return ['error' => 'No database connection'];
         
-        $columns = array_keys($data);
-        $values = array_map(function($v) {
-            return $this->conn->real_escape_string($v);
-        }, array_values($data));
+        $validColumns = $this->getTableColumns($primaryTable);
+        $filtered = [];
+        foreach ($data as $col => $val) {
+            if ($this->isValidColumn($col, $validColumns)) {
+                $filtered[$col] = $val;
+            }
+        }
+        if (empty($filtered)) return ['error' => 'No valid columns provided'];
+        
+        $columns = array_keys($filtered);
+        $placeholders = [];
+        $values = [];
+        $types = '';
+        foreach ($filtered as $col => $val) {
+            $placeholders[] = '?';
+            $values[] = $val;
+            $types .= is_int($val) ? 'i' : 's';
+        }
         
         $colStr = '`' . implode('`, `', $columns) . '`';
-        $valStr = "'" . implode("', '", $values) . "'";
+        $sql = "INSERT INTO `{$primaryTable}` ({$colStr}) VALUES (" . implode(', ', $placeholders) . ")";
         
-        $sql = "INSERT INTO `{$primaryTable}` ({$colStr}) VALUES ({$valStr})";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) return ['error' => $this->conn->error];
+        $stmt->bind_param($types, ...$values);
         
-        if ($this->conn->query($sql)) {
-            $insertId = $this->conn->insert_id;
+        if ($stmt->execute()) {
+            $insertId = $stmt->insert_id;
+            $stmt->close();
             return ['success' => true, 'id' => $insertId, 'message' => 'Record created'];
         }
-        return ['error' => $this->conn->error];
+        $error = $stmt->error;
+        $stmt->close();
+        return ['error' => $error];
     }
     
     /**
@@ -258,20 +304,37 @@ class ModuleRegistry {
     public function updateRecord(string $moduleName, int $id, array $data): array {
         $primaryTable = $this->getPrimaryTable($moduleName);
         if (!$primaryTable) return ['error' => 'Module not found'];
+        if (!$this->conn) return ['error' => 'No database connection'];
         
+        $validColumns = $this->getTableColumns($primaryTable);
         $sets = [];
+        $values = [];
+        $types = '';
         foreach ($data as $col => $val) {
-            $escapedVal = $this->conn->real_escape_string($val);
-            $sets[] = "`{$col}` = '{$escapedVal}'";
+            if (!$this->isValidColumn($col, $validColumns)) continue;
+            $sets[] = "`{$col}` = ?";
+            $values[] = $val;
+            $types .= is_int($val) ? 'i' : 's';
         }
+        if (empty($sets)) return ['error' => 'No valid columns provided'];
+        
+        $values[] = $id;
+        $types .= 'i';
         $setStr = implode(', ', $sets);
         
-        $sql = "UPDATE `{$primaryTable}` SET {$setStr} WHERE id = {$id}";
+        $sql = "UPDATE `{$primaryTable}` SET {$setStr} WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) return ['error' => $this->conn->error];
+        $stmt->bind_param($types, ...$values);
         
-        if ($this->conn->query($sql)) {
-            return ['success' => true, 'affected_rows' => $this->conn->affected_rows];
+        if ($stmt->execute()) {
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            return ['success' => true, 'affected_rows' => $affected];
         }
-        return ['error' => $this->conn->error];
+        $error = $stmt->error;
+        $stmt->close();
+        return ['error' => $error];
     }
     
     /**
@@ -298,17 +361,20 @@ class ModuleRegistry {
         
         $results = [];
         $escapedQuery = $this->conn->real_escape_string($query);
+        $limit = max(1, min((int)$limit, 100));
         
         foreach ($tables as $table) {
             $tableCheck = @$this->conn->query("SHOW TABLES LIKE '{$table}'");
             if (!$tableCheck || $tableCheck->num_rows === 0) continue;
             
-            $cols = @$this->conn->query("SHOW COLUMNS FROM `{$table}`");
-            if (!$cols) continue;
+            $validColumns = $this->getTableColumns($table);
             $stringCols = [];
-            while ($col = $cols->fetch_assoc()) {
-                if (in_array($col['Type'], ['text', 'varchar', 'longtext', 'mediumtext'])) {
-                    $stringCols[] = $col['Field'];
+            foreach ($validColumns as $colName) {
+                $colInfo = @$this->conn->query("SHOW COLUMNS FROM `{$table}` WHERE Field = '" . $this->conn->real_escape_string($colName) . "'");
+                if ($colInfo && $row = $colInfo->fetch_assoc()) {
+                    if (in_array($row['Type'], ['text', 'varchar', 'longtext', 'mediumtext'])) {
+                        $stringCols[] = $colName;
+                    }
                 }
             }
             
@@ -369,8 +435,10 @@ class ModuleRegistry {
      */
     public function logAccess(int $moduleId, int $staffId, string $action, ?int $recordId = null, ?array $details = null): void {
         if (!$this->conn) return;
+        $validActions = ['view', 'create', 'update', 'delete', 'login', 'export'];
+        $action = in_array($action, $validActions, true) ? $action : 'view';
         $detailsJson = $details ? json_encode($details) : 'NULL';
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $this->conn->real_escape_string($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
         $sql = "INSERT INTO module_audit_log (module_id, staff_id, action, record_id, details, ip_address) 
                 VALUES ({$moduleId}, {$staffId}, '{$action}', " . ($recordId ?: 'NULL') . ", {$detailsJson}, '{$ip}')";
         @$this->conn->query($sql);

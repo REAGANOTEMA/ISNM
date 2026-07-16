@@ -227,7 +227,6 @@ if ($conn && $canEditAcademic) {
 <div class="main" style="margin-left:270px;padding:20px;background:#f4f5f9;min-height:100vh;">
   <div class="page-header d-flex justify-content-between align-items-center">
     <div>
-      <button class="btn btn-sm btn-outline-secondary d-md-none me-2" onclick="document.getElementById('isnmSidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
       <h4 class="d-inline fw-bold">Student Management</h4>
       <span class="text-muted small ms-2"><i class="fas fa-shield-alt me-1"></i><?= htmlspecialchars($role) ?></span>
     </div>

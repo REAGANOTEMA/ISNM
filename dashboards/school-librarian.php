@@ -23,6 +23,88 @@ if (file_exists($profileSettingsFile)) {
 
 $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
+// Auto-create library tables if they don't exist
+if ($conn) {
+    $libTables = [
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_books (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            author VARCHAR(255) NOT NULL,
+            isbn VARCHAR(20),
+            category VARCHAR(100) NOT NULL,
+            subcategory VARCHAR(100),
+            publication_year INT,
+            edition VARCHAR(50),
+            pages INT,
+            publisher VARCHAR(255),
+            language VARCHAR(50) DEFAULT 'English',
+            location VARCHAR(100),
+            call_number VARCHAR(50),
+            description TEXT,
+            status ENUM('Available','Borrowed','Reserved','Lost','Damaged') DEFAULT 'Available',
+            barcode VARCHAR(50),
+            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_category (category),
+            INDEX idx_status (status),
+            INDEX idx_isbn (isbn)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_members (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            member_id VARCHAR(20) NOT NULL UNIQUE,
+            student_id INT,
+            staff_id INT,
+            full_name VARCHAR(200) NOT NULL,
+            email VARCHAR(200),
+            phone VARCHAR(30),
+            member_type ENUM('Student','Staff','Faculty') DEFAULT 'Student',
+            membership_type ENUM('Regular','Student','Premium') DEFAULT 'Regular',
+            status ENUM('Active','Suspended','Expired') DEFAULT 'Active',
+            registration_date DATE DEFAULT (CURRENT_DATE),
+            expiry_date DATE,
+            address TEXT,
+            INDEX idx_member_id (member_id),
+            INDEX idx_student (student_id),
+            INDEX idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_borrowing (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            member_id VARCHAR(20) NOT NULL,
+            student_id INT,
+            book_id INT,
+            book_title VARCHAR(255) NOT NULL,
+            borrow_date DATE NOT NULL,
+            due_date DATE NOT NULL,
+            return_date DATE,
+            return_status ENUM('Borrowed','Returned','Overdue') DEFAULT 'Borrowed',
+            renewals INT DEFAULT 0,
+            fine_amount DECIMAL(10,2) DEFAULT 0.00,
+            notes TEXT,
+            INDEX idx_member (member_id),
+            INDEX idx_status (return_status),
+            INDEX idx_due (due_date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$students_db_name}`.library_acquisitions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            author VARCHAR(255),
+            isbn VARCHAR(20),
+            quantity INT DEFAULT 1,
+            unit_cost DECIMAL(10,2),
+            total_cost DECIMAL(10,2),
+            vendor VARCHAR(255),
+            status ENUM('Requested','Ordered','Received','Cancelled') DEFAULT 'Requested',
+            request_date DATE DEFAULT (CURRENT_DATE),
+            acquisition_date DATE,
+            expected_date DATE,
+            requested_by INT,
+            notes TEXT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    ];
+    foreach ($libTables as $sql) {
+        try { @$conn->query($sql); } catch (Exception $e) { error_log('library table create: ' . $e->getMessage()); }
+    }
+}
+
 // Get library statistics from database
 $students_db = $ctx['students'];
 $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
@@ -118,7 +200,7 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-} catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
+    } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 ?>
 <?php
@@ -512,236 +594,232 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Update current date/time
+        const CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "" ?>';
+        const LIB_DB = '<?= $students_db_name ?>';
+
+        function showNotice(msg, type) {
+            var d = document.createElement('div');
+            d.className = 'alert alert-' + (type || 'success') + ' position-fixed top-0 start-50 translate-middle-x mt-3';
+            d.style.zIndex = 99999;
+            d.textContent = msg;
+            document.body.appendChild(d);
+            setTimeout(function() { d.remove(); }, 3500);
+        }
+
         function updateDateTime() {
             const now = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+            var el = document.getElementById('currentDate');
+            if (el) el.textContent = now.toLocaleDateString('en-US', options);
         }
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation
-        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(function(l) { l.classList.remove('active'); });
                 this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
-                }
+                var targetId = this.getAttribute('href').substring(1);
+                document.querySelectorAll('.content-section').forEach(function(s) { s.style.display = 'none'; });
+                var target = document.getElementById(targetId);
+                if (target) target.style.display = 'block';
             });
         });
 
-        // Modal functions
+        function apiPost(module, action, data, callback) {
+            fetch('../module_handler.php?action=' + action + '&module=' + module, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                body: JSON.stringify(data)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) { callback(res); })
+            .catch(function(err) { showNotice('Network error: ' + err.message, 'danger'); });
+        }
+
         function openModal(action) {
-            const modal = new bootstrap.Modal(document.getElementById('actionModal'));
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
+            var modal = new bootstrap.Modal(document.getElementById('actionModal'));
+            var title = document.getElementById('modalTitle');
+            var body = document.getElementById('modalBody');
+            var saveBtn = document.getElementById('modalAction');
+            saveBtn.onclick = null;
+
             switch(action) {
                 case 'addBook':
-                    modalTitle.textContent = 'Add New Book';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Book Title</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Author</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">ISBN</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Category</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Category</option>
-                                            <option value="nursing">Nursing</option>
-                                            <option value="midwifery">Midwifery</option>
-                                            <option value="medical">Medical Sciences</option>
-                                            <option value="general">General Education</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Subcategory</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Publication Year</label>
-                                        <input type="number" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Edition</label>
-                                        <input type="text" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Pages</label>
-                                        <input type="number" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Publisher</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Language</label>
-                                        <input type="text" class="form-control" value="English" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Location</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Location</option>
-                                            <option value="shelf-1">Shelf 1</option>
-                                            <option value="shelf-2">Shelf 2</option>
-                                            <option value="shelf-3">Shelf 3</option>
-                                            <option value="shelf-4">Shelf 4</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Call Number</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" rows="3"></textarea>
-                            </div>
-                        </form>
-                    `;
+                    title.textContent = 'Add New Book';
+                    body.innerHTML = '<form id="frmAddBook">' +
+                        '<div class="mb-3"><label class="form-label">Book Title *</label><input type="text" class="form-control" name="title" required></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Author *</label><input type="text" class="form-control" name="author" required></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">ISBN</label><input type="text" class="form-control" name="isbn"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Category *</label><select class="form-select" name="category" required><option value="">Select</option><option value="Nursing">Nursing</option><option value="Midwifery">Midwifery</option><option value="Medical Sciences">Medical Sciences</option><option value="General Education">General Education</option></select></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Subcategory</label><input type="text" class="form-control" name="subcategory"></div></div>' +
+                        '<div class="row"><div class="col-md-4 mb-3"><label class="form-label">Year</label><input type="number" class="form-control" name="publication_year"></div>' +
+                        '<div class="col-md-4 mb-3"><label class="form-label">Pages</label><input type="number" class="form-control" name="pages"></div>' +
+                        '<div class="col-md-4 mb-3"><label class="form-label">Edition</label><input type="text" class="form-control" name="edition"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Publisher</label><input type="text" class="form-control" name="publisher"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Language</label><input type="text" class="form-control" name="language" value="English"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Location/Shelf</label><input type="text" class="form-control" name="location"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Call Number</label><input type="text" class="form-control" name="call_number"></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmAddBook');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        data.status = 'Available';
+                        apiPost('library_books', 'create', data, function(res) {
+                            if (res.success) { showNotice('Book added successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to add book', 'danger');
+                        });
+                    };
                     break;
+
                 case 'checkoutBook':
-                    modalTitle.textContent = 'Checkout Book';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Member ID</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Book Title or ISBN</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Due Date</label>
-                                <input type="date" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Special Notes</label>
-                                <textarea class="form-control" rows="2"></textarea>
-                            </div>
-                        </form>
-                    `;
+                    title.textContent = 'Checkout Book';
+                    body.innerHTML = '<form id="frmCheckout">' +
+                        '<div class="mb-3"><label class="form-label">Member ID *</label><input type="text" class="form-control" name="member_id" required placeholder="e.g. LIB-2026-001"></div>' +
+                        '<div class="mb-3"><label class="form-label">Book ID *</label><input type="number" class="form-control" name="book_id" required placeholder="Enter book ID"></div>' +
+                        '<div class="mb-3"><label class="form-label">Book Title *</label><input type="text" class="form-control" name="book_title" required></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Borrow Date *</label><input type="date" class="form-control" name="borrow_date" value="<?= date("Y-m-d") ?>" required></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Due Date *</label><input type="date" class="form-control" name="due_date" value="<?= date("Y-m-d", strtotime("+14 days")) ?>" required></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="2"></textarea></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmCheckout');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        data.return_status = 'Borrowed';
+                        apiPost('library_borrowing', 'create', data, function(res) {
+                            if (res.success) {
+                                apiPost('library_books', 'update', { id: data.book_id, status: 'Borrowed' }, function() {});
+                                showNotice('Book checked out successfully');
+                                setTimeout(function() { location.reload(); }, 800);
+                            } else showNotice(res.error || 'Failed to checkout', 'danger');
+                        });
+                    };
                     break;
+
+                case 'returnBook':
+                    title.textContent = 'Return Book';
+                    body.innerHTML = '<form id="frmReturn">' +
+                        '<div class="mb-3"><label class="form-label">Borrowing Record ID *</label><input type="number" class="form-control" name="borrow_id" required placeholder="Enter borrowing record ID"></div>' +
+                        '<div class="mb-3"><label class="form-label">Book ID *</label><input type="number" class="form-control" name="book_id" required placeholder="Enter book ID"></div>' +
+                        '<div class="mb-3"><label class="form-label">Return Date *</label><input type="date" class="form-control" name="return_date" value="<?= date("Y-m-d") ?>" required></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmReturn');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        data.return_status = 'Returned';
+                        apiPost('library_borrowing', 'update', { id: data.borrow_id, return_status: 'Returned', return_date: data.return_date }, function(res) {
+                            if (res.success) {
+                                apiPost('library_books', 'update', { id: data.book_id, status: 'Available' }, function() {});
+                                showNotice('Book returned successfully');
+                                setTimeout(function() { location.reload(); }, 800);
+                            } else showNotice(res.error || 'Failed to return', 'danger');
+                        });
+                    };
+                    break;
+
+                case 'renewBook':
+                    title.textContent = 'Renew Book';
+                    body.innerHTML = '<form id="frmRenew">' +
+                        '<div class="mb-3"><label class="form-label">Borrowing Record ID *</label><input type="number" class="form-control" name="borrow_id" required></div>' +
+                        '<div class="mb-3"><label class="form-label">New Due Date *</label><input type="date" class="form-control" name="new_due_date" value="<?= date("Y-m-d", strtotime("+14 days")) ?>" required></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmRenew');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        apiPost('library_borrowing', 'update', { id: data.borrow_id, due_date: data.new_due_date }, function(res) {
+                            if (res.success) { showNotice('Book renewed successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to renew', 'danger');
+                        });
+                    };
+                    break;
+
                 case 'registerMember':
-                    modalTitle.textContent = 'Register New Library Member';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">First Name</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Surname</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone</label>
-                                        <input type="tel" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Member Type</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Type</option>
-                                            <option value="student">Student</option>
-                                            <option value="staff">Staff</option>
-                                            <option value="faculty">Faculty</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Program/Department</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Address</label>
-                                <textarea class="form-control" rows="2" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Membership Type</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Membership</option>
-                                    <option value="regular">Regular (1 year)</option>
-                                    <option value="student">Student (6 months)</option>
-                                </select>
-                            </div>
-                        </form>
-                    `;
+                    title.textContent = 'Register New Library Member';
+                    body.innerHTML = '<form id="frmRegisterMember">' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">First Name *</label><input type="text" class="form-control" name="first_name" required></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Surname *</label><input type="text" class="form-control" name="surname" required></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Email *</label><input type="email" class="form-control" name="email" required></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Member Type *</label><select class="form-select" name="member_type" required><option value="">Select</option><option value="Student">Student</option><option value="Staff">Staff</option><option value="Faculty">Faculty</option></select></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">Membership *</label><select class="form-select" name="membership_type" required><option value="Regular">Regular (1 year)</option><option value="Student">Student (6 months)</option></select></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2"></textarea></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmRegisterMember');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        var name = (data.first_name || '') + ' ' + (data.surname || '');
+                        data.full_name = name.trim();
+                        var count = Math.floor(Math.random() * 900) + 100;
+                        data.member_id = 'LIB-' + new Date().getFullYear() + '-' + String(count).padStart(3, '0');
+                        apiPost('library_members', 'create', data, function(res) {
+                            if (res.success) { showNotice('Member registered successfully'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to register', 'danger');
+                        });
+                    };
                     break;
-                // Add more cases as needed
+
+                case 'bookSearch':
+                    title.textContent = 'Search Books';
+                    body.innerHTML = '<form id="frmBookSearch"><div class="mb-3"><input type="text" class="form-control" id="bookSearchQuery" placeholder="Search by title, author, or ISBN..." onkeyup="doBookSearch(this.value)"></div><div id="bookSearchResults"></div></form>';
+                    break;
+
+                case 'newAcquisition':
+                    title.textContent = 'New Book Acquisition';
+                    body.innerHTML = '<form id="frmAcquisition">' +
+                        '<div class="mb-3"><label class="form-label">Book Title *</label><input type="text" class="form-control" name="title" required></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Author</label><input type="text" class="form-control" name="author"></div>' +
+                        '<div class="col-md-6 mb-3"><label class="form-label">ISBN</label><input type="text" class="form-control" name="isbn"></div></div>' +
+                        '<div class="row"><div class="col-md-4 mb-3"><label class="form-label">Quantity</label><input type="number" class="form-control" name="quantity" value="1"></div>' +
+                        '<div class="col-md-4 mb-3"><label class="form-label">Unit Cost (UGX)</label><input type="number" class="form-control" name="unit_cost" step="0.01"></div>' +
+                        '<div class="col-md-4 mb-3"><label class="form-label">Vendor</label><input type="text" class="form-control" name="vendor"></div></div>' +
+                        '<div class="row"><div class="col-md-6 mb-3"><label class="form-label">Expected Date</label><input type="date" class="form-control" name="expected_date"></div></div>' +
+                        '<div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="2"></textarea></div>' +
+                        '</form>';
+                    saveBtn.onclick = function() {
+                        var frm = document.getElementById('frmAcquisition');
+                        var fd = new FormData(frm);
+                        var data = {};
+                        fd.forEach(function(v, k) { if (v) data[k] = v; });
+                        data.status = 'Requested';
+                        data.request_date = new Date().toISOString().split('T')[0];
+                        if (data.unit_cost && data.quantity) data.total_cost = (parseFloat(data.unit_cost) * parseInt(data.quantity)).toFixed(2);
+                        apiPost('library_acquisitions', 'create', data, function(res) {
+                            if (res.success) { showNotice('Acquisition request submitted'); setTimeout(function() { location.reload(); }, 800); }
+                            else showNotice(res.error || 'Failed to submit', 'danger');
+                        });
+                    };
+                    break;
             }
-            
             modal.show();
+        }
+
+        function doBookSearch(q) {
+            var el = document.getElementById('bookSearchResults');
+            if (!el) return;
+            if (q.length < 2) { el.innerHTML = ''; return; }
+            fetch('../module_handler.php?action=search&module=library_books&q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (!res.results || res.results.length === 0) { el.innerHTML = '<p class="text-muted">No books found</p>'; return; }
+                    var html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Category</th><th>Status</th></tr></thead><tbody>';
+                    res.results.forEach(function(b) {
+                        html += '<tr><td>' + (b.id||'') + '</td><td>' + (b.title||'') + '</td><td>' + (b.author||'') + '</td><td>' + (b.category||'') + '</td><td><span class="badge bg-' + (b.status==='Available'?'success':'warning') + '">' + (b.status||'') + '</span></td></tr>';
+                    });
+                    html += '</tbody></table></div>';
+                    el.innerHTML = html;
+                });
         }
     </script>
 
