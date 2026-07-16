@@ -83,6 +83,315 @@ if (!function_exists('getStudentBalance')) {
     }
 }
 
+if (!function_exists('resolveStudentId')) {
+    function resolveStudentId($conn, $student_id_or_number) {
+        if (is_numeric($student_id_or_number) && (int)$student_id_or_number > 0) {
+            $check = $conn->prepare("SELECT id FROM students WHERE id = ?");
+            $check->bind_param("i", $student_id_or_number);
+            $check->execute();
+            if ($check->get_result()->num_rows > 0) {
+                return (int)$student_id_or_number;
+            }
+            $check->close();
+        }
+
+        $num = trim((string)$student_id_or_number);
+        if ($num !== '') {
+            $check = $conn->prepare("SELECT id FROM students WHERE student_number = ? OR index_number = ? OR registration_number = ? LIMIT 1");
+            $check->bind_param("sss", $num, $num, $num);
+            $check->execute();
+            $row = $check->get_result()->fetch_assoc();
+            $check->close();
+            if ($row) {
+                return (int)$row['id'];
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('calculateStudentBalance')) {
+    function calculateStudentBalance($student_id_or_number) {
+        $conn = getStudentsConnection();
+        $student_id = resolveStudentId($conn, $student_id_or_number);
+
+        if ($student_id === null) {
+            return [
+                'total_fees'         => 0,
+                'amount_paid'        => 0,
+                'balance'            => 0,
+                'status'             => 'Unpaid',
+                'last_payment_date'  => null,
+            ];
+        }
+
+        // Source 1: student_fee_tracking
+        $stmt = $conn->prepare("
+            SELECT 
+                COALESCE(SUM(amount), 0) as total_fees,
+                COALESCE(SUM(amount_paid), 0) as amount_paid,
+                COALESCE(SUM(balance), 0) as balance
+            FROM student_fee_tracking
+            WHERE student_id = ?
+        ");
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) {
+            error_log('calculateStudentBalance (fee_tracking) execute failed: ' . ($stmt->error ?? 'unknown'));
+        }
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($row && ((float)$row['total_fees'] > 0 || (int)$student_id > 0)) {
+            $total_fees = (float)$row['total_fees'];
+            $amount_paid = (float)$row['amount_paid'];
+            $balance = (float)$row['balance'];
+
+            if ($total_fees > 0) {
+                $balance = $total_fees - $amount_paid;
+                $status = 'Unpaid';
+                if ($balance <= 0) {
+                    $status = 'Paid';
+                } elseif ($amount_paid > 0) {
+                    $status = 'Partial';
+                }
+
+                $last_payment_date = null;
+                $lp_stmt = $conn->prepare("
+                    SELECT MAX(payment_date) as last_date
+                    FROM payments
+                    WHERE student_id = ? AND status = 'Completed'
+                ");
+                $lp_stmt->bind_param("i", $student_id);
+                if ($lp_stmt->execute()) {
+                    $lp_row = $lp_stmt->get_result()->fetch_assoc();
+                    $last_payment_date = $lp_row['last_date'] ?? null;
+                }
+                $lp_stmt->close();
+
+                if ($status !== 'Paid' && $last_payment_date !== null) {
+                    if (strtotime($last_payment_date) < strtotime('-30 days')) {
+                        $status = 'Overdue';
+                    }
+                }
+
+                return [
+                    'total_fees'        => $total_fees,
+                    'amount_paid'       => $amount_paid,
+                    'balance'           => max(0, $balance),
+                    'status'            => $status,
+                    'last_payment_date' => $last_payment_date,
+                ];
+            }
+        }
+
+        // Source 2: student_fees
+        $stmt = $conn->prepare("
+            SELECT 
+                COALESCE(SUM(amount), 0) as total_fees,
+                COALESCE(SUM(CASE WHEN status = 'Paid' THEN amount WHEN status = 'Partially Paid' THEN amount * 0.5 ELSE 0 END), 0) as amount_paid
+            FROM student_fees
+            WHERE student_id = ?
+        ");
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) {
+            error_log('calculateStudentBalance (student_fees) execute failed: ' . ($stmt->error ?? 'unknown'));
+        }
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($row && (float)$row['total_fees'] > 0) {
+            $total_fees = (float)$row['total_fees'];
+            $amount_paid = (float)$row['amount_paid'];
+            $balance = $total_fees - $amount_paid;
+            $status = 'Unpaid';
+            if ($balance <= 0) {
+                $status = 'Paid';
+            } elseif ($amount_paid > 0) {
+                $status = 'Partial';
+            }
+
+            $last_payment_date = null;
+            $lp_stmt = $conn->prepare("
+                SELECT MAX(paid_date) as last_date
+                FROM student_fees
+                WHERE student_id = ? AND paid_date IS NOT NULL
+            ");
+            $lp_stmt->bind_param("i", $student_id);
+            if ($lp_stmt->execute()) {
+                $lp_row = $lp_stmt->get_result()->fetch_assoc();
+                $last_payment_date = $lp_row['last_date'] ?? null;
+            }
+            $lp_stmt->close();
+
+            return [
+                'total_fees'        => $total_fees,
+                'amount_paid'       => $amount_paid,
+                'balance'           => max(0, $balance),
+                'status'            => $status,
+                'last_payment_date' => $last_payment_date,
+            ];
+        }
+
+        // Source 3: student_invoices + payments
+        $stmt = $conn->prepare("
+            SELECT 
+                COALESCE(SUM(si.total_amount), 0) as total_fees,
+                COALESCE(SUM(si.amount_paid), 0) as amount_paid
+            FROM student_invoices si
+            WHERE si.student_id = ? AND si.status != 'Cancelled'
+        ");
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) {
+            error_log('calculateStudentBalance (invoices) execute failed: ' . ($stmt->error ?? 'unknown'));
+        }
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $total_fees = (float)($row['total_fees'] ?? 0);
+        $amount_paid = (float)($row['amount_paid'] ?? 0);
+        $balance = $total_fees - $amount_paid;
+        $status = 'Unpaid';
+        if ($total_fees > 0 && $balance <= 0) {
+            $status = 'Paid';
+        } elseif ($amount_paid > 0) {
+            $status = 'Partial';
+        }
+
+        $last_payment_date = null;
+        $lp_stmt = $conn->prepare("
+            SELECT MAX(payment_date) as last_date
+            FROM payments
+            WHERE student_id = ? AND status = 'Completed'
+        ");
+        $lp_stmt->bind_param("i", $student_id);
+        if ($lp_stmt->execute()) {
+            $lp_row = $lp_stmt->get_result()->fetch_assoc();
+            $last_payment_date = $lp_row['last_date'] ?? null;
+        }
+        $lp_stmt->close();
+
+        if ($status !== 'Paid' && $last_payment_date !== null) {
+            if (strtotime($last_payment_date) < strtotime('-30 days')) {
+                $status = 'Overdue';
+            }
+        }
+
+        return [
+            'total_fees'        => $total_fees,
+            'amount_paid'       => $amount_paid,
+            'balance'           => max(0, $balance),
+            'status'            => $status,
+            'last_payment_date' => $last_payment_date,
+        ];
+    }
+}
+
+if (!function_exists('updateStudentBalanceAfterPayment')) {
+    function updateStudentBalanceAfterPayment($student_id, $payment_amount) {
+        $conn = getStudentsConnection();
+        $payment_amount = (float)$payment_amount;
+        if ($payment_amount <= 0) return false;
+
+        $updated = false;
+
+        $stmt = $conn->prepare("
+            SELECT id, balance FROM student_fee_tracking
+            WHERE student_id = ? AND balance > 0
+            ORDER BY due_date ASC
+        ");
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) {
+            error_log('updateStudentBalanceAfterPayment (fee_tracking select) failed: ' . ($stmt->error ?? 'unknown'));
+            return false;
+        }
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        $remaining = $payment_amount;
+        foreach ($rows as $row) {
+            if ($remaining <= 0) break;
+            $id = (int)$row['id'];
+            $cur_balance = (float)$row['balance'];
+            $deduct = min($remaining, $cur_balance);
+            $new_balance = $cur_balance - $deduct;
+            $new_status = $new_balance <= 0 ? 'Paid' : 'Partial';
+
+            $upd = $conn->prepare("
+                UPDATE student_fee_tracking
+                SET amount_paid = amount_paid + ?,
+                    balance = ?,
+                    status = ?
+                WHERE id = ?
+            ");
+            $upd->bind_param("ddsi", $deduct, $new_balance, $new_status, $id);
+            if ($upd->execute() && $upd->affected_rows >= 0) {
+                $updated = true;
+            } else {
+                error_log('updateStudentBalanceAfterPayment (fee_tracking update) failed: ' . ($upd->error ?? 'unknown'));
+            }
+            $upd->close();
+            $remaining -= $deduct;
+        }
+        $remaining = $payment_amount - ($payment_amount - $remaining);
+
+        if (!$updated) {
+            $upd = $conn->prepare("
+                UPDATE student_fees
+                SET paid_date = CURDATE(),
+                    status = CASE
+                        WHEN ? >= amount THEN 'Paid'
+                        WHEN ? > 0 THEN 'Partially Paid'
+                        ELSE status
+                    END
+                WHERE student_id = ? AND status IN ('Unpaid', 'Partially Paid', 'Overdue')
+                LIMIT 1
+            ");
+            $upd->bind_param("ddi", $payment_amount, $payment_amount, $student_id);
+            if ($upd->execute() && $upd->affected_rows > 0) {
+                $updated = true;
+            }
+            $upd->close();
+        }
+
+        $inv_stmt = $conn->prepare("
+            SELECT si.id, si.balance
+            FROM student_invoices si
+            WHERE si.student_id = ? AND si.status IN ('Pending', 'Partially Paid', 'Overdue')
+            ORDER BY si.due_date ASC
+        ");
+        $inv_stmt->bind_param("i", $student_id);
+        if ($inv_stmt->execute()) {
+            $inv_rows = $inv_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $inv_remaining = $payment_amount;
+            foreach ($inv_rows as $inv) {
+                if ($inv_remaining <= 0) break;
+                $inv_id = (int)$inv['id'];
+                $inv_balance = (float)$inv['balance'];
+                $inv_deduct = min($inv_remaining, $inv_balance);
+                $inv_new_balance = $inv_balance - $inv_deduct;
+                $inv_new_status = $inv_new_balance <= 0 ? 'Paid' : 'Partially Paid';
+
+                $upd = $conn->prepare("
+                    UPDATE student_invoices
+                    SET amount_paid = amount_paid + ?,
+                        status = ?
+                    WHERE id = ?
+                ");
+                $upd->bind_param("dsi", $inv_deduct, $inv_new_status, $inv_id);
+                if ($upd->execute()) {
+                    $updated = true;
+                }
+                $upd->close();
+                $inv_remaining -= $inv_deduct;
+            }
+        }
+        $inv_stmt->close();
+
+        return $updated;
+    }
+}
+
 if (!function_exists('calculatePenalty')) {
     function calculatePenalty($amount, $days_late = 0, $penalty_config_id = null) {
         $conn = getStudentsConnection();
