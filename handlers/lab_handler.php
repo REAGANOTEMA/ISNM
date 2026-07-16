@@ -18,7 +18,7 @@ $userId = (int)($user['id'] ?? 0);
 header('Content-Type: application/json');
 
 // CSRF protection
-if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
     exit;

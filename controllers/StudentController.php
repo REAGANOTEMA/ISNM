@@ -26,7 +26,7 @@ class StudentController {
             redirect('students.php?action=create');
         }
 
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
             flashMessage('error', 'Invalid security token. Please try again.');
             redirect('students.php?action=create');
         }
@@ -162,7 +162,7 @@ class StudentController {
             redirect('students.php');
         }
 
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
             flashMessage('error', 'Invalid security token. Please try again.');
             redirect('students.php');
         }

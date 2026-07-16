@@ -70,7 +70,22 @@ $registry = getModuleRegistry();
 $ALLOWED_TABLES = [
     'library_books', 'library_members', 'library_borrowing', 'library_acquisitions',
     'student_documents', 'staff_communications', 'announcements',
-    'volunteer_applications', 'volunteer_hours'
+    'volunteer_applications', 'volunteer_hours',
+    'news', 'news_categories', 'notifications', 'notification_reads',
+    'student_fee_tracking', 'student_fee_assignments', 'student_invoices',
+    'payments', 'fee_structures', 'expenses', 'bank_reconciliation',
+    'student_welfare_cases', 'student_welfare_notes',
+    'security_incidents', 'security_incident_notes', 'access_control_logs',
+    'staff_inbox', 'staff_activity_log', 'password_changes',
+    'ict_assets', 'ict_asset_categories', 'ict_server_status',
+    'ict_backup_logs', 'ict_tickets', 'ict_audit_logs',
+    'lab_equipment', 'lab_bookings', 'lab_attendance',
+    'payroll_employees', 'payroll_runs', 'payroll_details',
+    'salary_structures', 'payroll_settings', 'payroll_approvals',
+    'contact_submissions', 'volunteer_applications', 'donations',
+    'student_profiles', 'student_notifications',
+    'cybersecurity_incidents', 'system_activity_logs',
+    'system_modules', 'system_settings'
 ];
 
 function getDirectDbConn() {

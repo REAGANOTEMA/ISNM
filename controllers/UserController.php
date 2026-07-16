@@ -26,7 +26,7 @@ class UserController {
             redirect('users.php?action=create');
         }
 
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
             flashMessage('error', 'Invalid security token. Please try again.');
             redirect('users.php?action=create');
         }
@@ -88,7 +88,7 @@ class UserController {
             redirect('users.php');
         }
 
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
             flashMessage('error', 'Invalid security token. Please try again.');
             redirect('users.php');
         }
@@ -154,7 +154,7 @@ class UserController {
             redirect('users.php');
         }
 
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
             flashMessage('error', 'Invalid security token. Please try again.');
             redirect('users.php');
         }

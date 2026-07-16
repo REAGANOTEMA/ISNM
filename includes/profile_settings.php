@@ -7,6 +7,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => ''];
     try {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+            throw new Exception('Invalid security token');
+        }
         require_once __DIR__ . '/../config/database.php';
         $staffDb = null;
         if (function_exists('getDatabaseConnection')) {
@@ -203,6 +207,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => ''];
     try {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+            throw new Exception('Invalid security token');
+        }
         require_once __DIR__ . '/../config/database.php';
         $staffDb = null;
         if (function_exists('getDatabaseConnection')) {
@@ -440,6 +448,7 @@ function renderProfileScripts() { ?>
         var formData = new FormData();
         formData.append('action', 'upload_profile_image');
         formData.append('staff_id', staffId);
+        formData.append('csrf_token', '<?= $_SESSION['csrf_token'] ?? '' ?>');
         formData.append('profile_image', file);
 
         saveBtn.disabled = true;
@@ -506,6 +515,7 @@ function renderProfileScripts() { ?>
         var data = new URLSearchParams();
         data.append('action', 'save_profile_fields');
         data.append('staff_id', staffId);
+        data.append('csrf_token', '<?= $_SESSION['csrf_token'] ?? '' ?>');
         data.append('first_name', (document.getElementById('pf_first_name') || {}).value || '');
         data.append('surname', (document.getElementById('pf_surname') || {}).value || '');
         data.append('other_names', (document.getElementById('pf_other_names') || {}).value || '');
