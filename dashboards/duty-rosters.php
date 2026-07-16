@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $notes = trim($_POST['notes'] ?? '');
             if (!$name) { echo json_encode(['success' => false, 'message' => 'Staff name required']); exit; }
             $stmt = $conn->prepare("INSERT INTO duty_rosters (staff_name, shift, roster_date, location, notes, created_by, created_at) VALUES (?,?,?,?,?,?,NOW())");
-            $stmt->bind_param('sssssi', $name, $shift, $date, $loc, $notes, $userId);
+            $uid = (int)($user['id'] ?? 0);
+            $stmt->bind_param('sssssi', $name, $shift, $date, $loc, $notes, $uid);
             $ok = $stmt->execute(); $stmt->close();
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Roster added' : 'Failed']); exit;
 
