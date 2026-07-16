@@ -439,11 +439,11 @@
   }
 
   /* ════════════════════════════════════════════════════════════
-     MOBILE (< 576px) — Compact 2-col quick links, clean layout
+     MOBILE (< 576px) — Clean card-based layout
      ════════════════════════════════════════════════════════════ */
   @media (max-width: 576px) {
     .isnm-footer .container {
-      padding: 16px 12px 10px;
+      padding: 0 10px 4px;
     }
     .isnm-footer .row.g-4 {
       display: flex;
@@ -453,112 +453,158 @@
     .isnm-footer .row > div {
       padding-left: 0;
       padding-right: 0;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .isnm-footer .row > div:last-child {
       margin-bottom: 0;
       padding-bottom: 0;
       border-bottom: none;
     }
+    .isnm-footer .row > div:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    /* ── Logo Section ── */
     .footer-logo {
       text-align: center;
+      padding: 14px 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 8px;
     }
     .footer-logo-img {
-      width: 42px;
-      height: 42px;
-      margin-bottom: 4px;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 6px;
     }
     .footer-logo h4 {
-      font-size: 0.72rem;
-      margin-bottom: 4px;
-      line-height: 1.25;
-      letter-spacing: 0.3px;
+      font-size: 0.74rem;
+      margin-bottom: 6px;
+      line-height: 1.3;
+      letter-spacing: 0.4px;
     }
     .footer-logo p {
-      font-size: 0.66rem;
-      line-height: 1.25;
-      margin-bottom: 1px;
+      font-size: 0.7rem;
+      line-height: 1.5;
+      margin-bottom: 2px;
+      opacity: 0.9;
     }
     .footer-logo p i {
       display: none;
     }
     .social-links {
       justify-content: center;
-      gap: 6px;
-      margin-top: 6px !important;
+      gap: 8px;
+      margin-top: 8px !important;
     }
     .social-btn {
-      width: 28px;
-      height: 28px;
-      font-size: 0.75rem;
-      min-width: 28px;
-      min-height: 28px;
+      width: 30px;
+      height: 30px;
+      font-size: 0.8rem;
+      min-width: 30px;
+      min-height: 30px;
+    }
+
+    /* ── Quick Links Section ── */
+    .footer-links {
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 8px;
     }
     .isnm-footer h5 {
-      font-size: 0.72rem;
+      font-size: 0.76rem;
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     .isnm-footer h5 i {
       display: none;
     }
     .footer-links ul {
-      columns: 2;
-      column-gap: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      columns: unset;
+      column-gap: unset;
       text-align: left;
     }
     .footer-links ul li {
-      break-inside: avoid;
+      break-inside: unset;
       margin-bottom: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .footer-links ul li:last-child,
+    .footer-links ul li:nth-last-child(2):nth-child(odd) {
+      border-bottom: none;
     }
     .footer-links ul li a {
-      font-size: 0.68rem;
-      padding: 2px 0;
-      display: inline-flex;
+      font-size: 0.74rem;
+      padding: 6px 4px;
+      display: flex;
       align-items: center;
-      gap: 3px;
-      line-height: 1.3;
+      gap: 6px;
+      line-height: 1.35;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .footer-links ul li a:active {
+      background: rgba(255,255,255,0.08);
     }
     .footer-links ul li a i {
-      display: none;
+      display: inline-flex;
+      font-size: 0.55rem;
+      width: 14px;
+      min-width: 14px;
+      text-align: center;
+      margin-right: 0 !important;
+      color: var(--isnm-yellow);
+      flex-shrink: 0;
     }
+
+    /* ── Developer Section ── */
     .footer-developer {
       text-align: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
     }
     .footer-developer h5 {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       text-align: center;
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 6px;
     }
     .footer-developer h5 i {
       display: none;
     }
     .footer-developer h6 {
-      font-size: 0.7rem;
+      font-size: 0.74rem;
       text-align: center;
+      margin-bottom: 6px;
     }
     .footer-developer h6 i {
       display: none;
     }
     .developer-info .contact-info p {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       text-align: center;
-      line-height: 1.25;
-      margin-bottom: 1px;
+      line-height: 1.4;
+      margin-bottom: 3px;
     }
     .developer-info .contact-info p i {
       display: none;
     }
     .developer-info .contact-info a {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
+      word-break: break-all;
     }
     .developer-note {
-      margin-top: 4px;
-      padding: 3px 6px;
+      margin-top: 6px;
+      padding: 6px 8px;
     }
     .developer-note p {
-      font-size: 0.63rem;
+      font-size: 0.68rem;
       text-align: center;
     }
     .developer-note p i {
@@ -566,84 +612,97 @@
     }
     .footer-developer .btn-3d.btn-sm {
       width: 100%;
-      padding: 7px 10px;
-      font-size: 0.7rem;
-      min-height: 30px;
+      padding: 8px 12px;
+      font-size: 0.72rem;
+      min-height: 34px;
     }
     .footer-developer .btn-3d.btn-sm i {
-      display: none;
+      display: inline;
     }
     .isnm-footer p,
     .isnm-footer a {
-      font-size: 0.66rem;
+      font-size: 0.72rem;
     }
     .footer-bottom {
-      padding: 6px 0;
+      padding: 8px 0;
     }
     .footer-bottom p {
-      font-size: 0.62rem;
-      margin: 1px 0;
+      font-size: 0.66rem;
+      margin: 2px 0;
     }
     .footer-bottom .motto {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       display: block;
-      padding: 2px 0 0;
+      padding: 3px 0 0;
     }
-    .footer-bottom .motto i {
-      display: none;
+    .footer-stripes-top {
+      height: 4px;
+    }
+    .footer-stripes-bottom {
+      height: 3px;
     }
   }
 
   /* ════════════════════════════════════════════════════════════
-     EXTRA SMALL (< 360px) — Minimal compact
+     EXTRA SMALL (< 360px) — Tighter spacing
      ════════════════════════════════════════════════════════════ */
   @media (max-width: 360px) {
     .isnm-footer .container {
-      padding: 12px 8px 6px;
+      padding: 0 6px 2px;
     }
-    .isnm-footer .row > div {
-      margin-bottom: 8px;
-      padding-bottom: 6px;
+    .footer-logo {
+      padding: 10px 8px;
+      margin-bottom: 6px;
     }
     .footer-logo-img {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
     }
     .footer-logo h4 {
-      font-size: 0.66rem;
+      font-size: 0.68rem;
     }
     .footer-logo p {
-      font-size: 0.6rem;
+      font-size: 0.64rem;
     }
     .social-btn {
-      width: 24px;
-      height: 24px;
-      font-size: 0.68rem;
-      min-width: 24px;
-      min-height: 24px;
+      width: 26px;
+      height: 26px;
+      font-size: 0.72rem;
+      min-width: 26px;
+      min-height: 26px;
     }
-    .footer-links ul {
-      columns: 2;
-      column-gap: 6px;
+    .footer-links {
+      padding: 10px 8px;
+      margin-bottom: 6px;
     }
     .footer-links ul li a {
-      font-size: 0.62rem;
+      font-size: 0.68rem;
+      padding: 5px 3px;
+      gap: 4px;
+    }
+    .footer-links ul li a i {
+      font-size: 0.5rem;
+      width: 12px;
+      min-width: 12px;
+    }
+    .footer-developer {
+      padding: 10px 8px;
     }
     .developer-info .contact-info p {
-      font-size: 0.6rem;
+      font-size: 0.64rem;
     }
     .developer-info .contact-info a {
-      font-size: 0.6rem;
+      font-size: 0.64rem;
     }
     .isnm-footer p,
     .isnm-footer a {
-      font-size: 0.62rem;
+      font-size: 0.64rem;
     }
     .footer-bottom p {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
     }
     .footer-bottom .motto {
-      font-size: 0.55rem;
+      font-size: 0.56rem;
     }
   }
 
