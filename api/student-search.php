@@ -41,6 +41,7 @@ if ($query === '') {
     ]);
 }
 
+$query = addcslashes($query, '%_');
 $searchTerm = '%' . $query . '%';
 $results = [
     'students' => [],

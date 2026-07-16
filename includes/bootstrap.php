@@ -13,6 +13,13 @@
 require_once __DIR__ . '/ErrorHandler.php';
 ErrorHandler::register();
 
+// Error reporting: verbose in development, suppressed in production
+if (getenv('APP_ENV') === 'development') {
+    error_reporting(E_ALL);
+} else {
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+}
+
 require_once __DIR__ . '/Response.php';
 require_once __DIR__ . '/Validator.php';
 require_once __DIR__ . '/enterprise_auth.php';

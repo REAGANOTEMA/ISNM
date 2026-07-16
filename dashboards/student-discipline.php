@@ -3,7 +3,19 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','principal','deputy','secretary','matron','warden','head']);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
+$user = $ctx['user'];
+$user_id = (int) ($user['id'] ?? 0);
 $pageTitle = 'Student Discipline';
+
+$profileImageUrl = '../images/username.png';
+$profileSettingsFile = __DIR__ . '/../includes/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    include_once $profileSettingsFile;
+    if (function_exists('getStaffProfileImageUrl')) {
+        $url = getStaffProfileImageUrl($user_id);
+        if ($url) $profileImageUrl = $url;
+    }
+}
 
 $students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 

@@ -144,7 +144,7 @@ class StudentFinance {
             $limit = 20;
             
             $query = "SELECT s.id, s.full_name, s.registration_number, s.course, s.year, s.set_name,
-                        sf.tuition_fee, sf.amount_paid, sf.balance, sf.payment_status, sf.academic_year
+                        sf.tuition_fee, sf.amount_paid, COALESCE(sf.tuition_fee,0) - COALESCE(sf.amount_paid,0) AS balance, sf.payment_status, sf.academic_year
                       FROM students s
                       LEFT JOIN student_finance sf ON s.id = sf.student_id
                       WHERE 1=1";

@@ -206,7 +206,6 @@ if ($conn && $canEditAcademic) {
 .empty-state p { color: #999; max-width: 400px; margin: 0 auto; }
 .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; }
 .stat-card:hover { transform: translateY(-2px); }
-.section-card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .page-header { margin-bottom: 24px; }
 .page-header h4 { color: #1a237e; font-weight: 700; }
 .badge-role { font-size: 11px; padding: 2px 10px; border-radius: 20px; }

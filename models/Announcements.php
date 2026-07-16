@@ -37,11 +37,6 @@ class Announcements {
             $announcements = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
             
-            // Update view count
-            foreach ($announcements as $announcement) {
-                $this->incrementViewCount($announcement['id']);
-            }
-            
             // Get total count for pagination
             $countQuery = "SELECT COUNT(*) as total FROM announcements a
                           WHERE a.status = 'published' 
@@ -227,7 +222,7 @@ class Announcements {
     /**
      * Increment view count
      */
-    private function incrementViewCount($id) {
+    public function incrementViewCount($id) {
         try {
             $query = "UPDATE announcements SET view_count = view_count + 1 WHERE id = ?";
             executePrepared($this->conn, $query, 'i', [$id]);

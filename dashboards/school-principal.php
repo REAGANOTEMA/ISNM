@@ -545,10 +545,6 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 
 
 
-
-
-
-
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
@@ -557,17 +553,7 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 .act-item{padding:10px 14px;border-left:3px solid #1a237e;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:8px;transition:all .15s}
 .act-item:hover{background:#eef2ff}
 .act-item .time{font-size:11px;color:#94a3b8}
-.kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;transition:all .25s;display:flex;align-items:center;gap:14px;height:100%}
-.kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-1px)}
-.kpi-card .kpi-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.kpi-card .kpi-value{font-size:20px;font-weight:800;color:#0f172a;line-height:1.2}
-.kpi-card .kpi-label{font-size:11px;color:#64748b;font-weight:500}
-.kpi-card.primary .kpi-icon{background:#e8eaf6;color:#1a237e}
-.kpi-card.success .kpi-icon{background:#dcfce7;color:#16a34a}
-.kpi-card.info .kpi-icon{background:#e0f2fe;color:#0891b2}
-.kpi-card.warning .kpi-icon{background:#fef3c7;color:#d97706}
-.kpi-card.purple .kpi-icon{background:#f3e8ff;color:#7c3aed}
-.kpi-card.danger .kpi-icon{background:#fee2e2;color:#dc2626}
+
 .btn-sec{background:#1a237e;border:2px solid #1a237e;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:all .2s}
 .btn-sec:hover{background:#3949ab;border-color:#3949ab;color:#fff}
 .btn-outline-sec{background:#fff;border:2px solid #1a237e;color:#1a237e;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:all .2s}
@@ -580,7 +566,7 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 .approval-card .ac-meta{font-size:11px;color:#94a3b8}
 .approval-card .ac-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .approval-card .ac-actions .btn{font-size:12px;padding:4px 10px}
-@media(max-width:768px){.kpi-card{padding:12px 14px}.kpi-card .kpi-value{font-size:17px}}
+
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

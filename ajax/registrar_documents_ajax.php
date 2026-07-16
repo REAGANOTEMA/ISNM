@@ -26,6 +26,7 @@ if ($action === 'lookup_student') {
     if (strlen($q) < 2) {
         echo json_encode([]); exit;
     }
+    $q = addcslashes($q, '%_');
     $like = "%$q%";
     $stmt = $students_conn->prepare("SELECT id, full_name, student_number, registration_number, program, gender, date_of_birth, phone, email, level, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? ORDER BY surname,first_name LIMIT 30");
     $stmt->bind_param("ssss", $like, $like, $like, $like);

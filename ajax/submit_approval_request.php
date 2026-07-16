@@ -59,7 +59,7 @@ $workflowName = $workflowNameMap[$category] ?? 'General Department Request';
 
 try {
     // Find the workflow
-    $stmt = $conn->prepare("SELECT id FROM igangaschool_staffs.approval_workflows WHERE workflow_name = ? AND is_active = 1 LIMIT 1");
+    $stmt = $conn->prepare("SELECT id FROM approval_workflows WHERE workflow_name = ? AND is_active = 1 LIMIT 1");
     if (!$stmt) {
         echo json_encode(['success' => false, 'error' => 'Database error']);
         exit;
@@ -92,8 +92,12 @@ try {
     if ($result) {
         // Get the created request number
         $lastId = $conn->insert_id;
-        $rn = $conn->query("SELECT request_number FROM igangaschool_staffs.approval_requests WHERE id = $lastId");
+        $rnStmt = $conn->prepare("SELECT request_number FROM approval_requests WHERE id = ?");
+        $rnStmt->bind_param('i', $lastId);
+        $rnStmt->execute();
+        $rn = $rnStmt->get_result();
         $requestNumber = ($rn && $row = $rn->fetch_assoc()) ? $row['request_number'] : '';
+        $rnStmt->close();
 
         // Send notification to DG about new request
         if (function_exists('createNotification')) {

@@ -170,6 +170,8 @@ window.onerror = function(msg, url) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Enterprise Dashboard Layout System (merged: modern-ui + enterprise-layout + erp-design-system) -->
 <link href="<?= $rootPath ?>/css/enterprise-layout.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Enterprise Dashboard Design System (unified DG-style design for ALL dashboards) -->
+<link href="<?= $rootPath ?>/css/enterprise-dashboard.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Mobile Fixes â€” comprehensive responsive improvements (MUST be last CSS) -->
 <link href="<?= $rootPath ?>/css/mobile-fixes.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->

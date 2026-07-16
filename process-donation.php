@@ -71,8 +71,14 @@ if ($amount < 100) {
 }
 
 if ($amount > 100000000) { // 100M UGX cap
-    $response = ['success' => false, 'message' => 'Donation amount exceeds maximum allowed.'];
-    echo json_encode($response);
+    $msg = 'Donation amount exceeds maximum allowed.';
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $msg]);
+        exit;
+    }
+    $_SESSION['error_message'] = $msg;
+    header('Location: donation.php');
     exit;
 }
 

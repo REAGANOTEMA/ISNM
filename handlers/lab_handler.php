@@ -189,7 +189,7 @@ try {
         case 'verify_id_card':
             $cardNum = $_POST['card_number'] ?? '';
             if (!$cardNum) throw new Exception('Card number required');
-            $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschool_students.students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
+            $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
             $stmt->bind_param('s', $cardNum);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $card = $stmt->get_result()->fetch_assoc();
@@ -258,11 +258,11 @@ try {
             break;
 
         case 'bulk_attendance':
-            $students = $_POST['students'] ?? '';
+            $studentIds = $_POST['students'] ?? '';
             $sessionId = (int)($_POST['session_id'] ?? 0);
             $roomId = (int)($_POST['lab_room_id'] ?? 0);
             $date = $_POST['attendance_date'] ?? date('Y-m-d');
-            $ids = array_map('intval', explode(',', $students));
+            $ids = array_map('intval', explode(',', $studentIds));
             $count = 0;
             $checkStmt = $ict->prepare("SELECT id FROM lab_attendance WHERE student_id=? AND session_id=? AND attendance_date=?");
             $insertStmt = $ict->prepare("INSERT INTO lab_attendance (student_id, lab_room_id, session_id, attendance_date, time_in, status, marked_by) VALUES (?, ?, ?, ?, NOW(), 'present', ?)");

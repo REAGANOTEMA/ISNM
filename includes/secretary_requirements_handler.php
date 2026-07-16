@@ -63,7 +63,10 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
             case 'delete_store_item':
                 $id = (int)($_POST['item_id'] ?? 0);
                 if (!$id) { $response['message'] = 'Invalid ID'; break; }
-                $conn->query("DELETE FROM `$staff_db`.`store_items` WHERE id=$id");
+                $stmt = $conn->prepare("DELETE FROM `$staff_db`.`store_items` WHERE id=?");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $stmt->close();
                 $response['success'] = true;
                 $response['message'] = 'Item deleted';
                 break;
@@ -73,12 +76,18 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $qty = (int)($_POST['quantity_in_stock'] ?? -1);
                 $min = (int)($_POST['minimum_level'] ?? -1);
                 if (!$id || $qty < 0) { $response['message'] = 'Invalid data'; break; }
-                $sets = ["quantity_in_stock=$qty"];
                 $status_val = 'Active';
                 if ($qty <= 0) $status_val = 'Out of Stock';
-                $sets[] = "status='$status_val'";
-                if ($min >= 0) { $sets[] = "minimum_level=$min"; if ($qty <= $min && $qty > 0) $status_val = 'Low Stock'; $sets[count($sets)-1] = "minimum_level=$min"; $sets[count($sets)-1] = "status='$status_val'"; }
-                $conn->query("UPDATE `$staff_db`.`store_items` SET " . implode(',', $sets) . " WHERE id=$id");
+                elseif ($min >= 0 && $qty <= $min) $status_val = 'Low Stock';
+                if ($min >= 0) {
+                    $stmt = $conn->prepare("UPDATE `$staff_db`.`store_items` SET quantity_in_stock=?, status=?, minimum_level=? WHERE id=?");
+                    $stmt->bind_param('issi', $qty, $status_val, $min, $id);
+                } else {
+                    $stmt = $conn->prepare("UPDATE `$staff_db`.`store_items` SET quantity_in_stock=?, status=? WHERE id=?");
+                    $stmt->bind_param('isi', $qty, $status_val, $id);
+                }
+                $stmt->execute();
+                $stmt->close();
                 $response['success'] = true;
                 $response['message'] = 'Stock updated';
                 break;
@@ -156,7 +165,10 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
             case 'delete_requisition':
                 $id = (int)($_POST['req_id'] ?? 0);
                 if (!$id) { $response['message'] = 'Invalid ID'; break; }
-                $conn->query("DELETE FROM `$staff_db`.`store_requisitions` WHERE id=$id");
+                $stmt = $conn->prepare("DELETE FROM `$staff_db`.`store_requisitions` WHERE id=?");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $stmt->close();
                 $response['success'] = true;
                 $response['message'] = 'Requisition deleted';
                 break;

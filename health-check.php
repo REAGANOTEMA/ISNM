@@ -3,6 +3,23 @@
  * ISNM System Health Check
  * Tests database connectivity, PHP configuration, and critical services.
  */
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// Access control: only system admin or director general may view
+$allowedRoles = ['Director General', 'System Admin'];
+$isAdmin = isset($_SESSION['user_id'])
+    && isset($_SESSION['role'])
+    && in_array($_SESSION['role'], $allowedRoles, true);
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo '<!DOCTYPE html><html><head><title>Access Denied</title></head><body style="font-family:sans-serif;text-align:center;padding:60px;">';
+    echo '<h1>Access Denied</h1><p>You must be logged in as System Admin or Director General to view this page.</p>';
+    echo '<a href="staff-login.php" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#1e40af;color:#fff;text-decoration:none;border-radius:8px;">Go to Login</a>';
+    echo '</body></html>';
+    exit;
+}
+
 $checks = [];
 $overall = 'healthy';
 

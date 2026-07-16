@@ -85,7 +85,15 @@ $ALLOWED_TABLES = [
     'contact_submissions', 'volunteer_applications', 'donations',
     'student_profiles', 'student_notifications',
     'cybersecurity_incidents', 'system_activity_logs',
-    'system_modules', 'system_settings'
+    'system_modules', 'system_settings',
+    'it_support_tickets', 'ict_servers', 'ict_system_backups',
+    'ict_security_logs', 'ict_system_alerts', 'ict_system_notifications',
+    'ict_asset_assignments', 'ict_asset_maintenance',
+    'network_devices', 'lab_rooms', 'lab_computers',
+    'lab_practical_sessions', 'lab_equipment_checkout',
+    'printing_jobs', 'printing_charges', 'computer_repairs',
+    'software_inventory', 'software_installations', 'lab_consumables',
+    'student_id_cards', 'id_card_print_history', 'id_card_replacements'
 ];
 
 function getDirectDbConn() {
