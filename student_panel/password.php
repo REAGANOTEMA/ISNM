@@ -146,19 +146,19 @@
              $password=$_POST['current'] ?? '';
              $newpassword=$_POST['new'] ?? '';
              $confirmnewpassword=$_POST['repeat'] ?? '';
-            $stmt = $conn->prepare("SELECT password_hash FROM igangaschool_staffs.users WHERE id=?");
+            $stmt = $conn->prepare("SELECT password FROM students WHERE id=?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
             $result = $stmt->get_result();
             if($result->num_rows > 0){
                 $row = $result->fetch_assoc();
 
-                $pass = $row['password_hash'];
+                $pass = $row['password'];
                 if(isset($_POST['submit'])){
                     if(password_verify($password, $pass)){
                     if($newpassword == $confirmnewpassword){
                           $newpasswordhash=password_hash($newpassword, PASSWORD_DEFAULT);
-                          $upd = $conn->prepare("UPDATE igangaschool_staffs.users SET password_hash=? WHERE id=?");
+                          $upd = $conn->prepare("UPDATE students SET password=? WHERE id=?");
                           $upd->bind_param("si", $newpasswordhash, $id);
                         if($upd->execute()){
                                 echo "<script>alert('Password Updated')</script>";

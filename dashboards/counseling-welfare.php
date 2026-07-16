@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $notes = trim($_POST['notes'] ?? '');
             $date = trim($_POST['session_date'] ?? date('Y-m-d'));
             if (!$sname) { echo json_encode(['success' => false, 'message' => 'Student name required']); exit; }
-            $stmt = $conn->prepare("INSERT INTO counseling_sessions (student_name, session_type, counselor_name, notes, session_date, status, created_at) VALUES (?,?,?,?,$date,'scheduled',NOW())");
-            if ($stmt) { $stmt->bind_param('ssss', $sname, $stype, $counselor, $notes); $ok = $stmt->execute(); $stmt->close(); echo json_encode(['success' => $ok, 'message' => $ok ? 'Session added' : 'Failed']); }
+            $stmt = $conn->prepare("INSERT INTO counseling_sessions (student_name, session_type, counselor_name, notes, session_date, status, created_at) VALUES (?,?,?,?,?,'scheduled',NOW())");
+            if ($stmt) { $stmt->bind_param('sssss', $sname, $stype, $counselor, $notes, $date); $ok = $stmt->execute(); $stmt->close(); echo json_encode(['success' => $ok, 'message' => $ok ? 'Session added' : 'Failed']); }
             else { $conn->query("CREATE TABLE IF NOT EXISTS counseling_sessions (id INT AUTO_INCREMENT PRIMARY KEY, student_name VARCHAR(200), session_type VARCHAR(50), counselor_name VARCHAR(200), notes TEXT, session_date DATE, status VARCHAR(30), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"); echo json_encode(['success' => false, 'message' => 'Table created, try again']); }
             exit;
 

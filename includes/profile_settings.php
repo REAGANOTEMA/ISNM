@@ -24,6 +24,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
 
         $staffId = (int)($_POST['staff_id'] ?? 0);
         if ($staffId <= 0) { throw new Exception('Invalid staff ID'); }
+        $sessionUserId = (int)($_SESSION['user_id'] ?? 0);
+        if ($sessionUserId <= 0 || $staffId !== $sessionUserId) { throw new Exception('Unauthorized: cannot modify another user profile'); }
 
         if (!isset($_FILES['profile_image']) || $_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('No file uploaded or upload error');
@@ -224,6 +226,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
 
         $staffId = (int)($_POST['staff_id'] ?? 0);
         if ($staffId <= 0) { throw new Exception('Invalid staff ID'); }
+        $sessionUserId = (int)($_SESSION['user_id'] ?? 0);
+        if ($sessionUserId <= 0 || $staffId !== $sessionUserId) { throw new Exception('Unauthorized: cannot modify another user profile'); }
 
         $first_name = trim($_POST['first_name'] ?? '');
         $surname = trim($_POST['surname'] ?? '');

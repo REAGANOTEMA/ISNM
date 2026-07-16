@@ -63,8 +63,12 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
             if (!empty($_FILES['nw_image']['name']) && $_FILES['nw_image']['error'] === 0) {
                 $uploadDir = __DIR__ . '/../newsUploads/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $_FILES['nw_image']['tmp_name']);
+                finfo_close($finfo);
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
                 $ext = strtolower(pathinfo($_FILES['nw_image']['name'], PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
+                if (in_array($mime, $allowedMimes) && in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
                     $fname = 'nw_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
                     if (move_uploaded_file($_FILES['nw_image']['tmp_name'], $uploadDir . $fname)) {
                         $featuredImage = 'newsUploads/' . $fname;

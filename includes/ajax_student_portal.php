@@ -29,8 +29,7 @@ case 'register_courses':
     $semester = trim($_POST['semester'] ?? 'Semester 1');
 
     if (empty($course_ids)) {
-        $_SESSION['error'] = 'Please select at least one course.';
-        header('Location: ../dashboards/student-portal.php?page=courses');
+        echo json_encode(['success' => false, 'error' => 'Please select at least one course.']);
         exit();
     }
 

@@ -446,7 +446,7 @@ include 'shared/_header.php';
                 <?php if ($singleNews['author_role']): ?> (<?= htmlspecialchars($singleNews['author_role']) ?>)<?php endif; ?>
                 <?php endif; ?>
             </div>
-            <div class="content"><?= $singleNews['content'] ?></div>
+            <div class="content"><?= htmlspecialchars($singleNews['content'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         </article>
     </div>
 <?php else: ?>

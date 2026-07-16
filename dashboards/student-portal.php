@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         $new = $_POST['new_password'] ?? '';
         $confirm = $_POST['confirm_password'] ?? '';
         if ($new !== $confirm) { $_SESSION['error'] = 'Passwords do not match.'; header("Location: student-portal.php?page=password"); exit(); }
-        if (strlen($new) < 6) { $_SESSION['error'] = 'Password must be at least 6 characters.'; header("Location: student-portal.php?page=password"); exit(); }
+        if (strlen($new) < 8) { $_SESSION['error'] = 'Password must be at least 8 characters.'; header("Location: student-portal.php?page=password"); exit(); }
         $stmt = $studentsDb->prepare("SELECT password FROM students WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("i", $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $row = $stmt->get_result()->fetch_assoc(); $stmt->close();
@@ -144,7 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
             if (password_verify($current, $storedHash)) {
                 $newHash = password_hash($new, PASSWORD_DEFAULT);
                 $upd = $studentsDb->prepare("UPDATE students SET password=?, password_changed=1 WHERE id=?");
-                if ($upd) { $upd->bind_param("si", $newHash, $student_id); if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); }; $upd->close(); }
+                if ($upd) { $upd->bind_param("si", $newHash, $student_id); if (!$upd->execute()) { error_log('password change failed: ' . ($upd->error ?? 'unknown')); }; $upd->close(); }
+                // Log the password change
+                $logStmt = $studentsDb->prepare("INSERT INTO student_login_attempts (student_id, ip_address, success, attempted_at) VALUES (?, ?, 1, NOW())");
+                if ($logStmt) { $logStmt->bind_param('is', $student_id, $_SERVER['REMOTE_ADDR'] ?? ''); $logStmt->execute(); $logStmt->close(); }
                 $_SESSION['success'] = 'Password changed successfully.';
             } else { $_SESSION['error'] = 'Current password is incorrect.'; }
         }

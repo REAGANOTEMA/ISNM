@@ -1,19 +1,21 @@
 <?php
 // AJAX handler for generating academic transcript
+session_start();
+header('Content-Type: application/json');
 include_once 'config.php';
 include_once 'functions.php';
 include_once 'photo_upload.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    echo '<div class="alert alert-danger">Unauthorized access</div>';
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit();
 }
 
 $student_id = $_GET['student_id'] ?? '';
 
 if (empty($student_id)) {
-    echo '<div class="alert alert-warning">Student ID not provided</div>';
+    echo json_encode(['success' => false, 'message' => 'Student ID not provided']);
     exit();
 }
 
@@ -479,5 +481,6 @@ ob_start();
 </body>
 </html>
 <?php
-echo ob_get_clean();
+$html = ob_get_clean();
+echo json_encode(['success' => true, 'html' => $html]);
 ?>

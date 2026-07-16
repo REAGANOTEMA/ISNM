@@ -270,12 +270,12 @@ $flashMessages = getFlashMessages();
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">New Password *</label>
-                                        <input type="password" name="new_password" class="form-control" required minlength="6">
-                                        <small class="text-muted">Password must be at least 6 characters long</small>
+                                        <input type="password" name="new_password" class="form-control" required minlength="8">
+                                        <small class="text-muted">Password must be at least 8 characters long</small>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Confirm New Password *</label>
-                                        <input type="password" name="confirm_password" class="form-control" required minlength="6">
+                                        <input type="password" name="confirm_password" class="form-control" required minlength="8">
                                     </div>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-lock me-2"></i> Change Password

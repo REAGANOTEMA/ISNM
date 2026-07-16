@@ -131,9 +131,13 @@ background: linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244
 
               </form>
               <?php
-             $password=$_POST['current'];
-             $newpassword=$_POST['new'];
-             $confirmnewpassword=$_POST['repeat'];
+             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
+             $password=$_POST['current'] ?? '';
+             $newpassword=$_POST['new'] ?? '';
+             $confirmnewpassword=$_POST['repeat'] ?? '';
+             if (strlen($newpassword) < 8) { echo '<script>alert("Password must be at least 8 characters")</script>'; }
+             elseif ($newpassword !== $confirmnewpassword) { echo '<script>alert("New password and confirm password do not match")</script>'; }
+             else {
             $stmt = mysqli_prepare($conn, "SELECT password_hash FROM users WHERE id=?");
             mysqli_stmt_bind_param($stmt, "i", $id);
             mysqli_stmt_execute($stmt);
@@ -161,8 +165,9 @@ background: linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244
                     echo "<script>alert('wrong current password...');</script>";
                 }
             }
-        }
-         ?>   
+            }
+         } 
+         ?>
 
             </div>
           </div>

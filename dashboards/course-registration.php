@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $sem = trim($_POST['semester'] ?? '');
             $yr = trim($_POST['academic_year'] ?? '');
             if (!$snum || !$cname) { echo json_encode(['success' => false, 'message' => 'Student number and course name required']); exit; }
-            if (!$sid) { $sr = $conn->query("SELECT id FROM students WHERE student_number='$snum' LIMIT 1"); if ($sr && $sr->num_rows) $sid = (int)$sr->fetch_assoc()['id']; }
+            if (!$sid) { $sr = $conn->prepare("SELECT id FROM students WHERE student_number=? LIMIT 1"); if ($sr) { $sr->bind_param('s', $snum); $sr->execute(); $res = $sr->get_result(); if ($res && $res->num_rows) $sid = (int)$res->fetch_assoc()['id']; $sr->close(); } }
             $stmt = $conn->prepare("INSERT INTO course_registrations (student_id, student_number, course_code, course_name, semester, academic_year, status, created_at) VALUES (?,?,?,?,?,?,'Registered',NOW())");
             if ($stmt) { $stmt->bind_param('isssss', $sid, $snum, $ccode, $cname, $sem, $yr); $ok = $stmt->execute(); $stmt->close(); echo json_encode(['success' => $ok, 'message' => $ok ? 'Registration added' : 'Failed']); }
             else echo json_encode(['success' => false, 'message' => 'Query failed: ' . $conn->error]);

@@ -90,16 +90,20 @@ class NewsPublisher {
      * Get all published news (for website)
      */
     public function getPublishedNews($limit = 10, $offset = 0, $category = null) {
-        $sql = "SELECT * FROM website_announcements WHERE status = 'published'";
-        
+        $limit = (int)$limit;
+        $offset = (int)$offset;
         if ($category) {
-            $category = $this->conn->real_escape_string($category);
-            $sql .= " AND category = '$category'";
+            $stmt = $this->conn->prepare("SELECT * FROM website_announcements WHERE status = 'published' AND category = ? ORDER BY featured DESC, created_at DESC LIMIT ? OFFSET ?");
+            if (!$stmt) return [];
+            $stmt->bind_param('sii', $category, $limit, $offset);
+        } else {
+            $stmt = $this->conn->prepare("SELECT * FROM website_announcements WHERE status = 'published' ORDER BY featured DESC, created_at DESC LIMIT ? OFFSET ?");
+            if (!$stmt) return [];
+            $stmt->bind_param('ii', $limit, $offset);
         }
-        
-        $sql .= " ORDER BY featured DESC, created_at DESC LIMIT $limit OFFSET $offset";
-        
-        $result = $this->conn->query($sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
         
         if (!$result) return [];
         
@@ -158,6 +162,7 @@ class NewsPublisher {
      * Increment view count
      */
     private function incrementViews($newsId) {
+        $newsId = (int)$newsId;
         $this->conn->query("UPDATE website_announcements SET views = views + 1 WHERE id = $newsId");
     }
     
@@ -165,13 +170,17 @@ class NewsPublisher {
      * Search news
      */
     public function searchNews($query, $limit = 10) {
-        $query = $this->conn->real_escape_string($query);
-        
-        $result = $this->conn->query(
+        $stmt = $this->conn->prepare(
             "SELECT * FROM website_announcements 
-             WHERE status = 'published' AND (title LIKE '%$query%' OR content LIKE '%$query%')
-             ORDER BY created_at DESC LIMIT $limit"
+             WHERE status = 'published' AND (title LIKE ? OR content LIKE ?)
+             ORDER BY created_at DESC LIMIT ?"
         );
+        if (!$stmt) return [];
+        $like = '%' . $query . '%';
+        $stmt->bind_param('ssi', $like, $like, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
         
         if (!$result) return [];
         
@@ -224,8 +233,9 @@ class NewsPublisher {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'publish_news') {
     header('Content-Type: application/json');
     
-    // Check authorization (must be director)
-    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'director') {
+    // Check authorization (must be director, CEO, principal, or secretary)
+    $allowedRoles = ['director', 'ceo', 'principal', 'secretary', 'ict'];
+    if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', $allowedRoles)) {
         echo json_encode(['success' => false, 'message' => 'Unauthorized']);
         exit;
     }

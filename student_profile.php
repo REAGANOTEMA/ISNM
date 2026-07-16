@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit();
                 }
                 if (strlen($new) < 6) {
-                    $_SESSION['error'] = 'Password must be at least 6 characters.';
+                    $_SESSION['error'] = 'Password must be at least 8 characters.';
                     header("Location: student_profile.php?id=$student_id");
                     exit();
                 }
@@ -441,11 +441,11 @@ function handlePasswordChange() {
     // Verify current password using bcrypt, with legacy plaintext upgrade
     if (!password_verify($current_password, $user['password'])) {
         if ($current_password === $user['password']) {
-            $newHash = password_hash($current_password, PASSWORD_DEFAULT);
+            $newHash = password_hash($new_password, PASSWORD_DEFAULT);
             $upStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
             if ($upStmt) {
                 $upStmt->bind_param('si', $newHash, $user['id']);
-                if (!$upStmt->execute()) { error_log('$upStmt execute failed: ' . ($upStmt->error ?? 'unknown')); };
+                if (!$upStmt->execute()) { error_log('password upgrade failed: ' . ($upStmt->error ?? 'unknown')); };
                 $upStmt->close();
             }
         } else {
