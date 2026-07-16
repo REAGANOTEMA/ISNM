@@ -130,8 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $fare  = (float)($_POST['trip_fare'] ?? 0);
                 $notes = trim($_POST['notes'] ?? '');
                 if ($vid && $rid) {
-                    $rname_q = $conn->query("SELECT route_name FROM transport_routes WHERE id=$rid");
-                    $rname = $rname_q ? $rname_q->fetch_row()[0] : '';
+                    $rnstmt = $conn->prepare("SELECT route_name FROM transport_routes WHERE id=?");
+                    $rname = '';
+                    if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("INSERT INTO transport_trips (vehicle_id, driver_id, route_id, route_name, departure_time, arrival_time, passengers_count, fuel_cost, trip_distance, trip_fare, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
                     $stmt->bind_param('iiisssiddss', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $notes);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
@@ -156,8 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $status = trim($_POST['status'] ?? 'Scheduled');
                 $notes = trim($_POST['notes'] ?? '');
                 if ($tid) {
-                    $rname_q = $conn->query("SELECT route_name FROM transport_routes WHERE id=$rid");
-                    $rname = $rname_q ? $rname_q->fetch_row()[0] : '';
+                    $rnstmt = $conn->prepare("SELECT route_name FROM transport_routes WHERE id=?");
+                    $rname = '';
+                    if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("UPDATE transport_trips SET vehicle_id=?, driver_id=?, route_id=?, route_name=?, departure_time=?, arrival_time=?, passengers_count=?, fuel_cost=?, trip_distance=?, trip_fare=?, status=?, notes=? WHERE id=?");
                     $stmt->bind_param('iiisssiddssi', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $status, $notes, $tid);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };

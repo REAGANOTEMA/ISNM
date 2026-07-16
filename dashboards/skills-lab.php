@@ -308,12 +308,12 @@ if ($view === 'consumables' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_consumables SET item_name=?, category=?, quantity=?, unit=?, min_stock_level=?, unit_cost=?, supplier=?, last_ordered_date=?, notes=? WHERE id=?");
-            $stmt->bind_param("sssd ddssii", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
+            $stmt->bind_param("sssdssssi", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         } else {
             $stmt = $db->prepare("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES (?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("sssd ddsis", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
+            $stmt->bind_param("sssdsssss", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }

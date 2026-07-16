@@ -208,8 +208,19 @@ if (function_exists('handleWebsiteSubmissionsAction')) {
     handleWebsiteSubmissionsAction($website_conn);
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (isset($_REQUEST['ajax'])) {
     header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $csrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($csrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid security token.']);
+            exit;
+        }
+    }
     $action = $_REQUEST['ajax'];
     $response = ['success' => false, 'message' => ''];
     switch ($action) {
@@ -229,6 +240,7 @@ if (isset($_REQUEST['ajax'])) {
             $nationality = trim($_POST['nationality'] ?? 'Ugandan');
             $emergency_contact = trim($_POST['emergency_contact'] ?? '');
             $emergency_phone = trim($_POST['emergency_phone'] ?? '');
+            $set_name = trim($_POST['set_name'] ?? '');
             if (!$full_name || !$gender || !$program_name || !$intake) {
                 $response['message'] = 'Required fields are missing.';
                 break;
@@ -266,8 +278,8 @@ if (isset($_REQUEST['ajax'])) {
                     $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
                     $last_name = $parts[1] ?? $surname;
                     $year = 1; $level = 'Year 1';
-                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-                    $s_ins->bind_param('sssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $hashed_password);
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                    $s_ins->bind_param('ssssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $set_name, $hashed_password);
                     if (!$s_ins->execute()) { error_log('$s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {
@@ -1322,6 +1334,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}
             <div class="col-md-2"><label class="form-label fw-bold">Emergency Phone</label><input type="tel" class="form-control" name="emergency_phone"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Program <span class="text-danger">*</span></label><select class="form-select" name="program" required><option value="">Select Program</option><?php foreach ($programs as $p): ?><option value="<?= $p ?>"><?= $p ?></option><?php endforeach; ?></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Intake <span class="text-danger">*</span></label><select class="form-select" name="intake" required><option value="">Select Intake</option><?php foreach ($intakes as $i): ?><option value="<?= $i ?>"><?= $i ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Set/Group</label><select class="form-select" name="set_name"><option value="">Select Set</option><option value="Set A">Set A</option><option value="Set B">Set B</option><option value="Set C">Set C</option><option value="Set D">Set D</option></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Admission Date</label><input type="date" class="form-control" name="admission_date" value="<?= date('Y-m-d') ?>"></div>
         </div>
         <div class="mt-4 d-flex gap-2">
@@ -2083,8 +2096,9 @@ if ($edit_id) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const BASE = window.location.pathname.split('?')[0];
+const CSRF = '<?= $_SESSION['csrf_token'] ?>';
 function showMsg(msg,type='success'){const d=document.createElement('div');d.className='alert alert-'+type+' alert-dismissible fade show mt-2';d.innerHTML=msg+'<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';document.querySelector('.content-area').prepend(d);setTimeout(()=>d.remove(),5000)}
-async function ajax(action,method='GET',data=null){const opts={method};if(method==='POST'&&data){if(data instanceof FormData){opts.body=data}else{opts.body=new URLSearchParams(data)}}const url=new URL(BASE,window.location.origin);url.searchParams.set('ajax',action);if(method==='GET'&&data){Object.entries(data).forEach(([k,v])=>{if(v!==undefined&&v!==null)url.searchParams.set(k,v)})}const r=await fetch(url,opts);return r.json()}
+async function ajax(action,method='GET',data=null){const opts={method};if(method==='POST'&&data){if(data instanceof FormData){if(!data.has('csrf_token'))data.append('csrf_token',CSRF);opts.body=data}else{data.csrf_token=CSRF;opts.body=new URLSearchParams(data)}}const url=new URL(BASE,window.location.origin);url.searchParams.set('ajax',action);if(method==='GET'&&data){Object.entries(data).forEach(([k,v])=>{if(v!==undefined&&v!==null)url.searchParams.set(k,v)})}const r=await fetch(url,opts);return r.json()}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function exportCSV(){const s=document.getElementById('srSearch')?.value||'';const st=document.getElementById('srStatus')?.value||'';const pr=document.getElementById('srProgram')?.value||'';const url=new URL(BASE,window.location.origin);url.searchParams.set('ajax','export_students_csv');if(s)url.searchParams.set('search',s);if(st)url.searchParams.set('status',st);if(pr)url.searchParams.set('program',pr);window.location.href=url.toString()}
 if(document.getElementById('recentStudents')){ajax('search_students','GET',{search:'',page:1}).then(d=>{if(d.success){const tb=document.getElementById('recentStudents');tb.innerHTML=d.students.slice(0,8).map(s=>`<tr><td><small>${esc(s.student_number||'')}</small></td><td>${esc(s.full_name)}</td><td><small>${esc(s.program||'')}</small></td><td><span class="badge-status badge-${s.status||'new'}">${(s.status||'new').replace(/_/g,' ')}</span></td><td><small>${s.created_at||''}</small></td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted">No students registered yet</td></tr>'}})}

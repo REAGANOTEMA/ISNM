@@ -72,6 +72,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 .status-Registered,.status-active{background:#dcfce7;color:#166534}
 .status-Completed{background:#e0f2fe;color:#075985}
 .status-Dropped{background:#fef2f2;color:#991b1b}
+@media(max-width:768px){.main{margin-left:0!important;padding:16px!important}.d-flex.justify-content-between{flex-direction:column;gap:8px}}
 </style>
 <div class="main" style="margin-left:270px;padding:32px">
     <div class="d-flex justify-content-between align-items-center mb-4">

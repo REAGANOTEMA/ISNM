@@ -101,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
     if ($action === 'delete_welfare_case') {
         $case_id = (int)($_POST['case_id'] ?? 0);
-        $conn->query("DELETE FROM welfare_actions WHERE case_id = $case_id");
+        $delStmt = $conn->prepare("DELETE FROM welfare_actions WHERE case_id = ?");
+        if ($delStmt) { $delStmt->bind_param("i", $case_id); $delStmt->execute(); $delStmt->close(); }
         $stmt = $conn->prepare("DELETE FROM welfare_cases WHERE id = ?");
         $stmt->bind_param("i", $case_id);
         if ($stmt->execute()) {

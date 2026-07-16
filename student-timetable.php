@@ -82,6 +82,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 .entry-subject{flex:1;font-weight:500}
 .entry-detail{font-size:.85rem;color:#64748b}
 .empty-day{padding:40px;text-align:center}
+@media(max-width:768px){.main{margin-left:0!important;padding:16px!important}.d-flex.justify-content-between{flex-direction:column;gap:8px}.day-tab{padding:6px 12px;font-size:.8rem}.entry-row{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 16px}.entry-time{min-width:auto}}
 </style>
 <div class="main" style="margin-left:270px;padding:32px">
     <div class="d-flex justify-content-between align-items-center mb-4">

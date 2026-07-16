@@ -149,6 +149,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => true]);
         exit;
     }
+    if ($action === 'register_student') {
+        $id = (int)($_POST['id'] ?? 0);
+        if (!$id) { echo json_encode(['success' => false, 'message' => 'Invalid applicant ID.']); exit; }
+
+        $app = $conn->prepare("SELECT a.*, ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.id=? AND a.status IN ('Approved','Registered') LIMIT 1");
+        if (!$app) { echo json_encode(['success' => false, 'message' => 'Database error.']); exit; }
+        $app->bind_param('i', $id);
+        $app->execute();
+        $applicant = $app->get_result()->fetch_assoc();
+        $app->close();
+        if (!$applicant) { echo json_encode(['success' => false, 'message' => 'Applicant not found or not approved.']); exit; }
+
+        $full_name = $applicant['full_name'];
+        $parts = explode(' ', $full_name);
+        $first_name = $parts[0] ?? $full_name;
+        $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
+        $other_name = $applicant['middle_name'] ?? '';
+        $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $temp_password = bin2hex(random_bytes(4));
+        $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
+        $program_name = $applicant['program_name'] ?? $applicant['program_id'] ?? '';
+        $intake = $applicant['intake'] ?? '';
+        $year = 1;
+        $level = 'Year 1';
+
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("UPDATE applicants SET status='Registered', registered_at=NOW(), reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ii', $userId, $id); $stmt->execute(); $stmt->close(); }
+            logAdmission($conn, $id, $userId, "Registered", "Applicant registered as student $student_number");
+
+            $rc = 0;
+            $ck = $conn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1");
+            if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
+            $track = $conn->prepare("INSERT INTO student_admission_tracking (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
+            $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, date('Y-m-d'), 'Registered', 0, $rc);
+            if (!$track->execute()) { error_log('track execute failed: ' . ($track->error ?? 'unknown')); };
+
+            if ($stuConn) {
+                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $s_ins->bind_param('ssssssssssssssssssssssss',
+                    $student_number, $reg_number, $first_name, $surname, $other_name, $full_name,
+                    $applicant['email'], $applicant['phone'], $program_name, $program_name,
+                    $year, $level, (string)date('Y'), $intake, $applicant['date_of_birth'],
+                    $applicant['gender'], $applicant['address'], $applicant['guardian_name'],
+                    $applicant['guardian_phone'], $applicant['nationality'],
+                    $applicant['emergency_contact_name'], $applicant['emergency_contact_phone'],
+                    '', $hashed_password
+                );
+                if (!$s_ins->execute()) { error_log('s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
+                $s_id = $stuConn->insert_id;
+                if ($s_id > 0) {
+                    $prof = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
+                    $prof->bind_param('iss', $s_id, $applicant['status'], 'unpaid');
+                    if (!$prof->execute()) { error_log('prof execute failed: ' . ($prof->error ?? 'unknown')); };
+                }
+            }
+
+            $conn->commit();
+            echo json_encode(['success' => true, 'student_number' => $student_number, 'reg_number' => $reg_number, 'portal_username' => $student_number, 'portal_password' => $temp_password]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
+        }
+        exit;
+    }
     if ($action === 'approve') {
         $id = (int)($_POST['id'] ?? 0);
         $stmt = $conn->prepare("UPDATE applicants SET status='Approved', approved_by=?, approved_at=NOW() WHERE id=?");
@@ -901,11 +968,18 @@ function approveFromReview() {
 }
 
 function registerFromReview() {
-  if (!confirm('Register this applicant as a student?')) return;
-  // Build a simple registration via the applicants table
-  postData({action: 'update_status', id: _reviewAppId, status: 'Registered'}).then(d => {
-    if (d.success) { showToast('Applicant marked as Registered.', 'success'); bootstrap.Modal.getInstance(document.getElementById('reviewAppModal')).hide(); loadApplicants(); }
-    else { showToast('Registration failed.', 'danger'); }
+  if (!confirm('Register this applicant as a student? This will create a student record visible to all dashboards.')) return;
+  postData({action: 'register_student', id: _reviewAppId}).then(d => {
+    if (d.success) {
+      let msg = 'Student registered successfully! Number: ' + d.student_number;
+      if (d.portal_password) msg += '\n\nPortal Username: ' + d.portal_username + '\nPortal Password: ' + d.portal_password;
+      alert(msg);
+      showToast('Student registered!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('reviewAppModal')).hide();
+      loadApplicants();
+    } else {
+      showToast(d.message || 'Registration failed.', 'danger');
+    }
   });
 }
 

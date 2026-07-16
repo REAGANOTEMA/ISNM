@@ -78,6 +78,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 .stat-box{background:#f8fafc;border-radius:12px;padding:16px;text-align:center}
 .stat-box .num{font-size:1.8rem;font-weight:700;color:#2c5f8a}
 .stat-box .lbl{font-size:.8rem;color:#64748b;margin-top:4px}
+@media(max-width:768px){.main{margin-left:0!important;padding:16px!important}.d-flex.justify-content-between{flex-direction:column;gap:8px}.stat-box .num{font-size:1.3rem}.sem-tab{padding:6px 12px;font-size:.8rem}}
 </style>
 <div class="main" style="margin-left:270px;padding:32px">
     <div class="d-flex justify-content-between align-items-center mb-4">

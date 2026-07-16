@@ -449,7 +449,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
   </div>
 </div>
 <?php
-    case 'emergency': ?>';
+    case 'emergency': ?>
 
     <h4 class="fw-bold mb-3"><i class="fas fa-ambulance me-2"></i>Emergency Contacts</h4>
     <div class="card-section">
