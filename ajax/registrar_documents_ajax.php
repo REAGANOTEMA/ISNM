@@ -67,9 +67,13 @@ if ($action === 'create_student') {
     $snum = 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
     $full = trim("$fn $on $sn");
     $reg = 'REG-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
+    $temp_password = bin2hex(random_bytes(4));
+    $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
+    $intake_year = date('Y');
+    $intake_period = date('n') <= 6 ? 'January' : 'July';
     
-    $stmt = $students_conn->prepare("INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
-    $stmt->bind_param("sssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em);
+    $stmt = $students_conn->prepare("INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW())");
+    $stmt->bind_param("ssssssssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em, $intake_year, $intake_period, $password_hash);
     if ($stmt->execute()) {
         $id = $students_conn->insert_id;
         echo json_encode(['success' => true, 'student' => [
@@ -77,6 +81,8 @@ if ($action === 'create_student') {
             'full_name' => $full,
             'student_number' => $snum,
             'registration_number' => $reg,
+            'index_number' => $snum,
+            'password' => $temp_password,
             'course' => $crs,
             'gender' => $gen,
             'phone' => $ph,

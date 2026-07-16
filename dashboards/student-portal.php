@@ -726,7 +726,7 @@ elseif ($page === 'academics'):
 // 4. COURSE REGISTRATION
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'courses'):
-    $registered = safeQueryPrepared($studentsDb, "SELECT scr.*, cc.course_code, cc.course_name, cc.credit_hours, cc.is_compulsory FROM student_course_registrations scr LEFT JOIN course_catalog cc ON scr.course_id=cc.id WHERE scr.student_id=? ORDER BY scr.academic_year DESC, scr.semester DESC", "i", [$student_id]);
+    $registered = safeQueryPrepared($studentsDb, "SELECT scr.*, cc.course_code, cc.course_name, cc.credits AS credit_hours, cc.is_compulsory FROM student_course_registrations scr LEFT JOIN course_catalog cc ON scr.course_id=cc.id WHERE scr.student_id=? ORDER BY scr.academic_year DESC, scr.semester DESC", "i", [$student_id]);
     $available = safeQueryPrepared($studentsDb, "SELECT * FROM course_catalog WHERE program=? AND level=? AND status='Active' ORDER BY course_code", "ss", [$program, $level]);
     $prereqs = safeQuery($studentsDb, "SELECT * FROM course_prerequisites");
 ?>
@@ -780,7 +780,7 @@ $current_academic_year = date('Y');
 <td><input type="checkbox" name="course_ids[]" value="<?= $c['id'] ?>" class="reg-check"></td>
 <td><strong><?= htmlspecialchars($c['course_code']) ?></strong></td>
 <td><?= htmlspecialchars($c['course_name']) ?></td>
-<td><?= $c['credit_hours'] ?></td>
+<td><?= $c['credits'] ?? $c['credit_hours'] ?? '' ?></td>
 <td><span class="sp-badge sp-badge-<?= $c['is_compulsory']?'info':'secondary' ?>"><?= $c['is_compulsory']?'Compulsory':'Elective' ?></span></td>
 </tr>
 <?php endforeach; ?>

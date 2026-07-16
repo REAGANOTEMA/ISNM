@@ -1,9 +1,26 @@
 <?php
-require_once __DIR__ . '/includes/student_auth.php';
+session_start();
+$isStudent = isset($_SESSION['user_id']) && ($_SESSION['type'] ?? '') === 'student';
+$isStaff = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && ($_SESSION['type'] ?? '') === 'staff';
+
+if ($isStudent) {
+    require_once __DIR__ . '/includes/student_auth.php';
+} elseif ($isStaff) {
+    require_once __DIR__ . '/includes/staff_dashboard_access.php';
+    bootstrapStaffDashboard([]);
+} else {
+    header('Location: staff-login.php');
+    exit();
+}
 require_once __DIR__ . '/includes/financial_functions.php';
 
 $conn = getConnection();
-$student_id = $_SESSION['user_id'] ?? 0;
+$student_id = (int)($_GET['student_id'] ?? $_SESSION['user_id'] ?? 0);
+
+if ($student_id <= 0) {
+    echo '<p>No student specified.</p>';
+    exit();
+}
 $invoice_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $statement = generateFinancialStatement($student_id);

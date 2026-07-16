@@ -67,6 +67,15 @@ ON DUPLICATE KEY UPDATE
 
 
 -- ────────────────────────────────────────────────────────────
+--  A1b. Ensure staff table has all required columns
+-- ────────────────────────────────────────────────────────────
+ALTER TABLE `staff` ADD COLUMN IF NOT EXISTS `login_attempts` INT(11) DEFAULT 0;
+ALTER TABLE `staff` ADD COLUMN IF NOT EXISTS `locked_until` DATETIME DEFAULT NULL;
+ALTER TABLE `staff` ADD COLUMN IF NOT EXISTS `is_first_login` TINYINT(1) DEFAULT 1;
+ALTER TABLE `staff` ADD COLUMN IF NOT EXISTS `password_changed` TINYINT(1) DEFAULT 0;
+
+
+-- ────────────────────────────────────────────────────────────
 --  A2. LEADERSHIP & STRATEGY
 -- ────────────────────────────────────────────────────────────
 
@@ -349,6 +358,10 @@ CREATE TABLE IF NOT EXISTS `hr_users` (
   UNIQUE KEY `idx_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Ensure columns exist on pre-existing tables
+ALTER TABLE `hr_users` ADD COLUMN IF NOT EXISTS `login_attempts` INT(11) DEFAULT 0;
+ALTER TABLE `hr_users` ADD COLUMN IF NOT EXISTS `locked_until` DATETIME DEFAULT NULL;
+
 -- HR Manager — Alexis2026
 INSERT INTO `hr_users` (`email`,`password_hash`,`full_name`,`role`,`status`)
 VALUES ('hr-manager@igangaschoolofnursingandmidwifery.ac.ug',
@@ -384,6 +397,10 @@ CREATE TABLE IF NOT EXISTS `bursar_users` (
   UNIQUE KEY `idx_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Ensure columns exist on pre-existing tables
+ALTER TABLE `bursar_users` ADD COLUMN IF NOT EXISTS `login_attempts` INT(11) DEFAULT 0;
+ALTER TABLE `bursar_users` ADD COLUMN IF NOT EXISTS `locked_until` DATETIME DEFAULT NULL;
+
 -- School Bursar — bursar@isnm
 INSERT INTO `bursar_users` (`email`,`password_hash`,`full_name`,`role`,`status`)
 VALUES ('bursar@igangaschoolofnursingandmidwifery.ac.ug',
@@ -395,6 +412,24 @@ ON DUPLICATE KEY UPDATE
 
 
 -- ────────────────────────────────────────────────────────────
+--  B1b. Ensure students table has all required columns
+-- ────────────────────────────────────────────────────────────
+ALTER TABLE `students` ADD COLUMN IF NOT EXISTS `intake_year` VARCHAR(10) DEFAULT NULL;
+ALTER TABLE `students` ADD COLUMN IF NOT EXISTS `intake_period` VARCHAR(20) DEFAULT NULL;
+ALTER TABLE `students` ADD COLUMN IF NOT EXISTS `login_attempts` INT(11) DEFAULT 0;
+ALTER TABLE `students` ADD COLUMN IF NOT EXISTS `locked_until` TIMESTAMP NULL DEFAULT NULL;
+
+-- Ensure id has AUTO_INCREMENT for new inserts
+ALTER TABLE `students` MODIFY COLUMN `id` INT(11) NOT NULL AUTO_INCREMENT;
+
+-- Back-fill intake_year/intake_period from intake_date where possible
+UPDATE `students` SET
+  `intake_year` = COALESCE(`intake_year`, YEAR(`intake_date`)),
+  `intake_period` = COALESCE(`intake_period`, IF(MONTH(`intake_date`) <= 6, 'January', 'July'))
+WHERE `intake_year` IS NULL OR `intake_period` IS NULL;
+
+
+-- ────────────────────────────────────────────────────────────
 --  B2. SAMPLE STUDENT ACCOUNTS — student@isnm
 -- ────────────────────────────────────────────────────────────
 
@@ -402,14 +437,14 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO `students` (
   `index_number`,`registration_number`,`student_number`,`first_name`,`surname`,`other_name`,
   `full_name`,`email`,`phone`,`program`,`course`,`year`,`level`,
-  `set_name`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
+  `set_name`,`intake_date`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
   `gender`,`nationality`
 ) VALUES (
   'CM-2026-001','REG-2026-001','STU202600001',
   'John','Okello','James','John James Okello',
   'john.okello@student.isnm.ac.ug','0770000001',
   'Bachelor of Science in Nursing (Comprehensive)','BSc Nursing',1,'Year 1',
-  '1','2026','January','Active',
+  '1','2026-01-15','2026','January','Active',
   '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe',
   0,1,'Male','Ugandan'
 ) ON DUPLICATE KEY UPDATE
@@ -419,14 +454,14 @@ INSERT INTO `students` (
 INSERT INTO `students` (
   `index_number`,`registration_number`,`student_number`,`first_name`,`surname`,`other_name`,
   `full_name`,`email`,`phone`,`program`,`course`,`year`,`level`,
-  `set_name`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
+  `set_name`,`intake_date`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
   `gender`,`nationality`
 ) VALUES (
   'MID-2026-001','REG-2026-002','STU202600002',
   'Grace','Nambi','','Grace Nambi',
   'grace.nambi@student.isnm.ac.ug','0770000002',
   'Bachelor of Science in Midwifery','BSc Midwifery',1,'Year 1',
-  '2','2026','January','Active',
+  '2','2026-01-15','2026','January','Active',
   '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe',
   0,1,'Female','Ugandan'
 ) ON DUPLICATE KEY UPDATE
@@ -436,14 +471,14 @@ INSERT INTO `students` (
 INSERT INTO `students` (
   `index_number`,`registration_number`,`student_number`,`first_name`,`surname`,`other_name`,
   `full_name`,`email`,`phone`,`program`,`course`,`year`,`level`,
-  `set_name`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
+  `set_name`,`intake_date`,`intake_year`,`intake_period`,`status`,`password`,`is_first_login`,`password_changed`,
   `gender`,`nationality`
 ) VALUES (
   'DIP-2026-001','REG-2026-003','STU202600003',
   'Samuel','Mugisha','Peter','Samuel Peter Mugisha',
   'samuel.mugisha@student.isnm.ac.ug','0770000003',
   'Diploma in Nursing/Midwifery','Dip Nursing',1,'Year 1',
-  '3','2026','January','Active',
+  '3','2026-01-15','2026','January','Active',
   '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe',
   0,1,'Male','Ugandan'
 ) ON DUPLICATE KEY UPDATE

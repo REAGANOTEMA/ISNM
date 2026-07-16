@@ -21,9 +21,14 @@ class Student {
      */
     public function create($data) {
         try {
+            $temp_password = bin2hex(random_bytes(4));
+            $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
+            $intake_year = date('Y');
+            $intake_period = date('n') <= 6 ? 'January' : 'July';
             $query = "INSERT INTO students (full_name, registration_number, national_student_id_number, 
-                      index_number, mobile_number, course, year, set_name, gender, passport_photo, status) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')";
+                      index_number, mobile_number, course, year, set_name, gender, passport_photo,
+                      intake_year, intake_period, status, password, is_first_login, password_changed) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)";
             
             $params = [
                 $data['full_name'],
@@ -35,14 +40,17 @@ class Student {
                 $data['year'],
                 $data['set_name'],
                 $data['gender'],
-                $data['passport_photo'] ?? null
+                $data['passport_photo'] ?? null,
+                $intake_year,
+                $intake_period,
+                $password_hash
             ];
             
-            $stmt = executePrepared($this->conn, $query, 'ssssssisss', $params);
+            $stmt = executePrepared($this->conn, $query, 'ssssssisssssss', $params);
             $studentId = $stmt->insert_id;
             $stmt->close();
             
-            return ['success' => true, 'student_id' => $studentId];
+            return ['success' => true, 'student_id' => $studentId, 'password' => $temp_password, 'index_number' => $data['index_number']];
             
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {

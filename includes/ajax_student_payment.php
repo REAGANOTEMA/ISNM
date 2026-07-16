@@ -94,12 +94,12 @@ if ($action === 'student_payment_request') {
         $reference = 'REQ-' . strtoupper(bin2hex(random_bytes(4))) . '-' . date('YmdHis');
         $status = 'pending';
 
-        $stmt = $studentsDb->prepare("INSERT INTO payments (student_id, amount, payment_method, transaction_id, mobile_number, proof_file, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $studentsDb->prepare("INSERT INTO payments (student_id, amount, payment_method, transaction_id, mobile_number, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
         if (!$stmt) {
             echo json_encode(['success' => false, 'message' => 'Database error']);
             exit;
         }
-        $stmt->bind_param("sdssssss", $studentId, $amount, $method, $reference, $phone, $proofFile, $notes, $status);
+        $stmt->bind_param("sdsssss", $studentId, $amount, $method, $reference, $phone, $notes, $status);
         if (!$stmt->execute()) {
             error_log('student_payment execute failed: ' . ($stmt->error ?? 'unknown'));
             echo json_encode(['success' => false, 'message' => 'Failed to save payment request']);
@@ -109,6 +109,17 @@ if ($action === 'student_payment_request') {
 
         $paymentId = $studentsDb->insert_id;
         $stmt->close();
+
+        if (!empty($proofFile) && $paymentId > 0) {
+            $proofNumber = 'POP-' . strtoupper(bin2hex(random_bytes(4))) . '-' . date('YmdHis');
+            $popStmt = $studentsDb->prepare("INSERT INTO proof_of_payments (proof_number, payment_id, student_id, document_path, uploaded_by, verified, notes, created_at) VALUES (?, ?, ?, ?, ?, 0, ?, NOW())");
+            if ($popStmt) {
+                $uploadedBy = 'student_' . $studentId;
+                $popStmt->bind_param("siisss", $proofNumber, $paymentId, $studentId, $proofFile, $uploadedBy, $notes);
+                $popStmt->execute();
+                $popStmt->close();
+            }
+        }
 
         echo json_encode(['success' => true, 'reference' => $reference, 'payment_id' => $paymentId]);
     } catch (Exception $e) {

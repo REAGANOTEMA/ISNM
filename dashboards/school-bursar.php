@@ -444,13 +444,13 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-7">
     <div class="brs-card"><h3>Fee Structure</h3>
     <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchKONM" type="text" placeholder="Search..." onkeyup="filterTable('srchKONM','tblKONM')"></div>
-<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Fee Name</th><th>Amount</th><th>Type</th><th>Program ID</th><th>Year</th></tr></thead><tbody>
+<div class="table-responsive"><table id="tblKONM" class="table table-sm"><thead><tr><th>Fee Name</th><th>Amount</th><th>Type</th><th>Program ID</th><th>Year</th></tr></thead><tbody>
     <?php foreach ($feeStructures as $f): ?><tr><td><?=htmlspecialchars($f['fee_name'])?></td><td><strong><?=number_format($f['amount'])?></strong></td><td><?=htmlspecialchars($f['fee_type']??'-')?></td><td><?=htmlspecialchars($f['program_id']??'All')?></td><td><?=htmlspecialchars($f['academic_year']??'')?></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
     <div class="brs-card"><h3>Student Fee Balances</h3>
     <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFICW" type="text" placeholder="Search..." onkeyup="filterTable('srchFICW','tblFICW')"></div>
-<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Total Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>
-    <?php foreach ($studentFees as $f): ?><tr><td><?=htmlspecialchars($f['student_name'])?></td><td><?=number_format($f['total_fees']??$f['total_due']??($f['assigned_amount']??($f['paid_amount']??$f['amount']??0)+($f['balance']??0)))?></td><td><?=number_format($f['paid']??$f['paid_amount']??($f['amount_paid']??0))?></td><td><strong class="<?=$f['balance']>0?'text-danger':'text-success'?>"><?=number_format($f['balance'])?></strong></td><td><?=$f['balance']<=0?'<span class="badge bg-success">Cleared</span>':'<span class="badge bg-danger">Outstanding</span>'?></td></tr><?php endforeach; ?>
+<div class="table-responsive"><table id="tblFICW" class="table table-sm"><thead><tr><th>Student</th><th>Total Due</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <?php foreach ($studentFees as $f): ?><tr><td><?=htmlspecialchars($f['student_name'])?></td><td><?=number_format($f['total_fees']??$f['total_due']??($f['assigned_amount']??($f['paid_amount']??$f['amount']??0)+($f['balance']??0)))?></td><td><?=number_format($f['paid']??$f['paid_amount']??($f['amount_paid']??0))?></td><td><strong class="<?=$f['balance']>0?'text-danger':'text-success'?>"><?=number_format($f['balance'])?></strong></td><td><?=$f['balance']<=0?'<span class="badge bg-success">Cleared</span>':'<span class="badge bg-danger">Outstanding</span>'?></td><td><a href="../print_statement.php?student_id=<?=urlencode($f['student_id']??$f['id']??0)?>" target="_blank" class="btn btn-xs btn-outline-primary"><i class="fas fa-print me-1"></i>Statement</a></td></tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>
 </div>
@@ -473,7 +473,7 @@ $pageTitle = 'Bursar Dashboard';
   <div class="col-md-7">
     <div class="brs-card"><h3>Payment History</h3>
     <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchRZVM" type="text" placeholder="Search..." onkeyup="filterTable('srchRZVM','tblRZVM')"></div>
-<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Status</th><th>Date</th></tr></thead><tbody>
+<div class="table-responsive"><table id="tblRZVM" class="table table-sm"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>
     <?php foreach ($payments as $p): ?><tr>
       <td><?=htmlspecialchars($p['student_name'])?></td>
       <td><strong><?=number_format($p['amount'])?></strong></td>
@@ -481,6 +481,7 @@ $pageTitle = 'Bursar Dashboard';
       <td><?=htmlspecialchars($p['slip_number']??$p['payment_reference']??'-')?></td>
       <td><span class="badge bg-<?=in_array($p['status'],['Completed','verified'])?'success':'warning'?>"><?=htmlspecialchars($p['status'])?></span></td>
       <td><?=htmlspecialchars($p['payment_date']??$p['created_at']??'')?></td>
+      <td><a href="../print_receipt.php?type=payment&id=<?=urlencode($p['id'])?>" target="_blank" class="btn btn-xs btn-outline-success"><i class="fas fa-print me-1"></i>Receipt</a></td>
     </tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>

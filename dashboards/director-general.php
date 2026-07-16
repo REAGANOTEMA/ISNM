@@ -1657,7 +1657,7 @@ switch ($dgSection):
 // Student performance prediction data
 $perfData = ['labels'=>[],'actual'=>[],'predicted'=>[],'courses'=>[]];
 if ($conn) {
-    $pr = $conn->query("SELECT c.course_name, AVG(e.marks_obtained) avg_score, COUNT(e.id) total FROM examination_records e JOIN academic_course_catalog c ON e.course_code=c.course_code WHERE e.marks_obtained IS NOT NULL GROUP BY e.course_code ORDER BY avg_score DESC LIMIT 8");
+    $pr = $conn->query("SELECT c.course_title AS course_name, AVG(e.marks_obtained) avg_score, COUNT(e.id) total FROM examination_records e JOIN academic_course_catalog c ON e.course_code=c.course_code WHERE e.marks_obtained IS NOT NULL GROUP BY e.course_code ORDER BY avg_score DESC LIMIT 8");
     if ($pr) {
         $allCourses = []; $scores = [];
         while ($row = $pr->fetch_assoc()) {

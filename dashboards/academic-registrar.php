@@ -247,13 +247,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         $em = trim($_POST['email'] ?? '');
         if ($fn && $ln && $program) {
             $fullName = trim("$fn $ln"); $studentNum = 'STU-' . date('Y') . '-' . strtoupper(substr(uniqid(), -6));
-            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, surname, program, level, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')");
-            if ($stmt) { $stmt->bind_param('sssssi', $studentNum, $fullName, $fn, $ln, $program, $level);
+            $temp_password = bin2hex(random_bytes(4));
+            $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
+            $intake_year = date('Y');
+            $intake_period = date('n') <= 6 ? 'January' : 'July';
+            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, surname, program, level, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)");
+            if ($stmt) { $stmt->bind_param('sssssisssssss', $studentNum, $fullName, $fn, $ln, $program, $level, $ph, $em, $intake_year, $intake_period, $password_hash);
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
                     if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
-                    $_SESSION['success'] = "Student $fullName registered (#$studentNum)."; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)");
+                    $_SESSION['success'] = "Student $fullName registered (#$studentNum). Password: $temp_password"; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)");
                     $nid = createNotification('New Student Registered', "Student $fullName (#$studentNum) was registered.", 'academic-registrar.php?page=student-records', 'success', 'fas fa-user-graduate');
                     if ($nid) notifyAllStaff($nid);
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }

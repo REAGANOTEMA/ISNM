@@ -68,18 +68,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $index_number = "UACE/" . strtoupper(substr(uniqid(), -6)) . "/" . str_pad($nextNum, 4, "0", STR_PAD_LEFT);
 
     $dob = !empty($_POST["dob"]) ? trim($_POST["dob"]) : null;
+    $temp_password = bin2hex(random_bytes(4));
+    $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
+    $intake_year = date('Y');
+    $intake_period = date('n') <= 6 ? 'January' : 'July';
 
-    $stmt = $conn->prepare("INSERT INTO students (student_number, registration_number, index_number, first_name, surname, other_name, full_name, email, phone, mobile_number, course, program, current_year, year, level, set_name, gender, date_of_birth, address, nationality, guardian_name, guardian_phone, passport_photo, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
+    $stmt = $conn->prepare("INSERT INTO students (student_number, registration_number, index_number, first_name, surname, other_name, full_name, email, phone, mobile_number, course, program, current_year, year, level, set_name, gender, date_of_birth, address, nationality, guardian_name, guardian_phone, passport_photo, intake_year, intake_period, status, password, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)");
 
     $year = $currentYear;
     if ($stmt) {
-        $stmt->bind_param("sssssssssssssiissssssss",
+        $stmt->bind_param("sssssssssssssiisssssssssss",
             $student_number, $registration_number, $index_number,
             $fname, $lname, $otherName, $full_name,
             $email, $phone, $phone,
             $course, $course, $currentYear, $year, $level, $level,
             $gender, $dob, $address, $nationality,
-            $guardian, $gphone, $imageName
+            $guardian, $gphone, $imageName,
+            $intake_year, $intake_period, $password_hash
         );
 
         if ($stmt->execute()) {

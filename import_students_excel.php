@@ -73,9 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff && $studentsConn) {
                             }
 
                             $password_hash = password_hash('Student@123', PASSWORD_DEFAULT);
-                            $stmt = $studentsConn->prepare("INSERT INTO students (student_number, full_name, first_name, last_name, email, phone, gender, course_name, set_name, date_of_birth, password, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', NOW())");
+                            $intake_year = date('Y');
+                            $intake_period = date('n') <= 6 ? 'January' : 'July';
+                            $stmt = $studentsConn->prepare("INSERT INTO students (student_number, full_name, first_name, surname, email, phone, gender, program, set_name, date_of_birth, intake_year, intake_period, password, is_first_login, password_changed, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 'Active', NOW())");
                             if ($stmt) {
-                                $stmt->bind_param("sssssssssss", $student_number, $full_name, $first_name, $last_name, $email, $phone, $gender, $course_name, $set_name, $dob, $password_hash);
+                                $stmt->bind_param("ssssssssssssss", $student_number, $full_name, $first_name, $last_name, $email, $phone, $gender, $course_name, $set_name, $dob, $intake_year, $intake_period, $password_hash);
                                 if ($stmt->execute()) {
                                     $imported++;
                                 } else {

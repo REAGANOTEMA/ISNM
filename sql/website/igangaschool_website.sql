@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 16, 2026 at 07:22 AM
+-- Generation Time: Jul 16, 2026 at 10:57 PM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -126,6 +126,24 @@ CREATE TABLE `academic_registrar_activity_log` (
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admins`
+--
+
+CREATE TABLE `admins` (
+  `id` varchar(50) NOT NULL,
+  `s_no` int(11) NOT NULL,
+  `fname` varchar(100) DEFAULT NULL,
+  `lname` varchar(100) DEFAULT NULL,
+  `dob` date DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `gender` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `image` varchar(500) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -724,6 +742,48 @@ CREATE TABLE `bursar_users` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `buses`
+--
+
+CREATE TABLE `buses` (
+  `s_no` int(11) NOT NULL,
+  `bus_id` varchar(50) NOT NULL,
+  `bus_title` varchar(100) DEFAULT NULL,
+  `bus_number` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bus_root`
+--
+
+CREATE TABLE `bus_root` (
+  `s_no` int(11) NOT NULL,
+  `bus_id` varchar(50) NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `arrival_time` varchar(20) DEFAULT NULL,
+  `serial` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bus_staff`
+--
+
+CREATE TABLE `bus_staff` (
+  `s_no` int(11) NOT NULL,
+  `id` varchar(50) NOT NULL,
+  `bus_id` varchar(50) NOT NULL,
+  `name` varchar(150) DEFAULT NULL,
+  `contact` varchar(30) DEFAULT NULL,
+  `role` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -2540,6 +2600,20 @@ CREATE TABLE `expenses` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `feedback`
+--
+
+CREATE TABLE `feedback` (
+  `s_no` int(11) NOT NULL,
+  `sender_id` varchar(50) DEFAULT NULL,
+  `receiver_id` varchar(50) DEFAULT NULL,
+  `msg` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `feedback_submissions`
 --
 
@@ -3706,6 +3780,20 @@ CREATE TABLE `library_fines` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `marks`
+--
+
+CREATE TABLE `marks` (
+  `s_no` int(11) NOT NULL,
+  `exam_id` varchar(50) NOT NULL,
+  `subject` varchar(100) DEFAULT NULL,
+  `student_id` varchar(50) DEFAULT NULL,
+  `marks` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `medicine_stock`
 --
 
@@ -3922,6 +4010,41 @@ CREATE TABLE `news` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notes`
+--
+
+CREATE TABLE `notes` (
+  `s_no` int(11) NOT NULL,
+  `sender_id` varchar(50) DEFAULT NULL,
+  `editor_id` varchar(50) DEFAULT NULL,
+  `class` varchar(50) DEFAULT NULL,
+  `subject` varchar(100) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `file` varchar(500) DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notice`
+--
+
+CREATE TABLE `notice` (
+  `s_no` int(11) NOT NULL,
+  `sender_id` varchar(50) DEFAULT NULL,
+  `editor_id` varchar(50) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `body` text DEFAULT NULL,
+  `importance` varchar(50) DEFAULT NULL,
+  `file` varchar(500) DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -4868,6 +4991,20 @@ CREATE TABLE `registrar_transcript_requests` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reminders`
+--
+
+CREATE TABLE `reminders` (
+  `s_no` int(11) NOT NULL,
+  `id` varchar(50) NOT NULL,
+  `message` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -6042,6 +6179,24 @@ CREATE TABLE `student_appeals` (
   `outcome` varchar(500) DEFAULT NULL,
   `status` enum('pending','approved','rejected') DEFAULT 'pending',
   `reviewed_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_applications`
+--
+
+CREATE TABLE `student_applications` (
+  `id` int(11) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `surname` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) DEFAULT '',
+  `program_applied` varchar(255) DEFAULT '',
+  `status` varchar(50) DEFAULT 'Pending',
+  `submitted_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -7654,6 +7809,19 @@ CREATE TABLE `supplier_payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `syllabus`
+--
+
+CREATE TABLE `syllabus` (
+  `s_no` int(11) NOT NULL,
+  `class` varchar(50) NOT NULL,
+  `subject` varchar(100) NOT NULL,
+  `file` varchar(500) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `system_modules`
 --
 
@@ -7779,6 +7947,28 @@ INSERT INTO `timetable` (`id`, `program`, `year_of_study`, `semester`, `day_of_w
 (79, 'Diploma in Nursing', 2, 'Semester 3', 'Friday', '10:00-12:00', 'Psychiatric Nursing', 'DNM203', 'Mrs. Nabirye Sarah', 'Lecture Hall B', '2024/2025', NULL, '2026-07-03 04:51:14'),
 (80, 'Diploma in Nursing', 3, 'Semester 5', 'Tuesday', '08:00-12:00', 'Clinical Practicum I', 'DNM304', 'Head of Nursing', 'Iganga RRH', '2024/2025', NULL, '2026-07-03 04:51:14'),
 (81, 'Diploma in Nursing', 3, 'Semester 5', 'Thursday', '10:00-12:00', 'Nursing Management & Leadership', 'DNM303', 'Dr. Mubiru John', 'Lecture Hall C', '2024/2025', NULL, '2026-07-03 04:51:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `time_table`
+--
+
+CREATE TABLE `time_table` (
+  `s_no` int(11) NOT NULL,
+  `class` varchar(50) DEFAULT NULL,
+  `section` varchar(50) DEFAULT NULL,
+  `start_time` varchar(20) DEFAULT NULL,
+  `end_time` varchar(20) DEFAULT NULL,
+  `mon` varchar(100) DEFAULT NULL,
+  `tue` varchar(100) DEFAULT NULL,
+  `wed` varchar(100) DEFAULT NULL,
+  `thu` varchar(100) DEFAULT NULL,
+  `fri` varchar(100) DEFAULT NULL,
+  `sat` varchar(100) DEFAULT NULL,
+  `editor_id` varchar(50) DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -7949,6 +8139,13 @@ ALTER TABLE `academic_programs`
 --
 ALTER TABLE `academic_registrar_activity_log`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `admins`
+--
+ALTER TABLE `admins`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_s_no` (`s_no`);
 
 --
 -- Indexes for table `admission_activity_logs`
@@ -8147,6 +8344,27 @@ ALTER TABLE `bursar_tax_periods`
 --
 ALTER TABLE `bursar_users`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `buses`
+--
+ALTER TABLE `buses`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_bus_id` (`bus_id`);
+
+--
+-- Indexes for table `bus_root`
+--
+ALTER TABLE `bus_root`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_bus_id` (`bus_id`);
+
+--
+-- Indexes for table `bus_staff`
+--
+ALTER TABLE `bus_staff`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_bus_id` (`bus_id`);
 
 --
 -- Indexes for table `capital_projects`
@@ -8527,6 +8745,14 @@ ALTER TABLE `expenses`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_sender` (`sender_id`),
+  ADD KEY `idx_receiver` (`receiver_id`);
+
+--
 -- Indexes for table `feedback_submissions`
 --
 ALTER TABLE `feedback_submissions`
@@ -8776,6 +9002,14 @@ ALTER TABLE `library_fines`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `marks`
+--
+ALTER TABLE `marks`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_exam_id` (`exam_id`),
+  ADD KEY `idx_student_id` (`student_id`);
+
+--
 -- Indexes for table `medicine_stock`
 --
 ALTER TABLE `medicine_stock`
@@ -8834,6 +9068,19 @@ ALTER TABLE `module_permissions`
 --
 ALTER TABLE `news`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `notes`
+--
+ALTER TABLE `notes`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_class` (`class`);
+
+--
+-- Indexes for table `notice`
+--
+ALTER TABLE `notice`
+  ADD PRIMARY KEY (`s_no`);
 
 --
 -- Indexes for table `notifications`
@@ -9054,6 +9301,13 @@ ALTER TABLE `registrar_transcript_requests`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `reminders`
+--
+ALTER TABLE `reminders`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_id` (`id`);
+
+--
 -- Indexes for table `request_tracking`
 --
 ALTER TABLE `request_tracking`
@@ -9216,6 +9470,13 @@ ALTER TABLE `student_admission_tracking`
 --
 ALTER TABLE `student_appeals`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_applications`
+--
+ALTER TABLE `student_applications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sa_status` (`status`);
 
 --
 -- Indexes for table `student_attendance`
@@ -9422,6 +9683,13 @@ ALTER TABLE `supplier_payments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `syllabus`
+--
+ALTER TABLE `syllabus`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_class_subject` (`class`,`subject`);
+
+--
 -- Indexes for table `system_modules`
 --
 ALTER TABLE `system_modules`
@@ -9435,6 +9703,13 @@ ALTER TABLE `system_modules`
 --
 ALTER TABLE `timetable`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `time_table`
+--
+ALTER TABLE `time_table`
+  ADD PRIMARY KEY (`s_no`),
+  ADD KEY `idx_class_section` (`class`,`section`);
 
 --
 -- Indexes for table `transcripts`
@@ -9501,6 +9776,12 @@ ALTER TABLE `academic_programs`
 --
 ALTER TABLE `academic_registrar_activity_log`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `admins`
+--
+ALTER TABLE `admins`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `admission_activity_logs`
@@ -9663,6 +9944,24 @@ ALTER TABLE `bursar_tax_periods`
 --
 ALTER TABLE `bursar_users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `buses`
+--
+ALTER TABLE `buses`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bus_root`
+--
+ALTER TABLE `bus_root`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bus_staff`
+--
+ALTER TABLE `bus_staff`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `capital_projects`
@@ -9977,6 +10276,12 @@ ALTER TABLE `expenses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `feedback`
+--
+ALTER TABLE `feedback`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `feedback_submissions`
 --
 ALTER TABLE `feedback_submissions`
@@ -10205,6 +10510,12 @@ ALTER TABLE `library_fines`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `marks`
+--
+ALTER TABLE `marks`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `medicine_stock`
 --
 ALTER TABLE `medicine_stock`
@@ -10257,6 +10568,18 @@ ALTER TABLE `module_permissions`
 --
 ALTER TABLE `news`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notes`
+--
+ALTER TABLE `notes`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notice`
+--
+ALTER TABLE `notice`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -10433,6 +10756,12 @@ ALTER TABLE `registrar_transcript_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `reminders`
+--
+ALTER TABLE `reminders`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `request_tracking`
 --
 ALTER TABLE `request_tracking`
@@ -10568,6 +10897,12 @@ ALTER TABLE `student_admission_tracking`
 -- AUTO_INCREMENT for table `student_appeals`
 --
 ALTER TABLE `student_appeals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_applications`
+--
+ALTER TABLE `student_applications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -10757,6 +11092,12 @@ ALTER TABLE `supplier_payments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `syllabus`
+--
+ALTER TABLE `syllabus`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `system_modules`
 --
 ALTER TABLE `system_modules`
@@ -10767,6 +11108,12 @@ ALTER TABLE `system_modules`
 --
 ALTER TABLE `timetable`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+
+--
+-- AUTO_INCREMENT for table `time_table`
+--
+ALTER TABLE `time_table`
+  MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `transcripts`

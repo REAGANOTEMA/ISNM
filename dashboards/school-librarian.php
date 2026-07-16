@@ -149,17 +149,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if ($action === 'create') {
                 $fields = $_POST;
                 unset($fields['action'], $fields['table']);
-                $cols = implode(',', array_map(function($k) { return "`$k`"; }, array_keys($fields)));
-                $vals = implode(',', array_map(function($v) use ($conn) { return $conn->real_escape_string($v); }, array_values($fields)));
-                $conn->query("INSERT INTO `{$students_db_name}`.$table ($cols) VALUES ('$vals')");
-                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
+                $cols = []; $vals = []; $types = '';
+                foreach ($fields as $k => $v) {
+                    if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $k)) continue;
+                    $cols[] = "`$k`";
+                    $vals[] = $v;
+                    $types .= 's';
+                }
+                if (!empty($cols)) {
+                    $placeholders = implode(',', array_fill(0, count($cols), '?'));
+                    $stmt = $conn->prepare("INSERT INTO `{$students_db_name}`.$table (" . implode(',', $cols) . ") VALUES ($placeholders)");
+                    if ($stmt) {
+                        $stmt->bind_param($types, ...$vals);
+                        $stmt->execute();
+                        echo json_encode(['success' => true, 'id' => $stmt->insert_id]);
+                        $stmt->close();
+                    } else {
+                        echo json_encode(['error' => 'Prepare failed']);
+                    }
+                }
             } elseif ($action === 'update') {
                 $id = (int)($_POST['id'] ?? 0);
                 unset($fields['action'], $fields['table'], $fields['id']);
-                $sets = [];
-                foreach ($fields as $k => $v) { $sets[] = "`$k`='" . $conn->real_escape_string($v) . "'"; }
-                $conn->query("UPDATE `{$students_db_name}`.$table SET " . implode(',', $sets) . " WHERE id=$id");
-                echo json_encode(['success' => true]);
+                $sets = []; $vals = []; $types = '';
+                foreach ($fields as $k => $v) {
+                    if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $k)) continue;
+                    $sets[] = "`$k`=?";
+                    $vals[] = $v;
+                    $types .= 's';
+                }
+                if (!empty($sets) && $id) {
+                    $vals[] = $id;
+                    $types .= 'i';
+                    $stmt = $conn->prepare("UPDATE `{$students_db_name}`.$table SET " . implode(',', $sets) . " WHERE id=?");
+                    if ($stmt) {
+                        $stmt->bind_param($types, ...$vals);
+                        $stmt->execute();
+                        echo json_encode(['success' => true]);
+                        $stmt->close();
+                    } else {
+                        echo json_encode(['error' => 'Prepare failed']);
+                    }
+                }
             } else {
                 echo json_encode(['error' => 'Unknown action']);
             }
