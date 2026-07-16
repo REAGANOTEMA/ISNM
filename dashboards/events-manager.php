@@ -218,9 +218,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             }
 
             case 'get_calendar_events': {
-                $start = trim($_POST['start'] ?? date('Y-m-01'));
-                $end = trim($_POST['end'] ?? date('Y-m-t'));
-                $r = $staffConn->query("SELECT id, title, event_date as start, event_time, location, category, status, description FROM events WHERE status='published' AND event_date BETWEEN '$start' AND '$end' ORDER BY event_date");
+                $start = preg_replace('/[^0-9\-]/', '', trim($_POST['start'] ?? date('Y-m-01')));
+                $end = preg_replace('/[^0-9\-]/', '', trim($_POST['end'] ?? date('Y-m-t')));
+                $stmt = $staffConn->prepare("SELECT id, title, event_date as start, event_time, location, category, status, description FROM events WHERE status='published' AND event_date BETWEEN ? AND ? ORDER BY event_date");
+                if ($stmt) { $stmt->bind_param('ss', $start, $end); $stmt->execute(); $r = $stmt->get_result(); } else { $r = false; }
                 $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
                 $calendar = [];
                 foreach ($rows as $ev) {

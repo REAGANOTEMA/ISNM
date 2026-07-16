@@ -784,6 +784,95 @@ if ($staff) {
     addColumn($staff, 'staffs', 'staff_roles', 'hierarchy_level', "INT(11) DEFAULT 5");
     addColumn($staff, 'staffs', 'staff_roles', 'permissions', "JSON DEFAULT NULL");
 
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `applicants` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `application_number` VARCHAR(30) NOT NULL,
+        `student_number` VARCHAR(50) DEFAULT NULL,
+        `registration_number` VARCHAR(50) DEFAULT NULL,
+        `full_name` VARCHAR(255) NOT NULL,
+        `first_name` VARCHAR(100) DEFAULT NULL,
+        `middle_name` VARCHAR(100) DEFAULT NULL,
+        `surname` VARCHAR(100) DEFAULT NULL,
+        `gender` ENUM('Male','Female','Other') DEFAULT NULL,
+        `date_of_birth` DATE DEFAULT NULL,
+        `email` VARCHAR(100) DEFAULT NULL,
+        `phone` VARCHAR(20) DEFAULT NULL,
+        `nationality` VARCHAR(100) DEFAULT 'Ugandan',
+        `district` VARCHAR(100) DEFAULT NULL,
+        `religion` VARCHAR(50) DEFAULT NULL,
+        `address` TEXT DEFAULT NULL,
+        `program_id` INT(11) DEFAULT NULL,
+        `intake` VARCHAR(50) DEFAULT NULL,
+        `application_source` ENUM('Online','Manual','Walk-in','Referral','Other') DEFAULT 'Online',
+        `status` ENUM('New','Under Review','Waiting for Documents','Requirements Verified','Interview Scheduled','Approved','Rejected','Registered','Withdrawn') NOT NULL DEFAULT 'New',
+        `rejection_reason` TEXT DEFAULT NULL,
+        `guardian_name` VARCHAR(200) DEFAULT NULL,
+        `guardian_phone` VARCHAR(20) DEFAULT NULL,
+        `emergency_contact_name` VARCHAR(100) DEFAULT NULL,
+        `emergency_contact_phone` VARCHAR(20) DEFAULT NULL,
+        `submitted_at` TIMESTAMP NULL DEFAULT NULL,
+        `reviewed_by` INT(11) DEFAULT NULL,
+        `reviewed_at` DATETIME DEFAULT NULL,
+        `approved_by` INT(11) DEFAULT NULL,
+        `approved_at` DATETIME DEFAULT NULL,
+        `registered_at` DATETIME DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_application_number` (`application_number`),
+        INDEX `idx_student_number` (`student_number`),
+        INDEX `idx_status` (`status`),
+        INDEX `idx_program_id` (`program_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'applicants');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `student_admission_tracking` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `student_number` VARCHAR(50) DEFAULT NULL,
+        `full_name` VARCHAR(255) DEFAULT NULL,
+        `application_number` VARCHAR(30) DEFAULT NULL,
+        `applicant_id` INT(11) DEFAULT NULL,
+        `program` VARCHAR(255) DEFAULT NULL,
+        `intake` VARCHAR(50) DEFAULT NULL,
+        `admission_date` DATE DEFAULT NULL,
+        `admission_status` ENUM('Pending','Under Review','Requirements Pending','Approved','Rejected','Registered') NOT NULL DEFAULT 'Pending',
+        `requirements_total` INT(11) NOT NULL DEFAULT 0,
+        `requirements_completed` INT(11) NOT NULL DEFAULT 0,
+        `documents_uploaded` INT(11) NOT NULL DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_track_app` (`application_number`),
+        INDEX `idx_student_number` (`student_number`),
+        INDEX `idx_applicant_id` (`applicant_id`),
+        INDEX `idx_admission_status` (`admission_status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_admission_tracking');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `staff_profiles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `staff_id` INT(11) NOT NULL,
+        `national_id` VARCHAR(50) DEFAULT NULL,
+        `date_of_birth` DATE DEFAULT NULL,
+        `gender` ENUM('Male','Female','Other') DEFAULT NULL,
+        `marital_status` VARCHAR(30) DEFAULT NULL,
+        `nationality` VARCHAR(100) DEFAULT 'Ugandan',
+        `district` VARCHAR(100) DEFAULT NULL,
+        `subcounty` VARCHAR(100) DEFAULT NULL,
+        `village` VARCHAR(100) DEFAULT NULL,
+        `next_of_kin_name` VARCHAR(200) DEFAULT NULL,
+        `next_of_kin_phone` VARCHAR(20) DEFAULT NULL,
+        `next_of_kin_relationship` VARCHAR(50) DEFAULT NULL,
+        `bank_name` VARCHAR(100) DEFAULT NULL,
+        `bank_account_number` VARCHAR(50) DEFAULT NULL,
+        `nssf_number` VARCHAR(50) DEFAULT NULL,
+        `tin_number` VARCHAR(50) DEFAULT NULL,
+        `highest_education` VARCHAR(100) DEFAULT NULL,
+        `institution` VARCHAR(200) DEFAULT NULL,
+        `year_graduated` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_staff_profile` (`staff_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'staff_profiles');
+
     $staff->close();
 }
 

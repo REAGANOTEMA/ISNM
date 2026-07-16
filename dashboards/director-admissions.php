@@ -142,7 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)($_POST['id'] ?? 0);
         $st = trim($_POST['status'] ?? '');
         if ($id && $st) {
-            $conn->query("UPDATE applicants SET status='" . $conn->real_escape_string($st) . "',reviewed_by=$userId,reviewed_at=NOW() WHERE id=$id");
+            $stmt = $conn->prepare("UPDATE applicants SET status=?, reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sii', $st, $userId, $id); $stmt->execute(); $stmt->close(); }
             logAdmission($conn, $id, $userId, "Status: $st", "Status changed to $st");
         }
         echo json_encode(['success' => true]);
@@ -150,7 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'approve') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("UPDATE applicants SET status='Approved',approved_by=$userId,approved_at=NOW() WHERE id=$id");
+        $stmt = $conn->prepare("UPDATE applicants SET status='Approved', approved_by=?, approved_at=NOW() WHERE id=?");
+        if ($stmt) { $stmt->bind_param('ii', $userId, $id); $stmt->execute(); $stmt->close(); }
         logAdmission($conn, $id, $userId, "Approved", "Application approved");
         echo json_encode(['success' => true]);
         exit;
@@ -158,7 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'reject') {
         $id = (int)($_POST['id'] ?? 0);
         $reason = trim($_POST['reason'] ?? '');
-        $conn->query("UPDATE applicants SET status='Rejected',rejection_reason='" . $conn->real_escape_string($reason) . "' WHERE id=$id");
+        $stmt = $conn->prepare("UPDATE applicants SET status='Rejected', rejection_reason=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $reason, $id); $stmt->execute(); $stmt->close(); }
         logAdmission($conn, $id, $userId, "Rejected", "Reason: $reason");
         echo json_encode(['success' => true]);
         exit;
@@ -245,7 +248,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_requirement') {
         $id = (int)($_POST['requirement_id'] ?? 0);
         if ($id) {
-            $conn->query("DELETE FROM student_requirements WHERE id=$id");
+            $stmt = $conn->prepare("DELETE FROM student_requirements WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             logAdmission($conn, 0, $userId, "Requirement Deleted", "Requirement #$id deleted");
         }
         echo json_encode(['success' => true]);

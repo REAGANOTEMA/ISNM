@@ -1221,28 +1221,49 @@ img {
   .sidebar-toggle, .ent-hamburger, .sidebar-overlay, .sp-overlay,
   .dashboard-header, .isnm-header, .isnm-navbar,
   .navbar, #whatsappFloat, .isnm-loader,
-  .btn, .no-print {
+  .btn, .no-print, .module-window-header, .module-minimize-btn,
+  .module-close-btn, .module-refresh-btn, .toolbar-actions,
+  .sidebar-bottom, .sidebar-footer, .topbar, .top-bar,
+  .notification-bar, .page-header .btn {
     display: none !important;
   }
 
-  .main-content, .dashboard-main, .main, .sp-content {
+  .main-content, .dashboard-main, .main, .sp-content,
+  .dashboard-content, .content-area, .page-content {
     margin-left: 0 !important;
-    padding: 0 !important;
-  }
-
-  .dashboard-content {
-    padding: 0 !important;
+    padding: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
 
   body {
     background: #fff !important;
     color: #000 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .card, .stat-card, .content-section {
+  .card, .stat-card, .content-section, .module-window, .card-body {
     break-inside: avoid !important;
     box-shadow: none !important;
     border: 1px solid #ddd !important;
+    page-break-inside: avoid !important;
+  }
+
+  table {
+    font-size: 9pt !important;
+    border-collapse: collapse !important;
+  }
+
+  table th, table td {
+    padding: 4px 6px !important;
+    border: 1px solid #999 !important;
+  }
+
+  .modal, .modal-backdrop, .modal.show, .offcanvas {
+    display: none !important;
   }
 }
 

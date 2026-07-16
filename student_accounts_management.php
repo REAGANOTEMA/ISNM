@@ -1277,7 +1277,16 @@ function generateStudentId() {
     <script>
         // Export students function
         function exportStudents() {
-            window.location.href = 'student_accounts_management.php?action=export_students';
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'student_accounts_management.php';
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'action';
+            input.value = 'export_students';
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
         }
 
         // View student details

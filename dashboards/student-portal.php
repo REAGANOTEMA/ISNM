@@ -44,7 +44,7 @@ $profile_picture = $student['profile_picture'] ?? '';
 $student_status = $student['status'] ?? 'Active';
 
 function tableExists($db, $table) {
-    if (!$db) return false;
+    if (!$db || !preg_match('/^[a-zA-Z0-9_]+$/', $table)) return false;
     $r = $db->query("SHOW TABLES LIKE '$table'");
     return $r && $r->num_rows > 0;
 }

@@ -146,35 +146,19 @@ if (!function_exists('handleWebsiteSubmissionsAction')) {
         if (!$id || !$type) return false;
 
         if ($action === 'approve') {
-            switch ($type) {
-                case 'contacts':
-                    $conn->query("UPDATE contact_submissions SET status='Read' WHERE id=" . $id);
-                    break;
-                case 'volunteers':
-                    $conn->query("UPDATE volunteer_applications SET status='approved' WHERE id=" . $id);
-                    break;
-                case 'donations':
-                    $conn->query("UPDATE donations SET status='verified' WHERE id=" . $id);
-                    break;
-                case 'applications':
-                    $conn->query("UPDATE student_applications SET status='Approved' WHERE id=" . $id);
-                    break;
+            $tableMap = ['contacts' => ['contact_submissions', 'Read'], 'volunteers' => ['volunteer_applications', 'approved'], 'donations' => ['donations', 'verified'], 'applications' => ['student_applications', 'Approved']];
+            if (isset($tableMap[$type])) {
+                list($tbl, $newStatus) = $tableMap[$type];
+                $stmt = $conn->prepare("UPDATE `$tbl` SET status=? WHERE id=?");
+                if ($stmt) { $stmt->bind_param('si', $newStatus, $id); $stmt->execute(); $stmt->close(); }
             }
             $_SESSION['ws_success'] = ucfirst($type) . ' submission approved.';
         } elseif ($action === 'resolve') {
-            switch ($type) {
-                case 'contacts':
-                    $conn->query("UPDATE contact_submissions SET status='Responded' WHERE id=" . $id);
-                    break;
-                case 'volunteers':
-                    $conn->query("UPDATE volunteer_applications SET status='resolved' WHERE id=" . $id);
-                    break;
-                case 'donations':
-                    $conn->query("UPDATE donations SET status='verified' WHERE id=" . $id);
-                    break;
-                case 'applications':
-                    $conn->query("UPDATE student_applications SET status='Resolved' WHERE id=" . $id);
-                    break;
+            $tableMap = ['contacts' => ['contact_submissions', 'Responded'], 'volunteers' => ['volunteer_applications', 'resolved'], 'donations' => ['donations', 'verified'], 'applications' => ['student_applications', 'Resolved']];
+            if (isset($tableMap[$type])) {
+                list($tbl, $newStatus) = $tableMap[$type];
+                $stmt = $conn->prepare("UPDATE `$tbl` SET status=? WHERE id=?");
+                if ($stmt) { $stmt->bind_param('si', $newStatus, $id); $stmt->execute(); $stmt->close(); }
             }
             $_SESSION['ws_success'] = ucfirst($type) . ' submission resolved.';
         }

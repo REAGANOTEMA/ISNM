@@ -380,10 +380,11 @@ if (isset($_REQUEST['ajax'])) {
             $types .= 'i';
             $sql = "UPDATE `$staff_db`.`applicants` SET " . implode(', ', $sets) . " WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$params);
+                $stmt->bind_param($types, ...$params);
             if ($stmt->execute()) {
                 $an = '';
-                $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+                $rstmt = $conn->prepare("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=?");
+                if ($rstmt) { $rstmt->bind_param('i', $id); $rstmt->execute(); $r = $rstmt->get_result(); } else { $r = false; }
                 if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
                 if ($an) {
                     $track_sets = [];
@@ -410,14 +411,17 @@ if (isset($_REQUEST['ajax'])) {
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
             $an = '';
-            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            $rstmt = $conn->prepare("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=?");
+            if ($rstmt) { $rstmt->bind_param('i', $id); $rstmt->execute(); $r = $rstmt->get_result(); } else { $r = false; }
             if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
             $stmt = $conn->prepare("DELETE FROM `$staff_db`.`applicants` WHERE id = ?");
             $stmt->bind_param('i', $id);
             if ($stmt->execute()) {
-                $conn->query("DELETE FROM `$staff_db`.`applicant_requirement_status` WHERE applicant_id = $id");
-                $conn->query("DELETE FROM `$staff_db`.`student_documents` WHERE applicant_id = $id");
-                if ($an) $conn->query("DELETE FROM `$staff_db`.`student_admission_tracking` WHERE student_number = '" . $conn->real_escape_string($an) . "'");
+                $d1 = $conn->prepare("DELETE FROM `$staff_db`.`applicant_requirement_status` WHERE applicant_id = ?");
+                if ($d1) { $d1->bind_param('i', $id); $d1->execute(); $d1->close(); }
+                $d2 = $conn->prepare("DELETE FROM `$staff_db`.`student_documents` WHERE applicant_id = ?");
+                if ($d2) { $d2->bind_param('i', $id); $d2->execute(); $d2->close(); }
+                if ($an) { $d3 = $conn->prepare("DELETE FROM `$staff_db`.`student_admission_tracking` WHERE student_number = ?"); if ($d3) { $d3->bind_param('s', $an); $d3->execute(); $d3->close(); } }
                 $response['success'] = true;
                 $response['message'] = 'Student deleted';
             } else {
@@ -468,11 +472,13 @@ if (isset($_REQUEST['ajax'])) {
         case 'approve_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'Approved' WHERE id = $id");
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`applicants` SET status = 'Approved' WHERE id = ?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             $an = '';
-            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            $rstmt = $conn->prepare("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=?");
+            if ($rstmt) { $rstmt->bind_param('i', $id); $rstmt->execute(); $r = $rstmt->get_result(); } else { $r = false; }
             if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
-            if ($an) $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Approved' WHERE student_number = '" . $conn->real_escape_string($an) . "'");
+            if ($an) { $tstmt = $conn->prepare("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Approved' WHERE student_number = ?"); if ($tstmt) { $tstmt->bind_param('s', $an); $tstmt->execute(); $tstmt->close(); } }
             $response['success'] = true;
             $response['message'] = 'Student approved';
             break;
@@ -480,11 +486,13 @@ if (isset($_REQUEST['ajax'])) {
         case 'reject_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'Rejected' WHERE id = $id");
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`applicants` SET status = 'Rejected' WHERE id = ?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             $an = '';
-            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            $rstmt = $conn->prepare("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=?");
+            if ($rstmt) { $rstmt->bind_param('i', $id); $rstmt->execute(); $r = $rstmt->get_result(); } else { $r = false; }
             if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
-            if ($an) $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Rejected' WHERE student_number = '" . $conn->real_escape_string($an) . "'");
+            if ($an) { $tstmt = $conn->prepare("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Rejected' WHERE student_number = ?"); if ($tstmt) { $tstmt->bind_param('s', $an); $tstmt->execute(); $tstmt->close(); } }
             $response['success'] = true;
             $response['message'] = 'Student rejected';
             break;
@@ -706,8 +714,10 @@ if (isset($_REQUEST['ajax'])) {
 
         case 'delete_meeting':
             $id = (int)($_POST['id'] ?? 0);
-            $conn->query("DELETE FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id=$id");
-            $conn->query("DELETE FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id=$id");
+            $d1 = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meeting_action_items` WHERE meeting_id=?");
+            if ($d1) { $d1->bind_param('i', $id); $d1->execute(); $d1->close(); }
+            $d2 = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meeting_agenda` WHERE meeting_id=?");
+            if ($d2) { $d2->bind_param('i', $id); $d2->execute(); $d2->close(); }
             $stmt = $conn->prepare("DELETE FROM `$staff_db`.`secretary_meetings` WHERE id=? AND user_id=?");
             $stmt->bind_param('ii', $id, $user_id);
             if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Deleted'; }
@@ -839,7 +849,8 @@ if (isset($_REQUEST['ajax'])) {
 
         case 'mark_message_read':
             $id = (int)($_POST['id'] ?? 0);
-            $conn->query("UPDATE `$staff_db`.`secretary_messages` SET is_read = 1 WHERE id = $id AND recipient_id = $user_id");
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`secretary_messages` SET is_read = 1 WHERE id = ? AND recipient_id = ?");
+            if ($stmt) { $stmt->bind_param('ii', $id, $user_id); $stmt->execute(); $stmt->close(); }
             $response['success'] = true;
             break;
 
@@ -1038,11 +1049,18 @@ if (isset($_REQUEST['ajax'])) {
             if ($stmt->execute()) {
                 if (!$id && $status === 'published') {
                     $doc_id = $id ?: $conn->insert_id;
-                    $conn->query("UPDATE `$staff_db`.`secretary_official_documents` SET published_by=$user_id, published_at=NOW() WHERE id=$doc_id");
+                    $pstmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET published_by=?, published_at=NOW() WHERE id=?");
+                    if ($pstmt) { $pstmt->bind_param('ii', $user_id, $doc_id); $pstmt->execute(); $pstmt->close(); }
                 }
                 if (!$id && ($status === 'approved' || $status === 'review')) {
                     $doc_id = $id ?: $conn->insert_id;
-                    $conn->query("UPDATE `$staff_db`.`secretary_official_documents` SET " . ($status === 'review' ? 'reviewed_by' : 'approved_by') . "=$user_id, " . ($status === 'review' ? 'reviewed_at' : 'approved_at') . "=NOW() WHERE id=$doc_id");
+                    if ($status === 'review') {
+                        $rstmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+                        if ($rstmt) { $rstmt->bind_param('ii', $user_id, $doc_id); $rstmt->execute(); $rstmt->close(); }
+                    } else {
+                        $astmt = $conn->prepare("UPDATE `$staff_db`.`secretary_official_documents` SET approved_by=?, approved_at=NOW() WHERE id=?");
+                        if ($astmt) { $astmt->bind_param('ii', $user_id, $doc_id); $astmt->execute(); $astmt->close(); }
+                    }
                 }
                 $response['success'] = true;
                 $response['message'] = 'Document saved';

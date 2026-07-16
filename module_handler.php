@@ -184,16 +184,27 @@ switch ($action) {
             if (!$tableCheck || $tableCheck->num_rows === 0) { echo json_encode(['error' => "Table {$moduleName} not found"]); break; }
             $validCols = directTableColumns($conn, $moduleName);
             $where = [];
+            $types = '';
+            $bindVals = [];
             foreach ($filters as $col => $val) {
-                if (in_array($col, $validCols, true)) { $escapedVal = $conn->real_escape_string($val); $where[] = "`{$col}` = '{$escapedVal}'"; }
+                if (in_array($col, $validCols, true)) { $where[] = "`{$col}` = ?"; $types .= 's'; $bindVals[] = $val; }
             }
             $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-            $sql = "SELECT * FROM `{$moduleName}` {$whereClause} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}";
-            $result = @$conn->query($sql);
+            if (!empty($bindVals)) {
+                $stmt = $conn->prepare("SELECT * FROM `{$moduleName}` {$whereClause} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}");
+                if ($stmt) { $stmt->bind_param($types, ...$bindVals); $stmt->execute(); $result = $stmt->get_result(); } else { $result = null; }
+            } else {
+                $result = @$conn->query("SELECT * FROM `{$moduleName}` {$whereClause} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}");
+            }
             if (!$result) { echo json_encode(['error' => $conn->error]); break; }
             $data = [];
             while ($row = $result->fetch_assoc()) $data[] = $row;
-            $countResult = @$conn->query("SELECT COUNT(*) as total FROM `{$moduleName}` {$whereClause}");
+            if (!empty($bindVals)) {
+                $cstmt = $conn->prepare("SELECT COUNT(*) as total FROM `{$moduleName}` {$whereClause}");
+                if ($cstmt) { $cstmt->bind_param($types, ...$bindVals); $cstmt->execute(); $countResult = $cstmt->get_result(); } else { $countResult = null; }
+            } else {
+                $countResult = @$conn->query("SELECT COUNT(*) as total FROM `{$moduleName}` {$whereClause}");
+            }
             $total = 0;
             if ($countResult) { $cr = $countResult->fetch_assoc(); $total = $cr ? (int)$cr['total'] : 0; }
             echo json_encode(['success' => true, 'data' => $data, 'columns' => $validCols, 'total' => $total, 'limit' => $limit, 'offset' => $offset, 'table' => $moduleName]);

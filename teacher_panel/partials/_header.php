@@ -39,7 +39,7 @@
     // Try to get theme from database if connection is available
     if (isset($_SESSION['uid']) && isset($conn) && $conn) {
         try {
-            $uid = $_SESSION['uid'];
+            $uid = intval($_SESSION['uid']);
             $query = "SELECT theme FROM users WHERE id='$uid'";
             $result = mysqli_query($conn, $query);
             if($result && mysqli_num_rows($result) > 0){
