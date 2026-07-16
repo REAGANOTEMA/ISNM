@@ -598,10 +598,6 @@ function filterSysTables(q) {
         });
     });
 }
-function openGlobalSearch() {
-    var el = document.querySelector('.global-search-bar input, .student-lookup, [onkeyup*="search"]');
-    if (el) el.focus();
-}
 </script>
 </body>
 </html>

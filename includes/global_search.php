@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Global Search Component â€” ISNM
+ * Global Search Component Ã¢â‚¬â€ ISNM
  * Includes both the search UI (renderGlobalSearchBar) and the AJAX handler.
  * Include in any dashboard head or layout file.
  *
@@ -114,10 +114,13 @@ function doGlobalSearch() {
       if (s.set_name || s.set) detail += (detail ? ' &middot; ' : '') + (s.set_name || s.set);
       var badge = isExcel ? '<span class="gs-badge gs-badge-excel">Excel</span>' : '<span class="gs-badge gs-badge-db">DB</span>';
       var statusBadge = s.status === 'Active' || !s.status ? '<span class="gs-badge gs-badge-active">Active</span>' : '';
+      var safeInitial = initial.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var safeName = (s.full_name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var safeDetail = detail.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       html += '<div class="global-search-item" onclick="goToStudent(' + JSON.stringify({name:s.full_name||'',id:s.id||0,sid:s.student_id||s.index_number||s.student_number||'',src:isExcel?'excel':'db'}).replace(/"/g,'&quot;') + ')">'
-        + '<div class="gs-avatar">' + initial + '</div>'
-        + '<div class="gs-info"><div class="gs-name">' + (s.full_name || '') + '</div>'
-        + '<div class="gs-detail">' + detail + '</div></div>'
+        + '<div class="gs-avatar">' + safeInitial + '</div>'
+        + '<div class="gs-info"><div class="gs-name">' + safeName + '</div>'
+        + '<div class="gs-detail">' + safeDetail + '</div></div>'
         + '<div>' + badge + ' ' + statusBadge + '</div>'
         + '</div>';
     }
@@ -158,91 +161,13 @@ function goToStudent(opts) {
   var src = opts.src || 'db';
   closeGlobalSearch();
   if (src === 'excel' || !id || id === '0') {
-    window.location.href = '../dashboards/student-management.php?student_search=' + encodeURIComponent(sid || name);
+    window.location.href = '../dashboards/academic-registrar.php?page=student-management&student_search=' + encodeURIComponent(sid || name);
     return;
   }
-  window.location.href = '../dashboards/student-management.php?student_search=' + encodeURIComponent(sid || name);
+  window.location.href = '../dashboards/student-management.php?student_id=' + encodeURIComponent(id) + '&student_search=' + encodeURIComponent(sid || name);
 }
 </script>
 <?php
 }
-
-if (!function_exists('globalStudentSearchHandler')) {
-function globalStudentSearchHandler($conn, $studentsDb, $staffDb = null, $websiteDb = null, $ictDb = null) {
-    $q = trim($_POST['q'] ?? '');
-    if (strlen($q) < 2) { echo json_encode([]); return; }
-    header('Content-Type: application/json');
-    $results = [];
-    $seenByNumber = [];
-
-    // Helper to search a single DB's students table, dedup by student_number
-    $searchDb = function($db, $source) use ($q, &$results, &$seenByNumber) {
-        if (!$db) return;
-        $qq = '%' . $db->real_escape_string($q) . '%';
-        $s = $db->prepare("SELECT id, student_id, student_number, index_number, CONCAT(first_name,' ',COALESCE(surname,'')) full_name, email, phone, program, level, set_name, status FROM students WHERE (first_name LIKE ? OR surname LIKE ? OR CONCAT(first_name,' ',COALESCE(surname,'')) LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? OR email LIKE ? OR set_name LIKE ?) AND status != 'deleted' LIMIT 100");
-        if (!$s) return;
-        $s->bind_param('sssssssss', $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq, $qq);
-        if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
-        $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
-        $s->close();
-        foreach ($rows as $r) {
-            $num = $r['student_number'] ?? $r['index_number'] ?? $r['student_id'] ?? '';
-            $key = $num !== '' ? $num : strtolower(trim($r['full_name'] ?? '') . '|' . trim($r['email'] ?? ''));
-            if (!isset($seenByNumber[$key])) {
-                $r['_source'] = $source;
-                $results[] = $r;
-                $seenByNumber[$key] = true;
-            }
-        }
-    };
-
-    // Auto-acquire missing connections
-    if (!$staffDb && function_exists('getStaffConnection')) {
-        $staffDb = getStaffConnection();
-    }
-    if (!$websiteDb && function_exists('getWebsiteConnection')) {
-        $websiteDb = getWebsiteConnection();
-    }
-    if (!$ictDb && function_exists('getICTConnection')) {
-        $ictDb = getICTConnection();
-    }
-
-    // Search all 4 databases
-    $searchDb($studentsDb, 'StudentsDB');
-    $searchDb($staffDb, 'StaffDB');
-    $searchDb($websiteDb, 'WebsiteDB');
-    $searchDb($ictDb, 'ICTDB');
-
-    // Search Excel files
-    try {
-        $loader = new StudentDataLoader($studentsDb);
-        $excelResults = $loader->searchStudents($q);
-        foreach ($excelResults as $er) {
-            $num = $er['student_number'] ?? $er['index_number'] ?? '';
-            $name = strtolower(trim($er['full_name'] ?? ''));
-            $key = $num !== '' ? $num : $name;
-            if (!isset($seenByNumber[$key])) {
-                $results[] = [
-                    'id' => 0,
-                    'student_id' => $er['index_number'] ?? $er['student_number'] ?? '',
-                    'student_number' => $er['student_number'] ?? '',
-                    'index_number' => $er['index_number'] ?? '',
-                    'full_name' => $er['full_name'] ?? '',
-                    'email' => $er['email'] ?? '',
-                    'phone' => $er['phone'] ?? '',
-                    'program' => $er['program'] ?? '',
-                    'level' => $er['level'] ?? '',
-                    'set_name' => $er['set_name'] ?? $er['set'] ?? '',
-                    'status' => 'Active',
-                    '_source' => 'Excel',
-                ];
-                $seenByNumber[$key] = true;
-            }
-        }
-    } catch (Exception $e) { error_log('global_search query: ' . $e->getMessage()); }
-    echo json_encode($results);
-}
 }
 
-// â”€â”€ Close the if (!function_exists('renderGlobalSearchBar')) wrapper â”€â”€
-}

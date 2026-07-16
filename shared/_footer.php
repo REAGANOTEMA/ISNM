@@ -364,15 +364,15 @@
       break-inside: avoid;
     }
     .footer-links ul li a {
-      font-size: 0.76rem;
-      padding: 5px 0;
+      font-size: 0.74rem;
+      padding: 4px 0;
       display: inline-flex;
       align-items: center;
       gap: 4px;
       line-height: 1.4;
     }
     .footer-links ul li a i {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       width: 12px;
       text-align: center;
       margin-right: 3px !important;
@@ -439,7 +439,7 @@
   }
 
   /* ════════════════════════════════════════════════════════════
-     MOBILE (< 576px) — Clean single-column, no icons
+     MOBILE (< 576px) — Compact 2-col quick links, clean layout
      ════════════════════════════════════════════════════════════ */
   @media (max-width: 576px) {
     .isnm-footer .container {
@@ -453,8 +453,8 @@
     .isnm-footer .row > div {
       padding-left: 0;
       padding-right: 0;
-      margin-bottom: 14px;
-      padding-bottom: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .isnm-footer .row > div:last-child {
@@ -466,18 +466,19 @@
       text-align: center;
     }
     .footer-logo-img {
-      width: 46px;
-      height: 46px;
-      margin-bottom: 6px;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 4px;
     }
     .footer-logo h4 {
-      font-size: 0.78rem;
-      margin-bottom: 6px;
-      line-height: 1.3;
+      font-size: 0.72rem;
+      margin-bottom: 4px;
+      line-height: 1.25;
+      letter-spacing: 0.3px;
     }
     .footer-logo p {
-      font-size: 0.7rem;
-      line-height: 1.3;
+      font-size: 0.66rem;
+      line-height: 1.25;
       margin-bottom: 1px;
     }
     .footer-logo p i {
@@ -486,36 +487,38 @@
     .social-links {
       justify-content: center;
       gap: 6px;
-      margin-top: 8px !important;
+      margin-top: 6px !important;
     }
     .social-btn {
-      width: 30px;
-      height: 30px;
-      font-size: 0.8rem;
-      min-width: 30px;
-      min-height: 30px;
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+      min-width: 28px;
+      min-height: 28px;
     }
     .isnm-footer h5 {
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .isnm-footer h5 i {
       display: none;
     }
     .footer-links ul {
-      columns: 1;
-      column-gap: 0;
-      text-align: center;
+      columns: 2;
+      column-gap: 8px;
+      text-align: left;
     }
     .footer-links ul li {
       break-inside: avoid;
-      margin-bottom: 1px;
+      margin-bottom: 0;
     }
     .footer-links ul li a {
-      font-size: 0.72rem;
-      padding: 3px 0;
-      display: inline-block;
+      font-size: 0.68rem;
+      padding: 2px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
       line-height: 1.3;
     }
     .footer-links ul li a i {
@@ -525,37 +528,37 @@
       text-align: center;
     }
     .footer-developer h5 {
-      font-size: 0.74rem;
+      font-size: 0.7rem;
       text-align: center;
     }
     .footer-developer h5 i {
       display: none;
     }
     .footer-developer h6 {
-      font-size: 0.74rem;
+      font-size: 0.7rem;
       text-align: center;
     }
     .footer-developer h6 i {
       display: none;
     }
     .developer-info .contact-info p {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       text-align: center;
-      line-height: 1.3;
+      line-height: 1.25;
       margin-bottom: 1px;
     }
     .developer-info .contact-info p i {
       display: none;
     }
     .developer-info .contact-info a {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
     }
     .developer-note {
       margin-top: 4px;
-      padding: 4px 6px;
+      padding: 3px 6px;
     }
     .developer-note p {
-      font-size: 0.66rem;
+      font-size: 0.63rem;
       text-align: center;
     }
     .developer-note p i {
@@ -563,26 +566,26 @@
     }
     .footer-developer .btn-3d.btn-sm {
       width: 100%;
-      padding: 8px 10px;
-      font-size: 0.74rem;
-      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 0.7rem;
+      min-height: 30px;
     }
     .footer-developer .btn-3d.btn-sm i {
       display: none;
     }
     .isnm-footer p,
     .isnm-footer a {
-      font-size: 0.7rem;
+      font-size: 0.66rem;
     }
     .footer-bottom {
-      padding: 8px 0;
+      padding: 6px 0;
     }
     .footer-bottom p {
-      font-size: 0.66rem;
+      font-size: 0.62rem;
       margin: 1px 0;
     }
     .footer-bottom .motto {
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       display: block;
       padding: 2px 0 0;
     }
@@ -599,44 +602,48 @@
       padding: 12px 8px 6px;
     }
     .isnm-footer .row > div {
-      margin-bottom: 10px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
     }
     .footer-logo-img {
-      width: 38px;
-      height: 38px;
+      width: 34px;
+      height: 34px;
     }
     .footer-logo h4 {
-      font-size: 0.72rem;
+      font-size: 0.66rem;
     }
     .footer-logo p {
-      font-size: 0.66rem;
+      font-size: 0.6rem;
     }
     .social-btn {
-      width: 26px;
-      height: 26px;
-      font-size: 0.72rem;
-      min-width: 26px;
-      min-height: 26px;
+      width: 24px;
+      height: 24px;
+      font-size: 0.68rem;
+      min-width: 24px;
+      min-height: 24px;
+    }
+    .footer-links ul {
+      columns: 2;
+      column-gap: 6px;
     }
     .footer-links ul li a {
-      font-size: 0.66rem;
+      font-size: 0.62rem;
     }
     .developer-info .contact-info p {
-      font-size: 0.64rem;
+      font-size: 0.6rem;
     }
     .developer-info .contact-info a {
-      font-size: 0.64rem;
+      font-size: 0.6rem;
     }
     .isnm-footer p,
     .isnm-footer a {
-      font-size: 0.66rem;
-    }
-    .footer-bottom p {
       font-size: 0.62rem;
     }
+    .footer-bottom p {
+      font-size: 0.58rem;
+    }
     .footer-bottom .motto {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
     }
   }
 

@@ -29,7 +29,7 @@ $sub = $_GET['sub'] ?? '';
 
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!function_exists('verifyCSRFToken') || !verifyCSRFToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
+    if (!function_exists('verifyCsrfToken') || !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'record_payment' && $stuConn) {
@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $desc = trim($_POST['description'] ?? ''); $amount = (float)($_POST['amount'] ?? 0);
         $cat = trim($_POST['category'] ?? 'General'); $date = $_POST['expense_date'] ?? date('Y-m-d');
         if ($desc && $amount > 0) {
-            $stmt = $staffConn->prepare("INSERT INTO expenses (title, expense_title, amount, category, description, expense_date, status, created_by) VALUES (?,?,?,?,?,?,'approved',?)");
-            if ($stmt) { $stmt->bind_param('ssdsssi', $desc, $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Expense recorded.'; } }
+            $stmt = $staffConn->prepare("INSERT INTO expenses (expense_title, amount, category, description, expense_date, status, created_by) VALUES (?,?,?,?,?,'approved',?)");
+            if ($stmt) { $stmt->bind_param('sdsssi', $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('add_expense execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record expense.'; } else { $_SESSION['success'] = 'Expense recorded.'; } }
         }
         header('Location: school-bursar.php?page=budget'); exit;
     }
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $budgetConn = $stuConn ?? $staffConn;
         if ($name && $amount > 0) {
             $stmt = $budgetConn->prepare("INSERT INTO budgets (budget_name, total_amount, fiscal_year, status, created_by) VALUES (?,?,?,'Draft',?)");
-            if ($stmt) { $stmt->bind_param('sdsi', $name, $amount, $year, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $_SESSION['success'] = 'Budget created.'; }
+            if ($stmt) { $stmt->bind_param('sdsi', $name, $amount, $year, $userId); if ($stmt->execute()) { $_SESSION['success'] = 'Budget created.'; } else { error_log('create_budget execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to create budget.'; } }
         }
         header('Location: school-bursar.php?page=budget'); exit;
     }
@@ -123,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $totStmt = $staffConn->prepare("SELECT COALESCE(SUM(gross_pay),0) tg, COALESCE(SUM(paye_tax + nssf_employee + other_deductions),0) td, COALESCE(SUM(net_pay),0) tnet FROM payroll_details WHERE payroll_run_id=?");
             if ($totStmt) { $totStmt->bind_param('i', $runId); $totStmt->execute(); $totals = $totStmt->get_result(); $totStmt->close(); } else { $totals = null; }
+            $t = ['tg' => 0, 'td' => 0, 'tnet' => 0];
             if ($totals) {
                 $t = $totals->fetch_assoc();
                 $updStmt = $staffConn->prepare("UPDATE payroll_runs SET total_gross=?, total_deductions=?, total_net=?, status='processed' WHERE id=?");
@@ -151,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $diff = $bankBal - $bookBal;
         $notes = trim($_POST['notes'] ?? '');
         $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,?,?,'completed',?)");
-        if ($stmt) { $stmt->bind_param('sddddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Bank reconciled.'; } }
+        if ($stmt) { $stmt->bind_param('sdddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('reconcile_bank execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Bank reconciled.'; } }
         header('Location: school-bursar.php?page=ledger'); exit;
     }
 

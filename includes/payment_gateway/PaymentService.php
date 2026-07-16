@@ -12,6 +12,7 @@ require_once __DIR__ . '/providers/AirtelMoneyGateway.php';
 require_once __DIR__ . '/providers/StripeGateway.php';
 require_once __DIR__ . '/providers/FlutterwaveGateway.php';
 require_once __DIR__ . '/providers/PesapalGateway.php';
+require_once __DIR__ . '/providers/PayPalGateway.php';
 require_once __DIR__ . '/providers/BankTransferGateway.php';
 
 class PaymentService {
@@ -71,6 +72,7 @@ class PaymentService {
             'stripe'     => new StripeGateway($config),
             'flutterwave'=> new FlutterwaveGateway($config),
             'pesapal'    => new PesapalGateway($config),
+            'paypal'     => new PayPalGateway($config),
             'bank_transfer' => new BankTransferGateway($config),
             default      => null,
         };

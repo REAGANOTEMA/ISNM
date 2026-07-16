@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Professional Hierarchical Sidebar Navigation
  * Collapsible accordion, smooth animations, role-filtered, auto-expand active.
@@ -390,10 +390,9 @@ body.menu-open { overflow: hidden !important; position: fixed !important; width:
         if (sidebar) sidebar.classList.toggle('open');
         if (overlay) overlay.classList.toggle('open');
     }
-    var leftToggle = document.getElementById('sidebarToggle');
-    if (leftToggle) leftToggle.addEventListener('click', toggleSidebar);
-    var rightToggle = document.getElementById('sidebarRightToggle');
-    if (rightToggle) rightToggle.addEventListener('click', toggleSidebar);
+    // NOTE: #sidebarToggle click handler is managed by dashboard_footer.php
+    // which also handles icon swap, body.menu-open, and resize cleanup.
+    // Do NOT register a click handler here to avoid the double-toggle bug.
 
     // â”€â”€ Sidebar mobile close buttons â”€â”€
     var mobileClose = document.getElementById('sidebarMobileClose');
