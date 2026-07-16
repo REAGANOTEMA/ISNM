@@ -12,7 +12,7 @@
 
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../../config/database.php';
 require_once __DIR__ . '/../PaymentService.php';
 
 $providerKey = $_GET['provider'] ?? '';

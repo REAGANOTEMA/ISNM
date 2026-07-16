@@ -455,7 +455,7 @@ $pageTitle = 'HR Manager';
   <div class="col-md-6">
     <div class="hr-card"><h3>Payroll Integration</h3>
     <p class="text-muted small">Payroll is finalized by the Bursar's office. HR validates and submits salary inputs.</p>
-    <div class="mb-2"><a href="payroll.php" class="btn btn-sm btn-primary">Go to Full Payroll System</a> <a href="bursar-payroll.php" class="btn btn-sm btn-outline-primary">Bursar Payroll</a></div>
+    <div class="mb-2"><a href="../payroll.php" class="btn btn-sm btn-primary">Go to Full Payroll System</a> <a href="bursar-payroll.php" class="btn btn-sm btn-outline-primary">Bursar Payroll</a></div>
     <h4 class="fs-6 mt-3">Pending Payroll Validation</h4>
     <?php $pe = $staff_conn->query("SELECT COUNT(*) c FROM payroll_employees WHERE staff_id NOT IN (SELECT staff_id FROM salary_structures WHERE staff_id IS NOT NULL)"); $pendingPayroll = $pe ? (int)$pe->fetch_assoc()['c'] : 0; ?>
     <p class="small"><?=$pendingPayroll?> staff members missing salary structure setup.</p>

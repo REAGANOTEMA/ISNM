@@ -9,7 +9,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-require_once __DIR__ . '/../config/database.php';
 $conn = getStudentsConnection();
 
 $totalStudents = $activeStudents = $newThisYear = $graduated = 0;

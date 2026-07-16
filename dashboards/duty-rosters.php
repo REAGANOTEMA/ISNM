@@ -73,8 +73,11 @@ if ($conn) {
     @$r = $conn->query("SELECT * FROM duty_rosters ORDER BY roster_date DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
     if (empty($rosters)) {
-        @$r = $conn->query("SELECT * FROM duty_roster ORDER BY date DESC LIMIT 100");
-        if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
+        $r2 = @$conn->query("SHOW TABLES LIKE 'duty_roster'");
+        if ($r2 && $r2->num_rows > 0) {
+            @$r = $conn->query("SELECT * FROM duty_roster ORDER BY created_at DESC LIMIT 100");
+            if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
+        }
     }
 }
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

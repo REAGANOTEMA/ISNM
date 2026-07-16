@@ -487,6 +487,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if($id){ $stmt=$staff->prepare("DELETE FROM {$students_db}.budget_records WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };if($stmt->affected_rows>0){fin_success('Budget deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
+    if ($act === 'create_budget_adjustment' && $staff) {
+        $budget_id = (int)($_POST['budget_id'] ?? 0);
+        $adjustment_amount = (float)($_POST['adjustment_amount'] ?? 0);
+        $reason = trim($_POST['reason'] ?? '');
+        if ($budget_id && $adjustment_amount && $reason) {
+            $stmt = $staff->prepare("INSERT INTO {$students_db}.budget_records (budget_name, budget_category, allocated_amount, status, notes, created_at) VALUES (?, 'Adjustment', ?, 'Pending', ?, NOW())");
+            if ($stmt) {
+                $desc = "Adjustment for budget #$budget_id: " . $reason;
+                $stmt->bind_param('sds', $desc, $adjustment_amount, $reason);
+                if ($stmt->execute()) {
+                    fin_success("Budget adjustment of " . number_format($adjustment_amount) . " submitted.");
+                } else {
+                    fin_error("Failed to submit adjustment.");
+                }
+                $stmt->close();
+            } else {
+                fin_error("Database error.");
+            }
+        } else {
+            fin_error("All fields are required.");
+        }
+        header('Location: director-finance.php?section=budget_adjustments'); exit;
+    }
     header('Location: director-finance.php'); exit;
 }
 $sv = $_SESSION['fin_success'] ?? ''; $ev = $_SESSION['fin_error'] ?? '';

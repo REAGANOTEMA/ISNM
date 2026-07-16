@@ -165,10 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $id = (int)($_POST['id'] ?? 0);
                 if ($id <= 0) throw new Exception('Invalid ID.');
                 $staffConn->begin_transaction();
-                $staffConn->query("DELETE FROM alumni_contributions WHERE alumni_id=$id");
-                $staffConn->query("DELETE FROM alumni_events WHERE alumni_id=$id");
-                $staffConn->query("DELETE FROM alumni_jobs WHERE alumni_id=$id");
-                $staffConn->query("DELETE FROM alumni WHERE id=$id");
+                $del1 = $staffConn->prepare("DELETE FROM alumni_contributions WHERE alumni_id=?");
+                $del1->bind_param("i", $id); $del1->execute(); $del1->close();
+                $del2 = $staffConn->prepare("DELETE FROM alumni_events WHERE alumni_id=?");
+                $del2->bind_param("i", $id); $del2->execute(); $del2->close();
+                $del3 = $staffConn->prepare("DELETE FROM alumni_jobs WHERE alumni_id=?");
+                $del3->bind_param("i", $id); $del3->execute(); $del3->close();
+                $del4 = $staffConn->prepare("DELETE FROM alumni WHERE id=?");
+                $del4->bind_param("i", $id); $del4->execute(); $del4->close();
                 $staffConn->commit();
                 echo json_encode(['success' => true, 'message' => 'Alumni record deleted.']);
                 break;
@@ -176,8 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 
             case 'get_alumni': {
                 $id = (int)($_POST['id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM alumni WHERE id=$id");
-                $a = $r ? $r->fetch_assoc() : null;
+                $stmt = $staffConn->prepare("SELECT * FROM alumni WHERE id=?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                $a = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
                 echo json_encode(['success' => (bool)$a, 'alumni' => $a]);
                 break;
             }
@@ -231,8 +238,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 
             case 'list_contributions': {
                 $alumni_id = (int)($_POST['alumni_id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM alumni_contributions WHERE alumni_id=$alumni_id ORDER BY contribution_date DESC");
-                echo json_encode(['success' => true, 'contributions' => $r ? $r->fetch_all(MYSQLI_ASSOC) : []]);
+                $stmt = $staffConn->prepare("SELECT * FROM alumni_contributions WHERE alumni_id=? ORDER BY contribution_date DESC");
+                $stmt->bind_param("i", $alumni_id);
+                $stmt->execute();
+                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+                echo json_encode(['success' => true, 'contributions' => $rows]);
                 break;
             }
 
@@ -246,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $description = trim($_POST['description'] ?? '');
                 if (empty($company) || empty($position) || $alumni_id <= 0) throw new Exception('Company and position are required.');
                 $s = $staffConn->prepare("INSERT INTO alumni_jobs (alumni_id, company, position, start_date, end_date, is_current, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $s->bind_param('issssis', $alumni_id, $company, $position, $start_date, $end_date, $is_current, $description);
+                $s->bind_param('issssii', $alumni_id, $company, $position, $start_date, $end_date, $is_current, $description);
                 if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
                 echo json_encode(['success' => true, 'message' => 'Job added.']);
                 break;
@@ -254,8 +265,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 
             case 'list_jobs': {
                 $alumni_id = (int)($_POST['alumni_id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM alumni_jobs WHERE alumni_id=$alumni_id ORDER BY is_current DESC, start_date DESC");
-                echo json_encode(['success' => true, 'jobs' => $r ? $r->fetch_all(MYSQLI_ASSOC) : []]);
+                $stmt = $staffConn->prepare("SELECT * FROM alumni_jobs WHERE alumni_id=? ORDER BY is_current DESC, start_date DESC");
+                $stmt->bind_param("i", $alumni_id);
+                $stmt->execute();
+                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+                echo json_encode(['success' => true, 'jobs' => $rows]);
                 break;
             }
 
@@ -275,8 +290,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 
             case 'list_alumni_events': {
                 $alumni_id = (int)($_POST['alumni_id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM alumni_events WHERE alumni_id=$alumni_id ORDER BY event_date DESC");
-                echo json_encode(['success' => true, 'events' => $r ? $r->fetch_all(MYSQLI_ASSOC) : []]);
+                $stmt = $staffConn->prepare("SELECT * FROM alumni_events WHERE alumni_id=? ORDER BY event_date DESC");
+                $stmt->bind_param("i", $alumni_id);
+                $stmt->execute();
+                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+                echo json_encode(['success' => true, 'events' => $rows]);
                 break;
             }
 

@@ -115,7 +115,7 @@ if ($report) {
     echo '<div class="no-print"><button class="btn btn-primary btn-sm" onclick="window.print()" style="margin-bottom:12px">Print</button> <button class="btn btn-secondary btn-sm" onclick="window.close()">Close</button></div>';
     if ($report === 'student_progress') {
         echo '<h2>Student Progress Report</h2>';
-        $r=$students_conn->query("SELECT s.full_name,s.student_number,s.program,s.level,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM students s LEFT JOIN staffs_db.academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
+        $r=$conn->query("SELECT s.full_name,s.student_number,s.program,s.level,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM {$students_db}.students s LEFT JOIN academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
         echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Year</th><th>Exams</th><th>Avg Marks</th></tr></thead><tbody>';
         if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['level'].'</td><td>'.($row['exams']??0).'</td><td>'.round($row['avg_marks']??0,1).'</td></tr>'; }
         echo '</tbody></table>';

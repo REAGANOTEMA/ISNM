@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $cap = (int)($_POST['capacity'] ?? 0);
             $desc = trim($_POST['description'] ?? '');
             if (!$name) { echo json_encode(['success' => false, 'message' => 'Lab name required']); exit; }
-            $stmt = $conn->prepare("INSERT INTO skills_laboratory (lab_name, location, capacity, status, description, created_at) VALUES (?,?,'Active',?,NOW())");
-            $stmt->bind_param('sss', $name, $loc, $desc); $ok = $stmt->execute(); $stmt->close();
+            $stmt = $conn->prepare("INSERT INTO skills_laboratory (lab_name, location, capacity, status, description, created_at) VALUES (?,?,?,'Active',?,NOW())");
+            $stmt->bind_param('ssis', $name, $loc, $cap, $desc); $ok = $stmt->execute(); $stmt->close();
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Lab added' : 'Failed']); exit;
 
         case 'update_lab':

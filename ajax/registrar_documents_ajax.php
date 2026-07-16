@@ -168,7 +168,7 @@ if ($action === 'generate_transcript') {
     
     // Fetch courses/exam records
     $courses = [];
-    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_title AS course_name, cc.credits AS credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
     $stmt2->bind_param("i", $sid);
     if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $er = $stmt2->get_result();
@@ -177,7 +177,7 @@ if ($action === 'generate_transcript') {
     
     // If no exam records, get course registrations
     if (empty($courses)) {
-        $stmt3 = $staff_conn->prepare("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id = ? AND cr.status='Approved'");
+        $stmt3 = $staff_conn->prepare("SELECT cr.*, cc.course_title AS course_name, cc.course_code, cc.credits AS credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id = ? AND cr.status='Approved'");
         $stmt3->bind_param("i", $sid);
         if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $cr = $stmt3->get_result();
@@ -374,7 +374,7 @@ if ($action === 'auto_generate_all') {
     
     // Transcript
     $courses = [];
-    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_title AS course_name, cc.credits AS credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
     $stmt2->bind_param("i", $sid);
     if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
     $er = $stmt2->get_result();

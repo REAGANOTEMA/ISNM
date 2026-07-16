@@ -59,7 +59,6 @@ $canEditAdmission = in_array(PERM_EDIT_ADMISSION, $userPerms);
 $canManageStudents = in_array(PERM_MANAGE_STUDENTS, $userPerms);
 $canDelete = in_array(PERM_DELETE, $userPerms);
 
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 $conn = $studentsDb;

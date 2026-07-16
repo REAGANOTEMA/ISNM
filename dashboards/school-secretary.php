@@ -831,7 +831,7 @@ if (isset($_REQUEST['ajax'])) {
             break;
 
         case 'get_staff_list':
-            $r = $conn->query("SELECT id, full_name, email, phone, department FROM `$staff_db`.`staffs` WHERE status='Active' ORDER BY full_name ASC");
+            $r = $conn->query("SELECT id, full_name, email, phone, department FROM `$staff_db`.`staff` WHERE status='Active' ORDER BY full_name ASC");
             $staff = [];
             while ($row = $r->fetch_assoc()) { $staff[] = $row; }
             $response['success'] = true;
@@ -839,7 +839,7 @@ if (isset($_REQUEST['ajax'])) {
             break;
 
         case 'get_messages':
-            $stmt = $conn->prepare("SELECT m.*, s.full_name as sender_name FROM `$staff_db`.`secretary_messages` m LEFT JOIN `$staff_db`.`staffs` s ON s.id = m.sender_id WHERE m.recipient_id = ? ORDER BY m.created_at DESC");
+            $stmt = $conn->prepare("SELECT m.*, s.full_name as sender_name FROM `$staff_db`.`secretary_messages` m LEFT JOIN `$staff_db`.`staff` s ON s.id = m.sender_id WHERE m.recipient_id = ? ORDER BY m.created_at DESC");
             $stmt->bind_param('i', $user_id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
@@ -1334,7 +1334,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}
             <div class="col-md-2"><label class="form-label fw-bold">Emergency Phone</label><input type="tel" class="form-control" name="emergency_phone"></div>
             <div class="col-md-4"><label class="form-label fw-bold">Program <span class="text-danger">*</span></label><select class="form-select" name="program" required><option value="">Select Program</option><?php foreach ($programs as $p): ?><option value="<?= $p ?>"><?= $p ?></option><?php endforeach; ?></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Intake <span class="text-danger">*</span></label><select class="form-select" name="intake" required><option value="">Select Intake</option><?php foreach ($intakes as $i): ?><option value="<?= $i ?>"><?= $i ?></option><?php endforeach; ?></select></div>
-            <div class="col-md-4"><label class="form-label fw-bold">Set/Group</label><select class="form-select" name="set_name"><option value="">Select Set</option><option value="Set A">Set A</option><option value="Set B">Set B</option><option value="Set C">Set C</option><option value="Set D">Set D</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Set/Group</label><select class="form-select" name="set_name"><option value="">Select Set</option><option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option><option value="5">Set 5</option><option value="6">Set 6</option></select></div>
             <div class="col-md-4"><label class="form-label fw-bold">Admission Date</label><input type="date" class="form-control" name="admission_date" value="<?= date('Y-m-d') ?>"></div>
         </div>
         <div class="mt-4 d-flex gap-2">

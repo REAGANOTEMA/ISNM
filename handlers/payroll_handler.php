@@ -57,7 +57,7 @@ try {
             if (!$stmt->execute()) throw new Exception('Execute failed: ' . $stmt->error);
             $newId = $stmt->insert_id;
             $stmt->close();
-            $pconn->close();
+
 
             logPayrollAudit($staffId, 'employee_created', 'payroll_employee', $newId, null, $_POST);
             $_SESSION['success'] = 'Payroll profile created.';
@@ -81,7 +81,7 @@ try {
             $stmt->bind_param('sssssdsi', $bankName, $bankAccount, $tin, $nssfNumber, $salaryType, $monthlySalary, $payrollStatus, $profileId);
             if (!$stmt->execute()) throw new Exception('Execute failed: ' . $stmt->error);
             $stmt->close();
-            $pconn->close();
+
 
             logPayrollAudit($staffId, 'employee_updated', 'payroll_employee', $profileId, null, $_POST);
             $_SESSION['success'] = 'Payroll profile updated.';
@@ -103,7 +103,7 @@ try {
             $stmt->bind_param('iidissi', $peId, $typeId, $amount, $isTaxable, $isRecurring, $effectiveFrom, $staffId);
             if (!$stmt->execute()) { error_log('payroll assign_allowance failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to assign allowance.'; } else { $_SESSION['success'] = 'Allowance assigned.'; }
             $stmt->close();
-            $pconn->close();
+
             break;
 
         case 'remove_allowance':
@@ -114,7 +114,7 @@ try {
             $stmt->bind_param('i', $allowanceId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             $_SESSION['success'] = 'Allowance removed.';
             break;
 
@@ -133,7 +133,7 @@ try {
             $stmt->bind_param('iidisi', $peId, $typeId, $amount, $isRecurring, $effectiveFrom, $staffId);
             if (!$stmt->execute()) { error_log('payroll assign_deduction failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to assign deduction.'; } else { $_SESSION['success'] = 'Deduction assigned.'; }
             $stmt->close();
-            $pconn->close();
+
             break;
 
         case 'remove_deduction':
@@ -144,7 +144,7 @@ try {
             $stmt->bind_param('i', $dedId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             $_SESSION['success'] = 'Deduction removed.';
             break;
 
@@ -175,7 +175,7 @@ try {
             $stmt->bind_param('idddsi', $staffIdParam, $hours, $hourlyRate, $totalPay, $month, $staffId);
             if (!$stmt->execute()) { error_log('payroll record_overtime failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record overtime.'; } else { $_SESSION['success'] = 'Overtime recorded.'; }
             $stmt->close();
-            $pconn->close();
+
             break;
 
         case 'approve_overtime':
@@ -186,7 +186,7 @@ try {
             $stmt->bind_param('ii', $staffId, $otId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollApproval('overtime', $otId, 'approved', 'Approval', 'Approved by ' . $userRole, $staffId);
             $_SESSION['success'] = 'Overtime approved.';
             break;
@@ -207,7 +207,7 @@ try {
             $stmt->bind_param('issdisi', $peId, $type, $name, $amount, $isTaxable, $date, $staffId);
             if (!$stmt->execute()) { error_log('payroll add_bonus failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record bonus.'; } else { $_SESSION['success'] = 'Bonus recorded.'; }
             $stmt->close();
-            $pconn->close();
+
             break;
 
         // â”€â”€ Loan â”€â”€
@@ -230,7 +230,7 @@ try {
             $stmt->bind_param('issididisi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
             if (!$stmt->execute()) { error_log('payroll add_loan failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record loan.'; } else { $_SESSION['success'] = 'Loan recorded.'; }
             $stmt->close();
-            $pconn->close();
+
             break;
 
         case 'approve_loan':
@@ -241,7 +241,7 @@ try {
             $stmt->bind_param('ii', $staffId, $loanId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollApproval('loan', $loanId, 'approved', 'Approval', null, $staffId);
             $_SESSION['success'] = 'Loan approved.';
             break;
@@ -267,7 +267,7 @@ try {
             $stmt->bind_param("i", $periodId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollAudit($staffId, 'period_opened', 'payroll_period', $periodId, null, null);
             $_SESSION['success'] = 'Payroll period opened.';
             break;
@@ -280,7 +280,7 @@ try {
             $stmt->bind_param("ii", $staffId, $periodId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             $_SESSION['success'] = 'Payroll period closed.';
             break;
 
@@ -319,7 +319,7 @@ try {
             $stmt->bind_param("ii", $staffId, $runId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollApproval('payroll_run', $runId, 'approved', $step, $comments, $staffId);
             $_SESSION['success'] = "Payroll run approved ($step).";
             break;
@@ -337,7 +337,7 @@ try {
             $stmt->bind_param('i', $runId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollApproval('payroll_run', $runId, 'authorized', 'Principal Authorization', $comments, $staffId);
             $_SESSION['success'] = 'Payroll run authorized for payment.';
             break;
@@ -351,7 +351,7 @@ try {
             $stmt->bind_param("i", $runId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
             logPayrollApproval('payroll_run', $runId, 'rejected', 'Approval', $comments, $staffId);
             $_SESSION['error'] = 'Payroll run rejected.';
             break;
@@ -366,7 +366,7 @@ try {
                 $stmt->bind_param('ssi', $key, $value, $staffId);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $pconn->close();
+    
                 $_SESSION['success'] = 'Setting updated.';
             }
             break;
@@ -385,7 +385,7 @@ try {
                     $stmt->close();
                 }
             }
-            $pconn->close();
+
             $_SESSION['success'] = 'Settings saved.';
             break;
 
@@ -419,7 +419,7 @@ try {
             $stmt->bind_param("ssi", $payDate, $refNumber, $runId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $pconn->close();
+
 
             $_SESSION['success'] = 'Payment recorded.';
             break;
@@ -466,7 +466,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Failed to prepare leave request.';
                 }
-                $pconn->close();
+    
             } else {
                 $_SESSION['error'] = 'Please fill all required fields.';
             }
@@ -487,7 +487,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Could not approve leave request.';
                 }
-                $pconn->close();
+    
             }
             break;
 
@@ -506,7 +506,7 @@ try {
                 } else {
                     $_SESSION['error'] = 'Could not reject leave request.';
                 }
-                $pconn->close();
+    
             }
             break;
 
@@ -533,7 +533,7 @@ try {
                         $_SESSION['success'] = 'Leave type added.';
                     }
                 }
-                $pconn->close();
+    
             }
             break;
 

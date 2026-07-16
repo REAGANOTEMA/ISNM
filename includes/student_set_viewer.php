@@ -869,7 +869,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         var f = new FormData();
         f.set('action','delete'); f.set('id',id);
         f.append('csrf_token', window.CSRF_TOKEN || '');
-        fetch('ajax/update_student.php',{method:'POST',body:f})
+        fetch('../ajax/update_student.php',{method:'POST',body:f})
         .then(function(r){return r.text()})
         .then(function(t){return JSON.parse(t.replace(/^\uFEFF/,''))})
         .then(function(res){

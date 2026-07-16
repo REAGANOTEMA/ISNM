@@ -62,8 +62,9 @@ try {
             $stmt->execute();
             $r = $stmt->get_result();
             if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Asset not found'); }
+            $data = $r->fetch_assoc();
             $stmt->close();
-            ictRespond(true, 'OK', $r->fetch_assoc());
+            ictRespond(true, 'OK', $data);
             break;
         case 'get_server':
             $id = (int)($_GET['id'] ?? 0);
@@ -74,8 +75,9 @@ try {
             $stmt->execute();
             $r = $stmt->get_result();
             if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Server not found'); }
+            $data = $r->fetch_assoc();
             $stmt->close();
-            ictRespond(true, 'OK', $r->fetch_assoc());
+            ictRespond(true, 'OK', $data);
             break;
         case 'get_ticket':
             $id = (int)($_GET['id'] ?? 0);
@@ -86,8 +88,9 @@ try {
             $stmt->execute();
             $r = $stmt->get_result();
             if (!$r || !$r->num_rows) { $stmt->close(); ictRespond(false, 'Ticket not found'); }
+            $data = $r->fetch_assoc();
             $stmt->close();
-            ictRespond(true, 'OK', $r->fetch_assoc());
+            ictRespond(true, 'OK', $data);
             break;
 
         // â”€â”€ ASSETS â”€â”€
