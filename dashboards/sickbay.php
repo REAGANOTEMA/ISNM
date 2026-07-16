@@ -44,17 +44,14 @@ if ($action_get === 'search_student' && $students_conn) {
     exit;
 }
 if ($action_get === 'get_transactions' && $staff_conn) {
+    header('Content-Type: application/json');
     $mid = (int)($_GET['id'] ?? 0);
     if ($mid > 0) {
         $stmt = $staff_conn->prepare("SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id WHERE smt.medicine_id = ? ORDER BY smt.created_at DESC LIMIT 50");
         if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         $txns = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
-        if (!empty($txns)) {
-            echo '<table class="table table-sm"><thead><tr><th>Date</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead><tbody>';
-            foreach ($txns as $t) { echo '<tr><td>'.htmlspecialchars($t['transaction_date']??$t['created_at']??'').'</td><td><span class="badge bg-info">'.htmlspecialchars($t['transaction_type']??'N/A').'</span></td><td>'.(int)($t['quantity']??0).'</td><td>'.htmlspecialchars($t['notes']??'').'</td></tr>'; }
-            echo '</tbody></table>';
-        } else { echo '<p class="text-muted">No transactions.</p>'; }
-    } else { echo '<p class="text-danger">Invalid medicine ID.</p>'; }
+        echo json_encode($txns);
+    } else { echo json_encode([]); }
     exit;
 }
 if ($action_get === 'get_visit' && $staff_conn) {
@@ -929,8 +926,7 @@ function editVisit(id,name,date,symptoms,diagnosis,treatment,medication,status,f
 function resetVisitForm(){document.getElementById('ed-v-id').value='0';document.getElementById('visit-action').value='add_visit';document.getElementById('visit-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Add Visit';document.getElementById('visit-form').reset();}
 function editSbMed(id,name,category,qty,unit,exp,rol){document.getElementById('ed-sm-id').value=id;document.getElementById('ed-sm-name').value=name;document.getElementById('ed-sm-cat').value=category;document.getElementById('ed-sm-qty').value=qty;document.getElementById('ed-sm-unit').value=unit;document.getElementById('ed-sm-exp').value=exp||'';document.getElementById('ed-sm-rol').value=rol;document.getElementById('sb-med-action').value='update_medicine';document.getElementById('sb-med-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Update Medicine';document.getElementById('sec-visits').scrollIntoView({behavior:'smooth'});}
 function resetSbMedForm(){document.getElementById('ed-sm-id').value='0';document.getElementById('sb-med-action').value='add_medicine';document.getElementById('sb-med-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Add Medicine';document.getElementById('sb-med-form').reset();}
-function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id='+id).then(r=>r.text()).then(html=>{const w=window.open('','_blank','width=700,height=600');w.document.write('<html><head><title>Transactions: '+name+'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body class="p-4"><h4>'+name+' - Stock Transactions</h4>'+html+'<hr><button class="btn btn-sm btn-secondary" onclick="window.close()">Close</button>
-</body></html>');}).catch(()=>alert('Could not load transactions.'));}
+function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id='+id).then(r=>r.json()).then(data=>{var html='<table class="table table-sm"><thead><tr><th>Date</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead><tbody>';if(data.length===0){html+='<tr><td colspan="4" class="text-muted text-center">No transactions.</td></tr>';}else{data.forEach(function(t){html+='<tr><td>'+(t.transaction_date||t.created_at||'')+'</td><td><span class="badge bg-info">'+(t.transaction_type||'N/A')+'</span></td><td>'+(parseInt(t.quantity)||0)+'</td><td>'+(t.notes||'')+'</td></tr>';});}html+='</tbody></table>';const w=window.open('','_blank','width=700,height=600');w.document.write('<html><head><title>Transactions: '+name+'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body class="p-4"><h4>'+name+' - Stock Transactions</h4>'+html+'<hr><button class="btn btn-sm btn-secondary" onclick="window.close()">Close</button></body></html>');}).catch(()=>alert('Could not load transactions.'));}
 document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name','vb-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'},vb:{sid:'vb-sid',num:'vb-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>
 <script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>

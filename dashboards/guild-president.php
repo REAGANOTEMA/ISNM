@@ -232,8 +232,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
                 <input type="text" class="form-control form-control-sm mb-2" placeholder="Filter welfare cases..." onkeyup="filterGuildTables(this.value)">
                 <?php if (empty($welfareCases)): ?><p class="text-muted text-center py-3">No welfare cases recorded.</p>
                 <?php else: ?>
-                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>
-                <?php foreach ($welfareCases as $w): ?><tr><td><?= htmlspecialchars($w['student_name']??$w['student_id']??'-') ?></td><td><?= htmlspecialchars($w['case_type']??'-') ?></td><td><span class="badge bg-<?= in_array($w['status']??'',['resolved','closed'])?'success':(($w['status']??'')==='open'?'warning':'secondary') ?>"><?= htmlspecialchars($w['status']??'N/A') ?></span></td><td><?= htmlspecialchars($w['created_at']??'') ?></td></tr><?php endforeach; ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Student</th><th>Type</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody>
+                <?php foreach ($welfareCases as $w): ?><tr><td><?= htmlspecialchars($w['student_name']??$w['student_id']??'-') ?></td><td><?= htmlspecialchars($w['case_type']??'-') ?></td><td><span class="badge bg-<?= in_array($w['status']??'',['resolved','closed'])?'success':(($w['status']??'')==='open'?'warning':'secondary') ?>"><?= htmlspecialchars($w['status']??'N/A') ?></span></td><td><?= htmlspecialchars($w['created_at']??'') ?></td><td>
+                    <select class="form-select form-select-sm d-inline-block w-auto" style="width:100px" onchange="updateWelfareStatus(<?= (int)$w['id'] ?>, this.value)">
+                        <option value="open" <?= ($w['status']??'')==='open'?'selected':'' ?>>Open</option>
+                        <option value="in_progress" <?= ($w['status']??'')==='in_progress'?'selected':'' ?>>In Progress</option>
+                        <option value="resolved" <?= ($w['status']??'')==='resolved'?'selected':'' ?>>Resolved</option>
+                        <option value="closed" <?= ($w['status']??'')==='closed'?'selected':'' ?>>Closed</option>
+                    </select>
+                </td></tr><?php endforeach; ?>
                 </tbody></table></div>
                 <?php endif; ?>
             </div></div></div>
@@ -256,8 +263,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
             <div class="col-md-7"><div class="card"><div class="card-body"><h5><i class="fas fa-calendar-day me-2"></i>Upcoming Events</h5>
                 <?php if (empty($upcomingEvents)): ?><p class="text-muted text-center py-3">No upcoming events scheduled.</p>
                 <?php else: ?>
-                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>Type</th></tr></thead><tbody>
-                <?php foreach ($upcomingEvents as $e): ?><tr><td><strong><?= htmlspecialchars($e['title']) ?></strong></td><td><?= htmlspecialchars($e['event_date']) ?> <?= htmlspecialchars($e['start_time']??'') ?></td><td><?= htmlspecialchars($e['location']??'-') ?></td><td><span class="badge bg-info"><?= htmlspecialchars($e['event_type']??'General') ?></span></td></tr><?php endforeach; ?>
+                <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>Type</th><th>Action</th></tr></thead><tbody>
+                <?php foreach ($upcomingEvents as $e): ?><tr><td><strong><?= htmlspecialchars($e['title']) ?></strong></td><td><?= htmlspecialchars($e['event_date']) ?> <?= htmlspecialchars($e['start_time']??'') ?></td><td><?= htmlspecialchars($e['location']??'-') ?></td><td><span class="badge bg-info"><?= htmlspecialchars($e['event_type']??'General') ?></span></td><td>
+                    <?php if ((int)($e['created_by'] ?? 0) === $user_id): ?>
+                    <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete this event?'))deleteGuildEvent(<?= (int)$e['id'] ?>)"><i class="fas fa-trash"></i></button>
+                    <?php endif; ?>
+                </td></tr><?php endforeach; ?>
                 </tbody></table></div>
                 <?php endif; ?>
             </div></div></div>
@@ -502,6 +513,35 @@ document.getElementById('guildModalAction').addEventListener('click', function()
         })
         .catch(() => { body.innerHTML = '<div class="alert alert-danger">Network error.</div>'; });
 });
+
+function updateWelfareStatus(caseId, newStatus) {
+    const fd = new FormData();
+    fd.append('action', 'update_welfare');
+    fd.append('case_id', caseId);
+    fd.append('status', newStatus);
+    fd.append('csrf_token', window.CSRF_TOKEN || '');
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) { location.reload(); }
+            else { alert(resp.message || 'Failed to update status.'); }
+        })
+        .catch(() => alert('Network error.'));
+}
+
+function deleteGuildEvent(eventId) {
+    const fd = new FormData();
+    fd.append('action', 'delete_event');
+    fd.append('event_id', eventId);
+    fd.append('csrf_token', window.CSRF_TOKEN || '');
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) { location.reload(); }
+            else { alert(resp.message || 'Failed to delete event.'); }
+        })
+        .catch(() => alert('Network error.'));
+}
 </script>
 </body>
 </html>

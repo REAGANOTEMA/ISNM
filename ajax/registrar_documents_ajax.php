@@ -322,7 +322,7 @@ if ($action === 'generate_certificate') {
 
 if ($action === 'preview_document') {
     $doc_id = intval($_GET['doc_id'] ?? 0);
-    if ($doc_id <= 0) { echo "Invalid document"; exit; }
+    if ($doc_id <= 0) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid document']); exit; }
     
     $stmt = $staff_conn->prepare("SELECT document_content, document_title, document_type FROM generated_documents WHERE id = ?");
     $stmt->bind_param("i", $doc_id);
@@ -330,7 +330,7 @@ if ($action === 'preview_document') {
     $r = $stmt->get_result();
     $doc = $r ? $r->fetch_assoc() : null;
     $stmt->close();
-    if (!$doc) { echo "Document not found"; exit; }
+    if (!$doc) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Document not found']); exit; }
     
     header('Content-Type: text/html; charset=utf-8');
     header("Content-Security-Policy: default-src 'self' 'unsafe-inline'; img-src 'self' data:;");

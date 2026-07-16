@@ -25,7 +25,7 @@ $student_result = executeQuery($student_sql, [$student_id], 's');
 $student = $student_result[0] ?? null;
 
 if (!$student) {
-    echo '<div class="alert alert-danger">Student not found</div>';
+    echo json_encode(['success' => false, 'message' => 'Student not found']);
     exit();
 }
 

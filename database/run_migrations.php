@@ -1099,6 +1099,834 @@ if ($ict) {
         PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'computer_lab_items');
 
+    // ═══════════════════════════════════════════════════════
+    // CRITICAL MISSING TABLES (referenced by multiple dashboards)
+    // ═══════════════════════════════════════════════════════
+
+    // ── Staffs DB: Core System Tables ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `departments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(150) NOT NULL,
+        `code` VARCHAR(50) DEFAULT NULL, `head_id` INT(11) DEFAULT NULL,
+        `description` TEXT, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'departments');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `users` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `username` VARCHAR(100) NOT NULL,
+        `email` VARCHAR(255) NOT NULL, `password_hash` VARCHAR(255) NOT NULL,
+        `role` VARCHAR(50) DEFAULT 'staff', `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_email` (`email`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'users');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `roles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(100) NOT NULL,
+        `description` TEXT, `is_system` TINYINT(1) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'roles');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `password_resets` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `user_id` INT(11) NOT NULL,
+        `token` VARCHAR(255) NOT NULL, `expires_at` DATETIME NOT NULL,
+        `used` TINYINT(1) DEFAULT 0, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'password_resets');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `recycle_bin` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `table_name` VARCHAR(100) NOT NULL,
+        `record_id` INT(11) NOT NULL, `record_data` TEXT,
+        `deleted_by` INT(11) DEFAULT NULL, `deleted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `restored_at` DATETIME DEFAULT NULL, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'recycle_bin');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `error_logs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `level` VARCHAR(20) DEFAULT 'ERROR',
+        `message` TEXT, `file` VARCHAR(255), `line` INT(11), `trace` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'error_logs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `backup_management` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `backup_name` VARCHAR(255) NOT NULL,
+        `database_name` VARCHAR(100), `file_path` VARCHAR(500), `file_size` BIGINT DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'completed', `created_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'backup_management');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `system_logs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `action` VARCHAR(100) NOT NULL,
+        `details` TEXT, `user_id` INT(11) DEFAULT NULL, `ip_address` VARCHAR(45),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'system_logs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `alerts` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `message` TEXT, `severity` VARCHAR(20) DEFAULT 'info',
+        `target_role` VARCHAR(100) DEFAULT NULL, `is_read` TINYINT(1) DEFAULT 0,
+        `created_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'alerts');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `leave_types` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(100) NOT NULL,
+        `days_allowed` INT(11) DEFAULT 30, `is_paid` TINYINT(1) DEFAULT 1,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'leave_types');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `hr_activity_log` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `staff_id` INT(11) NOT NULL,
+        `action` VARCHAR(100) NOT NULL, `details` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'hr_activity_log');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `official_duties` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `staff_id` INT(11) NOT NULL,
+        `duty_type` VARCHAR(100) NOT NULL, `description` TEXT,
+        `start_date` DATE, `end_date` DATE, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'official_duties');
+
+    // ── Staffs DB: Messaging ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `staff_inbox` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `sender_id` INT(11) NOT NULL,
+        `receiver_id` INT(11) NOT NULL, `subject` VARCHAR(255),
+        `message` TEXT NOT NULL, `is_read` TINYINT(1) DEFAULT 0,
+        `parent_id` INT(11) DEFAULT NULL, `attachment` VARCHAR(500),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_receiver` (`receiver_id`), KEY `idx_sender` (`sender_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'staff_inbox');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `email_notifications_queue` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `recipient_email` VARCHAR(255) NOT NULL,
+        `subject` VARCHAR(255) NOT NULL, `body` TEXT NOT NULL,
+        `status` VARCHAR(20) DEFAULT 'pending', `attempts` INT(11) DEFAULT 0,
+        `last_attempt` DATETIME DEFAULT NULL, `sent_at` DATETIME DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'email_notifications_queue');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `portal_messages` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `sender_type` VARCHAR(50) DEFAULT 'staff',
+        `sender_id` INT(11) NOT NULL, `receiver_type` VARCHAR(50) DEFAULT 'student',
+        `receiver_id` INT(11) NOT NULL, `subject` VARCHAR(255),
+        `message` TEXT NOT NULL, `is_read` TINYINT(1) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'portal_messages');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `messages` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `sender_id` INT(11) NOT NULL,
+        `receiver_id` INT(11) NOT NULL, `subject` VARCHAR(255),
+        `message` TEXT NOT NULL, `is_read` TINYINT(1) DEFAULT 0,
+        `attachment` VARCHAR(500), `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_recv` (`receiver_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'messages');
+
+    // ── Staffs DB: Approval Workflow ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `approval_workflows` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `description` TEXT, `target_table` VARCHAR(100),
+        `is_active` TINYINT(1) DEFAULT 1, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'approval_workflows');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `approval_stages` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `workflow_id` INT(11) NOT NULL,
+        `stage_name` VARCHAR(255) NOT NULL, `approver_role` VARCHAR(100),
+        `approval_order` INT(11) DEFAULT 1, `is_mandatory` TINYINT(1) DEFAULT 1,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'approval_stages');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `approval_actions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `approval_request_id` INT(11) NOT NULL,
+        `stage_id` INT(11) DEFAULT NULL, `approver_id` INT(11) NOT NULL,
+        `action` VARCHAR(20) NOT NULL, `comments` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'approval_actions');
+
+    // ── Staffs DB: Academic ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `academic_records` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `academic_year` VARCHAR(20) NOT NULL, `semester` VARCHAR(50) NOT NULL,
+        `course_code` VARCHAR(50), `course_title` VARCHAR(255), `credits` DECIMAL(4,1) DEFAULT 0,
+        `grade` VARCHAR(5), `grade_points` DECIMAL(3,1) DEFAULT 0, `status` VARCHAR(20) DEFAULT 'Draft',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'academic_records');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `course_assignments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `course_code` VARCHAR(50) NOT NULL,
+        `course_title` VARCHAR(255), `program_code` VARCHAR(50),
+        `lecturer_id` INT(11) DEFAULT NULL, `academic_year` VARCHAR(20),
+        `semester` VARCHAR(50), `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'course_assignments');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `course_registrations` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `course_code` VARCHAR(50) NOT NULL, `academic_year` VARCHAR(20),
+        `semester` VARCHAR(50), `status` VARCHAR(20) DEFAULT 'Registered',
+        `registered_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`), KEY `idx_course` (`course_code`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'course_registrations');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `timetable` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `course_code` VARCHAR(50) NOT NULL,
+        `day_of_week` VARCHAR(20) NOT NULL, `start_time` TIME NOT NULL, `end_time` TIME NOT NULL,
+        `room` VARCHAR(100), `lecturer_id` INT(11) DEFAULT NULL,
+        `academic_year` VARCHAR(20), `semester` VARCHAR(50),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'timetable');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `academic_timetable` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `course_code` VARCHAR(50) NOT NULL,
+        `day_of_week` VARCHAR(20) NOT NULL, `start_time` TIME NOT NULL, `end_time` TIME NOT NULL,
+        `room` VARCHAR(100), `lecturer_id` INT(11) DEFAULT NULL,
+        `academic_year` VARCHAR(20), `semester` VARCHAR(50),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'academic_timetable');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `result_approvals` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `academic_year` VARCHAR(20) NOT NULL,
+        `semester` VARCHAR(50) NOT NULL, `program_code` VARCHAR(50),
+        `approved_by` INT(11) DEFAULT NULL, `status` VARCHAR(20) DEFAULT 'Pending',
+        `remarks` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'result_approvals');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `generated_documents` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) DEFAULT NULL,
+        `document_type` VARCHAR(100) NOT NULL, `document_title` VARCHAR(255),
+        `document_content` LONGTEXT, `generated_by` INT(11) DEFAULT NULL,
+        `status` VARCHAR(20) DEFAULT 'Generated', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'generated_documents');
+
+    // ── Staffs DB: Transport ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `vehicles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `vehicle_name` VARCHAR(255) NOT NULL,
+        `plate_number` VARCHAR(50), `vehicle_type` VARCHAR(50), `capacity` INT(11) DEFAULT 0,
+        `fuel_type` VARCHAR(50) DEFAULT 'Diesel', `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'vehicles');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `transport_vehicles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `vehicle_name` VARCHAR(255) NOT NULL,
+        `plate_number` VARCHAR(50), `vehicle_type` VARCHAR(50), `capacity` INT(11) DEFAULT 0,
+        `fuel_type` VARCHAR(50) DEFAULT 'Diesel', `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'transport_vehicles');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `fuel_management` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `vehicle_id` INT(11) NOT NULL,
+        `liters` DECIMAL(8,2) NOT NULL, `cost` DECIMAL(12,2) NOT NULL,
+        `fuel_date` DATE NOT NULL, `odometer` INT(11) DEFAULT NULL,
+        `driver_id` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_vehicle` (`vehicle_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'fuel_management');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `transport_routes` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `route_name` VARCHAR(255) NOT NULL,
+        `start_location` VARCHAR(255), `end_location` VARCHAR(255),
+        `distance_km` DECIMAL(8,2) DEFAULT NULL, `estimated_time` VARCHAR(50),
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'transport_routes');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `transport_trips` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `vehicle_id` INT(11) NOT NULL,
+        `route_id` INT(11) DEFAULT NULL, `driver_id` INT(11) DEFAULT NULL,
+        `trip_date` DATE NOT NULL, `departure_time` TIME, `arrival_time` TIME,
+        `passengers` INT(11) DEFAULT 0, `status` VARCHAR(20) DEFAULT 'Scheduled',
+        `dg_approval_status` VARCHAR(20) DEFAULT 'Pending', `dg_approved_by` INT(11) DEFAULT NULL,
+        `dg_approved_at` DATETIME DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'transport_trips');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `trip_logs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `trip_id` INT(11) NOT NULL,
+        `vehicle_id` INT(11) NOT NULL, `start_odometer` INT(11) DEFAULT 0,
+        `end_odometer` INT(11) DEFAULT 0, `fuel_used` DECIMAL(8,2) DEFAULT 0,
+        `notes` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'trip_logs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `transport_student_assignments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `trip_id` INT(11) NOT NULL,
+        `student_id` INT(11) NOT NULL, `stop_location` VARCHAR(255),
+        `status` VARCHAR(20) DEFAULT 'Assigned', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'transport_student_assignments');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `transport_fuel_log` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `vehicle_id` INT(11) NOT NULL,
+        `liters` DECIMAL(8,2) NOT NULL, `cost` DECIMAL(12,2) NOT NULL,
+        `fuel_date` DATE NOT NULL, `driver_id` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'transport_fuel_log');
+
+    // ── Staffs DB: Store/Inventory ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `store_categories` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(150) NOT NULL,
+        `description` TEXT, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'store_categories');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `store_inventory` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `item_name` VARCHAR(255) NOT NULL,
+        `item_code` VARCHAR(50), `category_id` INT(11) DEFAULT NULL,
+        `quantity` INT(11) DEFAULT 0, `unit` VARCHAR(50) DEFAULT 'pcs',
+        `min_stock` INT(11) DEFAULT 0, `location` VARCHAR(255),
+        `status` VARCHAR(20) DEFAULT 'Available', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'store_inventory');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `store_inventory_transactions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `item_id` INT(11) NOT NULL,
+        `transaction_type` VARCHAR(50) NOT NULL, `quantity` INT(11) NOT NULL,
+        `reference` VARCHAR(255), `performed_by` INT(11) DEFAULT NULL,
+        `notes` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_item` (`item_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'store_inventory_transactions');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `store_requests` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `request_number` VARCHAR(50) NOT NULL,
+        `requested_by` INT(11) NOT NULL, `requester_name` VARCHAR(255),
+        `requester_role` VARCHAR(100), `department` VARCHAR(150),
+        `items` TEXT, `urgency` VARCHAR(20) DEFAULT 'medium',
+        `status` VARCHAR(20) DEFAULT 'pending', `approved_by` INT(11) DEFAULT NULL,
+        `approved_at` DATETIME DEFAULT NULL, `notes` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_request_number` (`request_number`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'store_requests');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `store_request_items` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `request_id` INT(11) NOT NULL,
+        `item_id` INT(11) DEFAULT NULL, `quantity_requested` DECIMAL(10,2) DEFAULT 0,
+        `quantity_issued` DECIMAL(10,2) DEFAULT 0, `notes` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_request` (`request_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'store_request_items');
+
+    // ── Staffs DB: Payroll System ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_settings` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `setting_key` VARCHAR(100) NOT NULL,
+        `setting_value` TEXT, `description` TEXT,
+        `updated_by` INT(11) DEFAULT NULL, `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_key` (`setting_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_settings');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_employees` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `staff_id` INT(11) NOT NULL,
+        `employee_number` VARCHAR(50), `basic_salary` DECIMAL(12,2) DEFAULT 0,
+        `bank_name` VARCHAR(150), `bank_account` VARCHAR(100), `tax_id` VARCHAR(50),
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_staff` (`staff_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_employees');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_periods` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `period_name` VARCHAR(100) NOT NULL,
+        `start_date` DATE NOT NULL, `end_date` DATE NOT NULL,
+        `status` VARCHAR(20) DEFAULT 'Open', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_periods');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_items` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `payroll_run_id` INT(11) NOT NULL,
+        `employee_id` INT(11) NOT NULL, `basic_salary` DECIMAL(12,2) DEFAULT 0,
+        `allowances` DECIMAL(12,2) DEFAULT 0, `deductions` DECIMAL(12,2) DEFAULT 0,
+        `tax` DECIMAL(12,2) DEFAULT 0, `net_pay` DECIMAL(12,2) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Pending', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_items');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_payslips` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `payroll_item_id` INT(11) NOT NULL,
+        `payslip_number` VARCHAR(50), `basic_salary` DECIMAL(12,2) DEFAULT 0,
+        `total_allowances` DECIMAL(12,2) DEFAULT 0, `total_deductions` DECIMAL(12,2) DEFAULT 0,
+        `tax` DECIMAL(12,2) DEFAULT 0, `net_pay` DECIMAL(12,2) DEFAULT 0,
+        `generated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_payslips');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_allowance_types` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(150) NOT NULL,
+        `description` TEXT, `is_taxable` TINYINT(1) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_allowance_types');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_employee_allowances` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `employee_id` INT(11) NOT NULL,
+        `allowance_type_id` INT(11) NOT NULL, `amount` DECIMAL(12,2) DEFAULT 0,
+        `effective_date` DATE, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_employee_allowances');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_deduction_types` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(150) NOT NULL,
+        `description` TEXT, `is_percentage` TINYINT(1) DEFAULT 0,
+        `percentage_value` DECIMAL(5,2) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_deduction_types');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_employee_deductions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `employee_id` INT(11) NOT NULL,
+        `deduction_type_id` INT(11) NOT NULL, `amount` DECIMAL(12,2) DEFAULT 0,
+        `effective_date` DATE, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_employee_deductions');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_overtime` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `employee_id` INT(11) NOT NULL,
+        `hours` DECIMAL(6,2) DEFAULT 0, `rate_per_hour` DECIMAL(10,2) DEFAULT 0,
+        `overtime_date` DATE NOT NULL, `status` VARCHAR(20) DEFAULT 'Pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_overtime');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_bonus` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `employee_id` INT(11) NOT NULL,
+        `bonus_type` VARCHAR(100) NOT NULL, `amount` DECIMAL(12,2) NOT NULL,
+        `description` TEXT, `approved_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_bonus');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_loans` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `employee_id` INT(11) NOT NULL,
+        `loan_amount` DECIMAL(12,2) NOT NULL, `monthly_deduction` DECIMAL(12,2) DEFAULT 0,
+        `remaining_balance` DECIMAL(12,2) DEFAULT 0, `purpose` TEXT,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_loans');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_audit_logs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `action` VARCHAR(100) NOT NULL,
+        `details` TEXT, `user_id` INT(11) DEFAULT NULL, `ip_address` VARCHAR(45),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_audit_logs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `payroll_approval_history` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `payroll_run_id` INT(11) DEFAULT NULL,
+        `approved_by` INT(11) NOT NULL, `action` VARCHAR(50) NOT NULL,
+        `comments` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payroll_approval_history');
+
+    // ── Staffs DB: Cost Centers ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `cost_centers` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `code` VARCHAR(50) NOT NULL,
+        `name` VARCHAR(255) NOT NULL, `description` TEXT,
+        `budget` DECIMAL(15,2) DEFAULT 0, `spent` DECIMAL(15,2) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_code` (`code`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'cost_centers');
+
+    // ── Staffs DB: Compliance & Accreditation ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `compliance_requirements` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `area` VARCHAR(255) NOT NULL,
+        `description` TEXT, `standard` VARCHAR(255),
+        `status` VARCHAR(20) DEFAULT 'Pending', `due_date` DATE,
+        `responsible` VARCHAR(255), `evidence` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'compliance_requirements');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `institutional_alerts` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `message` TEXT, `severity` VARCHAR(20) DEFAULT 'info',
+        `target_role` VARCHAR(100), `is_read` TINYINT(1) DEFAULT 0,
+        `created_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'institutional_alerts');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `alert_recipients` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `alert_id` INT(11) NOT NULL,
+        `recipient_id` INT(11) NOT NULL, `is_read` TINYINT(1) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'alert_recipients');
+
+    // ── Staffs DB: Director General CMS Tables ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `director_news` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `content` LONGTEXT, `excerpt` TEXT, `status` VARCHAR(20) DEFAULT 'draft',
+        `created_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'director_news');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `cms_events` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `description` TEXT, `event_date` DATE, `start_time` TIME, `end_time` TIME,
+        `location` VARCHAR(255), `event_type` VARCHAR(50) DEFAULT 'General',
+        `status` VARCHAR(20) DEFAULT 'upcoming', `created_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'cms_events');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `cms_testimonials` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `author_name` VARCHAR(255) NOT NULL,
+        `author_role` VARCHAR(100), `content` TEXT NOT NULL,
+        `rating` INT(11) DEFAULT 5, `status` VARCHAR(20) DEFAULT 'pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'cms_testimonials');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `cms_faqs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `question` VARCHAR(500) NOT NULL,
+        `answer` TEXT NOT NULL, `category` VARCHAR(100) DEFAULT 'General',
+        `sort_order` INT(11) DEFAULT 0, `status` VARCHAR(20) DEFAULT 'published',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'cms_faqs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `news_views` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `news_id` INT(11) NOT NULL,
+        `viewer_ip` VARCHAR(45), `viewer_id` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_news` (`news_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'news_views');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `staff_departments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `department_name` VARCHAR(255) NOT NULL,
+        `department_code` VARCHAR(50) NOT NULL, `department_level` VARCHAR(50),
+        `head_id` INT(11) DEFAULT NULL, `description` TEXT,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_dept_code` (`department_code`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'staff_departments');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `pending_students` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `student_name` VARCHAR(255), `program` VARCHAR(150),
+        `status` VARCHAR(20) DEFAULT 'Pending', `submitted_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'pending_students');
+
+    // ── Staffs DB: Scholarships ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `scholarships` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `description` TEXT, `amount` DECIMAL(12,2) DEFAULT 0,
+        `eligibility` TEXT, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'scholarships');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `sponsorships` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `sponsor_name` VARCHAR(255) NOT NULL,
+        `student_id` INT(11) DEFAULT NULL, `amount` DECIMAL(12,2) DEFAULT 0,
+        `start_date` DATE, `end_date` DATE, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'sponsorships');
+
+    // ── Staffs DB: Lab ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_equipment` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `equipment_code` VARCHAR(50), `category` VARCHAR(100),
+        `quantity` INT(11) DEFAULT 0, `condition_status` VARCHAR(50) DEFAULT 'Good',
+        `location` VARCHAR(255), `status` VARCHAR(20) DEFAULT 'Available',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_equipment');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_sessions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `session_name` VARCHAR(255) NOT NULL,
+        `instructor_id` INT(11) DEFAULT NULL, `scheduled_date` DATE,
+        `start_time` TIME, `end_time` TIME, `room` VARCHAR(100),
+        `max_students` INT(11) DEFAULT 30, `status` VARCHAR(20) DEFAULT 'Scheduled',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_sessions');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_checkouts` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `equipment_id` INT(11) NOT NULL,
+        `student_id` INT(11) NOT NULL, `checkout_date` DATETIME NOT NULL,
+        `return_date` DATETIME DEFAULT NULL, `status` VARCHAR(20) DEFAULT 'Checked Out',
+        `notes` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_checkouts');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_demonstrations` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `session_id` INT(11) NOT NULL,
+        `topic` VARCHAR(255) NOT NULL, `description` TEXT,
+        `instructor_id` INT(11) DEFAULT NULL, `duration_minutes` INT(11) DEFAULT 60,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_demonstrations');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_consumables` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `category` VARCHAR(100), `quantity` INT(11) DEFAULT 0,
+        `unit` VARCHAR(50) DEFAULT 'pcs', `min_stock` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Available', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_consumables');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_incidents` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `incident_type` VARCHAR(100) NOT NULL,
+        `description` TEXT, `equipment_id` INT(11) DEFAULT NULL,
+        `reported_by` INT(11) DEFAULT NULL, `severity` VARCHAR(20) DEFAULT 'Low',
+        `status` VARCHAR(20) DEFAULT 'Open', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_incidents');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `lab_attendance` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `session_id` INT(11) NOT NULL,
+        `student_id` INT(11) NOT NULL, `status` VARCHAR(20) DEFAULT 'Present',
+        `check_in_time` TIME, `notes` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'lab_attendance');
+
+    // ── Staffs DB: Department Requests ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `department_requests` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `department` VARCHAR(150) NOT NULL,
+        `requested_by` INT(11) NOT NULL, `request_type` VARCHAR(100),
+        `description` TEXT, `priority` VARCHAR(20) DEFAULT 'Medium',
+        `status` VARCHAR(20) DEFAULT 'Pending', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'department_requests');
+
+    // ── Staffs DB: Library ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `library_books` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `author` VARCHAR(255), `isbn` VARCHAR(50), `category` VARCHAR(100),
+        `quantity` INT(11) DEFAULT 1, `available` INT(11) DEFAULT 1,
+        `location` VARCHAR(255), `status` VARCHAR(20) DEFAULT 'Available',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'library_books');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `library_borrowing` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `book_id` INT(11) NOT NULL,
+        `member_id` INT(11) NOT NULL, `borrow_date` DATE NOT NULL,
+        `due_date` DATE NOT NULL, `return_date` DATE DEFAULT NULL,
+        `status` VARCHAR(20) DEFAULT 'Borrowed', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_book` (`book_id`), KEY `idx_member` (`member_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'library_borrowing');
+
+    // ── Staffs DB: Salary Structures ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `salary_structures` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `grade` VARCHAR(50) NOT NULL,
+        `step` INT(11) DEFAULT 1, `amount` DECIMAL(12,2) NOT NULL,
+        `description` TEXT, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'salary_structures');
+
+    // ── Staffs DB: Document Templates ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `receipt_templates` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `content` LONGTEXT, `type` VARCHAR(50) DEFAULT 'receipt',
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'receipt_templates');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `document_templates` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `content` LONGTEXT, `type` VARCHAR(50) DEFAULT 'document',
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'document_templates');
+
+    // ── Staffs DB: Other Referenced Tables ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `quality_assurance_reviews` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `review_type` VARCHAR(100) NOT NULL,
+        `reviewer_id` INT(11) DEFAULT NULL, `department` VARCHAR(150),
+        `findings` TEXT, `rating` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Pending', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'quality_assurance_reviews');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `staff_audit_logs` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `staff_id` INT(11) NOT NULL,
+        `action` VARCHAR(100) NOT NULL, `description` TEXT,
+        `ip_address` VARCHAR(45), `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_staff` (`staff_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'staff_audit_logs');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `clinical_training` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `department` VARCHAR(150), `supervisor_id` INT(11) DEFAULT NULL,
+        `start_date` DATE, `end_date` DATE, `hours` DECIMAL(6,1) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'clinical_training');
+
+    // ── Staffs DB: Sports Events ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `sports_events` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `sport_type` VARCHAR(100), `event_date` DATE,
+        `location` VARCHAR(255), `description` TEXT,
+        `status` VARCHAR(20) DEFAULT 'Upcoming', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'sports_events');
+
+    // ── Staffs DB: Expenditure Records ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `expenditure_records` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `category` VARCHAR(150) NOT NULL,
+        `amount` DECIMAL(12,2) NOT NULL, `description` TEXT,
+        `recorded_by` INT(11) DEFAULT NULL, `expense_date` DATE,
+        `status` VARCHAR(20) DEFAULT 'Recorded', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'expenditure_records');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `penalty_configurations` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `penalty_type` VARCHAR(100) NOT NULL,
+        `amount` DECIMAL(12,2) DEFAULT 0, `description` TEXT,
+        `grace_period_days` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'penalty_configurations');
+
+    // ── Staffs DB: Institutional Framework ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `institutional_risks` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `risk_name` VARCHAR(255) NOT NULL,
+        `description` TEXT, `likelihood` VARCHAR(20) DEFAULT 'Medium',
+        `impact` VARCHAR(20) DEFAULT 'Medium', `mitigation` TEXT,
+        `owner_id` INT(11) DEFAULT NULL, `status` VARCHAR(20) DEFAULT 'Open',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'institutional_risks');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `data_ownership_rules` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `table_name` VARCHAR(100) NOT NULL,
+        `owner_role` VARCHAR(100) NOT NULL, `description` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'data_ownership_rules');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `director_performance_reviews` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `staff_id` INT(11) NOT NULL,
+        `review_period` VARCHAR(50), `rating` DECIMAL(3,1) DEFAULT 0,
+        `reviewer_id` INT(11) DEFAULT NULL, `comments` TEXT,
+        `status` VARCHAR(20) DEFAULT 'Draft', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'director_performance_reviews');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `department_targets` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `department` VARCHAR(150) NOT NULL,
+        `target_name` VARCHAR(255) NOT NULL, `target_value` DECIMAL(12,2) DEFAULT 0,
+        `current_value` DECIMAL(12,2) DEFAULT 0, `period` VARCHAR(50),
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'department_targets');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `director_departments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL,
+        `code` VARCHAR(50), `head_id` INT(11) DEFAULT NULL,
+        `description` TEXT, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'director_departments');
+
+    // ── Staffs DB: Subscriptions ──
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `announcements` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `content` TEXT, `target_audience` VARCHAR(100) DEFAULT 'all',
+        `priority` VARCHAR(20) DEFAULT 'normal', `status` VARCHAR(20) DEFAULT 'published',
+        `created_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'announcements');
+
+    // ── Students DB: Student Tables ──
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_requests` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `request_type` VARCHAR(100) NOT NULL, `reason` TEXT,
+        `status` VARCHAR(20) DEFAULT 'Pending', `reviewed_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_requests');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_messages` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `sender_type` VARCHAR(50) DEFAULT 'system', `sender_id` INT(11) DEFAULT NULL,
+        `subject` VARCHAR(255), `message` TEXT NOT NULL,
+        `is_read` TINYINT(1) DEFAULT 0, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_messages');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_downloads` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `document_name` VARCHAR(255) NOT NULL, `document_type` VARCHAR(100),
+        `file_path` VARCHAR(500), `downloaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_downloads');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_profiles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `bio` TEXT, `avatar_url` VARCHAR(500),
+        `emergency_contact` VARCHAR(255), `emergency_phone` VARCHAR(50),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_profiles');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_warnings` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `warning_type` VARCHAR(100) NOT NULL, `description` TEXT,
+        `issued_by` INT(11) DEFAULT NULL, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_warnings');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_semester_gpa` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `academic_year` VARCHAR(20) NOT NULL, `semester` VARCHAR(50) NOT NULL,
+        `gpa` DECIMAL(3,2) DEFAULT 0, `total_credits` INT(11) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_semester_gpa');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_academic_records` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `academic_year` VARCHAR(20), `semester` VARCHAR(50),
+        `course_code` VARCHAR(50), `grade` VARCHAR(5), `credits` DECIMAL(4,1) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_academic_records');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_fee_accounts` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `total_fees` DECIMAL(12,2) DEFAULT 0, `total_paid` DECIMAL(12,2) DEFAULT 0,
+        `balance` DECIMAL(12,2) DEFAULT 0, `academic_year` VARCHAR(20),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_fee_accounts');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_attendance` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `date` DATE NOT NULL, `status` VARCHAR(20) DEFAULT 'Present',
+        `course_code` VARCHAR(50), `remarks` TEXT,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`), KEY `idx_date` (`date`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_attendance');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_academic_profiles` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `program` VARCHAR(150), `level` INT(11) DEFAULT 1,
+        `gpa` DECIMAL(3,2) DEFAULT 0, `total_credits` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_academic_profiles');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `clinical_placements_students` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `placement_site` VARCHAR(255), `department` VARCHAR(150),
+        `supervisor` VARCHAR(255), `start_date` DATE, `end_date` DATE,
+        `hours` DECIMAL(6,1) DEFAULT 0, `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'clinical_placements_students');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `student_fees` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `fee_type` VARCHAR(100) NOT NULL, `amount` DECIMAL(12,2) NOT NULL,
+        `academic_year` VARCHAR(20), `semester` VARCHAR(50),
+        `status` VARCHAR(20) DEFAULT 'Pending', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_fees');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `expenditure_records` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `category` VARCHAR(150) NOT NULL,
+        `amount` DECIMAL(12,2) NOT NULL, `description` TEXT,
+        `recorded_by` INT(11) DEFAULT NULL, `expense_date` DATE,
+        `status` VARCHAR(20) DEFAULT 'Recorded', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'expenditure_records');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `penalty_configurations` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `penalty_type` VARCHAR(100) NOT NULL,
+        `amount` DECIMAL(12,2) DEFAULT 0, `description` TEXT,
+        `grace_period_days` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'penalty_configurations');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `subscription_deductions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `subscription_id` INT(11) NOT NULL,
+        `amount` DECIMAL(12,2) NOT NULL, `deduction_date` DATE NOT NULL,
+        `status` VARCHAR(20) DEFAULT 'Processed', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'subscription_deductions');
+
+    addTable($stu, 'students', "CREATE TABLE IF NOT EXISTS `payment_subscriptions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `student_id` INT(11) NOT NULL,
+        `subscription_type` VARCHAR(100) NOT NULL, `amount` DECIMAL(12,2) NOT NULL,
+        `frequency` VARCHAR(50) DEFAULT 'Monthly', `status` VARCHAR(20) DEFAULT 'Active',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'payment_subscriptions');
+
+    // ── Website DB: Missing Tables ──
+    addTable($web, 'website', "CREATE TABLE IF NOT EXISTS `volunteer_applications` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `full_name` VARCHAR(255) NOT NULL,
+        `email` VARCHAR(255), `phone` VARCHAR(50),
+        `role` VARCHAR(100), `interest` VARCHAR(255),
+        `message` TEXT, `status` VARCHAR(20) DEFAULT 'pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'volunteer_applications');
+
+    addTable($web, 'website', "CREATE TABLE IF NOT EXISTS `student_applications` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `full_name` VARCHAR(255) NOT NULL,
+        `email` VARCHAR(255), `phone` VARCHAR(50),
+        `program` VARCHAR(150), `course` VARCHAR(150),
+        `status` VARCHAR(20) DEFAULT 'pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_applications');
+
+    addTable($web, 'website', "CREATE TABLE IF NOT EXISTS `pages` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,
+        `slug` VARCHAR(255) NOT NULL, `content` LONGTEXT,
+        `status` VARCHAR(20) DEFAULT 'published', `sort_order` INT(11) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_slug` (`slug`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'pages');
+
     $ict->close();
 }
 

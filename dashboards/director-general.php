@@ -880,6 +880,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         } else { $msg = 'Name required.'; }
     }
 
+    if ($action === 'edit_role' && $conn) {
+        $rid = (int)($_POST['role_id'] ?? 0);
+        $rname = trim($_POST['role_name'] ?? '');
+        $rlevel = (int)($_POST['role_level'] ?? 99);
+        $rdash = trim($_POST['dashboard_path'] ?? '');
+        $ractive = (int)($_POST['is_active'] ?? 1);
+        $rexec = (int)($_POST['is_executive'] ?? 0);
+        if ($rid && $rname) {
+            $stmt = $conn->prepare("UPDATE staff_roles SET role_name=?, role_level=?, dashboard_path=?, is_active=?, is_executive=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sisiii', $rname, $rlevel, $rdash, $ractive, $rexec, $rid); if ($stmt->execute()) { $ok = true; $msg = "Role '$rname' updated."; } else { $msg = 'Database error updating role.'; error_log('edit_role: ' . $conn->error); } $stmt->close(); }
+        } else { $msg = 'Role name required.'; }
+    }
+
+    if ($action === 'delete_role' && $conn) {
+        $rid = (int)($_POST['role_id'] ?? 0);
+        if ($rid) {
+            $chk = $conn->prepare("SELECT COUNT(*) as c FROM staff WHERE role_id=?");
+            if ($chk) { $chk->bind_param('i', $rid); $chk->execute(); $cnt = $chk->get_result()->fetch_assoc()['c'] ?? 0; $chk->close(); }
+            if (!empty($cnt)) { $msg = "Cannot delete role: $cnt staff members assigned."; }
+            else { $stmt = $conn->prepare("DELETE FROM staff_roles WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $rid); if ($stmt->execute()) { $ok = true; $msg = 'Role deleted.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
+        }
+    }
+
     if ($action === 'approve_submission' && $websiteConn) {
         $type = trim($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
@@ -1366,9 +1389,38 @@ switch ($dgSection):
             <input type="hidden" name="dept_id" value="<?= $d['id'] ?? 0 ?>">
             <input type="hidden" name="dept_code" value="<?= htmlspecialchars($d['department_code']??'') ?>">
             <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:2px 6px;" title="Delete"><i class="fas fa-trash"></i></button>
-          </form>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT ROLE MODAL -->
+<div class="modal fade modern-modal" id="editRoleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <?= csrfField() ?>
+      <input type="hidden" name="dg_action" value="edit_role">
+      <input type="hidden" name="role_id" id="editRoleId" value="0">
+      <div class="modal-header" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;">
+        <h5 class="modal-title"><i class="fas fa-user-tag me-2"></i>Edit Role</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-8"><label class="form-label fw-semibold" style="font-size:13px;">Role Name *</label><input type="text" name="role_name" id="editRoleName" class="form-control" required style="border-radius:8px;"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold" style="font-size:13px;">Level</label><input type="number" name="role_level" id="editRoleLevel" class="form-control" style="border-radius:8px;" min="1" max="99"></div>
+          <div class="col-12"><label class="form-label fw-semibold" style="font-size:13px;">Dashboard Path</label><input type="text" name="dashboard_path" id="editRoleDashboard" class="form-control" style="border-radius:8px;" placeholder="e.g., dashboards/lecturers.php"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Active</label><select name="is_active" id="editRoleActive" class="form-select" style="border-radius:8px;"><option value="1">Yes</option><option value="0">No</option></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Executive</label><select name="is_executive" id="editRoleExecutive" class="form-select" style="border-radius:8px;"><option value="0">No</option><option value="1">Yes</option></select></div>
         </div>
       </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;"><i class="fas fa-save me-1"></i>Update Role</button>
+      </div>
+    </form>
+  </div>
+</div>
+
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
@@ -2602,7 +2654,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><?= (int)($r['role_level'] ?? 99) ?></td>
             <td><?= ($r['is_executive'] ?? 0) ? 'âœ…' : '' ?></td>
             <td>
-              <button class="btn btn-sm btn-outline-primary" onclick="alert('Role editing coming soon')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-outline-primary" onclick="editRole(<?= htmlspecialchars(json_encode($r)) ?>)"><i class="fas fa-edit"></i></button>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -3407,6 +3459,18 @@ function openEditStaffModal(staff) {
     document.getElementById('editStaffRole').value = staff.position || staff.role_name || '';
     document.getElementById('editStaffStatus').value = staff.status || 'Active';
     var modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
+}
+
+function editRole(r) {
+    if (!r) return;
+    document.getElementById('editRoleId').value = r.id || 0;
+    document.getElementById('editRoleName').value = r.role_name || '';
+    document.getElementById('editRoleLevel').value = r.role_level || 1;
+    document.getElementById('editRoleDashboard').value = r.dashboard_path || '';
+    document.getElementById('editRoleActive').value = r.is_active ?? 1;
+    document.getElementById('editRoleExecutive').value = r.is_executive ?? 0;
+    var modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
     modal.show();
 }
 </script>

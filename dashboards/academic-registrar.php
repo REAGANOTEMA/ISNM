@@ -425,6 +425,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         }
         redirectBack('settings');
     }
+
+    // ── Update/Delete Programs ──
+    if ($action === 'update_program') {
+        $id = intval($_POST['program_id'] ?? 0);
+        $code = trim($_POST['program_code'] ?? ''); $name = trim($_POST['program_name'] ?? '');
+        $type = trim($_POST['program_type'] ?? ''); $dept = trim($_POST['department'] ?? '');
+        $dur = intval($_POST['duration_years'] ?? 0); $status = trim($_POST['status'] ?? 'Active');
+        if ($id && $code && $name) {
+            $stmt = $staff->prepare("UPDATE academic_programs SET program_code=?, program_name=?, program_type=?, department=?, duration_years=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssii', $code, $name, $type, $dept, $dur, $status, $id);
+                if ($stmt->execute()) { $_SESSION['success'] = "Program $code updated."; logAudit($staff, $user_id, 'UPDATE', 'program', $id, "Updated program $code"); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('programs');
+    }
+    if ($action === 'delete_program') {
+        $id = intval($_POST['program_id'] ?? 0);
+        if ($id) {
+            $stmt = $staff->prepare("DELETE FROM academic_programs WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id);
+                if ($stmt->execute()) { $_SESSION['success'] = 'Program deleted.'; logAudit($staff, $user_id, 'DELETE', 'program', $id, 'Deleted program'); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('programs');
+    }
+
+    // ── Update/Delete Courses ──
+    if ($action === 'update_course') {
+        $id = intval($_POST['course_id'] ?? 0);
+        $ccode = trim($_POST['course_code'] ?? ''); $ctitle = trim($_POST['course_title'] ?? '');
+        $credits = floatval($_POST['credits'] ?? 0); $pcode = trim($_POST['program_code'] ?? '');
+        $yos = intval($_POST['year_of_study'] ?? 1); $sem = trim($_POST['semester'] ?? '');
+        $status = trim($_POST['status'] ?? 'Active');
+        if ($id && $ccode && $ctitle) {
+            $stmt = $staff->prepare("UPDATE academic_course_catalog SET course_code=?, course_title=?, credits=?, program_code=?, year_of_study=?, semester=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssdsisii', $ccode, $ctitle, $credits, $pcode, $yos, $sem, $status, $id);
+                if ($stmt->execute()) { $_SESSION['success'] = "Course $ccode updated."; logAudit($staff, $user_id, 'UPDATE', 'course', $id, "Updated course $ccode"); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('courses');
+    }
+    if ($action === 'delete_course') {
+        $id = intval($_POST['course_id'] ?? 0);
+        if ($id) {
+            $stmt = $staff->prepare("DELETE FROM academic_course_catalog WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id);
+                if ($stmt->execute()) { $_SESSION['success'] = 'Course deleted.'; logAudit($staff, $user_id, 'DELETE', 'course', $id, 'Deleted course'); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('courses');
+    }
+
+    // ── Update/Delete Intakes ──
+    if ($action === 'update_intake') {
+        $id = intval($_POST['intake_id'] ?? 0);
+        $name = trim($_POST['intake_name'] ?? ''); $year = trim($_POST['academic_year'] ?? '');
+        $start = preg_replace('/[^0-9\-]/', '', $_POST['start_date'] ?? '');
+        $end = preg_replace('/[^0-9\-]/', '', $_POST['end_date'] ?? '');
+        $status = trim($_POST['status'] ?? 'Open');
+        if ($id && $name) {
+            $stmt = $staff->prepare("UPDATE intakes SET intake_name=?, academic_year=?, start_date=?, end_date=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssi', $name, $year, $start, $end, $status, $id);
+                if ($stmt->execute()) { $_SESSION['success'] = "Intake '$name' updated."; logAudit($staff, $user_id, 'UPDATE', 'intake', $id, "Updated intake $name"); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('intakes');
+    }
+    if ($action === 'delete_intake') {
+        $id = intval($_POST['intake_id'] ?? 0);
+        if ($id) {
+            $stmt = $staff->prepare("DELETE FROM intakes WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id);
+                if ($stmt->execute()) { $_SESSION['success'] = 'Intake deleted.'; logAudit($staff, $user_id, 'DELETE', 'intake', $id, 'Deleted intake'); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('intakes');
+    }
+
+    // ── Update/Delete Graduation Candidates ──
+    if ($action === 'update_graduation') {
+        $id = intval($_POST['candidate_id'] ?? 0);
+        $status = trim($_POST['status'] ?? 'Pending'); $remarks = trim($_POST['remarks'] ?? '');
+        if ($id) {
+            $stmt = $staff->prepare("UPDATE graduation_candidates SET status=?, remarks=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssi', $status, $remarks, $id);
+                if ($stmt->execute()) { $_SESSION['success'] = 'Graduation candidate updated.'; logAudit($staff, $user_id, 'UPDATE', 'graduation', $id, "Updated graduation candidate status to $status"); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('graduation');
+    }
+    if ($action === 'delete_graduation') {
+        $id = intval($_POST['candidate_id'] ?? 0);
+        if ($id) {
+            $stmt = $staff->prepare("DELETE FROM graduation_candidates WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id);
+                if ($stmt->execute()) { $_SESSION['success'] = 'Graduation candidate removed.'; logAudit($staff, $user_id, 'DELETE', 'graduation', $id, 'Deleted graduation candidate'); }
+                else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
+        }
+        redirectBack('graduation');
+    }
+
     if ($action === 'send_notice') {
         $rectype = trim($_POST['recipient_type'] ?? 'student'); $recipientId = intval($_POST['recipient_id'] ?? 0);
         $subject = trim($_POST['subject'] ?? ''); $msg = trim($_POST['message'] ?? '');
@@ -1207,12 +1308,16 @@ document.addEventListener('click', function(e) {
     <div class="section-card p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead class="table-light"><tr><th>Code</th><th>Name</th><th>Type</th><th>Department</th><th>Duration</th><th>Enrolled</th><th>Status</th></tr></thead>
+          <thead class="table-light"><tr><th>Code</th><th>Name</th><th>Type</th><th>Department</th><th>Duration</th><th>Enrolled</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             <?php if (empty($allPrograms)): ?>
-            <tr><td colspan="7" class="text-center py-4 text-muted">No programs defined.</td></tr>
+            <tr><td colspan="8" class="text-center py-4 text-muted">No programs defined.</td></tr>
             <?php else: foreach ($allPrograms as $p): ?>
-            <tr><td><code><?= htmlspecialchars($p['program_code']) ?></code></td><td><strong><?= htmlspecialchars($p['program_name']) ?></strong></td><td><?= htmlspecialchars($p['program_type']) ?></td><td><?= htmlspecialchars($p['department']) ?></td><td><?= $p['duration_years'] ?> yr(s)</td><td><?= $p['enrolled'] ?? 0 ?></td><td><span class="badge bg-<?= $p['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($p['status']) ?></span></td></tr>
+            <tr><td><code><?= htmlspecialchars($p['program_code']) ?></code></td><td><strong><?= htmlspecialchars($p['program_name']) ?></strong></td><td><?= htmlspecialchars($p['program_type']) ?></td><td><?= htmlspecialchars($p['department']) ?></td><td><?= $p['duration_years'] ?> yr(s)</td><td><?= $p['enrolled'] ?? 0 ?></td><td><span class="badge bg-<?= $p['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($p['status']) ?></span></td>
+            <td class="text-nowrap">
+              <button class="btn btn-sm btn-outline-primary" onclick="editProgram(<?= htmlspecialchars(json_encode($p)) ?>)"><i class="fas fa-edit"></i></button>
+              <form method="POST" class="d-inline" onsubmit="return confirm('Delete this program?')"><input type="hidden" name="action" value="delete_program"><input type="hidden" name="program_id" value="<?= (int)$p['id'] ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+            </td></tr>
             <?php endforeach; endif; ?>
           </tbody>
         </table>
@@ -1254,12 +1359,16 @@ document.addEventListener('click', function(e) {
     <div class="section-card p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0 data-table">
-          <thead class="table-light"><tr><th>Code</th><th>Title</th><th>Program</th><th>Year</th><th>Semester</th><th>Credits</th><th>Status</th></tr></thead>
+          <thead class="table-light"><tr><th>Code</th><th>Title</th><th>Program</th><th>Year</th><th>Semester</th><th>Credits</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             <?php if (empty($allCourses)): ?>
-            <tr><td colspan="7" class="text-center py-4 text-muted">No courses defined.</td></tr>
+            <tr><td colspan="8" class="text-center py-4 text-muted">No courses defined.</td></tr>
             <?php else: foreach ($allCourses as $c): ?>
-            <tr><td><code><?= htmlspecialchars($c['course_code']) ?></code></td><td><strong><?= htmlspecialchars($c['course_title']) ?></strong></td><td><?= htmlspecialchars($c['program_name'] ?: $c['program_code']) ?></td><td>Year <?= $c['year_of_study'] ?></td><td><?= htmlspecialchars($c['semester']) ?></td><td><?= $c['credits'] ?></td><td><span class="badge bg-<?= $c['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($c['status']) ?></span></td></tr>
+            <tr><td><code><?= htmlspecialchars($c['course_code']) ?></code></td><td><strong><?= htmlspecialchars($c['course_title']) ?></strong></td><td><?= htmlspecialchars($c['program_name'] ?: $c['program_code']) ?></td><td>Year <?= $c['year_of_study'] ?></td><td><?= htmlspecialchars($c['semester']) ?></td><td><?= $c['credits'] ?></td><td><span class="badge bg-<?= $c['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($c['status']) ?></span></td>
+            <td class="text-nowrap">
+              <button class="btn btn-sm btn-outline-primary" onclick="editCourse(<?= htmlspecialchars(json_encode($c)) ?>)"><i class="fas fa-edit"></i></button>
+              <form method="POST" class="d-inline" onsubmit="return confirm('Delete this course?')"><input type="hidden" name="action" value="delete_course"><input type="hidden" name="course_id" value="<?= (int)$c['id'] ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+            </td></tr>
             <?php endforeach; endif; ?>
           </tbody>
         </table>
@@ -1304,11 +1413,15 @@ document.addEventListener('click', function(e) {
     <div class="section-card p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead class="table-light"><tr><th>Intake Name</th><th>Academic Year</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+          <thead class="table-light"><tr><th>Intake Name</th><th>Academic Year</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <?php if (empty($intakes)): ?><tr><td colspan="5" class="text-center py-4 text-muted">No intakes defined.</td></tr>
+            <?php if (empty($intakes)): ?><tr><td colspan="6" class="text-center py-4 text-muted">No intakes defined.</td></tr>
             <?php else: foreach ($intakes as $i): ?>
-            <tr><td><strong><?= htmlspecialchars($i['intake_name']) ?></strong></td><td><?= htmlspecialchars($i['academic_year']) ?></td><td><?= $i['start_date'] ?: '-' ?></td><td><?= $i['end_date'] ?: '-' ?></td><td><span class="badge bg-<?= $i['status'] === 'Open' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($i['status']) ?></span></td></tr>
+            <tr><td><strong><?= htmlspecialchars($i['intake_name']) ?></strong></td><td><?= htmlspecialchars($i['academic_year']) ?></td><td><?= $i['start_date'] ?: '-' ?></td><td><?= $i['end_date'] ?: '-' ?></td><td><span class="badge bg-<?= $i['status'] === 'Open' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($i['status']) ?></span></td>
+            <td class="text-nowrap">
+              <button class="btn btn-sm btn-outline-primary" onclick="editIntake(<?= htmlspecialchars(json_encode($i)) ?>)"><i class="fas fa-edit"></i></button>
+              <form method="POST" class="d-inline" onsubmit="return confirm('Delete this intake?')"><input type="hidden" name="action" value="delete_intake"><input type="hidden" name="intake_id" value="<?= (int)$i['id'] ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form>
+            </td></tr>
             <?php endforeach; endif; ?>
           </tbody>
         </table>
@@ -1330,6 +1443,75 @@ document.addEventListener('click', function(e) {
           </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-reg"><i class="fas fa-save me-1"></i>Add</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Program Modal -->
+  <div class="modal fade" id="editProgramModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="update_program">
+        <input type="hidden" name="program_id" id="editProgId" value="0">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Program</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Code *</label><input type="text" name="program_code" id="editProgCode" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="program_name" id="editProgName" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label">Type</label><select name="program_type" id="editProgType" class="form-select"><option>Certificate</option><option>Diploma</option><option>Bachelor</option><option>Master</option></select></div>
+            <div class="col-md-4"><label class="form-label">Department</label><input type="text" name="department" id="editProgDept" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Duration</label><input type="number" name="duration_years" id="editProgDur" class="form-control" min="1" max="8"></div>
+            <div class="col-md-6"><label class="form-label">Status</label><select name="status" id="editProgStatus" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Course Modal -->
+  <div class="modal fade" id="editCourseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="update_course">
+        <input type="hidden" name="course_id" id="editCourseId" value="0">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Course</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Course Code *</label><input type="text" name="course_code" id="editCourseCode" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Title *</label><input type="text" name="course_title" id="editCourseTitle" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label">Credits</label><input type="number" step="0.5" name="credits" id="editCourseCredits" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Program</label><input type="text" name="program_code" id="editCourseProgram" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Year</label><input type="number" name="year_of_study" id="editCourseYear" class="form-control" min="1"></div>
+            <div class="col-md-6"><label class="form-label">Semester</label><input type="text" name="semester" id="editCourseSem" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Status</label><select name="status" id="editCourseStatus" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Intake Modal -->
+  <div class="modal fade" id="editIntakeModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="update_intake">
+        <input type="hidden" name="intake_id" id="editIntakeId" value="0">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Intake</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="intake_name" id="editIntakeName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Year</label><input type="text" name="academic_year" id="editIntakeYear" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Start Date</label><input type="date" name="start_date" id="editIntakeStart" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">End Date</label><input type="date" name="end_date" id="editIntakeEnd" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Status</label><select name="status" id="editIntakeStatus" class="form-select"><option value="Open">Open</option><option value="Closed">Closed</option></select></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button></div>
       </form>
     </div>
   </div>
@@ -1665,13 +1847,16 @@ document.addEventListener('click', function(e) {
     <div class="section-card p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0 data-table">
-          <thead class="table-light"><tr><th>#</th><th>Student</th><th>Program</th><th>Grad Year</th><th>Status</th><th>Submitted</th></tr></thead>
+          <thead class="table-light"><tr><th>#</th><th>Student</th><th>Program</th><th>Grad Year</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
           <tbody>
-            <?php if (empty($gradCandidates)): ?><tr><td colspan="6" class="text-center py-4 text-muted">No candidates.</td></tr>
+            <?php if (empty($gradCandidates)): ?><tr><td colspan="7" class="text-center py-4 text-muted">No candidates.</td></tr>
             <?php else: foreach ($gradCandidates as $gc): ?>
             <tr><td><?= $gc['id'] ?></td><td><?= htmlspecialchars($gc['full_name'] ?? "ID:{$gc['student_id']}") ?></td><td><?= htmlspecialchars($gc['program_name'] ?? "-") ?></td><td><?= htmlspecialchars($gc['graduation_year']) ?></td>
             <td><span class="badge bg-<?= $gc['status'] === 'Approved by Registrar' ? 'success' : ($gc['status'] === 'Pending' ? 'warning' : 'secondary') ?>"><?= htmlspecialchars($gc['status']) ?></span></td>
-            <td><small><?= $gc['submitted_at'] ? date('d M Y', strtotime($gc['submitted_at'])) : '-' ?></small></td></tr>
+            <td><small><?= $gc['submitted_at'] ? date('d M Y', strtotime($gc['submitted_at'])) : '-' ?></small></td>
+            <td class="text-nowrap">
+              <form method="POST" class="d-inline" onsubmit="return confirm('Remove this candidate from graduation?')"><input type="hidden" name="action" value="delete_graduation"><input type="hidden" name="candidate_id" value="<?= (int)$gc['id'] ?>"><?= csrfField() ?><button class="btn btn-sm btn-outline-danger" title="Remove"><i class="fas fa-trash"></i></button></form>
+            </td></tr>
             <?php endforeach; endif; ?>
           </tbody>
         </table>
@@ -1968,6 +2153,39 @@ document.addEventListener('click', function(e) {
 })();
 
 function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
+
+function editProgram(p) {
+    document.getElementById('editProgId').value = p.id || 0;
+    document.getElementById('editProgCode').value = p.program_code || '';
+    document.getElementById('editProgName').value = p.program_name || '';
+    document.getElementById('editProgType').value = p.program_type || 'Certificate';
+    document.getElementById('editProgDept').value = p.department || '';
+    document.getElementById('editProgDur').value = p.duration_years || 3;
+    document.getElementById('editProgStatus').value = p.status || 'Active';
+    new bootstrap.Modal(document.getElementById('editProgramModal')).show();
+}
+
+function editCourse(c) {
+    document.getElementById('editCourseId').value = c.id || 0;
+    document.getElementById('editCourseCode').value = c.course_code || '';
+    document.getElementById('editCourseTitle').value = c.course_title || '';
+    document.getElementById('editCourseCredits').value = c.credits || 3;
+    document.getElementById('editCourseProgram').value = c.program_code || '';
+    document.getElementById('editCourseYear').value = c.year_of_study || 1;
+    document.getElementById('editCourseSem').value = c.semester || '';
+    document.getElementById('editCourseStatus').value = c.status || 'Active';
+    new bootstrap.Modal(document.getElementById('editCourseModal')).show();
+}
+
+function editIntake(i) {
+    document.getElementById('editIntakeId').value = i.id || 0;
+    document.getElementById('editIntakeName').value = i.intake_name || '';
+    document.getElementById('editIntakeYear').value = i.academic_year || '';
+    document.getElementById('editIntakeStart').value = i.start_date || '';
+    document.getElementById('editIntakeEnd').value = i.end_date || '';
+    document.getElementById('editIntakeStatus').value = i.status || 'Open';
+    new bootstrap.Modal(document.getElementById('editIntakeModal')).show();
+}
 </script>
 
 </div>

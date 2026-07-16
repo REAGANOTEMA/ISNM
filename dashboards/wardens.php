@@ -219,6 +219,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             }
         }
     }
+
+    if ($action === 'schedule_session') {
+        $student_id = (int)($_POST['student_id'] ?? 0);
+        $session_type = trim($_POST['session_type'] ?? 'individual');
+        $session_date = preg_replace('/[^0-9\-]/', '', $_POST['session_date'] ?? '');
+        $session_time = preg_replace('/[^0-9:]/', '', $_POST['session_time'] ?? '');
+        $notes = trim($_POST['notes'] ?? '');
+
+        $s = $stuConn->prepare("SELECT CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
+        $s->bind_param("i", $student_id);
+        if (!$s->execute()) { error_log('schedule_session student lookup failed'); };
+        $st = $s->get_result()->fetch_assoc();
+        $s->close();
+
+        if (!$st) {
+            $flash = 'Student not found.';
+            $flashType = 'danger';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, student_name, session_type, session_date, session_time, counselor_id, counselor_name, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
+            $sname = $st['full_name'];
+            $stmt->bind_param("issssis", $student_id, $sname, $session_type, $session_date, $session_time, $user_id, $user_name, $notes);
+            if ($stmt->execute()) {
+                $flash = 'Counseling session scheduled.';
+                $flashType = 'success';
+            } else {
+                $flash = 'Failed to schedule session.';
+                $flashType = 'danger';
+            }
+            $stmt->close();
+        }
+    }
+
+    if ($action === 'counseling_record') {
+        $student_id = (int)($_POST['student_id'] ?? 0);
+        $session_type = trim($_POST['session_type'] ?? 'academic');
+        $session_date = preg_replace('/[^0-9\-]/', '', $_POST['session_date'] ?? date('Y-m-d'));
+        $notes = trim($_POST['notes'] ?? '');
+        $action_plan = trim($_POST['action_plan'] ?? '');
+
+        $s = $stuConn->prepare("SELECT CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
+        $s->bind_param("i", $student_id);
+        if (!$s->execute()) { error_log('counseling_record student lookup failed'); };
+        $st = $s->get_result()->fetch_assoc();
+        $s->close();
+
+        if (!$st) {
+            $flash = 'Student not found.';
+            $flashType = 'danger';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, student_name, session_type, session_date, counselor_id, counselor_name, notes, action_plan, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Completed')");
+            $sname = $st['full_name'];
+            $stmt->bind_param("isssisss", $student_id, $sname, $session_type, $session_date, $user_id, $user_name, $notes, $action_plan);
+            if ($stmt->execute()) {
+                $flash = 'Counseling record saved.';
+                $flashType = 'success';
+            } else {
+                $flash = 'Failed to save record.';
+                $flashType = 'danger';
+            }
+            $stmt->close();
+        }
+    }
 }
 
 $students_db = $ctx['students'];
@@ -644,8 +706,8 @@ if ($view_case_id && $conn) {
         <section id="counseling" class="content-section dashboard-section<?= $section==='counseling'?' active':'' ?>" data-section="counseling">
             <h2>Counseling Services</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="counseling-actions">
-                <button class="btn btn-primary" onclick="openModal('scheduleSession')"><i class="fas fa-calendar-plus"></i> Schedule Session</button>
-                <button class="btn btn-success" onclick="openModal('counselingRecord')"><i class="fas fa-file-medical"></i> Counseling Record</button>
+                <button class="btn btn-primary" onclick="openModal('Schedule Counseling Session','<form method=POST><input type=hidden name=csrf_token value=<?= $_SESSION["csrf_token"] ?? "" ?>><input type=hidden name=action value=schedule_session><div class=mb-2><label>Student ID</label><input name=student_id type=number class=form-control required></div><div class=mb-2><label>Session Type</label><select name=session_type class=form-select><option value=individual>Individual</option><option value=group>Group</option><option value=follow_up>Follow Up</option></select></div><div class=mb-2><label>Date</label><input type=date name=session_date class=form-control required></div><div class=mb-2><label>Time</label><input type=time name=session_time class=form-control></div><div class=mb-2><label>Notes</label><textarea name=notes class=form-control rows=2></textarea></div><button type=submit class=btn btn-primary>Schedule</button></form>','Save')"><i class="fas fa-calendar-plus"></i> Schedule Session</button>
+                <button class="btn btn-success" onclick="openModal('Record Counseling Session','<form method=POST><input type=hidden name=csrf_token value=<?= $_SESSION["csrf_token"] ?? "" ?>><input type=hidden name=action value=counseling_record><div class=mb-2><label>Student ID</label><input name=student_id type=number class=form-control required></div><div class=mb-2><label>Session Type</label><select name=session_type class=form-select><option value=academic>Academic</option><option value=personal>Personal</option><option value=behavioral>Behavioral</option><option value=career>Career</option></select></div><div class=mb-2><label>Date</label><input type=date name=session_date class=form-control required></div><div class=mb-2><label>Notes</label><textarea name=notes class=form-control rows=3 required></textarea></div><div class=mb-2><label>Action Plan</label><textarea name=action_plan class=form-control rows=2></textarea></div><button type=submit class=btn btn-success>Save Record</button></form>','Save')"><i class="fas fa-file-medical"></i> Counseling Record</button>
             </div>
             <div class="counseling-overview">
                 <h3>Today's Counseling Schedule</h3>
@@ -808,8 +870,18 @@ if ($view_case_id && $conn) {
             <h2>Security & Safety</h2><button onclick="window.print()" class="btn btn-sm btn-outline-secondary float-end ms-2"><i class="fas fa-print"></i></button>
             <div class="security-overview">
                 <div class="security-stats">
-                    <div class="security-stat"><h4>Security Personnel</h4><div>5 on duty</div><small>All positions covered</small></div>
-                    <div class="security-stat"><h4>Incidents Today</h4><div>0</div><small>No incidents reported</small></div>
+                    <?php
+                    $securityCount = 0;
+                    $incidentCount = 0;
+                    if ($conn) {
+                        $sr = @$conn->query("SELECT COUNT(*) as c FROM staff WHERE department LIKE '%Security%' AND status='Active'");
+                        if ($sr) $securityCount = (int)$sr->fetch_assoc()['c'];
+                        $ir = @$conn->query("SELECT COUNT(*) as c FROM security_incidents WHERE DATE(created_at) = CURDATE()");
+                        if ($ir) $incidentCount = (int)$ir->fetch_assoc()['c'];
+                    }
+                    ?>
+                    <div class="security-stat"><h4>Security Personnel</h4><div><?= $securityCount ?> on duty</div><small><?= $securityCount > 0 ? 'Positions covered' : 'No staff assigned' ?></small></div>
+                    <div class="security-stat"><h4>Incidents Today</h4><div><?= $incidentCount ?></div><small><?= $incidentCount === 0 ? 'No incidents reported' : 'Incidents to review' ?></small></div>
                 </div>
             </div>
         </section>
