@@ -9,16 +9,16 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 $totalMessages = 0; $sentMessages = 0; $receivedMessages = 0; $unreadMessages = 0;
 $messages = [];
 if ($conn) {
-    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = $userId OR recipient_id = $userId");
-    if ($r) $totalMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = $userId AND is_deleted_sender = 0");
-    if ($r) $sentMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = $userId AND is_deleted_recipient = 0");
-    if ($r) $receivedMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = $userId AND is_read = 0 AND is_deleted_recipient = 0");
-    if ($r) $unreadMessages = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT id, subject, sender_name, recipient_name, created_at AS sent_at, is_read FROM staff_inbox WHERE (sender_id = $userId AND is_deleted_sender = 0) OR (recipient_id = $userId AND is_deleted_recipient = 0) ORDER BY created_at DESC LIMIT 100");
-    if ($r) while ($row = $r->fetch_assoc()) $messages[] = $row;
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = ? OR recipient_id = ?");
+    if ($stmt) { $stmt->bind_param('ii', $userId, $userId); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $totalMessages = (int)$r->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0");
+    if ($stmt) { $stmt->bind_param('i', $userId); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $sentMessages = (int)$r->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0");
+    if ($stmt) { $stmt->bind_param('i', $userId); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $receivedMessages = (int)$r->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
+    if ($stmt) { $stmt->bind_param('i', $userId); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $unreadMessages = (int)$r->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT id, subject, sender_name, recipient_name, created_at AS sent_at, is_read FROM staff_inbox WHERE (sender_id = ? AND is_deleted_sender = 0) OR (recipient_id = ? AND is_deleted_recipient = 0) ORDER BY created_at DESC LIMIT 100");
+    if ($stmt) { $stmt->bind_param('ii', $userId, $userId); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $messages[] = $row; } $stmt->close(); }
 }
 ?>
 <?php include_once __DIR__ . '/includes/dashboard_head.php'; ?>

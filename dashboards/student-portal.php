@@ -406,29 +406,29 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 if ($page === 'dashboard'):
     $fee_balance = 0;
     if (tableExists($studentsDb, 'student_fee_tracking')) {
-        $fr = $studentsDb->query("SELECT COALESCE(SUM(balance),0) as bal FROM student_fee_tracking WHERE student_id=$student_id AND status != 'Paid'");
-        if ($fr && $fr->num_rows) $fee_balance = (float)$fr->fetch_assoc()['bal'];
+        $stmt = $studentsDb->prepare("SELECT COALESCE(SUM(balance),0) as bal FROM student_fee_tracking WHERE student_id=? AND status != 'Paid'");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) $fee_balance = (float)$fr->fetch_assoc()['bal']; } $stmt->close(); }
     } elseif (tableExists($studentsDb, 'student_fee_accounts')) {
-        $fr = $studentsDb->query("SELECT COALESCE(SUM(balance),0) as bal FROM student_fee_accounts WHERE student_id=$student_id AND status != 'paid'");
-        if ($fr && $fr->num_rows) $fee_balance = (float)$fr->fetch_assoc()['bal'];
+        $stmt = $studentsDb->prepare("SELECT COALESCE(SUM(balance),0) as bal FROM student_fee_accounts WHERE student_id=? AND status != 'paid'");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) $fee_balance = (float)$fr->fetch_assoc()['bal']; } $stmt->close(); }
     }
     $attendance_pct = 0;
     if (tableExists($studentsDb, 'student_attendance')) {
-        $ar = $studentsDb->query("SELECT ROUND(COUNT(CASE WHEN status='Present' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) as pct FROM student_attendance WHERE student_id=$student_id");
-        if ($ar && $ar->num_rows) $attendance_pct = (float)$ar->fetch_assoc()['pct'];
+        $stmt = $studentsDb->prepare("SELECT ROUND(COUNT(CASE WHEN status='Present' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) as pct FROM student_attendance WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $ar = $stmt->get_result(); if ($ar && $ar->num_rows) $attendance_pct = (float)$ar->fetch_assoc()['pct']; } $stmt->close(); }
     }
     $active_warnings = 0;
     if (tableExists($studentsDb, 'student_warnings')) {
-        $wr = $studentsDb->query("SELECT COUNT(*) as cnt FROM student_warnings WHERE student_id=$student_id AND status='Active'");
-        if ($wr && $wr->num_rows) $active_warnings = (int)$wr->fetch_assoc()['cnt'];
+        $stmt = $studentsDb->prepare("SELECT COUNT(*) as cnt FROM student_warnings WHERE student_id=? AND status='Active'");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $wr = $stmt->get_result(); if ($wr && $wr->num_rows) $active_warnings = (int)$wr->fetch_assoc()['cnt']; } $stmt->close(); }
     }
     $gpa = 0;
     if (tableExists($studentsDb, 'student_semester_gpa')) {
-        $gr = $studentsDb->query("SELECT semester_gpa FROM student_semester_gpa WHERE student_id=$student_id ORDER BY id DESC LIMIT 1");
-        if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['semester_gpa'];
+        $stmt = $studentsDb->prepare("SELECT semester_gpa FROM student_semester_gpa WHERE student_id=? ORDER BY id DESC LIMIT 1");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $gr = $stmt->get_result(); if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['semester_gpa']; } $stmt->close(); }
     } elseif (tableExists($studentsDb, 'student_academic_records')) {
-        $gr = $studentsDb->query("SELECT gpa FROM student_academic_records WHERE student_id=$student_id ORDER BY id DESC LIMIT 1");
-        if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['gpa'];
+        $stmt = $studentsDb->prepare("SELECT gpa FROM student_academic_records WHERE student_id=? ORDER BY id DESC LIMIT 1");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $gr = $stmt->get_result(); if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['gpa']; } $stmt->close(); }
     }
     // Admission requirements status from staff DB
     $admissionStatus = 'Not Set';
@@ -494,7 +494,7 @@ if ($page === 'dashboard'):
 <?php
 $notifs = [];
 if (tableExists($studentsDb, 'student_notifications')) {
-    $notifs = safeQuery($studentsDb, "SELECT * FROM student_notifications WHERE student_id=$student_id ORDER BY created_at DESC LIMIT 5");
+    $notifs = safeQueryPrepared($studentsDb, "SELECT * FROM student_notifications WHERE student_id=? ORDER BY created_at DESC LIMIT 5", "i", [$student_id]);
 }
 if (empty($notifs)) {
     echo '<div class="sp-empty"><i class="fas fa-bell"></i><p>No recent notifications</p></div>';

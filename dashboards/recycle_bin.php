@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($item) {
             $table = $item['original_table'];
             $col = $item['original_id_column'];
-            $original_id = (int)$item['original_id'];
+            $original_id = intval($item['original_id']);
             $allowed_tables = ['documents','templates','student_documents','staff_documents','payment_invoices','student_payments','student_invoices','student_receipts'];
             $allowed_cols = ['id','student_id','invoice_id','payment_id','receipt_id'];
             if (!in_array($table, $allowed_tables) || !in_array($col, $allowed_cols)) {
@@ -42,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: recycle_bin.php');
                 exit;
             }
-            $restore = $conn->query("UPDATE `$table` SET is_deleted = 0, deleted_at = NULL WHERE `$col` = $original_id AND is_deleted = 1");
+            $restore = $conn->prepare("UPDATE `$table` SET is_deleted = 0, deleted_at = NULL WHERE `$col` = ? AND is_deleted = 1");
+            if ($restore) { $restore->bind_param('i', $original_id); $restore->execute(); $restore->close(); }
             if ($restore) {
                 $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
                 if ($stmt) { $stmt->bind_param('i', $item_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
@@ -65,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($item) {
             $table = $item['original_table'];
             $col = $item['original_id_column'];
-            $original_id = (int)$item['original_id'];
+            $original_id = intval($item['original_id']);
             $allowed_tables = ['documents','templates','student_documents','staff_documents','payment_invoices','student_payments','student_invoices','student_receipts'];
             $allowed_cols = ['id','student_id','invoice_id','payment_id','receipt_id'];
             if (!in_array($table, $allowed_tables) || !in_array($col, $allowed_cols)) {
@@ -73,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: recycle_bin.php');
                 exit;
             }
-            $conn->query("DELETE FROM `$table` WHERE `$col` = $original_id");
+            $del = $conn->prepare("DELETE FROM `$table` WHERE `$col` = ?");
+            if ($del) { $del->bind_param('i', $original_id); $del->execute(); $del->close(); }
             $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
             if ($stmt) { $stmt->bind_param('i', $item_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Item permanently deleted.';

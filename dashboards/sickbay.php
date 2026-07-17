@@ -930,4 +930,6 @@ function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id
 document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name','vb-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'},vb:{sid:'vb-sid',num:'vb-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>
 <script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
+</body>
+</html>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

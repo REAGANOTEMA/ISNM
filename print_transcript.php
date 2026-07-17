@@ -23,8 +23,14 @@ $role = '';
 if ($is_staff && function_exists('getStaffConnection')) {
     $sdb = getStaffConnection();
     if ($sdb) {
-        $r = $sdb->query("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = $user_id LIMIT 1");
-        if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
+        $stmt_role = $sdb->prepare("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = ? LIMIT 1");
+        if ($stmt_role) {
+            $stmt_role->bind_param("i", $user_id);
+            if (!$stmt_role->execute()) { error_log('$stmt_role execute failed: ' . ($stmt_role->error ?? 'unknown')); };
+            $r = $stmt_role->get_result();
+            if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
+            $stmt_role->close();
+        }
     }
 }
 $is_registrar = stripos($role, 'registrar') !== false;
@@ -235,11 +241,18 @@ if ($studentId && $studentsDb) {
 // ---------------------------------------------------------------------------
 function loadStudentData($db, $id) {
     $id = (int)$id;
-    $q = $db->query("SELECT * FROM students WHERE id = $id LIMIT 1");
-    if ($q && ($s = $q->fetch_assoc())) {
-        $s['full_name'] = $s['full_name'] ?: trim(($s['first_name']??'') . ' ' . ($s['surname']??'') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
-        $s['registration_number'] = $s['registration_number'] ?: $s['student_number'] ?: '';
-        return $s;
+    $q = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+    if ($q) {
+        $q->bind_param("i", $id);
+        if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
+        $res = $q->get_result();
+        if ($res && ($s = $res->fetch_assoc())) {
+            $s['full_name'] = $s['full_name'] ?: trim(($s['first_name']??'') . ' ' . ($s['surname']??'') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
+            $s['registration_number'] = $s['registration_number'] ?: $s['student_number'] ?: '';
+            $q->close();
+            return $s;
+        }
+        $q->close();
     }
     // Try by student_number
     $stmt = $db->prepare("SELECT * FROM students WHERE student_number = ? OR registration_number = ? LIMIT 1");
@@ -265,15 +278,27 @@ function loadAcademicRecords($db, $student, $id) {
     // Try student_academic_records first
     $tables = $db->query("SHOW TABLES LIKE 'student_academic_records'");
     if ($tables && $tables->num_rows > 0) {
-        $r = $db->query("SELECT *, subject AS course_name FROM student_academic_records WHERE student_id = $id ORDER BY academic_year, semester");
-        if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+        $q = $db->prepare("SELECT *, subject AS course_name FROM student_academic_records WHERE student_id = ? ORDER BY academic_year, semester");
+        if ($q) {
+            $q->bind_param("i", $id);
+            if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
+            $r = $q->get_result();
+            if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+            $q->close();
+        }
         if (!empty($records)) return $records;
     }
     // Try academic_records
     $tables = $db->query("SHOW TABLES LIKE 'academic_records'");
     if ($tables && $tables->num_rows > 0) {
-        $r = $db->query("SELECT * FROM academic_records WHERE student_id = $id ORDER BY academic_year, semester");
-        if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+        $q = $db->prepare("SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year, semester");
+        if ($q) {
+            $q->bind_param("i", $id);
+            if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
+            $r = $q->get_result();
+            if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
+            $q->close();
+        }
     }
     return $records;
 }
@@ -292,19 +317,25 @@ function loadExaminationRecords($db, $studentNumber) {
     if (!$s || !($srow = $s->fetch_assoc())) { $stmt->close(); return $records; }
     $stmt->close();
     $sid = (int)$srow['id'];
-    $r = $db->query("SELECT er.*, cc.course_title AS course_name, cc.credits FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = $sid AND er.grade_status = 'Published' ORDER BY er.created_at ASC");
-    if ($r) while ($row = $r->fetch_assoc()) {
-        $records[] = [
-            'course_code' => $row['course_code'] ?? '',
-            'course_name' => $row['course_name'] ?? '',
-            'credits' => $row['credits'] ?? $row['credit_hours'] ?? 0,
-            'semester' => $row['semester'] ?? '',
-            'academic_year' => $row['academic_year'] ?? date('Y'),
-            'marks' => $row['marks_obtained'] ?? $row['total_marks_calculated'] ?? 0,
-            'grade' => $row['grade'] ?? '',
-            'continuous_assessment_marks' => $row['continuous_assessment_marks'] ?? 0,
-            'final_exam_marks' => $row['final_exam_marks'] ?? 0,
-        ];
+    $q = $db->prepare("SELECT er.*, cc.course_title AS course_name, cc.credits FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.grade_status = 'Published' ORDER BY er.created_at ASC");
+    if ($q) {
+        $q->bind_param("i", $sid);
+        if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
+        $r = $q->get_result();
+        if ($r) while ($row = $r->fetch_assoc()) {
+            $records[] = [
+                'course_code' => $row['course_code'] ?? '',
+                'course_name' => $row['course_name'] ?? '',
+                'credits' => $row['credits'] ?? $row['credit_hours'] ?? 0,
+                'semester' => $row['semester'] ?? '',
+                'academic_year' => $row['academic_year'] ?? date('Y'),
+                'marks' => $row['marks_obtained'] ?? $row['total_marks_calculated'] ?? 0,
+                'grade' => $row['grade'] ?? '',
+                'continuous_assessment_marks' => $row['continuous_assessment_marks'] ?? 0,
+                'final_exam_marks' => $row['final_exam_marks'] ?? 0,
+            ];
+        }
+        $q->close();
     }
     return $records;
 }

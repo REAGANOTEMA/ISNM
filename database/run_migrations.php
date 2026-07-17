@@ -1770,6 +1770,20 @@ if ($ict) {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'director_departments');
 
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `smart_suggestions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `user_id` INT(11) NOT NULL,
+        `suggestion_type` VARCHAR(50) DEFAULT 'action', `suggestion_text` TEXT NOT NULL,
+        `priority` VARCHAR(20) DEFAULT 'medium', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_user` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'smart_suggestions');
+
+    addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `document_generation_log` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT, `document_type` VARCHAR(100) NOT NULL,
+        `document_id` INT(11) DEFAULT 0, `generated_by` INT(11) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
+        KEY `idx_type` (`document_type`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'document_generation_log');
+
     // ── Staffs DB: Subscriptions ──
     addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `announcements` (
         `id` INT(11) NOT NULL AUTO_INCREMENT, `title` VARCHAR(255) NOT NULL,

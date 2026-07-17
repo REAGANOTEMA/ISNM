@@ -227,7 +227,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Publish</button></div>
 </form></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>function filterTable(inputId, tableId) {
     var input = document.getElementById(inputId);
     var filter = input.value.toUpperCase();
     var table = document.getElementById(tableId);
@@ -242,7 +243,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         tr[i].style.display = found ? "" : "none";
     }
 }
-
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>

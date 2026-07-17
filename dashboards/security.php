@@ -658,7 +658,8 @@ document.addEventListener('DOMContentLoaded',function(){
     });
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">function filterTable(inputId, tableId) {
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>function filterTable(inputId, tableId) {
     var input = document.getElementById(inputId);
     var filter = input.value.toUpperCase();
     var table = document.getElementById(tableId);
@@ -673,7 +674,6 @@ document.addEventListener('DOMContentLoaded',function(){
         tr[i].style.display = found ? "" : "none";
     }
 }
-
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

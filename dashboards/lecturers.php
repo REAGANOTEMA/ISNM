@@ -262,16 +262,16 @@ try {
     if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
     $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status='Active'");
     if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
-    $ca_result = $conn->query("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=" . (int)$user_id . " AND status='Active'");
-    if ($ca_result) $assigned_courses = (int)$ca_result->fetch_assoc()['cnt'];
-    $tt_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=" . (int)$user_id . " AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
-    if ($tt_result) $lectures_this_week = (int)$tt_result->fetch_assoc()['cnt'];
-    $ar_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND grade IS NULL");
-    if ($ar_result) $pending_grades = (int)$ar_result->fetch_assoc()['cnt'];
-    $stu_result = $conn->query("SELECT COUNT(DISTINCT student_id) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id);
-    if ($stu_result) $total_students_taught = (int)$stu_result->fetch_assoc()['cnt'];
-    $avg_result = $conn->query("SELECT AVG(marks) as avg FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND marks IS NOT NULL");
-    if ($avg_result) $average_grade = (int)round($avg_result->fetch_assoc()['avg'] ?? 0);
+    $ca_stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=? AND status='Active'");
+    if ($ca_stmt) { $ca_stmt->bind_param('i', $user_id); if ($ca_stmt->execute()) { $assigned_courses = (int)$ca_stmt->get_result()->fetch_assoc()['cnt']; } $ca_stmt->close(); }
+    $tt_stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=? AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
+    if ($tt_stmt) { $tt_stmt->bind_param('i', $user_id); if ($tt_stmt->execute()) { $lectures_this_week = (int)$tt_stmt->get_result()->fetch_assoc()['cnt']; } $tt_stmt->close(); }
+    $ar_stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=? AND grade IS NULL");
+    if ($ar_stmt) { $ar_stmt->bind_param('i', $user_id); if ($ar_stmt->execute()) { $pending_grades = (int)$ar_stmt->get_result()->fetch_assoc()['cnt']; } $ar_stmt->close(); }
+    $stu_stmt = $conn->prepare("SELECT COUNT(DISTINCT student_id) as cnt FROM academic_records WHERE lecturer_id=?");
+    if ($stu_stmt) { $stu_stmt->bind_param('i', $user_id); if ($stu_stmt->execute()) { $total_students_taught = (int)$stu_stmt->get_result()->fetch_assoc()['cnt']; } $stu_stmt->close(); }
+    $avg_stmt = $conn->prepare("SELECT AVG(marks) as avg FROM academic_records WHERE lecturer_id=? AND marks IS NOT NULL");
+    if ($avg_stmt) { $avg_stmt->bind_param('i', $user_id); if ($avg_stmt->execute()) { $average_grade = (int)round($avg_stmt->get_result()->fetch_assoc()['avg'] ?? 0); } $avg_stmt->close(); }
 } catch (Exception $e) {
     error_log('lecturers stats: ' . $e->getMessage());
 }
@@ -634,8 +634,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         <?php
                         $assessments = [];
                         if ($conn) {
-                            $ar2 = $conn->query("SELECT * FROM teaching_assessments WHERE lecturer_id=" . (int)$user_id . " ORDER BY assessment_date DESC");
-                            if ($ar2) { while ($r = $ar2->fetch_assoc()) $assessments[] = $r; }
+                            $as2_stmt = $conn->prepare("SELECT * FROM teaching_assessments WHERE lecturer_id=? ORDER BY assessment_date DESC");
+                            if ($as2_stmt) { $as2_stmt->bind_param('i', $user_id); $ar2 = $as2_stmt->execute() ? $as2_stmt->get_result() : null; if ($ar2) { while ($r = $ar2->fetch_assoc()) $assessments[] = $r; } $as2_stmt->close(); }
                         }
                         ?>
                         <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchXLPG" type="text" placeholder="Search..." onkeyup="filterTable('srchXLPG','tblXLPG')"></div>
@@ -744,8 +744,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         <?php
                         $resources = [];
                         if ($conn) {
-                            $rr = $conn->query("SELECT * FROM teaching_resources WHERE lecturer_id=" . (int)$user_id . " ORDER BY id DESC");
-                            if ($rr) { while ($r = $rr->fetch_assoc()) $resources[] = $r; }
+                            $res_stmt = $conn->prepare("SELECT * FROM teaching_resources WHERE lecturer_id=? ORDER BY id DESC");
+                            if ($res_stmt) { $res_stmt->bind_param('i', $user_id); $rr = $res_stmt->execute() ? $res_stmt->get_result() : null; if ($rr) { while ($r = $rr->fetch_assoc()) $resources[] = $r; } $res_stmt->close(); }
                         }
                         ?>
                         <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchTLNY" type="text" placeholder="Search..." onkeyup="filterTable('srchTLNY','tblTLNY')"></div>
@@ -796,8 +796,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         <?php
                         $announcements = [];
                         if ($conn) {
-                            $anr = $conn->query("SELECT * FROM teaching_announcements WHERE lecturer_id=" . (int)$user_id . " ORDER BY id DESC");
-                            if ($anr) { while ($r = $anr->fetch_assoc()) $announcements[] = $r; }
+                            $an_stmt = $conn->prepare("SELECT * FROM teaching_announcements WHERE lecturer_id=? ORDER BY id DESC");
+                            if ($an_stmt) { $an_stmt->bind_param('i', $user_id); $anr = $an_stmt->execute() ? $an_stmt->get_result() : null; if ($anr) { while ($r = $anr->fetch_assoc()) $announcements[] = $r; } $an_stmt->close(); }
                         }
                         ?>
                         <div class="mb-2"><input class="form-control form-control-sm" style="max-width:300px" id="srchFUGV" type="text" placeholder="Search..." onkeyup="filterTable('srchFUGV','tblFUGV')"></div>
@@ -870,8 +870,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $attendanceRecords = [];
         if ($studentsConn) {
-            $r = $studentsConn->query("SELECT sa.*, s.full_name, s.student_number FROM student_attendance sa JOIN students s ON sa.student_id=s.id WHERE sa.course_id IN (SELECT course_id FROM course_assignments WHERE lecturer_id=$user_id) ORDER BY sa.date DESC LIMIT 20");
-            if ($r) $attendanceRecords = $r->fetch_all(MYSQLI_ASSOC);
+            $att_stmt = $studentsConn->prepare("SELECT sa.*, s.full_name, s.student_number FROM student_attendance sa JOIN students s ON sa.student_id=s.id WHERE sa.course_id IN (SELECT course_id FROM course_assignments WHERE lecturer_id=?) ORDER BY sa.date DESC LIMIT 20");
+            if ($att_stmt) { $att_stmt->bind_param('i', $user_id); $r = $att_stmt->execute() ? $att_stmt->get_result() : null; if ($r) $attendanceRecords = $r->fetch_all(MYSQLI_ASSOC); $att_stmt->close(); }
         }
         if (empty($attendanceRecords)): ?><p class="text-muted text-center py-3">No attendance records found for your courses.</p>
         <?php else: ?>
@@ -888,8 +888,11 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $catRecords = [];
         if ($conn) {
-            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
-            if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
+        $stmt->bind_param('i', $user_id);
+        $r = $stmt->execute() ? $stmt->get_result() : null;
+        if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
         }
         if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
         <?php else: ?>
@@ -906,8 +909,11 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $examRecords = [];
         if ($conn) {
-            $r = $conn->query("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=$user_id AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
-            if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
+        $stmt->bind_param('i', $user_id);
+        $r = $stmt->execute() ? $stmt->get_result() : null;
+        if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
         <?php else: ?>
@@ -943,8 +949,11 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $lessonPlans = [];
         if ($conn) {
-            $r = $conn->query("SELECT * FROM lesson_plans WHERE lecturer_id=$user_id ORDER BY created_at DESC LIMIT 10");
+            $stmt = $conn->prepare("SELECT * FROM lesson_plans WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
+            $stmt->bind_param('i', $user_id);
+            $r = $stmt->execute() ? $stmt->get_result() : null;
             if ($r) $lessonPlans = $r->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
         }
         if (empty($lessonPlans)): ?><p class="text-muted text-center py-3">No lesson plans created yet.</p>
         <?php else: ?>
@@ -961,8 +970,11 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $assignments = [];
         if ($conn) {
-            $r = $conn->query("SELECT * FROM assignments WHERE lecturer_id=$user_id ORDER BY created_at DESC LIMIT 10");
-            if ($r) $assignments = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt = $conn->prepare("SELECT * FROM assignments WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
+        $stmt->bind_param('i', $user_id);
+        $r = $stmt->execute() ? $stmt->get_result() : null;
+        if ($r) $assignments = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
         }
         if (empty($assignments)): ?><p class="text-muted text-center py-3">No assignments created yet.</p>
         <?php else: ?>

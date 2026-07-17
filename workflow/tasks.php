@@ -12,8 +12,8 @@ $priorities = ['low', 'medium', 'high', 'urgent'];
 $staff = [];
 
 if ($conn) {
-    $r = $conn->query("SELECT * FROM task_assignments WHERE assigned_to = $user_id OR assigned_by = $user_id ORDER BY FIELD(priority,'urgent','high','medium','low'), created_at DESC LIMIT 50");
-    if ($r) while ($row = $r->fetch_assoc()) $tasks[] = $row;
+    $stmt = $conn->prepare("SELECT * FROM task_assignments WHERE assigned_to = ? OR assigned_by = ? ORDER BY FIELD(priority,'urgent','high','medium','low'), created_at DESC LIMIT 50");
+    if ($stmt) { $stmt->bind_param('ii', $user_id, $user_id); if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $tasks[] = $row; } $stmt->close(); }
     $r = $conn->query("SELECT id, full_name FROM staff WHERE status='Active' ORDER BY full_name");
     if ($r) while ($row = $r->fetch_assoc()) $staff[] = $row;
 }
@@ -39,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         $status = $_POST['status'] ?? '';
         if ($id && in_array($status, $task_statuses)) {
-            $conn->query("UPDATE task_assignments SET status='$status' WHERE id=$id");
+            $stmt = $conn->prepare("UPDATE task_assignments SET status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('si', $status, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Task updated.';
         }
         header('Location: tasks.php'); exit;

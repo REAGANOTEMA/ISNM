@@ -125,8 +125,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $id = (int)($_POST['id'] ?? 0);
                 if ($id <= 0) throw new Exception('Invalid event ID.');
                 $staffConn->begin_transaction();
-                $staffConn->query("DELETE FROM event_attendees WHERE event_id=$id");
-                $staffConn->query("DELETE FROM events WHERE id=$id");
+                $stmt = $staffConn->prepare("DELETE FROM event_attendees WHERE event_id=?");
+                if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+                $stmt = $staffConn->prepare("DELETE FROM events WHERE id=?");
+                if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
                 $staffConn->commit();
                 echo json_encode(['success' => true, 'message' => 'Event deleted.']);
                 break;
@@ -134,7 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
 
             case 'get_event': {
                 $id = (int)($_POST['id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM events WHERE id=$id");
+                $stmt = $staffConn->prepare("SELECT * FROM events WHERE id=?");
+                if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else { $r = null; }
                 $ev = $r ? $r->fetch_assoc() : null;
                 echo json_encode(['success' => (bool)$ev, 'event' => $ev]);
                 break;
@@ -204,14 +207,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             case 'delete_attendee': {
                 $id = (int)($_POST['id'] ?? 0);
                 if ($id <= 0) throw new Exception('Invalid ID.');
-                $staffConn->query("DELETE FROM event_attendees WHERE id=$id");
+                $stmt = $staffConn->prepare("DELETE FROM event_attendees WHERE id=?");
+                if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
                 echo json_encode(['success' => true, 'message' => 'Attendee removed.']);
                 break;
             }
 
             case 'list_attendees': {
                 $event_id = (int)($_POST['event_id'] ?? 0);
-                $r = $staffConn->query("SELECT * FROM event_attendees WHERE event_id=$event_id ORDER BY registered_at DESC");
+                $stmt = $staffConn->prepare("SELECT * FROM event_attendees WHERE event_id=? ORDER BY registered_at DESC");
+                if ($stmt) { $stmt->bind_param('i', $event_id); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else { $r = null; }
                 $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
                 echo json_encode(['success' => true, 'attendees' => $rows]);
                 break;

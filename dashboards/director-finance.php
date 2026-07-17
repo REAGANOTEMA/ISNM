@@ -387,7 +387,7 @@ if ($ajax === 'publish_finance_notice' && $staff) {
     echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 
-if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
+if (isset($_GET['ajax'])) { error_log("Unhandled AJAX: {$_GET['ajax']} in director-finance.php"); header('Content-Type: application/json'); echo json_encode(['success'=>false,'error'=>'Unknown AJAX action']); exit; }
 
 // -- POST Handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {

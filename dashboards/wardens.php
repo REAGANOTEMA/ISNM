@@ -377,8 +377,11 @@ $myRequests = [];
 if ($conn) {
     $r = $conn->query("SELECT si.id, si.item_name, si.item_code, si.unit, si.quantity, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
     if ($r) while ($row = $r->fetch_assoc()) $storeInventory[] = $row;
-    $r2 = $conn->query("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=$user_id ORDER BY sr.created_at DESC LIMIT 20");
+    $stmt = $conn->prepare("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=? ORDER BY sr.created_at DESC LIMIT 20");
+    $stmt->bind_param('i', $user_id);
+    $r2 = $stmt->execute() ? $stmt->get_result() : null;
     if ($r2) while ($row = $r2->fetch_assoc()) $myRequests[] = $row;
+    $stmt->close();
 }
 
 $pageToSection = [

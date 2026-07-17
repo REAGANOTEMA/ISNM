@@ -27,7 +27,14 @@ $statement = generateFinancialStatement($student_id);
 $balance = getStudentBalance($student_id);
 
 // Get student info
-$student = $conn->query("SELECT full_name, student_number, registration_number, program FROM students WHERE id = $student_id LIMIT 1")->fetch_assoc();
+$stmt_student = $conn->prepare("SELECT full_name, student_number, registration_number, program FROM students WHERE id = ? LIMIT 1");
+$student = null;
+if ($stmt_student) {
+    $stmt_student->bind_param("i", $student_id);
+    if (!$stmt_student->execute()) { error_log('$stmt_student execute failed: ' . ($stmt_student->error ?? 'unknown')); };
+    $student = $stmt_student->get_result()->fetch_assoc();
+    $stmt_student->close();
+}
 
 // Get specific invoice if id provided
 $invoice = null;

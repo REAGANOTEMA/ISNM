@@ -24,8 +24,14 @@ if ($is_staff) {
         $sdb = getStaffConnection();
         if ($sdb) {
             $uid = (int)$_SESSION['user_id'];
-            $r = $sdb->query("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = $uid LIMIT 1");
-            if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
+            $stmt_uid = $sdb->prepare("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id = ? LIMIT 1");
+            if ($stmt_uid) {
+                $stmt_uid->bind_param("i", $uid);
+                if (!$stmt_uid->execute()) { error_log('$stmt_uid execute failed: ' . ($stmt_uid->error ?? 'unknown')); };
+                $r = $stmt_uid->get_result();
+                if ($r) { $row = $r->fetch_assoc(); $role = $row['role_name'] ?? ''; }
+                $stmt_uid->close();
+            }
         }
     }
     $allowed_roles = ['academic registrar', 'registrar', 'director academics', 'director general', 'system admin', 'principal'];

@@ -512,7 +512,7 @@ if ($view === 'approve_graduation' && $ajax === '1') {
 }
 
 // -- AJAX catch-all --
-if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
+if (isset($_GET['ajax'])) { error_log("Unhandled AJAX: {$_GET['ajax']} in school-principal.php"); header('Content-Type: application/json'); echo json_encode(['success'=>false,'error'=>'Unknown AJAX action']); exit; }
 
 // -- POST handlers --
 // Handle website submission actions

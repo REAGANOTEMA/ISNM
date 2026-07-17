@@ -370,7 +370,7 @@ if ($view === 'update_placement_status' && $ajax === '1' && $staff) {
     }
     echo json_encode(['success'=>false]); exit;
 }
-if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
+if (isset($_GET['ajax'])) { error_log("Unhandled AJAX: {$_GET['ajax']} in deputy-principal.php"); header('Content-Type: application/json'); echo json_encode(['success'=>false,'error'=>'Unknown AJAX action']); exit; }
 
 // â”€â”€ POST HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

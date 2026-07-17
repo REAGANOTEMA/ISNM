@@ -245,3 +245,4 @@ function filterTable(inputId, tableId) {
 
 </script>
 </body>
+</html>

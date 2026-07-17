@@ -1104,34 +1104,58 @@ if (isset($_REQUEST['ajax'])) {
 
         case 'get_document_stats':
             $stats = [];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id");
+            $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=?");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['total'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT status, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id GROUP BY status");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT status, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=? GROUP BY status");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['by_status'] = []; while ($row = $r->fetch_assoc()) { $stats['by_status'][$row['status']] = (int)$row['cnt']; }
-            $r = @$conn->query("SELECT doc_type, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id GROUP BY doc_type ORDER BY cnt DESC");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT doc_type, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=? GROUP BY doc_type ORDER BY cnt DESC");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['by_type'] = []; while ($row = $r->fetch_assoc()) { $stats['by_type'][] = $row; }
-            $r = @$conn->query("SELECT department, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=$user_id AND department!='' GROUP BY department ORDER BY cnt DESC");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT department, COUNT(*) as cnt FROM `$staff_db`.`secretary_official_documents` WHERE user_id=? AND department!='' GROUP BY department ORDER BY cnt DESC");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['by_department'] = []; while ($row = $r->fetch_assoc()) { $stats['by_department'][] = $row; }
+            $stmt->close();
             $response['success'] = true;
             $response['stats'] = $stats;
             break;
 
         case 'get_dashboard_stats':
             $stats = [];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants`");
+            $r = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants`");
             $stats['total_students'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'Approved'");
+            $r = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'Approved'");
             $stats['active_students'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'New Applicant'");
+            $r = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'New Applicant'");
             $stats['pending_admissions'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id = $user_id AND appointment_date = CURDATE()");
+            $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id = ? AND appointment_date = CURDATE()");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['today_appointments'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_messages` WHERE recipient_id = $user_id AND is_read = 0");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_messages` WHERE recipient_id = ? AND is_read = 0");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['unread_messages'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_requests` WHERE user_id = $user_id AND status = 'pending'");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_requests` WHERE user_id = ? AND status = 'pending'");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['pending_requests'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_meetings` WHERE user_id = $user_id AND meeting_date = CURDATE()");
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_meetings` WHERE user_id = ? AND meeting_date = CURDATE()");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute(); $r = $stmt->get_result();
             $stats['today_meetings'] = (int)$r->fetch_assoc()['cnt'];
+            $stmt->close();
             $response['success'] = true;
             $response['stats'] = $stats;
             break;
@@ -1152,10 +1176,14 @@ $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE s
 if ($r) $stats['pending_admissions'] = (int)$r->fetch_assoc()['cnt'];
 $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` a WHERE (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id=ar.id WHERE ars.applicant_id=a.id AND ars.status IN ('Submitted','Verified')) < (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` WHERE is_active=1)");
 if ($r) $stats['incomplete_reqs'] = (int)$r->fetch_assoc()['cnt'];
-$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id=$user_id AND appointment_date=CURDATE()");
-if ($r) $stats['today_appointments'] = (int)$r->fetch_assoc()['cnt'];
-$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_messages` WHERE recipient_id=$user_id AND is_read=0");
-if ($r) $stats['unread_messages'] = (int)$r->fetch_assoc()['cnt'];
+$stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id=? AND appointment_date=CURDATE()");
+$stmt->bind_param('i', $user_id);
+if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $stats['today_appointments'] = (int)$r->fetch_assoc()['cnt']; }
+$stmt->close();
+$stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_messages` WHERE recipient_id=? AND is_read=0");
+$stmt->bind_param('i', $user_id);
+if ($stmt->execute()) { $r = $stmt->get_result(); if ($r) $stats['unread_messages'] = (int)$r->fetch_assoc()['cnt']; }
+$stmt->close();
 
 $programs = [];
 $prog_res = @$conn->query("SELECT program_name FROM `$staff_db`.`academic_programs` WHERE status='Active' ORDER BY program_name");
@@ -2369,4 +2397,7 @@ function loadDirectorRequirements(){
     });
 }
 function toggleAllDirReq(el){document.querySelectorAll('.dir-req-check').forEach(function(cb){cb.checked=el.checked;toggleStudentReq(cb.dataset.id,el.checked)})}
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body>
+</html>

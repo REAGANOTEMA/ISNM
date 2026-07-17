@@ -23,8 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $staff_id = (int)($_POST['staff_id'] ?? 0);
         if ($staff_id) {
             $status = 'Present';
-            $check = $conn->query("SELECT id FROM attendance WHERE staff_id=$staff_id AND date='$today'");
-            if ($check && $check->num_rows > 0) {
+            $check = $conn->prepare("SELECT id FROM attendance WHERE staff_id=? AND date=?");
+            if ($check) { $check->bind_param('is', $staff_id, $today); $check->execute(); $checkR = $check->get_result(); } else { $checkR = null; }
+            if ($checkR && $checkR->num_rows > 0) {
                 $response['error'] = 'Already checked in today';
             } else {
                 $stmt = $conn->prepare("INSERT INTO attendance (staff_id, date, check_in, status) VALUES (?, ?, ?, ?)");
@@ -54,8 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($action === 'mark_absent' && $conn) {
         $staff_id = (int)($_POST['staff_id'] ?? 0);
         if ($staff_id) {
-            $check = $conn->query("SELECT id FROM attendance WHERE staff_id=$staff_id AND date='$today'");
-            if ($check && $check->num_rows > 0) {
+            $check = $conn->prepare("SELECT id FROM attendance WHERE staff_id=? AND date=?");
+            if ($check) { $check->bind_param('is', $staff_id, $today); $check->execute(); $checkR = $check->get_result(); } else { $checkR = null; }
+            if ($checkR && $checkR->num_rows > 0) {
                 $response['error'] = 'Attendance already recorded for today';
             } else {
                 $stmt = $conn->prepare("INSERT INTO attendance (staff_id, date, status) VALUES (?, ?, 'Absent')");
@@ -77,16 +79,16 @@ $attendance = [];
 
 if ($conn) {
     $today = date('Y-m-d');
-    $r1 = $conn->query("SELECT COUNT(*) c FROM attendance WHERE date='$today' AND status='Present'");
-    if ($r1) $presentToday = (int)$r1->fetch_assoc()['c'];
-    $r2 = $conn->query("SELECT COUNT(*) c FROM attendance WHERE date='$today' AND status='Absent'");
-    if ($r2) $absent = (int)$r2->fetch_assoc()['c'];
-    $r3 = $conn->query("SELECT COUNT(*) c FROM attendance WHERE date='$today' AND status='On Leave'");
-    if ($r3) $onLeave = (int)$r3->fetch_assoc()['c'];
-    $r4 = $conn->query("SELECT COUNT(*) c FROM attendance WHERE date='$today' AND status='Late'");
-    if ($r4) $late = (int)$r4->fetch_assoc()['c'];
-    $a = $conn->query("SELECT a.*, s.full_name staff_name FROM attendance a LEFT JOIN staff s ON a.staff_id=s.id WHERE a.date='$today' ORDER BY a.check_in ASC");
-    if ($a) $attendance = $a->fetch_all(MYSQLI_ASSOC);
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM attendance WHERE date=? AND status='Present'");
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $r1 = $stmt->get_result(); if ($r1) $presentToday = (int)$r1->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM attendance WHERE date=? AND status='Absent'");
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $r2 = $stmt->get_result(); if ($r2) $absent = (int)$r2->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM attendance WHERE date=? AND status='On Leave'");
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $r3 = $stmt->get_result(); if ($r3) $onLeave = (int)$r3->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM attendance WHERE date=? AND status='Late'");
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $r4 = $stmt->get_result(); if ($r4) $late = (int)$r4->fetch_assoc()['c']; } $stmt->close(); }
+    $stmt = $conn->prepare("SELECT a.*, s.full_name staff_name FROM attendance a LEFT JOIN staff s ON a.staff_id=s.id WHERE a.date=? ORDER BY a.check_in ASC");
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $a = $stmt->get_result(); if ($a) $attendance = $a->fetch_all(MYSQLI_ASSOC); } $stmt->close(); }
 }
 ?>
 <!DOCTYPE html>
