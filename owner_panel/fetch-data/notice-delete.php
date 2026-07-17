@@ -2,7 +2,7 @@
  include("../../assets/config.php");
 
 // Assuming noticeId is sent via POST method
-$id = $_POST['noticeId'];
+$id = $_POST['noticeId'] ?? '';
 
 // Using prepared statement to prevent SQL injection
 $sql = "DELETE FROM notice WHERE s_no=?";

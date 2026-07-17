@@ -9,10 +9,10 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $noticeId = (int) ($_POST["noticeId"]);
-    $disks = $_POST["disks"];
-    $body = $_POST["body"];
-    $title = $_POST["title"];
+    $noticeId = (int) ($_POST["noticeId"] ?? 0);
+    $disks = $_POST["disks"] ?? '';
+    $body = $_POST["body"] ?? '';
+    $title = $_POST["title"] ?? '';
     
     $editorId = $_SESSION['uid'];
 

@@ -9,14 +9,14 @@ $response = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $title = $_POST["title"];
+    $title = $_POST["title"] ?? '';
     $body = "";
     $file = "";
-    $importance = $_POST['disks'];
+    $importance = $_POST['disks'] ?? '';
     $senderId = $_SESSION['uid'];
 
     if (isset($_POST['body'])) {
-        $body = $_POST["body"];
+        $body = $_POST["body"] ?? '';
     }
 
     if (isset($_FILES["file"]) && $_FILES["file"]["error"] == 0) {

@@ -3,7 +3,7 @@ include('config.php');
 $response = "";
 
 if (isset($_POST['subjectId'])) {
-    $subID = $_POST['subjectId'];
+    $subID = $_POST['subjectId'] ?? '';
 
     // Use prepared statement to delete subject
     $sql = "DELETE FROM `subjects` WHERE `subject_id` = ?";

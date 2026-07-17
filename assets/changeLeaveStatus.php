@@ -6,7 +6,7 @@ $response = array();
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['s_no'], $_POST['status'])) {
         $s_no = (int) $_POST['s_no'];
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? '';
 
         if ($status == "approved" || $status == "rejected") {
 

@@ -5,8 +5,8 @@ session_start();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response = "";
     $senderId = $_SESSION['uid'];
-    $class = $_POST["class"];
-    $subject = $_POST["subject"];
+    $class = $_POST["class"] ?? '';
+    $subject = $_POST["subject"] ?? '';
 
     $query = "SELECT * FROM `syllabus` WHERE `class`= ? AND `subject` = ?";
     $statement = mysqli_prepare($conn, $query);

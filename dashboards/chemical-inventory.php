@@ -30,11 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'save_chemical') {
         $id = (int)($_POST['id'] ?? 0);
-        $code = $_POST['chemical_code'];
-        $name = $_POST['chemical_name'];
-        $type = $_POST['chemical_type'];
+        $code = $_POST['chemical_code'] ?? '';
+        $name = $_POST['chemical_name'] ?? '';
+        $type = $_POST['chemical_type'] ?? '';
         $cas = $_POST['cas_number'] ?? '';
-        $hazard = $_POST['hazard_class'];
+        $hazard = $_POST['hazard_class'] ?? '';
         $loc = $_POST['storage_location'] ?? '';
         $qty = (float)($_POST['quantity_on_hand'] ?? 0);
         $unit = $_POST['unit_of_measure'] ?? 'ml';
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $supplier = $_POST['supplier'] ?? '';
         $expiry = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
         $received = !empty($_POST['date_received']) ? $_POST['date_received'] : null;
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? '';
 
         // Auto-calculate status based on qty and expiry
         $expiry_dt = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : '';
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'stock_adjust') {
         $id = (int)($_POST['id'] ?? 0);
-        $adjust_type = $_POST['adjust_type'];
+        $adjust_type = $_POST['adjust_type'] ?? '';
         $adjust_qty = (float)($_POST['adjust_quantity'] ?? 0);
         if ($id > 0 && $adjust_qty > 0) {
             $stmt = $staff_conn->prepare("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id = ?");

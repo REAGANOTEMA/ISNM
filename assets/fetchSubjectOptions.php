@@ -3,7 +3,7 @@ $response = '';
 include("config.php");
 
 if (isset($_POST["class"])) {
-    $class1 = $_POST["class"];
+    $class1 = $_POST["class"] ?? '';
     $response = $class1 . "lskjdflksj";
 
     $query = "SELECT * FROM subjects WHERE `class` = ?";

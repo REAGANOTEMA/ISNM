@@ -29,7 +29,7 @@ if (isset($_SESSION['uid']) && $_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_POST['bus_id'])) {
             $saveBusQuery = "UPDATE `buses` SET `bus_title` = ?, `bus_number` = ? WHERE `buses`.`bus_id` = ?;";
 
-            $busID =  $_POST['bus_id'];
+            $busID =  $_POST['bus_id'] ?? '';
           
             $saveBusStmt = mysqli_prepare($conn, $saveBusQuery);
             mysqli_stmt_bind_param($saveBusStmt, "sss", $busTitle, $busNumber, $busID);

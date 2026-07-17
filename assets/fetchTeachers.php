@@ -2,7 +2,7 @@
 include("config.php");
 
 if (isset($_POST['name'])) {
-    $name = $_POST['name'];
+    $name = $_POST['name'] ?? '';
     $query = "";
     $resultOutput = array();
 

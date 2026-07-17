@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $auth_service = new AuthenticationService();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
+    $action = $_POST['action'] ?? '';
 
     if ($action === 'request_reset') {
         $identifier = trim($_POST['identifier'] ?? '');

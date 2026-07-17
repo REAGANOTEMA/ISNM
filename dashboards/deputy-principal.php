@@ -26,7 +26,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
 $migrate($staff); $migrate($students);
 if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
-$view = $_GET['section']; if ($view === 'overview') $view = 'home';
+$view = $_GET['section'] ?? 'overview'; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
 function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function dep_success($m) { $_SESSION['dep_success'] = $m; }

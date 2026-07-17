@@ -5,7 +5,7 @@ $response = array();
 
 if (isset($_SESSION['uid']) && $_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $busId = $_POST['busId'];
+    $busId = $_POST['busId'] ?? '';
 
     $delBusQuery = "DELETE FROM `buses` WHERE `bus_id` = ?";
     $stmt1 = mysqli_prepare($conn, $delBusQuery);

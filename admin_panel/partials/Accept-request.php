@@ -7,7 +7,7 @@ if ($conn->connect_error) {
 
 // Check if the 'id' parameter is set in the URL
 if(isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = intval($_GET['id'] ?? 0);
 
     // Update query
     $sql = "UPDATE students SET request = 'accepted' WHERE id = ?";

@@ -2,7 +2,7 @@
 
 include('config.php');
 if (isset($_POST['subject_id'])) {
-    $id = $_POST['subject_id'];
+    $id = $_POST['subject_id'] ?? '';
     $data = array(
         'subject_id' => $id
     );

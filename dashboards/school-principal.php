@@ -47,7 +47,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
 $migrate($staff); $migrate($students);
 if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
-$view = $_GET['section']; if ($view === 'overview') $view = 'home';
+$view = $_GET['section'] ?? 'overview'; if ($view === 'overview') $view = 'home';
 $viewAliases = [
     'academic' => 'academic_dashboard',
     'student-affairs' => 'student_welfare',

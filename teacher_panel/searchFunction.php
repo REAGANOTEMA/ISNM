@@ -6,7 +6,7 @@ $pages = array( 'dashboard.php','student.php',"attendence.php", 'noticeboard.php
 
 $response = "";
 if (isset($_POST['searchValue'])) {
-    $searchValue = $_POST['searchValue'];
+    $searchValue = $_POST['searchValue'] ?? '';
     $i = 0;
     foreach ($searches as $search) {
         if ($searchValue !== '' && str_contains($search, $searchValue)) {

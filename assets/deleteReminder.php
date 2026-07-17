@@ -3,7 +3,7 @@
     include('config.php');
 
     if(isset($_POST['dbLine'])){
-        $sr_no = $_POST['dbLine'];
+        $sr_no = $_POST['dbLine'] ?? '';
 
         // Use prepared statement to delete reminder
         $sql = "DELETE FROM `reminders` WHERE `reminders`.`s_no` = ?";

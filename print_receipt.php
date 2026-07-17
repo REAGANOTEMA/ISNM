@@ -12,7 +12,7 @@ if (!isset($_GET['type'])) {
     exit();
 }
 
-$type = $_GET['type'];
+$type = $_GET['type'] ?? '';
 
 if ($type === 'payment' && isset($_GET['id'])) {
     $payment_id = (int)$_GET['id'];

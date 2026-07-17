@@ -309,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=news'); exit;
     }
-    $action   = $_POST['dg_news_action'];
+    $action   = $_POST['dg_news_action'] ?? '';
     $title    = trim($_POST['dg_news_title'] ?? '');
     $content  = trim($_POST['dg_news_content'] ?? '');
     $excerpt  = trim($_POST['dg_news_excerpt'] ?? '');
@@ -446,7 +446,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
         $_SESSION['ev_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=events'); exit;
     }
-    $action     = $_POST['dg_event_action'];
+    $action     = $_POST['dg_event_action'] ?? '';
     $ev_title   = trim($_POST['dg_event_title'] ?? '');
     $ev_desc    = trim($_POST['dg_event_description'] ?? '');
     $ev_date    = trim($_POST['dg_event_date'] ?? '');
@@ -530,7 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action
         $_SESSION['tm_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=testimonials'); exit;
     }
-    $action     = $_POST['dg_testimonial_action'];
+    $action     = $_POST['dg_testimonial_action'] ?? '';
     $tm_content = trim($_POST['dg_testimonial_content'] ?? '');
     $tm_author  = trim($_POST['dg_testimonial_author'] ?? '');
     $tm_role    = trim($_POST['dg_testimonial_role'] ?? '');
@@ -615,7 +615,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
         $_SESSION['faq_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=faqs'); exit;
     }
-    $action    = $_POST['dg_faq_action'];
+    $action    = $_POST['dg_faq_action'] ?? '';
     $faq_q     = trim($_POST['dg_faq_question'] ?? '');
     $faq_a     = trim($_POST['dg_faq_answer'] ?? '');
     $faq_cat   = trim($_POST['dg_faq_category'] ?? 'General');
@@ -703,7 +703,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])
         $_SESSION['ws_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=web-settings'); exit;
     }
-    $settingsAction = $_POST['dg_settings_action'];
+    $settingsAction = $_POST['dg_settings_action'] ?? '';
     if ($settingsAction === 'update_settings') {
         $keys   = $_POST['setting_key'] ?? [];
         $values = $_POST['setting_value'] ?? [];
@@ -824,7 +824,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php'); exit;
     }
-    $action = $_POST['dg_action'];
+    $action = $_POST['dg_action'] ?? '';
     $ok = false; $msg = '';
 
     if ($action === 'add_department' && $conn) {

@@ -106,7 +106,7 @@
 </nav>
     </div>
     <?php
-    $id=$_GET['id'];
+    $id = intval($_GET['id'] ?? 0);
     echo "<script>var id='{$id}';</script>";
 ?>
     <div class="attendence" id="val">

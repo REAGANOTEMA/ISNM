@@ -2,7 +2,7 @@
  include("../../assets/config.php");
 
 // Assuming you've already sanitized the search term
-$search = $_POST['search'];
+$search = $_POST['search'] ?? '';
 
 // Using prepared statement to prevent SQL injection
 $sql = "SELECT * FROM teachers WHERE fname LIKE ? OR lname LIKE ? OR gender LIKE ?";

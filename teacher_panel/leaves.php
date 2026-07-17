@@ -99,7 +99,7 @@
                                 </div>
                             <?php } else { 
                                 error_reporting(1);
-                                $id = $_GET['id'];
+                                $id = intval($_GET['id'] ?? 0);
                                 $fetchDataQuery = "SELECT * FROM `leaves` WHERE `leaves`.`s_no` = ? AND `leaves`.`sender_id`= ? AND `leaves`.`status` = ?;";
                                 
                                 $pending = "pending";

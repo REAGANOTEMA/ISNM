@@ -4,8 +4,8 @@ include("config.php");
 $response = ""; 
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $subject = $_POST['subject'];
-    $subjectId = $_POST['subject_id'];
+    $subject = $_POST['subject'] ?? '';
+    $subjectId = $_POST['subject_id'] ?? '';
 
     $query = "UPDATE subjects SET subject_name = ? WHERE subject_id = ?";
 

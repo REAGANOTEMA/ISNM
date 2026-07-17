@@ -10,8 +10,8 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
         if ($action === 'add' || $action === 'edit') {
-            $code = $_POST['cost_center_code'];
-            $name = $_POST['cost_center_name'];
+            $code = $_POST['cost_center_code'] ?? '';
+            $name = $_POST['cost_center_name'] ?? '';
             $dept = $_POST['department'] ?? '';
             $desc = $_POST['description'] ?? '';
             if ($action === 'add') {

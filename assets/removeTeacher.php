@@ -3,7 +3,7 @@
 include("config.php");
 
 if (isset($_POST['teacherid'])) {
-    $teacherid = $_POST['teacherid'];
+    $teacherid = $_POST['teacherid'] ?? '';
 
     // Check if teacher exists
     $checkSql = "SELECT * FROM `teachers` WHERE `id`=?";

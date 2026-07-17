@@ -32,7 +32,7 @@ $migrate($staff); $migrate($students);
 $page = $_GET['page'] ?? '';
 $pageMap = ['revenue'=>'revenue_summary','budget'=>'budget_planning','expenditure'=>'expenditure_monitoring','payroll'=>'payroll_review','ledger'=>'general_ledger','audit'=>'audit_logs','procurement'=>'purchase_requests','assets'=>'asset_register'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? ($pageMap[$page] ?? 'overview');
-$view = $_GET['section']; if ($view === 'overview') $view = 'home';
+$view = $_GET['section'] ?? 'overview'; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $q = $_GET['q'] ?? '';
 function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function fin_success($m) { $_SESSION['fin_success'] = $m; }

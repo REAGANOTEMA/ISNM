@@ -9,7 +9,7 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     if ($_POST['action'] === 'add_requirement') {
-        $name = $_POST['name'];
+        $name = $_POST['name'] ?? '';
         $desc = $_POST['description'] ?? '';
         $deadline = $_POST['deadline'] ?? '';
         if ($deadline) {

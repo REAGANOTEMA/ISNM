@@ -4,7 +4,7 @@ include('config.php');
 session_start();
 
 if (isset($_POST['id']) && isset($_SESSION['uid'])) {
-    $id = $_POST['id'];
+    $id = $_POST['id'] ?? '';
     $uid = $_SESSION['uid'];
 
     $data = array('id' => $id);

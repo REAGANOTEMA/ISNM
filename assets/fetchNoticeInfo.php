@@ -3,7 +3,7 @@
 include('config.php');
 
 if (isset($_POST['noticeId'])) {
-    $id = $_POST['noticeId'];
+    $id = $_POST['noticeId'] ?? '';
     $data = array('noticeId' => $id);
     
     $sql = "SELECT *

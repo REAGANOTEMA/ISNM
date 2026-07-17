@@ -5,11 +5,11 @@ session_start();
 $response = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $class = $_POST['class'];
-    $subject = $_POST['subject'];
-    $title = $_POST['title'];
-    $comment = $_POST['comment'];
-    $noteId = $_POST['noteId'] . "";
+    $class = $_POST['class'] ?? '';
+    $subject = $_POST['subject'] ?? '';
+    $title = $_POST['title'] ?? '';
+    $comment = $_POST['comment'] ?? '';
+    $noteId = ($_POST['noteId'] ?? '') . "";
     $editorId = $_SESSION['uid'];
 
 

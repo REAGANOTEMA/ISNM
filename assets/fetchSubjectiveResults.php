@@ -3,7 +3,7 @@ session_start();
 include('config.php');
 $response = array();
 if (isset($_POST['exam_id'])) {
-    $examId = $_POST['exam_id'];
+    $examId = $_POST['exam_id'] ?? '';
     $studentId = $_SESSION['uid'];
 
 

@@ -116,8 +116,10 @@ function tryHrAuth(string $email, string $password) {
         // Legacy support: auto-upgrade MD5/SHA1 hashes to bcrypt on successful login
         if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
             $ok = (md5($password) === $u['password_hash']);
+            if ($ok) error_log("tryHrAuth: Legacy MD5 password verified for $email — upgrading to bcrypt");
         } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
             $ok = (sha1($password) === $u['password_hash']);
+            if ($ok) error_log("tryHrAuth: Legacy SHA1 password verified for $email — upgrading to bcrypt");
         }
         if (!$ok) {
             // Record failed attempt
@@ -207,8 +209,10 @@ function tryBursarAuth(string $email, string $password) {
         // Legacy support: auto-upgrade MD5/SHA1 hashes to bcrypt on successful login
         if (!$ok && strlen($u['password_hash']) === 32 && ctype_xdigit($u['password_hash'])) {
             $ok = (md5($password) === $u['password_hash']);
+            if ($ok) error_log("tryBursarAuth: Legacy MD5 password verified for $email — upgrading to bcrypt");
         } elseif (!$ok && strlen($u['password_hash']) === 40 && ctype_xdigit($u['password_hash'])) {
             $ok = (sha1($password) === $u['password_hash']);
+            if ($ok) error_log("tryBursarAuth: Legacy SHA1 password verified for $email — upgrading to bcrypt");
         }
         if (!$ok) {
             // Record failed attempt

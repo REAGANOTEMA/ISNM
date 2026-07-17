@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit();
                 }
                 
-                $new_status = $_POST['status'];
+                $new_status = $_POST['status'] ?? '';
                 $update_status_sql = "UPDATE students SET status = ? WHERE student_id = ?";
                 $stmt = $conn->prepare($update_status_sql);
                 $stmt->bind_param("ss", $new_status, $student_id);

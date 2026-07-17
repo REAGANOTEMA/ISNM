@@ -7,7 +7,7 @@ $response = array();
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_SESSION['uid'], $_POST['status'], $_POST['limit'], $_POST['offset'])) {
 
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? '';
         $limit = (int) $_POST['limit'];
         $offset = (int) $_POST['offset']; 
 

@@ -3,7 +3,7 @@ include('config.php');
 $response = array();
 
 if (isset($_POST['class'])) {
-    $class = $_POST['class'];
+    $class = $_POST['class'] ?? '';
 
     $sql = "SELECT * FROM subjects WHERE class=?";
     $stmt = mysqli_prepare($conn, $sql);

@@ -12,7 +12,7 @@ $auth_service = new AuthenticationService();
 
 // Handle password reset request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
+    $action = $_POST['action'] ?? '';
     
     switch ($action) {
         case 'request_reset':

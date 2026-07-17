@@ -4,7 +4,7 @@ session_start();
 
 if(isset($_SESSION['uid'])){
     if(isset($_POST['theme'])){
-        $theme = $_POST['theme'];
+        $theme = $_POST['theme'] ?? '';
         $uid = $_SESSION['uid'];
 
         $allowed_themes = ['light', 'dark'];

@@ -208,10 +208,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $se = trim($_POST['side_effects']);
         $stat = trim($_POST['status']);
         $restocked = !empty($_POST['last_restocked']) ? trim($_POST['last_restocked']) : null;
-        $status_calc = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
+        $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Medicine updated.';
         } else {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
@@ -250,9 +250,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0;
                 $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
                 $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET quantity=?, status=? WHERE id=?");
-                if ($stmt) { $stmt->bind_param('sii', $ns, $nq, $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES (?,?,?,?,?,?,?)");
-                if ($stmt) { $stmt->bind_param('sisiiis', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('sisissi', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
             }
         }
@@ -410,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Medicine updated.';
         } else {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
@@ -431,7 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
             $_SESSION['success'] = 'Medicine updated.';
         }
         header('Location: sickbay.php?section=visits'); exit;

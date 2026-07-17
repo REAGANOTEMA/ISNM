@@ -3,7 +3,7 @@ if (isset($_POST["msg"])) {
     session_start();
     include("config.php");
 
-    $msg = $_POST["msg"];
+    $msg = $_POST["msg"] ?? '';
     $uid = $_SESSION['uid'];
 
     // Use prepared statement to prevent SQL injection

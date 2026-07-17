@@ -4,11 +4,11 @@
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response = "";
 
-    $title = $_POST["title"];
-    $comment = $_POST["comment"];
+    $title = $_POST["title"] ?? '';
+    $comment = $_POST["comment"] ?? '';
 
-    $class = $_POST["class"];
-    $subject = $_POST["subject"];
+    $class = $_POST["class"] ?? '';
+    $subject = $_POST["subject"] ?? '';
     $senderId = $_SESSION['uid'];
 
     if (

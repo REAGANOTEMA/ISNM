@@ -8,6 +8,7 @@ $studentsConn = $ctx['students'];
 $conn = $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
+$isSuper = in_array(strtolower($user_role), ['director general', 'system admin', 'director']);
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

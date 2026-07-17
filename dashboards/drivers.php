@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 }
 
 if (isset($_GET['flash'])) {
-    $flash = $_GET['flash'];
+    $flash = $_GET['flash'] ?? '';
     $flashType = $_GET['flash_type'] ?? 'success';
 }
 
