@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -12,8 +12,17 @@ if ($staffDb) { global $conn; $conn = $staffDb; }
 // Check if user is logged in
 requireAuth();
 
+// Generate CSRF token for form protection
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'send_message':
@@ -306,8 +315,8 @@ if ($_SESSION['role'] !== 'Student') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Communication System | ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #1a237e;
@@ -638,6 +647,7 @@ if ($_SESSION['role'] !== 'Student') {
                     <h4 class="mb-3">Send Individual Message</h4>
                     <form method="POST" action="student_communication_system.php">
                         <input type="hidden" name="action" value="send_message">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Student ID *</label>
@@ -687,6 +697,7 @@ if ($_SESSION['role'] !== 'Student') {
                     <h4 class="mb-3">Send Bulk Message</h4>
                     <form method="POST" action="student_communication_system.php">
                         <input type="hidden" name="action" value="send_bulk_message">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">Select Students *</label>
@@ -848,6 +859,7 @@ if ($_SESSION['role'] !== 'Student') {
                 </div>
                 <form method="POST" action="student_communication_system.php">
                     <input type="hidden" name="action" value="reply_message">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" id="original_message_id" name="original_message_id">
                     <input type="hidden" id="reply_student_id" name="student_id">
                     <div class="modal-body">
@@ -868,10 +880,11 @@ if ($_SESSION['role'] !== 'Student') {
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         let currentMessageId = null;
+        const csrfToken = '<?= $_SESSION['csrf_token'] ?? '' ?>';
 
         // Toggle compose form
         function toggleComposeForm() {
@@ -964,7 +977,7 @@ if ($_SESSION['role'] !== 'Student') {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'action=mark_read&message_id=' + messageId
+                body: 'action=mark_read&message_id=' + messageId + '&csrf_token=' + encodeURIComponent(csrfToken)
             })
             .then(response => response.json())
             .then(data => {
@@ -1000,8 +1013,14 @@ if ($_SESSION['role'] !== 'Student') {
                 messageIdInput.name = 'message_id';
                 messageIdInput.value = messageId;
                 
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = csrfToken;
+                
                 form.appendChild(actionInput);
                 form.appendChild(messageIdInput);
+                form.appendChild(csrfInput);
                 
                 document.body.appendChild(form);
                 form.submit();

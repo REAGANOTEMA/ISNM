@@ -1,5 +1,5 @@
-<?php
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+﻿<?php
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','registrar','ict','it']);
 $conn = $ctx['staff'];
@@ -431,7 +431,7 @@ if ($current_table === 'receipt_templates') {
     <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 function viewPreview(id) {
     const modal = document.getElementById('previewModal' + id);

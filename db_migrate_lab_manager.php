@@ -18,18 +18,76 @@ if (!$ict) {
 }
 echo "Connected to: " . ICT_DB_NAME . "\n\n";
 
-// Read schema SQL
-$schemaFile = __DIR__ . '/sql/ict/lab_manager_schema.sql';
-if (!file_exists($schemaFile)) {
-    die("ERROR: Schema file not found: $schemaFile\n");
-}
-$sql = file_get_contents($schemaFile);
-if (empty($sql)) {
-    die("ERROR: Schema file is empty\n");
-}
-
-// Split by semicolons and execute each statement
-$statements = explode(';', $sql);
+// Inline CREATE TABLE statements for skills lab tables
+$statements = [
+    "CREATE TABLE IF NOT EXISTS `skills_lab_equipment` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `name` VARCHAR(255) NOT NULL,
+        `equipment_code` VARCHAR(50) DEFAULT NULL,
+        `category` VARCHAR(100) DEFAULT NULL,
+        `quantity` INT(11) DEFAULT 0,
+        `condition_status` VARCHAR(50) DEFAULT 'Good',
+        `location` VARCHAR(255) DEFAULT NULL,
+        `status` VARCHAR(20) DEFAULT 'Available',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `skills_lab_checkouts` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `equipment_id` INT(11) NOT NULL,
+        `student_id` INT(11) NOT NULL,
+        `checkout_date` DATETIME NOT NULL,
+        `return_date` DATETIME DEFAULT NULL,
+        `status` VARCHAR(20) DEFAULT 'Checked Out',
+        `notes` TEXT DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `skills_lab_sessions` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `session_name` VARCHAR(255) NOT NULL,
+        `instructor_id` INT(11) DEFAULT NULL,
+        `scheduled_date` DATE DEFAULT NULL,
+        `start_time` TIME DEFAULT NULL,
+        `end_time` TIME DEFAULT NULL,
+        `room` VARCHAR(100) DEFAULT NULL,
+        `max_students` INT(11) DEFAULT 30,
+        `status` VARCHAR(20) DEFAULT 'Scheduled',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `skills_lab_skills` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `skill_name` VARCHAR(255) NOT NULL,
+        `category` VARCHAR(100) DEFAULT NULL,
+        `description` TEXT DEFAULT NULL,
+        `is_mandatory` TINYINT(1) DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `skills_lab_consumables` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `name` VARCHAR(255) NOT NULL,
+        `category` VARCHAR(100) DEFAULT NULL,
+        `quantity` INT(11) DEFAULT 0,
+        `unit` VARCHAR(50) DEFAULT 'pcs',
+        `min_stock` INT(11) DEFAULT 0,
+        `status` VARCHAR(20) DEFAULT 'Available',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `skills_lab_incidents` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `incident_type` VARCHAR(100) NOT NULL,
+        `description` TEXT DEFAULT NULL,
+        `equipment_id` INT(11) DEFAULT NULL,
+        `reported_by` INT(11) DEFAULT NULL,
+        `severity` VARCHAR(20) DEFAULT 'Low',
+        `status` VARCHAR(20) DEFAULT 'Open',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+];
 $count = 0;
 $errors = [];
 

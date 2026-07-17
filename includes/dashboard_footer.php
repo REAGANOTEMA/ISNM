@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $rootPath = '..';
 
 // Cache-busting version — bump on every deploy
@@ -501,7 +501,7 @@ window.escJs = window.escJs || function(s) {
 window.printCertificate = window.printCertificate || function(studentId) {
     if (!studentId) { window.print(); return; }
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
     w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
     w.document.write('<div class="p-5 text-center"><h2>Certificate</h2><p class="text-muted">Preview not available. Use browser print.</p>');
     w.document.write('<div class="text-center mt-3 no-print"><button class="btn btn-primary" onclick="window.print()">Print</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>');

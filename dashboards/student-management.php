@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
@@ -371,7 +371,7 @@ if ($conn && $canEditAcademic) {
 <!-- Student Profile Modal -->
 <div class="modal fade" id="profileModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content profile-card"><div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="card-body" id="profileBody"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x mb-3" style="color:#1a237e"></i><p>Loading profile...</p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-primary" onclick="printProfileFromModal()"><i class="fas fa-print me-1"></i> Print</button></div></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 var currentProfileStudent = null;
 var userPerms = { canEditAcademic: <?= json_encode($canEditAcademic) ?>, canEditFinance: <?= json_encode($canEditFinance) ?>, canEditAdmission: <?= json_encode($canEditAdmission) ?>, canManageStudents: <?= json_encode($canManageStudents) ?>, canDelete: <?= json_encode($canDelete) ?> };

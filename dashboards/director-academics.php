@@ -117,19 +117,19 @@ if ($report) {
         echo '<h2>Student Progress Report</h2>';
         $r=$conn->query("SELECT s.full_name,s.student_number,s.program,s.level,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM {$students_db}.students s LEFT JOIN academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
         echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Year</th><th>Exams</th><th>Avg Marks</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['level'].'</td><td>'.($row['exams']??0).'</td><td>'.round($row['avg_marks']??0,1).'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['level']).'</td><td>'.($row['exams']??0).'</td><td>'.round($row['avg_marks']??0,1).'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'attendance_report') {
         echo '<h2>Attendance Report</h2>';
         if($students_conn){ $r=$students_conn->query("SELECT s.full_name,s.student_number,s.program,COUNT(a.id)total,SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END)present FROM students s LEFT JOIN student_attendance a ON s.id=a.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
         echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Total</th><th>Present</th><th>Rate</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ $rt=$row['total']>0?round(($row['present']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td><td>'.$row['present'].'</td><td>'.$rt.'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ $rt=$row['total']>0?round(($row['present']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['total']).'</td><td>'.htmlspecialchars($row['present']).'</td><td>'.$rt.'</td></tr>'; }
         echo '</tbody></table>'; }
     } elseif ($report === 'graduation') {
         echo '<h2>Graduation Report</h2>';
         $r=$students_conn->query("SELECT program,COUNT(*)total FROM students WHERE status IN('Graduated','graduation_candidate') GROUP BY program");
         echo '<table><thead><tr><th>Program</th><th>Graduating</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['total']).'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'academic_performance') {
         echo '<h2>Academic Performance</h2>';

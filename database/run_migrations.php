@@ -1099,6 +1099,27 @@ if ($ict) {
         PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'computer_lab_items');
 
+    addTable($ict, 'ict', "CREATE TABLE IF NOT EXISTS `it_support_tickets` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `ticket_number` VARCHAR(50) NOT NULL,
+        `requester_name` VARCHAR(100) NOT NULL,
+        `requester_email` VARCHAR(100) DEFAULT NULL,
+        `requester_type` ENUM('student','staff','faculty') NOT NULL,
+        `issue_type` ENUM('hardware','software','network','account','other') NOT NULL,
+        `priority` ENUM('low','medium','high','critical') DEFAULT 'medium',
+        `subject` VARCHAR(255) DEFAULT NULL,
+        `description` TEXT NOT NULL,
+        `status` ENUM('open','in_progress','resolved','closed') DEFAULT 'open',
+        `assigned_to` INT(11) DEFAULT NULL,
+        `resolution_notes` TEXT DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        INDEX `idx_status` (`status`),
+        INDEX `idx_priority` (`priority`),
+        INDEX `idx_ticket_number` (`ticket_number`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'it_support_tickets');
+
     // ═══════════════════════════════════════════════════════
     // CRITICAL MISSING TABLES (referenced by multiple dashboards)
     // ═══════════════════════════════════════════════════════
@@ -1517,6 +1538,19 @@ if ($ict) {
         `target_role` VARCHAR(100), `is_read` TINYINT(1) DEFAULT 0,
         `created_by` INT(11) DEFAULT NULL, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'institutional_alerts');
+
+    addColumn($staff, 'staffs', 'institutional_alerts', 'alert_title', "VARCHAR(255) DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'alert_message', "TEXT DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'alert_type', "VARCHAR(50) DEFAULT 'info'");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'priority', "VARCHAR(20) DEFAULT 'Medium'");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'category', "VARCHAR(100) DEFAULT 'other'");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'department_code', "VARCHAR(50) DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'source_url', "VARCHAR(500) DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'is_auto_generated', "TINYINT(1) DEFAULT 0");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'is_resolved', "TINYINT(1) DEFAULT 0");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'expires_at', "DATETIME DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'resolved_by', "INT(11) DEFAULT NULL");
+    addColumn($staff, 'staffs', 'institutional_alerts', 'resolved_at', "DATETIME DEFAULT NULL");
 
     addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `alert_recipients` (
         `id` INT(11) NOT NULL AUTO_INCREMENT, `alert_id` INT(11) NOT NULL,

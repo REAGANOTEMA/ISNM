@@ -1,10 +1,11 @@
-<?php
+﻿<?php
 /**
  * Payment Checkout Page
  * Renders a unified payment form for any provider.
  * Access: /payment_gateway/checkout.php?ref=PAY-20260714-ABC123&amount=500000&provider=mtn_momo
  */
 session_start();
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/core/GatewayManager.php';
 
@@ -23,6 +24,7 @@ $providers = $gateway->getAvailableProviders();
 // Process payment if submitted
 $paymentResult = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['pay_now'])) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) { die('Invalid CSRF token'); }
     $selectedProvider = $_POST['selected_provider'] ?? $provider;
     $paymentResult = $gateway->initiatePayment($selectedProvider, [
         'reference' => $_POST['reference'] ?? $reference,
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['pay_now'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISNM — Make a Payment</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .checkout-card { max-width: 600px; margin: 40px auto; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
@@ -99,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['pay_now'])) {
             </div>
 
             <form method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                 <input type="hidden" name="reference" value="<?= htmlspecialchars($reference) ?>">
                 <input type="hidden" name="amount" value="<?= $amount ?>">
                 <input type="hidden" name="payment_for" value="<?= htmlspecialchars($paymentFor) ?>">

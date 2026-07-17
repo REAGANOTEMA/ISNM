@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Payment Provider Admin — Configure and manage payment providers.
  * Access: /payment_gateway/admin/providers.php
@@ -69,7 +69,7 @@ if ($result) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Providers — ISNM Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container-fluid py-4">

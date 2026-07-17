@@ -107,11 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: computer_lab.php');
         exit;
     }
-            $stmt->close();
-        }
-        header('Location: computer_lab.php');
-        exit;
-    }
 
     if ($action === 'edit_student' && $students_conn) {
         $id = (int)$_POST['id'];

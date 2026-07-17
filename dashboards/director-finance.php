@@ -2039,6 +2039,9 @@ if ($ajax === 'finance_notice_list' && $staff) {
 }
 if ($ajax === 'update_audit_status' && $staff) {
     header('Content-Type: application/json');
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
+    }
     $id=(int)($_POST['id']??0); $st=$_POST['status']??'';
     if($id&&$st){
         $stmt=$staff->prepare("UPDATE {$students_db}.audit_findings SET status=? WHERE id=?");

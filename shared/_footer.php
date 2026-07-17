@@ -1,4 +1,4 @@
-<!-- Enhanced ISNM Footer with Stripes -->
+﻿<!-- Enhanced ISNM Footer with Stripes -->
 <footer class="isnm-footer">
   <!-- Top Stripes -->
   <div class="footer-stripes-top"></div>
@@ -750,7 +750,7 @@
 </style>
 
 <!-- Font Awesome loaded as CSS/webfont in _header.php → no fetch rejections -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="shared/app.js"></script>
   <script>
     // ── Global Link Loading Animation ──

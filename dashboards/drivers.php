@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -596,6 +596,7 @@ case 'transport-vehicles': ?>
     <div class="drv-card-header" style="background:#fffbeb"><h5><i class="fas fa-edit" style="color:#d97706;margin-right:8px"></i>Edit Vehicle #<?= (int)$edit_entity['id'] ?></h5></div>
     <div class="drv-card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             <input type="hidden" name="action" value="update_vehicle">
             <input type="hidden" name="vehicle_id" value="<?= (int)$edit_entity['id'] ?>">
             <input type="hidden" name="page" value="transport-vehicles">
@@ -640,6 +641,7 @@ case 'transport-vehicles': ?>
                 <td class="actions">
                     <a href="?page=transport-vehicles&edit_vehicle=<?= (int)$v['id'] ?>" class="drv-btn drv-btn-outline drv-btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this vehicle permanently?')">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="delete_vehicle">
                         <input type="hidden" name="vehicle_id" value="<?= (int)$v['id'] ?>">
                         <input type="hidden" name="page" value="transport-vehicles">
@@ -663,6 +665,7 @@ case 'transport-vehicles': ?>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div style="padding:24px">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="action" value="add_vehicle">
                     <input type="hidden" name="page" value="transport-vehicles">
                     <div class="mb-3"><label class="drv-form-label">Vehicle Number *</label><input type="text" name="vehicle_number" class="drv-form-input" required placeholder="e.g. UGA-123A"></div>
@@ -695,6 +698,7 @@ case 'transport-routes': ?>
     <div class="drv-card-header" style="background:#fffbeb"><h5><i class="fas fa-edit" style="color:#d97706;margin-right:8px"></i>Edit Route #<?= (int)$edit_entity['id'] ?></h5></div>
     <div class="drv-card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             <input type="hidden" name="action" value="update_route">
             <input type="hidden" name="route_id" value="<?= (int)$edit_entity['id'] ?>">
             <input type="hidden" name="page" value="transport-routes">
@@ -744,6 +748,7 @@ case 'transport-routes': ?>
                 <td class="actions">
                     <a href="?page=transport-routes&edit_route=<?= (int)$rt['id'] ?>" class="drv-btn drv-btn-outline drv-btn-sm"><i class="fas fa-edit"></i></a>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this route?')">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="delete_route">
                         <input type="hidden" name="route_id" value="<?= (int)$rt['id'] ?>">
                         <input type="hidden" name="page" value="transport-routes">
@@ -767,6 +772,7 @@ case 'transport-routes': ?>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div style="padding:24px">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="action" value="add_route">
                     <input type="hidden" name="page" value="transport-routes">
                     <div class="mb-3"><label class="drv-form-label">Route Name *</label><input type="text" name="route_name" class="drv-form-input" required placeholder="e.g. Main Campus - Hospital"></div>
@@ -806,6 +812,7 @@ case 'transport-trips': ?>
     <div class="drv-card-header" style="background:#fffbeb"><h5><i class="fas fa-edit" style="color:#d97706;margin-right:8px"></i>Edit Trip #<?= (int)$edit_entity['id'] ?></h5></div>
     <div class="drv-card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             <input type="hidden" name="action" value="update_trip">
             <input type="hidden" name="trip_id" value="<?= (int)$edit_entity['id'] ?>">
             <input type="hidden" name="page" value="transport-trips">
@@ -859,6 +866,7 @@ case 'transport-trips': ?>
                     <span class="drv-badge <?= $dgBadge ?>"><?= $dgLabel ?></span>
                     <?php if (($t['dg_approval_status'] ?? '') === 'pending'): ?>
                     <form method="POST" style="display:inline;margin-top:4px">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="submit_trip_for_approval">
                         <input type="hidden" name="trip_id" value="<?= (int)$t['id'] ?>">
                         <input type="hidden" name="page" value="transport-trips">
@@ -869,6 +877,7 @@ case 'transport-trips': ?>
                 <td class="actions">
                     <a href="?page=transport-trips&edit_trip=<?= (int)$t['id'] ?>" class="drv-btn drv-btn-outline drv-btn-sm"><i class="fas fa-edit"></i></a>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this trip?')">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="delete_trip">
                         <input type="hidden" name="trip_id" value="<?= (int)$t['id'] ?>">
                         <input type="hidden" name="page" value="transport-trips">
@@ -892,6 +901,7 @@ case 'transport-trips': ?>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div style="padding:24px">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="action" value="add_trip">
                     <input type="hidden" name="page" value="transport-trips">
                     <div class="drv-grid-3">
@@ -932,6 +942,7 @@ case 'student-transport': ?>
     <div class="drv-card-header" style="background:#fffbeb"><h5><i class="fas fa-edit" style="color:#d97706;margin-right:8px"></i>Edit Student Assignment #<?= (int)$edit_entity['id'] ?></h5></div>
     <div class="drv-card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             <input type="hidden" name="action" value="update_student">
             <input type="hidden" name="assignment_id" value="<?= (int)$edit_entity['id'] ?>">
             <input type="hidden" name="page" value="student-transport">
@@ -980,6 +991,7 @@ case 'student-transport': ?>
                 <td class="actions">
                     <a href="?page=student-transport&edit_student=<?= (int)$sa['id'] ?>" class="drv-btn drv-btn-outline drv-btn-sm"><i class="fas fa-edit"></i></a>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Remove this student assignment?')">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="delete_student">
                         <input type="hidden" name="assignment_id" value="<?= (int)$sa['id'] ?>">
                         <input type="hidden" name="page" value="student-transport">
@@ -1003,6 +1015,7 @@ case 'student-transport': ?>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div style="padding:24px">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="action" value="add_student">
                     <input type="hidden" name="page" value="student-transport">
                     <div class="drv-grid-3">
@@ -1048,6 +1061,7 @@ case 'fuel-log': ?>
     <div class="drv-card-header" style="background:#fffbeb"><h5><i class="fas fa-edit" style="color:#d97706;margin-right:8px"></i>Edit Fuel Record #<?= (int)$edit_entity['id'] ?></h5></div>
     <div class="drv-card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             <input type="hidden" name="action" value="update_fuel_log">
             <input type="hidden" name="fuel_id" value="<?= (int)$edit_entity['id'] ?>">
             <input type="hidden" name="page" value="fuel-log">
@@ -1094,6 +1108,7 @@ case 'fuel-log': ?>
                 <td class="actions">
                     <a href="?page=fuel-log&edit_fuel=<?= (int)$f['id'] ?>" class="drv-btn drv-btn-outline drv-btn-sm"><i class="fas fa-edit"></i></a>
                     <form method="POST" style="display:inline" onsubmit="return confirm('Delete this fuel record?')">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <input type="hidden" name="action" value="delete_fuel_log">
                         <input type="hidden" name="fuel_id" value="<?= (int)$f['id'] ?>">
                         <input type="hidden" name="page" value="fuel-log">
@@ -1117,6 +1132,7 @@ case 'fuel-log': ?>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div style="padding:24px">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="action" value="add_fuel_log">
                     <input type="hidden" name="page" value="fuel-log">
                     <div class="drv-grid-2">
@@ -1232,7 +1248,7 @@ default: ?>
 endswitch; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>function filterTable(inputId, tableId) {
     var input = document.getElementById(inputId);
     var filter = input.value.toUpperCase();

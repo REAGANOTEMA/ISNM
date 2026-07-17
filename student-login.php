@@ -46,7 +46,7 @@ if ($login_success) { unset($_SESSION['success']); }
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Login | ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link rel="stylesheet" href="css/3d-buttons.css">
@@ -907,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ── iOS viewport guard ──
-  const m = 'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no';
+  const m = 'width=device-width,initial-scale=1.0';
   document.querySelectorAll('input[type="email"],input[type="password"],input[type="text"],input[type="tel"]').forEach(function(el) {
     el.addEventListener('focus', function() { 
       document.querySelector('meta[name=viewport]').setAttribute('content', m); 

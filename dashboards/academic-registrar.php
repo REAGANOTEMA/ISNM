@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -1150,7 +1150,7 @@ function previewStudent(data) {
 
 function previewTranscript(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Transcript Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head><body>');
+    w.document.write('<html><head><title>Transcript Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body>');
     fetch('academic-registrar.php?ajax=get_transcript_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })
         .then(function(html) {
@@ -1162,7 +1162,7 @@ function previewTranscript(studentId) {
 
 function printTranscript(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Print Transcript</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<html><head><title>Print Transcript</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
     w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
     fetch('academic-registrar.php?ajax=get_transcript_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })
@@ -1176,7 +1176,7 @@ function printTranscript(studentId) {
 
 function previewCertificate(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Certificate Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head><body>');
+    w.document.write('<html><head><title>Certificate Preview</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body>');
     fetch('academic-registrar.php?ajax=get_certificate_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })
         .then(function(html) {
@@ -1188,7 +1188,7 @@ function previewCertificate(studentId) {
 
 function printCertificate(studentId) {
     var w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    w.document.write('<html><head><title>Print Certificate</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
     w.document.write('<style>@media print{body{padding:20px;}.no-print{display:none!important;}}@page{size:landscape;margin:15mm;}</style></head><body>');
     fetch('academic-registrar.php?ajax=get_certificate_preview&student_id=' + studentId)
         .then(function(r) { return r.text(); })

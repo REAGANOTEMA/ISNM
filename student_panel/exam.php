@@ -1,4 +1,4 @@
-<?php include("../assets/noSessionRedirect.php"); ?>
+﻿<?php include("../assets/noSessionRedirect.php"); ?>
 
 <?php include("./verifyRoleRedirect.php");
 $id = $_SESSION['uid'];
@@ -26,7 +26,7 @@ if (isset($conn) && $id) {
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
     <link rel="shortcut icon" href="../images/school-logo.png">
     <link rel="stylesheet" href="style.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../css/oranbyte-google-translator.css">
     <script src="../js/oranbyte-google-translator.js"></script>
 

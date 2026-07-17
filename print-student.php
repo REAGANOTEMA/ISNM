@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 bootstrapStaffDashboard();
 require_once __DIR__ . '/config/database.php';
@@ -32,7 +32,7 @@ $status = htmlspecialchars($student['status'] ?: '');
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Profile - <?= $name ?></title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
   body { font-family: 'Segoe UI',system-ui,sans-serif; padding: 30px; background: #fff; }
   .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1a237e; padding-bottom: 20px; }
@@ -69,6 +69,6 @@ $status = htmlspecialchars($student['status'] ?: '');
 <div style="text-align:center;color:#999;font-size:12px;margin-top:30px;border-top:1px solid #eee;padding-top:15px">
   Generated on <?= date('d M Y, h:i A') ?> | ISNM Student Management System
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

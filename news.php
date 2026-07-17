@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 
@@ -675,7 +675,7 @@ include 'shared/_header.php';
 
 <script>
 if (typeof jQuery === 'undefined') {
-    document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>');
+    document.write('<script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>');
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>

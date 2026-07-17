@@ -19,6 +19,10 @@ if ($conn) {
 
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header('Location: academic-calendar.php'); exit;
+    }
     $action = $_POST['action'] ?? '';
     if ($action === 'add_calendar') {
         $ay = $_POST['academic_year'] ?? '';

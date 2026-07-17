@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Director of Admissions – Complete Dashboard
  * Tabs: Applications | Requirements | Enrolled Students
@@ -1653,7 +1653,7 @@ function number_format_local(num) {
 function printStudentProfile() {
   const content = document.getElementById('studentProfileBody').innerHTML;
   const win = window.open('', '_blank', 'width=800,height=600');
-  win.document.write('<html><head><title>Student Profile</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' +
+  win.document.write('<html><head><title>Student Profile</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' +
     '<h3 class="text-center mb-4">Student Profile</h3>' + content +
     '<script>setTimeout(function(){window.print();},500);<\/script></body></html>');
   win.document.close();
@@ -1682,7 +1682,7 @@ function printStudentFromList(studentId) {
       '<tr><th>Requirements</th><td>' + req.completed + '/' + req.total + ' completed</td></tr>' +
       '</tbody></table>';
     const win = window.open('', '_blank', 'width=800,height=600');
-    win.document.write('<html><head><title>Student Profile - ' + escapeHtml(fullName) + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' + html + '<script>setTimeout(function(){window.print();},500);<\/script></body></html>');
+    win.document.write('<html><head><title>Student Profile - ' + escapeHtml(fullName) + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' + html + '<script>setTimeout(function(){window.print();},500);<\/script></body></html>');
     win.document.close();
   });
 }

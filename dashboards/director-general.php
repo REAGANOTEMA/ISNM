@@ -299,6 +299,9 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
 
 // â”€â”€ Global search handler â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
+    }
     globalStudentSearchHandler($conn, $studentsConn, $conn, $websiteConn);
     exit;
 }

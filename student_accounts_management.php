@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -11,8 +11,17 @@ if ($studentsDb) { global $conn; $conn = $studentsDb; }
 // Check if user is logged in and has permission to create students
 requireStudentCreationPermission();
 
+// Generate CSRF token for form protection
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+        exit;
+    }
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'add_student':
@@ -405,8 +414,8 @@ function generateStudentId() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Accounts Management | ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #1a237e;
@@ -1073,6 +1082,7 @@ function generateStudentId() {
                 </div>
                 <form method="POST" action="student_accounts_management.php">
                     <input type="hidden" name="action" value="add_student">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-4">
@@ -1193,6 +1203,7 @@ function generateStudentId() {
                 </div>
                 <form method="POST" action="student_accounts_management.php" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="import_students">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">CSV File *</label>
@@ -1229,6 +1240,7 @@ function generateStudentId() {
                 </div>
                 <form method="POST" action="student_accounts_management.php" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="upload_photo">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" id="photo_student_id" name="student_id">
                     <div class="modal-body">
                         <div class="text-center mb-3">
@@ -1272,9 +1284,11 @@ function generateStudentId() {
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        const csrfToken = '<?= $_SESSION['csrf_token'] ?? '' ?>';
+
         // Export students function
         function exportStudents() {
             var form = document.createElement('form');
@@ -1284,7 +1298,12 @@ function generateStudentId() {
             input.type = 'hidden';
             input.name = 'action';
             input.value = 'export_students';
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken;
             form.appendChild(input);
+            form.appendChild(csrfInput);
             document.body.appendChild(form);
             form.submit();
         }
@@ -1339,8 +1358,14 @@ function generateStudentId() {
                 studentIdInput.name = 'student_id';
                 studentIdInput.value = studentId;
                 
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = csrfToken;
+                
                 form.appendChild(actionInput);
                 form.appendChild(studentIdInput);
+                form.appendChild(csrfInput);
                 document.body.appendChild(form);
                 form.submit();
             }
