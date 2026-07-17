@@ -298,6 +298,7 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
 </head>
 <body>
 <?php $csrf = htmlspecialchars($_SESSION['csrf_token']); ?>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <style>:root{--sidebar-w:270px}.dashboard-main{margin-left:var(--sidebar-w);width:calc(100% - var(--sidebar-w));min-height:100vh;background:#f5f7fa}@media(max-width:991px){.dashboard-main{margin-left:0;width:100%}}@media(max-width:768px){.dashboard-main{margin-left:0!important;width:100%!important}}</style>
 <div class="dashboard-main">
@@ -741,7 +742,6 @@ function filterTable(inputId, tableId) {
 
 </script>
 </div>
-<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

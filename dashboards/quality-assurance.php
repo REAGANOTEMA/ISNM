@@ -64,6 +64,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         header('Location: quality-assurance.php');
         exit;
     }
+    if ($action === 'delete_review') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            flashMessage('error', 'Invalid review ID.');
+        } else {
+            $stmt = $conn->prepare("DELETE FROM quality_assurance WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                if ($stmt->execute()) {
+                    flashMessage('success', 'Review deleted successfully.');
+                } else {
+                    flashMessage('error', 'Failed to delete review.');
+                }
+                $stmt->close();
+            } else {
+                flashMessage('error', 'Database error: ' . $conn->error);
+            }
+        }
+        header('Location: quality-assurance.php');
+        exit;
+    }
 }
 
 $qa = [];
@@ -121,6 +142,12 @@ $pageTitle = 'Quality Assurance';
     data-id="<?= htmlspecialchars($q['id']??'') ?>"
     data-status="<?= htmlspecialchars($q['status']??'') ?>"
     data-recommendations="<?= htmlspecialchars($q['recommendations']??'') ?>"><i class="fas fa-edit"></i> Edit</button>
+<form method="POST" action="quality-assurance.php" class="d-inline" onsubmit="return confirm('Delete this review?')">
+    <?php csrfField(); ?>
+    <input type="hidden" name="action" value="delete_review">
+    <input type="hidden" name="id" value="<?= (int)($q['id']??0) ?>">
+    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i> Delete</button>
+</form>
 </td>
 </tr>
 <?php endforeach; ?>

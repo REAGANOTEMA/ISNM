@@ -42,6 +42,18 @@ if ($conn) {
             $_SESSION['success'] = 'Grade scale deleted.';
             header('Location: grade-scales.php'); exit;
         }
+        if ($action === 'edit_scale') {
+            $id = (int)($_POST['id'] ?? 0);
+            $grade = trim($_POST['grade'] ?? '');
+            $minScore = (float)($_POST['min_score'] ?? 0);
+            $maxScore = (float)($_POST['max_score'] ?? 100);
+            $gp = (float)($_POST['grade_point'] ?? 0);
+            $remark = trim($_POST['remark'] ?? '');
+            $stmt = $conn->prepare("UPDATE grade_scales SET grade_letter=?, min_percentage=?, max_percentage=?, grade_point=?, remark=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            $_SESSION['success'] = "Grade scale '$grade' updated.";
+            header('Location: grade-scales.php'); exit;
+        }
     }
     $search = trim($_GET['search'] ?? '');
     if ($search !== '') {
@@ -124,7 +136,8 @@ $pageTitle = 'Grade Scales & Grading System';
                             <td><?= $s['grade_point'] ?></td>
                             <td><?= htmlspecialchars($s['remark'] ?? '') ?></td>
                             <td class="no-print">
-                                <form method="post" onsubmit="return confirm('Delete this grade scale?')">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editScale(<?= $s['id'] ?>, '<?= htmlspecialchars(addslashes($s['grade_letter'])) ?>', <?= $s['min_percentage'] ?>, <?= $s['max_percentage'] ?>, <?= $s['grade_point'] ?>, '<?= htmlspecialchars(addslashes($s['remark'] ?? '')) ?>')" title="Edit"><i class="fas fa-edit"></i></button>
+                                <form method="post" onsubmit="return confirm('Delete this grade scale?')" style="display:inline">
                                     <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                     <button type="submit" name="action" value="delete_scale" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -139,6 +152,37 @@ $pageTitle = 'Grade Scales & Grading System';
     </div>
 </div>
 </section>
+
+<!-- Edit Grade Scale Modal -->
+<div class="modal fade" id="editScaleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Grade Scale</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+        <input type="hidden" name="action" value="edit_scale">
+        <input type="hidden" name="id" id="editScaleId">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Grade Letter</label><input name="grade" id="editScaleGrade" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Grade Point</label><input name="grade_point" id="editScalePoint" class="form-control" type="number" step="0.1" required></div>
+            <div class="col-md-6"><label class="form-label">Min %</label><input name="min_score" id="editScaleMin" class="form-control" type="number" step="0.1" required></div>
+            <div class="col-md-6"><label class="form-label">Max %</label><input name="max_score" id="editScaleMax" class="form-control" type="number" step="0.1" required></div>
+            <div class="col-12"><label class="form-label">Remark</label><input name="remark" id="editScaleRemark" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>
 function filterTable(inputId, tableId) {
@@ -158,5 +202,16 @@ function filterTable(inputId, tableId) {
 }
 </script>
 <script>document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION["csrf_token"] ?? "")?>';document.querySelectorAll('form[method="POST"],form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});</script>
+<script>
+function editScale(id, grade, min, max, gp, remark) {
+    document.getElementById('editScaleId').value = id;
+    document.getElementById('editScaleGrade').value = grade;
+    document.getElementById('editScaleMin').value = min;
+    document.getElementById('editScaleMax').value = max;
+    document.getElementById('editScalePoint').value = gp;
+    document.getElementById('editScaleRemark').value = remark;
+    new bootstrap.Modal(document.getElementById('editScaleModal')).show();
+}
+</script>
 </body>
 </html>

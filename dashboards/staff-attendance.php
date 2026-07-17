@@ -69,6 +69,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             $response['error'] = 'Staff ID required';
         }
+    } elseif ($action === 'delete_record' && $conn) {
+        $record_id = (int)($_POST['record_id'] ?? 0);
+        if ($record_id) {
+            $stmt = $conn->prepare("DELETE FROM attendance WHERE id=?");
+            $stmt->bind_param('i', $record_id);
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
+                $response['success'] = true;
+            } else {
+                $response['error'] = 'Record not found or already deleted';
+            }
+            $stmt->close();
+        } else {
+            $response['error'] = 'Record ID required';
+        }
     }
     echo json_encode($response);
     exit;
@@ -165,7 +179,7 @@ if ($conn) {
 <div class="table-responsive">
                     <table id="tblNUJK" class="table table-striped table-hover align-middle">
                         <thead class="table-light">
-                            <tr><th>Staff Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th></tr>
+                            <tr><th>Staff Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($attendance as $at): ?>
@@ -177,6 +191,9 @@ if ($conn) {
                                 <td>
                                     <?php $sc = $at['status'] === 'Present' ? 'success' : ($at['status'] === 'Absent' ? 'danger' : ($at['status'] === 'Late' ? 'warning text-dark' : ($at['status'] === 'On Leave' ? 'info' : 'secondary'))); ?>
                                     <span class="badge bg-<?= $sc ?>"><?= htmlspecialchars($at['status']) ?></span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAttendance(<?= (int)$at['id'] ?>)" title="Delete record"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -249,6 +266,20 @@ function filterTable(inputId, tableId) {
         }
         tr[i].style.display = found ? "" : "none";
     }
+}
+function deleteAttendance(recordId) {
+    if (!confirm('Delete this attendance record?')) return;
+    var fd = new FormData();
+    fd.append('action', 'delete_record');
+    fd.append('record_id', recordId);
+    fd.append('csrf_token', window.CSRF_TOKEN);
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.success) { window.location.reload(); }
+            else { alert(d.error || 'Failed to delete record'); }
+        })
+        .catch(function() { alert('Network error'); });
 }
 
 </script>

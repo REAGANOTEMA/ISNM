@@ -76,12 +76,16 @@ foreach ($staffMembers as $s) {
             </div>
         </div>
 
+        <div class="mb-3">
+            <input class="form-control" style="max-width:400px" id="staffDirSearch" type="text" placeholder="Search by name, role, department, or phone..." onkeyup="filterStaffDirectory()">
+        </div>
+
         <?php foreach ($staffByDept as $dept => $members): ?>
-        <div class="card-section mb-4">
+        <div class="card-section mb-4 staff-dept-section" data-dept="<?= htmlspecialchars(strtolower($dept)) ?>">
             <h5 class="fw-bold mb-3"><i class="fas fa-building me-2"></i><?= htmlspecialchars($dept) ?> <span class="badge bg-secondary ms-2"><?= count($members) ?></span></h5>
             <div class="row g-3">
                 <?php foreach ($members as $s): ?>
-                <div class="col-md-4 col-lg-3">
+                <div class="col-md-4 col-lg-3 staff-card-item" data-search="<?= htmlspecialchars(strtolower(($s['full_name']??'').' '.($s['role_name']??'').' '.($s['department']??'').' '.($s['phone']??''))) ?>">
                     <div class="card border h-100 shadow-sm">
                         <div class="card-body text-center p-3">
                             <?php if (!empty($s['passport'])): ?>
@@ -116,5 +120,22 @@ foreach ($staffMembers as $s) {
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<script>
+function filterStaffDirectory() {
+    var q = document.getElementById('staffDirSearch').value.toLowerCase().trim();
+    var cards = document.querySelectorAll('.staff-card-item');
+    var sections = document.querySelectorAll('.staff-dept-section');
+    cards.forEach(function(card) {
+        var search = card.getAttribute('data-search') || '';
+        card.style.display = search.indexOf(q) > -1 ? '' : 'none';
+    });
+    sections.forEach(function(sec) {
+        var visibleCards = sec.querySelectorAll('.staff-card-item');
+        var hasVisible = false;
+        visibleCards.forEach(function(c) { if (c.style.display !== 'none') hasVisible = true; });
+        sec.style.display = hasVisible ? '' : 'none';
+    });
+}
+</script>
 </body>
 </html>
