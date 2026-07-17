@@ -832,6 +832,16 @@ function openCommunicationModal() {
 @media (max-width: 768px) {
   .dep-approval-fab { bottom: calc(var(--fab-approval, 264px) - 8px); right: 16px; width: 48px; height: 48px; font-size: 18px; }
 }
+@media (max-width: 480px) {
+  .dep-approval-fab,
+  .comm-floating-btn,
+  .notif-bell,
+  .sidebar-toggle,
+  .ent-hamburger {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
 </style>
 
 <!-- Department Approval FAB (staff only) -->

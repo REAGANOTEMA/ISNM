@@ -120,6 +120,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
         header("Location: student-portal.php?page=requests");
         exit();
     }
+    if ($action === 'upload_requirement_doc') {
+        $req_id = (int)($_POST['requirement_id'] ?? 0);
+        if ($req_id > 0 && $staffDb && tableExists($staffDb, 'student_documents')) {
+            $applicant_id = 0;
+            $studentNum = $student['student_number'] ?? $student['registration_number'] ?? '';
+            $aq = $staffDb->query("SELECT id FROM applicants WHERE student_number='".$staffDb->real_escape_string($studentNum)."' OR registration_number='".$staffDb->real_escape_string($studentNum)."' LIMIT 1");
+            if ($aq && $aq->num_rows > 0) { $applicant_id = (int)$aq->fetch_assoc()['id']; }
+            if ($applicant_id > 0) {
+                $file_path = '';
+                if (isset($_FILES['req_document']) && $_FILES['req_document']['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['req_document']['name'], PATHINFO_EXTENSION));
+                    $allowed = ['jpg','jpeg','png','gif','pdf','doc','docx'];
+                    if (in_array($ext, $allowed) && $_FILES['req_document']['size'] <= 10*1024*1024) {
+                        $dir = __DIR__ . '/../uploads/admissions/';
+                        if (!is_dir($dir)) @mkdir($dir, 0755, true);
+                        $fname = 'req_' . $student_id . '_' . $req_id . '_' . time() . '.' . $ext;
+                        if (move_uploaded_file($_FILES['req_document']['tmp_name'], $dir . $fname)) {
+                            $file_path = 'uploads/admissions/' . $fname;
+                        }
+                    }
+                }
+                $doc_name = trim($_POST['document_name'] ?? 'Uploaded Document');
+                $stmt = $staffDb->prepare("INSERT INTO student_documents (applicant_id, requirement_id, document_name, document_type, file_path, verification_status, document_status) VALUES (?,?,?,?,?,'Pending','Active')");
+                if ($stmt) {
+                    $stmt->bind_param('iisss', $applicant_id, $req_id, $doc_name, $ext, $file_path);
+                    if ($stmt->execute()) {
+                        $upd = $staffDb->prepare("UPDATE applicant_requirement_status SET status='Submitted', remarks=? WHERE applicant_id=? AND requirement_id=?");
+                        if ($upd) { $note = 'Document uploaded by student on ' . date('Y-m-d H:i'); $upd->bind_param('sii', $note, $applicant_id, $req_id); $upd->execute(); $upd->close(); }
+                        $_SESSION['success'] = 'Document uploaded successfully.';
+                    } else { $_SESSION['error'] = 'Failed to save document record.'; }
+                    $stmt->close();
+                }
+            } else { $_SESSION['error'] = 'Could not find your applicant record.'; }
+        } else { $_SESSION['error'] = 'Invalid request or missing tables.'; }
+        header("Location: student-portal.php?page=requirements");
+        exit();
+    }
     if ($action === 'update_profile') {
         $phone = trim($_POST['phone'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -400,6 +437,14 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <?php endif; ?>
 
 <?php
+// Common data loading for multiple pages
+$applicant_id = 0;
+if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
+    $studentNum = $student['student_number'] ?? $student['registration_number'] ?? '';
+    $appQ = $staffDb->query("SELECT id FROM applicants WHERE student_number='".$staffDb->real_escape_string($studentNum)."' OR registration_number='".$staffDb->real_escape_string($studentNum)."' LIMIT 1");
+    if ($appQ && $appQ->num_rows > 0) { $applicant_id = (int)$appQ->fetch_assoc()['id']; }
+}
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 1. DASHBOARD
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -436,22 +481,53 @@ if ($page === 'dashboard'):
     $directorNotes = [];
     $reqTotal = 0; $reqCompleted = 0;
     if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
-        $studentNum = $student['student_number'] ?? $student['registration_number'] ?? '';
-        // Find applicant record by student_number or registration_number
-        $appQ = $staffDb->query("SELECT id FROM applicants WHERE student_number='".$staffDb->real_escape_string($studentNum)."' OR registration_number='".$staffDb->real_escape_string($studentNum)."' LIMIT 1");
-        if ($appQ && $appQ->num_rows > 0) {
-            $appRow = $appQ->fetch_assoc();
-            $appId = (int)$appRow['id'];
+        if ($applicant_id > 0) {
             // Get admission status
-            $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$appId LIMIT 1");
+            $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$applicant_id LIMIT 1");
             if ($trackQ && $trackQ->num_rows > 0) { $admissionStatus = $trackQ->fetch_assoc()['admission_status']; }
             // Get requirements with director notes
-            $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$appId AND ar.is_active=1 ORDER BY ar.display_order");
+            $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.requirement_id, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$applicant_id AND ar.is_active=1 ORDER BY ar.display_order");
             if ($reqQ) { while ($r = $reqQ->fetch_assoc()) { $requirements[] = $r; if (!empty($r['director_notes'])) $directorNotes[] = ['req'=>$r['requirement_name'], 'note'=>$r['director_notes']]; } }
             $reqTotal = count($requirements);
             $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
         }
     }
+    // Fee balance details
+    $fee_total_charged = 0;
+    $fee_total_paid = 0;
+    $fee_last_payment = null;
+    if (tableExists($studentsDb, 'student_fee_tracking')) {
+        $stmt = $studentsDb->prepare("SELECT COALESCE(SUM(amount),0) as total_charged, COALESCE(SUM(amount_paid),0) as total_paid FROM student_fee_tracking WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) { $row = $fr->fetch_assoc(); $fee_total_charged = (float)$row['total_charged']; $fee_total_paid = (float)$row['total_paid']; } } $stmt->close(); }
+        $stmt = $studentsDb->prepare("SELECT MAX(payment_date) as last_pay FROM payments WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) $fee_last_payment = $fr->fetch_assoc()['last_pay'] ?? null; } $stmt->close(); }
+    } elseif (tableExists($studentsDb, 'student_fee_accounts')) {
+        $stmt = $studentsDb->prepare("SELECT COALESCE(SUM(amount),0) as total_charged, COALESCE(SUM(amount_paid),0) as total_paid FROM student_fee_accounts WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) { $row = $fr->fetch_assoc(); $fee_total_charged = (float)$row['total_charged']; $fee_total_paid = (float)$row['total_paid']; } } $stmt->close(); }
+        $stmt = $studentsDb->prepare("SELECT MAX(payment_date) as last_pay FROM fee_payments WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $fr = $stmt->get_result(); if ($fr && $fr->num_rows) $fee_last_payment = $fr->fetch_assoc()['last_pay'] ?? null; } $stmt->close(); }
+    }
+    if ($fee_total_charged == 0 && $fee_total_paid == 0) { $fee_total_charged = $fee_balance; }
+
+    // Requirements counts
+    $reqPending = 0; $reqMissing = 0;
+    foreach ($requirements as $r) {
+        $s = $r['status'] ?? 'Not Submitted';
+        if (in_array($s, ['Not Submitted', 'Pending'])) $reqPending++;
+        elseif (in_array($s, ['Rejected', 'Missing'])) $reqMissing++;
+    }
+
+    // Profile completeness
+    $profile_fields = ['first_name', 'surname', 'email', 'phone', 'gender', 'date_of_birth', 'nationality', 'district', 'guardian_name', 'guardian_phone'];
+    $profile_filled = 0;
+    $profile_missing = [];
+    foreach ($profile_fields as $f) {
+        $val = $student[$f] ?? '';
+        if (!empty(trim($val))) { $profile_filled++; }
+        else { $profile_missing[] = str_replace('_', ' ', ucfirst($f)); }
+    }
+    $profile_pct = count($profile_fields) > 0 ? round($profile_filled / count($profile_fields) * 100) : 0;
+
     $first_name_greeting = explode(' ', trim($full_name))[0] ?? 'Student';
 ?>
 <div class="sp-card" style="background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;margin-bottom:20px">
@@ -522,6 +598,51 @@ if (empty($notifs)) {
 </div>
 </div>
 
+<div class="sp-grid-2">
+<div class="sp-card">
+<h4><i class="fas fa-clipboard-check me-2"></i>Requirements Status</h4>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+<div style="text-align:center;padding:12px;background:#f8fafc;border-radius:8px"><h3 style="margin:0;color:#1e293b"><?= $reqTotal ?></h3><p style="font-size:.75rem;color:#64748b;margin:2px 0 0">Total</p></div>
+<div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:8px"><h3 style="margin:0;color:#059669"><?= $reqCompleted ?></h3><p style="font-size:.75rem;color:#64748b;margin:2px 0 0">Completed</p></div>
+<div style="text-align:center;padding:12px;background:#fefce8;border-radius:8px"><h3 style="margin:0;color:#d97706"><?= $reqPending ?></h3><p style="font-size:.75rem;color:#64748b;margin:2px 0 0">Pending</p></div>
+<div style="text-align:center;padding:12px;background:#fef2f2;border-radius:8px"><h3 style="margin:0;color:#dc2626"><?= $reqMissing ?></h3><p style="font-size:.75rem;color:#64748b;margin:2px 0 0">Missing</p></div>
+</div>
+<div class="sp-progress" style="margin-bottom:8px"><div class="sp-progress-bar" style="width:<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%"></div></div>
+<p style="font-size:.78rem;color:#64748b;margin:0"><?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>% complete &middot; <a href="?page=requirements" style="color:#3b82f6;font-weight:500">View All</a></p>
+</div>
+<div class="sp-card">
+<h4><i class="fas fa-money-bill me-2"></i>Fee Balance</h4>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+<div style="padding:12px;background:#f8fafc;border-radius:8px"><p style="font-size:.72rem;color:#64748b;margin:0 0 4px">Total Charged</p><h4 style="margin:0;font-size:1.1rem;color:#1e293b">UGX <?= number_format($fee_total_charged) ?></h4></div>
+<div style="padding:12px;background:#f0fdf4;border-radius:8px"><p style="font-size:.72rem;color:#64748b;margin:0 0 4px">Total Paid</p><h4 style="margin:0;font-size:1.1rem;color:#059669">UGX <?= number_format($fee_total_paid) ?></h4></div>
+<div style="padding:12px;background:<?= $fee_balance > 0 ? '#fef2f2' : '#f0fdf4' ?>;border-radius:8px"><p style="font-size:.72rem;color:#64748b;margin:0 0 4px">Balance Due</p><h4 style="margin:0;font-size:1.1rem;color:<?= $fee_balance > 0 ? '#dc2626' : '#059669' ?>">UGX <?= number_format($fee_balance) ?></h4></div>
+<div style="padding:12px;background:#f8fafc;border-radius:8px"><p style="font-size:.72rem;color:#64748b;margin:0 0 4px">Last Payment</p><p style="margin:0;font-size:.9rem;font-weight:600;color:#1e293b"><?= $fee_last_payment ? date('M j, Y', strtotime($fee_last_payment)) : 'None' ?></p></div>
+</div>
+<a href="?page=finances" class="sp-btn sp-btn-outline" style="width:100%;justify-content:center"><i class="fas fa-money-bill"></i>View Full Finance Details</a>
+</div>
+</div>
+<div class="sp-card">
+<h4><i class="fas fa-id-card me-2"></i>Profile Completeness</h4>
+<div style="display:flex;align-items:center;gap:20px;margin-bottom:12px">
+<div style="position:relative;width:80px;height:80px;flex-shrink:0">
+<svg viewBox="0 0 36 36" style="width:80px;height:80px;transform:rotate(-90deg)">
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="<?= $profile_pct >= 80 ? '#059669' : ($profile_pct >= 50 ? '#d97706' : '#dc2626') ?>" stroke-width="3" stroke-dasharray="<?= $profile_pct ?>, 100"/>
+</svg>
+<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#1e293b"><?= $profile_pct ?>%</div>
+</div>
+<div style="flex:1">
+<p style="font-size:.85rem;color:#475569;margin:0 0 8px"><?= $profile_filled ?> of <?= count($profile_fields) ?> fields completed</p>
+<div class="sp-progress"><div class="sp-progress-bar" style="width:<?= $profile_pct ?>%;background:<?= $profile_pct >= 80 ? '#059669' : ($profile_pct >= 50 ? '#d97706' : '#dc2626') ?>"></div></div>
+<?php if (!empty($profile_missing)): ?>
+<p style="font-size:.75rem;color:#dc2626;margin:8px 0 0"><i class="fas fa-exclamation-circle"></i> Missing: <?= htmlspecialchars(implode(', ', $profile_missing)) ?></p>
+<?php else: ?>
+<p style="font-size:.75rem;color:#059669;margin:8px 0 0"><i class="fas fa-check-circle"></i> Your profile is complete!</p>
+<?php endif; ?>
+</div>
+</div>
+</div>
+
 <?php if (!empty($requirements)): ?>
 <div class="sp-card">
 <h4><i class="fas fa-check-double me-2"></i>Admission Requirements Status</h4>
@@ -559,6 +680,20 @@ if (empty($notifs)) {
 // REQUIREMENTS
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elseif ($page === 'requirements'):
+    $admissionStatus = 'Not Set';
+    $requirements = [];
+    $directorNotes = [];
+    $reqTotal = 0; $reqCompleted = 0;
+    if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
+        if ($applicant_id > 0) {
+            $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$applicant_id LIMIT 1");
+            if ($trackQ && $trackQ->num_rows > 0) { $admissionStatus = $trackQ->fetch_assoc()['admission_status']; }
+            $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.requirement_id, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$applicant_id AND ar.is_active=1 ORDER BY ar.display_order");
+            if ($reqQ) { while ($r = $reqQ->fetch_assoc()) { $requirements[] = $r; if (!empty($r['director_notes'])) $directorNotes[] = ['req'=>$r['requirement_name'], 'note'=>$r['director_notes']]; } }
+            $reqTotal = count($requirements);
+            $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
+        }
+    }
 ?>
 <div class="sp-card">
 <h4><i class="fas fa-check-double me-2"></i>Admission Requirements</h4>
@@ -569,7 +704,7 @@ elseif ($page === 'requirements'):
 <div class="sp-progress" style="margin-bottom:20px"><div class="sp-progress-bar" style="width:<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%"></div></div>
 <p style="font-size:.85rem;color:#64748b;margin-bottom:16px"><?= $reqCompleted ?> of <?= $reqTotal ?> requirements completed (<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%)</p>
 <table class="sp-table">
-<thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Last Updated</th><th>Director's Note</th></tr></thead>
+<thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Last Updated</th><th>Director's Note</th><th>Actions</th></tr></thead>
 <tbody>
 <?php $i = 0; foreach ($requirements as $req): $i++; $s = $req['status'] ?? 'Not Submitted'; ?>
 <tr>
@@ -577,7 +712,27 @@ elseif ($page === 'requirements'):
 <td><?= htmlspecialchars($req['requirement_name']) ?></td>
 <td><span class="sp-badge sp-badge-<?= in_array($s,['Verified','Received'])?'success':(in_array($s,['Submitted'])?'info':(in_array($s,['Rejected','Missing'])?'danger':($s==='Not Yet Given'?'warning':'secondary'))) ?>"><?= htmlspecialchars($s) ?></span></td>
 <td><?= $req['updated_at'] ? date('M j, Y', strtotime($req['updated_at'])) : '-' ?></td>
-<td><?= !empty($req['director_notes']) ? nl2br(htmlspecialchars(substr($req['director_notes'],0,200))) : '<span style="color:#94a3b8">â€”</span>' ?></td>
+<td><?= !empty($req['director_notes']) ? nl2br(htmlspecialchars(substr($req['director_notes'],0,200))) : '<span style="color:#94a3b8">—</span>' ?></td>
+<td>
+<?php if (in_array($s, ['Not Submitted', 'Pending', 'Not Yet Given'])): ?>
+<button class="sp-btn sp-btn-primary" style="padding:4px 10px;font-size:.72rem" onclick="showUploadReqModal(<?= (int)($req['requirement_id'] ?? 0) ?>,'<?= htmlspecialchars($req['requirement_name'], ENT_QUOTES) ?>')"><i class="fas fa-upload"></i> Upload</button>
+<?php elseif (in_array($s, ['Submitted', 'Verified', 'Received'])): ?>
+<?php
+$docFilePath = '';
+if ($staffDb && tableExists($staffDb, 'student_documents') && $applicant_id > 0 && !empty($req['requirement_id'])) {
+    $dq = $staffDb->prepare("SELECT file_path FROM student_documents WHERE applicant_id=? AND requirement_id=? AND document_status='Active' ORDER BY uploaded_at DESC LIMIT 1");
+    if ($dq) { $dq->bind_param('ii', $applicant_id, (int)$req['requirement_id']); if ($dq->execute()) { $dr = $dq->get_result(); if ($dr && $dr->num_rows) $docFilePath = $dr->fetch_assoc()['file_path'] ?? ''; } $dq->close(); }
+}
+?>
+<?php if ($docFilePath): ?>
+<a href="../<?= htmlspecialchars($docFilePath) ?>" target="_blank" class="sp-btn sp-btn-success" style="padding:4px 10px;font-size:.72rem"><i class="fas fa-eye"></i> View</a>
+<?php else: ?>
+<span style="color:#94a3b8;font-size:.75rem">—</span>
+<?php endif; ?>
+<?php else: ?>
+<span style="color:#94a3b8;font-size:.75rem">—</span>
+<?php endif; ?>
+</td>
 </tr>
 <?php endforeach; ?>
 </tbody>
@@ -589,6 +744,32 @@ elseif ($page === 'requirements'):
 <p><strong>Current Status:</strong> <span class="sp-badge sp-badge-<?= $admissionStatus==='Registered'?'success':'warning' ?>"><?= htmlspecialchars($admissionStatus) ?></span></p>
 <p style="color:#64748b;margin-top:8px;font-size:.85rem">Your admission status reflects the current stage of your application process. Contact the Admissions Office for any questions.</p>
 </div>
+
+<div id="reqUploadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;width:90%;max-width:500px;padding:24px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h4 style="margin:0"><i class="fas fa-upload"></i> Upload Document</h4>
+<button class="btn-close" onclick="document.getElementById('reqUploadModal').style.display='none'" aria-label="Close"></button>
+</div>
+<form method="POST" enctype="multipart/form-data">
+<input type="hidden" name="action" value="upload_requirement_doc">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+<input type="hidden" name="requirement_id" id="reqUploadId">
+<div class="sp-form-group"><label>Requirement</label><p id="reqUploadName" style="padding:8px;background:#f8fafc;border-radius:6px;font-weight:600"></p></div>
+<div class="sp-form-group"><label>Document Name</label><input type="text" name="document_name" placeholder="e.g. Scanned National ID"></div>
+<div class="sp-form-group"><label>Upload File</label><input type="file" name="req_document" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" required style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px"></div>
+<p style="font-size:.72rem;color:#94a3b8;margin-bottom:12px">Allowed: JPG, PNG, GIF, PDF, DOC, DOCX &bull; Max 10MB</p>
+<div style="text-align:right"><button type="submit" class="sp-btn sp-btn-primary"><i class="fas fa-upload"></i> Upload Document</button></div>
+</form>
+</div>
+</div>
+<script>
+function showUploadReqModal(reqId, reqName) {
+    document.getElementById('reqUploadId').value = reqId;
+    document.getElementById('reqUploadName').textContent = reqName;
+    document.getElementById('reqUploadModal').style.display = 'flex';
+}
+</script>
 <?php
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 2. PROFILE
@@ -658,6 +839,74 @@ elseif ($page === 'profile'):
 <div class="sp-form-group"><label>Category</label><p style="padding:8px;background:#f8fafc;border-radius:6px"><?= htmlspecialchars($student['student_category'] ?? '') ?></p></div>
 <div class="sp-form-group"><label>Intake Year</label><p style="padding:8px;background:#f8fafc;border-radius:6px"><?= htmlspecialchars($student['intake_year'] ?? '') ?></p></div>
 </div>
+</div>
+
+<?php
+// Profile: Requirements Status
+if (!empty($requirements)): ?>
+<div class="sp-card">
+<h4><i class="fas fa-check-double me-2"></i>Requirements Status</h4>
+<div class="sp-progress" style="margin-bottom:12px"><div class="sp-progress-bar" style="width:<?= $reqTotal>0 ? round($reqCompleted/$reqTotal*100) : 0 ?>%"></div></div>
+<p style="font-size:.82rem;color:#64748b;margin-bottom:12px"><?= $reqCompleted ?> of <?= $reqTotal ?> completed &middot; <a href="?page=requirements" style="color:#3b82f6">View Details</a></p>
+<table class="sp-table">
+<thead><tr><th>Requirement</th><th>Status</th></tr></thead>
+<tbody>
+<?php foreach ($requirements as $req): $s = $req['status'] ?? 'Not Submitted'; ?>
+<tr>
+<td><?= htmlspecialchars($req['requirement_name']) ?></td>
+<td><span class="sp-badge sp-badge-<?= in_array($s,['Verified','Received'])?'success':(in_array($s,['Submitted'])?'info':(in_array($s,['Rejected','Missing'])?'danger':($s==='Not Yet Given'?'warning':'secondary'))) ?>"><?= htmlspecialchars($s) ?></span></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>
+<?php endif; ?>
+
+<?php
+// Profile: Fee Balance Summary
+$prof_fee_total = 0; $prof_fee_paid = 0; $prof_fee_balance = 0;
+if (tableExists($studentsDb, 'student_fee_tracking')) {
+    $pf = $studentsDb->prepare("SELECT COALESCE(SUM(amount),0) as total, COALESCE(SUM(amount_paid),0) as paid FROM student_fee_tracking WHERE student_id=?");
+    if ($pf) { $pf->bind_param('i', $student_id); if ($pf->execute()) { $pr = $pf->get_result(); if ($pr && $pr->num_rows) { $pfr = $pr->fetch_assoc(); $prof_fee_total = (float)$pfr['total']; $prof_fee_paid = (float)$pfr['paid']; } } $pf->close(); }
+} elseif (tableExists($studentsDb, 'student_fee_accounts')) {
+    $pf = $studentsDb->prepare("SELECT COALESCE(SUM(amount),0) as total, COALESCE(SUM(amount_paid),0) as paid FROM student_fee_accounts WHERE student_id=?");
+    if ($pf) { $pf->bind_param('i', $student_id); if ($pf->execute()) { $pr = $pf->get_result(); if ($pr && $pr->num_rows) { $pfr = $pr->fetch_assoc(); $prof_fee_total = (float)$pfr['total']; $prof_fee_paid = (float)$pfr['paid']; } } $pf->close(); }
+}
+$prof_fee_balance = $prof_fee_total - $prof_fee_paid;
+?>
+<div class="sp-card">
+<h4><i class="fas fa-money-bill me-2"></i>Fee Balance Summary</h4>
+<div class="sp-stats" style="margin-bottom:0">
+<div class="sp-stat"><div class="icon" style="background:#dbeafe;color:#3b82f6"><i class="fas fa-file-invoice-dollar"></i></div><h3 style="font-size:1.1rem">UGX <?= number_format($prof_fee_total) ?></h3><p>Total Fees</p></div>
+<div class="sp-stat"><div class="icon" style="background:#d1fae5;color:#059669"><i class="fas fa-check-circle"></i></div><h3 style="font-size:1.1rem">UGX <?= number_format($prof_fee_paid) ?></h3><p>Paid</p></div>
+<div class="sp-stat"><div class="icon" style="background:<?= $prof_fee_balance > 0 ? '#fee2e2' : '#d1fae5' ?>;color:<?= $prof_fee_balance > 0 ? '#dc2626' : '#059669' ?>"><i class="fas fa-balance-scale"></i></div><h3 style="font-size:1.1rem">UGX <?= number_format($prof_fee_balance) ?></h3><p>Balance</p></div>
+</div>
+<div style="margin-top:12px"><a href="?page=finances" class="sp-btn sp-btn-outline" style="width:100%;justify-content:center"><i class="fas fa-money-bill"></i>View Full Finance Details</a></div>
+</div>
+
+<?php
+// Profile: Academic Status
+$prof_gpa = 0; $prof_standing = ''; $prof_records_count = 0;
+if (tableExists($studentsDb, 'student_semester_gpa')) {
+    $pg = $studentsDb->prepare("SELECT semester_gpa, academic_standing FROM student_semester_gpa WHERE student_id=? ORDER BY id DESC LIMIT 1");
+    if ($pg) { $pg->bind_param('i', $student_id); if ($pg->execute()) { $pgr = $pg->get_result(); if ($pgr && $pgr->num_rows) { $pga = $pgr->fetch_assoc(); $prof_gpa = (float)$pga['semester_gpa']; $prof_standing = $pga['academic_standing'] ?? ''; } } $pg->close(); }
+}
+if (tableExists($studentsDb, 'student_academic_records')) {
+    $pc = $studentsDb->prepare("SELECT COUNT(*) as cnt FROM student_academic_records WHERE student_id=?");
+    if ($pc) { $pc->bind_param('i', $student_id); if ($pc->execute()) { $pcr = $pc->get_result(); if ($pcr && $pcr->num_rows) $prof_records_count = (int)$pcr->fetch_assoc()['cnt']; } $pc->close(); }
+}
+?>
+<div class="sp-card">
+<h4><i class="fas fa-graduation-cap me-2"></i>Academic Status</h4>
+<div class="sp-grid-3">
+<div class="sp-form-group"><label>Program</label><p style="padding:8px;background:#f8fafc;border-radius:6px;font-weight:600"><?= htmlspecialchars($program) ?></p></div>
+<div class="sp-form-group"><label>Year / Level</label><p style="padding:8px;background:#f8fafc;border-radius:6px">Year <?= $current_year ?> &middot; <?= htmlspecialchars($level) ?></p></div>
+<div class="sp-form-group"><label>Semester GPA</label><p style="padding:8px;background:#f8fafc;border-radius:6px;font-weight:600"><?= number_format($prof_gpa, 2) ?></p></div>
+<div class="sp-form-group"><label>Academic Standing</label><p style="padding:8px;background:#f8fafc;border-radius:6px"><span class="sp-badge sp-badge-<?= $prof_standing === 'Good Standing' ? 'success' : ($prof_standing ? 'warning' : 'secondary') ?>"><?= htmlspecialchars($prof_standing ?: 'N/A') ?></span></p></div>
+<div class="sp-form-group"><label>Total Course Records</label><p style="padding:8px;background:#f8fafc;border-radius:6px"><?= $prof_records_count ?></p></div>
+<div class="sp-form-group"><label>Student Status</label><p style="padding:8px;background:#f8fafc;border-radius:6px"><span class="sp-badge sp-badge-<?= $student_status==='Active'?'success':'warning' ?>"><?= htmlspecialchars($student_status) ?></span></p></div>
+</div>
+<div style="margin-top:12px"><a href="?page=academics" class="sp-btn sp-btn-outline"><i class="fas fa-graduation-cap"></i>View Academic Record</a> <a href="?page=results" class="sp-btn sp-btn-outline"><i class="fas fa-file-alt"></i>View Results</a></div>
 </div>
 
 <?php

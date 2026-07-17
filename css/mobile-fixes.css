@@ -1012,6 +1012,12 @@ img {
     font-size: 0.65rem !important;
   }
 
+  .notif-dropdown {
+    width: calc(100vw - 32px) !important;
+    right: -10px !important;
+    max-width: 360px;
+  }
+
   .dashboard-header {
     padding: 0 12px 0 56px !important;
     min-height: 52px !important;

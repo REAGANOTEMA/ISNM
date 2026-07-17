@@ -278,7 +278,7 @@ body {
 /* Mobile: 768px */
 @media (max-width: 768px) {
   /* Show hamburger */
-  .sidebar-toggle, .ent-hamburger { display: flex; }
+  .sidebar-toggle, .ent-hamburger { display: flex; top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); }
 
   /* Sidebar slides off-screen */
   .sidebar, .dashboard-sidebar, .isnm-sidebar, .ent-sidebar {
@@ -344,10 +344,15 @@ body {
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
   .header-right .user-avatar { width: 32px; height: 32px; }
-  .stat-card { flex-direction: column; text-align: center; gap: 8px; }
+  .stat-card { flex-direction: row; text-align: left; gap: 8px; }
   .stat-icon { width: 36px; height: 36px; font-size: 0.9rem; }
   .stat-content h3 { font-size: 1.1rem; }
   .stat-content p { font-size: 0.65rem; }
+
+  .table-responsive-stacked thead { display: none; }
+  .table-responsive-stacked tr { display: block; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px; }
+  .table-responsive-stacked td { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #f0f0f0; }
+  .table-responsive-stacked td::before { content: attr(data-label); font-weight: 600; color: #666; }
 }
 
 /* ── UNIVERSAL MOBILE FIXES (all dashboards) ───────────────── */

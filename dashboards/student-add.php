@@ -114,6 +114,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         if ($action === 'add') {
+            if (empty($index_number)) {
+                $index_number = 'IDX' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            }
+            if (empty($student_number)) {
+                $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            }
+            if (empty($registration_number)) {
+                $registration_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            }
             $temp_password = bin2hex(random_bytes(4));
             $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
             $intake_year = date('Y');
@@ -121,11 +130,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO students (first_name,surname,other_name,full_name,gender,index_number,registration_number,student_number,national_student_id_number,phone,mobile_number,email,program,level,set_name,year,current_year,passport_photo,profile_picture,intake_year,intake_period,status,password,is_first_login,password_changed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1)");
             $stmt->bind_param('ssssssssssssssssisssss', $first_name,$surname,$other_name,$full_name,$gender,$index_number,$registration_number,$student_number,$national_id,$phone,$mobile_number,$email,$program,$level,$set_name,$year,$year,$photo_path,$photo_path,$intake_year,$intake_period,$password_hash);
             if ($stmt->execute()) {
+                $new_student_id = $stmt->insert_id;
+                $stmt->close();
+                if ($new_student_id > 0) {
+                    $chk = @$conn->query("SHOW TABLES LIKE 'student_profiles'");
+                    if ($chk && $chk->num_rows > 0) {
+                        $sp = $conn->prepare("INSERT IGNORE INTO student_profiles (student_id, admission_status, fee_status) VALUES (?,?,'unpaid')");
+                        if ($sp) { $sp->bind_param('is', $new_student_id, 'Registered'); $sp->execute(); $sp->close(); }
+                    }
+                }
                 $_SESSION['success'] = "Student '$full_name' added successfully. Index: $index_number | Password: $temp_password";
             } else {
                 $_SESSION['error'] = 'Add failed: ' . $stmt->error;
+                $stmt->close();
             }
-            $stmt->close();
         } else {
             if ($photo_path !== '') {
                 $stmt = $conn->prepare("UPDATE students SET first_name=?,surname=?,other_name=?,full_name=?,gender=?,index_number=?,registration_number=?,student_number=?,national_student_id_number=?,phone=?,mobile_number=?,email=?,program=?,level=?,set_name=?,year=?,current_year=?,passport_photo=?,profile_picture=? WHERE id=?");

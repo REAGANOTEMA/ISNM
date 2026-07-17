@@ -41,6 +41,171 @@ function ict_fetch_one($conn, $sql) {
     catch (Exception $e) { error_log('director-ict getDetail: ' . $e->getMessage()); return null; }
 }
 
+// --- Student Management AJAX Handlers ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'ict_register_student') {
+    header('Content-Type: application/json');
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid security token.']);
+        exit;
+    }
+
+    $firstName = trim($_POST['first_name'] ?? '');
+    $surname = trim($_POST['surname'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $program = trim($_POST['program'] ?? '');
+    $intake = trim($_POST['intake'] ?? '');
+    $dob = trim($_POST['date_of_birth'] ?? '');
+    $nationalId = trim($_POST['national_id'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $district = trim($_POST['district'] ?? '');
+    $nokName = trim($_POST['next_of_kin_name'] ?? '');
+    $nokPhone = trim($_POST['next_of_kin_phone'] ?? '');
+
+    if (!$firstName || !$surname || !$gender || !$phone || !$program || !$intake) {
+        echo json_encode(['success' => false, 'message' => 'First name, surname, gender, phone, program, and intake are required.']);
+        exit;
+    }
+
+    $full_name = trim($firstName . ' ' . $surname);
+
+    $intakeParts = explode(' ', $intake);
+    $intakeMonth = ucfirst(strtolower($intakeParts[0] ?? ''));
+    $intakeYearShort = substr($intakeParts[1] ?? date('Y'), -2);
+    $monthMap = ['January'=>'JAN','February'=>'FEB','March'=>'MAR','April'=>'APR','May'=>'MAY','June'=>'JUN','July'=>'JUL','August'=>'AUG','September'=>'SEP','October'=>'OCT','November'=>'NOV','December'=>'DEC'];
+    $intakeCode = $monthMap[$intakeMonth] ?? strtoupper(substr($intakeMonth, 0, 3));
+
+    $progCode = 'GEN';
+    if ($staff_conn) {
+        $progStmt = $staff_conn->prepare("SELECT program_code FROM academic_programs WHERE program_name=? LIMIT 1");
+        if ($progStmt) {
+            $progStmt->bind_param('s', $program);
+            $progStmt->execute();
+            $progRes = $progStmt->get_result();
+            if ($progRow = $progRes->fetch_assoc()) $progCode = strtoupper(substr($progRow['program_code'], 0, 4));
+            $progStmt->close();
+        }
+    }
+
+    $seqPrefix = $intakeCode . $intakeYearShort . '/' . $progCode . '/' . date('Y');
+    $nextSeq = 1;
+    if ($staff_conn) {
+        $seqStmt = $staff_conn->prepare("SELECT COUNT(*) c FROM student_admission_tracking WHERE student_number LIKE ?");
+        $seqLike = $seqPrefix . '/%';
+        if ($seqStmt) {
+            $seqStmt->bind_param('s', $seqLike);
+            $seqStmt->execute();
+            $seqRes = $seqStmt->get_result();
+            if ($seqRow = $seqRes->fetch_assoc()) $nextSeq = (int)$seqRow['c'] + 1;
+            $seqStmt->close();
+        }
+    }
+    $index_number = $seqPrefix . '/' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+    $snPrefix = 'ISNM/' . date('Y');
+    $nextSnSeq = 1;
+    if ($staff_conn) {
+        $snStmt = $staff_conn->prepare("SELECT COUNT(*) c FROM student_admission_tracking WHERE student_number LIKE ?");
+        $snLike = $snPrefix . '/%';
+        if ($snStmt) {
+            $snStmt->bind_param('s', $snLike);
+            $snStmt->execute();
+            $snRes = $snStmt->get_result();
+            if ($snRow = $snRes->fetch_assoc()) $nextSnSeq = (int)$snRow['c'] + 1;
+            $snStmt->close();
+        }
+    }
+    $student_number = $snPrefix . '/' . str_pad($nextSnSeq, 4, '0', STR_PAD_LEFT);
+
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $temp_password = '';
+    for ($i = 0; $i < 8; $i++) { $temp_password .= $chars[random_int(0, strlen($chars) - 1)]; }
+    $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
+
+    $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+    $year = 1;
+    $level = 'Year 1';
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+
+    if ($staff_conn) $staff_conn->begin_transaction();
+    try {
+        $rc = 0;
+        if ($staff_conn) {
+            $ck = $staff_conn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1");
+            if ($ck) { $rc = (int)$ck->fetch_assoc()['c']; }
+
+            $track = $staff_conn->prepare("INSERT INTO student_admission_tracking (student_number, index_number, application_number, full_name, program, intake, admission_date, admission_status, requirements_total) VALUES (?,?,?,?,?,?,?,'Registered',?)");
+            $trackAppNum = 'ICT-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
+            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, date('Y-m-d'), $rc);
+            if (!$track->execute()) throw new Exception('Tracking insert failed: ' . $track->error);
+            $track->close();
+        }
+
+        if ($students_conn) {
+            $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+            $s_ins->bind_param('sssssssssssssssssssssss',
+                $student_number, $reg_number, $firstName, $surname, '', $full_name,
+                $email, $phone, $program, $program,
+                $year, $level, (string)date('Y'), $intake, $dob,
+                $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password
+            );
+            if (!$s_ins->execute()) throw new Exception('Student insert failed: ' . $s_ins->error);
+            $s_id = $students_conn->insert_id;
+            $s_ins->close();
+            if ($s_id > 0) {
+                $prof = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
+                $prof->bind_param('iss', $s_id, 'Registered', 'unpaid');
+                if (!$prof->execute()) error_log('ICT student_profiles insert failed: ' . ($prof->error ?? 'unknown'));
+                $prof->close();
+            }
+        }
+
+        if ($staff_conn) $staff_conn->commit();
+        echo json_encode(['success' => true, 'student_number' => $student_number, 'index_number' => $index_number, 'temp_password' => $temp_password, 'registration_number' => $reg_number]);
+    } catch (Exception $e) {
+        if ($staff_conn) $staff_conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'search_students') {
+    header('Content-Type: application/json');
+    $q = trim($_POST['search'] ?? '');
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+    if (!$students_conn || strlen($q) < 2) { echo json_encode(['success' => true, 'students' => []]); exit; }
+    $like = '%' . $q . '%';
+    $stmt = $students_conn->prepare("SELECT id, student_number, registration_number, first_name, surname, full_name, email, phone, program, level, status FROM `$studentsDb`.`students` WHERE (full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR email LIKE ? OR phone LIKE ?) ORDER BY full_name LIMIT 50");
+    if (!$stmt) { echo json_encode(['success' => true, 'students' => []]); exit; }
+    $stmt->bind_param('sssss', $like, $like, $like, $like, $like);
+    $stmt->execute();
+    $r = $stmt->get_result();
+    $data = [];
+    while ($row = $r->fetch_assoc()) $data[] = $row;
+    $stmt->close();
+    echo json_encode(['success' => true, 'students' => $data]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'get_student_details') {
+    header('Content-Type: application/json');
+    $studentId = (int)($_POST['student_id'] ?? 0);
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+    if (!$studentId || !$students_conn) { echo json_encode(['success' => false, 'message' => 'Invalid student ID.']); exit; }
+
+    $result = ['student' => null, 'profile' => null];
+    $s = $students_conn->prepare("SELECT * FROM `$studentsDb`.`students` WHERE id=? LIMIT 1");
+    if ($s) { $s->bind_param('i', $studentId); $s->execute(); $result['student'] = $s->get_result()->fetch_assoc(); $s->close(); }
+    if ($result['student']) {
+        $p = $students_conn->prepare("SELECT * FROM `$studentsDb`.`student_profiles` WHERE student_id=? LIMIT 1");
+        if ($p) { $p->bind_param('i', $studentId); $p->execute(); $result['profile'] = $p->get_result()->fetch_assoc(); $p->close(); }
+    }
+
+    echo json_encode(['success' => true, 'data' => $result]);
+    exit;
+}
+
 // â”€â”€ STATS â”€â”€
 $total_staff   = ict_q($staff_conn, "SELECT COUNT(*) FROM staff WHERE status='Active'");
 $total_students = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
@@ -105,7 +270,7 @@ if ($staff_conn) {
     } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
 }
 
-$ictPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'overview','approvals'=>'approvals','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'overview','reports-monthly'=>'overview','reports-annual'=>'overview','exports'=>'overview','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'security','activity-logs'=>'security','it_infrastructure'=>'infrastructure','infrastructure'=>'infrastructure','system_logs'=>'infrastructure','backup_management'=>'backups','ict_policy'=>'security'];
+$ictPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'overview','approvals'=>'approvals','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'overview','reports-monthly'=>'overview','reports-annual'=>'overview','exports'=>'overview','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'security','activity-logs'=>'security','it_infrastructure'=>'infrastructure','infrastructure'=>'infrastructure','system_logs'=>'infrastructure','backup_management'=>'backups','ict_policy'=>'security','student-management'=>'student-management'];
 $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'overview';
@@ -1142,6 +1307,55 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             </div>
         </div>
         <?php endif; ?>
+
+        <!-- ======== STUDENT MANAGEMENT ======== -->
+        <?php if ($tab === 'student-management'): ?>
+        <div class="row g-3">
+            <div class="col-lg-12">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="mb-0"><i class="fas fa-user-graduate me-2 text-primary"></i>Student Management</h2>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" id="ictStudentSearch" placeholder="Search by name, student number, or index..." style="width:320px" oninput="if(this.value.length>=2){searchStudents()}else{document.getElementById('ictStudentResults').innerHTML='';}">
+                            <button class="btn btn-sm btn-success" onclick="showICTRegisterModal()"><i class="fas fa-plus me-1"></i>Register New Student</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height:600px;overflow-y:auto">
+                        <table class="table table-sm table-hover table-small">
+                            <thead>
+                                <tr><th>Name</th><th>Student Number</th><th>Index Number</th><th>Program</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="ictStudentResults">
+                                <?php
+                                $ictStudents = ict_fetch($students_conn, "SELECT id, student_number, registration_number, full_name, first_name, surname, program, level, status FROM students ORDER BY created_at DESC LIMIT 30");
+                                if (empty($ictStudents)):
+                                ?>
+                                <tr><td colspan="6" class="text-center text-muted">No students found. Use the search bar or register a new student.</td></tr>
+                                <?php else: foreach ($ictStudents as $st): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($st['full_name'] ?: ($st['first_name'] . ' ' . $st['surname'])) ?></strong></td>
+                                    <td><code><?= htmlspecialchars($st['student_number'] ?? '-') ?></code></td>
+                                    <td><small class="text-muted"><?= htmlspecialchars($st['registration_number'] ?? '-') ?></small></td>
+                                    <td><small><?= htmlspecialchars($st['program'] ?? '-') ?></small></td>
+                                    <td><span class="badge bg-<?= ($st['status'] ?? '') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($st['status'] ?? 'Active') ?></span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="viewICTStudentProfile(<?= (int)$st['id'] ?>)" title="View Profile"><i class="fas fa-eye"></i></button>
+                                        <button class="btn btn-sm btn-outline-warning py-0 px-1" onclick="editICTStudent(<?= (int)$st['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.getElementById('ictStudentSearch').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') searchStudents();
+        });
+        </script>
+        <?php endif; ?>
 </div>
 <div class="modal fade" id="addAssetModal" tabindex="-1"><div class="modal-dialog">
 <form class="modal-content" id="addAssetForm">
@@ -1218,6 +1432,81 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-info text-white"><i class="fas fa-save me-1"></i>Add</button></div>
 </form>
+</div></div>
+
+<!-- ICT Student Registration Modal -->
+<div class="modal fade" id="ictRegisterModal" tabindex="-1"><div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+    <form id="ictRegisterForm">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+    <input type="hidden" name="action" value="ict_register_student">
+    <div class="row g-2 mb-2">
+        <div class="col-md-4"><label class="form-label">First Name *</label><input type="text" name="first_name" class="form-control" required></div>
+        <div class="col-md-4"><label class="form-label">Surname *</label><input type="text" name="surname" class="form-control" required></div>
+        <div class="col-md-4"><label class="form-label">Gender *</label><select name="gender" class="form-select" required><option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-md-6"><label class="form-label">Phone *</label><input type="text" name="phone" class="form-control" required></div>
+        <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-md-6"><label class="form-label">Program *</label>
+            <select name="program" class="form-select" required>
+                <option value="">Select Program...</option>
+                <?php
+                $ictPrograms = [];
+                if ($staff_conn) {
+                    $pr = $staff_conn->query("SELECT program_name FROM academic_programs WHERE status='Active' ORDER BY program_name");
+                    if ($pr) while ($row = $pr->fetch_assoc()) $ictPrograms[] = $row['program_name'];
+                }
+                if ($students_conn && empty($ictPrograms)) {
+                    $pr2 = $students_conn->query("SELECT DISTINCT program FROM students WHERE program IS NOT NULL AND program != '' ORDER BY program");
+                    if ($pr2) while ($row = $pr2->fetch_assoc()) $ictPrograms[] = $row['program'];
+                }
+                foreach ($ictPrograms as $prog):
+                ?>
+                <option value="<?= htmlspecialchars($prog) ?>"><?= htmlspecialchars($prog) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-6"><label class="form-label">Intake *</label>
+            <select name="intake" class="form-select" required>
+                <option value="">Select Intake...</option>
+                <?php
+                $ictIntakes = [];
+                if ($staff_conn) {
+                    $ir = $staff_conn->query("SELECT intake_name FROM intakes WHERE status='Open' ORDER BY intake_year DESC, FIELD(intake_month,'January','February','March','April','May','June','July','August','September','October','November','December')");
+                    if ($ir) while ($row = $ir->fetch_assoc()) $ictIntakes[] = $row['intake_name'];
+                }
+                if (empty($ictIntakes)) {
+                    $ictIntakes[] = date('F') . ' ' . date('Y');
+                }
+                foreach ($ictIntakes as $intk):
+                ?>
+                <option value="<?= htmlspecialchars($intk) ?>"><?= htmlspecialchars($intk) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-md-4"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" class="form-control"></div>
+        <div class="col-md-4"><label class="form-label">National ID</label><input type="text" name="national_id" class="form-control"></div>
+        <div class="col-md-4"><label class="form-label">District</label><input type="text" name="district" class="form-control"></div>
+    </div>
+    <div class="mb-2"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+    <hr>
+    <h6 class="text-muted mb-2"><i class="fas fa-users me-1"></i>Next of Kin</h6>
+    <div class="row g-2 mb-2">
+        <div class="col-md-6"><label class="form-label">Name</label><input type="text" name="next_of_kin_name" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="next_of_kin_phone" class="form-control"></div>
+    </div>
+    <div id="ictRegisterResult" style="display:none" class="alert alert-success mt-2"></div>
+    </form>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" form="ictRegisterForm" class="btn btn-success"><i class="fas fa-save me-1"></i>Register Student</button></div>
+</div>
 </div></div>
 
 <!-- jQuery & Bootstrap already loaded in dashboard_head.php â€” do NOT re-add here -->
@@ -1361,6 +1650,113 @@ function addSecurityLog() {
 function filterTickets(s) { $('#ticketTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('backup-row-'+s)); }); }
 function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter-pill[onclick*="'${s}'"]`).addClass('active'); $('.section-card tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
+
+// === Student Management Functions ===
+$('#ictRegisterForm').submit(function(e) {
+    e.preventDefault();
+    var form = this;
+    var data = $(form).serializeArray().reduce(function(o, x) { o[x.name] = x.value; return o; }, {});
+    data.action = 'ict_register_student';
+    data.csrf_token = CSRF_TOKEN;
+    var btn = $(form).find('button[type=submit]');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Registering...');
+    $.post('director-ict.php', data).done(function(r) {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Register Student');
+        if (r.success) {
+            var msg = '<strong>Student Registered Successfully!</strong><br>' +
+                'Student Number: <code>' + r.student_number + '</code><br>' +
+                'Index Number: <code>' + r.index_number + '</code><br>' +
+                'Registration: <code>' + (r.registration_number||'') + '</code><br>' +
+                'Temp Password: <code>' + r.temp_password + '</code><br>' +
+                '<small class="text-warning">Please save these credentials. The password will not be shown again.</small>';
+            $('#ictRegisterResult').html(msg).show();
+            $(form).find('input:not([type=hidden]),select,textarea').val('');
+        } else {
+            showAlert(r.message, 'danger');
+        }
+    }).fail(function() {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Register Student');
+        showAlert('AJAX error', 'danger');
+    });
+});
+
+function searchStudents() {
+    var q = $('#ictStudentSearch').val().trim();
+    if (q.length < 2) { document.getElementById('ictStudentResults').innerHTML = ''; return; }
+    $.post('director-ict.php', { action: 'search_students', search: q, csrf_token: CSRF_TOKEN }).done(function(r) {
+        var tb = document.getElementById('ictStudentResults');
+        if (!r.success || !r.students || r.students.length === 0) {
+            tb.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No students found matching your search.</td></tr>';
+            return;
+        }
+        var html = '';
+        r.students.forEach(function(s) {
+            var name = s.full_name || ((s.first_name || '') + ' ' + (s.surname || ''));
+            html += '<tr>';
+            html += '<td><strong>' + escHtml(name) + '</strong></td>';
+            html += '<td><code>' + escHtml(s.student_number || '-') + '</code></td>';
+            html += '<td><small class="text-muted">' + escHtml(s.registration_number || '-') + '</small></td>';
+            html += '<td><small>' + escHtml(s.program || '-') + '</small></td>';
+            html += '<td><span class="badge bg-' + (s.status === 'Active' ? 'success' : 'secondary') + '">' + escHtml(s.status || 'Active') + '</span></td>';
+            html += '<td>';
+            html += '<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="viewICTStudentProfile(' + s.id + ')" title="View Profile"><i class="fas fa-eye"></i></button> ';
+            html += '<button class="btn btn-sm btn-outline-warning py-0 px-1" onclick="editICTStudent(' + s.id + ')" title="Edit"><i class="fas fa-edit"></i></button>';
+            html += '</td></tr>';
+        });
+        tb.innerHTML = html;
+    }).fail(function() {
+        showAlert('Search failed', 'danger');
+    });
+}
+
+function viewICTStudentProfile(id) {
+    $.post('director-ict.php', { action: 'get_student_details', student_id: id, csrf_token: CSRF_TOKEN }).done(function(r) {
+        if (!r.success || !r.data || !r.data.student) { showAlert(r.message || 'Student not found', 'danger'); return; }
+        var s = r.data.student;
+        var p = r.data.profile || {};
+        var name = s.full_name || ((s.first_name || '') + ' ' + (s.surname || ''));
+        var html = '<div class="row g-2">';
+        html += '<div class="col-md-6"><strong>Name:</strong> ' + escHtml(name) + '</div>';
+        html += '<div class="col-md-6"><strong>Student Number:</strong> <code>' + escHtml(s.student_number || '-') + '</code></div>';
+        html += '<div class="col-md-6"><strong>Registration:</strong> <code>' + escHtml(s.registration_number || '-') + '</code></div>';
+        html += '<div class="col-md-6"><strong>Program:</strong> ' + escHtml(s.program || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Level:</strong> ' + escHtml(s.level || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Year:</strong> ' + escHtml(s.year || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Email:</strong> ' + escHtml(s.email || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Phone:</strong> ' + escHtml(s.phone || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Gender:</strong> ' + escHtml(s.gender || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Date of Birth:</strong> ' + escHtml(s.date_of_birth || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Status:</strong> <span class="badge bg-' + (s.status === 'Active' ? 'success' : 'secondary') + '">' + escHtml(s.status || 'Active') + '</span></div>';
+        html += '<div class="col-md-6"><strong>Intake:</strong> ' + escHtml(s.intake_period || '-') + '</div>';
+        if (s.address) html += '<div class="col-12"><strong>Address:</strong> ' + escHtml(s.address) + '</div>';
+        if (s.district) html += '<div class="col-md-6"><strong>District:</strong> ' + escHtml(s.district) + '</div>';
+        if (s.national_id) html += '<div class="col-md-6"><strong>National ID:</strong> ' + escHtml(s.national_id) + '</div>';
+        if (s.guardian_name) html += '<div class="col-md-6"><strong>Guardian:</strong> ' + escHtml(s.guardian_name) + '</div>';
+        if (s.guardian_phone) html += '<div class="col-md-6"><strong>Guardian Phone:</strong> ' + escHtml(s.guardian_phone) + '</div>';
+        if (p && p.admission_status) html += '<div class="col-md-6"><strong>Admission Status:</strong> <span class="badge bg-info">' + escHtml(p.admission_status) + '</span></div>';
+        if (p && p.fee_status) html += '<div class="col-md-6"><strong>Fee Status:</strong> <span class="badge bg-' + (p.fee_status === 'paid' ? 'success' : 'warning text-dark') + '">' + escHtml(p.fee_status) + '</span></div>';
+        html += '</div>';
+        showBootstrapModal('Student Profile: ' + escHtml(name), html, 'ictStudentProfileModal');
+    }).fail(function() { showAlert('Failed to load student profile', 'danger'); });
+}
+
+function showICTRegisterModal() {
+    $('#ictRegisterResult').hide().html('');
+    $('#ictRegisterForm').find('input:not([type=hidden]),select,textarea').val('');
+    var modal = new bootstrap.Modal(document.getElementById('ictRegisterModal'));
+    modal.show();
+}
+
+function editICTStudent(id) {
+    viewICTStudentProfile(id);
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
 </script>
 
 <!-- â•â•â• AJAX MODULE LOADING â•â•â• -->

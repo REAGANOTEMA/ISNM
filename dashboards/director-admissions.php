@@ -168,6 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $other_name = $applicant['middle_name'] ?? '';
         $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
         $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $index_number = 'IDX' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
         $temp_password = bin2hex(random_bytes(4));
         $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
         $program_name = $applicant['program_name'] ?? $applicant['program_id'] ?? '';
@@ -183,15 +184,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $rc = 0;
             $ck = $conn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1");
-            if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
+            if ($ck) { $rc = (int)$ck->fetch_assoc()['c']; }
             $track = $conn->prepare("INSERT INTO student_admission_tracking (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
             $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, date('Y-m-d'), 'Registered', 0, $rc);
             if (!$track->execute()) { error_log('track execute failed: ' . ($track->error ?? 'unknown')); };
 
             if ($stuConn) {
-                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-                $s_ins->bind_param('ssssssssssssssssssssssss',
-                    $student_number, $reg_number, $first_name, $surname, $other_name, $full_name,
+                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (index_number, student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $s_ins->bind_param('sssssssssssssssssssssssss',
+                    $index_number, $student_number, $reg_number, $first_name, $surname, $other_name, $full_name,
                     $applicant['email'], $applicant['phone'], $program_name, $program_name,
                     $year, $level, (string)date('Y'), $intake, $applicant['date_of_birth'],
                     $applicant['gender'], $applicant['address'], $applicant['guardian_name'],
@@ -377,6 +378,183 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         exit;
     }
+
+    // --- Direct Register Student (bypass application process) ---
+    if ($action === 'direct_register_student') {
+        $firstName = trim($_POST['first_name'] ?? '');
+        $surname = trim($_POST['surname'] ?? '');
+        $gender = trim($_POST['gender'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $program = trim($_POST['program'] ?? '');
+        $intake = trim($_POST['intake'] ?? '');
+        $dob = trim($_POST['date_of_birth'] ?? '');
+        $nationalId = trim($_POST['national_id'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+        $district = trim($_POST['district'] ?? '');
+        $nokName = trim($_POST['next_of_kin_name'] ?? '');
+        $nokPhone = trim($_POST['next_of_kin_phone'] ?? '');
+
+        if (!$firstName || !$surname || !$gender || !$phone || !$program || !$intake) {
+            echo json_encode(['success' => false, 'message' => 'First name, surname, gender, phone, program, and intake are required.']);
+            exit;
+        }
+
+        $full_name = trim($firstName . ' ' . $surname);
+
+        // Build intake code from intake name (e.g. "January 2026" -> "JAN26")
+        $intakeParts = explode(' ', $intake);
+        $intakeMonth = ucfirst(strtolower($intakeParts[0] ?? ''));
+        $intakeYearShort = substr($intakeParts[1] ?? date('Y'), -2);
+        $monthMap = ['January'=>'JAN','February'=>'FEB','March'=>'MAR','April'=>'APR','May'=>'MAY','June'=>'JUN','July'=>'JUL','August'=>'AUG','September'=>'SEP','October'=>'OCT','November'=>'NOV','December'=>'DEC'];
+        $intakeCode = $monthMap[$intakeMonth] ?? strtoupper(substr($intakeMonth, 0, 3));
+
+        // Get program code
+        $progCode = 'GEN';
+        $progStmt = $conn->prepare("SELECT program_code FROM academic_programs WHERE program_name=? LIMIT 1");
+        if ($progStmt) {
+            $progStmt->bind_param('s', $program);
+            $progStmt->execute();
+            $progRes = $progStmt->get_result();
+            if ($progRow = $progRes->fetch_assoc()) $progCode = strtoupper(substr($progRow['program_code'], 0, 4));
+            $progStmt->close();
+        }
+
+        // Get next sequence
+        $seqPrefix = $intakeCode . $intakeYearShort . '/' . $progCode . '/' . date('Y');
+        $seqStmt = $conn->prepare("SELECT COUNT(*) c FROM student_admission_tracking WHERE student_number LIKE ?");
+        $seqLike = $seqPrefix . '/%';
+        $nextSeq = 1;
+        if ($seqStmt) {
+            $seqStmt->bind_param('s', $seqLike);
+            $seqStmt->execute();
+            $seqRes = $seqStmt->get_result();
+            if ($seqRow = $seqRes->fetch_assoc()) $nextSeq = (int)$seqRow['c'] + 1;
+            $seqStmt->close();
+        }
+        $index_number = $seqPrefix . '/' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+        // Student number
+        $snPrefix = 'ISNM/' . date('Y');
+        $snStmt = $conn->prepare("SELECT COUNT(*) c FROM student_admission_tracking WHERE student_number LIKE ?");
+        $snLike = $snPrefix . '/%';
+        $nextSnSeq = 1;
+        if ($snStmt) {
+            $snStmt->bind_param('s', $snLike);
+            $snStmt->execute();
+            $snRes = $snStmt->get_result();
+            if ($snRow = $snRes->fetch_assoc()) $nextSnSeq = (int)$snRow['c'] + 1;
+            $snStmt->close();
+        }
+        $student_number = $snPrefix . '/' . str_pad($nextSnSeq, 4, '0', STR_PAD_LEFT);
+
+        // Random temp password
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $temp_password = '';
+        for ($i = 0; $i < 8; $i++) { $temp_password .= $chars[random_int(0, strlen($chars) - 1)]; }
+        $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
+
+        $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $year = 1;
+        $level = 'Year 1';
+
+        $conn->begin_transaction();
+        try {
+            $rc = 0;
+            $ck = $conn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1");
+            if ($ck) { $rc = (int)$ck->fetch_assoc()['c']; }
+
+            $track = $conn->prepare("INSERT INTO student_admission_tracking (student_number, index_number, application_number, full_name, program, intake, admission_date, admission_status, requirements_total) VALUES (?,?,?,?,?,?,?,'Registered',?)");
+            $trackAppNum = 'DR-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
+            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, date('Y-m-d'), $rc);
+            if (!$track->execute()) throw new Exception('Tracking insert failed: ' . $track->error);
+            $track->close();
+
+            if ($stuConn) {
+                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $s_ins->bind_param('sssssssssssssssssssssss',
+                    $student_number, $reg_number, $firstName, $surname, '', $full_name,
+                    $email, $phone, $program, $program,
+                    $year, $level, (string)date('Y'), $intake, $dob,
+                    $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password
+                );
+                if (!$s_ins->execute()) throw new Exception('Student insert failed: ' . $s_ins->error);
+                $s_id = $stuConn->insert_id;
+                $s_ins->close();
+                if ($s_id > 0) {
+                    $prof = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
+                    $prof->bind_param('iss', $s_id, 'Registered', 'unpaid');
+                    if (!$prof->execute()) error_log('prof execute failed: ' . ($prof->error ?? 'unknown'));
+                    $prof->close();
+                }
+            }
+
+            logAdmission($conn, 0, $userId, "Direct Registered", "Directly registered $full_name as $student_number");
+            $conn->commit();
+            echo json_encode(['success' => true, 'student_number' => $student_number, 'index_number' => $index_number, 'temp_password' => $temp_password]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // --- Get Student Profile ---
+    if ($action === 'get_student_profile') {
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        if (!$studentId) { echo json_encode(['success' => false, 'message' => 'Invalid student ID.']); exit; }
+
+        $result = ['student' => null, 'profile' => null, 'requirements' => ['total' => 0, 'completed' => 0, 'pending' => 0, 'rejected' => 0], 'fee_balance' => 0];
+
+        if ($stuConn) {
+            $s = $stuConn->prepare("SELECT * FROM `$studentsDb`.`students` WHERE id=? LIMIT 1");
+            if ($s) { $s->bind_param('i', $studentId); $s->execute(); $result['student'] = $s->get_result()->fetch_assoc(); $s->close(); }
+            if ($result['student']) {
+                $p = $stuConn->prepare("SELECT * FROM `$studentsDb`.`student_profiles` WHERE student_id=? LIMIT 1");
+                if ($p) { $p->bind_param('i', $studentId); $p->execute(); $result['profile'] = $p->get_result()->fetch_assoc(); $p->close(); }
+            }
+        }
+
+        $reqQ = $conn->prepare("SELECT status, COUNT(*) cnt FROM student_requirements WHERE student_id=? GROUP BY status");
+        if ($reqQ) {
+            $reqQ->bind_param('i', $studentId);
+            $reqQ->execute();
+            $reqRes = $reqQ->get_result();
+            while ($rr = $reqRes->fetch_assoc()) {
+                $result['requirements']['total'] += (int)$rr['cnt'];
+                $sKey = $rr['status'];
+                if ($sKey === 'verified') $result['requirements']['completed'] += (int)$rr['cnt'];
+                elseif ($sKey === 'pending' || $sKey === 'submitted') $result['requirements']['pending'] += (int)$rr['cnt'];
+                elseif ($sKey === 'rejected') $result['requirements']['rejected'] += (int)$rr['cnt'];
+            }
+            $reqQ->close();
+        }
+
+        if ($stuConn) {
+            $fn = $result['student']['student_number'] ?? '';
+            if ($fn) {
+                try {
+                    $feeQ = $stuConn->query("SELECT COALESCE(SUM(amount_due - amount_paid),0) AS balance FROM `$studentsDb`.`student_invoices` WHERE student_number='" . $stuConn->real_escape_string($fn) . "' LIMIT 1");
+                    if ($feeQ) { $feeRow = $feeQ->fetch_assoc(); $result['fee_balance'] = (float)($feeRow['balance'] ?? 0); }
+                } catch (Exception $e) { $result['fee_balance'] = 0; }
+            }
+        }
+
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Get Student Requirements ---
+    if ($action === 'get_student_requirements') {
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        if (!$studentId) { echo json_encode([]); exit; }
+        $rows = [];
+        $s = $conn->prepare("SELECT * FROM student_requirements WHERE student_id=? ORDER BY created_at DESC");
+        if ($s) { $s->bind_param('i', $studentId); $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+        echo json_encode($rows);
+        exit;
+    }
+
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
     exit;
 }
@@ -563,6 +741,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
         <option value="<?= htmlspecialchars($i['intake_name']) ?>"><?= htmlspecialchars($i['intake_name']) ?></option>
       <?php endforeach; ?>
     </select>
+    <button class="btn btn-sm btn-success ms-auto" onclick="showDirectRegisterModal()"><i class="fas fa-user-plus"></i> Register New Student</button>
   </div>
   <div class="table-responsive">
     <table class="table table-hover table-sm">
@@ -626,10 +805,10 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
   <div class="table-responsive">
     <table class="table table-hover table-sm">
       <thead>
-        <tr><th>Student #</th><th>Name</th><th>Program</th><th>Gender</th><th>Email</th><th>Phone</th><th>Status</th><th>Enrolled</th></tr>
+        <tr><th>Student #</th><th>Name</th><th>Program</th><th>Gender</th><th>Email</th><th>Phone</th><th>Status</th><th>Enrolled</th><th>Actions</th></tr>
       </thead>
       <tbody id="enrolledTableBody">
-        <tr><td colspan="8" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+        <tr><td colspan="9" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -795,6 +974,115 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
       <div class="modal-footer">
         <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-sm btn-danger" onclick="confirmRejectApp()"><i class="fas fa-times"></i> Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Direct Register New Student Modal -->
+<div class="modal fade" id="directRegisterModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff">
+        <h5 class="modal-title"><i class="fas fa-user-plus"></i> Register New Student</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="directRegisterForm" onsubmit="submitDirectRegister(event)">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">First Name *</label>
+              <input type="text" class="form-control form-control-sm" id="dr_first_name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Surname *</label>
+              <input type="text" class="form-control form-control-sm" id="dr_surname" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Gender *</label>
+              <select class="form-select form-select-sm" id="dr_gender" required>
+                <option value="">-- Select --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Date of Birth</label>
+              <input type="date" class="form-control form-control-sm" id="dr_date_of_birth">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Phone *</label>
+              <input type="text" class="form-control form-control-sm" id="dr_phone" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Email</label>
+              <input type="email" class="form-control form-control-sm" id="dr_email">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Program *</label>
+              <select class="form-select form-select-sm" id="dr_program" required>
+                <option value="">-- Select Program --</option>
+                <?php foreach ($programs as $p): ?>
+                  <option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Intake *</label>
+              <select class="form-select form-select-sm" id="dr_intake" required>
+                <option value="">-- Select Intake --</option>
+                <?php foreach ($intakes as $i): ?>
+                  <option value="<?= htmlspecialchars($i['intake_name']) ?>"><?= htmlspecialchars($i['intake_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">National ID</label>
+              <input type="text" class="form-control form-control-sm" id="dr_national_id">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Address</label>
+              <input type="text" class="form-control form-control-sm" id="dr_address">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">District</label>
+              <input type="text" class="form-control form-control-sm" id="dr_district">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Next of Kin Name</label>
+              <input type="text" class="form-control form-control-sm" id="dr_next_of_kin_name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Next of Kin Phone</label>
+              <input type="text" class="form-control form-control-sm" id="dr_next_of_kin_phone">
+            </div>
+          </div>
+          <div id="directRegisterResult" class="mt-3"></div>
+        </div>
+        <div class="modal-footer">
+          <div id="directRegisterMsg" class="small me-auto"></div>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-success" id="directRegisterBtn"><i class="fas fa-save"></i> Register Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Student Profile Modal -->
+<div class="modal fade" id="studentProfileModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff">
+        <h5 class="modal-title"><i class="fas fa-user"></i> Student Profile</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="studentProfileBody">
+        <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="printStudentProfile()"><i class="fas fa-print"></i> Print</button>
       </div>
     </div>
   </div>
@@ -1230,7 +1518,7 @@ function renderEnrolled() {
   }) : _enrolledData;
   const tbody = document.getElementById('enrolledTableBody');
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-user-graduate"></i> No enrolled students found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4"><i class="fas fa-user-graduate"></i> No enrolled students found.</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(s => {
@@ -1244,8 +1532,184 @@ function renderEnrolled() {
       '<td class="small">' + escapeHtml(s.phone || '-') + '</td>' +
       '<td>' + stBadge + '</td>' +
       '<td class="small text-muted">' + (s.created_at || '-') + '</td>' +
+      '<td><div class="d-flex gap-1">' +
+        '<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="viewStudentProfile(' + s.id + ')" title="View Profile"><i class="fas fa-eye"></i></button>' +
+        '<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="printStudentFromList(' + s.id + ')" title="Print"><i class="fas fa-print"></i></button>' +
+        '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="viewStudentRequirements(' + s.id + ',\'' + escapeHtml(s.full_name || '') + '\')" title="Requirements"><i class="fas fa-clipboard-list"></i></button>' +
+      '</div></td>' +
     '</tr>';
   }).join('');
+}
+
+// ===================== DIRECT REGISTER =====================
+function showDirectRegisterModal() {
+  document.getElementById('directRegisterForm').reset();
+  document.getElementById('directRegisterMsg').textContent = '';
+  document.getElementById('directRegisterResult').innerHTML = '';
+  document.getElementById('directRegisterBtn').disabled = false;
+  new bootstrap.Modal(document.getElementById('directRegisterModal')).show();
+}
+
+function submitDirectRegister(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById('directRegisterMsg');
+  const resultEl = document.getElementById('directRegisterResult');
+  const btn = document.getElementById('directRegisterBtn');
+  btn.disabled = true;
+  msgEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
+  const data = {
+    action: 'direct_register_student',
+    first_name: document.getElementById('dr_first_name').value.trim(),
+    surname: document.getElementById('dr_surname').value.trim(),
+    gender: document.getElementById('dr_gender').value,
+    phone: document.getElementById('dr_phone').value.trim(),
+    email: document.getElementById('dr_email').value.trim(),
+    program: document.getElementById('dr_program').value,
+    intake: document.getElementById('dr_intake').value,
+    date_of_birth: document.getElementById('dr_date_of_birth').value,
+    national_id: document.getElementById('dr_national_id').value.trim(),
+    address: document.getElementById('dr_address').value.trim(),
+    district: document.getElementById('dr_district').value.trim(),
+    next_of_kin_name: document.getElementById('dr_next_of_kin_name').value.trim(),
+    next_of_kin_phone: document.getElementById('dr_next_of_kin_phone').value.trim()
+  };
+
+  postData(data).then(d => {
+    if (d.success) {
+      msgEl.innerHTML = '<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> Student registered successfully!</span>';
+      resultEl.innerHTML = '<div class="alert alert-success">' +
+        '<strong>Student Number:</strong> ' + escapeHtml(d.student_number) + '<br>' +
+        '<strong>Index Number:</strong> ' + escapeHtml(d.index_number) + '<br>' +
+        '<strong>Temp Password:</strong> <code>' + escapeHtml(d.temp_password) + '</code><br>' +
+        '<small class="text-muted">Please save these credentials. The password should be given to the student.</small>' +
+        '</div>';
+      btn.disabled = true;
+      loadApplicants();
+    } else {
+      msgEl.innerHTML = '<span class="text-danger">' + escapeHtml(d.message || 'Registration failed.') + '</span>';
+      btn.disabled = false;
+    }
+  }).catch(err => {
+    msgEl.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+    btn.disabled = false;
+  });
+}
+
+// ===================== STUDENT PROFILE =====================
+function viewStudentProfile(studentId) {
+  document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  new bootstrap.Modal(document.getElementById('studentProfileModal')).show();
+  postData({action: 'get_student_profile', student_id: studentId}).then(d => {
+    if (!d || !d.student) {
+      document.getElementById('studentProfileBody').innerHTML = '<p class="text-danger">Student not found.</p>';
+      return;
+    }
+    const s = d.student;
+    const p = d.profile || {};
+    const req = d.requirements || {total:0,completed:0,pending:0,rejected:0};
+    const fullName = s.full_name || (s.first_name + ' ' + (s.surname || ''));
+    const photo = s.photo ? '<img src="../' + escapeHtml(s.photo) + '" alt="Photo" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover">' :
+      '<div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:100px;height:100px;background:#e2e8f0;font-size:36px;color:#64748b"><i class="fas fa-user"></i></div>';
+
+    let html = '<div class="text-center">' + photo + '</div>' +
+      '<h5 class="text-center fw-bold">' + escapeHtml(fullName) + '</h5>' +
+      '<div class="row mt-3">' +
+        '<div class="col-sm-6"><div class="mb-2"><strong>Student #:</strong> ' + escapeHtml(s.student_number || '-') + '</div>' +
+        '<div class="mb-2"><strong>Index #:</strong> ' + escapeHtml(s.index_number || '-') + '</div>' +
+        '<div class="mb-2"><strong>Reg #:</strong> ' + escapeHtml(s.registration_number || '-') + '</div>' +
+        '<div class="mb-2"><strong>Program:</strong> ' + escapeHtml(s.program || '-') + '</div>' +
+        '<div class="mb-2"><strong>Intake:</strong> ' + escapeHtml(s.intake_period || '-') + ' ' + escapeHtml(s.intake_year || '') + '</div>' +
+        '<div class="mb-2"><strong>Year:</strong> ' + escapeHtml(s.year || '-') + '</div>' +
+        '<div class="mb-2"><strong>Level:</strong> ' + escapeHtml(s.level || '-') + '</div></div>' +
+        '<div class="col-sm-6"><div class="mb-2"><strong>Gender:</strong> ' + escapeHtml(s.gender || '-') + '</div>' +
+        '<div class="mb-2"><strong>Phone:</strong> ' + escapeHtml(s.phone || '-') + '</div>' +
+        '<div class="mb-2"><strong>Email:</strong> ' + escapeHtml(s.email || '-') + '</div>' +
+        '<div class="mb-2"><strong>Address:</strong> ' + escapeHtml(s.address || '-') + '</div>' +
+        '<div class="mb-2"><strong>Status:</strong> <span class="badge bg-' + (s.status === 'Active' ? 'success' : 'secondary') + '">' + escapeHtml(s.status || '-') + '</span></div>' +
+        '<div class="mb-2"><strong>Registered:</strong> ' + escapeHtml(s.created_at || '-') + '</div></div>' +
+      '</div>';
+
+    html += '<hr><h6 class="fw-bold">Fee Balance</h6>' +
+      '<div class="mb-2"><strong>Outstanding Balance:</strong> UGX ' + number_format_local(d.fee_balance) + '</div>' +
+      '<div class="mb-2"><strong>Fee Status:</strong> <span class="badge bg-' + (p.fee_status === 'paid' ? 'success' : 'warning text-dark') + '">' + escapeHtml(p.fee_status || 'unpaid') + '</span></div>';
+
+    html += '<hr><h6 class="fw-bold">Requirements Status</h6>' +
+      '<div class="row text-center">' +
+        '<div class="col"><div class="fs-4 fw-bold text-primary">' + req.total + '</div><div class="small text-muted">Total</div></div>' +
+        '<div class="col"><div class="fs-4 fw-bold text-success">' + req.completed + '</div><div class="small text-muted">Completed</div></div>' +
+        '<div class="col"><div class="fs-4 fw-bold text-warning">' + req.pending + '</div><div class="small text-muted">Pending</div></div>' +
+        '<div class="col"><div class="fs-4 fw-bold text-danger">' + req.rejected + '</div><div class="small text-muted">Rejected</div></div>' +
+      '</div>';
+
+    document.getElementById('studentProfileBody').innerHTML = html;
+  });
+}
+
+function number_format_local(num) {
+  return parseFloat(num || 0).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+function printStudentProfile() {
+  const content = document.getElementById('studentProfileBody').innerHTML;
+  const win = window.open('', '_blank', 'width=800,height=600');
+  win.document.write('<html><head><title>Student Profile</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' +
+    '<h3 class="text-center mb-4">Student Profile</h3>' + content +
+    '<script>setTimeout(function(){window.print();},500);<\/script></body></html>');
+  win.document.close();
+}
+
+function printStudentFromList(studentId) {
+  postData({action: 'get_student_profile', student_id: studentId}).then(d => {
+    if (!d || !d.student) { showToast('Student not found.', 'danger'); return; }
+    const s = d.student;
+    const p = d.profile || {};
+    const req = d.requirements || {total:0,completed:0,pending:0,rejected:0};
+    const fullName = s.full_name || (s.first_name + ' ' + (s.surname || ''));
+    let html = '<h3 class="text-center mb-4">Student Profile</h3>' +
+      '<h5 class="text-center">' + escapeHtml(fullName) + '</h5>' +
+      '<p class="text-center text-muted">' + escapeHtml(s.student_number || '') + ' | ' + escapeHtml(s.registration_number || '') + '</p>' +
+      '<table class="table table-bordered"><tbody>' +
+      '<tr><th width="30%">Program</th><td>' + escapeHtml(s.program || '-') + '</td></tr>' +
+      '<tr><th>Intake</th><td>' + escapeHtml(s.intake_period || '-') + ' ' + escapeHtml(s.intake_year || '') + '</td></tr>' +
+      '<tr><th>Year / Level</th><td>' + escapeHtml(s.year || '-') + ' / ' + escapeHtml(s.level || '-') + '</td></tr>' +
+      '<tr><th>Gender</th><td>' + escapeHtml(s.gender || '-') + '</td></tr>' +
+      '<tr><th>Phone</th><td>' + escapeHtml(s.phone || '-') + '</td></tr>' +
+      '<tr><th>Email</th><td>' + escapeHtml(s.email || '-') + '</td></tr>' +
+      '<tr><th>Address</th><td>' + escapeHtml(s.address || '-') + '</td></tr>' +
+      '<tr><th>Status</th><td>' + escapeHtml(s.status || '-') + '</td></tr>' +
+      '<tr><th>Fee Balance</th><td>UGX ' + number_format_local(d.fee_balance) + '</td></tr>' +
+      '<tr><th>Requirements</th><td>' + req.completed + '/' + req.total + ' completed</td></tr>' +
+      '</tbody></table>';
+    const win = window.open('', '_blank', 'width=800,height=600');
+    win.document.write('<html><head><title>Student Profile - ' + escapeHtml(fullName) + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:30px;font-family:Arial,sans-serif}</style></head><body>' + html + '<script>setTimeout(function(){window.print();},500);<\/script></body></html>');
+    win.document.close();
+  });
+}
+
+function viewStudentRequirements(studentId, studentName) {
+  postData({action: 'get_student_requirements', student_id: studentId}).then(rows => {
+    let bodyHtml = '<h6 class="fw-bold">' + escapeHtml(studentName || 'Student') + ' - Requirements</h6>';
+    if (!rows || rows.length === 0) {
+      bodyHtml += '<p class="text-muted">No requirements found for this student.</p>';
+    } else {
+      bodyHtml += '<table class="table table-sm table-hover"><thead><tr><th>Type</th><th>Document</th><th>Status</th><th>Submitted</th><th>Verified</th></tr></thead><tbody>';
+      rows.forEach(r => {
+        const sBadge = getReqStatusBadge(r.status);
+        bodyHtml += '<tr>' +
+          '<td>' + escapeHtml(r.requirement_type) + '</td>' +
+          '<td>' + escapeHtml(r.document_name || '-') + '</td>' +
+          '<td>' + sBadge + '</td>' +
+          '<td class="small">' + (r.submitted_date || '-') + '</td>' +
+          '<td class="small">' + (r.verified_date || '-') + '</td>' +
+          '</tr>';
+      });
+      bodyHtml += '</tbody></table>';
+    }
+    document.getElementById('viewDocBody').innerHTML = bodyHtml;
+    document.querySelector('#viewDocModal .modal-title').innerHTML = '<i class="fas fa-clipboard-list"></i> Student Requirements';
+    new bootstrap.Modal(document.getElementById('viewDocModal')).show();
+  });
 }
 
 // ===================== INIT =====================
