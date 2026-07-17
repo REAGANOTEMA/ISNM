@@ -920,7 +920,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
         $ref = $_POST['sub_ref'] ?? '';
-        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request approved.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request approved.';
+            $reqInfo = $conn->prepare("SELECT requested_by, requester_name, department FROM store_requests WHERE request_number=?");
+            if ($reqInfo) { $reqInfo->bind_param('s', $ref); $reqInfo->execute(); $rRow = $reqInfo->get_result()->fetch_assoc(); $reqInfo->close();
+                if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Store Request Approved", "Your requisition $ref has been approved by the Director General. You may now collect your items.", 'store-requisition.php?tab=my_requests', 'success', 'fas fa-check-circle'); }
+            }
+        } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'transport_trip') {
         $subId = (int)($_POST['sub_id'] ?? 0);
@@ -945,7 +950,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     }
     if ($action === 'reject_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
         $ref = $_POST['sub_ref'] ?? '';
-        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='rejected',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request rejected.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='rejected',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); if ($stmt->execute()) { $ok = true; $msg = 'Store request rejected.';
+            $reqInfo = $conn->prepare("SELECT requested_by, requester_name FROM store_requests WHERE request_number=?");
+            if ($reqInfo) { $reqInfo->bind_param('s', $ref); $reqInfo->execute(); $rRow = $reqInfo->get_result()->fetch_assoc(); $reqInfo->close();
+                if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Store Request Rejected", "Your requisition $ref has been rejected by the Director General. Please contact the office for details.", 'store-requisition.php?tab=my_requests', 'warning', 'fas fa-times-circle'); }
+            }
+        } else { $msg = 'Database error.'; } $stmt->close(); } }
     }
 
     if ($action === 'resolve_alert') {

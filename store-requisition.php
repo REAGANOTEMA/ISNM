@@ -71,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         }
                         $ins->close();
                         $staffConn->commit();
+                        require_once __DIR__ . '/includes/notification_helper.php';
+                        $notifMsg = "$userName from $department requested items. Urgency: $urgency.";
+                        createNotification("New Store Requisition: $reqNum", $notifMsg, 'dashboards/storekeeper.php', 'info', 'fas fa-clipboard-list');
                         $msg = $submitDg
                             ? ['type' => 'success', 'text' => "Requisition <strong>$reqNum</strong> submitted for <strong>DG Approval</strong>!"]
                             : ['type' => 'success', 'text' => "Requisition <strong>$reqNum</strong> submitted! The storekeeper will process it."];

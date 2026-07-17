@@ -135,7 +135,12 @@ $autoMigrate = [
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_programs` (id INT AUTO_INCREMENT PRIMARY KEY, program_code VARCHAR(50) NOT NULL UNIQUE, program_name VARCHAR(300) NOT NULL, program_type VARCHAR(100) DEFAULT '', department VARCHAR(200) DEFAULT '', duration_years INT DEFAULT 3, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_course_catalog` (id INT AUTO_INCREMENT PRIMARY KEY, course_code VARCHAR(50) NOT NULL, course_title VARCHAR(300) NOT NULL, credits DECIMAL(5,2) DEFAULT 0.00, program_code VARCHAR(50) DEFAULT '', year_of_study INT DEFAULT 1, semester VARCHAR(100) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_program (program_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
     "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`examination_records` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) NOT NULL, exam_type VARCHAR(50) DEFAULT 'Final', marks_obtained DECIMAL(8,2) DEFAULT 0.00, total_marks DECIMAL(8,2) DEFAULT 100.00, grade VARCHAR(5) DEFAULT '', continuous_assessment_marks DECIMAL(8,2) DEFAULT 0.00, final_exam_marks DECIMAL(8,2) DEFAULT 0.00, grade_status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_student_course_exam (student_id, course_code, exam_type)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grading_approval_workflow` (id INT AUTO_INCREMENT PRIMARY KEY, workflow_number INT NOT NULL UNIQUE, examination_record_id INT DEFAULT 0, hod_status VARCHAR(50) DEFAULT 'Pending', registrar_status VARCHAR(50) DEFAULT 'Pending', principal_status VARCHAR(50) DEFAULT 'Pending', hod_approved_by INT DEFAULT 0, registrar_approved_by INT DEFAULT 0, principal_approved_by INT DEFAULT 0, current_stage VARCHAR(100) DEFAULT 'HOD', published_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_record (examination_record_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grading_approval_workflow` (id INT AUTO_INCREMENT PRIMARY KEY, workflow_number INT NOT NULL UNIQUE, examination_record_id INT DEFAULT 0, hod_status VARCHAR(50) DEFAULT 'Pending', registrar_status VARCHAR(50) DEFAULT 'Pending', principal_status VARCHAR(50) DEFAULT 'Pending', hod_approved_by INT DEFAULT 0, registrar_approved_by INT DEFAULT 0, principal_approved_by INT DEFAULT 0, current_stage VARCHAR(100) DEFAULT 'HOD', published_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_record (examination_record_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`registrar_settings` (id INT AUTO_INCREMENT PRIMARY KEY, setting_key VARCHAR(100) UNIQUE NOT NULL, setting_value TEXT, description VARCHAR(500) DEFAULT NULL, updated_by INT DEFAULT 0, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`generated_documents` (id INT AUTO_INCREMENT PRIMARY KEY, document_type VARCHAR(50) NOT NULL, student_id INT NOT NULL, document_title VARCHAR(300) DEFAULT '', document_content LONGTEXT, document_number VARCHAR(100) DEFAULT NULL, generated_by INT DEFAULT 0, generation_date DATETIME DEFAULT NULL, status VARCHAR(50) DEFAULT 'Active', is_archived TINYINT(1) DEFAULT 0, is_downloadable TINYINT(1) DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_type (document_type)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`course_registrations` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) NOT NULL, academic_year VARCHAR(20) DEFAULT NULL, semester VARCHAR(100) DEFAULT NULL, registration_date DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Registered', registered_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_course (course_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`registrar_transcripts` (id INT AUTO_INCREMENT PRIMARY KEY, transcript_number VARCHAR(50) UNIQUE, student_id INT NOT NULL, academic_year VARCHAR(20) DEFAULT NULL, program VARCHAR(300) DEFAULT '', transcript_status VARCHAR(50) DEFAULT 'Draft', request_date DATETIME DEFAULT NULL, generated_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_archived TINYINT(1) DEFAULT 0, is_downloadable TINYINT(1) DEFAULT 0, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`registrar_certificates` (id INT AUTO_INCREMENT PRIMARY KEY, certificate_number VARCHAR(50) UNIQUE, student_id INT NOT NULL, full_name VARCHAR(300) DEFAULT '', program VARCHAR(300) DEFAULT '', certificate_type VARCHAR(100) DEFAULT 'Certificate', status VARCHAR(50) DEFAULT 'Draft', generated_by INT DEFAULT 0, generated_date DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_archived TINYINT(1) DEFAULT 0, is_downloadable TINYINT(1) DEFAULT 0, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 ];
 if ($staff) {
     foreach ($autoMigrate as $ddl) {
@@ -168,6 +173,10 @@ if ($staff) {
     if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
         $staff->query("INSERT IGNORE INTO transcript_templates (template_name, template_html, orientation, is_default, status) VALUES ('Standard Transcript','<h3 class=\"text-center\">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h3><p class=\"text-center\">ACADEMIC TRANSCRIPT</p>','portrait',1,'Active')");
         $staff->query("INSERT IGNORE INTO certificate_templates (template_name, template_html, orientation, is_default, status) VALUES ('Standard Certificate','<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h4>CERTIFICATE</h4>','landscape',1,'Active')");
+    }
+    $r = $staff->query("SELECT COUNT(*) c FROM registrar_settings");
+    if ($r && ($row = $r->fetch_assoc()) && $row['c'] == 0) {
+        $staff->query("INSERT IGNORE INTO registrar_settings (setting_key, setting_value, description) VALUES ('institution_name','Iganga School of Nursing & Midwifery','Institution name for documents'),('institution_motto','Excellence in Nursing Education','Institution motto'),('transcript_footer','This is a computer-generated document','Transcript footer text'),('certificate_footer','This certificate is awarded upon successful completion','Certificate footer text')");
     }
 }
 
@@ -252,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             $intake_year = date('Y');
             $intake_period = date('n') <= 6 ? 'January' : 'July';
             $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, surname, program, level, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)");
-            if ($stmt) { $stmt->bind_param('sssssisssssss', $studentNum, $fullName, $fn, $ln, $program, $level, $ph, $em, $intake_year, $intake_period, $password_hash);
+            if ($stmt) { $stmt->bind_param('sssssisssss', $studentNum, $fullName, $fn, $ln, $program, $level, $ph, $em, $intake_year, $intake_period, $password_hash);
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
@@ -399,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         $gradYear = trim($_POST['graduation_year'] ?? date('Y')); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid && $pid) {
             $stmt = $staff->prepare("INSERT INTO graduation_candidates (student_id, program_id, academic_year, graduation_year, status, remarks, submitted_by) VALUES (?, ?, ?, ?, 'Pending', ?, ?) ON DUPLICATE KEY UPDATE status='Pending', remarks=VALUES(remarks), submitted_by=VALUES(submitted_by)");
-            if ($stmt) { $stmt->bind_param('iissis', $sid, $pid, $gradYear, $gradYear, $remarks, $user_id);
+            if ($stmt) { $stmt->bind_param('iisssi', $sid, $pid, $gradYear, $gradYear, $remarks, $user_id);
                 if ($stmt->execute()) { $_SESSION['success'] = 'Student added to graduation candidates.'; logAudit($staff, $user_id, 'CREATE', 'graduation_candidate', $staff->insert_id, "Added student $sid to graduation candidates"); }
                 else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID and program required.';
@@ -438,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         $dur = intval($_POST['duration_years'] ?? 0); $status = trim($_POST['status'] ?? 'Active');
         if ($id && $code && $name) {
             $stmt = $staff->prepare("UPDATE academic_programs SET program_code=?, program_name=?, program_type=?, department=?, duration_years=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssii', $code, $name, $type, $dept, $dur, $status, $id);
+            if ($stmt) { $stmt->bind_param('ssssisi', $code, $name, $type, $dept, $dur, $status, $id);
                 if ($stmt->execute()) { $_SESSION['success'] = "Program $code updated."; logAudit($staff, $user_id, 'UPDATE', 'program', $id, "Updated program $code"); }
                 else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         }
@@ -549,6 +558,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("UPDATE grading_approval_workflow gw JOIN examination_records er ON gw.examination_record_id=er.id SET gw.published_at=NOW() WHERE er.grade_status='Verified' AND gw.published_at IS NULL");
                     if ($stmt2) { if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
+                    $stuConn = getStudentsConnection();
+                    if ($stuConn) {
+                        $nStmt = $staff->prepare("SELECT DISTINCT er.student_id, s.full_name FROM examination_records er LEFT JOIN igangaschool_students.students s ON er.student_id=s.id WHERE er.academic_year=? AND er.semester=? AND er.grade_status='Verified'");
+                        if ($nStmt) { $nStmt->bind_param('ss', $ay, $sem); $nStmt->execute(); $nRes = $nStmt->get_result();
+                            while ($sRow = $nRes->fetch_assoc()) { $sid=(int)$sRow['student_id']; $sName=$sRow['full_name'] ?? 'Student';
+                                $notifStmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?, ?, ?, 'Academic', 'High', 0)");
+                                if ($notifStmt) { $notifTitle="Results Published"; $notifMsg="Dear $sName, your exam results for $ay $sem have been published. Please check your portal."; $notifStmt->bind_param('iss', $sid, $notifTitle, $notifMsg); $notifStmt->execute(); $notifStmt->close(); }
+                            }
+                            $nRes->close(); $nStmt->close();
+                        }
+                    }
                     $_SESSION['success'] = "Results published for $ay $sem."; logAudit($staff, $user_id, 'PUBLISH', 'result', 0, "Published results for $ay $sem");
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         }
@@ -627,18 +647,22 @@ if ($ajaxAction === 'get_student_gpa') {
     header('Content-Type: application/json');
     $sid = $ajaxSid;
     if (!$staff) { echo json_encode(['gpa' => 0, 'total_credits' => 0, 'count' => 0]); exit; }
-    $stmt = $staff->prepare("SELECT marks_obtained, total_marks FROM examination_records WHERE student_id = ? AND grade_status = 'Verified'");
+    $stmt = $staff->prepare("SELECT er.marks_obtained, er.total_marks, COALESCE(acc.credits, 0) as credits FROM examination_records er LEFT JOIN academic_course_catalog acc ON er.course_code = acc.course_code WHERE er.student_id = ? AND er.grade_status = 'Verified'");
     if (!$stmt) { echo json_encode(['error' => $staff->error]); exit; }
     $stmt->bind_param('i', $sid);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $r = $stmt->get_result();
-    $totalGp = 0; $count = 0; $totalCredits = 0;
+    $totalGp = 0; $count = 0; $totalCredits = 0; $weightedGp = 0;
     while ($row = $r->fetch_assoc()) {
         $gp = calculateGPA($row['marks_obtained'], $row['total_marks']);
-        $totalGp += $gp; $count++;
+        $credits = (float)$row['credits'];
+        $totalGp += $gp;
+        $totalCredits += $credits;
+        $weightedGp += $gp * $credits;
+        $count++;
     }
     $stmt->close();
-    $gpa = $count > 0 ? round($totalGp / $count, 2) : 0;
+    $gpa = $totalCredits > 0 ? round($weightedGp / $totalCredits, 2) : ($count > 0 ? round($totalGp / $count, 2) : 0);
     echo json_encode(['gpa' => $gpa, 'total_credits' => $totalCredits, 'count' => $count]);
     exit;
 }
@@ -730,12 +754,23 @@ if ($ajaxAction === 'mark_downloadable') {
     header('Content-Type: application/json');
     $type = $_GET['doc_type'] ?? ''; $did = intval($_GET['doc_id'] ?? 0);
     if (!$staff || !$did) { echo json_encode(['success' => false]); exit; }
-    $table = $type === 'certificate' ? 'certificates' : 'transcripts';
-    $stmt = $staff->prepare("UPDATE $table SET is_downloadable = 1 WHERE id = ?");
-    if ($stmt) { $stmt->bind_param('i', $did); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
+    $table = $type === 'certificate' ? 'certificates' : ($type === 'transcript' ? 'transcripts' : null);
+    if (!$table) { echo json_encode(['success' => false, 'error' => 'Invalid document type']); exit; }
+    $stmt = $staff->prepare("UPDATE {$table} SET is_downloadable = 1 WHERE id = ?");
+    if ($stmt) { $stmt->bind_param('i', $did); if ($stmt->execute()) {
+        $sStmt = $staff->prepare("SELECT student_id FROM {$table} WHERE id = ?");
+        if ($sStmt) { $sStmt->bind_param('i', $did); $sStmt->execute(); $sRes = $sStmt->get_result(); $sRow = $sRes->fetch_assoc(); $sStmt->close();
+            if ($sRow && $sRow['student_id']) {
+                $stuConn = getStudentsConnection();
+                if ($stuConn) { $docLabel = ucfirst($type); $notifStmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?, ?, ?, 'Document', 'High', 0)");
+                    if ($notifStmt) { $docSid=(int)$sRow['student_id']; $notifTitle="$docLabel Ready for Download"; $notifMsg="Your $docLabel is now available for download. Please visit the Student Portal to access it."; $notifStmt->bind_param('iss', $docSid, $notifTitle, $notifMsg); $notifStmt->execute(); $notifStmt->close(); }
+                }
+            }
+        }
         echo json_encode(['success' => true]);
         logAudit($staff, $user_id, 'MARK_DOWNLOADABLE', $type, $did, "Marked $type $did as downloadable");
-    } else echo json_encode(['success' => false, 'error' => $staff->error]);
+    } else { echo json_encode(['success' => false, 'error' => $stmt->error]); } $stmt->close(); }
+    else echo json_encode(['success' => false, 'error' => $staff->error]);
     exit;
 }
 
@@ -743,8 +778,9 @@ if ($ajaxAction === 'archive_document') {
     header('Content-Type: application/json');
     $type = $_GET['doc_type'] ?? ''; $did = intval($_GET['doc_id'] ?? 0);
     if (!$staff || !$did) { echo json_encode(['success' => false]); exit; }
-    $table = $type === 'certificate' ? 'certificates' : 'transcripts';
-    $stmt = $staff->prepare("UPDATE $table SET is_archived = 1 WHERE id = ?");
+    $table = $type === 'certificate' ? 'certificates' : ($type === 'transcript' ? 'transcripts' : null);
+    if (!$table) { echo json_encode(['success' => false, 'error' => 'Invalid document type']); exit; }
+    $stmt = $staff->prepare("UPDATE {$table} SET is_archived = 1 WHERE id = ?");
     if ($stmt) { $stmt->bind_param('i', $did); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         echo json_encode(['success' => true]);
         logAudit($staff, $user_id, 'ARCHIVE', $type, $did, "Archived $type $did");
@@ -1220,7 +1256,7 @@ function archiveDoc(type, id) {
         });
 }
 
-function escJs(str) { if (!str) return ''; return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function escJs(str) { if (!str) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 /* â”€â”€ Auto-inject CSRF token into all POST forms â”€â”€ */
 (function() {
@@ -1394,7 +1430,7 @@ document.addEventListener('click', function(e) {
               <datalist id="progCodeList"><?php foreach ($programs as $p): ?><option value="<?= htmlspecialchars($p['program_code']) ?>"><?php endforeach; ?></datalist>
             </div>
             <div class="col-md-2"><label class="form-label">Year</label><input type="number" name="year_of_study" class="form-control" value="1" min="1" max="8"></div>
-            <div class="col-md-2"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>First</option><option>Second</option></select></div>
+            <div class="col-md-2"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>First Semester</option><option>Second Semester</option></select></div>
           </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-reg"><i class="fas fa-save me-1"></i>Add</button></div>

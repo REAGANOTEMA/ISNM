@@ -69,6 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $reqId = (int)($_POST['request_id'] ?? 0);
         $stmt = $staffConn->prepare("UPDATE store_requests SET status='fulfilled', fulfilled_by=?, fulfilled_at=NOW(), updated_at=NOW() WHERE id=?");
         $stmt->bind_param("ii", $userId, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
+        $rStmt = $staffConn->prepare("SELECT requested_by, request_number FROM store_requests WHERE id=?");
+        if ($rStmt) { $rStmt->bind_param("i", $reqId); $rStmt->execute(); $rRow = $rStmt->get_result()->fetch_assoc(); $rStmt->close();
+            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Fulfilled: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been fulfilled by the storekeeper. Please collect your items.", 'store-requisition.php?tab=my_requests', 'success', 'fas fa-box-open'); }
+        }
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request marked as fulfilled.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -78,6 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $reason = trim($_POST['rejection_reason'] ?? 'No reason');
         $stmt = $staffConn->prepare("UPDATE store_requests SET status='rejected', rejection_reason=?, updated_at=NOW() WHERE id=?");
         $stmt->bind_param("si", $reason, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
+        $rStmt = $staffConn->prepare("SELECT requested_by, request_number FROM store_requests WHERE id=?");
+        if ($rStmt) { $rStmt->bind_param("i", $reqId); $rStmt->execute(); $rRow = $rStmt->get_result()->fetch_assoc(); $rStmt->close();
+            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Rejected: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been rejected. Reason: $reason", 'store-requisition.php?tab=my_requests', 'warning', 'fas fa-times-circle'); }
+        }
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request rejected.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -203,7 +211,7 @@ if ($staffConn) {
     if ($r) while ($row = $r->fetch_assoc()) $lowStock[] = $row;
     $r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.expiry_date IS NOT NULL AND si.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 90 DAY) ORDER BY si.expiry_date ASC LIMIT 20");
     if ($r) while ($row = $r->fetch_assoc()) $expiringItems[] = $row;
-    $r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','pending_approval') ORDER BY FIELD(sr.status,'pending','pending_approval'), FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
+    $r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','pending_approval','approved') ORDER BY FIELD(sr.status,'approved','pending','pending_approval'), FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
     if ($r) while ($row = $r->fetch_assoc()) $pendingReqs[] = $row;
     $r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('fulfilled','rejected') ORDER BY sr.updated_at DESC LIMIT 10");
     if ($r) while ($row = $r->fetch_assoc()) $fulfilledReqs[] = $row;
@@ -710,6 +718,15 @@ case 'requests': ?>
                 <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                 <button type="submit" class="sk-btn sk-btn-warning sk-btn-sm"><i class="fas fa-crown me-1"></i> Submit for DG Approval</button>
             </form>
+            <form method="POST" style="display:inline" onsubmit="return confirm('Mark as fulfilled?')">
+                <input type="hidden" name="action" value="fulfill_request">
+                <?php csrfField(); ?>
+                <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
+                <button type="submit" class="sk-btn sk-btn-success sk-btn-sm"><i class="fas fa-check me-1"></i> Mark Fulfilled</button>
+            </form>
+            <button class="sk-btn sk-btn-danger sk-btn-sm" onclick="openReject(<?= $req['id'] ?>)"><i class="fas fa-times me-1"></i> Reject</button>
+            <?php elseif ($req['status'] === 'approved'): ?>
+            <span class="sk-badge sk-badge-success" style="padding:6px 12px;font-size:.82rem;margin-right:6px"><i class="fas fa-check-circle me-1"></i> DG Approved</span>
             <form method="POST" style="display:inline" onsubmit="return confirm('Mark as fulfilled?')">
                 <input type="hidden" name="action" value="fulfill_request">
                 <?php csrfField(); ?>

@@ -18,6 +18,8 @@ if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
 
 $action = $_GET['action'] ?? '';
 
+$userId = (int)($_SESSION['user_id'] ?? 0);
+
 $students_conn = getStudentsConnection();
 $staff_conn = getStaffConnection();
 
@@ -213,7 +215,7 @@ if ($action === 'generate_transcript') {
     $staff_conn->begin_transaction();
     try {
         $title = "Academic Transcript - ".($student['full_name']??'');
-        $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+        $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, $userId, ?, ?, NOW())");
         $stmt4->bind_param("iss", $sid, $title, $html);
         if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
         $doc_id = $staff_conn->insert_id;
@@ -222,7 +224,7 @@ if ($action === 'generate_transcript') {
         // Also update registrar_transcripts
         $course_val = $student['program']??'';
         $academic_year = date('Y');
-        $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
+        $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), $userId)");
         $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
         if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
         $stmt5->close();
@@ -297,7 +299,7 @@ if ($action === 'generate_certificate') {
     $staff_conn->begin_transaction();
     try {
         $title = "Certificate of $cert_type - ".($student['full_name']??'');
-        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, $userId, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title, $html);
         if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $doc_id = $staff_conn->insert_id;
@@ -306,7 +308,7 @@ if ($action === 'generate_certificate') {
         // Also update registrar_certificates
         $full_name_val = $student['full_name']??'';
         $course_val = $student['program']??'';
-        $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
+        $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', $userId, NOW())");
         $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
         if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
         $stmt4->close();
@@ -392,7 +394,7 @@ if ($action === 'auto_generate_all') {
         $tnum = 'T'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
         $t_html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
         $title_t = "Academic Transcript - ".($student['full_name']??'');
-        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+        $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, $userId, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title_t, $t_html);
         if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
         $t_doc_id = $staff_conn->insert_id;
@@ -417,7 +419,7 @@ if ($action === 'auto_generate_all') {
         $cnum = 'CERT'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
         $c_html = generateProfessionalCertificate($student, $settings, 'Diploma', $cnum, $class_of_award);
         $title_c = "Certificate - ".($student['full_name']??'');
-        $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+        $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, $userId, ?, ?, NOW())");
         $stmt5->bind_param("iss", $sid, $title_c, $c_html);
         if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
         $c_doc_id = $staff_conn->insert_id;

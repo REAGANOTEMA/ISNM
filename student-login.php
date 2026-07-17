@@ -372,20 +372,40 @@ if ($login_success) { unset($_SESSION['success']); }
   .alert-danger { background: #ffebee; color: #c62828; border-left: 4px solid #ef5350; }
   .alert-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #66bb6a; }
 
+  /* Mobile: hide organogram button, full-screen login */
   @media(max-width:768px){
+    body { padding: 10px; align-items: flex-start; padding-top: 16px; }
+    .text-center.mb-3 { display: none !important; }
+    .login-wrapper { max-width: 100%; }
     .login-card { border-radius: 20px; }
-    .login-header { padding: 36px 24px 32px; }
-    .login-body { padding: 24px 20px; }
-    .login-header h1 { font-size: 1.5rem; }
+    .login-header { padding: 32px 24px 28px; }
+    .login-header h1 { font-size: 1.4rem; }
+    .login-header p { font-size: 0.82rem; }
+    .login-body { padding: 22px 20px 20px; }
+    .logo-wrap { width: 85px; height: 85px; }
+    .logo-wrap img { width: 68px; height: 68px; }
+    .form-control { font-size: 16px !important; padding: 12px 14px 12px 44px !important; min-height: 46px; }
+    .input-group-text { width: 44px; font-size: 1rem; }
+    .btn-login { padding: 14px 20px; font-size: 15px; min-height: 48px; }
+    .form-label { font-size: 0.88rem; }
+    .info-block { padding: 14px 16px; font-size: 0.82rem; }
+    .link-row { flex-direction: column; gap: 8px; }
+    .link-row .btn-3d { width: 100%; justify-content: center; min-height: 44px; font-size: 0.85rem; }
   }
   
   @media(max-width:480px){
+    body { padding: 6px; padding-top: 10px; }
     .login-card { border-radius: 16px; }
-    .login-header { padding: 30px 18px 26px; }
-    .login-body { padding: 20px 16px; }
-    .logo-wrap { width: 85px; height: 85px; }
-    .logo-wrap img { width: 68px; height: 68px; }
-    .link-row { flex-direction: column; gap: 8px; }
+    .login-header { padding: 26px 16px 22px; }
+    .login-header h1 { font-size: 1.25rem; }
+    .login-header p { font-size: 0.78rem; }
+    .login-body { padding: 18px 14px 16px; }
+    .logo-wrap { width: 72px; height: 72px; }
+    .logo-wrap img { width: 58px; height: 58px; }
+    .form-control { font-size: 16px !important; padding: 11px 12px 11px 42px !important; min-height: 44px; }
+    .btn-login { padding: 13px 18px; font-size: 14px; min-height: 46px; }
+    .hint-pill { font-size: 0.72rem; padding: 4px 12px; }
+    .link-row .btn-3d { font-size: 0.82rem; min-height: 42px; }
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -797,7 +817,7 @@ if ($login_success) { unset($_SESSION['success']); }
 
     <div class="link-row">
         <a href="student-forgot-password.php" class="btn-3d btn-blue btn-3d-sm"><i class="fas fa-key"></i> Forgot Password</a>
-        <a href="organogram.php" class="btn-3d btn-green btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
+        <a href="staff-login.php" class="btn-3d btn-green btn-3d-sm"><i class="fas fa-arrow-left"></i> Staff login</a>
         <a href="index.php" class="btn-3d btn-chocolate btn-3d-sm"><i class="fas fa-home"></i> Homepage</a>
     </div>
     </div>

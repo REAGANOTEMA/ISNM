@@ -112,6 +112,9 @@ switch ($action) {
             $ins->close();
 
             $staffConn->commit();
+            require_once __DIR__ . '/../includes/notification_helper.php';
+            $notifMsg = "New requisition $reqNum submitted. Urgency: $urgency.";
+            createNotification("New Store Requisition: $reqNum", $notifMsg, 'dashboards/storekeeper.php', 'info', 'fas fa-clipboard-list');
             $statusMsg = $submitDg
                 ? "Requisition <strong>$reqNum</strong> submitted for <strong>Director General Approval</strong>!"
                 : "Requisition <strong>$reqNum</strong> submitted successfully! The storekeeper will process it.";
