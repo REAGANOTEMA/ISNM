@@ -555,6 +555,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($action === 'get_clearance_students') {
+        $where = "1=1";
+        $params = [];
+        $types = '';
+        $search = trim($_POST['search'] ?? '');
+        $filterField = trim($_POST['filter_field'] ?? '');
+        if (strlen($search) >= 2) {
+            if ($filterField === 'name') { $where .= " AND sr.student_name LIKE ?"; $params[] = "%$search%"; $types .= 's'; }
+            elseif ($filterField === 'admission') { $where .= " AND sr.registration_number LIKE ?"; $params[] = "%$search%"; $types .= 's'; }
+            elseif ($filterField === 'phone') { $where .= " AND sr.registration_number LIKE ? OR sr.student_name LIKE ?"; $params[] = "%$search%"; $params[] = "%$search%"; $types .= 'ss'; }
+            else { $where .= " AND (sr.student_name LIKE ? OR sr.registration_number LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; $types .= 'ss'; }
+        }
+        $fStatus = trim($_POST['filter_status'] ?? '');
+        if ($fStatus && $fStatus !== 'all') { $where .= " AND sr.status = ?"; $params[] = $fStatus; $types .= 's'; }
+        $sql = "SELECT sr.* FROM student_requirements sr WHERE $where ORDER BY sr.student_name, sr.created_at DESC LIMIT 500";
+        $s = $conn->prepare($sql);
+        $rows = [];
+        if ($s) {
+            if ($types) $s->bind_param($types, ...$params);
+            $s->execute();
+            $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+            $s->close();
+        }
+        echo json_encode(['success' => true, 'students' => $rows]);
+        exit;
+    }
+    if ($action === 'toggle_clearance_item') {
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        $reqType = trim($_POST['requirement_type'] ?? '');
+        $newStatus = trim($_POST['new_status'] ?? 'verified');
+        if (!$studentId || !$reqType) {
+            echo json_encode(['success' => false, 'message' => 'Student ID and requirement type required.']);
+            exit;
+        }
+        // Find or create the requirement record for this student/type
+        $stmt = $conn->prepare("SELECT id, status FROM student_requirements WHERE student_id=? AND requirement_type=? LIMIT 1");
+        $stmt->bind_param("is", $studentId, $reqType);
+        $stmt->execute();
+        $existing = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($existing) {
+            $stmt = $conn->prepare("UPDATE student_requirements SET status=?, verified_date=CASE WHEN ?='verified' THEN CURDATE() ELSE verified_date END, verified_by=?, updated_at=NOW() WHERE id=?");
+            $stmt->bind_param("ssii", $newStatus, $newStatus, $userId, $existing['id']);
+            $stmt->execute();
+            $stmt->close();
+        } else {
+            $stmt = $conn->prepare("INSERT INTO student_requirements (student_id, student_name, requirement_type, status, verified_date, verified_by) VALUES (?, '', ?, ?, CASE WHEN ?='verified' THEN CURDATE() ELSE NULL END, ?)");
+            $sName = '';
+            $stmt->bind_param("isssi", $studentId, $reqType, $newStatus, $newStatus, $userId);
+            $stmt->execute();
+            $stmt->close();
+        }
+        logAdmission($conn, 0, $userId, "Clearance Updated", "$reqType set to $newStatus for student #$studentId");
+        echo json_encode(['success' => true, 'message' => "Requirement $newStatus"]);
+        exit;
+    }
+    if ($action === 'bulk_clearance') {
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        $items = $_POST['items'] ?? [];
+        if (!$studentId || empty($items)) {
+            echo json_encode(['success' => false, 'message' => 'No items to clear.']);
+            exit;
+        }
+        foreach ($items as $reqType) {
+            $reqType = trim($reqType);
+            if (!$reqType) continue;
+            $stmt = $conn->prepare("SELECT id FROM student_requirements WHERE student_id=? AND requirement_type=? LIMIT 1");
+            $stmt->bind_param("is", $studentId, $reqType);
+            $stmt->execute();
+            $exists = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($exists) {
+                $stmt = $conn->prepare("UPDATE student_requirements SET status='verified', verified_date=CURDATE(), verified_by=? WHERE id=?");
+                $stmt->bind_param("ii", $userId, $exists['id']);
+                $stmt->execute();
+                $stmt->close();
+            } else {
+                $stmt = $conn->prepare("INSERT INTO student_requirements (student_id, student_name, requirement_type, status, verified_date, verified_by) VALUES (?, '', ?, 'verified', CURDATE(), ?)");
+                $stmt->bind_param("isi", $studentId, $reqType, $userId);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+        logAdmission($conn, 0, $userId, "Bulk Clearance", count($items) . " items cleared for student #$studentId");
+        echo json_encode(['success' => true, 'message' => count($items) . " requirements cleared"]);
+        exit;
+    }
+    if ($action === 'get_clearance_detail') {
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        $rows = [];
+        if ($studentId) {
+            $s = $conn->prepare("SELECT * FROM student_requirements WHERE student_id=? ORDER BY created_at DESC");
+            if ($s) { $s->bind_param("i", $studentId); $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+        }
+        $studentName = '';
+        if (!empty($rows)) { $studentName = $rows[0]['student_name'] ?? ''; }
+        echo json_encode(['success' => true, 'requirements' => $rows, 'student_name' => $studentName]);
+        exit;
+    }
+
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
     exit;
 }
@@ -688,6 +788,7 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
 <nav class="da-tabs">
   <a href="?tab=applications" class="<?= $tab === 'applications' ? 'active' : '' ?>"><i class="fas fa-file-alt"></i> Applications</a>
   <a href="?tab=requirements" class="<?= $tab === 'requirements' ? 'active' : '' ?>"><i class="fas fa-clipboard-check"></i> Requirements</a>
+  <a href="?tab=clearance" class="<?= $tab === 'clearance' ? 'active' : '' ?>"><i class="fas fa-check-double"></i> Requirements Clearance</a>
   <a href="?tab=enrolled" class="<?= $tab === 'enrolled' ? 'active' : '' ?>"><i class="fas fa-user-graduate"></i> Enrolled Students</a>
 </nav>
 
@@ -792,6 +893,66 @@ body{background:#f1f5f9;font-family:'Inter',system-ui,-apple-system,sans-serif}
   </div>
 </div>
 <?php endif; ?>
+
+<!-- ======================== REQUIREMENTS CLEARANCE TAB ======================== -->
+<?php if ($tab === 'clearance'): ?>
+<?php
+$clearanceReqs = [
+    'Surgical Gloves', 'Examination Gloves', 'Photocopying Ream', 'Ruled Paper Reams',
+    'Omo', 'Toilet Papers', 'Compound Brooms', 'Soft Brooms', 'Rake',
+    'Cobweb Brush', 'Scrubbing Brush', 'Squeezer', 'Toilet Brush',
+    'JIK', 'Vim', 'Mops', 'Sanitizer', 'Liquid Soap', 'Face Masks', 'Heavy Duty Gloves'
+];
+?>
+<div class="da-card">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h3 style="border:none;padding:0;margin:0"><i class="fas fa-check-double"></i> Requirements Clearance Portal</h3>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" onclick="refreshClearanceList()"><i class="fas fa-sync"></i> Refresh</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div class="input-group" style="width:250px">
+      <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+      <input class="form-control form-control-sm" id="clearanceSearch" placeholder="Search student name, admission #..." oninput="debounceClearance()">
+    </div>
+    <select class="form-select form-select-sm" id="clearanceFilterField" style="width:160px" onchange="refreshClearanceList()">
+      <option value="name">By Name</option>
+      <option value="admission">By Admission #</option>
+      <option value="phone">By Phone</option>
+    </select>
+    <select class="form-select form-select-sm" id="clearanceFilterStatus" style="width:160px" onchange="refreshClearanceList()">
+      <option value="all">All Status</option>
+      <option value="verified">Cleared</option>
+      <option value="pending">Pending</option>
+      <option value="submitted">Submitted</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <button class="btn btn-sm btn-outline-secondary" onclick="clearClearanceFilters()"><i class="fas fa-times"></i> Clear</button>
+  </div>
+</div>
+
+<div id="clearanceResults" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading students...</div>
+<?php endif; ?>
+
+<!-- Clearance Detail Modal -->
+<div class="modal fade" id="clearanceDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff">
+        <h5 class="modal-title"><i class="fas fa-check-double"></i> <span id="clearanceDetailTitle">Student Clearance</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="clearanceDetailBody">
+        <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-sm btn-success" onclick="bulkClearAll()"><i class="fas fa-check-double"></i> Mark All Cleared</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ======================== ENROLLED STUDENTS TAB ======================== -->
 <?php if ($tab === 'enrolled'): ?>
@@ -1712,6 +1873,147 @@ function viewStudentRequirements(studentId, studentName) {
   });
 }
 
+// ===================== REQUIREMENTS CLEARANCE =====================
+let clearanceTimer = null;
+function debounceClearance() { clearTimeout(clearanceTimer); clearanceTimer = setTimeout(refreshClearanceList, 400); }
+
+function clearClearanceFilters() {
+  document.getElementById('clearanceSearch').value = '';
+  document.getElementById('clearanceFilterField').value = 'name';
+  document.getElementById('clearanceFilterStatus').value = 'all';
+  refreshClearanceList();
+}
+
+function refreshClearanceList() {
+  const search = document.getElementById('clearanceSearch').value.trim();
+  if (search.length < 2 && search.length > 0) { document.getElementById('clearanceResults').innerHTML = '<div class="text-muted py-3">Type at least 2 characters to search...</div>'; return; }
+  document.getElementById('clearanceResults').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+  const params = {
+    action: 'get_clearance_students',
+    search: search,
+    filter_field: document.getElementById('clearanceFilterField').value,
+    filter_status: document.getElementById('clearanceFilterStatus').value
+  };
+  postData(params).then(d => {
+    if (!d || !d.success) { document.getElementById('clearanceResults').innerHTML = '<div class="text-danger py-3">Error loading students.</div>'; return; }
+    const students = d.students || [];
+    if (students.length === 0) {
+      document.getElementById('clearanceResults').innerHTML = '<div class="text-muted py-4"><i class="fas fa-users-slash fa-2x mb-2 d-block"></i>No students found matching your criteria.</div>';
+      return;
+    }
+    let html = '<div class="row g-2">';
+    students.forEach(s => {
+      const initials = (s.student_name || 'S').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const statusColors = { verified: '#059669', submitted: '#2563eb', pending: '#f59e0b', rejected: '#dc2626' };
+      const statusColor = statusColors[s.status] || '#6b7280';
+      html += '<div class="col-md-6 col-lg-4">' +
+        '<div class="card border-0 shadow-sm h-100 cursor-pointer" style="border-left:3px solid ' + statusColor + ' !important" onclick="openClearanceDetail(' + s.student_id + ', \'' + escapeHtml((s.student_name || '').replace(/'/g, "\\'")) + '\')">' +
+        '<div class="card-body p-3">' +
+        '<div class="d-flex align-items-center gap-2 mb-2">' +
+        '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0">' + initials + '</div>' +
+        '<div class="min-width-0">' +
+        '<div class="fw-bold small text-truncate">' + escapeHtml(s.student_name || 'Unknown') + '</div>' +
+        '<div class="text-muted" style="font-size:11px">' + escapeHtml(s.registration_number || '') + '</div>' +
+        '</div></div>' +
+        '<div class="d-flex justify-content-between align-items-center mt-2">' +
+        '<span class="badge rounded-pill" style="background:' + statusColor + ';font-size:11px">' + (s.status || 'pending').toUpperCase() + '</span>' +
+        '<span class="text-muted" style="font-size:11px">' + escapeHtml(s.requirement_type || '') + '</span>' +
+        '</div></div></div></div>';
+    });
+    html += '</div>';
+    html += '<div class="text-muted small mt-2 text-center">Showing ' + students.length + ' student(s)</div>';
+    document.getElementById('clearanceResults').innerHTML = html;
+  });
+}
+
+let currentClearanceStudentId = null;
+function openClearanceDetail(studentId, studentName) {
+  currentClearanceStudentId = studentId;
+  document.getElementById('clearanceDetailTitle').textContent = studentName + ' - Requirements Clearance';
+  document.getElementById('clearanceDetailBody').innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading requirements...</div>';
+  new bootstrap.Modal(document.getElementById('clearanceDetailModal')).show();
+  postData({ action: 'get_clearance_detail', student_id: studentId }).then(d => {
+    if (!d || !d.success) { document.getElementById('clearanceDetailBody').innerHTML = '<div class="text-danger">Error loading requirements.</div>'; return; }
+    const requirements = d.requirements || [];
+    const name = d.student_name || studentName;
+    renderClearanceDetail(requirements, name);
+  });
+}
+
+function renderClearanceDetail(requirements, studentName) {
+  const allItems = [
+    'Surgical Gloves', 'Examination Gloves', 'Photocopying Ream', 'Ruled Paper Reams',
+    'Omo', 'Toilet Papers', 'Compound Brooms', 'Soft Brooms', 'Rake',
+    'Cobweb Brush', 'Scrubbing Brush', 'Squeezer', 'Toilet Brush',
+    'JIK', 'Vim', 'Mops', 'Sanitizer', 'Liquid Soap', 'Face Masks', 'Heavy Duty Gloves'
+  ];
+  const statusMap = {};
+  requirements.forEach(r => { statusMap[r.requirement_type] = r.status; });
+
+  let html = '<div class="mb-3 fw-bold text-primary"><i class="fas fa-user-graduate"></i> ' + escapeHtml(studentName) + '</div>';
+  html += '<div class="row g-2">';
+  allItems.forEach(item => {
+    const st = statusMap[item] || 'pending';
+    const verified = st === 'verified';
+    const icon = verified ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+    const bg = verified ? 'border-success bg-success bg-opacity-10' : 'border-danger bg-danger bg-opacity-10';
+    const labelColor = verified ? 'text-success' : 'text-danger';
+    html += '<div class="col-md-6 col-lg-4">' +
+      '<div class="card border ' + bg + ' h-100">' +
+      '<div class="card-body p-2 d-flex align-items-center gap-2">' +
+      '<i class="fas ' + icon + ' fa-lg"></i>' +
+      '<div class="flex-grow-1">' +
+      '<div class="fw-bold small">' + escapeHtml(item) + '</div>' +
+      '<div class="text-muted" style="font-size:11px">' + (verified ? 'Cleared' : st.toUpperCase()) + '</div>' +
+      '</div>' +
+      '<button class="btn btn-sm btn-outline-' + (verified ? 'secondary' : 'success') + '" onclick="toggleClearanceItem(' + currentClearanceStudentId + ', \'' + escapeHtml(item.replace(/'/g, "\\'")) + '\', ' + (verified ? "'pending'" : "'verified'") + ')">' +
+      '<i class="fas ' + (verified ? 'fa-undo' : 'fa-check') + '"></i></button>' +
+      '</div></div></div>';
+  });
+  html += '</div>';
+  const clearedCount = allItems.filter(i => statusMap[i] === 'verified').length;
+  const total = allItems.length;
+  const pct = Math.round((clearedCount / total) * 100);
+  const barColor = pct === 100 ? 'bg-success' : pct >= 60 ? 'bg-warning' : 'bg-danger';
+  html = '<div class="mb-3"><div class="d-flex justify-content-between mb-1"><span class="fw-bold small">Progress: ' + clearedCount + '/' + total + '</span><span class="fw-bold small">' + pct + '%</span></div>' +
+    '<div class="progress" style="height:8px"><div class="progress-bar ' + barColor + '" style="width:' + pct + '%"></div></div></div>' + html;
+  document.getElementById('clearanceDetailBody').innerHTML = html;
+}
+
+function toggleClearanceItem(studentId, requirementType, newStatus) {
+  const params = { action: 'toggle_clearance_item', student_id: studentId, requirement_type: requirementType, new_status: newStatus };
+  postData(params).then(d => {
+    if (d && d.success) {
+      showToast(d.message, 'success');
+      openClearanceDetail(studentId, document.getElementById('clearanceDetailTitle').textContent);
+      refreshClearanceList();
+    } else {
+      showToast(d ? d.message : 'Error updating.', 'danger');
+    }
+  });
+}
+
+function bulkClearAll() {
+  if (!currentClearanceStudentId) return;
+  if (!confirm('Mark ALL 20 requirements as cleared?')) return;
+  const allItems = [
+    'Surgical Gloves', 'Examination Gloves', 'Photocopying Ream', 'Ruled Paper Reams',
+    'Omo', 'Toilet Papers', 'Compound Brooms', 'Soft Brooms', 'Rake',
+    'Cobweb Brush', 'Scrubbing Brush', 'Squeezer', 'Toilet Brush',
+    'JIK', 'Vim', 'Mops', 'Sanitizer', 'Liquid Soap', 'Face Masks', 'Heavy Duty Gloves'
+  ];
+  const params = { action: 'bulk_clearance', student_id: currentClearanceStudentId, items: allItems };
+  postData(params).then(d => {
+    if (d && d.success) {
+      showToast(d.message, 'success');
+      openClearanceDetail(currentClearanceStudentId, document.getElementById('clearanceDetailTitle').textContent);
+      refreshClearanceList();
+    } else {
+      showToast(d ? d.message : 'Error clearing items.', 'danger');
+    }
+  });
+}
+
 // ===================== INIT =====================
 document.addEventListener('DOMContentLoaded', function() {
   <?php if ($tab === 'applications'): ?>
@@ -1720,6 +2022,8 @@ document.addEventListener('DOMContentLoaded', function() {
   loadRequirements();
   <?php elseif ($tab === 'enrolled'): ?>
   loadEnrolled();
+  <?php elseif ($tab === 'clearance'): ?>
+  refreshClearanceList();
   <?php endif; ?>
 });
 </script>
