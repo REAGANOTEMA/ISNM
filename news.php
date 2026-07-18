@@ -337,11 +337,11 @@ if ($view === 'single' && $slug) {
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
     $orderClause = $is_admin ? 'ORDER BY n.created_at DESC' : 'ORDER BY n.published_at DESC';
 
-    // Count total for pagination
-    $countSql = "SELECT COUNT(*) as total FROM director_news n $whereClause";
+    // Count total for pagination — read from website DB 'news' table (primary) + director_news (fallback)
+    $countSql = "SELECT COUNT(*) as total FROM news n $whereClause";
     $totalArticles = 0;
     if (!empty($params)) {
-        $cstmt = $staffConn->prepare($countSql);
+        $cstmt = $websiteConn ? $websiteConn->prepare($countSql) : $staffConn->prepare($countSql);
         if ($cstmt) {
             $cstmt->bind_param($types, ...$params);
             $cstmt->execute();
@@ -350,14 +350,15 @@ if ($view === 'single' && $slug) {
             $cstmt->close();
         }
     } else {
-        $cres = $staffConn->query($countSql);
+        $cres = $websiteConn ? $websiteConn->query($countSql) : $staffConn->query($countSql);
         if ($cres) $totalArticles = (int)$cres->fetch_assoc()['total'];
     }
     $totalPages = max(1, (int)ceil($totalArticles / $perPage));
 
-    $sql = "SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id $whereClause $orderClause LIMIT $perPage OFFSET $offset";
+    $sql = "SELECT n.*, n.author_name, n.author_role FROM news n $whereClause $orderClause LIMIT $perPage OFFSET $offset";
+    $queryConn = $websiteConn ?: $staffConn;
     if (!empty($params)) {
-        $stmt = $staffConn->prepare($sql);
+        $stmt = $queryConn->prepare($sql);
         if ($stmt) {
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
@@ -368,9 +369,25 @@ if ($view === 'single' && $slug) {
             $stmt->close();
         }
     } else {
-        $result = $staffConn->query($sql);
+        $result = $queryConn->query($sql);
         if ($result) {
             while ($row = $result->fetch_assoc()) $newsList[] = $row;
+        }
+    }
+    // Fallback: if no results from website DB, try director_news in staff DB
+    if (empty($newsList) && $staffConn) {
+        $countSqlDn = "SELECT COUNT(*) as total FROM director_news n $whereClause";
+        $totalArticlesDn = 0;
+        if (!empty($params)) {
+            $cstmtDn = $staffConn->prepare($countSqlDn);
+            if ($cstmtDn) { $cstmtDn->bind_param($types, ...$params); $cstmtDn->execute(); $crowDn = $cstmtDn->get_result()->fetch_assoc(); $totalArticlesDn = (int)($crowDn['total'] ?? 0); $cstmtDn->close(); }
+        } else { $cresDn = $staffConn->query($countSqlDn); if ($cresDn) $totalArticlesDn = (int)$cresDn->fetch_assoc()['total']; }
+        if ($totalArticlesDn > 0) {
+            $totalArticles = $totalArticlesDn;
+            $totalPages = max(1, (int)ceil($totalArticles / $perPage));
+            $sqlDn = "SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id $whereClause $orderClause LIMIT $perPage OFFSET $offset";
+            if (!empty($params)) { $stmtDn = $staffConn->prepare($sqlDn); if ($stmtDn) { $stmtDn->bind_param($types, ...$params); $stmtDn->execute(); $resDn = $stmtDn->get_result(); if ($resDn) { while ($rowDn = $resDn->fetch_assoc()) $newsList[] = $rowDn; } $stmtDn->close(); } }
+            else { $resDn = $staffConn->query($sqlDn); if ($resDn) { while ($rowDn = $resDn->fetch_assoc()) $newsList[] = $rowDn; } }
         }
     }
 }

@@ -287,10 +287,10 @@ function getRoleOperations(string $role): array {
         ],
         'security' => [
             ['label' => 'Overview',            'icon'=>'fas fa-chart-pie',        'page'=>'overview'],
-            ['label' => 'Visitor Registration','icon'=>'fas fa-user-plus',       'page'=>'visitor-registration'],
-            ['label' => 'All Visitors',        'icon'=>'fas fa-history',         'page'=>'visitor-history'],
+            ['label' => 'Visitors',            'icon'=>'fas fa-user-plus',       'page'=>'visitors'],
             ['label' => 'Incident Reports',    'icon'=>'fas fa-exclamation-triangle','page'=>'incidents'],
             ['label' => 'Patrol Management',   'icon'=>'fas fa-shield-alt',      'page'=>'patrol'],
+            ['label' => 'Access Control',      'icon'=>'fas fa-key',             'page'=>'access_control'],
             ['label' => 'Emergency Contacts',  'icon'=>'fas fa-ambulance',       'page'=>'emergency'],
             ['label' => 'Store Requisition',   'icon'=>'fas fa-clipboard-list',  'page'=>'store-requisition', 'href'=>'store-requisition.php'],
         ],

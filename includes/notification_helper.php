@@ -55,6 +55,10 @@ if (!function_exists('ensureNotificationTables')) {
             UNIQUE KEY uq_notif_read (notification_id, user_id, user_type),
             KEY idx_user (user_id, user_type)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        // Ensure user_type column exists (added after initial table creation)
+        @$conn->query("ALTER TABLE staff_notification_reads ADD COLUMN IF NOT EXISTS `user_type` VARCHAR(20) DEFAULT 'staff'");
+        // Add unique key if missing
+        @$conn->query("ALTER TABLE staff_notification_reads ADD UNIQUE KEY IF NOT EXISTS uq_notif_read (notification_id, user_id, user_type)");
     }
 }
 

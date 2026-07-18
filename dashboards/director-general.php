@@ -3062,9 +3062,7 @@ function dgExportCSV() {
 </div>
         <?php break;
     default: ?>
-        <div id="home" class="content-section dashboard-section active" data-section="home">
-            <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
-        </div>
+        <?php header('Location: director-general.php?section=home'); exit; ?>
         <?php break;
 endswitch; ?>
 

@@ -148,13 +148,15 @@ class FormRouter {
      * Create in-app notification
      */
     private function createNotification($staffId, $type, $title, $message, $relatedId, $fromEmail) {
-        $stmt = $this->conn->prepare(
-            "INSERT INTO notifications (staff_id, type, title, message, related_id, from_email, is_read, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())"
+        $staffsDb = getStaffConnection();
+        if (!$staffsDb) return;
+        $stmt = $staffsDb->prepare(
+            "INSERT INTO staff_notifications (staff_id, title, message, type, is_read, created_at) 
+             VALUES (?, ?, ?, ?, 0, NOW())"
         );
         
         if ($stmt) {
-            $stmt->bind_param('isssss', $staffId, $type, $title, $message, $relatedId, $fromEmail);
+            $stmt->bind_param('iss', $staffId, $title, $message);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
@@ -191,18 +193,17 @@ class NotificationManager {
         }
     }
     
-    /**
-     * Get unread notifications for staff
-     */
     public function getNotifications($staffId, $limit = 10) {
         $stmt = $this->conn->prepare(
-            "SELECT * FROM notifications WHERE staff_id = ? AND is_read = 0 
-             ORDER BY created_at DESC LIMIT ?"
+            "SELECT n.* FROM staff_notifications n 
+             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = ?
+             WHERE n.staff_id = ? AND r.id IS NULL
+             ORDER BY n.created_at DESC LIMIT ?"
         );
         
         if (!$stmt) return [];
         
-        $stmt->bind_param('ii', $staffId, $limit);
+        $stmt->bind_param('iii', $staffId, $staffId, $limit);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         
@@ -215,17 +216,16 @@ class NotificationManager {
         return $notifications;
     }
     
-    /**
-     * Get notification count
-     */
     public function getNotificationCount($staffId) {
         $stmt = $this->conn->prepare(
-            "SELECT COUNT(*) as count FROM notifications WHERE staff_id = ? AND is_read = 0"
+            "SELECT COUNT(*) as count FROM staff_notifications n 
+             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = ?
+             WHERE n.staff_id = ? AND r.id IS NULL"
         );
         
         if (!$stmt) return 0;
         
-        $stmt->bind_param('i', $staffId);
+        $stmt->bind_param('ii', $staffId, $staffId);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
@@ -234,16 +234,15 @@ class NotificationManager {
         return $row['count'] ?? 0;
     }
     
-    /**
-     * Mark notification as read
-     */
     public function markAsRead($notificationId) {
+        $staffId = $_SESSION['user_id'] ?? 0;
+        if (!$staffId) return false;
         $stmt = $this->conn->prepare(
-            "UPDATE notifications SET is_read = 1 WHERE id = ?"
+            "INSERT IGNORE INTO staff_notification_reads (staff_id, notification_id, read_at) VALUES (?, ?, NOW())"
         );
         
         if ($stmt) {
-            $stmt->bind_param('i', $notificationId);
+            $stmt->bind_param('ii', $staffId, $notificationId);
             $success = $stmt->execute();
             $stmt->close();
             return $success;
@@ -252,37 +251,36 @@ class NotificationManager {
         return false;
     }
     
-    /**
-     * Mark all as read
-     */
     public function markAllAsRead($staffId) {
-        $stmt = $this->conn->prepare(
-            "UPDATE notifications SET is_read = 1 WHERE staff_id = ? AND is_read = 0"
+        $unread = $this->conn->query(
+            "SELECT n.id FROM staff_notifications n 
+             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = $staffId
+             WHERE n.staff_id = $staffId AND r.id IS NULL"
         );
-        
-        if ($stmt) {
-            $stmt->bind_param('i', $staffId);
-            $success = $stmt->execute();
-            $stmt->close();
-            return $success;
+        if (!$unread) return false;
+        $ok = true;
+        while ($row = $unread->fetch_assoc()) {
+            $stmt = $this->conn->prepare("INSERT IGNORE INTO staff_notification_reads (staff_id, notification_id, read_at) VALUES (?, ?, NOW())");
+            if ($stmt) {
+                $stmt->bind_param('ii', $staffId, $row['id']);
+                if (!$stmt->execute()) $ok = false;
+                $stmt->close();
+            }
         }
-        
-        return false;
+        return $ok;
     }
     
-    /**
-     * Get recent notifications (last 24 hours)
-     */
     public function getRecentNotifications($staffId, $limit = 5) {
         $stmt = $this->conn->prepare(
-            "SELECT * FROM notifications WHERE staff_id = ? 
-             AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-             ORDER BY created_at DESC LIMIT ?"
+            "SELECT n.* FROM staff_notifications n 
+             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = ?
+             WHERE n.staff_id = ? AND n.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND r.id IS NULL
+             ORDER BY n.created_at DESC LIMIT ?"
         );
         
         if (!$stmt) return [];
         
-        $stmt->bind_param('ii', $staffId, $limit);
+        $stmt->bind_param('iii', $staffId, $staffId, $limit);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         

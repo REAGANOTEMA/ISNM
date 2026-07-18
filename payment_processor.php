@@ -45,11 +45,14 @@ class PaymentProcessor {
         try {
             $staffsDb = getStaffConnection();
             if ($staffsDb) {
-                $stmt = $staffsDb->prepare("INSERT INTO notifications (title, message, type, priority, audience, created_by, created_at) VALUES (?, ?, 'payment', ?, 'finance', ?, NOW())");
                 $userId = $_SESSION['user_id'] ?? 0;
-                $stmt->bind_param('sssi', $title, $message, $priority, $userId);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $stmt->close();
+                $stmt = $staffsDb->prepare("INSERT INTO staff_notifications (staff_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, 'payment', 0, NOW())");
+                if ($stmt) {
+                    $staffId = $userId;
+                    $stmt->bind_param('iss', $staffId, $title, $message);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $stmt->close();
+                }
             }
         } catch (Exception $e) {
             error_log('Payment notification error: ' . $e->getMessage());

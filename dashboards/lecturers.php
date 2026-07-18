@@ -1022,10 +1022,6 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 var sec = this.getAttribute('href').substring(1);
                 if (typeof switchToSection === 'function') {
                     switchToSection(sec);
-                } else {
-                    document.querySelectorAll('.section-card').forEach(function(s) { s.style.display = 'none'; });
-                    var t = document.getElementById(sec);
-                    if (t) t.style.display = 'block';
                 }
             });
         });

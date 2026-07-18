@@ -424,6 +424,38 @@ unset($_SESSION['success'], $_SESSION['error']);
         <section id="courses" class="content-section dashboard-section active" data-section="courses">
             <h2><i class="fas fa-book-open me-2"></i>Course Management</h2>
             <p class="text-muted">Manage nursing courses, curriculum, and syllabi.</p>
+            <?php
+            $nursing_course_list = [];
+            if ($conn) {
+                try {
+                    $cr = $conn->query("SELECT * FROM course_assignments WHERE course_name LIKE '%Nursing%' ORDER BY course_name");
+                    if ($cr) $nursing_course_list = $cr->fetch_all(MYSQLI_ASSOC);
+                } catch (Exception $e) { error_log('head-nursing courses: ' . $e->getMessage()); }
+            }
+            ?>
+            <?php if (!empty($nursing_course_list)): ?>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Course Code</th><th>Course Name</th><th>Instructor</th><th>Credits</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($nursing_course_list as $c): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($c['course_code'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($c['course_name'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($c['instructor'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($c['credits'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= ($c['status'] ?? 'Active') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($c['status'] ?? 'Active') ?></span></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-book fa-3x mb-3 opacity-25"></i>
+                <p>No nursing courses found. Courses will appear here once assigned.</p>
+            </div>
+            <?php endif; ?>
         </section>
         <?php break;
     case 'clinical': ?>
@@ -670,39 +702,7 @@ unset($_SESSION['success'], $_SESSION['error']);
         </script>
         <?php break;
     default: ?>
-        <section id="overview" class="content-section dashboard-section active" data-section="overview">
-            <h2>Department Overview</h2>
-            <div class="stats-grid">
-                <div class="stat-card success">
-                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
-                    <div class="stat-content">
-                        <h3><?php echo number_format($total_students); ?></h3>
-                        <p>Total Nursing Students</p>
-                    </div>
-                </div>
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <div class="stat-content">
-                        <h3><?php echo number_format($total_staff); ?></h3>
-                        <p>Faculty Members</p>
-                    </div>
-                </div>
-                <div class="stat-card info">
-                    <div class="stat-icon"><i class="fas fa-book"></i></div>
-                    <div class="stat-content">
-                        <h3><?php echo number_format($nursing_courses); ?></h3>
-                        <p>Active Courses</p>
-                    </div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
-                    <div class="stat-content">
-                        <h3><?php echo number_format($active_programs); ?></h3>
-                        <p>Active Programs</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <?php header('Location: head-nursing.php?section=overview'); exit; ?>
         <?php break;
 endswitch; ?>
 

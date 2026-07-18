@@ -16,6 +16,7 @@ if ($staffConn) {
         id INT AUTO_INCREMENT PRIMARY KEY,
         request_number VARCHAR(50),
         requested_by INT,
+        requester_name VARCHAR(255) DEFAULT '',
         requester_role VARCHAR(50) DEFAULT '',
         department VARCHAR(100) DEFAULT '',
         urgency VARCHAR(50) DEFAULT 'Normal',
@@ -32,7 +33,7 @@ if ($staffConn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     @$staffConn->query($createTable);
     // Add missing columns if they don't exist
-    foreach (['requester_role' => "VARCHAR(50) DEFAULT ''", 'items' => 'TEXT', 'rejection_reason' => 'TEXT', 'fulfilled_by' => 'INT', 'fulfilled_at' => 'DATETIME', 'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'] as $col => $type) {
+    foreach (['requester_name' => "VARCHAR(255) DEFAULT ''", 'requester_role' => "VARCHAR(50) DEFAULT ''", 'items' => 'TEXT', 'rejection_reason' => 'TEXT', 'fulfilled_by' => 'INT', 'fulfilled_at' => 'DATETIME', 'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'] as $col => $type) {
         @$staffConn->query("ALTER TABLE store_requests ADD COLUMN IF NOT EXISTS `$col` $type");
     }
 }
