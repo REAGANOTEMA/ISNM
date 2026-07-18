@@ -27,7 +27,33 @@ $isSuper = $auth->hasFullInstitutionAccess($userRole);
 $page = $_GET['page'] ?? 'overview';
 $sub = $_GET['sub'] ?? '';
 
-// â”€â”€ Handle POST actions â”€â”€
+// Handle CSV stock report export
+if (isset($_GET['export']) && $_GET['export'] === 'stock_report' && $staffConn) {
+    $result = $staffConn->query("SELECT item_name, category, quantity, unit, unit_cost, reorder_level, location, status FROM inventory_items ORDER BY category, item_name");
+    if ($result && $result->num_rows > 0) {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="stock_report_' . date('Y-m-d') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Item Name', 'Category', 'Quantity', 'Unit', 'Unit Cost', 'Total Value', 'Reorder Level', 'Status', 'Location']);
+        while ($row = $result->fetch_assoc()) {
+            $qty = (int)($row['quantity'] ?? 0);
+            $cost = (float)($row['unit_cost'] ?? 0);
+            $reorder = (int)($row['reorder_level'] ?? 0);
+            $computedStatus = $qty <= 0 ? 'Out of Stock' : ($qty <= $reorder ? 'Low Stock' : 'In Stock');
+            fputcsv($out, [
+                $row['item_name'] ?? '', $row['category'] ?? '', $qty,
+                $row['unit'] ?? '', number_format($cost, 2), number_format($qty * $cost, 2),
+                $reorder, $computedStatus, $row['location'] ?? ''
+            ]);
+        }
+        fclose($out);
+        exit;
+    }
+    header('Location: school-bursar.php?page=inventory');
+    exit;
+}
+
+// Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!function_exists('verifyCsrfToken') || !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
     $action = $_POST['action'] ?? '';
@@ -702,7 +728,7 @@ $pageTitle = 'Bursar Dashboard';
     </tr><?php endwhile; ?>
     </tbody></table></div>
     <?php else: ?><p class="text-muted small">No stock items tracked yet.</p><?php endif; ?>
-    <p class="small mt-2"><a href="#" onclick="alert('Full inventory report coming soon with CSV export.')" class="text-primary">Download Stock Report</a></p>
+    <p class="small mt-2"><a href="school-bursar.php?page=inventory&export=stock_report" class="text-primary" onclick="return confirm('Download stock report as CSV?')"><i class="fas fa-download me-1"></i>Download Stock Report</a></p>
     </div>
   </div>
 </div>

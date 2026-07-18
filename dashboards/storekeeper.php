@@ -10,6 +10,33 @@ $user_role = $user['role'] ?? '';
 $userId = (int)($user['id'] ?? 0);
 $userName = $user['full_name'] ?? 'Store Keeper';
 
+// Ensure store_requests table has all required columns
+if ($staffConn) {
+    $createTable = "CREATE TABLE IF NOT EXISTS store_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        request_number VARCHAR(50),
+        requested_by INT,
+        requester_role VARCHAR(50) DEFAULT '',
+        department VARCHAR(100) DEFAULT '',
+        urgency VARCHAR(50) DEFAULT 'Normal',
+        status VARCHAR(50) DEFAULT 'pending',
+        notes TEXT,
+        items TEXT,
+        rejection_reason TEXT,
+        fulfilled_by INT,
+        fulfilled_at DATETIME,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status),
+        INDEX idx_requested_by (requested_by)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    @$staffConn->query($createTable);
+    // Add missing columns if they don't exist
+    foreach (['requester_role' => "VARCHAR(50) DEFAULT ''", 'items' => 'TEXT', 'rejection_reason' => 'TEXT', 'fulfilled_by' => 'INT', 'fulfilled_at' => 'DATETIME', 'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'] as $col => $type) {
+        @$staffConn->query("ALTER TABLE store_requests ADD COLUMN IF NOT EXISTS `$col` $type");
+    }
+}
+
 // â”€â”€ POST Handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffConn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }

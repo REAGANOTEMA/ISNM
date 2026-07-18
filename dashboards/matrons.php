@@ -581,9 +581,13 @@ if ($conn) {
 // Store data for requisitions
 $storeInventory = [];
 $myRequests = [];
+$matronItemMap = [];
 if ($conn) {
     $r = $conn->query("SELECT si.id, si.item_name, si.item_code, si.unit, si.quantity, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
-    if ($r) while ($row = $r->fetch_assoc()) $storeInventory[] = $row;
+    if ($r) while ($row = $r->fetch_assoc()) {
+        $storeInventory[] = $row;
+        $matronItemMap[strtolower(trim($row['item_name']))] = (int)$row['id'];
+    }
     $stmt = $conn->prepare("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=? ORDER BY sr.created_at DESC LIMIT 20");
     $stmt->bind_param('i', $user_id);
     $r2 = $stmt->execute() ? $stmt->get_result() : null;
@@ -907,7 +911,10 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         <form method="POST">
                         <div style="padding:18px 24px;background:#10b981;color:#fff;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">
                             <h5 style="margin:0"><i class="fas fa-plus me-2"></i>New Store Requisition</h5>
-                            <button type="button" class="btn-close btn-close-white" style="font-size:1.2rem" onclick="this.closest('#newReqModal').style.display='none'" aria-label="Close"></button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-warning btn-sm fw-semibold" onclick="quickSelectMatronItems()" title="Auto-fill the 16 standard Matron items"><i class="fas fa-bolt me-1"></i>Matron Essentials</button>
+                                <button type="button" class="btn-close btn-close-white" style="font-size:1.2rem" onclick="this.closest('#newReqModal').style.display='none'" aria-label="Close"></button>
+                            </div>
                         </div>
                         <div style="padding:24px">
                             <input type="hidden" name="action" value="create_store_requisition">
@@ -1029,15 +1036,14 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
+        // Navigation — delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-                const t = document.getElementById(targetId);
-                if (t) t.style.display = 'block';
+                var sec = this.getAttribute('href').substring(1);
+                if (typeof switchToSection === 'function') {
+                    switchToSection(sec);
+                }
             });
         });
 
@@ -1820,6 +1826,41 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 '<button type="button" class="btn btn-danger btn-sm" onclick="this.closest(\'.req-item-row\').remove()"><i class="fas fa-times"></i></button></div>';
             document.getElementById('reqItemsContainer').insertAdjacentHTML('beforeend', html);
             matronReqIdx++;
+        }
+
+        function quickSelectMatronItems() {
+            document.getElementById('reqItemsContainer').innerHTML = '';
+            matronReqIdx = 0;
+            var matronItems = <?= json_encode($matronItemMap) ?>;
+            var presetNames = [
+                'omo', 'jik', 'vim', 'examination gloves', 'surgical gloves',
+                'scrubbing brushes', 'squeezers', 'mops', 'soft brooms', 'compound brooms',
+                'ruled reams', 'toilet brushes', 'bulbs', 'stick glue', 'cobweb brushes', 'sink pumps'
+            ];
+            var defaultQtys = {
+                'omo': 5, 'jik': 5, 'vim': 5, 'examination gloves': 2, 'surgical gloves': 2,
+                'scrubbing brushes': 5, 'squeezers': 3, 'mops': 5, 'soft brooms': 5, 'compound brooms': 3,
+                'ruled reams': 2, 'toilet brushes': 5, 'bulbs': 5, 'stick glue': 2, 'cobweb brushes': 3, 'sink pumps': 2
+            };
+            var options = '<option value="">-- Select Item --</option>';
+            <?php foreach ($storeInventory as $item): ?>
+            options += '<option value="<?= $item['id'] ?>"><?= addslashes(htmlspecialchars($item['item_name'])) ?> (<?= number_format($item['quantity']) ?> <?= htmlspecialchars($item['unit']) ?>)</option>';
+            <?php endforeach; ?>
+            presetNames.forEach(function(name) {
+                var id = matronItems[name];
+                if (!id) return;
+                var qty = defaultQtys[name] || 1;
+                var label = name.charAt(0).toUpperCase() + name.slice(1);
+                var html = '<div class="d-flex gap-2 mb-2 req-item-row align-items-center">' +
+                    '<select name="req_items[' + matronReqIdx + '][item_id]" class="form-select" style="flex:2" required onchange="this.closest(\'.req-item-row\').querySelector(\'input[name*=item_name]\').value=this.options[this.selectedIndex].text.split(\'(\')[0].trim()">' + options + '</select>' +
+                    '<input type="number" name="req_items[' + matronReqIdx + '][quantity]" class="form-control" style="width:80px" placeholder="Qty" min="1" required value="' + qty + '">' +
+                    '<input type="text" name="req_items[' + matronReqIdx + '][item_name]" class="form-control" style="flex:1" placeholder="Item name" value="' + label + '">' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="this.closest(\'.req-item-row\').remove()"><i class="fas fa-times"></i></button></div>';
+                document.getElementById('reqItemsContainer').insertAdjacentHTML('beforeend', html);
+                var sel = document.querySelector('#reqItemsContainer select:last-of-type');
+                if (sel) sel.value = id;
+                matronReqIdx++;
+            });
         }
     function filterTable(inputId, tableId) {
     var input = document.getElementById(inputId);

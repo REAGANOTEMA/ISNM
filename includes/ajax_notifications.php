@@ -67,7 +67,7 @@ switch ($action) {
             echo json_encode(['error' => 'Invalid security token']);
             exit;
         }
-        $nid = (int)($_POST['id'] ?? 0);
+        $nid = (int)($_POST['notification_id'] ?? $_POST['id'] ?? 0);
         if ($nid) markNotificationRead($nid, $user_id, $user_type);
         echo json_encode(['ok' => true]);
         break;

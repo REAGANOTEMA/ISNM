@@ -1318,7 +1318,25 @@ function deleteSoftware(id) {
     if (!confirm('Delete this software?')) return;
     $.post(LAB_HANDLER, { action: 'delete_software', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
-function editConsumable(id) { showAlert('Edit feature coming soon', 'info'); }
+function editConsumable(id) {
+    var items = <?= json_encode($consumables) ?>;
+    var item = null;
+    for (var i = 0; i < items.length; i++) { if (items[i].id == id) { item = items[i]; break; } }
+    if (!item) { showAlert('Item not found', 'danger'); return; }
+    var name = prompt('Item name:', item.item_name || '');
+    if (name === null) return;
+    var cat = prompt('Category:', item.item_category || item.category || '');
+    if (cat === null) return;
+    var qty = prompt('Quantity:', item.quantity);
+    if (qty === null) return;
+    var reorder = prompt('Reorder level:', item.reorder_level || item.min_stock_level || 10);
+    if (reorder === null) return;
+    var cost = prompt('Unit cost:', item.unit_cost || 0);
+    if (cost === null) return;
+    var supplier = prompt('Supplier:', item.supplier || '');
+    if (supplier === null) return;
+    $.post(LAB_HANDLER, { action: 'edit_consumable', id: id, item_name: name, item_category: cat, quantity: parseInt(qty), reorder_level: parseInt(reorder), unit_cost: parseFloat(cost), supplier: supplier, csrf_token: CSRF_TOKEN }).done(function(r) { if (r.success) location.reload(); else showAlert(r.message, 'danger'); });
+}
 function deleteConsumable(id) {
     if (!confirm('Delete this consumable?')) return;
     $.post(LAB_HANDLER, { action: 'delete_consumable', id, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
@@ -1331,8 +1349,42 @@ function adjustConsumable(id, curQty) {
 function updateSessionStatus(id, status) {
     $.post(LAB_HANDLER, { action: 'edit_practical_session', id, status, csrf_token: CSRF_TOKEN }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
 }
-function editSession(id) { showAlert('Edit via modal coming soon', 'info'); }
-function markAttendance(id) { showAlert(`Open attendance for session #${id}`, 'info'); }
+function editSession(id) {
+    var sessions = <?= json_encode($sessions) ?>;
+    var sess = null;
+    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id == id) { sess = sessions[i]; break; } }
+    if (!sess) { showAlert('Session not found', 'danger'); return; }
+    var rooms = <?= json_encode($rooms) ?>;
+    var roomNames = rooms.map(function(r) { return r.id + ':' + r.room_name; }).join(', ');
+    var name = prompt('Course name:', sess.title || sess.course_name || '');
+    if (name === null) return;
+    var instructor = prompt('Instructor:', sess.instructor || sess.instructor_name || '');
+    if (instructor === null) return;
+    var roomId = prompt('Lab room ID (' + roomNames + '):', sess.lab_room_id || '');
+    if (roomId === null) return;
+    var date = prompt('Date (YYYY-MM-DD):', sess.session_date || '');
+    if (date === null) return;
+    var start = prompt('Start time (HH:MM):', sess.start_time || '');
+    if (start === null) return;
+    var end = prompt('End time (HH:MM):', sess.end_time || '');
+    if (end === null) return;
+    var status = prompt('Status (scheduled/ongoing/completed/cancelled):', sess.status || 'scheduled');
+    if (status === null) return;
+    $.post(LAB_HANDLER, { action: 'edit_practical_session', id: id, course_name: name, instructor_name: instructor, lab_room_id: parseInt(roomId) || 0, session_date: date, start_time: start, end_time: end, status: status, csrf_token: CSRF_TOKEN }).done(function(r) { if (r.success) location.reload(); else showAlert(r.message, 'danger'); });
+}
+function markAttendance(id) {
+    var sessions = <?= json_encode($sessions) ?>;
+    var sess = null;
+    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id == id) { sess = sessions[i]; break; } }
+    if (!sess) { showAlert('Session not found', 'danger'); return; }
+    var studentId = prompt('Enter student ID to mark attendance for session:\n(' + (sess.title || sess.course_name || 'Session #' + id) + ')\n\nType student ID number:');
+    if (!studentId || isNaN(studentId)) return;
+    var status = prompt('Attendance status (present/late/absent/excused):', 'present');
+    if (!status) return;
+    var validStatuses = ['present', 'late', 'absent', 'excused'];
+    if (validStatuses.indexOf(status.toLowerCase()) === -1) { showAlert('Invalid status. Use: present, late, absent, or excused', 'danger'); return; }
+    $.post(LAB_HANDLER, { action: 'mark_attendance', session_id: id, student_id: parseInt(studentId), lab_room_id: sess.lab_room_id || 0, status: status.toLowerCase(), attendance_date: sess.session_date, csrf_token: CSRF_TOKEN }).done(function(r) { if (r.success) { showAlert('Attendance marked successfully', 'success'); } else showAlert(r.message, 'danger'); });
+}
 function filterPrint(s) {
     $('#printTable tbody tr').each(function() { $(this).toggle(s === 'all' || $(this).hasClass('print-row-' + s)); });
 }

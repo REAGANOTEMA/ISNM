@@ -338,58 +338,175 @@ var ISNM_VERSION = '<?= $v ?>';
    ══════════════════════════════════════════════════════════════════ */
 
 // ── 1. UNIVERSAL SECTION SWITCHER ──────────────────────────────
-// If the dashboard uses data-section, this ensures ?page= and ?section= params
-// activate the correct section.
+// Handles ALL section switching patterns across every dashboard.
+// Properly CLOSES all other sections when opening one.
+// Strips inline style.display that overrides CSS class system.
 (function() {
-    function switchToSection(name) {
-        if (!name) return;
-        // Try data-section elements (most common pattern)
-        var targets = document.querySelectorAll('[data-section]');
-        if (targets.length) {
-            Array.from(targets).forEach(function(el) { el.classList.remove('active'); });
-            var match = document.querySelector('[data-section="' + name + '"]');
-            if (match) {
-                match.classList.add('active');
-                return true;
+    // Selectors for all section containers across all dashboards
+    var SECTION_SEL = '.dashboard-section, .content-section, [data-section]';
+
+    // Strip inline display styles from ALL sections so CSS class system works
+    function stripInlineStyles() {
+        document.querySelectorAll(SECTION_SEL).forEach(function(el) {
+            if (el.style.display !== '') {
+                el.style.display = '';
             }
-        }
-        // Try element id match (director-general.php pattern)
-        var byId = document.getElementById(name);
-        if (byId) {
-            byId.classList.add('active');
-            return true;
-        }
-        // Try content-section + id
-        var cs = document.querySelector('.content-section#' + name + ', .dashboard-section#' + name);
-        if (cs) {
-            cs.classList.add('active');
-            return true;
-        }
-        return false;
+        });
+        // Also strip from section-card elements used by some dashboards
+        document.querySelectorAll('.section-card').forEach(function(el) {
+            if (el.style.display !== '') {
+                el.style.display = '';
+            }
+        });
     }
 
-    // Read ?page= or ?section= from URL — activate the correct section
-    // Default to 'home' → 'overview' → first data-section so content isn't hidden
+    // Check if a target section exists in the DOM
+    function sectionExists(name) {
+        if (!name) return false;
+        return !!(
+            document.querySelector('.dashboard-section[data-section="' + name + '"], .content-section[data-section="' + name + '"]') ||
+            document.getElementById(name)
+        );
+    }
+
+    function switchToSection(name) {
+        if (!name) return false;
+        var switched = false;
+
+        // STEP 0: Strip ALL inline display styles first — this fixes lecturers, senior-lecturers,
+        // matrons, non-teaching, wardens, school-librarian dashboards
+        stripInlineStyles();
+
+        // STEP 1: Find ALL sections (both patterns)
+        var allSections = document.querySelectorAll(SECTION_SEL);
+
+        // SAFETY: If target section doesn't exist in DOM, do NOT remove active from current
+        // This prevents blank pages in head-nursing, head-midwifery, ceo, etc.
+        if (!sectionExists(name) && allSections.length > 0) {
+            // Check if there's currently an active section — keep it active
+            var hasActive = false;
+            allSections.forEach(function(el) { if (el.classList.contains('active')) hasActive = true; });
+            if (hasActive) return false; // Don't touch anything
+        }
+
+        // STEP 2: Remove active from ALL sections
+        allSections.forEach(function(el) { el.classList.remove('active'); });
+
+        // STEP 3: Add active to target — try data-section first, then id
+        var match = document.querySelector('.dashboard-section[data-section="' + name + '"], .content-section[data-section="' + name + '"]');
+        if (match) {
+            match.classList.add('active');
+            // Also clear any lingering inline styles on the target
+            match.style.display = '';
+            switched = true;
+        }
+
+        if (!switched) {
+            var byId = document.getElementById(name);
+            if (byId) {
+                byId.classList.add('active');
+                byId.style.display = '';
+                switched = true;
+            }
+        }
+
+        // Update tab active states
+        document.querySelectorAll('.section-tab, .ed-tab, [data-tab]').forEach(function(tab) {
+            tab.classList.remove('active');
+            if (tab.getAttribute('data-tab') === name || tab.getAttribute('data-section') === name) {
+                tab.classList.add('active');
+            }
+        });
+
+        // Update sidebar active states
+        document.querySelectorAll('.child-link, .mod-sidebar-item, .nav-link').forEach(function(link) {
+            link.classList.remove('active');
+            var href = link.getAttribute('href') || '';
+            var linkSection = href.match(/(?:section|page)=([^&]+)/);
+            var linkHash = href.match(/#(.+)$/);
+            if ((linkSection && linkSection[1] === name) || (linkHash && linkHash[1] === name)) {
+                link.classList.add('active');
+            }
+        });
+
+        // Scroll to top of content area
+        var contentEl = document.querySelector('.content-area, .dg-content, .ed-content, .main-content, .brs-content, .prin-content, .page-content');
+        if (contentEl) contentEl.scrollTop = 0;
+
+        return switched;
+    }
+
+    // Read ?page= or ?section= from URL
     var m = window.location.search.match(/[?&](?:section|page)=([^&]+)/);
     var sectionParam = (m && m[1]) || '';
     if (sectionParam) {
         switchToSection(sectionParam);
     } else {
-        // No param: try common defaults, then first available section
-        if (!switchToSection('home') && !switchToSection('overview')) {
-            var firstSec = document.querySelector('[data-section]');
+        // Default: try common section names, then first available section
+        if (!switchToSection('home') && !switchToSection('overview') && !switchToSection('dashboard')) {
+            var firstSec = document.querySelector('.dashboard-section[data-section], .content-section[data-section]');
             if (firstSec) switchToSection(firstSec.getAttribute('data-section'));
         }
     }
 
-    // Listen for hash changes (for data-section switching)
+    // Listen for hash changes
     window.addEventListener('hashchange', function() {
         var hash = window.location.hash.replace('#', '');
         if (hash) switchToSection(hash);
     });
 
-    // Expose globally so dashboard-specific code can call it
-    window.switchToSection = window.switchToSection || switchToSection;
+    // ALWAYS expose globally — override any local definitions that don't properly close sections
+    window.switchToSection = switchToSection;
+
+    // Also alias switchSection for dashboards that use that name
+    window.switchSection = window.switchToSection;
+
+    // MutationObserver: continuously strip inline display styles that fight CSS
+    // This catches dashboards that set style.display after page load
+    var stripObserver = new MutationObserver(function(mutations) {
+        var needsStrip = false;
+        mutations.forEach(function(m) {
+            if (m.type === 'attributes' && m.attributeName === 'style') {
+                var t = m.target;
+                if (t.classList && (t.classList.contains('dashboard-section') || t.classList.contains('content-section'))) {
+                    needsStrip = true;
+                }
+            }
+        });
+        if (needsStrip) stripInlineStyles();
+    });
+    stripObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
+
+    // ── CLOSE / BACK BUTTON FOR ALL SECTIONS ──────────────────
+    // Auto-inject a "Back to Dashboard" button at the top of every section
+    function injectBackButtons() {
+        var sections = document.querySelectorAll('.dashboard-section[data-section], .content-section[data-section]');
+        var homeSections = ['home', 'overview', 'dashboard', 'executive', 'control-panel'];
+        
+        Array.from(sections).forEach(function(section) {
+            var sectionName = section.getAttribute('data-section');
+            // Don't add back button to home/overview sections
+            if (homeSections.indexOf(sectionName) !== -1) return;
+            // Don't add if already has a back button
+            if (section.querySelector('.ed-back-btn')) return;
+            
+            // Create back button
+            var backBtn = document.createElement('div');
+            backBtn.className = 'ed-back-btn';
+            backBtn.innerHTML = '<button class="ed-btn ed-btn-outline" onclick="var home=\'overview\'; var homeSecs=' + JSON.stringify(homeSections) + '; for(var i=0;i<homeSecs.length;i++){if(document.querySelector(\'.dashboard-section[data-section=\"\'+homeSecs[i]+\'\"],.content-section[data-section=\"\'+homeSecs[i]+\'\"]\')){home=homeSecs[i];break;}} switchToSection(home);"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>';
+            section.insertBefore(backBtn, section.firstChild);
+        });
+    }
+
+    // Inject after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectBackButtons);
+    } else {
+        injectBackButtons();
+    }
+    // Also re-inject when content changes (for AJAX loaded sections)
+    var observer = new MutationObserver(function() { setTimeout(injectBackButtons, 100); });
+    observer.observe(document.body, { childList: true, subtree: true });
 })();
 
 // ── 2. CLOSE ALL BOOTSTRAP MODALS ON BACKDROP / BUTTON CLICK ──
@@ -693,6 +810,42 @@ function openCommunicationModal() {
 @media (max-width: 480px) {
   .notif-dropdown { width: calc(100% - 32px); right: 16px; }
 }
+
+/* ── Universal Back / Close Button for Dashboard Sections ─── */
+.ed-back-btn {
+  margin-bottom: 14px;
+}
+.ed-back-btn .ed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.ed-back-btn .ed-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateX(-2px);
+}
+.ed-back-btn .ed-btn i { font-size: 11px; }
+
+/* ── Ensure ALL dashboard-sections are hidden by default ────── */
+.dashboard-section, .content-section {
+  display: none;
+}
+.dashboard-section.active, .content-section.active {
+  display: block;
+}
+
 /* ============================================================
    PADDING / LAYOUT NORMALIZATION
    Ensures consistent spacing across all dashboards/pages.

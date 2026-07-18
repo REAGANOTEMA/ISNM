@@ -192,11 +192,13 @@ function getModuleConfig(): array {
         [
             'title'    => 'Requisitions',
             'icon'     => 'fas fa-clipboard-list',
-            'roles'    => ['bursar','finance','accountant'],
+            'roles'    => ['bursar','finance','accountant','director general','ceo','principal','deputy','secretary',
+                           'registrar','director','academics','lecturer','head','senior','nursing','midwifery',
+                           'non-teaching','matron','warden','sickbay','driver','security','computer lab','store'],
             'children' => [
-                ['title' => 'Pending Requisitions',  'route' => 'school-bursar.php?section=requisitions','roles' => '*'],
-                ['title' => 'Approved Requisitions', 'route' => 'school-bursar.php?section=requisitions&filter=approved','roles' => '*'],
-                ['title' => 'Rejected Requisitions', 'route' => 'school-bursar.php?section=requisitions&filter=rejected','roles' => '*'],
+                ['title' => 'All Requisitions',    'route' => 'store-requisition.php','roles' => '*'],
+                ['title' => 'My Requests',         'route' => 'store-requisition.php?tab=my_requests','roles' => '*'],
+                ['title' => 'Department Requests', 'route' => 'department-requests.php','roles' => '*'],
             ],
         ],
         [
@@ -204,9 +206,7 @@ function getModuleConfig(): array {
             'icon'     => 'fas fa-envelope',
             'roles'    => ['bursar','finance','accountant'],
             'children' => [
-                ['title' => 'Messages',         'route' => 'school-bursar.php?section=communications','roles' => '*'],
-                ['title' => 'Financial Notices','route' => 'school-bursar.php?section=communications&tab=notices','roles' => '*'],
-                ['title' => 'Sent Messages',    'route' => 'school-bursar.php?section=communications&tab=sent','roles' => '*'],
+                ['title' => 'Messages',         'route' => 'communications.php','roles' => '*'],
             ],
         ],
         [
@@ -474,7 +474,7 @@ function getModuleConfig(): array {
                 ['title' => 'Inventory Reports',     'route' => 'inventory-reports.php',              'roles' => ['director','principal','hr','store','storekeeper']],
                 ['title' => 'Asset Management',      'route' => 'asset-management.php',               'roles' => ['store','storekeeper','director','manager']],
                 ['title' => 'Procurement Oversight', 'route' => 'procurement-oversight.php',          'roles' => ['director','finance','bursar','store','storekeeper']],
-                ['title' => 'Department Requests',   'route' => 'department-requests.php',            'roles' => ['store','storekeeper','director','manager','head']],
+                ['title' => 'Department Requests',   'route' => 'department-requests.php',            'roles' => ['store','storekeeper','director','manager','head','finance','bursar','admin','secretary','registrar','deputy','principal','ict','hr','head-nursing','head-midwifery']],
             ],
         ],
         [
@@ -519,11 +519,19 @@ function getModuleConfig(): array {
             ],
         ],
         [
+            'title'    => 'Requirement Clearance',
+            'icon'     => 'fas fa-clipboard-check',
+            'roles'    => ['director','secretary','registrar','principal','deputy','hr','ict','storekeeper','matron','bursar','finance','admin','ceo'],
+            'children' => [
+                ['title' => 'Clearance Portal',    'route' => 'requirement-portal.php',    'roles' => '*'],
+            ],
+        ],
+        [
             'title'    => 'Communications',
             'icon'     => 'fas fa-bullhorn',
             'roles'    => ['director','secretary','ict','it','principal'],
             'children' => [
-                ['title' => 'Communications Hub',   'route' => 'communications.php',                 'roles' => ['director','secretary','ict','it']],
+                ['title' => 'Communications Hub',   'route' => 'communications.php',                 'roles' => ['director','secretary','ict','it','hr','finance','bursar','registrar','deputy','principal','head-nursing','head-midwifery','non-teaching','ceo']],
                 ['title' => 'News Management',       'route' => '../news.php',                        'roles' => '*'],
                 ['title' => 'Announcements',         'route' => 'student-announcements.php',          'roles' => '*'],
                 ['title' => 'SMS / Email',           'route' => '../messaging.php',                   'roles' => '*'],

@@ -223,6 +223,7 @@ if (!function_exists('renderCommunicationModal')) {
                             <input type="hidden" name="sender_id" value="<?= $staff_id ?>">
                             <input type="hidden" name="sender_email" value="<?= htmlspecialchars($staff_email) ?>">
                             <input type="hidden" name="sender_name" value="<?= htmlspecialchars($staff_name) ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
                             <div class="row g-3">
                                 <div class="col-md-6">

@@ -865,7 +865,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </div>
 
     <!-- Attendance -->
-    <section id="attendance" class="content-section dashboard-section section-card<?= $section==='attendance'?' active':'' ?>" data-section="attendance" style="<?= $section==='attendance'?'':'display:none' ?>">
+    <section id="attendance" class="content-section dashboard-section section-card<?= $section==='attendance'?' active':'' ?>" data-section="attendance">
         <h2><i class="fas fa-calendar-check me-2"></i>Attendance Records</h2>
         <?php
         $attendanceRecords = [];
@@ -883,7 +883,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- CAT Marks -->
-    <section id="cat-marks" class="content-section dashboard-section section-card<?= $section==='cat-marks'?' active':'' ?>" data-section="cat-marks" style="<?= $section==='cat-marks'?'':'display:none' ?>">
+    <section id="cat-marks" class="content-section dashboard-section section-card<?= $section==='cat-marks'?' active':'' ?>" data-section="cat-marks">
         <h2><i class="fas fa-pen me-2"></i>CAT Marks Entry</h2>
         <?php
         $catRecords = [];
@@ -904,7 +904,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- Exam Marks -->
-    <section id="exam-marks" class="content-section dashboard-section section-card<?= $section==='exam-marks'?' active':'' ?>" data-section="exam-marks" style="<?= $section==='exam-marks'?'':'display:none' ?>">
+    <section id="exam-marks" class="content-section dashboard-section section-card<?= $section==='exam-marks'?' active':'' ?>" data-section="exam-marks">
         <h2><i class="fas fa-file-alt me-2"></i>Exam Marks</h2>
         <?php
         $examRecords = [];
@@ -925,7 +925,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- Results -->
-    <section id="results" class="content-section dashboard-section section-card<?= $section==='results'?' active':'' ?>" data-section="results" style="<?= $section==='results'?'':'display:none' ?>">
+    <section id="results" class="content-section dashboard-section section-card<?= $section==='results'?' active':'' ?>" data-section="results">
         <h2><i class="fas fa-chart-bar me-2"></i>Student Results</h2>
         <div class="row g-3 mb-3">
             <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Total Records</h6><h3><?= count($grade_distribution??[]) > 0 ? array_sum($grade_distribution) : 0 ?></h3></div></div></div>
@@ -935,7 +935,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- Reports -->
-    <section id="reports" class="content-section dashboard-section section-card<?= $section==='reports'?' active':'' ?>" data-section="reports" style="<?= $section==='reports'?'':'display:none' ?>">
+    <section id="reports" class="content-section dashboard-section section-card<?= $section==='reports'?' active':'' ?>" data-section="reports">
         <h2><i class="fas fa-file-invoice me-2"></i>Reports Center</h2>
         <div class="row g-3">
             <div class="col-md-6"><div class="card"><div class="card-body"><h5>Teaching Summary</h5><p>Courses: <?= $assigned_courses ?> | Students: <?= $total_students ?> | Pending Grades: <?= $pending_grades ?></p><a href="?page=overview" class="btn btn-sm btn-outline-primary">View Overview</a></div></div></div>
@@ -944,7 +944,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- Lesson Plans -->
-    <section id="lesson-plans" class="content-section dashboard-section section-card<?= $section==='lesson-plans'?' active':'' ?>" data-section="lesson-plans" style="<?= $section==='lesson-plans'?'':'display:none' ?>">
+    <section id="lesson-plans" class="content-section dashboard-section section-card<?= $section==='lesson-plans'?' active':'' ?>" data-section="lesson-plans">
         <h2><i class="fas fa-clipboard-list me-2"></i>Lesson Plans</h2>
         <?php
         $lessonPlans = [];
@@ -965,7 +965,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </section>
 
     <!-- Assignments -->
-    <section id="assignments" class="content-section dashboard-section section-card<?= $section==='assignments'?' active':'' ?>" data-section="assignments" style="<?= $section==='assignments'?'':'display:none' ?>">
+    <section id="assignments" class="content-section dashboard-section section-card<?= $section==='assignments'?' active':'' ?>" data-section="assignments">
         <h2><i class="fas fa-tasks me-2"></i>Assignments</h2>
         <?php
         $assignments = [];

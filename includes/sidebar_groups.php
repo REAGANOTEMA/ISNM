@@ -46,14 +46,12 @@ function getSidebarGroups(string $role): array {
         ];
     }
 
-    // ── COMMUNICATION (exec roles only) ──
-    if ($isExec && $roleKey !== 'director_admissions') {
-        $g['COMMUNICATION'] = [
-            ['label' => 'Notifications', 'icon' => 'fas fa-bell',       'page' => 'notifications'],
-            ['label' => 'Messages',      'icon' => 'fas fa-envelope',   'page' => 'messages'],
-            ['label' => 'Announcements', 'icon' => 'fas fa-bullhorn',   'page' => 'announcements'],
-        ];
-    }
+    // ── COMMUNICATION (all staff) ──
+    $g['COMMUNICATION'] = [
+        ['label' => 'Notifications', 'icon' => 'fas fa-bell',       'page' => 'notifications'],
+        ['label' => 'Messages',      'icon' => 'fas fa-envelope',   'page' => 'communications', 'href' => 'communications.php'],
+        ['label' => 'Announcements', 'icon' => 'fas fa-bullhorn',   'page' => 'announcements'],
+    ];
 
     // ── ACCOUNT (everyone) ──
     $g['ACCOUNT'] = [
@@ -268,27 +266,24 @@ function getRoleOperations(string $role): array {
             ['label' => 'Meals & Accommodation','icon'=>'fas fa-utensils',     'page'=>'meals'],
             ['label' => 'Sick Bay',             'icon'=>'fas fa-plus-circle',  'page'=>'sickbay'],
             ['label' => 'Student Welfare',      'icon'=>'fas fa-heart',        'page'=>'welfare'],
+            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'store-requisition.php'],
         ],
         'wardens' => [
             ['label' => 'Hostel Management',    'icon'=>'fas fa-bed',          'page'=>'hostel'],
             ['label' => 'Discipline',           'icon'=>'fas fa-gavel',        'page'=>'discipline'],
             ['label' => 'Student Welfare',      'icon'=>'fas fa-heart',        'page'=>'welfare'],
             ['label' => 'Hostel Reports',       'icon'=>'fas fa-file-alt',     'page'=>'reports'],
+            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'store-requisition.php'],
         ],
         'drivers' => [
-            ['label' => 'Trip Requests',        'icon'=>'fas fa-route',        'page'=>'trip-requests'],
-            ['label' => 'Assigned Vehicles',    'icon'=>'fas fa-truck',        'page'=>'assigned-vehicles'],
-            ['label' => 'Journey Planner',      'icon'=>'fas fa-map-marked-alt','page'=>'journey-planner'],
-            ['label' => 'Fuel Requests',        'icon'=>'fas fa-gas-pump',     'page'=>'fuel-requests'],
-            ['label' => 'Fuel Records',         'icon'=>'fas fa-file-invoice', 'page'=>'fuel-records'],
-            ['label' => 'Mileage',              'icon'=>'fas fa-tachometer-alt','page'=>'mileage'],
-            ['label' => 'Maintenance',          'icon'=>'fas fa-tools',        'page'=>'maintenance'],
-            ['label' => 'Repairs',              'icon'=>'fas fa-wrench',       'page'=>'repairs'],
-            ['label' => 'Vehicle Inspection',   'icon'=>'fas fa-clipboard-check','page'=>'inspection'],
-            ['label' => 'Vehicle History',      'icon'=>'fas fa-history',      'page'=>'vehicle-history'],
-            ['label' => 'Attendance',           'icon'=>'fas fa-calendar-check','page'=>'attendance'],
-            ['label' => 'Journey Reports',      'icon'=>'fas fa-file-alt',     'page'=>'journey-reports'],
-            ['label' => 'Incident Reports',     'icon'=>'fas fa-exclamation-triangle','page'=>'incidents'],
+            ['label' => 'Dashboard',           'icon'=>'fas fa-home',            'page'=>'home'],
+            ['label' => 'Vehicles',            'icon'=>'fas fa-truck',           'page'=>'transport-vehicles', 'href'=>'drivers.php?page=transport-vehicles'],
+            ['label' => 'Routes',              'icon'=>'fas fa-route',           'page'=>'transport-routes',   'href'=>'drivers.php?page=transport-routes'],
+            ['label' => 'Trips',               'icon'=>'fas fa-map-marked-alt',  'page'=>'transport-trips',    'href'=>'drivers.php?page=transport-trips'],
+            ['label' => 'Student Transport',   'icon'=>'fas fa-user-graduate',   'page'=>'student-transport',  'href'=>'drivers.php?page=student-transport'],
+            ['label' => 'Fuel Log',            'icon'=>'fas fa-gas-pump',        'page'=>'fuel-log',           'href'=>'drivers.php?page=fuel-log'],
+            ['label' => 'Reports',             'icon'=>'fas fa-file-alt',        'page'=>'reports',            'href'=>'drivers.php?page=reports'],
+            ['label' => 'Store Requisition',   'icon'=>'fas fa-clipboard-list',  'page'=>'store-requisition',  'href'=>'store-requisition.php'],
         ],
         'security' => [
             ['label' => 'Overview',            'icon'=>'fas fa-chart-pie',        'page'=>'overview'],
@@ -297,6 +292,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Incident Reports',    'icon'=>'fas fa-exclamation-triangle','page'=>'incidents'],
             ['label' => 'Patrol Management',   'icon'=>'fas fa-shield-alt',      'page'=>'patrol'],
             ['label' => 'Emergency Contacts',  'icon'=>'fas fa-ambulance',       'page'=>'emergency'],
+            ['label' => 'Store Requisition',   'icon'=>'fas fa-clipboard-list',  'page'=>'store-requisition', 'href'=>'store-requisition.php'],
         ],
         'store' => [
             ['label' => 'Dashboard',            'icon'=>'fas fa-home',         'page'=>'dashboard'],

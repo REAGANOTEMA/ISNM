@@ -13,14 +13,6 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-// CSRF validation for all POST actions except read-only ones
-$csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Invalid or missing security token.']);
-    exit;
-}
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed.']);
@@ -29,6 +21,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $action = $_POST['action'] ?? '';
 $user_id = (int)$_SESSION['user_id'];
+
+// CSRF only for write actions (send, read, delete) — skip for read-only
+$writeActions = ['send', 'read', 'delete'];
+if (in_array($action, $writeActions)) {
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid or missing security token.']);
+        exit;
+    }
+}
 
 $conn = function_exists('getStaffConnection') ? getStaffConnection() : null;
 if (!$conn) {

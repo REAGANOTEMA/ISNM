@@ -524,10 +524,10 @@ try {
               <?php endif; ?>
               <div class="news-card-body">
                 <span class="date"><i class="far fa-calendar-alt me-1"></i><?= date('F j, Y', strtotime($item['published_at'])) ?></span>
-                <h5><a href="news.php?id=<?= (int)$item['id'] ?>"><?= htmlspecialchars($item['title']) ?></a></h5>
+                <h5><a href="news.php?view=single&slug=<?= urlencode($item['slug'] ?? '') ?>"><?= htmlspecialchars($item['title']) ?></a></h5>
                 <p class="excerpt"><?= htmlspecialchars(mb_strimwidth(strip_tags($item['excerpt'] ?? ''), 0, 120, '...')) ?></p>
                 <div class="mt-2">
-                  <a href="news.php?id=<?= (int)$item['id'] ?>" class="btn-3d btn-blue btn-3d-sm">
+                  <a href="news.php?view=single&slug=<?= urlencode($item['slug'] ?? '') ?>" class="btn-3d btn-blue btn-3d-sm">
                     <span class="shine"></span>
                     <i class="fas fa-arrow-right"></i> Read More
                   </a>

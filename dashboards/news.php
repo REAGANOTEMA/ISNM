@@ -64,6 +64,27 @@ function ensureNewsTables($staffConn, $websiteConn) {
         @$c->query($catSchema);
         @$c->query($seedCats);
     }
+
+    // Ensure website DB news table has required columns for sync
+    if ($websiteConn) {
+        $websiteCols = ['summary', 'category', 'tags', 'is_featured', 'scheduled_at', 'archived_at', 'views', 'excerpt'];
+        foreach ($websiteCols as $col) {
+            $typeMap = [
+                'summary' => 'TEXT',
+                'category' => "VARCHAR(100) DEFAULT 'General'",
+                'tags' => 'VARCHAR(500)',
+                'is_featured' => 'TINYINT(1) DEFAULT 0',
+                'scheduled_at' => 'DATETIME',
+                'archived_at' => 'DATETIME',
+                'views' => 'INT DEFAULT 0',
+                'excerpt' => 'TEXT',
+            ];
+            $type = $typeMap[$col] ?? 'TEXT';
+            @$websiteConn->query("ALTER TABLE news ADD COLUMN IF NOT EXISTS `$col` $type");
+        }
+        // Ensure status ENUM includes 'scheduled'
+        @$websiteConn->query("ALTER TABLE news MODIFY COLUMN status ENUM('draft','published','scheduled','archived') DEFAULT 'draft'");
+    }
 }
 ensureNewsTables($staff, $website);
 
@@ -84,17 +105,27 @@ function syncToWebsite($websiteConn, $operation, $data, $staffId) {
     try {
         switch ($operation) {
             case 'insert':
-                $stmt = $websiteConn->prepare("INSERT INTO news (id,title,slug,summary,content,featured_image,category,tags,status,is_featured,published_at,scheduled_at,archived_at,author_id,author_name,views,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())");
+                $stmt = $websiteConn->prepare("INSERT INTO news (id,title,slug,content,excerpt,featured_image,author_id,author_name,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,NOW())");
                 if ($stmt) {
-                    $stmt->bind_param('isssssssisssisi', $data['id'],$data['title'],$data['slug'],$data['summary'],$data['content'],$data['featured_image'],$data['category'],$data['tags'],$data['status'],$data['is_featured'],$data['published_at'],$data['scheduled_at'],$data['archived_at'],$data['author_id'],$data['author_name'],$data['views']);
+                    $summary = $data['summary'] ?? $data['content'] ?? '';
+                    if (mb_strlen($summary) > 200) $summary = mb_substr($summary, 0, 200) . '...';
+                    $excerpt = $data['summary'] ?? mb_substr(strip_tags($data['content'] ?? ''), 0, 200);
+                    $publishedAt = $data['status'] === 'published' ? date('Y-m-d H:i:s') : ($data['published_at'] ?? null);
+                    $authorName = $data['author_name'] ?? '';
+                    $authorId = $data['author_id'] ?? $staffId;
+                    $stmt->bind_param('isssssisss', $data['id'],$data['title'],$data['slug'],$data['content'],$excerpt,$data['featured_image'],$authorId,$authorName,$data['status'],$publishedAt);
                     @$stmt->execute();
                     $stmt->close();
                 }
                 break;
             case 'update':
-                $stmt = $websiteConn->prepare("UPDATE news SET title=?,slug=?,summary=?,content=?,featured_image=?,category=?,tags=?,status=?,is_featured=?,published_at=?,scheduled_at=?,archived_at=?,author_id=?,author_name=?,views=?,updated_at=NOW() WHERE id=?");
+                $stmt = $websiteConn->prepare("UPDATE news SET title=?,slug=?,content=?,excerpt=?,featured_image=?,author_id=?,author_name=?,status=?,published_at=?,updated_at=NOW() WHERE id=?");
                 if ($stmt) {
-                    $stmt->bind_param('ssssssssisssisii', $data['title'],$data['slug'],$data['summary'],$data['content'],$data['featured_image'],$data['category'],$data['tags'],$data['status'],$data['is_featured'],$data['published_at'],$data['scheduled_at'],$data['archived_at'],$data['author_id'],$data['author_name'],$data['views'],$data['id']);
+                    $excerpt = $data['summary'] ?? mb_substr(strip_tags($data['content'] ?? ''), 0, 200);
+                    $publishedAt = $data['status'] === 'published' ? date('Y-m-d H:i:s') : ($data['published_at'] ?? null);
+                    $authorName = $data['author_name'] ?? '';
+                    $authorId = $data['author_id'] ?? $staffId;
+                    $stmt->bind_param('sssssisssi', $data['title'],$data['slug'],$data['content'],$excerpt,$data['featured_image'],$authorId,$authorName,$data['status'],$publishedAt,$data['id']);
                     @$stmt->execute();
                     $stmt->close();
                 }

@@ -11,14 +11,15 @@ require_once __DIR__ . '/includes/notification_helper.php';
 $totalNotifications = 0; $unreadNotifications = 0; $readNotifications = 0; $recentNotifications = 0;
 $notifications = [];
 if ($conn) {
-    $r = $conn->query("SELECT COUNT(*) c FROM notifications");
+    ensureNotificationTables($conn);
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_notifications");
     if ($r) $totalNotifications = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM notification_reads WHERE user_id = $userId");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_notification_reads WHERE user_id = $userId");
     if ($r) $readNotifications = (int)$r->fetch_assoc()['c'];
     $unreadNotifications = max(0, $totalNotifications - $readNotifications);
-    $r = $conn->query("SELECT COUNT(*) c FROM notifications WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+    $r = $conn->query("SELECT COUNT(*) c FROM staff_notifications WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
     if ($r) $recentNotifications = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT n.id, n.title, n.message, n.type, n.created_at, (SELECT COUNT(*) FROM notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = $userId) AS is_read FROM notifications n ORDER BY n.created_at DESC LIMIT 100");
+    $r = $conn->query("SELECT n.id, n.title, n.message, n.type, n.created_at, (SELECT COUNT(*) FROM staff_notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = $userId) AS is_read FROM staff_notifications n ORDER BY n.created_at DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $notifications[] = $row;
 }
 ?>

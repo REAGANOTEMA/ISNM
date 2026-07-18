@@ -3607,12 +3607,7 @@ function sendBroadcast(e){
     <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
   </div>
 </div>
-<script>
-// â•â•â• SWITCH SECTION â•â•â•
-function switchToSection(section) {
-    window.location.href = 'director-general.php?page=' + encodeURIComponent(section);
-}
-</script>
+<!-- Universal section switcher is provided by dashboard_footer.php — no local override needed -->
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

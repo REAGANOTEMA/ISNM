@@ -83,18 +83,19 @@ if ($result) {
                     $action === 'approve' ? 'fas fa-check-circle' : ($action === 'reject' ? 'fas fa-times-circle' : 'fas fa-undo')
                 );
                 if ($nid) {
-                    $websiteConn = getWebsiteConnection();
+                    $notifConn = getNotifConn();
                     $staffConn = getStaffConnection();
-                    if ($websiteConn && $staffConn) {
+                    if ($notifConn && $staffConn) {
+                        ensureNotificationTables($notifConn);
                         $stmtAll = $staffConn->prepare("SELECT id FROM staff WHERE id != ?");
                         if ($stmtAll) { $stmtAll->bind_param('i', $requesterId); $stmtAll->execute(); $allStaff = $stmtAll->get_result(); }
                         if ($allStaff) {
-                            $stmt = $websiteConn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
+                            $stmt = $notifConn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
                             if ($stmt) {
                                 while ($s = $allStaff->fetch_assoc()) {
                                     $sid = (int)$s['id'];
                                     $stmt->bind_param('ii', $nid, $sid);
-                                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                                    if (!$stmt->execute()) { error_log('approval_action mark read failed: ' . ($stmt->error ?? 'unknown')); }
                                 }
                                 $stmt->close();
                             }

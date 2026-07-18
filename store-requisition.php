@@ -269,8 +269,9 @@ if ($r) while ($row = $r->fetch_assoc()) $myRequests[] = $row;
 
                     <div class="mb-3">
                         <label class="srq-form-label">Select Items *</label>
-                        <div class="mb-2">
-                            <input type="text" id="itemSearch" class="srq-form-input" placeholder="Search items...">
+                        <div class="mb-2 d-flex gap-2">
+                            <input type="text" id="itemSearch" class="srq-form-input" placeholder="Search items..." style="flex:1">
+                            <button type="button" class="srq-btn srq-btn-primary srq-btn-sm" onclick="quickSelectMatron()" title="Auto-select the 16 standard Matron items"><i class="fas fa-bolt me-1"></i>Matron Essentials</button>
                         </div>
                         <div style="max-height:450px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;padding:10px" id="itemsContainer">
                         <?php foreach ($categories as $cat):
@@ -402,6 +403,31 @@ $(document).ready(function(){
         else { $('#selectedSummary').hide(); $('#selectedList').html(''); }
     }
 });
+
+function quickSelectMatron() {
+    var presetMap = <?= json_encode(array_flip(array_map('strtolower', array_column($allItems, 'item_name', 'id')))) ?>;
+    var nameToId = {};
+    <?php foreach ($allItems as $item): ?>
+    nameToId['<?= strtolower(addslashes($item['item_name'])) ?>'] = <?= (int)$item['id'] ?>;
+    <?php endforeach; ?>
+    var presets = [
+        ['omo', 5], ['jik', 5], ['vim', 5], ['examination gloves', 2], ['surgical gloves', 2],
+        ['scrubbing brushes', 5], ['squeezers', 3], ['mops', 5], ['soft brooms', 5], ['compound brooms', 3],
+        ['ruled reams', 2], ['toilet brushes', 5], ['bulbs', 5], ['stick glue', 2], ['cobweb brushes', 3], ['sink pumps', 2]
+    ];
+    $('.item-check').prop('checked', false).trigger('change');
+    $('.qty-input').val('').prop('disabled', true);
+    presets.forEach(function(p) {
+        var id = nameToId[p[0]];
+        if (!id) return;
+        var chk = $('.item-check[data-id="'+id+'"]');
+        if (chk.length) {
+            chk.prop('checked', true).trigger('change');
+            chk.closest('.srq-item-row').find('.qty-input').val(p[1]).prop('disabled', false);
+        }
+    });
+    updateSummary();
+}
 </script>
 <?php include_once __DIR__ . '/includes/dashboard_footer.php'; ?>
 </body>

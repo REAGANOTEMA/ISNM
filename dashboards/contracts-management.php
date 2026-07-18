@@ -278,7 +278,49 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function viewContract(id) { alert('View contract #' + id + ' â€” full detail view coming with document generation.'); }
+var _contracts = <?= json_encode(array_map(function($c) {
+    return [
+        'id' => $c['id'], 'contract_number' => $c['contract_number'] ?? '',
+        'full_name' => $c['full_name'] ?? '', 'staff_id' => $c['staff_id'] ?? '',
+        'contract_type' => $c['contract_type'] ?? '', 'job_title' => $c['job_title'] ?? '',
+        'department' => $c['department'] ?? '', 'start_date' => $c['start_date'] ?? '',
+        'end_date' => $c['end_date'] ?? '', 'salary' => $c['salary'] ?? 0,
+        'currency' => $c['currency'] ?? 'UGX', 'status' => $c['status'] ?? '',
+        'probation_period' => $c['probation_period'] ?? '', 'notice_period' => $c['notice_period'] ?? '',
+        'contract_terms' => $c['contract_terms'] ?? '', 'benefits' => $c['benefits'] ?? '',
+        'signed_date' => $c['signed_date'] ?? '',
+    ];
+}, $contracts)) ?>;
+function viewContract(id) {
+    var c = null;
+    for (var i = 0; i < _contracts.length; i++) { if (_contracts[i].id == id) { c = _contracts[i]; break; } }
+    if (!c) { alert('Contract not found'); return; }
+    var html = '<div class="modal fade" id="viewContractModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">';
+    html += '<div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Contract ' + escHtml(c.contract_number) + '</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>';
+    html += '<div class="modal-body"><div class="row g-3">';
+    html += '<div class="col-md-6"><strong>Staff:</strong> ' + escHtml(c.full_name) + '</div>';
+    html += '<div class="col-md-6"><strong>Staff ID:</strong> ' + escHtml(c.staff_id) + '</div>';
+    html += '<div class="col-md-6"><strong>Type:</strong> ' + escHtml(c.contract_type) + '</div>';
+    html += '<div class="col-md-6"><strong>Job Title:</strong> ' + escHtml(c.job_title) + '</div>';
+    html += '<div class="col-md-6"><strong>Department:</strong> ' + escHtml(c.department || '-') + '</div>';
+    html += '<div class="col-md-6"><strong>Salary:</strong> ' + escHtml(c.currency) + ' ' + parseFloat(c.salary || 0).toLocaleString() + '</div>';
+    html += '<div class="col-md-6"><strong>Start Date:</strong> ' + (c.start_date || '-') + '</div>';
+    html += '<div class="col-md-6"><strong>End Date:</strong> ' + (c.end_date || 'Open-ended') + '</div>';
+    html += '<div class="col-md-6"><strong>Probation:</strong> ' + (c.probation_period || '-') + ' months</div>';
+    html += '<div class="col-md-6"><strong>Notice Period:</strong> ' + (c.notice_period || '-') + ' days</div>';
+    html += '<div class="col-md-6"><strong>Signed:</strong> ' + (c.signed_date || '-') + '</div>';
+    html += '<div class="col-md-6"><strong>Status:</strong> <span class="badge bg-' + (c.status === 'Active' ? 'success' : (c.status === 'Expired' ? 'secondary' : (c.status === 'Terminated' ? 'danger' : 'primary'))) + '">' + escHtml(c.status) + '</span></div>';
+    if (c.contract_terms) html += '<div class="col-12"><strong>Terms:</strong><br><p class="text-muted small">' + escHtml(c.contract_terms).replace(/\n/g, '<br>') + '</p></div>';
+    if (c.benefits) html += '<div class="col-12"><strong>Benefits:</strong><br><p class="text-muted small">' + escHtml(c.benefits).replace(/\n/g, '<br>') + '</p></div>';
+    html += '</div></div>';
+    html += '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>';
+    html += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    var modal = new bootstrap.Modal(document.getElementById('viewContractModal'));
+    modal.show();
+    document.getElementById('viewContractModal').addEventListener('hidden.bs.modal', function() { this.remove(); });
+}
+function escHtml(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function renewContract(id, num) { document.getElementById('renewId').value = id; document.getElementById('renewNum').textContent = num; new bootstrap.Modal(document.getElementById('renewModal')).show(); }
 function terminateContract(id, num) { document.getElementById('termId').value = id; document.getElementById('termNum').textContent = num; new bootstrap.Modal(document.getElementById('terminateModal')).show(); }
 </script>

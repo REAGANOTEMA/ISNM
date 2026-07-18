@@ -1,20 +1,17 @@
 <?php
 /**
- * Notification Helper â€” create, fetch, and manage notifications across all dashboards.
- * Uses website_db.notifications + notification_reads tables.
+ * Notification Helper — create, fetch, and manage general notifications.
+ * Uses staff_notifications + staff_notification_reads (NOT the bursar notifications table).
  */
 require_once __DIR__ . '/../config/database.php';
 
 if (!function_exists('getNotifConn')) {
     function getNotifConn() {
-        if (function_exists('getWebsiteConnection')) {
-            return getWebsiteConnection();
-        }
-        if (function_exists('getDatabaseConnection')) {
-            return getDatabaseConnection('website');
-        }
         if (function_exists('getStaffConnection')) {
             return getStaffConnection();
+        }
+        if (function_exists('getDatabaseConnection')) {
+            return getDatabaseConnection('staffs');
         }
         return null;
     }
@@ -32,14 +29,44 @@ if (!function_exists('getStaffConn')) {
     }
 }
 
+if (!function_exists('ensureNotificationTables')) {
+    function ensureNotificationTables($conn) {
+        static $done = false;
+        if ($done) return;
+        $done = true;
+        $conn->query("CREATE TABLE IF NOT EXISTS staff_notifications (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            message TEXT,
+            type VARCHAR(30) DEFAULT 'info',
+            url VARCHAR(500) DEFAULT NULL,
+            icon VARCHAR(100) DEFAULT 'fas fa-bell',
+            target_user_id INT DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_created (created_at),
+            KEY idx_target (target_user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $conn->query("CREATE TABLE IF NOT EXISTS staff_notification_reads (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            notification_id INT NOT NULL,
+            user_id INT NOT NULL,
+            user_type VARCHAR(20) DEFAULT 'staff',
+            read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_notif_read (notification_id, user_id, user_type),
+            KEY idx_user (user_id, user_type)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+}
+
 if (!function_exists('createNotification')) {
     function createNotification($title, $message = '', $url = '', $type = 'info', $icon = 'fas fa-bell') {
         try {
             $conn = getNotifConn();
             if (!$conn) return false;
-            $stmt = $conn->prepare("INSERT INTO notifications (title, message, type, audience, created_at) VALUES (?, ?, ?, 'all', NOW())");
+            ensureNotificationTables($conn);
+            $stmt = $conn->prepare("INSERT INTO staff_notifications (title, message, type, url, icon, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
             if (!$stmt) return false;
-            $stmt->bind_param("sss", $title, $message, $type);
+            $stmt->bind_param("sssss", $title, $message, $type, $url, $icon);
             $ok = $stmt->execute();
             $id = $stmt->insert_id;
             $stmt->close();
@@ -57,10 +84,11 @@ if (!function_exists('notifyAllStaff')) {
             $staffConn = getStaffConn();
             $notifConn = getNotifConn();
             if (!$staffConn || !$notifConn) return 0;
+            ensureNotificationTables($notifConn);
             $r = $staffConn->query("SELECT id FROM staff WHERE status = 'Active'");
             if (!$r) return 0;
             $count = 0;
-            $stmt = $notifConn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
+            $stmt = $notifConn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
             if (!$stmt) return 0;
             while ($row = $r->fetch_assoc()) {
                 $stmt->bind_param("ii", $notification_id, $row['id']);
@@ -80,10 +108,11 @@ if (!function_exists('getUnreadNotificationCount')) {
         try {
             $conn = getNotifConn();
             if (!$conn) return 0;
-            $stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM notifications n WHERE NOT EXISTS (SELECT 1 FROM notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
+            ensureNotificationTables($conn);
+            $stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM staff_notifications n WHERE NOT EXISTS (SELECT 1 FROM staff_notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
             if (!$stmt) return 0;
             $stmt->bind_param("is", $user_id, $user_type);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('getUnreadNotificationCount execute failed: ' . ($stmt->error ?? 'unknown')); }
             $result = (int)$stmt->get_result()->fetch_assoc()['cnt'];
             $stmt->close();
             return $result;
@@ -99,10 +128,11 @@ if (!function_exists('getRecentNotifications')) {
         try {
             $conn = getNotifConn();
             if (!$conn) return [];
-            $stmt = $conn->prepare("SELECT n.*, CASE WHEN nr.id IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM notifications n LEFT JOIN notification_reads nr ON nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ? ORDER BY n.created_at DESC LIMIT ?");
+            ensureNotificationTables($conn);
+            $stmt = $conn->prepare("SELECT n.*, CASE WHEN nr.id IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM staff_notifications n LEFT JOIN staff_notification_reads nr ON nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ? ORDER BY n.created_at DESC LIMIT ?");
             if (!$stmt) return [];
             $stmt->bind_param("isi", $user_id, $user_type, $limit);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('getRecentNotifications execute failed: ' . ($stmt->error ?? 'unknown')); }
             $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
             return $rows;
@@ -118,7 +148,8 @@ if (!function_exists('markNotificationRead')) {
         try {
             $conn = getNotifConn();
             if (!$conn) return false;
-            $stmt = $conn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) VALUES (?, ?, ?)");
+            ensureNotificationTables($conn);
+            $stmt = $conn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) VALUES (?, ?, ?)");
             if (!$stmt) return false;
             $stmt->bind_param("iis", $notification_id, $user_id, $user_type);
             $ok = $stmt->execute();
@@ -136,7 +167,8 @@ if (!function_exists('markAllNotificationsRead')) {
         try {
             $conn = getNotifConn();
             if (!$conn) return false;
-            $stmt = $conn->prepare("INSERT IGNORE INTO notification_reads (notification_id, user_id, user_type) SELECT n.id, ?, ? FROM notifications n WHERE NOT EXISTS (SELECT 1 FROM notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
+            ensureNotificationTables($conn);
+            $stmt = $conn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) SELECT n.id, ?, ? FROM staff_notifications n WHERE NOT EXISTS (SELECT 1 FROM staff_notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
             if (!$stmt) return false;
             $stmt->bind_param("isii", $user_id, $user_type, $user_id, $user_type);
             $ok = $stmt->execute();

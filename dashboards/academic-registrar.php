@@ -1096,12 +1096,11 @@ $(document).ready(function() {
     if (hash) switchSection(hash);
 });
 
-function switchSection(section) {
-    document.querySelectorAll('.dashboard-section').forEach(function(el) { el.classList.remove('active'); });
-    var target = document.querySelector('.dashboard-section[data-section="' + section + '"]');
-    if (target) {
-        target.classList.add('active');
-    } else {
+// switchSection is provided by dashboard_footer.php (universal section switcher)
+// Hash-based fallback for sections not in the DOM:
+document.addEventListener('DOMContentLoaded', function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash && !document.querySelector('.dashboard-section[data-section="' + hash + '"], .content-section[data-section="' + hash + '"]')) {
         var generic = document.querySelector('.dashboard-section[data-section="generic"]');
         if (generic) {
             generic.classList.add('active');
@@ -1109,18 +1108,12 @@ function switchSection(section) {
             var desc = document.getElementById('genericSectionDesc');
             if (label) {
                 var titles = <?= json_encode($sectionTitles ?? []) ?>;
-                var title = titles[section] || section.replace(/-/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+                var title = titles[hash] || hash.replace(/-/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
                 label.textContent = title;
                 if (desc) desc.textContent = 'This section is under development. Content will be available soon.';
             }
         }
     }
-    window.location.hash = section;
-}
-
-window.addEventListener('hashchange', function() {
-    var hash = window.location.hash.replace('#', '');
-    if (hash) switchSection(hash);
 });
 
 document.querySelectorAll('.student-lookup').forEach(function(input) {

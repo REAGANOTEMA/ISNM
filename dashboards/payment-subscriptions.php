@@ -18,6 +18,31 @@ $studentId = $_GET['student_id'] ?? '';
 $subscriptions = $studentId ? getStudentSubscriptions($studentId) : [];
 $allSubscriptions = [];
 $stats = [];
+
+// AJAX endpoint for subscription detail
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'subscription_detail' && isset($_GET['id']) && $studentsDb) {
+    header('Content-Type: application/json');
+    $subId = (int)$_GET['id'];
+    $stmt = $studentsDb->prepare("SELECT ps.*, s.full_name, s.student_number, s.program FROM payment_subscriptions ps LEFT JOIN students s ON CAST(s.id AS CHAR) = ps.student_id WHERE ps.id = ?");
+    if ($stmt) {
+        $stmt->bind_param('i', $subId);
+        $stmt->execute();
+        $sub = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    } else { $sub = null; }
+    $deductions = [];
+    if ($sub) {
+        $dStmt = $studentsDb->prepare("SELECT * FROM subscription_deductions WHERE subscription_id = ? ORDER BY installment_number");
+        if ($dStmt) {
+            $dStmt->bind_param('i', $subId);
+            $dStmt->execute();
+            $deductions = $dStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $dStmt->close();
+        }
+    }
+    echo json_encode(['subscription' => $sub, 'deductions' => $deductions]);
+    exit;
+}
 if (in_array(strtolower($userRole), ['director general','director ict','school secretary','school principal','bursar','finance','director finance'])) {
     $allSubscriptions = getAllSubscriptions();
     $stats = getSubscriptionStats();
@@ -323,7 +348,51 @@ function filterSubscriptions() {
     });
 }
 function viewSubscription(id) {
-    alert('Subscription #' + id + ' details - Full history view coming soon.');
+    fetch('payment-subscriptions.php?ajax=subscription_detail&id=' + id)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var s = data.subscription;
+        var deductions = data.deductions || [];
+        if (!s) { alert('Subscription not found'); return; }
+        var collected = parseFloat(s.installments_collected || 0);
+        var total = parseFloat(s.total_installments || 1);
+        var pct = Math.min(100, (collected / total) * 100).toFixed(0);
+        var html = '<div class="modal fade" id="viewSubModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">';
+        html += '<div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-credit-card me-2"></i>Subscription Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>';
+        html += '<div class="modal-body">';
+        html += '<div class="row g-3 mb-4">';
+        html += '<div class="col-md-6"><strong>Student:</strong> ' + (s.full_name || 'N/A') + '<br><small class="text-muted">' + (s.student_number || s.student_id) + '</small></div>';
+        html += '<div class="col-md-6"><strong>Program:</strong> ' + (s.program || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Type:</strong> ' + (s.subscription_type || '-').replace(/_/g, ' ') + '</div>';
+        html += '<div class="col-md-6"><strong>Status:</strong> <span class="badge bg-' + (s.status === 'active' ? 'success' : (s.status === 'paused' ? 'warning' : 'secondary')) + '">' + (s.status || '') + '</span></div>';
+        html += '<div class="col-md-6"><strong>Total:</strong> UGX ' + parseFloat(s.total_amount || 0).toLocaleString() + '</div>';
+        html += '<div class="col-md-6"><strong>Installment:</strong> UGX ' + parseFloat(s.installment_amount || 0).toLocaleString() + ' / ' + (s.frequency || 'monthly') + '</div>';
+        html += '<div class="col-md-6"><strong>Method:</strong> ' + (s.payment_method || '-').replace(/_/g, ' ') + '</div>';
+        html += '<div class="col-md-6"><strong>Provider:</strong> ' + (s.payment_provider || '-') + ' ' + (s.phone_number || '') + '</div>';
+        html += '<div class="col-md-6"><strong>Start:</strong> ' + (s.start_date || '-') + '</div>';
+        html += '<div class="col-md-6"><strong>Next Due:</strong> ' + (s.next_due_date || '-') + '</div>';
+        html += '</div>';
+        html += '<div class="mb-3"><strong>Progress:</strong> ' + collected + '/' + total + ' installments (' + pct + '%)';
+        html += '<div class="progress mt-1" style="height:10px;"><div class="progress-bar bg-success" style="width:' + pct + '%"></div></div></div>';
+        if (deductions.length > 0) {
+            html += '<h6><i class="fas fa-history me-1"></i>Payment History</h6>';
+            html += '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>#</th><th>Amount</th><th>Due Date</th><th>Processed</th><th>Status</th><th>Reference</th></tr></thead><tbody>';
+            deductions.forEach(function(d) {
+                var stCls = d.status === 'completed' ? 'success' : (d.status === 'failed' ? 'danger' : (d.status === 'pending' ? 'warning' : 'secondary'));
+                html += '<tr><td>' + d.installment_number + '</td><td>UGX ' + parseFloat(d.amount || 0).toLocaleString() + '</td><td>' + (d.due_date || '-') + '</td><td>' + (d.processed_date || '-') + '</td><td><span class="badge bg-' + stCls + '">' + (d.status || '') + '</span></td><td><small>' + (d.payment_reference || '-') + '</small></td></tr>';
+            });
+            html += '</tbody></table></div>';
+        } else {
+            html += '<p class="text-muted">No payment history found.</p>';
+        }
+        html += '</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>';
+        html += '</div></div></div>';
+        document.body.insertAdjacentHTML('beforeend', html);
+        var modal = new bootstrap.Modal(document.getElementById('viewSubModal'));
+        modal.show();
+        document.getElementById('viewSubModal').addEventListener('hidden.bs.modal', function() { this.remove(); });
+    })
+    .catch(function(e) { alert('Failed to load subscription details'); console.error(e); });
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

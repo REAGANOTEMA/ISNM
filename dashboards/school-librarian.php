@@ -713,15 +713,14 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
+        // Navigation — delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(function(l) { l.classList.remove('active'); });
-                this.classList.add('active');
-                var targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(function(s) { s.style.display = 'none'; });
-                var target = document.getElementById(targetId);
-                if (target) target.style.display = 'block';
+                var sec = this.getAttribute('href').substring(1);
+                if (typeof switchToSection === 'function') {
+                    switchToSection(sec);
+                }
             });
         });
 

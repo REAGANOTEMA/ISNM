@@ -696,20 +696,13 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation
+        // Navigation — delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
+                var sec = this.getAttribute('href').substring(1);
+                if (typeof switchToSection === 'function') {
+                    switchToSection(sec);
                 }
             });
         });

@@ -258,7 +258,7 @@ $view = $_GET['view'] ?? 'list';
 $slug = $_GET['slug'] ?? '';
 
 if ($view === 'single' && $slug) {
-    // Try staff DB first, then website DB
+    // Try staff DB first (director_news), then website DB (news)
     $s = $staffConn->prepare("SELECT n.*, s.full_name as author_name, s.position as author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id WHERE n.slug=? AND n.status='published' LIMIT 1");
     if (!$s) {
         $s = $staffConn->prepare("SELECT * FROM director_news WHERE slug=? AND status='published' LIMIT 1");
@@ -271,6 +271,22 @@ if ($view === 'single' && $slug) {
             $singleNews = $result->fetch_assoc();
         }
         $s->close();
+    }
+    // Fallback: try website DB news table
+    if (!$singleNews && $websiteConn) {
+        $sw = $websiteConn->prepare("SELECT * FROM news WHERE slug=? AND status='published' LIMIT 1");
+        if ($sw) {
+            $sw->bind_param("s", $slug);
+            if (!$sw->execute()) { error_log('$sw execute failed: ' . ($sw->error ?? 'unknown')); };
+            $rw = $sw->get_result();
+            if ($rw && $rw->num_rows > 0) {
+                $singleNews = $rw->fetch_assoc();
+                $singleNews['author_name'] = $singleNews['author_name'] ?? '';
+                $singleNews['author_role'] = $singleNews['author_role'] ?? '';
+                $singleNews['content'] = $singleNews['content'] ?? $singleNews['excerpt'] ?? '';
+            }
+            $sw->close();
+        }
     }
     // Track the view
     if ($singleNews) {
@@ -446,7 +462,7 @@ include 'shared/_header.php';
                 <?php if ($singleNews['author_role']): ?> (<?= htmlspecialchars($singleNews['author_role']) ?>)<?php endif; ?>
                 <?php endif; ?>
             </div>
-            <div class="content"><?= htmlspecialchars($singleNews['content'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="content"><?= $singleNews['content'] ?? '' ?></div>
         </article>
     </div>
 <?php else: ?>

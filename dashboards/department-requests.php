@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['director', 'finance', 'bursar', 'store', 'admin', 'secretary', 'registrar', 'deputy', 'principal']);
+$ctx = bootstrapStaffDashboard(['director', 'finance', 'bursar', 'store', 'admin', 'secretary', 'registrar', 'deputy', 'principal', 'storekeeper', 'head-nursing', 'head-midwifery', 'nursing', 'midwifery', 'ict', 'hr', 'non-teaching', 'ceo']);
 $user = $ctx['user'];
 $userId = (int)($user['id'] ?? 0);
 
@@ -8,6 +8,31 @@ $conn = getConnection();
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Ensure department_requests table has correct schema
+if ($conn) {
+    $createTable = "CREATE TABLE IF NOT EXISTS department_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        request_number VARCHAR(50) NOT NULL,
+        from_department VARCHAR(100) NOT NULL,
+        to_department VARCHAR(100) DEFAULT 'Store',
+        item_name VARCHAR(300) NOT NULL,
+        quantity INT DEFAULT 1,
+        unit VARCHAR(50) DEFAULT '',
+        purpose TEXT,
+        urgency VARCHAR(50) DEFAULT 'Normal',
+        status VARCHAR(50) DEFAULT 'Pending',
+        requested_by INT,
+        approved_by INT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status),
+        INDEX idx_from_dept (from_department),
+        INDEX idx_to_dept (to_department)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    @$conn->query($createTable);
 }
 
 function dr_fetch($conn, $sql) {

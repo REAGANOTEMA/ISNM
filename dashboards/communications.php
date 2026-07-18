@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
+$ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal','hr','finance','bursar','registrar','deputy','nursing','midwifery','non-teaching','lecturer','senior-lecturer','head-nursing','head-midwifery','warden','matron','librarian','driver','storekeeper','security','ceo']);
 $pageTitle = 'Communications';
 
 $user_id = (int)($_SESSION['user_id'] ?? 0);
@@ -63,10 +63,10 @@ if ($conn) {
 .msg-meta { text-align:right; flex-shrink:0; }
 .msg-time { font-size:10px; color:#94a3b8; }
 .msg-priority { font-size:9px; padding:2px 6px; border-radius:8px; font-weight:600; margin-top:4px; display:inline-block; }
-.priority-Urgent { background:#fef2f2; color:#dc2626; }
-.priority-High { background:#fff7ed; color:#ea580c; }
-.priority-Normal { background:#f0fdf4; color:#16a34a; }
-.priority-Low { background:#f8fafc; color:#64748b; }
+.priority-urgent { background:#fef2f2; color:#dc2626; }
+.priority-high { background:#fff7ed; color:#ea580c; }
+.priority-normal { background:#f0fdf4; color:#16a34a; }
+.priority-low { background:#f8fafc; color:#64748b; }
 .msg-detail-header { padding:16px; border-bottom:1px solid #e2e8f0; }
 .msg-detail-body { padding:20px; line-height:1.7; font-size:13px; color:#334155; }
 .compose-form label { font-size:12px; font-weight:600; color:#475569; margin-bottom:4px; }
@@ -132,8 +132,8 @@ if ($conn) {
                     <div class="msg-meta">
                         <div class="msg-time"><?= date('d M Y', strtotime($m['created_at'])) ?></div>
                         <div class="msg-time"><?= date('H:i', strtotime($m['created_at'])) ?></div>
-                        <?php if ($m['priority'] !== 'Normal'): ?>
-                        <span class="msg-priority priority-<?= $m['priority'] ?>"><?= $m['priority'] ?></span>
+                        <?php if (strtolower($m['priority'] ?? '') !== 'normal'): ?>
+                        <span class="msg-priority priority-<?= strtolower($m['priority'] ?? 'normal') ?>"><?= htmlspecialchars(ucfirst($m['priority'] ?? 'Normal')) ?></span>
                         <?php endif; ?>
                     </div>
                 </div>
