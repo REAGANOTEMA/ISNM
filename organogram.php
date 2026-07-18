@@ -7,18 +7,28 @@ include('shared/_header.php');
            ISNM ORGANOGRAM — Hierarchical Tree Layout
            ══════════════════════════════════════════════════════════════ */
         :root {
-            --exec: #667eea;
-            --mgmt: #c471f5;
-            --admin: #4facfe;
-            --academic: #43e97b;
-            --support: #f673a8;
-            --student: #30cfd0;
-            --bg-deep: #060a14;
-            --bg-card: rgba(255,255,255,0.035);
-            --line-color: rgba(255,255,255,0.08);
-            --line-glow: rgba(102,126,234,0.12);
-            --text-primary: #f0f2f8;
-            --text-secondary: rgba(255,255,255,0.55);
+            --isnm-blue: #1A237E;
+            --isnm-blue-light: #3949AB;
+            --isnm-blue-dark: #0D1642;
+            --isnm-gold: #FFD700;
+            --isnm-gold-deep: #FFA000;
+            --isnm-cream: #FFF8DC;
+            --exec: #FFD700;
+            --mgmt: #FFA000;
+            --admin: #FFC107;
+            --academic: #FFB300;
+            --support: #FFE082;
+            --student: #FFF176;
+            --bg-deep: #0a0e1f;
+            --bg-card: rgba(13,22,66,0.85);
+            --bg-card-hover: rgba(26,35,126,0.95);
+            --line-color: rgba(255,215,0,0.18);
+            --line-glow: rgba(255,215,0,0.25);
+            --border-subtle: rgba(255,215,0,0.12);
+            --border-active: rgba(255,215,0,0.45);
+            --text-primary: #FFF8DC;
+            --text-secondary: rgba(255,248,220,0.6);
+            --text-gold: #FFD700;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,16 +47,16 @@ include('shared/_header.php');
         .org-bg {
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(102,126,234,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 80% 85%, rgba(196,113,245,0.05) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(79,172,254,0.04) 0%, transparent 60%),
-                linear-gradient(180deg, #060a14 0%, #0a1226 40%, #0f1a2e 70%, #060a14 100%);
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(255,215,0,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 85%, rgba(26,35,126,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(57,73,171,0.08) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0e1f 0%, #0D1642 40%, #1A237E 70%, #0a0e1f 100%);
         }
         .org-bg::after {
             content: ''; position: absolute; inset: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+                linear-gradient(rgba(255,215,0,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,215,0,0.015) 1px, transparent 1px);
             background-size: 60px 60px;
         }
 
@@ -67,21 +77,21 @@ include('shared/_header.php');
             position: relative; z-index: 1;
             max-width: 960px; margin: 0 auto 36px;
             padding: 32px 28px;
-            background: linear-gradient(135deg, rgba(102,126,234,0.06) 0%, rgba(196,113,245,0.04) 50%, rgba(79,172,254,0.06) 100%);
+            background: linear-gradient(135deg, rgba(26,35,126,0.6) 0%, rgba(13,22,66,0.8) 50%, rgba(26,35,126,0.6) 100%);
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.07);
+            border: 2px solid rgba(255,215,0,0.25);
             display: flex; align-items: center; justify-content: center; gap: 24px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05) inset;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 60px rgba(255,215,0,0.06), 0 1px 0 rgba(255,215,0,0.1) inset;
             animation: fadeDown 0.7s ease-out;
         }
         @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
 
         .school-banner::before {
             content: ''; position: absolute; inset: -1px; border-radius: 25px;
-            background: conic-gradient(from 180deg, rgba(102,126,234,0.12), rgba(196,113,245,0.08), rgba(79,172,254,0.12), rgba(67,233,123,0.08), rgba(102,126,234,0.12));
+            background: conic-gradient(from 180deg, rgba(255,215,0,0.3), rgba(255,160,0,0.2), rgba(255,215,0,0.3), rgba(255,160,0,0.2), rgba(255,215,0,0.3));
             z-index: -1; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude; -webkit-mask-composite: xor; padding: 1.5px;
+            mask-composite: exclude; -webkit-mask-composite: xor; padding: 2px;
             animation: rotateConic 12s linear infinite;
         }
         @keyframes rotateConic { to { transform: rotate(360deg); } }
@@ -89,22 +99,22 @@ include('shared/_header.php');
         .banner-logo { position: relative; flex-shrink: 0; }
         .banner-logo::after {
             content: ''; position: absolute; inset: -5px; border-radius: 50%;
-            border: 1.5px solid rgba(102,126,234,0.15);
+            border: 1.5px solid rgba(255,215,0,0.25);
             animation: ringPulse 3s ease-in-out infinite;
         }
         @keyframes ringPulse {
             0%, 100% { transform: scale(1); opacity: 0.3; }
             50% { transform: scale(1.05); opacity: 0.8; }
         }
-        .banner-logo img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .banner-divider { width: 1px; height: 48px; flex-shrink: 0; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.08), transparent); }
+        .banner-logo img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,215,0,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 20px rgba(255,215,0,0.08); }
+        .banner-divider { width: 1px; height: 48px; flex-shrink: 0; background: linear-gradient(180deg, transparent, rgba(255,215,0,0.25), transparent); }
         .banner-text { text-align: center; flex: 1; min-width: 0; }
         .banner-text h2 {
             font-size: 1.6rem; font-weight: 800; line-height: 1.2; margin-bottom: 5px;
-            background: linear-gradient(135deg, #fff 0%, #c8d0ff 50%, #c471f5 100%);
+            background: linear-gradient(135deg, #FFD700 0%, #FFF8DC 40%, #FFA000 70%, #FFD700 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .banner-text p { font-size: 0.85rem; font-style: italic; color: var(--text-secondary); }
+        .banner-text p { font-size: 0.85rem; font-style: italic; color: var(--isnm-cream); opacity: 0.7; }
 
         /* ══════════════════════════════════════════════════
            PAGE HEADER
@@ -112,7 +122,7 @@ include('shared/_header.php');
         .page-header { position: relative; z-index: 1; text-align: center; margin-bottom: 40px; padding: 0 16px; }
         .page-header h1 {
             font-size: 2rem; font-weight: 800; margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff 0%, #a8b8ff 40%, #c471f5 70%, #4facfe 100%);
+            background: linear-gradient(135deg, #FFD700 0%, #FFF8DC 30%, #FFA000 60%, #FFD700 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .page-header p { font-size: 0.95rem; color: var(--text-secondary); max-width: 480px; margin: 0 auto; }
@@ -145,8 +155,8 @@ include('shared/_header.php');
         .v-line::before {
             content: ''; position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
             width: 6px; height: 6px; border-radius: 50%;
-            background: rgba(102,126,234,0.25);
-            box-shadow: 0 0 8px rgba(102,126,234,0.15);
+            background: rgba(255,215,0,0.4);
+            box-shadow: 0 0 8px rgba(255,215,0,0.2);
         }
 
         /* ── Tier label ── */
@@ -164,12 +174,12 @@ include('shared/_header.php');
 
         @keyframes labelIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-        .org-tier.t-exec .tier-label { --tl-color: var(--exec); --tl-border: rgba(102,126,234,0.2); --tl-bg: rgba(102,126,234,0.08); }
-        .org-tier.t-mgmt .tier-label { --tl-color: var(--mgmt); --tl-border: rgba(196,113,245,0.2); --tl-bg: rgba(196,113,245,0.08); }
-        .org-tier.t-admin .tier-label { --tl-color: var(--admin); --tl-border: rgba(79,172,254,0.2); --tl-bg: rgba(79,172,254,0.08); }
-        .org-tier.t-academic .tier-label { --tl-color: var(--academic); --tl-border: rgba(67,233,123,0.2); --tl-bg: rgba(67,233,123,0.08); }
-        .org-tier.t-support .tier-label { --tl-color: var(--support); --tl-border: rgba(246,115,168,0.2); --tl-bg: rgba(246,115,168,0.08); }
-        .org-tier.t-student .tier-label { --tl-color: var(--student); --tl-border: rgba(48,207,208,0.2); --tl-bg: rgba(48,207,208,0.08); }
+        .org-tier.t-exec .tier-label { --tl-color: var(--exec); --tl-border: rgba(255,215,0,0.3); --tl-bg: rgba(255,215,0,0.1); }
+        .org-tier.t-mgmt .tier-label { --tl-color: var(--mgmt); --tl-border: rgba(255,160,0,0.3); --tl-bg: rgba(255,160,0,0.1); }
+        .org-tier.t-admin .tier-label { --tl-color: var(--admin); --tl-border: rgba(255,193,7,0.3); --tl-bg: rgba(255,193,7,0.1); }
+        .org-tier.t-academic .tier-label { --tl-color: var(--academic); --tl-border: rgba(255,179,0,0.3); --tl-bg: rgba(255,179,0,0.1); }
+        .org-tier.t-support .tier-label { --tl-color: var(--support); --tl-border: rgba(255,224,130,0.3); --tl-bg: rgba(255,224,130,0.1); }
+        .org-tier.t-student .tier-label { --tl-color: var(--student); --tl-border: rgba(255,241,118,0.3); --tl-bg: rgba(255,241,118,0.1); }
 
         /* ── Cards row ── */
         .tier-cards {
@@ -195,7 +205,7 @@ include('shared/_header.php');
             background: var(--bg-card);
             backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
             border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,215,0,0.12);
             padding: 24px 14px 16px;
             text-align: center;
             display: flex; flex-direction: column; align-items: center;
@@ -209,7 +219,7 @@ include('shared/_header.php');
 
         .org-card::before {
             content: ''; position: absolute; inset: 0; border-radius: 16px;
-            background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(0,0,0,0.03) 100%);
+            background: linear-gradient(160deg, rgba(255,215,0,0.04) 0%, transparent 40%, rgba(0,0,0,0.15) 100%);
             pointer-events: none; z-index: 0;
         }
 
@@ -217,7 +227,7 @@ include('shared/_header.php');
         .org-card::after {
             content: ''; position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
             width: 2px; height: 20px;
-            background: linear-gradient(180deg, var(--line-color), rgba(255,255,255,0.04));
+            background: linear-gradient(180deg, var(--line-color), rgba(255,215,0,0.06));
             z-index: -1;
         }
 
@@ -226,46 +236,47 @@ include('shared/_header.php');
         /* Shine sweep */
         .org-card .card-shine {
             position: absolute; top: 0; left: -120%; width: 50%; height: 100%;
-            background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+            background: linear-gradient(105deg, transparent 30%, rgba(255,215,0,0.06) 50%, transparent 70%);
             transform: skewX(-12deg); transition: left 0.6s ease; pointer-events: none; z-index: 3;
         }
         .org-card:hover .card-shine { left: 140%; }
 
         .org-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 30px var(--card-glow, rgba(255,255,255,0.02));
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 40px var(--card-glow, rgba(255,215,0,0.06));
+            border-color: var(--border-active);
         }
 
         /* Category styles */
-        .org-card.cat-exec { border-color: rgba(102,126,234,0.15); --card-glow: rgba(102,126,234,0.08); }
-        .org-card.cat-exec:hover { border-color: rgba(102,126,234,0.4); }
-        .org-card.cat-mgmt { border-color: rgba(196,113,245,0.15); --card-glow: rgba(196,113,245,0.08); }
-        .org-card.cat-mgmt:hover { border-color: rgba(196,113,245,0.4); }
-        .org-card.cat-admin { border-color: rgba(79,172,254,0.15); --card-glow: rgba(79,172,254,0.08); }
-        .org-card.cat-admin:hover { border-color: rgba(79,172,254,0.4); }
-        .org-card.cat-academic { border-color: rgba(67,233,123,0.15); --card-glow: rgba(67,233,123,0.08); }
-        .org-card.cat-academic:hover { border-color: rgba(67,233,123,0.4); }
-        .org-card.cat-support { border-color: rgba(246,115,168,0.15); --card-glow: rgba(246,115,168,0.08); }
-        .org-card.cat-support:hover { border-color: rgba(246,115,168,0.4); }
-        .org-card.cat-student { border-color: rgba(48,207,208,0.15); --card-glow: rgba(48,207,208,0.08); }
-        .org-card.cat-student:hover { border-color: rgba(48,207,208,0.4); }
+        .org-card.cat-exec { border-color: rgba(255,215,0,0.2); --card-glow: rgba(255,215,0,0.1); }
+        .org-card.cat-exec:hover { border-color: rgba(255,215,0,0.5); }
+        .org-card.cat-mgmt { border-color: rgba(255,160,0,0.2); --card-glow: rgba(255,160,0,0.1); }
+        .org-card.cat-mgmt:hover { border-color: rgba(255,160,0,0.5); }
+        .org-card.cat-admin { border-color: rgba(255,193,7,0.2); --card-glow: rgba(255,193,7,0.1); }
+        .org-card.cat-admin:hover { border-color: rgba(255,193,7,0.5); }
+        .org-card.cat-academic { border-color: rgba(255,179,0,0.2); --card-glow: rgba(255,179,0,0.1); }
+        .org-card.cat-academic:hover { border-color: rgba(255,179,0,0.5); }
+        .org-card.cat-support { border-color: rgba(255,224,130,0.2); --card-glow: rgba(255,224,130,0.1); }
+        .org-card.cat-support:hover { border-color: rgba(255,224,130,0.5); }
+        .org-card.cat-student { border-color: rgba(255,241,118,0.2); --card-glow: rgba(255,241,118,0.1); }
+        .org-card.cat-student:hover { border-color: rgba(255,241,118,0.5); }
 
         /* ── Root card (DG) — special crown treatment ── */
         .org-card.root-node {
             width: 230px; min-height: 210px;
-            border-color: rgba(102,126,234,0.25);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 40px rgba(102,126,234,0.06);
+            border-color: rgba(255,215,0,0.35);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 50px rgba(255,215,0,0.08);
         }
         .org-card.root-node::after { display: none; }
-        .org-card.root-node .card-icon { width: 62px; height: 62px; font-size: 1.6rem; border-radius: 50%; border-color: rgba(102,126,234,0.2); }
+        .org-card.root-node .card-icon { width: 62px; height: 62px; font-size: 1.6rem; border-radius: 50%; border-color: rgba(255,215,0,0.3); }
         .org-card.root-node:hover {
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 50px rgba(102,126,234,0.12);
-            border-color: rgba(102,126,234,0.5);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 60px rgba(255,215,0,0.15);
+            border-color: rgba(255,215,0,0.6);
         }
         .org-card.root-node { animation: cardReveal 0.5s ease-out both, pulseRoot 4s ease-in-out infinite 1.5s; }
         @keyframes pulseRoot {
-            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 30px rgba(102,126,234,0.04); }
-            50% { box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 50px rgba(102,126,234,0.1); }
+            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 40px rgba(255,215,0,0.06); }
+            50% { box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 60px rgba(255,215,0,0.12); }
         }
 
         /* ── Icon ── */
@@ -273,8 +284,8 @@ include('shared/_header.php');
             width: 50px; height: 50px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.25rem; margin-bottom: 12px;
-            background: rgba(255,255,255,0.04);
-            border: 1.5px solid rgba(255,255,255,0.06);
+            background: rgba(255,215,0,0.06);
+            border: 1.5px solid rgba(255,215,0,0.12);
             transition: transform 0.4s ease;
         }
         .org-card:hover .card-icon { transform: scale(1.1) translateY(-2px); }
@@ -288,7 +299,7 @@ include('shared/_header.php');
 
         .card-title {
             font-size: 0.88rem; font-weight: 700; line-height: 1.25;
-            color: #fff; margin-bottom: 4px;
+            color: #FFF8DC; margin-bottom: 4px;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
         .card-sub {
@@ -299,13 +310,13 @@ include('shared/_header.php');
         .card-login {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 7px 20px; border-radius: 22px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.75);
-            text-decoration: none; font-size: 0.74rem; font-weight: 500;
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.2);
+            color: var(--isnm-gold);
+            text-decoration: none; font-size: 0.74rem; font-weight: 600;
             transition: all 0.3s ease;
         }
-        .card-login:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; transform: scale(1.04); }
+        .card-login:hover { background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.5); color: #FFF8DC; transform: scale(1.04); box-shadow: 0 0 20px rgba(255,215,0,0.1); }
         .card-login i { font-size: 0.65rem; }
 
         /* ── Stagger animation ── */
@@ -403,7 +414,7 @@ include('shared/_header.php');
         /* ── Touch devices ── */
         @media (hover: none) and (pointer: coarse) {
             .org-card { -webkit-tap-highlight-color: transparent; }
-            .card-login:active { background: rgba(255,255,255,0.12); transform: scale(0.96); }
+            .card-login:active { background: rgba(255,215,0,0.2); transform: scale(0.96); }
         }
     </style>
 
