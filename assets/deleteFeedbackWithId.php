@@ -16,7 +16,7 @@ if (isset($_POST["feedbackid"])) {
         $response['message'] = "Unable to delete feedback!";
     }
 } else {
-    $response['status'] = "success";
+    $response['status'] = "error";
     $response['message'] = "Invalid request!";
 }
 

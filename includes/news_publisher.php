@@ -234,7 +234,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     header('Content-Type: application/json');
     
     // Check authorization (must be director, CEO, principal, or secretary)
-    $allowedRoles = ['director', 'ceo', 'principal', 'secretary', 'ict'];
+    $allowedRoles = ['director', 'ceo', 'principal', 'secretary', 'ict',
+                     'Director General', 'Chief Executive Officer', 'Director Academics',
+                     'Director Finance', 'Director ICT', 'School Principal',
+                     'Deputy Principal', 'Academic Registrar', 'HR Manager', 'School Bursar'];
     if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', $allowedRoles)) {
         echo json_encode(['success' => false, 'message' => 'Unauthorized']);
         exit;

@@ -55,18 +55,18 @@ if (isset($_POST['name'])) {
 
                 $resultOutput[$count - 1] = "<tr>
                    <td>&nbsp;&nbsp;" . $count . ".&nbsp;&nbsp;</td>
-                <td>" . $tid . "</td>
+                <td>" . htmlspecialchars($tid, ENT_QUOTES, 'UTF-8') . "</td>
                 <td class='user'>
-                    <img src='" . $image . "'>
-                    <p>". ucfirst(strtolower($fname)) ." ". strtolower($lname)."</p>
+                    <img src='" . htmlspecialchars($image, ENT_QUOTES, 'UTF-8') . "'>
+                    <p>". htmlspecialchars(ucfirst(strtolower($fname)) ." ". strtolower($lname), ENT_QUOTES, 'UTF-8') ."</p>
                 </td>
                 <td class='flex-center'>
                     <div class='edit-delete'>
-                        <a onclick='editTeacher(`" . $tid . "`)'   class='edit' >
+                        <a onclick='editTeacher(`" . htmlspecialchars($tid, ENT_QUOTES, 'UTF-8') . "`)'   class='edit' >
                             <i class='bx bxs-edit'></i>
                             <span>&nbsp;Edit</span>
                         </a>
-                        <a onclick='deleteTeacherWithId(`" . $tid . "`)'  class='delete'>
+                        <a onclick='deleteTeacherWithId(`" . htmlspecialchars($tid, ENT_QUOTES, 'UTF-8') . "`)'  class='delete'>
                             &nbsp;&nbsp;<i class='bx bxs-trash'></i>
                             <span>&nbsp;Delete</span>
                             &nbsp;&nbsp;

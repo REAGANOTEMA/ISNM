@@ -302,8 +302,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
     }
-    globalStudentSearchHandler($conn, $studentsConn, $conn, $websiteConn);
+    $searchQuery = trim($_POST['query'] ?? $_POST['search'] ?? '');
+    $results = [];
+    if ($studentsConn && $searchQuery) {
+        $s = "%$searchQuery%";
+        $stmt = $studentsConn->prepare("SELECT id, student_number, full_name, first_name, surname, program, course, year, level, status FROM students WHERE (student_number LIKE ? OR full_name LIKE ? OR first_name LIKE ? OR surname LIKE ?) LIMIT 20");
+        if ($stmt) {
+            $stmt->bind_param('ssss', $s, $s, $s, $s);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) { $results[] = $row; }
+            $stmt->close();
+        }
+    }
+    echo json_encode(['success' => true, 'students' => $results]);
     exit;
+}
+
+// ── AJAX handler for Director Requirements section ──
+if (isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $ajax_action = $_GET['ajax'];
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $csrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($csrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid security token.']); exit;
+        }
+    }
+
+    switch ($ajax_action) {
+        case 'search_students':
+            $search = trim($_GET['search'] ?? '');
+            $page = max(1, (int)($_GET['page'] ?? 1));
+            $per_page = 20;
+            $offset = ($page - 1) * $per_page;
+            if (!$search) { echo json_encode(['success' => false, 'students' => []]); exit; }
+            $students = [];
+            if ($studentsConn) {
+                $s = "%$search%";
+                $stmt = $studentsConn->prepare("SELECT id, student_number, full_name, first_name, surname, program, course, year, level, status, email, phone FROM students WHERE (student_number LIKE ? OR full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR email LIKE ?) ORDER BY full_name ASC LIMIT $per_page OFFSET $offset");
+                if ($stmt) {
+                    $stmt->bind_param('sssss', $s, $s, $s, $s, $s);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    while ($row = $result->fetch_assoc()) { $students[] = $row; }
+                    $stmt->close();
+                }
+            }
+            echo json_encode(['success' => true, 'students' => $students]); exit;
+
+        case 'get_student_app_requirements':
+            $student_num = trim($_GET['student_number'] ?? '');
+            if (!$student_num) { echo json_encode(['success' => false, 'message' => 'Student number required']); exit; }
+            $reqs = [];
+            if ($conn) {
+                $result = $conn->query("SELECT * FROM `$staff_db`.`student_application_requirements` WHERE student_number='" . $conn->real_escape_string($student_num) . "' ORDER BY category, requirement_name");
+                if ($result) { while ($r = $result->fetch_assoc()) { $reqs[] = $r; } }
+            }
+            echo json_encode(['success' => true, 'requirements' => $reqs]); exit;
+
+        case 'clear_student_requirement':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'message' => 'POST required']); exit; }
+            $id = (int)($_POST['req_id'] ?? 0);
+            $cleared = (int)($_POST['cleared'] ?? 1);
+            if (!$id) { echo json_encode(['success' => false, 'message' => 'Invalid ID']); exit; }
+            $new_status = $cleared ? 'Cleared' : 'Pending';
+            $v_by = $cleared ? ($_SESSION['full_name'] ?? 'Director General') : null;
+            $v_at = $cleared ? date('Y-m-d H:i:s') : null;
+            if ($conn) {
+                $stmt = $conn->prepare("UPDATE `$staff_db`.`student_application_requirements` SET status=?, verified_by=?, verified_at=? WHERE id=?");
+                $stmt->bind_param('sssi', $new_status, $v_by, $v_at, $id);
+                if ($stmt->execute()) {
+                    echo json_encode(['success' => true, 'message' => $cleared ? 'Requirement cleared' : 'Requirement unmarked']); exit;
+                }
+                $stmt->close();
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to update']); exit;
+    }
+    echo json_encode(['success' => false, 'message' => 'Unknown AJAX action']); exit;
 }
 
 // â”€â”€ News Management POST handlers â”€â”€
@@ -365,7 +443,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                             if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); };
                             $snStmt->close();
                         }
-                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = 'News article created successfully.';
@@ -415,7 +492,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
                         $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,'A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
                         if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); if (!$snStmt->execute()) { error_log('$snStmt execute failed: ' . ($snStmt->error ?? 'unknown')); }; $snStmt->close(); }
-                        $snConn->close();
                     }
                 }
                 $_SESSION['nw_success'] = "Status changed to $newStatus.";
@@ -1406,7 +1482,9 @@ switch ($dgSection):
   </div>
 </div>
 
-<!-- EDIT ROLE MODAL -->
+      <?php endforeach; ?>
+
+<!-- EDIT ROLE MODAL (must be outside foreach to avoid duplication) -->
 <div class="modal fade modern-modal" id="editRoleModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -1433,8 +1511,6 @@ switch ($dgSection):
     </form>
   </div>
 </div>
-
-      <?php endforeach; ?>
     </div>
     <?php endif; ?>
   </div>
@@ -1670,7 +1746,7 @@ switch ($dgSection):
 // Student performance prediction data
 $perfData = ['labels'=>[],'actual'=>[],'predicted'=>[],'courses'=>[]];
 if ($conn) {
-    $pr = $conn->query("SELECT c.course_title AS course_name, AVG(e.marks_obtained) avg_score, COUNT(e.id) total FROM examination_records e JOIN academic_course_catalog c ON e.course_code=c.course_code WHERE e.marks_obtained IS NOT NULL GROUP BY e.course_code ORDER BY avg_score DESC LIMIT 8");
+    $pr = $studentsConn->query("SELECT c.course_title AS course_name, AVG(e.marks_obtained) avg_score, COUNT(e.id) total FROM examination_records e JOIN academic_course_catalog c ON e.course_code=c.course_code WHERE e.marks_obtained IS NOT NULL GROUP BY e.course_code ORDER BY avg_score DESC LIMIT 8");
     if ($pr) {
         $allCourses = []; $scores = [];
         while ($row = $pr->fetch_assoc()) {
@@ -2029,18 +2105,17 @@ document.addEventListener('DOMContentLoaded', function() {
               $in = implode(',', $newsIds);
 
               if ($staffConn = getStaffConnection()) {
-                  $lvq = $staffConn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
+                  $lvq = $conn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
                   if ($lvq) {
                       while ($row = $lvq->fetch_assoc()) {
                           $dgLastViewByNewsId[(int)$row['news_id']] = $row['v'] ?? '';
                       }
-                      $lvq->close();
-                  }
-                  $staffConn->close();
-              }
-          }
-      }
-  } else {
+                    $lvq->close();
+                }
+            }
+        }
+    }
+} else {
       if ($conn) {
         $nr = $conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT 50");
         if ($nr) while ($row = $nr->fetch_assoc()) $dgNewsList[] = $row;
@@ -2050,7 +2125,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if ($staffConn = getStaffConnection()) {
         $nvr = $staffConn->query("SELECT news_id, COUNT(*) cnt FROM news_views GROUP BY news_id ORDER BY cnt DESC LIMIT 20");
         if ($nvr) while ($row = $nvr->fetch_assoc()) $dgNewsViews[$row['news_id']] = (int)$row['cnt'];
-        $staffConn->close();
       }
 
       $dgTotalViews = array_sum($dgNewsViews);
@@ -2065,7 +2139,7 @@ document.addEventListener('DOMContentLoaded', function() {
           $newsIds = array_values(array_filter($newsIds, fn($x) => $x > 0));
           if (!empty($newsIds)) {
               $in = implode(',', $newsIds);
-              $lvq = $staffConn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
+              $lvq = $conn->query("SELECT news_id, MAX(viewed_at) v FROM news_views WHERE news_id IN ($in) GROUP BY news_id");
               if ($lvq) {
                   while ($row = $lvq->fetch_assoc()) {
                       $dgLastViewByNewsId[(int)$row['news_id']] = $row['v'] ?? '';
@@ -2073,7 +2147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                   $lvq->close();
               }
           }
-          $staffConn->close();
       }
 
       if ($dgNewsUseCache) {
@@ -2157,7 +2230,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 $lvq->close();
               }
             }
-            $viewConn->close();
           }
 
           foreach ($dgNewsViews as $nid => $cnt):
@@ -3069,9 +3141,8 @@ endswitch; ?>
 <?php renderApprovalModalsAndScripts(); ?>
 <?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
-</div><!-- /ent-content-body -->
 </div><!-- /ent-content-area -->
-</div><!-- /ent-main -->
+</div><!-- /dg-content -->
 
 <!-- â•â•â• SEND ANNOUNCEMENT MODAL â•â•â• -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">
@@ -3484,10 +3555,123 @@ function editRole(r) {
     var modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
     modal.show();
 }
+
+var dgEventData = <?= json_encode($dgEventsList ?? []) ?>;
+function dgShowEventModal() {
+    document.getElementById('dgEventAction').value = 'create';
+    document.getElementById('dgEventId').value = '0';
+    document.getElementById('dgEventTitle').value = '';
+    document.getElementById('dgEventDate').value = '';
+    document.getElementById('dgEventDescription').value = '';
+    if (document.getElementById('dgEventType')) document.getElementById('dgEventType').value = 'general';
+    if (document.getElementById('dgEventLocation')) document.getElementById('dgEventLocation').value = '';
+    var titleEl = document.getElementById('dgEventModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create Event';
+    new bootstrap.Modal(document.getElementById('eventModal')).show();
+}
+function dgEditEvent(id) {
+    var ev = dgEventData.find(function(e) { return e.id == id; });
+    if (!ev) return;
+    document.getElementById('dgEventAction').value = 'update';
+    document.getElementById('dgEventId').value = ev.id;
+    document.getElementById('dgEventTitle').value = ev.title || '';
+    document.getElementById('dgEventDate').value = ev.event_date || '';
+    document.getElementById('dgEventDescription').value = ev.description || '';
+    if (document.getElementById('dgEventType')) document.getElementById('dgEventType').value = ev.event_type || 'general';
+    if (document.getElementById('dgEventLocation')) document.getElementById('dgEventLocation').value = ev.location || '';
+    var titleEl = document.getElementById('dgEventModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Event';
+    new bootstrap.Modal(document.getElementById('eventModal')).show();
+}
+function dgDeleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    fetch('director-general.php', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dg_events_action=delete&dg_event_id='+id+'&csrf_token='+encodeURIComponent(window.csrfToken||'')}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert(d.error||'Failed');});
+}
+function dgFilterEvents(q) {
+    q = (q||'').toLowerCase().trim();
+    document.querySelectorAll('.dg-event-row').forEach(function(el) {
+        var t = (el.querySelector('.dg-event-title')||{}).textContent||'';
+        el.style.display = !q || t.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+    });
+}
+
+var dgTestimonialData = <?= json_encode($dgTestimonialsList ?? []) ?>;
+function dgShowTestimonialModal() {
+    document.getElementById('dgTestimonialAction').value = 'create';
+    document.getElementById('dgTestimonialId').value = '0';
+    document.getElementById('dgTestimonialAuthor').value = '';
+    document.getElementById('dgTestimonialRole').value = '';
+    document.getElementById('dgTestimonialContent').value = '';
+    if (document.getElementById('dgTestimonialRating')) document.getElementById('dgTestimonialRating').value = '5';
+    var titleEl = document.getElementById('dgTestimonialModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create Testimonial';
+    new bootstrap.Modal(document.getElementById('testimonialModal')).show();
+}
+function dgEditTestimonial(id) {
+    var tm = dgTestimonialData.find(function(t) { return t.id == id; });
+    if (!tm) return;
+    document.getElementById('dgTestimonialAction').value = 'update';
+    document.getElementById('dgTestimonialId').value = tm.id;
+    document.getElementById('dgTestimonialAuthor').value = tm.author_name || '';
+    document.getElementById('dgTestimonialRole').value = tm.author_role || '';
+    document.getElementById('dgTestimonialContent').value = tm.content || '';
+    if (document.getElementById('dgTestimonialRating')) document.getElementById('dgTestimonialRating').value = tm.rating || '5';
+    var titleEl = document.getElementById('dgTestimonialModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Testimonial';
+    new bootstrap.Modal(document.getElementById('testimonialModal')).show();
+}
+function dgDeleteTestimonial(id) {
+    if (!confirm('Delete this testimonial?')) return;
+    fetch('director-general.php', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dg_testimonials_action=delete&dg_testimonial_id='+id+'&csrf_token='+encodeURIComponent(window.csrfToken||'')}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert(d.error||'Failed');});
+}
+function dgFilterTestimonials(q) {
+    q = (q||'').toLowerCase().trim();
+    document.querySelectorAll('.dg-testimonial-row').forEach(function(el) {
+        var t = ((el.querySelector('.dg-testimonial-author')||{}).textContent||'') + ' ' + ((el.querySelector('.dg-testimonial-content')||{}).textContent||'');
+        el.style.display = !q || t.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+    });
+}
+
+var dgFaqData = <?= json_encode($dgFaqsList ?? []) ?>;
+function dgShowFaqModal() {
+    document.getElementById('dgFaqAction').value = 'create';
+    document.getElementById('dgFaqId').value = '0';
+    document.getElementById('dgFaqSortOrder').value = '0';
+    document.getElementById('dgFaqQuestion').value = '';
+    document.getElementById('dgFaqAnswer').value = '';
+    if (document.getElementById('dgFaqCategory')) document.getElementById('dgFaqCategory').value = 'General';
+    var titleEl = document.getElementById('dgFaqModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create FAQ';
+    new bootstrap.Modal(document.getElementById('faqModal')).show();
+}
+function dgEditFaq(id) {
+    var faq = dgFaqData.find(function(f) { return f.id == id; });
+    if (!faq) return;
+    document.getElementById('dgFaqAction').value = 'update';
+    document.getElementById('dgFaqId').value = faq.id;
+    document.getElementById('dgFaqSortOrder').value = faq.sort_order || 0;
+    document.getElementById('dgFaqQuestion').value = faq.question || '';
+    document.getElementById('dgFaqAnswer').value = faq.answer || '';
+    if (document.getElementById('dgFaqCategory')) document.getElementById('dgFaqCategory').value = faq.category || 'General';
+    var titleEl = document.getElementById('dgFaqModalTitle');
+    if (titleEl) titleEl.innerHTML = '<i class="fas fa-edit me-2"></i>Edit FAQ';
+    new bootstrap.Modal(document.getElementById('faqModal')).show();
+}
+function dgDeleteFaq(id) {
+    if (!confirm('Delete this FAQ?')) return;
+    fetch('director-general.php', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dg_faqs_action=delete&dg_faq_id='+id+'&csrf_token='+encodeURIComponent(window.csrfToken||'')}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert(d.error||'Failed');});
+}
+function dgFilterFaqs(q) {
+    q = (q||'').toLowerCase().trim();
+    document.querySelectorAll('.dg-faq-row').forEach(function(el) {
+        var t = (el.querySelector('.dg-faq-question')||{}).textContent||'';
+        el.style.display = !q || t.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+    });
+}
 </script>
 
 <script>
-window.allStudents = <?= json_encode($loader->loadAllStudents() ?: []) ?>;
+window.allStudents = <?= ($dgSection === 'student' || $dgSection === 'student-requirements' || $dgSection === 'director-requirements') ? json_encode($loader->loadAllStudents() ?: []) : '[]' ?>;
 </script>
 <script>
 function viewFullProfile(id){ showStudentProfileModal(id); }

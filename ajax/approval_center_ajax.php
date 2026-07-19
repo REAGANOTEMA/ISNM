@@ -35,10 +35,10 @@ if ($action === 'get_detail') {
     }
     try {
         $sql = "SELECT ar.*, ws.workflow_name, ws.category as workflow_category,
-                (SELECT stage_name FROM approval_stages WHERE id = ar.current_stage_id) as current_stage_name,
-                (SELECT COUNT(*) FROM approval_stages WHERE workflow_id = ar.workflow_id) as total_stages
-                FROM approval_requests ar
-                LEFT JOIN approval_workflows ws ON ar.workflow_id = ws.id
+                (SELECT stage_name FROM igangaschool_staffs.approval_stages WHERE id = ar.current_stage_id) as current_stage_name,
+                (SELECT COUNT(*) FROM igangaschool_staffs.approval_stages WHERE workflow_id = ar.workflow_id) as total_stages
+                FROM igangaschool_staffs.approval_requests ar
+                LEFT JOIN igangaschool_staffs.approval_workflows ws ON ar.workflow_id = ws.id
                 WHERE ar.id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -79,7 +79,7 @@ if ($action === 'get_detail') {
 
         // Final approver name
         if (!empty($req['final_approval_by'])) {
-            $faStmt = $conn->prepare("SELECT full_name FROM staff WHERE id = ?");
+            $faStmt = $conn->prepare("SELECT full_name FROM igangaschool_staffs.staff WHERE id = ?");
             if ($faStmt) { $faStmt->bind_param('i', $req['final_approval_by']); if (!$faStmt->execute()) { error_log('$faStmt execute failed: ' . ($faStmt->error ?? 'unknown')); }; $fa = $faStmt->get_result(); $faStmt->close(); } else { $fa = false; }
             $data['final_approval_by_name'] = ($fa && $f = $fa->fetch_assoc()) ? $f['full_name'] : 'Unknown';
         } else {
@@ -88,7 +88,7 @@ if ($action === 'get_detail') {
 
         // Timeline from approval_actions
         $timeline = [];
-        $taStmt = $conn->prepare("SELECT aa.*, s.full_name as action_by_name FROM approval_actions aa LEFT JOIN staff s ON aa.action_by = s.id WHERE aa.request_id = ? ORDER BY aa.created_at ASC");
+        $taStmt = $conn->prepare("SELECT aa.*, s.full_name as action_by_name FROM igangaschool_staffs.approval_actions aa LEFT JOIN igangaschool_staffs.staff s ON aa.action_by = s.id WHERE aa.request_id = ? ORDER BY aa.created_at ASC");
         if ($taStmt) { $taStmt->bind_param('i', $id); if (!$taStmt->execute()) { error_log('$taStmt execute failed: ' . ($taStmt->error ?? 'unknown')); }; $ta = $taStmt->get_result(); $taStmt->close(); } else { $ta = false; }
         if ($ta) {
             while ($t = $ta->fetch_assoc()) {
@@ -110,7 +110,7 @@ if ($action === 'get_detail') {
 
         // Comments (non-null comments from actions)
         $comments = [];
-        $caStmt = $conn->prepare("SELECT aa.*, s.full_name as action_by_name FROM approval_actions aa LEFT JOIN staff s ON aa.action_by = s.id WHERE aa.request_id = ? AND aa.comments IS NOT NULL AND aa.comments != '' ORDER BY aa.created_at DESC");
+        $caStmt = $conn->prepare("SELECT aa.*, s.full_name as action_by_name FROM igangaschool_staffs.approval_actions aa LEFT JOIN igangaschool_staffs.staff s ON aa.action_by = s.id WHERE aa.request_id = ? AND aa.comments IS NOT NULL AND aa.comments != '' ORDER BY aa.created_at DESC");
         if ($caStmt) { $caStmt->bind_param('i', $id); if (!$caStmt->execute()) { error_log('$caStmt execute failed: ' . ($caStmt->error ?? 'unknown')); }; $ca = $caStmt->get_result(); $caStmt->close(); } else { $ca = false; }
         if ($ca) {
             while ($c = $ca->fetch_assoc()) {

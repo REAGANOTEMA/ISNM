@@ -100,8 +100,8 @@ try {
         $rnStmt->close();
 
         // Send notification to DG about new request
+        require_once __DIR__ . '/../includes/notification_helper.php';
         if (function_exists('createNotification')) {
-            require_once __DIR__ . '/../includes/notification_helper.php';
             $nid = createNotification(
                 "New Approval Request: $title",
                 "$staffName submitted a new $category approval request.",

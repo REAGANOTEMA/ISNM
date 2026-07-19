@@ -34,7 +34,7 @@ if (isset($_POST['exam_id'])) {
         $tableHeader = '
      <table style="padding: 10px;margin: 10px;">
                 <tr>
-                    <th>'. $examRow['exam_title'] . '</th>
+                    <th>'. htmlspecialchars($examRow['exam_title'], ENT_QUOTES, 'UTF-8') . '</th>
                 </tr>
             </table>
             
@@ -60,9 +60,9 @@ if (isset($_POST['exam_id'])) {
 
             $body .= "<tr>
                 <td> <strong>".$counter."</strong></td>
-                <td>" . $row["subject"] . "</td>
-                <td style='text-align:center;'>" . $mark . "</td>
-                <td style='text-align:center;'>" . $examRow["total_marks"] . "</td>
+                <td>" . htmlspecialchars($row["subject"], ENT_QUOTES, 'UTF-8') . "</td>
+                <td style='text-align:center;'>" . htmlspecialchars($mark, ENT_QUOTES, 'UTF-8') . "</td>
+                <td style='text-align:center;'>" . htmlspecialchars($examRow["total_marks"], ENT_QUOTES, 'UTF-8') . "</td>
                 " . $status . "
             </tr>";
             $counter++;

@@ -48,12 +48,12 @@ if (isset($_SESSION['uid'])) {
 
         $data[$index] = '<li class="' . $class  . '">
                             <div class="task-title">
-                                <a class="status-btn" onclick="changeReminderStatus(' . $line . ')">
+                                <a class="status-btn" onclick="changeReminderStatus(' . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . ')">
                                    ' . $icon . '
                                 </a>
-                                <p>' . $msg . '</p>
+                                <p>' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') . '</p>
                             </div>
-                             <a onclick="deleteReminder(' . $line . ', ' . $index . ')"><i class="bx bx-trash ml-2 text-danger"></i></a>
+                             <a onclick="deleteReminder(' . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . ', ' . htmlspecialchars($index, ENT_QUOTES, 'UTF-8') . ')"><i class="bx bx-trash ml-2 text-danger"></i></a>
                          </li>';
     }
 

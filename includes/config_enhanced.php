@@ -293,9 +293,9 @@ if (!function_exists('queueEmail')) {
 }
 
 // Constants for database names
-define('DB_STAFFS', 'staffs');
-define('DB_STUDENTS', 'students');
-define('DB_WEBSITE', 'website');
+if (!defined('DB_STAFFS')) define('DB_STAFFS', 'staffs');
+if (!defined('DB_STUDENTS')) define('DB_STUDENTS', 'students');
+if (!defined('DB_WEBSITE')) define('DB_WEBSITE', 'website');
 
 // Enhanced security functions
 function validateSession() {
@@ -314,30 +314,8 @@ function validateSession() {
     return true;
 }
 
-if (!function_exists('hasPermission')) {
-function hasPermission($permission, $userId = null) {
-    $userId = $userId ?? $_SESSION['user_id'];
-    
-    if (!$userId) {
-        return false;
-    }
-    
-    try {
-        $sql = "SELECT COUNT(*) as has_permission FROM staff s 
-                  JOIN staff_roles sr ON s.role_id = sr.id 
-                  WHERE s.id = ? AND sr.role_level <= ?";
-        $params = [$userId, 3];
-        
-        $result = DatabaseConnection::executeQuery('staffs', $sql, $params);
-        
-        return $result && $result[0]['has_permission'] > 0;
-        
-    } catch (Exception $e) {
-        error_log("Permission check error: " . $e->getMessage());
-        return false;
-    }
-}
-}
+// hasPermission() is defined in includes/functions.php with proper role-based mapping.
+// For database-driven permissions, use checkEnterprisePermission() from enterprise_auth.php.
 
 if (!function_exists('trackPerformance')) {
     // Performance monitoring

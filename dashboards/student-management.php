@@ -145,7 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sem = $_POST['semester'] ?? 'First Semester';
         if ($sid && $cid) {
             $stmt = $conn->prepare("INSERT INTO course_registrations (student_id,course_id,academic_year,semester,registration_status) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE registration_status='Registered'");
-            $stmt->bind_param("iisss", $sid, $cid, $ay, $sem);
+            $regStatus = trim($_POST['registration_status'] ?? 'Registered');
+            $stmt->bind_param("iisss", $sid, $cid, $ay, $sem, $regStatus);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Course registration saved.';

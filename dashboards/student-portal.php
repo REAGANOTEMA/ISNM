@@ -1102,7 +1102,11 @@ elseif ($page === 'results'):
 <div class="sp-card">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
 <h4 style="margin:0"><i class="fas fa-scroll me-2"></i>Transcript Requests</h4>
-<a href="../includes/ajax_student_portal.php?action=request_transcript" class="sp-btn sp-btn-primary" onclick="return confirm('Request official transcript?')"><i class="fas fa-plus"></i>Request Transcript</a>
+<form method="post" action="../includes/ajax_student_portal.php" style="display:inline" onsubmit="return confirm('Request official transcript?')">
+    <input type="hidden" name="action" value="request_transcript">
+    <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'] ?? '')?>">
+    <button type="submit" class="sp-btn sp-btn-primary"><i class="fas fa-plus me-1"></i>Request Transcript</button>
+</form>
 </div>
 <?php if (empty($transcripts)): ?>
 <div class="sp-empty"><i class="fas fa-scroll"></i><p>No transcript requests yet</p></div>

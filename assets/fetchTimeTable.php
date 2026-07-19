@@ -48,16 +48,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     if($flag < 4){
                         $response['table1Message'] .= '  <tr class="tableRow">
                    
-                        <td class="tableData"> <input class="form-control tableInput srartTime_" type="text" value="' . $row['start_time'] . '" disabled></td>
-                        <td class="tableData"><input class="form-control tableInput endTime_" type="text" value="' . $row['end_time'] . '" disabled></td>
-                        <td class="tableData"> <input class="form-control tableInput subject_" type="text" value="' . $row[$arrayOfDays[$dayOfWeak - 1]] . '" disabled></td>
+                        <td class="tableData"> <input class="form-control tableInput srartTime_" type="text" value="' . htmlspecialchars($row['start_time'], ENT_QUOTES, 'UTF-8') . '" disabled></td>
+                        <td class="tableData"><input class="form-control tableInput endTime_" type="text" value="' . htmlspecialchars($row['end_time'], ENT_QUOTES, 'UTF-8') . '" disabled></td>
+                        <td class="tableData"> <input class="form-control tableInput subject_" type="text" value="' . htmlspecialchars($row[$arrayOfDays[$dayOfWeak - 1]], ENT_QUOTES, 'UTF-8') . '" disabled></td>
                     </tr>';
                     }else{
                         $response['table2Message'] .= '  <tr class="tableRow">
                    
-                        <td class="tableData"> <input class="form-control tableInput srartTime_" type="text" value="' . $row['start_time'] . '" disabled></td>
-                        <td class="tableData"><input class="form-control tableInput endTime_" type="text" value="' . $row['end_time'] . '" disabled></td>
-                        <td class="tableData"> <input class="form-control tableInput subject_" type="text" value="' . $row[$arrayOfDays[$dayOfWeak - 1]] . '" disabled></td>
+                        <td class="tableData"> <input class="form-control tableInput srartTime_" type="text" value="' . htmlspecialchars($row['start_time'], ENT_QUOTES, 'UTF-8') . '" disabled></td>
+                        <td class="tableData"><input class="form-control tableInput endTime_" type="text" value="' . htmlspecialchars($row['end_time'], ENT_QUOTES, 'UTF-8') . '" disabled></td>
+                        <td class="tableData"> <input class="form-control tableInput subject_" type="text" value="' . htmlspecialchars($row[$arrayOfDays[$dayOfWeak - 1]], ENT_QUOTES, 'UTF-8') . '" disabled></td>
                     </tr>';
                     }
                    

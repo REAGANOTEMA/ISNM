@@ -19,6 +19,12 @@ require_once __DIR__ . '/includes/module_registry.php';
 
 header('Content-Type: application/json');
 
+// Authentication check
+if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || empty($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'error' => 'Authentication required', 'code' => 401]);
+    exit;
+}
+
 $action = $_REQUEST['action'] ?? '';
 $moduleName = $_REQUEST['module'] ?? '';
 $roleId = (int)($_SESSION['role_id'] ?? 0);
@@ -96,13 +102,60 @@ $ALLOWED_TABLES = [
     'student_id_cards', 'id_card_print_history', 'id_card_replacements'
 ];
 
-function getDirectDbConn() {
-    static $conn = null;
-    if ($conn === null) {
-        $conn = @getStaffConnection();
-        if (!$conn) $conn = @getStudentsConnection();
+/**
+ * Map table names to their database connections.
+ * Returns the correct mysqli connection for the given table.
+ */
+function getDirectDbConn($table = '') {
+    static $conns = [];
+    
+    // ICT DB tables
+    $ictPrefixes = ['ict_', 'cybersecurity_incidents', 'system_activity_logs', 'it_support_tickets',
+        'network_devices', 'lab_', 'printing_', 'computer_repairs', 'software_inventory',
+        'software_installations', 'lab_consumables', 'ict_servers', 'ict_system_backups',
+        'ict_security_logs', 'ict_system_alerts', 'ict_system_notifications'];
+    
+    // Website DB tables
+    $webTables = ['news', 'news_categories', 'notifications', 'notification_reads',
+        'contact_submissions', 'volunteer_applications', 'volunteer_hours', 'donations',
+        'student_applications', 'pages', 'announcements'];
+    
+    // Determine which database to use
+    $dbKey = 'staffs'; // default
+    if (!empty($table)) {
+        $isIct = false;
+        foreach ($ictPrefixes as $prefix) {
+            if (strpos($table, $prefix) === 0 || $table === $prefix) { $isIct = true; break; }
+        }
+        if ($isIct) {
+            $dbKey = 'ict';
+        } elseif (in_array($table, $webTables, true)) {
+            $dbKey = 'website';
+        } elseif (strpos($table, 'student_') === 0 || strpos($table, 'payment_') === 0 ||
+                   strpos($table, 'fee_') === 0 || strpos($table, 'expense') === 0 ||
+                   strpos($table, 'bank_') === 0 || $table === 'payments') {
+            $dbKey = 'students';
+        }
     }
-    return $conn;
+    
+    if (!isset($conns[$dbKey])) {
+        switch ($dbKey) {
+            case 'ict':
+                $conns[$dbKey] = @getICTConnection();
+                break;
+            case 'website':
+                $conns[$dbKey] = @getWebsiteConnection();
+                break;
+            case 'students':
+                $conns[$dbKey] = @getStudentsConnection();
+                break;
+            default:
+                $conns[$dbKey] = @getStaffConnection();
+                if (!$conns[$dbKey]) $conns[$dbKey] = @getStudentsConnection();
+                break;
+        }
+    }
+    return $conns[$dbKey] ?? null;
 }
 
 function directTableColumns($conn, $table) {
@@ -186,7 +239,7 @@ switch ($action) {
             $registry->logAccess($module['id'], $staffId, 'view');
             echo json_encode(['success' => true] + $result);
         } elseif (isAllowedTable($moduleName)) {
-            $conn = getDirectDbConn();
+            $conn = getDirectDbConn($moduleName);
             if (!$conn) { echo json_encode(['error' => 'No database connection']); break; }
             $tableCheck = @$conn->query("SHOW TABLES LIKE '{$moduleName}'");
             if (!$tableCheck || $tableCheck->num_rows === 0) { echo json_encode(['error' => "Table {$moduleName} not found"]); break; }

@@ -95,7 +95,7 @@ if ($view === 'principal_stats' && $ajax === '1') {
         $r = $staff->query("SELECT IFNULL(SUM(amount),0) v FROM expenses WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())"); if ($r) $out['total_expenses'] = (float)$r->fetch_assoc()['v'];
     }
     if ($students) {
-        $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='completed'"); if ($r) $out['total_revenue'] = (float)$r->fetch_assoc()['v'];
+        $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='Completed'"); if ($r) $out['total_revenue'] = (float)$r->fetch_assoc()['v'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.principal_notices"); if ($r) $out['recent_notices'] = (int)$r->fetch_assoc()['c'];
     }
     $score = 0;
@@ -586,7 +586,7 @@ try {
         $r = $staff->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM examination_records WHERE grade IS NOT NULL) t FROM examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $welfareAlerts = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $upMt = (int)$r->fetch_assoc()['c'];
-        $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='completed'"); if ($r) $revTotal = (float)$r->fetch_assoc()['v'];
+        $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='Completed'"); if ($r) $revTotal = (float)$r->fetch_assoc()['v'];
     }
     if ($staff) {
         $r = $staff->query("SELECT COUNT(*) c FROM staff WHERE status='Active'"); if ($r) $totalStaff = (int)$r->fetch_assoc()['c'];

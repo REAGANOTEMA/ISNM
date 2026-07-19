@@ -588,7 +588,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('clinical-placement');
     }
     if ($action === 'global_stu_search') {
-        globalStudentSearchHandler($staff, $students, $staff, $website);
+        header('Content-Type: application/json');
+        $searchQuery = trim($_POST['query'] ?? $_POST['search'] ?? '');
+        $results = [];
+        if ($students && $searchQuery) {
+            $s = "%$searchQuery%";
+            $stmt = $students->prepare("SELECT id, student_number, full_name, first_name, surname, program, course, year, level, status FROM students WHERE (student_number LIKE ? OR full_name LIKE ? OR first_name LIKE ? OR surname LIKE ?) LIMIT 20");
+            if ($stmt) {
+                $stmt->bind_param('ssss', $s, $s, $s, $s);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                while ($row = $result->fetch_assoc()) { $results[] = $row; }
+                $stmt->close();
+            }
+        }
+        echo json_encode(['success' => true, 'students' => $results]);
         exit;
     }
 }

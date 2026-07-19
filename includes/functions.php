@@ -58,7 +58,7 @@ function generateUniqueId($prefix, $table, $field) {
         $unique_id = "$prefix/$year/$random";
         
         $check_sql = "SELECT COUNT(*) as count FROM $table WHERE $field = ?";
-        $check_result = DatabaseConnection::executeQuery('staffs', $check_sql, [$unique_id], 's');
+        $check_result = DatabaseConnection::executeQuery($table, $check_sql, [$unique_id], 's');
         if (empty($check_result) || !isset($check_result[0]['count'])) {
             return uniqid();
         }

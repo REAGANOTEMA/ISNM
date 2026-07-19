@@ -148,6 +148,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         header('Location: head-nursing.php?page=students');
         exit;
     }
+
+    // AJAX handlers for staff management (return JSON, not redirect)
+    if (in_array($action, ['add_staff', 'edit_staff', 'delete_staff'])) {
+        header('Content-Type: application/json');
+        $response = ['success' => false, 'error' => 'Unknown action'];
+        if ($action === 'add_staff' && $conn) {
+            $name = trim($_POST['full_name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
+            $position = trim($_POST['position'] ?? '');
+            if ($name && $email) {
+                $stmt = $conn->prepare("INSERT INTO staff (full_name, email, phone, department, position, status) VALUES (?, ?, ?, 'Nursing', ?, 'Active')");
+                $stmt->bind_param('ssss', $name, $email, $phone, $position);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            } else {
+                $response['error'] = 'Name and email are required';
+            }
+        } elseif ($action === 'edit_staff' && $conn) {
+            $id = (int)($_POST['id'] ?? 0);
+            $name = trim($_POST['full_name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
+            $position = trim($_POST['position'] ?? '');
+            $status = trim($_POST['status'] ?? 'Active');
+            if ($id && $name && $email) {
+                $stmt = $conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, status=? WHERE id=?");
+                $stmt->bind_param('sssssi', $name, $email, $phone, $position, $status, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            } else {
+                $response['error'] = 'ID, name, and email are required';
+            }
+        } elseif ($action === 'delete_staff' && $conn) {
+            $id = (int)($_POST['id'] ?? 0);
+            if ($id) {
+                $stmt = $conn->prepare("DELETE FROM staff WHERE id=?");
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            } else {
+                $response['error'] = 'Staff ID is required';
+            }
+        }
+        echo json_encode($response);
+        exit;
+    }
 }
 
 // â”€â”€ Page routing â”€â”€
@@ -517,57 +567,7 @@ unset($_SESSION['success'], $_SESSION['error']);
         </section>
         <?php break;
     case 'staff':
-        // Handle POST actions
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-            header('Content-Type: application/json');
-            $response = ['success' => false, 'error' => 'Unknown action'];
-            $action = $_POST['action'];
-            if ($action === 'add_staff' && $conn) {
-                $name = trim($_POST['full_name'] ?? '');
-                $email = trim($_POST['email'] ?? '');
-                $phone = trim($_POST['phone'] ?? '');
-                $position = trim($_POST['position'] ?? '');
-                if ($name && $email) {
-                    $dept = 'Nursing';
-                    $stmt = $conn->prepare("INSERT INTO staff (full_name, email, phone, department, position, status) VALUES (?, ?, ?, ?, ?, 'Active')");
-                    $stmt->bind_param('sssss', $name, $email, $phone, $dept, $position);
-                    $response['success'] = $stmt->execute();
-                    $response['error'] = $stmt->error;
-                    $stmt->close();
-                } else {
-                    $response['error'] = 'Name and email are required';
-                }
-            } elseif ($action === 'edit_staff' && $conn) {
-                $id = (int)($_POST['id'] ?? 0);
-                $name = trim($_POST['full_name'] ?? '');
-                $email = trim($_POST['email'] ?? '');
-                $phone = trim($_POST['phone'] ?? '');
-                $position = trim($_POST['position'] ?? '');
-                $status = trim($_POST['status'] ?? 'Active');
-                if ($id && $name && $email) {
-                    $stmt = $conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, status=? WHERE id=?");
-                    $stmt->bind_param('sssssi', $name, $email, $phone, $position, $status, $id);
-                    $response['success'] = $stmt->execute();
-                    $response['error'] = $stmt->error;
-                    $stmt->close();
-                } else {
-                    $response['error'] = 'ID, name, and email are required';
-                }
-            } elseif ($action === 'delete_staff' && $conn) {
-                $id = (int)($_POST['id'] ?? 0);
-                if ($id) {
-                    $stmt = $conn->prepare("DELETE FROM staff WHERE id=?");
-                    $stmt->bind_param('i', $id);
-                    $response['success'] = $stmt->execute();
-                    $response['error'] = $stmt->error;
-                    $stmt->close();
-                } else {
-                    $response['error'] = 'Staff ID is required';
-                }
-            }
-            echo json_encode($response);
-            exit;
-        }
+        // Staff AJAX handlers are processed in the top POST handler above
     ?>
         <section id="staff" class="content-section dashboard-section active" data-section="staff">
             <div class="d-flex justify-content-between align-items-center mb-3">

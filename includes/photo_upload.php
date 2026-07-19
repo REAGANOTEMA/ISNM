@@ -162,7 +162,7 @@ function updateStudentPhoto($student_id, $filename) {
     
     // Get current photo to delete old one
     $current_photo_sql = "SELECT profile_image FROM students WHERE student_id = ?";
-    $current_result = executeQuery($current_photo_sql, [$student_id], 's');
+    $current_result = executeQuery($conn, $current_photo_sql, [$student_id], 's');
     
     if (!empty($current_result)) {
         $current_photo = $current_result[0]['profile_image'];
@@ -221,9 +221,10 @@ function validatePassportPhotoRequirements($file) {
 }
 
 function createPhotoGallery($student_id) {
+    global $conn;
     // Create a gallery view for student photos
     $photo_sql = "SELECT profile_image FROM students WHERE student_id = ?";
-    $result = executeQuery($photo_sql, [$student_id], 's');
+    $result = executeQuery($conn, $photo_sql, [$student_id], 's');
     
     if (!empty($result)) {
         $photo = $result[0]['profile_image'];

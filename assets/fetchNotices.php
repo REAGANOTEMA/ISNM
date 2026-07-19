@@ -65,7 +65,7 @@ if (isset($_POST['begin'])) {
                         $showFileSize = $fileSizeInMB > 1 ? $fileSizeInMB . "MB" : $fileSizeInKB . "KB";
 
 
-                        $haveFile = $row['file'] == "" ? "" : ' <a href="' . $pathToFile . '" download="' . $row['file'] . '" class="other-file"><i class="bx bxs-download"></i></a>&nbsp; <small>'.$showFileSize.' '.$file_extension.'</small>';
+                        $haveFile = $row['file'] == "" ? "" : ' <a href="' . htmlspecialchars($pathToFile, ENT_QUOTES, 'UTF-8') . '" download="' . htmlspecialchars($row['file'], ENT_QUOTES, 'UTF-8') . '" class="other-file"><i class="bx bxs-download"></i></a>&nbsp; <small>'.htmlspecialchars($showFileSize, ENT_QUOTES, 'UTF-8').' '.htmlspecialchars($file_extension, ENT_QUOTES, 'UTF-8').'</small>';
     
                     }
                     
@@ -79,21 +79,21 @@ if (isset($_POST['begin'])) {
                         <div class="card-body">
                             <div class="card-content">
                                 <div class="flex-heading">
-                                    <h5 class="card-title">' . ucfirst($title)  . '</h5> <span class="' . $disks[$importanceInt - 1] . '"></span>
+                                    <h5 class="card-title">' . htmlspecialchars(ucfirst($title), ENT_QUOTES, 'UTF-8')  . '</h5> <span class="' . $disks[$importanceInt - 1] . '"></span>
                                 </div>
-                                <small>' . $formattedTime . '</small>
-                                <p class="card-text">' .ucfirst($body)   . '</p>
+                                <small>' . htmlspecialchars($formattedTime, ENT_QUOTES, 'UTF-8') . '</small>
+                                <p class="card-text">' .htmlspecialchars(ucfirst($body), ENT_QUOTES, 'UTF-8')   . '</p>
                             </div>
                             <div class="card-buttons">
                                 <div class="files">
-                                <a onclick="showFullNotice(`' . $row['s_no'] . '`)" class="image-file">  <i class="bx bx-show-alt" ></i></a>
+                                <a onclick="showFullNotice(`' . htmlspecialchars($row['s_no'], ENT_QUOTES, 'UTF-8') . '`)" class="image-file">  <i class="bx bx-show-alt" ></i></a>
                                   ' . $haveFile . '
                                 </div>
                                 
                                 <div class="actions25">
-                                    <a class="edit-btn" onclick="openEditDialog(`' . $row['s_no'] . '`)"> <i
+                                    <a class="edit-btn" onclick="openEditDialog(`' . htmlspecialchars($row['s_no'], ENT_QUOTES, 'UTF-8') . '`)"> <i
                                             class="bx bxs-edit"></i></a>
-                                    <a class="delete-btn" onclick="openDeleteConfirmationDialog(' . $row['s_no'] . ')"><i
+                                    <a class="delete-btn" onclick="openDeleteConfirmationDialog(' . htmlspecialchars($row['s_no'], ENT_QUOTES, 'UTF-8') . ')"><i
                                             class="bx bxs-trash"></i></a>
                                 </div>
                             </div>

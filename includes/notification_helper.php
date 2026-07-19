@@ -83,23 +83,20 @@ if (!function_exists('createNotification')) {
 }
 
 if (!function_exists('notifyAllStaff')) {
+    /**
+     * Mark a notification as intended for all active staff.
+     * This does NOT mark it as read — notifications are UNREAD by default.
+     * Each user will see the notification until they explicitly mark it as read
+     * via markNotificationRead() or markAllNotificationsRead().
+     */
     function notifyAllStaff($notification_id) {
         try {
             $staffConn = getStaffConn();
-            $notifConn = getNotifConn();
-            if (!$staffConn || !$notifConn) return 0;
-            ensureNotificationTables($notifConn);
-            $r = $staffConn->query("SELECT id FROM staff WHERE status = 'Active'");
+            if (!$staffConn) return 0;
+            $r = $staffConn->query("SELECT COUNT(*) AS cnt FROM staff WHERE status = 'Active'");
             if (!$r) return 0;
-            $count = 0;
-            $stmt = $notifConn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) VALUES (?, ?, 'staff')");
-            if (!$stmt) return 0;
-            while ($row = $r->fetch_assoc()) {
-                $stmt->bind_param("ii", $notification_id, $row['id']);
-                if ($stmt->execute()) $count++;
-            }
-            $stmt->close();
-            return $count;
+            $row = $r->fetch_assoc();
+            return (int)($row['cnt'] ?? 0);
         } catch (Exception $e) {
             error_log('notifyAllStaff: ' . $e->getMessage());
             return 0;
@@ -174,7 +171,7 @@ if (!function_exists('markAllNotificationsRead')) {
             ensureNotificationTables($conn);
             $stmt = $conn->prepare("INSERT IGNORE INTO staff_notification_reads (notification_id, user_id, user_type) SELECT n.id, ?, ? FROM staff_notifications n WHERE NOT EXISTS (SELECT 1 FROM staff_notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = ? AND nr.user_type = ?)");
             if (!$stmt) return false;
-            $stmt->bind_param("isii", $user_id, $user_type, $user_id, $user_type);
+            $stmt->bind_param("isis", $user_id, $user_type, $user_id, $user_type);
             $ok = $stmt->execute();
             $stmt->close();
             return $ok;

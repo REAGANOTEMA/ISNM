@@ -104,7 +104,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 
     <div class="row g-3 mb-4">
         <div class="col-md-3"><div class="stat-box"><div class="num"><?= count($examResults) ?></div><div class="lbl">Courses Taken</div></div></div>
-        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:<?= $gpaBySemester[0]['gpa'] >= 3.0 ? '#1a9e6e' : '#d97706' ?>"><?= $gpaBySemester[0]['gpa'] ?? 'â€”' ?></div><div class="lbl">Current GPA</div></div></div>
+        <div class="col-md-3"><div class="stat-box"><div class="num" style="color:<?= (!empty($gpaBySemester) && ($gpaBySemester[0]['gpa'] ?? 0) >= 3.0) ? '#1a9e6e' : '#d97706' ?>"><?= $gpaBySemester[0]['gpa'] ?? 'â€”' ?></div><div class="lbl">Current GPA</div></div></div>
         <div class="col-md-3"><div class="stat-box"><div class="num"><?= count(array_filter($examResults, fn($r)=>($r['grade']??'')==='A')) ?></div><div class="lbl">Grade A's</div></div></div>
         <div class="col-md-3"><div class="stat-box"><div class="num" style="color:#1a9e6e"><?= $programCode ?: 'â€”' ?></div><div class="lbl"><?= htmlspecialchars(explode(' ',$program)[0]??'') ?></div></div></div>
     </div>

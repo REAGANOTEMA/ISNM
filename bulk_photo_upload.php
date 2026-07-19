@@ -1,13 +1,9 @@
 ﻿<?php
-require_once 'auth-service.php';
-include_once 'includes/functions.php';
-include_once 'includes/photo_upload.php';
+session_start();
 
-// Check if user is logged in and has appropriate access level
-if (!$auth_service->isAuthenticated() || !$auth_service->canCreateStudents($_SESSION['role'])) {
-    $_SESSION['error'] = "Access denied. Insufficient permissions.";
-    header("Location: staff-login.php");
-    exit();
+if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
+    header('Location: staff-login.php');
+    exit;
 }
 
 // Handle bulk photo upload

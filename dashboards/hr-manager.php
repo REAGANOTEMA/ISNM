@@ -320,8 +320,8 @@ $pageTitle = 'HR Manager';
       <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
         <div><strong><?=htmlspecialchars($l['full_name'])?></strong><br><small class="text-muted"><?=htmlspecialchars($l['type_name'])?>: <?=htmlspecialchars($l['start_date'])?> - <?=htmlspecialchars($l['end_date'])?></small></div>
         <div class="d-flex gap-1">
-          <form method="post" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form>
-          <form method="post" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form>
+          <form method="post" class="d-inline"><input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form>
+          <form method="post" class="d-inline"><input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form>
         </div></div>
     <?php endforeach; endif; ?>
     </div>
@@ -439,7 +439,7 @@ $pageTitle = 'HR Manager';
     <div class="hr-card"><h3 id="leave">Leave Requests</h3>
     <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Status</th><th>Actions</th></tr></thead><tbody>
     <?php foreach ($leaveReqs as $l): ?><tr><td><?=htmlspecialchars($l['full_name'])?></td><td><?=htmlspecialchars($l['type_name'])?></td><td><?=htmlspecialchars($l['start_date'])?> - <?=htmlspecialchars($l['end_date'])?></td><td><?=hrStatusBadge($l['status'])?></td>
-      <td><?php if ($l['status']==='pending'): ?><form method="post" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form><form method="post" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form><?php endif; ?></td>
+      <td><?php if ($l['status']==='pending'): ?><form method="post" class="d-inline"><input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form><form method="post" class="d-inline"><input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form><?php endif; ?></td>
     </tr><?php endforeach; ?>
     </tbody></table></div></div>
   </div>

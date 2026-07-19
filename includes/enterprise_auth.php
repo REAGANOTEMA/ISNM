@@ -1,7 +1,7 @@
 <?php
 /**
- * ISNM Enterprise Auth â€” Shared authentication & permission engine
- * Used by ALL dashboards. No duplicates â€” this is the single source of truth.
+ * ISNM Enterprise Auth - Shared authentication & permission engine
+ * Used by ALL dashboards. No duplicates - this is the single source of truth.
  *
  * Provides:
  * - checkPermission($conn, $roleId, $permissionSlug) : bool
@@ -31,17 +31,14 @@ if (session_status() === PHP_SESSION_NONE) {
     } else {
         ini_set('session.cookie_secure', 0);
     }
-    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
+    if (defined('SESSION_COOKIE_PATH')) {
+        ini_set('session.cookie_path', SESSION_COOKIE_PATH);
+    }
     session_start();
 }
-// Auth guard â€” redirect to staff-login.php if not authenticated
-if (session_status() === PHP_SESSION_NONE) session_start();
-if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'staff') {
-    $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-    session_write_close();
-    header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
-    exit();
-}
+
+// Auth guard removed: bootstrapStaffDashboard() in staff_dashboard_access.php handles auth.
+// This file provides utility functions used by dashboards already authenticated.
 
 if (function_exists('checkEnterprisePermission')) return;
 
@@ -62,7 +59,7 @@ function checkEnterprisePermission($conn, int $roleId, string $permissionSlug): 
         $stmt = $conn->prepare("SELECT permissions FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -93,7 +90,7 @@ function checkEnterprisePermission($conn, int $roleId, string $permissionSlug): 
         );
         if ($stmt2) {
             $stmt2->bind_param('is', $roleId, $permissionSlug);
-            if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
+            if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }
             $cnt = (int)$stmt2->get_result()->fetch_assoc()['cnt'];
             $stmt2->close();
             return $cnt > 0;
@@ -114,7 +111,7 @@ function getRolePermissions($conn, int $roleId): array {
         $stmt = $conn->prepare("SELECT permissions FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($row && !empty($row['permissions'])) {
@@ -139,7 +136,7 @@ function getRoleName($conn, int $roleId): string {
         $stmt = $conn->prepare("SELECT role_name FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             $name = $row['role_name'] ?? '';
@@ -163,7 +160,7 @@ function hasRole(string $roleName): bool {
 }
 
 /**
- * Require permission â€” redirect to dashboard if denied.
+ * Require permission - redirect to dashboard if denied.
  */
 if (!function_exists('requirePermission')) {
 function requirePermission($conn, int $roleId, string $permissionSlug): void {
@@ -189,7 +186,7 @@ function getStaffById($conn, int $staffId): ?array {
         );
         if ($stmt) {
             $stmt->bind_param('i', $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             return $row ?: null;
@@ -209,7 +206,7 @@ function getSystemSettingDirect($conn, string $key, $default = null) {
         $stmt = $conn->prepare("SELECT setting_value, setting_type FROM system_settings WHERE setting_key = ?");
         if ($stmt) {
             $stmt->bind_param('s', $key);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($row) {
@@ -263,7 +260,7 @@ function getPendingTaskCount($conn, int $staffId): int {
         $stmt = $conn->prepare("SELECT COUNT(*) cnt FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
         if ($stmt) {
             $stmt->bind_param('i', $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $cnt = (int)$stmt->get_result()->fetch_assoc()['cnt'];
             $stmt->close();
             return $cnt;
@@ -318,7 +315,7 @@ function logActivity($conn, string $activityType, string $description, int $user
         );
         if ($stmt) {
             $stmt->bind_param('iss', $uid, $activityType, $description);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $stmt->close();
         }
     } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
@@ -341,7 +338,7 @@ function logAuditTrail($conn, string $actionType, string $entityType, int $entit
         );
         if ($stmt) {
             $stmt->bind_param('ississs', $staffId, $actionType, $entityType, $entityId, $description, $ip, $ua);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $stmt->close();
         }
     } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }

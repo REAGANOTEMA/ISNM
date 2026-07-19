@@ -48,36 +48,36 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 $response['data'] = '<div class="modal-header">
 				<div class="d-flex">
-					<img src="' . $image_path . '" id="image">
+					<img src="' . htmlspecialchars($image_path, ENT_QUOTES, 'UTF-8') . '" id="image">
 					<div class="d-flex ms-3" style="flex-direction: column;">
 						<h1 class="modal-title fs-5" id="staticBackdropLabel" id="teacher_name">
-							' . $teacher_name . '
+							' . htmlspecialchars($teacher_name, ENT_QUOTES, 'UTF-8') . '
 						</h1>
-						<div id="teacher_id">' . $teacher_id . '</div>
+						<div id="teacher_id">' . htmlspecialchars($teacher_id, ENT_QUOTES, 'UTF-8') . '</div>
 					</div>
 				</div>
 				<button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i class="bx bx-x"></i></button>
 			</div>
 			<div class="modal-body px-3">
-				<h1 class="fs-5" id="leave_type">' . $leave_type . '</h1>
-				<p class="px-3 leave-description text-break" style="text-align: justify;" id="leave_description ">' . $leave_desc . '</p>
+				<h1 class="fs-5" id="leave_type">' . htmlspecialchars($leave_type, ENT_QUOTES, 'UTF-8') . '</h1>
+				<p class="px-3 leave-description text-break" style="text-align: justify;" id="leave_description ">' . htmlspecialchars($leave_desc, ENT_QUOTES, 'UTF-8') . '</p>
 				<br>
 				<div class="d-flex justify-content-between">
 					<span class="text-start" >
 						<div><b>Apply date - </b></div>
-						<small id="apply_date">' . $send_date . '</small>
+						<small id="apply_date">' . htmlspecialchars($send_date, ENT_QUOTES, 'UTF-8') . '</small>
 					</span>
 					<span class="text-end">
-						<div><b>From - </b><small id="start_date">' . $start_date . '</small></div>
-						<div><b>To -</b> <small id="end_date">' . $end_date . '</small></div>
+						<div><b>From - </b><small id="start_date">' . htmlspecialchars($start_date, ENT_QUOTES, 'UTF-8') . '</small></div>
+						<div><b>To -</b> <small id="end_date">' . htmlspecialchars($end_date, ENT_QUOTES, 'UTF-8') . '</small></div>
 					</span>
 				</div>
 			</div>
 			<div class="modal-footer">
 				<div class="d-flex justify-content-between" style="width: 100% !important; ">
 					<span class="text-start ">
-						<div class="-details"><b>Contact - </b> <small id="contact">' . $contact . '</small></div>
-						<div class="-details"><b>Subject - </b> <small id="subject"> ' . $subject . '</small></div>
+						<div class="-details"><b>Contact - </b> <small id="contact">' . htmlspecialchars($contact, ENT_QUOTES, 'UTF-8') . '</small></div>
+						<div class="-details"><b>Subject - </b> <small id="subject"> ' . htmlspecialchars($subject, ENT_QUOTES, 'UTF-8') . '</small></div>
 					</span>
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 				</div>

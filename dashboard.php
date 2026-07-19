@@ -560,7 +560,7 @@ if ($access_level >= 8) {
                         <a href="#" class="btn-action me-2" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">
                             <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
-                        <?php if (hasPermission($role, 'dashboard')): ?>
+                        <?php if (hasPermission($role, 'students') || hasPermission($role, 'academics') || hasPermission($role, 'all')): ?>
                             <a href="dashboards/<?php echo strtolower(str_replace(' ', '-', $role)); ?>.php" class="btn-action">
                                 <i class="fas fa-tachometer-alt me-2"></i> Your Dashboard
                             </a>

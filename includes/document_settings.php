@@ -56,8 +56,6 @@ function loadDocumentSettings() {
                 $defaults[$row['setting_key']] = $row['setting_value'];
             }
         }
-
-        $db->close();
     } catch (Exception $e) {
         error_log('document_settings load: ' . $e->getMessage());
     }
@@ -92,7 +90,6 @@ function saveDocumentSetting($key, $value) {
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
-        $db->close();
         return true;
     } catch (Exception $e) {
         error_log('document_settings: ' . $e->getMessage());

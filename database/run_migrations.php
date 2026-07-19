@@ -784,6 +784,9 @@ if ($staff) {
     addColumn($staff, 'staffs', 'staff_roles', 'hierarchy_level', "INT(11) DEFAULT 5");
     addColumn($staff, 'staffs', 'staff_roles', 'permissions', "JSON DEFAULT NULL");
 
+    // NOTE: $staff connection must NOT be closed here because more tables are added
+    // further down in this file (lines 1128+). Closing it causes 50+ tables to silently fail.
+
     addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `applicants` (
         `id` INT(11) NOT NULL AUTO_INCREMENT,
         `application_number` VARCHAR(30) NOT NULL,

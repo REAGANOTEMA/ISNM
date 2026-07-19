@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 $response[$counter] = '<tr>
                     <td>'.((int)$begin + 1).'.&nbsp;&nbsp;</td>
-                    <td>'.$studentId.'</td>
+                    <td>'.htmlspecialchars($studentId, ENT_QUOTES, 'UTF-8').'</td>
                     <td class="user">
-                        <img src="'.$pathToFile.'">
+                        <img src="'.htmlspecialchars($pathToFile, ENT_QUOTES, 'UTF-8').'">
                         <p>' . htmlspecialchars($displayName) . '</p>
                     </td>
                     <td>'.$status.'</td>

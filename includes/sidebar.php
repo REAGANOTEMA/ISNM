@@ -13,7 +13,8 @@
 // Session is already started by bootstrapStaffDashboard() before this file is included.
 // Do NOT call session_start() here â€” headers were already sent by dashboard_head.php.
 if (empty($_SESSION['user_id']) || empty($_SESSION['role'])) {
-    echo '<script>window.location.href="../index.php";</script>'; exit();
+    $loginUrl = (strpos($_SERVER['SCRIPT_NAME'], '/dashboards/') !== false) ? '../staff-login.php' : 'staff-login.php';
+    echo '<script>window.location.href="' . $loginUrl . '";</script>'; exit();
 }
 
 $sidebarPosition = $sidebarPosition ?? 'left';

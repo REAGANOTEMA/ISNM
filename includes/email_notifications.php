@@ -4,6 +4,9 @@
  * Sends beautiful HTML emails with school branding via PHPMailer (Gmail SMTP)
  * Used by: contact, volunteer, donation, application handlers
  */
+if (!defined('EMAIL_DIRECTOR_GENERAL')) {
+    require_once __DIR__ . '/../config/config.php';
+}
 
 if (!function_exists('sendProfessionalEmail')) {
     function sendProfessionalEmail($to, $toName, $subject, $htmlBody) {

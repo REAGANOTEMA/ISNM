@@ -53,7 +53,7 @@ if ($studentsDb) {
     }
 }
 
-$fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname']??'') . ' ' . ($studentInfo['firstname']??'')) : 'Student';
+$fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname']??'') . ' ' . ($studentInfo['first_name'] ?? $studentInfo['firstname'] ?? '')) : 'Student';
 $program = $studentInfo ? htmlspecialchars($studentInfo['program']??'N/A') : 'N/A';
 $yearOfStudy = $studentInfo ? (int)($studentInfo['year_of_study']??1) : 1;
 

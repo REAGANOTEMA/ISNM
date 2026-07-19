@@ -52,8 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                             $result2 = mysqli_stmt_get_result($stmt2);
 
                             while ($subRow = mysqli_fetch_assoc($result2)) {
-                                $viewBtns .= '<div class="col-6 col-md-3 mb-2"><a class="btn btn-warning view-result-btn" onclick="showResultDialog(`'.$row['exam_id'].'`, `'. $subRow['subject_name'] .'`)" aria-controls="markSheerOffcanvas">
-                                                <span> '. $subRow['subject_name'] .' </span>
+                                $viewBtns .= '<div class="col-6 col-md-3 mb-2"><a class="btn btn-warning view-result-btn" onclick="showResultDialog(`'.$row['exam_id'].'`, `'. htmlspecialchars($subRow['subject_name'], ENT_QUOTES, 'UTF-8') .'`)" aria-controls="markSheerOffcanvas">
+                                                <span> '. htmlspecialchars($subRow['subject_name'], ENT_QUOTES, 'UTF-8') .' </span>
                                             </a></div>';
                             }
                             mysqli_stmt_close($stmt2);
@@ -61,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                     } else {
                         $viewBtns .= '
                             <div class="col-6 col-md-3 mb-2">
-                            <a class="btn btn-warning view-result-btn" onclick="showResultDialog(`'.$row['exam_id'].'`, `'. $row['subject'] .'`)" aria-controls="markSheerOffcanvas">
-                                       <span> '. $row['subject'] .' </span>
+                            <a class="btn btn-warning view-result-btn" onclick="showResultDialog(`'.$row['exam_id'].'`, `'. htmlspecialchars($row['subject'], ENT_QUOTES, 'UTF-8') .'`)" aria-controls="markSheerOffcanvas">
+                                       <span> '. htmlspecialchars($row['subject'], ENT_QUOTES, 'UTF-8') .' </span>
                                       </a>
                             </div>
                         ';
@@ -70,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
                     $response['data'] .= '<div class="accordion-item">
                                             <h2 class="accordion-header">
-                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-'.$row['exam_id'].'" aria-expanded="false" aria-controls="flush-collapseOne" data-bs-parent="#Exam-Titles">
-                                                    <b> '. ucfirst(strtolower($title)) .' </b> &nbsp; <small>(Data - '.$formattedDate.')</small>
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-'.htmlspecialchars($row['exam_id'], ENT_QUOTES, 'UTF-8').'" aria-expanded="false" aria-controls="flush-collapseOne" data-bs-parent="#Exam-Titles">
+                                                    <b> '. htmlspecialchars(ucfirst(strtolower($title)), ENT_QUOTES, 'UTF-8') .' </b> &nbsp; <small>(Data - '.htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8').')</small>
                                                 </button>
                                             </h2>
-                                            <div id="flush-'.$row['exam_id'].'" class="accordion-collapse collapse" data-bs-parent="#Exam-Titles">
+                                            <div id="flush-'.htmlspecialchars($row['exam_id'], ENT_QUOTES, 'UTF-8').'" class="accordion-collapse collapse" data-bs-parent="#Exam-Titles">
                                                 <div class="accordion-body">
                                                     <div class="mx-2 mt-3">
                                                         <small> Consolidated Subject-Wise Results Overview - </small>

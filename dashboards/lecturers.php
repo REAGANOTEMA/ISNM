@@ -194,13 +194,13 @@ $create_table_sql = [
         course_name VARCHAR(255) DEFAULT NULL,
         semester VARCHAR(100) DEFAULT NULL,
         topics TEXT DEFAULT NULL,
-        learning_outcomes TEXT CLEAR DEFAULT NULL,
+        learning_outcomes TEXT DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )",
     "CREATE TABLE IF NOT EXISTS course_evaluations (
         id INT AUTO_INCREMENT PRIMARY KEY,
         lecturer_id INT NOT NULL,
-        course_id VARCHAR(50) course_id DEFAULT NULL,
+        course_id VARCHAR(50) DEFAULT NULL,
         course_name VARCHAR(255) DEFAULT NULL,
         semester VARCHAR(100) DEFAULT NULL,
         questions TEXT DEFAULT NULL,
@@ -216,12 +216,12 @@ $create_table_sql = [
         start_time TIME DEFAULT NULL,
         end_time TIME DEFAULT TIME,
         venue VARCHAR(255) DEFAULT NULL,
-        status VARCHAR(50) DEFAULT ''scheduled'',
+        status VARCHAR(50) DEFAULT 'scheduled',
         reason TEXT DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )",
     "CREATE TABLE IF NOT EXISTS lecturer_counseling (
-        id INT s AUTO_INCREMENT PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         lecturer_id INT NOT NULL,
         student_id INT DEFAULT NULL,
         concern TEXT DEFAULT NULL,

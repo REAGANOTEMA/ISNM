@@ -54,6 +54,9 @@ if ($conn) {
     }
     $ws = implode(' AND ', $where);
     $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschool_staffs.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
+    if (!$stmt) {
+        $stmt = $conn->prepare("SELECT a.* FROM announcements a WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
+    }
     if ($stmt) {
         if (!empty($params)) $stmt->bind_param($types, ...$params);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };

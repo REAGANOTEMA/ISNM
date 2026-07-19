@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $students_db = $ctx['students'];
 $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM applicants")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $total_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM `{$students_db_name}`.library_books")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $available_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM `{$students_db_name}`.library_books WHERE status = 'Available'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;

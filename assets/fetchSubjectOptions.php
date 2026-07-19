@@ -4,7 +4,7 @@ include("config.php");
 
 if (isset($_POST["class"])) {
     $class1 = $_POST["class"] ?? '';
-    $response = $class1 . "lskjdflksj";
+    $response = $class1;
 
     $query = "SELECT * FROM subjects WHERE `class` = ?";
     $stmt = mysqli_prepare($conn, $query);

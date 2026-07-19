@@ -705,7 +705,10 @@ case 'requests': ?>
 <?php else: ?>
 <?php foreach ($pendingReqs as $req):
     $urgBadge = $req['urgency'] === 'urgent' ? 'sk-badge-danger' : ($req['urgency'] === 'high' ? 'sk-badge-warning' : ($req['urgency'] === 'medium' ? 'sk-badge-info' : 'sk-badge-secondary'));
-    $reqItems = $staffConn->query("SELECT sri.*, si.item_name, si.unit, si.quantity as avail_qty FROM store_request_items sri JOIN store_inventory si ON sri.item_id=si.id WHERE sri.request_id={$req['id']}");
+    $riStmt = $staffConn->prepare("SELECT sri.*, si.item_name, si.unit, si.quantity as avail_qty FROM store_request_items sri JOIN store_inventory si ON sri.item_id=si.id WHERE sri.request_id=?");
+    $riStmt->bind_param('i', $req['id']);
+    $riStmt->execute();
+    $reqItems = $riStmt->get_result();
 ?>
 <div class="sk-card">
     <div class="sk-card-header">

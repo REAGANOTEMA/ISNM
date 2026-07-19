@@ -32,6 +32,15 @@ if ($studentsDb) {
     $studentsDb->query("ALTER TABLE `student_discipline` ADD COLUMN IF NOT EXISTS `closed_date` DATETIME DEFAULT NULL AFTER `notes`");
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $csrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid security token']);
+        exit;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
     $response = ['success' => false, 'error' => 'Unknown action'];
