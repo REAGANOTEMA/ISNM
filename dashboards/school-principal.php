@@ -482,8 +482,6 @@ if ($view === 'record_department_review' && $ajax === '1') {
     header('Content-Type: application/json');
     $dep = trim($_POST['department']??''); $rp = trim($_POST['review_period']??''); $os = (float)($_POST['overall_score']??0); $str = trim($_POST['strengths']??''); $wk = trim($_POST['weaknesses']??''); $rec = trim($_POST['recommendations']??'');
     if ($dep && $rp) {
-        $stmt = $staff->prepare("INSERT INTO {$staff_db}.department_reviews (department,reviewer_id,review_period,overall_score,strengths,weaknesses,recommendations,status) VALUES (?,?,?,?,'submitted')");
-        // Note: original query had 6 params + 'submitted', simplified here
         $stmt2 = $staff->prepare("INSERT INTO {$staff_db}.department_reviews (department,reviewer_id,review_period,overall_score,strengths,weaknesses,recommendations,status) VALUES (?,?,?,?,?,?,?,?)");
         if ($stmt2) { $s='submitted'; $stmt2->bind_param('sisdssss', $dep, $uid, $rp, $os, $str, $wk, $rec, $s); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $ok = $stmt2->affected_rows > 0; $stmt2->close(); } else $ok = false;
         echo json_encode(['success'=>$ok]); exit;
@@ -507,7 +505,7 @@ if ($view === 'submit_staff_appraisal' && $ajax === '1') {
 if ($view === 'approve_graduation' && $ajax === '1') {
     header('Content-Type: application/json');
     $sid = (int)($_POST['student_id']??0);
-    if ($sid) { $ok = $students->query("UPDATE students SET status='Graduated' WHERE id=$sid"); echo json_encode(['success'=>($ok && $students->affected_rows>0)]); exit; }
+    if ($sid) { $stmt = $students->prepare("UPDATE students SET status='Graduated' WHERE id=?"); $stmt->bind_param("i", $sid); $ok = $stmt->execute(); echo json_encode(['success'=>($ok && $stmt->affected_rows>0)]); $stmt->close(); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 

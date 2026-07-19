@@ -637,6 +637,13 @@ $pageTitle = 'HR Manager';
     </tbody></table></div>
   </div>
 </div>
+<?php else: ?>
+<div class="section-card" style="padding:40px;text-align:center">
+  <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>
+  <h5>Page Not Found</h5>
+  <p class="text-muted">The requested page "<?= htmlspecialchars($page) ?>" does not exist.</p>
+  <a href="hr-manager.php?page=overview" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Overview</a>
+</div>
 <?php endif; ?>
 </div>
 

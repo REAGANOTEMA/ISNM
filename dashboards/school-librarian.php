@@ -170,6 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             } elseif ($action === 'update') {
                 $id = (int)($_POST['id'] ?? 0);
+                $fields = $_POST;
                 unset($fields['action'], $fields['table'], $fields['id']);
                 $sets = []; $vals = []; $types = '';
                 foreach ($fields as $k => $v) {
@@ -292,7 +293,7 @@ if ($conn) {
 $recent_activities = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        $result = $conn->query("SELECT activity_description as activity, '' as icon, '' as user_name, activity_description as action, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $recent_activities[] = $row;

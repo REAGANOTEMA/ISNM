@@ -552,8 +552,20 @@ try {
     $_SESSION['error'] = 'An error occurred processing your request';
 }
 
-// Non-AJAX: redirect back
-if (!$isAjax) {
-    header("Location: $referrer");
-    exit;
+// AJAX: return JSON response with session flash message
+if ($isAjax) {
+    $successMsg = $_SESSION['success'] ?? '';
+    $errorMsg = $_SESSION['error'] ?? '';
+    unset($_SESSION['success'], $_SESSION['error']);
+    if ($errorMsg) {
+        jsonResponse(false, $errorMsg);
+    } elseif ($successMsg) {
+        jsonResponse(true, $successMsg);
+    } else {
+        jsonResponse(true, 'Operation completed');
+    }
 }
+
+// Non-AJAX: redirect back
+header("Location: $referrer");
+exit;

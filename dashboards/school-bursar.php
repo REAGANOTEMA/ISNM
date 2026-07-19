@@ -73,9 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = 'Completed';
             $gatewayMsg = '';
             if (stripos($method, 'mobile') !== false && $phone) {
-                $gw = new PaymentGateway();
-                $gwResult = $gw->requestPayment($provider ?: 'mtn', $phone, $amount, $payRef, $notes);
-                if (!$gwResult['success']) { $status = 'Pending'; $gatewayMsg = ' (mobile money request sent, awaiting confirmation)'; }
+                $gw = PaymentGateway::getInstance();
+                $gwResult = $gw->initiatePayment($provider ?: 'mtn_momo', ['phone' => $phone, 'amount' => $amount, 'reference' => $payRef, 'description' => $notes]);
+                if (empty($gwResult['success'])) { $status = 'Pending'; $gatewayMsg = ' (mobile money request sent, awaiting confirmation)'; }
                 $ref = $ref ?: ($gwResult['transaction_id'] ?? '');
             }
             $mlc = strtolower($method); $method = in_array($mlc, ['mobile_money','mobile']) ? 'Mobile Money' : (in_array($mlc, ['bank','bank_deposit','bank_transfer']) ? 'Bank Transfer' : (in_array($mlc, ['cash']) ? 'Cash' : (in_array($mlc, ['cheque']) ? 'Cheque' : (in_array($mlc, ['card']) ? 'Card' : 'Cash'))));
@@ -793,8 +793,8 @@ $pageTitle = 'Bursar Dashboard';
     </div>
     <div class="d-flex gap-2 mt-3">
       <a href="ura-reporting.php" class="btn btn-sm btn-primary"><img src="<?=$ura_logo?>" alt="" style="height:14px;width:auto;margin-right:6px" onerror="this.style.display='none'">Full URA Reporting Portal</a>
-      <a href="ura_reporting.php?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
-      <a href="ura_reporting.php?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
+      <a href="../ura_reporting.php?generate=1&type=vat" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>VAT CSV</a>
+      <a href="../ura_reporting.php?generate=1&type=wht" class="btn btn-sm btn-outline-info"><i class="fas fa-download me-1"></i>WHT CSV</a>
     </div>
     </div>
   </div>
@@ -913,6 +913,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<?php else: ?>
+<div class="content-section">
+  <div class="section-card" style="padding:40px;text-align:center">
+    <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>
+    <h5>Page Not Found</h5>
+    <p class="text-muted">The requested page "<?= htmlspecialchars($page) ?>" does not exist.</p>
+    <a href="school-bursar.php?page=overview" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Overview</a>
+  </div>
+</div>
 <?php endif; ?>
 </div>
 <script>

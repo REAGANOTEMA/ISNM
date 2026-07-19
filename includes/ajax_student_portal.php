@@ -52,8 +52,9 @@ case 'register_courses':
             $stmt->close();
         }
     }
-    $_SESSION['success'] = "$registered course(s) registered." . ($skipped > 0 ? " $skipped already registered." : '');
-    header('Location: ../dashboards/student-portal.php?page=courses');
+    $msg = "$registered course(s) registered." . ($skipped > 0 ? " $skipped already registered." : '');
+    $_SESSION['success'] = $msg;
+    echo json_encode(['success' => true, 'message' => $msg, 'registered' => $registered, 'skipped' => $skipped]);
     exit();
 
 case 'request_transcript':

@@ -238,8 +238,9 @@ if ($view === 'forward_approval' && $ajax === '1' && $staff) {
         
         $subject = "Forwarded by Deputy: Review";
         $body = "Item #$aid reviewed by Deputy $sn. Recommendation: $comm";
-        $stmt2 = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,'$sn','principal',?,?)");
-        $stmt2->bind_param("iss", $uid, $subject, $body);
+        $role = 'principal';
+        $stmt2 = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,?,?,?,?)");
+        $stmt2->bind_param("issss", $uid, $sn, $role, $subject, $body);
         if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $stmt2->close();
         echo json_encode(['success'=>true]); exit;
@@ -348,7 +349,7 @@ if ($view === 'schedule_placement' && $ajax === '1' && $staff) {
     $sd = $_POST['start_date'] ?? '';
     $ed = $_POST['end_date'] ?? '';
     if ($sid && $site) {
-        $stmt = $staff->prepare("INSERT INTO {$students_db}.clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.clinical_placements_students (student_id,facility_name,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
         $stmt->bind_param("issss", $sid, $site, $sup, $sd, $ed);
         if ($stmt->execute()) {
             echo json_encode(['success'=>true]); $stmt->close(); exit;
@@ -465,7 +466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sd=$_POST['start_date']??'';
         $ed=$_POST['end_date']??'';
         if ($sid>0 && $site) {
-            $stmt = $students->prepare("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
+            $stmt = $students->prepare("INSERT INTO clinical_placements_students (student_id,facility_name,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
             $stmt->bind_param("issss", $sid, $site, $sup, $sd, $ed);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             if ($students->affected_rows>0) { dep_success('Clinical placement created.'); } else { dep_error('Placement failed: '.$students->error); }
@@ -1249,10 +1250,15 @@ function depUpdateImpProgress(id){
 document.addEventListener('DOMContentLoaded', depLoadImprovement);
 </script>
 
+<?php else: ?>
+<div class="scard"><div class="sch"><i class="fas fa-info-circle me-2"></i>Section Not Found</div><div class="scb">
+<p class="text-muted">The requested section "<code><?= htmlspecialchars($view) ?></code>" was not found.</p>
+<p><a href="?section=deputy_overview" class="btn btn-sec"><i class="fas fa-home me-1"></i>Return to Dashboard</a></p>
+</div></div>
 <?php endif; ?>
 </div>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

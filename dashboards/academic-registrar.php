@@ -560,7 +560,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                     if ($stmt2) { if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
                     $stuConn = getStudentsConnection();
                     if ($stuConn) {
-                        $nStmt = $staff->prepare("SELECT DISTINCT er.student_id, s.full_name FROM examination_records er LEFT JOIN igangaschool_students.students s ON er.student_id=s.id WHERE er.academic_year=? AND er.semester=? AND er.grade_status='Verified'");
+                        $nStmt = $staff->prepare("SELECT DISTINCT er.student_id, s.full_name FROM examination_records er LEFT JOIN {$students_db}.students s ON er.student_id=s.id WHERE er.academic_year=? AND er.semester=? AND er.grade_status='Verified'");
                         if ($nStmt) { $nStmt->bind_param('ss', $ay, $sem); $nStmt->execute(); $nRes = $nStmt->get_result();
                             while ($sRow = $nRes->fetch_assoc()) { $sid=(int)$sRow['student_id']; $sName=$sRow['full_name'] ?? 'Student';
                                 $notifStmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?, ?, ?, 'Academic', 'High', 0)");

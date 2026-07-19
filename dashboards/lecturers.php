@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // studentCounseling - store in lecturer_counseling
     if ($action === 'add_counseling' && $conn) {
-        $stmt = $conn->prepare("INSERT INTO lecturer_counseling (lecturer_id, student_id, concern, action_taken, follow_up) VALUES (?,?,?,?,?)");
+        $stmt = $conn->prepare("INSERT INTO lecturer_counseling (lecturer_id, student_id, concern, action_outcome, follow_up) VALUES (?,?,?,?,?)");
         $stmt->bind_param("iisss", $user_id, $_POST['student_id'], $_POST['concern'], $_POST['action_taken'], $_POST['follow_up']);
         $ok = $stmt->execute(); if (!$ok) { error_log('counseling: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Counseling record added']); $stmt->close(); exit;
     }
@@ -272,6 +272,9 @@ try {
     if ($stu_stmt) { $stu_stmt->bind_param('i', $user_id); if ($stu_stmt->execute()) { $total_students_taught = (int)$stu_stmt->get_result()->fetch_assoc()['cnt']; } $stu_stmt->close(); }
     $avg_stmt = $conn->prepare("SELECT AVG(marks) as avg FROM academic_records WHERE lecturer_id=? AND marks IS NOT NULL");
     if ($avg_stmt) { $avg_stmt->bind_param('i', $user_id); if ($avg_stmt->execute()) { $average_grade = (int)round($avg_stmt->get_result()->fetch_assoc()['avg'] ?? 0); } $avg_stmt->close(); }
+    $grade_distribution = ['A'=>0,'B'=>0,'C'=>0,'D'=>0,'F'=>0];
+    $gd_stmt = $conn->prepare("SELECT grade, COUNT(*) as c FROM academic_records WHERE lecturer_id=? AND grade IS NOT NULL GROUP BY grade");
+    if ($gd_stmt) { $gd_stmt->bind_param('i', $user_id); if ($gd_stmt->execute()) { $gr = $gd_stmt->get_result(); if ($gr) while ($row = $gr->fetch_assoc()) { $g = strtoupper(trim($row['grade'])); if (isset($grade_distribution[$g])) $grade_distribution[$g] = (int)$row['c']; } } $gd_stmt->close(); }
 } catch (Exception $e) {
     error_log('lecturers stats: ' . $e->getMessage());
 }
@@ -928,8 +931,9 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     <section id="results" class="content-section dashboard-section section-card<?= $section==='results'?' active':'' ?>" data-section="results">
         <h2><i class="fas fa-chart-bar me-2"></i>Student Results</h2>
         <div class="row g-3 mb-3">
-            <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Total Records</h6><h3><?= count($grade_distribution??[]) > 0 ? array_sum($grade_distribution) : 0 ?></h3></div></div></div>
-            <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Pass Rate</h6><h3 class="text-success"><?= ($total_grades = array_sum($grade_distribution ?? [])) > 0 ? round(($grade_distribution['A']+$grade_distribution['B']+$grade_distribution['C'])/$total_grades*100) : 0 ?>%</h3></div></div></div>
+        <?php $gd = $grade_distribution ?? []; $totalGrades = array_sum($gd); ?>
+            <div class="col-md-4"><div class="card"><div class="card-body text-center"><h6>Total Records</h6><h3><?= $totalGrades ?></h3></div></div></div>
+            <div class="col-md-4"><div class="card border-success"><div class="card-body text-center"><h6 class="text-success">Pass Rate</h6><h3 class="text-success"><?= $totalGrades > 0 ? round(($gd['A']+$gd['B']+$gd['C'])/$totalGrades*100) : 0 ?>%</h3></div></div></div>
             <div class="col-md-4"><div class="card"><div class="card-body"><p class="mb-0 text-muted">View detailed results in <a href="exams-results.php">Exams & Results</a> module.</p></div></div></div>
         </div>
     </section>
@@ -1166,13 +1170,13 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     break;
 
                 case 'lessonPlan':
-                    modalTitle.textContext = 'Letson Plan';
+                    modalTitle.textContent = 'Lesson Plan';
                     modalBody.innerHTML = '<form id="lessonPlanForm"><input type="hidden" name="action" value="add_lesson_plan"><div class="md-3"><label class="form-label">Course ID</label><input name="course_id" class="form-control"></div><div class="mb-3"><label class="form-label">Week Number</label><input name="week_number" type="number" class="form-control"></div><div class="mb-3"><label class="form-label">Topic</label><input name="topic" class="form-control"></div><div class="mb-3"><label class="form-label">objectives</label><textarea name="objectives" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Activities</label><textarea name="activities" class="form-control" rows="3"></textarea></div></form>';
                     break;
 
                 case 'courseEvaluation':
-                    modalTitle.textContent = 'Course Evalution';
-                    modalBody.innerHTML = '<form id="evalForm"><input type="hidden" action="add_evaluation"><div class="mb-3"><label class="form-label">Course ID</label><input name="course_id" class="form-control"></div><div class="mb-3"><label class="form-label">Course Name</label><input name="course_name" class="form-control"></div><div class="mb-3"><label class="form-label">Semester</label><input name="semester" class="form-control"></div><div class="mb-3"><label class="form-label">Questions</label><textarea name="questions" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Feedback</label><textarea name="feedback" class="form-control" rows="3"></textarea></div></form>';
+                    modalTitle.textContent = 'Course Evaluation';
+                    modalBody.innerHTML = '<form id="evalForm"><input type="hidden" name="action" value="add_evaluation"><div class="mb-3"><label class="form-label">Course ID</label><input name="course_id" class="form-control"></div><div class="mb-3"><label class="form-label">Course Name</label><input name="course_name" class="form-control"></div><div class="mb-3"><label class="form-label">Semester</label><input name="semester" class="form-control"></div><div class="mb-3"><label class="form-label">Questions</label><textarea name="questions" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Feedback</label><textarea name="feedback" class="form-control" rows="3"></textarea></div></form>';
                     break;
 
                 case 'addLecture':
@@ -1199,7 +1203,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     break;
 
                 case 'cancelLecture':
-                    modalBody = 'Cancel Lecture';
+                    modalTitle.textContent = 'Cancel Lecture';
                     modalBody.innerHTML = '<form id="cancelLectureForm"><input type="hidden" name="action" value="cancel_lecture"><div class="mb-3"><label class="form-label">Lecture ID</label><input name="lecture_id" type="number" class="form-control" required></div><div class="mb-3"><label class="form-label">Reason</label><textarea name="reason" class="form-control" rows="3"></textarea></div></form>';
                     break;
 
@@ -1222,8 +1226,8 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     break;
 
                 case 'studentProgress':
-                    modalTitle = 'Student Progress';
-                    modalBody = '<div id="progressRes">Loading progress...</div>';
+                    modalTitle.textContent = 'Student Progress';
+                    modalBody.innerHTML = '<div id="progressRes">Loading progress...</div>';
                     modalActionBtn.style.display = 'none';
                     fetch('endpoints/student_progress.php').then(function(r) { return r.json(); }).then(function(d) {
                         var h = '<table class="table"><thead><tr><th>Student</th><th>Marks</th><th>Grade</th></tr></thead><tbody>';
@@ -1234,13 +1238,13 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     break;
 
                 case 'studentCounseling':
-                    modalTitle = 'Student Counseling';
-                    modalBody = '<form id="counselForm"><input type="hidden" name="action" value="add_counseling"><div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control"></div><div class="mb-3"><label class="form-label">Concern</label><textarea name="concern" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Action Taken</label><textarea name="action_taken" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Follow Up</label><textarea name="follow_up" class="form-control" rows="3"></textarea></div></form>';
+                    modalTitle.textContent = 'Student Counseling';
+                    modalBody.innerHTML = '<form id="counselForm"><input type="hidden" name="action" value="add_counseling"><div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control"></div><div class="mb-3"><label class="form-label">Concern</label><textarea name="concern" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Action Taken</label><textarea name="action_outcome" class="form-control" rows="3"></textarea></div><div class="mb-3"><label class="form-label">Follow Up</label><textarea name="follow_up" class="form-control" rows="3"></textarea></div></form>';
                     break;
 
                 case 'gradebook':
-                    modalTitle = 'Gradebook';
-                    modalBody = '<div id="gradeRes">Loading...</div>';
+                    modalTitle.textContent = 'Gradebook';
+                    modalBody.innerHTML = '<div id="gradeRes">Loading...</div>';
                     modalActionBtn.style.display = 'none';
                     fetch('endpoints/gradebook.php').then(function(r) { return r.json(); }).then(function(d) {
                         var h = '<table class="table"><thead><tr><th>Student</th><th>Assessment</th><th>Marks</th><th>Grade</th></tr></thead><tbody>';
@@ -1251,25 +1255,25 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     break;
 
                 case 'gradeSubmission':
-                    modalTitle = 'Submit Grade';
-                    modalBody = '<form id="gradeForm"><input type="hidden" name="action" value="submit_grade"><div class="mb-3"><label class="form-label">Course</label><input name="course_name" class="form-control"></div><div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control"></div><div class="mb-3"><label class="form-label">Assessment Type</label><select name="assessment_type" class="form-control"><option value="CAT">CAT</option><option value="Exam">Exam</option></select></div><div class="mb-3"><label class="form-label">Score</label><input name="text" step="0.01" class="form-control"></div><div class="mb-3"><label class="form-label">Grade</label><select name="grade" class="form-control"><option value="">Select</option><option>A</option><option>B</option><option>C</option><option>F</option></select></div></form>';
+                    modalTitle.textContent = 'Submit Grade';
+                    modalBody.innerHTML = '<form id="gradeForm"><input type="hidden" name="action" value="submit_grade"><div class="mb-3"><label class="form-label">Course</label><input name="course_name" class="form-control"></div><div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control"></div><div class="mb-3"><label class="form-label">Assessment Type</label><select name="assessment_type" class="form-control"><option value="CAT">CAT</option><option value="Exam">Exam</option></select></div><div class="mb-3"><label class="form-label">Score</label><input name="score" step="0.01" class="form-control"></div><div class="mb-3"><label class="form-label">Grade</label><select name="grade" class="form-control"><option value="">Select</option><option>A</option><option>B</option><option>C</option><option>F</option></select></div></form>';
                     break;
 
                 case 'gradeAnalysis':
-                    modalTitle = 'Grade Analysis';
-                    modalBody = '<div id="analysisRes">Loading grade distribution...</div>';
+                    modalTitle.textContent = 'Grade Analysis';
+                    modalBody.innerHTML = '<div id="analysisRes">Loading grade distribution...</div>';
                     modalActionBtn.style.display = 'none';
                     fetch('endpoints/grade_analysis.php').then(function(r) { return r.json(); }).then(function(d) {
                         var h = '<p>Distribution</p><table class="table"><thead><tr><th>Grade</th><th>Count</th></tr></thead><tbody>';
-                        for (var k in (d.distibution || d)) { h += '<tr><td>' + k + '</td><td>' + d[k] + '</td></tr>'; }
+                        for (var k in (d.distribution || d)) { h += '<tr><td>' + k + '</td><td>' + d[k] + '</td></tr>'; }
                         h += '</tbody></table>';
                         document.getElementById('analysisRes').innerHTML = h;
                     });
                     break;
 
                 case 'gradeAppeals':
-                    modalTitle = 'Grade Appeals';
-                    modalBody = '<div id="appealRes">Loading appeals...</div>';
+                    modalTitle.textContent = 'Grade Appeals';
+                    modalBody.innerHTML = '<div id="appealRes">Loading appeals...</div>';
                     modalActionBtn.style.display = 'none';
                     fetch('endpoints/grade_appeals.php').then(function(r) { return r.json(); }).then(function(d) {
                         var l = d.appeals || d;

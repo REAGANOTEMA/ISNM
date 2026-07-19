@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $stmt->bind_param("ii", $userId, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $rStmt = $staffConn->prepare("SELECT requested_by, request_number FROM store_requests WHERE id=?");
         if ($rStmt) { $rStmt->bind_param("i", $reqId); $rStmt->execute(); $rRow = $rStmt->get_result()->fetch_assoc(); $rStmt->close();
-            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Fulfilled: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been fulfilled by the storekeeper. Please collect your items.", 'store-requisition.php?tab=my_requests', 'success', 'fas fa-box-open'); }
+            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Fulfilled: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been fulfilled by the storekeeper. Please collect your items.", '../store-requisition.php?tab=my_requests', 'success', 'fas fa-box-open'); }
         }
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request marked as fulfilled.'];
         header('Location: storekeeper.php'); exit;
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         $stmt->bind_param("si", $reason, $reqId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
         $rStmt = $staffConn->prepare("SELECT requested_by, request_number FROM store_requests WHERE id=?");
         if ($rStmt) { $rStmt->bind_param("i", $reqId); $rStmt->execute(); $rRow = $rStmt->get_result()->fetch_assoc(); $rStmt->close();
-            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Rejected: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been rejected. Reason: $reason", 'store-requisition.php?tab=my_requests', 'warning', 'fas fa-times-circle'); }
+            if ($rRow && $rRow['requested_by']) { require_once __DIR__ . '/../includes/notification_helper.php'; createNotification("Request Rejected: {$rRow['request_number']}", "Your store requisition {$rRow['request_number']} has been rejected. Reason: $reason", '../store-requisition.php?tab=my_requests', 'warning', 'fas fa-times-circle'); }
         }
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request rejected.'];
         header('Location: storekeeper.php'); exit;

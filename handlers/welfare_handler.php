@@ -319,4 +319,9 @@ switch ($action) {
         }
         $stmt->close();
         exit;
+
+    default:
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Unknown action: ' . $action]);
+        exit;
 }

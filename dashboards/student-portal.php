@@ -453,10 +453,22 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}
 <?php
 // Common data loading for multiple pages
 $applicant_id = 0;
+$requirements = [];
+$directorNotes = [];
+$reqTotal = 0; $reqCompleted = 0;
+$admissionStatus = 'Not Set';
 if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
     $studentNum = $student['student_number'] ?? $student['registration_number'] ?? '';
     $appQ = $staffDb->query("SELECT id FROM applicants WHERE student_number='".$staffDb->real_escape_string($studentNum)."' OR registration_number='".$staffDb->real_escape_string($studentNum)."' LIMIT 1");
     if ($appQ && $appQ->num_rows > 0) { $applicant_id = (int)$appQ->fetch_assoc()['id']; }
+    if ($applicant_id > 0) {
+        $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$applicant_id LIMIT 1");
+        if ($trackQ && $trackQ->num_rows > 0) { $admissionStatus = $trackQ->fetch_assoc()['admission_status']; }
+        $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.requirement_id, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$applicant_id AND ar.is_active=1 ORDER BY ar.display_order");
+        if ($reqQ) { while ($r = $reqQ->fetch_assoc()) { $requirements[] = $r; if (!empty($r['director_notes'])) $directorNotes[] = ['req'=>$r['requirement_name'], 'note'=>$r['director_notes']]; } }
+        $reqTotal = count($requirements);
+        $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
+    }
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -488,23 +500,6 @@ if ($page === 'dashboard'):
     } elseif (tableExists($studentsDb, 'student_academic_records')) {
         $stmt = $studentsDb->prepare("SELECT gpa FROM student_academic_records WHERE student_id=? ORDER BY id DESC LIMIT 1");
         if ($stmt) { $stmt->bind_param('i', $student_id); if ($stmt->execute()) { $gr = $stmt->get_result(); if ($gr && $gr->num_rows) $gpa = (float)$gr->fetch_assoc()['gpa']; } $stmt->close(); }
-    }
-    // Admission requirements status from staff DB
-    $admissionStatus = 'Not Set';
-    $requirements = [];
-    $directorNotes = [];
-    $reqTotal = 0; $reqCompleted = 0;
-    if ($staffDb && tableExists($staffDb, 'applicant_requirement_status') && tableExists($staffDb, 'admission_requirements')) {
-        if ($applicant_id > 0) {
-            // Get admission status
-            $trackQ = $staffDb->query("SELECT admission_status FROM student_admission_tracking WHERE applicant_id=$applicant_id LIMIT 1");
-            if ($trackQ && $trackQ->num_rows > 0) { $admissionStatus = $trackQ->fetch_assoc()['admission_status']; }
-            // Get requirements with director notes
-            $reqQ = $staffDb->query("SELECT ar.requirement_name, ars.requirement_id, ars.status, ars.director_notes, ars.updated_at FROM applicant_requirement_status ars JOIN admission_requirements ar ON ars.requirement_id=ar.id WHERE ars.applicant_id=$applicant_id AND ar.is_active=1 ORDER BY ar.display_order");
-            if ($reqQ) { while ($r = $reqQ->fetch_assoc()) { $requirements[] = $r; if (!empty($r['director_notes'])) $directorNotes[] = ['req'=>$r['requirement_name'], 'note'=>$r['director_notes']]; } }
-            $reqTotal = count($requirements);
-            $reqCompleted = count(array_filter($requirements, fn($r) => in_array($r['status'], ['Submitted','Verified','Received'])));
-        }
     }
     // Fee balance details
     $fee_total_charged = 0;
@@ -1710,6 +1705,13 @@ elseif ($page === 'timetable'):
 <div class="sp-form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" class="form-control" autocomplete="new-password" required minlength="6"></div>
 <button type="submit" name="action" value="change_password" class="sp-btn sp-btn-primary"><i class="fas fa-save me-1"></i>Update Password</button>
 </form>
+</div>
+<?php else: ?>
+<div class="sp-card" style="text-align:center;padding:40px">
+  <i class="fas fa-exclamation-triangle fa-2x text-muted mb-3"></i>
+  <h5>Page Not Found</h5>
+  <p class="text-muted">The requested page "<?= htmlspecialchars($page) ?>" does not exist.</p>
+  <a href="?page=dashboard" class="sp-btn sp-btn-primary mt-2"><i class="fas fa-home me-1"></i>Back to Dashboard</a>
 </div>
 <?php endif; ?>
 </main>
