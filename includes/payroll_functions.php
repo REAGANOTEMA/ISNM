@@ -56,13 +56,13 @@ if (!function_exists('getPayrollSetting')) {
             $conn = getPayrollConnection();
             if (!$conn) return $default;
             $stmt = $conn->prepare("SELECT setting_value FROM payroll_settings WHERE setting_key = ? LIMIT 1");
-            if (!$stmt) { $conn->close(); return $default; }
+            if (!$stmt) { return $default; }
             $stmt->bind_param('s', $key);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
-            $conn->close();
+
             return $row ? $row['setting_value'] : $default;
         } catch (Exception $e) {
             error_log('getPayrollSetting error: ' . $e->getMessage());
@@ -77,11 +77,10 @@ if (!function_exists('updatePayrollSetting')) {
             $conn = getPayrollConnection();
             if (!$conn) return false;
             $stmt = $conn->prepare("INSERT INTO payroll_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by)");
-            if (!$stmt) { $conn->close(); return false; }
+            if (!$stmt) { return false; }
             $stmt->bind_param('ssi', $key, $value, $updatedBy);
             $result = $stmt->execute();
             $stmt->close();
-            $conn->close();
             return $result;
         } catch (Exception $e) {
             error_log('updatePayrollSetting error: ' . $e->getMessage());
@@ -145,11 +144,11 @@ if (!function_exists('logPayrollAudit')) {
             $oldJson = is_null($oldValues) ? null : (is_string($oldValues) ? $oldValues : json_encode($oldValues));
             $newJson = is_null($newValues) ? null : (is_string($newValues) ? $newValues : json_encode($newValues));
             $stmt = $conn->prepare("INSERT INTO payroll_audit_logs (staff_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            if (!$stmt) { $conn->close(); return false; }
+            if (!$stmt) { return false; }
             $stmt->bind_param('ississss', $staffId, $action, $entityType, $entityId, $oldJson, $newJson, $ip, $ua);
             $result = $stmt->execute();
             $stmt->close();
-            $conn->close();
+
             return $result;
         } catch (Exception $e) {
             error_log('logPayrollAudit error: ' . $e->getMessage());
@@ -164,11 +163,11 @@ if (!function_exists('logPayrollApproval')) {
             $conn = getPayrollConnection();
             if (!$conn) return false;
             $stmt = $conn->prepare("INSERT INTO payroll_approval_history (entity_type, entity_id, action, step, comments, acted_by) VALUES (?, ?, ?, ?, ?, ?)");
-            if (!$stmt) { $conn->close(); return false; }
+            if (!$stmt) { return false; }
             $stmt->bind_param('sisssi', $entityType, $entityId, $action, $step, $comments, $actedBy);
             $result = $stmt->execute();
             $stmt->close();
-            $conn->close();
+
             return $result;
         } catch (Exception $e) {
             error_log('logPayrollApproval error: ' . $e->getMessage());
@@ -183,13 +182,13 @@ if (!function_exists('getEmployeeActiveAllowances')) {
             $conn = getPayrollConnection();
             if (!$conn) return [];
             $stmt = $conn->prepare("SELECT pea.*, pat.allowance_code, pat.allowance_name, pat.is_taxable as type_taxable FROM payroll_employee_allowances pea JOIN payroll_allowance_types pat ON pea.allowance_type_id = pat.id WHERE pea.payroll_employee_id = ? AND pea.status = 'active' AND (pea.effective_from IS NULL OR pea.effective_from <= CURDATE()) AND (pea.effective_to IS NULL OR pea.effective_to >= CURDATE())");
-            if (!$stmt) { $conn->close(); return []; }
+            if (!$stmt) { return []; }
             $stmt->bind_param('i', $payrollEmployeeId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
-            $conn->close();
+
             return $rows ?: [];
         } catch (Exception $e) {
             error_log('getEmployeeActiveAllowances error: ' . $e->getMessage());
@@ -204,13 +203,13 @@ if (!function_exists('getEmployeeActiveDeductions')) {
             $conn = getPayrollConnection();
             if (!$conn) return [];
             $stmt = $conn->prepare("SELECT ped.*, pdt.deduction_code, pdt.deduction_name, pdt.is_statutory, pdt.category as type_category FROM payroll_employee_deductions ped JOIN payroll_deduction_types pdt ON ped.deduction_type_id = pdt.id WHERE ped.payroll_employee_id = ? AND ped.status = 'active' AND (ped.effective_from IS NULL OR ped.effective_from <= CURDATE()) AND (ped.effective_to IS NULL OR ped.effective_to >= CURDATE())");
-            if (!$stmt) { $conn->close(); return []; }
+            if (!$stmt) { return []; }
             $stmt->bind_param('i', $payrollEmployeeId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
-            $conn->close();
+
             return $rows ?: [];
         } catch (Exception $e) {
             error_log('getEmployeeActiveDeductions error: ' . $e->getMessage());
@@ -225,13 +224,13 @@ if (!function_exists('getEmployeeOvertimeTotal')) {
             $conn = getPayrollConnection();
             if (!$conn) return 0;
             $stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM payroll_overtime WHERE payroll_employee_id = ? AND payroll_period_id = ? AND status IN ('approved', 'paid')");
-            if (!$stmt) { $conn->close(); return 0; }
+            if (!$stmt) { return 0; }
             $stmt->bind_param('ii', $payrollEmployeeId, $payrollPeriodId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
-            $conn->close();
+
             return (float)($row['total'] ?? 0);
         } catch (Exception $e) {
             error_log('getEmployeeOvertimeTotal error: ' . $e->getMessage());
@@ -246,13 +245,13 @@ if (!function_exists('getEmployeeBonusTotal')) {
             $conn = getPayrollConnection();
             if (!$conn) return 0;
             $stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM payroll_bonus WHERE payroll_employee_id = ? AND payroll_period_id = ? AND status IN ('approved', 'paid')");
-            if (!$stmt) { $conn->close(); return 0; }
+            if (!$stmt) { return 0; }
             $stmt->bind_param('ii', $payrollEmployeeId, $payrollPeriodId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
-            $conn->close();
+
             return (float)($row['total'] ?? 0);
         } catch (Exception $e) {
             error_log('getEmployeeBonusTotal error: ' . $e->getMessage());
@@ -267,13 +266,13 @@ if (!function_exists('getEmployeeLoanInstallment')) {
             $conn = getPayrollConnection();
             if (!$conn) return 0;
             $stmt = $conn->prepare("SELECT COALESCE(SUM(installment_amount), 0) as total FROM payroll_loans WHERE payroll_employee_id = ? AND status = 'active'");
-            if (!$stmt) { $conn->close(); return 0; }
+            if (!$stmt) { return 0; }
             $stmt->bind_param('i', $payrollEmployeeId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
-            $conn->close();
+
             return (float)($row['total'] ?? 0);
         } catch (Exception $e) {
             error_log('getEmployeeLoanInstallment error: ' . $e->getMessage());
@@ -512,11 +511,11 @@ if (!function_exists('processPayrollRun')) {
                 'total_tax'      => $totalTax,
                 'total_nssf'     => $totalNssf,
             ];
-            $conn->close();
+
             return $result;
         } catch (Exception $e) {
             if (isset($conn) && $conn) {
-                try { $conn->rollback(); $conn->close(); } catch (Exception $ignore) { error_log('payroll_functions compute: ' . $ignore->getMessage()); }
+                try { $conn->rollback(); } catch (Exception $ignore) { error_log('payroll_functions compute: ' . $ignore->getMessage()); }
             }
             error_log('processPayrollRun error: ' . $e->getMessage());
             $result['message'] = 'Internal error: ' . $e->getMessage();
@@ -533,12 +532,12 @@ if (!function_exists('generatePayslipsForRun')) {
             if (!$conn) { $result['message'] = 'Database connection failed'; return $result; }
 
             $runStmt = $conn->prepare("SELECT id, run_number, payroll_period_id FROM payroll_runs WHERE id = ?");
-            if (!$runStmt) { $conn->close(); $result['message'] = 'Run query failed'; return $result; }
+            if (!$runStmt) { $result['message'] = 'Run query failed'; return $result; }
             $runStmt->bind_param('i', $payrollRunId);
             if (!$runStmt->execute()) { error_log('$runStmt execute failed: ' . ($runStmt->error ?? 'unknown')); };
             $run = $runStmt->get_result()->fetch_assoc();
             $runStmt->close();
-            if (!$run) { $conn->close(); $result['message'] = 'Payroll run not found'; return $result; }
+            if (!$run) { $result['message'] = 'Payroll run not found'; return $result; }
 
             $periodStmt = $conn->prepare("SELECT period_name FROM payroll_periods WHERE id = ?");
             $periodStmt->bind_param('i', $run['payroll_period_id']);
@@ -547,7 +546,7 @@ if (!function_exists('generatePayslipsForRun')) {
             $periodStmt->close();
 
             $itemsStmt = $conn->prepare("SELECT pi.*, pe.staff_id as pe_staff_id, pe.payroll_number, pe.tin, pe.nssf_number, s.full_name, s.position FROM payroll_items pi JOIN payroll_employees pe ON pi.payroll_employee_id = pe.id JOIN staff s ON pi.staff_id = s.id WHERE pi.payroll_run_id = ? AND pi.status = 'active'");
-            if (!$itemsStmt) { $conn->close(); $result['message'] = 'Items query failed'; return $result; }
+            if (!$itemsStmt) { $result['message'] = 'Items query failed'; return $result; }
             $itemsStmt->bind_param('i', $payrollRunId);
             if (!$itemsStmt->execute()) { error_log('$itemsStmt execute failed: ' . ($itemsStmt->error ?? 'unknown')); };
             $items = $itemsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -591,13 +590,12 @@ if (!function_exists('generatePayslipsForRun')) {
                 }
             }
 
-            $conn->close();
+
             $result['success'] = true;
             $result['message'] = "$count payslips generated.";
             $result['data'] = ['count' => $count];
             return $result;
         } catch (Exception $e) {
-            if (isset($conn) && $conn) $conn->close();
             error_log('generatePayslipsForRun error: ' . $e->getMessage());
             $result['message'] = 'Internal error: ' . $e->getMessage();
             return $result;
@@ -641,7 +639,7 @@ if (!function_exists('getPayrollDashboardStats')) {
             $approvalResult = $conn->query("SELECT COUNT(*) as c FROM payroll_approval_history WHERE action IN ('submitted', 'pending') AND acted_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
             if ($approvalResult) $defaults['pending_approvals'] = (int)$approvalResult->fetch_assoc()['c'];
 
-            $conn->close();
+
             return $defaults;
         } catch (Exception $e) {
             error_log('getPayrollDashboardStats error: ' . $e->getMessage());
@@ -663,12 +661,12 @@ if (!function_exists('getPayrollPeriods')) {
             } else {
                 $stmt = $conn->prepare($sql);
             }
-            if (!$stmt) { $conn->close(); return []; }
+            if (!$stmt) { return []; }
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
-            $conn->close();
+
             return $rows ?: [];
         } catch (Exception $e) {
             error_log('getPayrollPeriods error: ' . $e->getMessage());
@@ -692,16 +690,16 @@ if (!function_exists('createPayrollPeriod')) {
             $paymentDate = date('Y-m-d', mktime(0, 0, 0, $month, $payDay, $year));
 
             $stmt = $conn->prepare("INSERT INTO payroll_periods (period_code, period_name, frequency, month, year, start_date, end_date, payment_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?) ON DUPLICATE KEY UPDATE period_name = VALUES(period_name)");
-            if (!$stmt) { $conn->close(); $result['message'] = 'Insert prepare failed'; return $result; }
+            if (!$stmt) { $result['message'] = 'Insert prepare failed'; return $result; }
             $stmt->bind_param('ssiiiissi', $periodCode, $periodName, $frequency, $month, $year, $startDate, $endDate, $paymentDate, $createdBy);
             if (!$stmt->execute()) {
-                $conn->close();
+    
                 $result['message'] = 'Execute failed: ' . $stmt->error;
                 return $result;
             }
             $periodId = $stmt->insert_id;
             $stmt->close();
-            $conn->close();
+
 
             logPayrollAudit($createdBy, 'period_created', 'payroll_period', $periodId, null, ['code' => $periodCode, 'name' => $periodName]);
 
@@ -710,7 +708,6 @@ if (!function_exists('createPayrollPeriod')) {
             $result['data'] = ['period_id' => $periodId, 'period_code' => $periodCode];
             return $result;
         } catch (Exception $e) {
-            if (isset($conn) && $conn) $conn->close();
             error_log('createPayrollPeriod error: ' . $e->getMessage());
             $result['message'] = 'Internal error: ' . $e->getMessage();
             return $result;
@@ -724,13 +721,13 @@ if (!function_exists('getPayrollEmployees')) {
             $conn = getPayrollConnection();
             if (!$conn) return [];
             $stmt = $conn->prepare("SELECT pe.*, s.full_name, s.position, s.email, s.phone FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id WHERE pe.payroll_status = ? ORDER BY s.full_name");
-            if (!$stmt) { $conn->close(); return []; }
+            if (!$stmt) { return []; }
             $stmt->bind_param('s', $status);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             $rows = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
-            $conn->close();
+
             return $rows ?: [];
         } catch (Exception $e) {
             error_log('getPayrollEmployees error: ' . $e->getMessage());

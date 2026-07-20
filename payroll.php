@@ -121,10 +121,10 @@ $pageTitle = 'Payroll Management';
                         <td><?= $i + 1 ?></td>
                         <td><?= htmlspecialchars($e['full_name'] ?? '') ?></td>
                         <td class="small text-muted"><?= htmlspecialchars($e['position'] ?? '') ?></td>
-                        <td><span class="badge-payroll badge-<?= $e['employment_type'] === 'permanent' ? 'active' : 'draft' ?>"><?= htmlspecialchars($e['employment_type']) ?></span></td>
+                        <td><span class="badge-payroll badge-<?= ($e['employment_type'] ?? '') === 'permanent' ? 'active' : 'draft' ?>"><?= htmlspecialchars($e['employment_type'] ?? '') ?></span></td>
                         <td><?= formatCurrencyUGX($e['monthly_salary'] ?? 0) ?></td>
-                        <td class="small"><?= htmlspecialchars($e['payment_method']) ?></td>
-                        <td><span class="badge-payroll badge-<?= $e['payroll_status'] === 'active' ? 'active' : 'closed' ?>"><?= $e['payroll_status'] ?></span></td>
+                        <td class="small"><?= htmlspecialchars($e['payment_method'] ?? '') ?></td>
+                        <td><span class="badge-payroll badge-<?= ($e['payroll_status'] ?? '') === 'active' ? 'active' : 'closed' ?>"><?= htmlspecialchars($e['payroll_status'] ?? '') ?></span></td>
                         <td><button class="btn btn-sm btn-outline-primary" onclick="editEmployee(<?= $e['id'] ?>)"><i class="fas fa-edit"></i></button></td>
                     </tr>
 <?php endforeach; if (empty($employees)): ?>
@@ -852,8 +852,8 @@ $status = $lr['status'] ?? 'Pending';
 <tr>
 <td><strong><?= htmlspecialchars($lr['full_name'] ?? '') ?></strong></td>
 <td><?= htmlspecialchars($leaveName) ?></td>
-<td><?= date('M j, Y', strtotime($lr['start_date'])) ?></td>
-<td><?= date('M j, Y', strtotime($lr['end_date'])) ?></td>
+<td><?= !empty($lr['start_date']) ? date('M j, Y', strtotime($lr['start_date'])) : '-' ?></td>
+<td><?= !empty($lr['end_date']) ? date('M j, Y', strtotime($lr['end_date'])) : '-' ?></td>
 <td><?= $days ?></td>
 <td><span class="badge-payroll badge-<?= $status==='Approved'?'active':($status==='Rejected'?'closed':'pending') ?>"><?= htmlspecialchars($status) ?></span></td>
 <td>
@@ -1055,4 +1055,4 @@ if ($allStaff) while ($st = $allStaff->fetch_assoc()):
 </script>
 </body>
 </html>
-<?php if ($payrollConn) $payrollConn->close(); ?>
+<?php // Connection reuse — don't close?>
