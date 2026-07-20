@@ -4,10 +4,10 @@
  * Accessible by authorized officials to manage website content
  */
 session_start();
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../auth-service.php';
-require_once __DIR__ . '/../includes/student_helpers.php';
-require_once __DIR__ . '/core/CMS.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../auth-service.php';
+require_once __DIR__ . '/../../includes/student_helpers.php';
+require_once __DIR__ . '/../core/CMS.php';
 
 if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     header('Location: ../staff-login.php');

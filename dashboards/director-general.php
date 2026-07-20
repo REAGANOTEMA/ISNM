@@ -210,22 +210,26 @@ $dgPageToSection = [
     'messaging'     => 'messaging',
     'broadcast'     => 'broadcast',
     'news'          => 'news-management',
+    'news-management'=> 'news-management',
     'events'        => 'events-mgmt',
+    'events-mgmt'   => 'events-mgmt',
     'testimonials'  => 'testimonials-mgmt',
+    'testimonials-mgmt'=> 'testimonials-mgmt',
     'faqs'          => 'faqs-mgmt',
+    'faqs-mgmt'     => 'faqs-mgmt',
     'web-settings'  => 'web-settings',
     'reports'       => 'reports',
+    'reports-daily'  => 'reports',
+    'reports-monthly'=> 'reports',
+    'reports-annual' => 'reports',
+    'exports'       => 'reports',
+    'print'         => 'reports',
     'system-health' => 'system-health',
     'notifications' => 'notifications',
     'kpi'           => 'kpi',
     'analytics'     => 'home',
     'tasks'         => 'home',
     'schedules'     => 'home',
-    'reports-daily'  => 'reports',
-    'reports-monthly'=> 'reports',
-    'reports-annual' => 'reports',
-    'exports'       => 'reports',
-    'print'         => 'reports',
     'messages'      => 'messaging',
     'announcements' => 'broadcast',
     'profile'       => 'staff',
@@ -244,6 +248,9 @@ $dgPageToSection = [
     'calendar'      => 'executive',
     'emergency'     => 'audit',
     'director_requirements' => 'director-requirements',
+    'intake-management'     => 'executive',
+    'donation-tracking'     => 'executive',
+    'volunteer-applications'=> 'executive',
 ];
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
@@ -1371,6 +1378,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php
 $dgNewsList = [];
 $allStaffList = [];
+echo '---DGSECTION=' . var_export($dgSection, true) . '---';
 switch ($dgSection):
     case 'home': ?>
         <div id="home" class="content-section dashboard-section active" data-section="home">
@@ -1425,8 +1433,9 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'executive': ?>
+<?php case 'executive': ?>
 <div id="executive" class="content-section dashboard-section active" data-section="executive">
+  <?php echo '<!-- EXECUTIVE_CASE_REACHED -->'; ?>
   <?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
   <div class="section-card">
     <?php dgToolbar('Executive Overview', 'fa-chart-simple', 'Updated live'); ?>
@@ -1447,7 +1456,7 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'departments': ?>
+<?php case 'departments': ?>
 <div id="departments" class="content-section dashboard-section active" data-section="departments">
   <div class="section-card">
     <?php dgToolbar('Department Monitoring', 'fa-building'); ?>
@@ -1517,7 +1526,7 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'performance': ?>
+    <?php case 'performance': ?>
 <div id="performance" class="content-section dashboard-section active" data-section="performance">
   <div class="section-card">
     <?php dgToolbar('Director Performance', 'fa-chart-bar'); ?>
@@ -1545,7 +1554,7 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'financial': ?>
+    <?php case 'financial': ?>
 <div id="financial" class="content-section dashboard-section active" data-section="financial">
   <div class="section-card">
     <?php dgToolbar('Financial Overview', 'fa-coins'); ?>
@@ -1608,7 +1617,7 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'staff': ?>
+    <?php case 'staff': ?>
 <div id="staff" class="content-section dashboard-section active" data-section="staff">
   <div class="section-card">
     <?php dgToolbar('Staff Management', 'fa-id-badge'); ?>
@@ -1722,7 +1731,7 @@ switch ($dgSection):
 </div>
 
 <?php break; ?>
-    case 'student': ?>
+    <?php case 'student': ?>
 <div id="student" class="content-section dashboard-section active" data-section="student">
   <div class="section-card">
     <?php dgToolbar('Student Management', 'fa-user-graduate'); ?>
@@ -1816,7 +1825,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'approvals': ?>
+    <?php case 'approvals': ?>
 <div id="approvals" class="content-section dashboard-section active" data-section="approvals">
   <div class="section-card">
     <?php dgToolbar('Approval Center', 'fa-check-double'); ?>
@@ -1824,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 <?php break; ?>
-    case 'audit': ?>
+    <?php case 'audit': ?>
 <div id="audit" class="content-section dashboard-section active" data-section="audit">
   <div class="section-card">
     <?php dgToolbar('Audit Trail', 'fa-history'); ?>
@@ -1857,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'store': ?>
+    <?php case 'store': ?>
 <div id="store" class="content-section dashboard-section active" data-section="store">
   <div class="section-card">
     <?php dgToolbar('Store & Assets', 'fa-warehouse'); ?>
@@ -1911,7 +1920,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'transport': ?>
+    <?php case 'transport': ?>
 <div id="transport" class="content-section dashboard-section active" data-section="transport">
   <div class="section-card">
     <?php dgToolbar('Transport & Routes', 'fa-bus'); ?>
@@ -2071,7 +2080,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'news-management': ?>
+    <?php case 'news-management': ?>
 <div id="news-management" class="content-section dashboard-section active" data-section="news-management">
   <?php
   // Fetch news for this section (cached)
@@ -2323,7 +2332,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'events-mgmt': ?>
+    <?php case 'events-mgmt': ?>
 <?php
   $dgEventsList = [];
   if ($conn) {
@@ -2416,7 +2425,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'testimonials-mgmt': ?>
+    <?php case 'testimonials-mgmt': ?>
 <?php
   $dgTestimonialsList = [];
   if ($conn) {
@@ -2513,7 +2522,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'faqs-mgmt': ?>
+    <?php case 'faqs-mgmt': ?>
 <?php
   $dgFaqsList = [];
   if ($conn) {
@@ -2606,7 +2615,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'web-settings': ?>
+    <?php case 'web-settings': ?>
 <?php
   $dgSettingsList = [];
   if ($conn) {
@@ -2670,7 +2679,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'communications': ?>
+    <?php case 'communications': ?>
 <div id="communications" class="content-section dashboard-section active" data-section="communications">
   <div class="section-card">
     <?php dgToolbar('Communications', 'fa-bullhorn'); ?>
@@ -2679,7 +2688,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'system-users': ?>
+    <?php case 'system-users': ?>
 <div id="system-users" class="content-section dashboard-section active" data-section="system-users">
   <div class="section-card">
     <?php dgToolbar('User Management', 'fa-user-shield'); ?>
@@ -2715,7 +2724,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'system-roles': ?>
+    <?php case 'system-roles': ?>
 <div id="system-roles" class="content-section dashboard-section active" data-section="system-roles">
   <div class="section-card">
     <?php dgToolbar('Role Management', 'fa-user-tag'); ?>
@@ -2750,7 +2759,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'messaging': ?>
+    <?php case 'messaging': ?>
 <div id="messaging" class="content-section dashboard-section active" data-section="messaging">
   <div class="section-card">
     <?php dgToolbar('Staff Messaging', 'fa-comments'); ?>
@@ -2871,7 +2880,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'broadcast': ?>
+    <?php case 'broadcast': ?>
 <div id="broadcast" class="content-section dashboard-section active" data-section="broadcast">
   <div class="section-card">
     <?php dgToolbar('Broadcast Messages', 'fa-bullhorn'); ?>
@@ -2951,7 +2960,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php break; ?>
-    case 'quick': ?>
+    <?php case 'quick': ?>
 <div id="quick" class="content-section dashboard-section active" data-section="quick">
   <div class="section-card">
     <?php dgToolbar('Quick Actions', 'fa-bolt'); ?>
@@ -3048,19 +3057,19 @@ function dgExportCSV() {
 </script>
 
 <?php break; ?>
-    case 'reports': ?>
+    <?php case 'reports': ?>
 <div id="reports" class="content-section dashboard-section active" data-section="reports">
   <?php include_once __DIR__ . '/../includes/dg_reports_center.php'; ?>
 </div>
 
 <?php break; ?>
-    case 'kpi': ?>
+    <?php case 'kpi': ?>
 <div id="kpi" class="content-section dashboard-section active" data-section="kpi">
   <?php include_once __DIR__ . '/../includes/dg_strategic_kpi.php'; ?>
 </div>
 
 <?php break; ?>
-    case 'notifications': ?>
+    <?php case 'notifications': ?>
 <div id="notifications" class="content-section dashboard-section active" data-section="notifications">
   <?php 
   include_once __DIR__ . '/../includes/dg_notifications_center.php';
@@ -3071,7 +3080,7 @@ function dgExportCSV() {
 </div>
 
 <?php break; ?>
-    case 'system-health': ?>
+    <?php case 'system-health': ?>
 <div id="system-health" class="content-section dashboard-section active" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
 </div>
