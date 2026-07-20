@@ -15,6 +15,9 @@ function redirectBack($hash = '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        $_SESSION['error'] = 'Invalid security token.'; header('Location: student-library.php'); exit;
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_book') {

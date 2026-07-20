@@ -378,14 +378,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     if ($action === 'dashboard_stats') {
-        $totalApps = $conn->query("SELECT COUNT(*) c FROM applicants")->fetch_assoc()['c'] ?? 0;
+        $r0 = $conn->query("SELECT COUNT(*) c FROM applicants"); $totalApps = $r0 ? (int)($r0->fetch_assoc()['c'] ?? 0) : 0;
         $pendingReviews = adCount($conn, 'New') + adCount($conn, 'Under Review') + adCount($conn, 'Waiting for Documents');
         $enrolled = 0;
         if ($stuConn) {
             $r = $stuConn->query("SELECT COUNT(*) c FROM $studentsDb.students WHERE status='Active'");
             if ($r) $enrolled = (int)$r->fetch_assoc()['c'];
         }
-        $reqPending = $conn->query("SELECT COUNT(*) c FROM student_requirements WHERE status IN ('pending','submitted')")->fetch_assoc()['c'] ?? 0;
+        $r1 = $conn->query("SELECT COUNT(*) c FROM student_requirements WHERE status IN ('pending','submitted')"); $reqPending = $r1 ? (int)($r1->fetch_assoc()['c'] ?? 0) : 0;
         echo json_encode([
             'total_apps' => (int)$totalApps,
             'pending_reviews' => (int)$pendingReviews,
@@ -676,14 +676,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- Page data ---
-$totalApps = $conn->query("SELECT COUNT(*) c FROM applicants")->fetch_assoc()['c'] ?? 0;
+$r0 = $conn->query("SELECT COUNT(*) c FROM applicants"); $totalApps = $r0 ? (int)($r0->fetch_assoc()['c'] ?? 0) : 0;
 $pendingReviews = adCount($conn, 'New') + adCount($conn, 'Under Review') + adCount($conn, 'Waiting for Documents');
 $enrolledCount = 0;
 if ($stuConn) {
     $r = $stuConn->query("SELECT COUNT(*) c FROM $studentsDb.students WHERE status='Active'");
     if ($r) $enrolledCount = (int)$r->fetch_assoc()['c'];
 }
-$reqPending = $conn->query("SELECT COUNT(*) c FROM student_requirements WHERE status IN ('pending','submitted')")->fetch_assoc()['c'] ?? 0;
+$r1 = $conn->query("SELECT COUNT(*) c FROM student_requirements WHERE status IN ('pending','submitted')"); $reqPending = $r1 ? (int)($r1->fetch_assoc()['c'] ?? 0) : 0;
 
 $programs = [];
 $r = $conn->query("SELECT * FROM academic_programs WHERE status='Active' ORDER BY program_name");

@@ -983,8 +983,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $rid = (int)($_POST['role_id'] ?? 0);
         if ($rid) {
             $chk = $conn->prepare("SELECT COUNT(*) as c FROM staff WHERE role_id=?");
-            if ($chk) { $chk->bind_param('i', $rid); $chk->execute(); $cnt = $chk->get_result()->fetch_assoc()['c'] ?? 0; $chk->close(); }
-            if (!empty($cnt)) { $msg = "Cannot delete role: $cnt staff members assigned."; }
+            $cnt = 0;
+            if ($chk) { $chk->bind_param('i', $rid); $chk->execute(); $cnt = (int)($chk->get_result()->fetch_assoc()['c'] ?? 0); $chk->close(); }
+            if ($cnt > 0) { $msg = "Cannot delete role: $cnt staff members assigned."; }
             else { $stmt = $conn->prepare("DELETE FROM staff_roles WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $rid); if ($stmt->execute()) { $ok = true; $msg = 'Role deleted.'; } else { $msg = 'Database error.'; } $stmt->close(); } }
         }
     }
@@ -1693,7 +1694,7 @@ switch ($dgSection):
               <td><span style="font-size:12px;color:#64748b;"><?= htmlspecialchars($s['phone']??'-') ?></span></td>
               <td><span class="badge badge-soft <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
               <td>
-                <button class="btn btn-sm" style="color:#2563eb;border:none;background:none;padding:0 4px;" title="Edit" onclick='openEditStaffModal(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm" style="color:#2563eb;border:none;background:none;padding:0 4px;" title="Edit" onclick='openEditStaffModal(<?= htmlspecialchars(json_encode($s), ENT_QUOTES, 'UTF-8') ?>)'><i class="fas fa-edit"></i></button>
                 <form method="POST" style="display:inline;" onsubmit="return confirm('Remove <?= htmlspecialchars($s['full_name'],ENT_QUOTES) ?> from staff?')">
                   <?= csrfField() ?>
                   <input type="hidden" name="dg_action" value="delete_staff">
@@ -3135,7 +3136,7 @@ function dgExportCSV() {
   }
   function toggleDirReqDG(id,checked){
     var baseUrl=window.location.pathname.split('?')[0];
-    fetch(baseUrl+'?ajax=clear_student_requirement',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'req_id='+id+'&cleared='+(checked?1:0)}).then(r=>r.json()).then(d=>{if(!d.success)alert(d.message);else loadDirectorRequirementsDG()});
+    fetch(baseUrl+'?ajax=clear_student_requirement',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'req_id='+id+'&cleared='+(checked?1:0)+'&csrf_token='+encodeURIComponent(window.CSRF_TOKEN||'')}).then(r=>r.json()).then(d=>{if(!d.success)alert(d.message);else loadDirectorRequirementsDG()});
   }
   function toggleAllDirReqDG(el){document.querySelectorAll('.dir-req-check').forEach(function(cb){cb.checked=el.checked;toggleDirReqDG(cb.dataset.id,el.checked)})}
   function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
@@ -3143,7 +3144,7 @@ function dgExportCSV() {
 </div>
         <?php break;
     default: ?>
-        <?php header('Location: director-general.php?section=home'); exit; ?>
+        <?php header('Location: director-general.php?page=home'); exit; ?>
         <?php break;
 endswitch; ?>
 
@@ -3502,7 +3503,7 @@ endswitch; ?>
 </script>
 <script>
 // â•â•â• NEWS MANAGEMENT â•â•â•
-var dgNewsData = <?= json_encode($dgNewsList) ?>;
+var dgNewsData = <?= json_encode($dgNewsList, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
 function dgShowNewsModal() {
     document.getElementById('dgNewsAction').value = 'create';
@@ -3565,7 +3566,7 @@ function editRole(r) {
     modal.show();
 }
 
-var dgEventData = <?= json_encode($dgEventsList ?? []) ?>;
+var dgEventData = <?= json_encode($dgEventsList ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 function dgShowEventModal() {
     document.getElementById('dgEventAction').value = 'create';
     document.getElementById('dgEventId').value = '0';
@@ -3604,7 +3605,7 @@ function dgFilterEvents(q) {
     });
 }
 
-var dgTestimonialData = <?= json_encode($dgTestimonialsList ?? []) ?>;
+var dgTestimonialData = <?= json_encode($dgTestimonialsList ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 function dgShowTestimonialModal() {
     document.getElementById('dgTestimonialAction').value = 'create';
     document.getElementById('dgTestimonialId').value = '0';
@@ -3641,7 +3642,7 @@ function dgFilterTestimonials(q) {
     });
 }
 
-var dgFaqData = <?= json_encode($dgFaqsList ?? []) ?>;
+var dgFaqData = <?= json_encode($dgFaqsList ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 function dgShowFaqModal() {
     document.getElementById('dgFaqAction').value = 'create';
     document.getElementById('dgFaqId').value = '0';
@@ -3750,11 +3751,11 @@ function sendBroadcast(e){
 
   result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Broadcasting...</span>';
 
-  var allStaffIds = <?= json_encode(array_column($allStaffList, 'id')) ?>;
+  var allStaffIds = <?= json_encode(array_column($allStaffList ?? [], 'id')) ?>;
   var deptStaffMap = {};
   <?php
   $deptStaffMap = [];
-  foreach ($allStaffList as $s) { $deptStaffMap[$s['department']][] = $s['id']; }
+  foreach ($allStaffList ?? [] as $s) { $deptStaffMap[$s['department']][] = $s['id']; }
   ?>
   deptStaffMap = <?= json_encode($deptStaffMap) ?>;
 

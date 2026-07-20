@@ -85,7 +85,7 @@ if ($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
     // Seed sample data if table is empty
-    $count = $conn->query("SELECT COUNT(*) AS c FROM intake_plans")->fetch_assoc()['c'] ?? 0;
+    $r = $conn->query("SELECT COUNT(*) AS c FROM intake_plans"); $count = $r ? (int)($r->fetch_assoc()['c'] ?? 0) : 0;
     if ((int)$count === 0) {
         $seeds = [
             ['Certificate in Nursing', 60, '2026', 'Semester 1', 'Active'],

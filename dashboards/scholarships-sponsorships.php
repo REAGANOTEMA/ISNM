@@ -28,6 +28,9 @@ if ($conn) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid security token.']); exit;
+    }
     $action = $_POST['action'] ?? '';
     header('Content-Type: application/json');
 

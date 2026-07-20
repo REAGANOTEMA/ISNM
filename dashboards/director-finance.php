@@ -122,6 +122,16 @@ if ($ajax === 'compliance_alert_list' && $staff) {
     $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.compliance_alerts ORDER BY created_at DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
     echo json_encode($rows); exit;
 }
+if ($ajax === 'finance_message_list' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.finance_messages ORDER BY created_at DESC LIMIT 50"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'finance_notice_list' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.finance_notices ORDER BY created_at DESC LIMIT 50"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
 if ($ajax === 'procurement_list' && $staff) {
     header('Content-Type: application/json');
     $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.procurement_requests ORDER BY created_at DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
@@ -154,6 +164,9 @@ if ($ajax === 'supplier_payment_list' && $staff) {
 }
 if ($ajax === 'update_audit_status' && $staff) {
     header('Content-Type: application/json');
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
+    }
     $id=(int)($_POST['id']??0); $st=$_POST['status']??'';
     $validSt=['open','in_progress','resolved','closed'];
     if($id&&in_array($st,$validSt)){
@@ -2025,36 +2038,6 @@ document.addEventListener('DOMContentLoaded',function(){
 <div class="modal-footer"><button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record Payment</button></div>
 </form></div></div></div>
 
-<?php
-// -- Additional AJAX endpoints (referenced by JS but appended after sections) --
-if ($ajax === 'finance_message_list' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.finance_messages ORDER BY created_at DESC LIMIT 50"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'finance_notice_list' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.finance_notices ORDER BY created_at DESC LIMIT 50"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'update_audit_status' && $staff) {
-    header('Content-Type: application/json');
-    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
-    }
-    $id=(int)($_POST['id']??0); $st=$_POST['status']??'';
-    if($id&&$st){
-        $stmt=$staff->prepare("UPDATE {$students_db}.audit_findings SET status=? WHERE id=?");
-        if($stmt){$stmt->bind_param('si',$st,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
-    }
-    echo json_encode(['success'=>false]); exit;
-}
-if ($ajax === 'supplier_payment_list' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT sp.*,s.supplier_name FROM {$students_db}.supplier_payments sp LEFT JOIN {$students_db}.suppliers s ON sp.supplier_id=s.id ORDER BY sp.created_at DESC LIMIT 100"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-
 // -- Report Generation (print/PDF) --
 $report = $_GET['report'] ?? '';
 if ($report) {
@@ -2114,8 +2097,6 @@ if ($report) {
     echo '</body></html>'; exit;
 }
 ?>
-
-<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 
 <!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">

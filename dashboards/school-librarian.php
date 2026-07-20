@@ -140,6 +140,9 @@ if ($conn) {
 
 // Handle POST requests for library CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        header('Content-Type: application/json'); echo json_encode(['success' => false, 'error' => 'Invalid security token.']); exit;
+    }
     header('Content-Type: application/json');
     $action = $_POST['action'];
     $table = $_POST['table'] ?? '';

@@ -22,3 +22,17 @@ if (!function_exists('verifyCsrfToken')) {
         return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
     }
 }
+
+if (!function_exists('flashMessage')) {
+    function flashMessage($type, $message) {
+        $_SESSION['flash'][$type] = $message;
+    }
+}
+
+if (!function_exists('getFlashMessages')) {
+    function getFlashMessages() {
+        $messages = $_SESSION['flash'] ?? [];
+        unset($_SESSION['flash']);
+        return $messages;
+    }
+}

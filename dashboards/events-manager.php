@@ -319,10 +319,10 @@ body{background:var(--bg-light);font-family:'Segoe UI',system-ui,sans-serif}
     <!-- Stats -->
     <div class="row g-3 mb-4">
         <?php
-        $total = $staffConn->query("SELECT COUNT(*) c FROM events")->fetch_assoc()['c'] ?? 0;
-        $upcoming = $staffConn->query("SELECT COUNT(*) c FROM events WHERE event_date >= CURDATE() AND status='published'")->fetch_assoc()['c'] ?? 0;
-        $completed = $staffConn->query("SELECT COUNT(*) c FROM events WHERE status='completed'")->fetch_assoc()['c'] ?? 0;
-        $totalAttendees = $staffConn->query("SELECT COUNT(*) c FROM event_attendees")->fetch_assoc()['c'] ?? 0;
+        $r = $staffConn->query("SELECT COUNT(*) c FROM events"); $total = $r ? (int)($r->fetch_assoc()['c'] ?? 0) : 0;
+        $r = $staffConn->query("SELECT COUNT(*) c FROM events WHERE event_date >= CURDATE() AND status='published'"); $upcoming = $r ? (int)($r->fetch_assoc()['c'] ?? 0) : 0;
+        $r = $staffConn->query("SELECT COUNT(*) c FROM events WHERE status='completed'"); $completed = $r ? (int)($r->fetch_assoc()['c'] ?? 0) : 0;
+        $r = $staffConn->query("SELECT COUNT(*) c FROM event_attendees"); $totalAttendees = $r ? (int)($r->fetch_assoc()['c'] ?? 0) : 0;
         ?>
         <div class="col-md-3"><div class="stat-card position-relative"><div class="number"><?= $total ?></div><div class="label">Total Events</div><div class="icon"><i class="fas fa-calendar-alt"></i></div></div></div>
         <div class="col-md-3"><div class="stat-card position-relative"><div class="number"><?= $upcoming ?></div><div class="label">Upcoming Events</div><div class="icon"><i class="fas fa-clock"></i></div></div></div>

@@ -49,13 +49,13 @@ if (isset($_GET['export']) && $_GET['export'] === 'stock_report' && $staffConn) 
         fclose($out);
         exit;
     }
-    header('Location: school-bursar.php?page=inventory');
+    header('Location: ?page=inventory');
     exit;
 }
 
 // Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!function_exists('verifyCsrfToken') || !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: school-bursar.php'); exit; }
+    if (!function_exists('verifyCsrfToken') || !verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token. Please try again.'; header('Location: ?page=overview'); exit; }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'record_payment' && $stuConn) {
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $stuConn->prepare("INSERT INTO payments (payment_reference, student_id, amount_received, payment_method, transaction_ref, slip_number, payment_date, status, received_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
             if ($stmt) { $stmt->bind_param('sidsssssis', $payRef, $studentId, $amount, $method, $ref, $slipNo, $date, $status, $userId, $notes); if ($stmt->execute()) { $_SESSION['success'] = "Payment recorded. Ref: $payRef, Slip: $slipNo$gatewayMsg"; if (function_exists('logActivity')) logActivity($userId, 'bursar', 'create', 'Recorded payment: UGX ' . number_format($amount) . ' from student #' . $studentId . ' via ' . $method, 'finance', $stuConn->insert_id); try { $upd = $stuConn->prepare("UPDATE student_fee_tracking SET amount_paid = amount_paid + ?, balance = balance - ? WHERE student_id = ? AND status != 'Paid'"); if ($upd) { $upd->bind_param('ddi', $amount, $amount, $studentId); $upd->execute(); $upd->close(); } $upd2 = $stuConn->prepare("UPDATE student_fee_assignments SET paid_amount = paid_amount + ?, status = CASE WHEN paid_amount + ? >= assigned_amount THEN 'Paid' ELSE 'Partially Paid' END WHERE student_id = ? AND status != 'Paid'"); if ($upd2) { $upd2->bind_param('ddi', $amount, $amount, $studentId); $upd2->execute(); $upd2->close(); } $upd3 = $stuConn->prepare("UPDATE student_invoices SET amount_paid = amount_paid + ?, status = CASE WHEN amount_paid + ? >= net_amount THEN 'Paid' ELSE 'Partially Paid' END WHERE student_id = ? AND status NOT IN ('Paid','Cancelled','Waived')"); if ($upd3) { $upd3->bind_param('ddi', $amount, $amount, $studentId); $upd3->execute(); $upd3->close(); } $notif = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, is_read) VALUES (?, 'Payment Received', ?, 'Fee', 0)"); if ($notif) { $msg = "Your payment of " . number_format($amount) . " UGX has been recorded"; $notif->bind_param('is', $studentId, $msg); $notif->execute(); $notif->close(); } } catch (Exception $e) { error_log('Balance update failed for payment ' . $payRef . ': ' . $e->getMessage()); } } else { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record payment.'; } $stmt->close(); }
         }
-        header('Location: school-bursar.php?page=payments'); exit;
+        header('Location: ?page=payments'); exit;
     }
 
     if ($action === 'add_fee_structure' && $stuConn) {
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $stuConn->prepare("INSERT INTO fee_structures (fee_name, fee_type, amount, program_id, academic_year, is_active) VALUES (?,?,?,?,?,1)");
             if ($stmt) { $stmt->bind_param('ssdii', $name, $feeType, $amount, $progId, $year); if (!$stmt->execute()) { error_log('add_fee_structure execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Fee structure added.'; if (function_exists('logActivity')) logActivity($userId, 'bursar', 'create', 'Added fee structure: ' . $name, 'finance', $stuConn->insert_id); } }
         }
-        header('Location: school-bursar.php?page=billing'); exit;
+        header('Location: ?page=billing'); exit;
     }
 
     if ($action === 'add_expense' && $staffConn) {
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $staffConn->prepare("INSERT INTO expenses (expense_title, amount, category, description, expense_date, status, created_by) VALUES (?,?,?,?,?,'approved',?)");
             if ($stmt) { $stmt->bind_param('sdsssi', $desc, $amount, $cat, $desc, $date, $userId); if (!$stmt->execute()) { error_log('add_expense execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record expense.'; } else { $_SESSION['success'] = 'Expense recorded.'; if (function_exists('logActivity')) logActivity($userId, 'bursar', 'create', 'Recorded expense: ' . $desc . ' UGX ' . number_format($amount), 'finance', $staffConn->insert_id); } }
         }
-        header('Location: school-bursar.php?page=budget'); exit;
+        header('Location: ?page=budget'); exit;
     }
 
     if ($action === 'create_budget' && ($stuConn || $staffConn)) {
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $budgetConn->prepare("INSERT INTO budgets (budget_name, total_amount, fiscal_year, status, created_by) VALUES (?,?,?,'Draft',?)");
             if ($stmt) { $stmt->bind_param('sdsi', $name, $amount, $year, $userId); if ($stmt->execute()) { $_SESSION['success'] = 'Budget created.'; } else { error_log('create_budget execute failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to create budget.'; } }
         }
-        header('Location: school-bursar.php?page=budget'); exit;
+        header('Location: ?page=budget'); exit;
     }
 
     if ($action === 'run_payroll' && $staffConn) {
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $staffConn->rollback();
             $_SESSION['error'] = 'Payroll processing failed: ' . $e->getMessage();
         }
-        header('Location: school-bursar.php?page=payroll'); exit;
+        header('Location: ?page=payroll'); exit;
     }
 
     if ($action === 'reconcile_bank' && $staffConn) {
@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notes = trim($_POST['notes'] ?? '');
         $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,?,?,'completed',?)");
         if ($stmt) { $stmt->bind_param('sdddsi', $date, $bankBal, $bookBal, $diff, $notes, $userId); if (!$stmt->execute()) { error_log('reconcile_bank execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Bank reconciled.'; } }
-        header('Location: school-bursar.php?page=ledger'); exit;
+        header('Location: ?page=ledger'); exit;
     }
 
     if ($action === 'send_reminder' && $stuConn) {
@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?,?,?,'Fee','Medium',0)");
             if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Reminder sent.'; } }
         }
-        header('Location: school-bursar.php?page=communications'); exit;
+        header('Location: ?page=communications'); exit;
     }
 
     if ($action === 'add_discount' && $stuConn) {
@@ -199,13 +199,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $stuConn->prepare("INSERT INTO fee_adjustments (adjustment_number, student_id, adjustment_type, amount, reason, created_by) VALUES (?,?,?,?,?,?)");
             if ($stmt) { $stmt->bind_param('sisdsi', $adjNo, $studentId, $type, $amount, $reason, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Adjustment applied.'; } }
         }
-        header('Location: school-bursar.php?page=billing'); exit;
+        header('Location: ?page=billing'); exit;
     }
 
     if ($action === 'approve_payment' && $stuConn) {
         $pid = (int)($_POST['payment_id'] ?? 0);
         if ($pid) { $st=$stuConn->prepare("UPDATE payments SET status='Completed', received_by=? WHERE id=?"); if($st){$st->bind_param('ii',$userId,$pid);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$st->close();$_SESSION['success']='Payment verified.';} }
-        header('Location: school-bursar.php?page=payments'); exit;
+        header('Location: ?page=payments'); exit;
     }
 
     if ($action === 'add_asset' && $staffConn) {
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st=$staffConn->prepare("INSERT INTO assets (asset_name, purchase_cost, value, category, purchase_date, useful_life_years, salvage_value, status, created_by) VALUES (?,?,?,?,?,?,?,'new',?)");
             if($st){$st->bind_param('sddssidi', $name, $cost, $cost, $cat, $date, $life, $salvage, $userId); if ($st->execute()) { $_SESSION['success']='Asset added with depreciation profile.'; } else { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); $_SESSION['error'] = 'Failed to add asset.'; } $st->close();}
         }
-        header('Location: school-bursar.php?page=inventory'); exit;
+        header('Location: ?page=inventory'); exit;
     }
 
     if ($action === 'calculate_depreciation' && $staffConn) {
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['success'] = "Asset depreciation updated: accumulated $accumDepr UGX, current value $currVal UGX.";
             }
         }
-        header('Location: school-bursar.php?page=inventory'); exit;
+        header('Location: ?page=inventory'); exit;
     }
 
     if ($action === 'import_bank_csv' && $staffConn && isset($_FILES['bank_csv']) && $_FILES['bank_csv']['error'] === UPLOAD_ERR_OK) {
@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $_SESSION['success'] = "Bank CSV imported: $imported transactions, total UGX " . number_format($totalAmount);
         }
-        header('Location: school-bursar.php?page=ledger'); exit;
+        header('Location: ?page=ledger'); exit;
     }
 
     if ($action === 'add_stock_item' && $staffConn) {
@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st=$staffConn->prepare("INSERT INTO inventory_items (item_name, category, quantity, unit, unit_cost, reorder_level, status) VALUES (?,?,?,?,?,?,'in_stock')");
             if($st){$st->bind_param('ssidsi', $name, $cat, $qty, $unit, $price, $reorder);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success']='Stock item added.'; }$st->close();}
         }
-        header('Location: school-bursar.php?page=inventory'); exit;
+        header('Location: ?page=inventory'); exit;
     }
 
     if ($action === 'add_tax_record' && $staffConn) {
@@ -288,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st=$staffConn->prepare("INSERT INTO bursar_withholding_tax (tax_date, payee_name, description, gross_amount, wht_rate, wht_amount, status) VALUES (?,?,?,?,6.00,?,'active')");
             if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
         }
-        header('Location: school-bursar.php?page=ura'); exit;
+        header('Location: ?page=ura'); exit;
     }
 
     if ($action === 'update_provider_config' && $stuConn) {
@@ -314,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ok = $service->updateProviderConfig($providerKey, $updates);
             $_SESSION[$ok ? 'success' : 'error'] = $ok ? "Provider '$providerKey' updated." : 'Update failed.';
         }
-        header('Location: school-bursar.php?page=payment-providers'); exit;
+        header('Location: ?page=payment-providers'); exit;
     }
 }
 
@@ -397,15 +397,15 @@ $pageTitle = 'Bursar Dashboard';
 
 <nav class="brs-tabs">
   <a href="school-bursar.php" class="<?=$page==='overview'?'active':''?>">Overview</a>
-  <a href="school-bursar.php?page=billing" class="<?=$page==='billing'?'active':''?>">Billing</a>
-  <a href="school-bursar.php?page=payments" class="<?=$page==='payments'?'active':''?>">Payments</a>
-  <a href="school-bursar.php?page=reports" class="<?=$page==='reports'?'active':''?>">Reports</a>
-  <a href="school-bursar.php?page=budget" class="<?=$page==='budget'?'active':''?>">Budget</a>
-  <a href="school-bursar.php?page=payroll" class="<?=$page==='payroll'?'active':''?>">Payroll</a>
-  <a href="school-bursar.php?page=ledger" class="<?=$page==='ledger'?'active':''?>">Ledger</a>
-  <a href="school-bursar.php?page=inventory" class="<?=$page==='inventory'?'active':''?>">Inventory</a>
-  <a href="school-bursar.php?page=communications" class="<?=$page==='communications'?'active':''?>">Comms</a>
-  <a href="school-bursar.php?page=ura" class="<?=$page==='ura'?'active':''?>"><img src="../images/ura.png" alt="" style="height:14px;width:auto;margin-right:4px" onerror="this.style.display='none'">URA Tax</a>
+  <a href="?page=billing" class="<?=$page==='billing'?'active':''?>">Billing</a>
+  <a href="?page=payments" class="<?=$page==='payments'?'active':''?>">Payments</a>
+  <a href="?page=reports" class="<?=$page==='reports'?'active':''?>">Reports</a>
+  <a href="?page=budget" class="<?=$page==='budget'?'active':''?>">Budget</a>
+  <a href="?page=payroll" class="<?=$page==='payroll'?'active':''?>">Payroll</a>
+  <a href="?page=ledger" class="<?=$page==='ledger'?'active':''?>">Ledger</a>
+  <a href="?page=inventory" class="<?=$page==='inventory'?'active':''?>">Inventory</a>
+  <a href="?page=communications" class="<?=$page==='communications'?'active':''?>">Comms</a>
+  <a href="?page=ura" class="<?=$page==='ura'?'active':''?>"><img src="../images/ura.png" alt="" style="height:14px;width:auto;margin-right:4px" onerror="this.style.display='none'">URA Tax</a>
 </nav>
 
 <?php if ($page === 'overview'): ?>
@@ -604,7 +604,7 @@ $pageTitle = 'Bursar Dashboard';
     </form></div>
     <div class="brs-card"><h3>Staff Payroll Profiles</h3>
     <div class="table-responsive" style="max-height:300px;overflow-y:auto"><table class="table table-sm"><thead><tr><th>Staff</th><th>Basic Salary</th></tr></thead><tbody>
-    <?php $ss = $staffConn ? $staffConn->query("SELECT pe.staff_id, pe.basic_salary, s.full_name FROM payroll_employees pe JOIN staff s ON pe.staff_id=s.id WHERE pe.status='active' ORDER BY s.full_name") : null; if ($ss) while ($s = $ss->fetch_assoc()): ?><tr><td><?=htmlspecialchars($s['full_name'])?></td><td><?=number_format($s['basic_salary']??0)?></td></tr><?php endwhile; if ($ss && $ss->num_rows===0): ?><tr><td colspan="2" class="text-muted text-center small">No payroll profiles yet</td></tr><?php endif; ?>
+    <?php $ss = $staffConn ? $staffConn->query("SELECT pe.staff_id, pe.basic_salary, s.full_name FROM payroll_employees pe JOIN staff s ON pe.staff_id=s.id WHERE pe.payroll_status='active' ORDER BY s.full_name") : null; if ($ss) while ($s = $ss->fetch_assoc()): ?><tr><td><?=htmlspecialchars($s['full_name'])?></td><td><?=number_format($s['basic_salary']??0)?></td></tr><?php endwhile; if ($ss && $ss->num_rows===0): ?><tr><td colspan="2" class="text-muted text-center small">No payroll profiles yet</td></tr><?php endif; ?>
     </tbody></table></div></div>
   </div>
   <div class="col-md-7">
@@ -624,7 +624,7 @@ $pageTitle = 'Bursar Dashboard';
     </tbody></table></div>
     <div class="brs-card"><h3>Integration with HR</h3>
     <p class="text-muted small">Payroll pulls staff data from HR's staff table. Staff must have a <strong>payroll profile</strong> (bank, TIN, NSSF, salary) set up in the full payroll system.</p>
-    <?php $pendingPayrollSetup = $staffConn ? $staffConn->query("SELECT COUNT(*) c FROM staff WHERE id NOT IN (SELECT staff_id FROM payroll_employees WHERE staff_id IS NOT NULL) AND status='active'")->fetch_assoc()['c'] : 0; ?>
+    <?php $pendingPayrollSetup = 0; if ($staffConn) { $pr = $staffConn->query("SELECT COUNT(*) c FROM staff WHERE id NOT IN (SELECT staff_id FROM payroll_employees WHERE staff_id IS NOT NULL) AND status='active'"); $pendingPayrollSetup = $pr ? (int)$pr->fetch_assoc()['c'] : 0; } ?>
     <p class="small mb-0"><?=$pendingPayrollSetup?> active staff missing payroll profiles. <a href="bursar-payroll.php?tab=employees" class="text-primary fw-medium">Set up in Payroll System</a></p>
   </div>
 </div>
@@ -728,7 +728,7 @@ $pageTitle = 'Bursar Dashboard';
     </tr><?php endwhile; ?>
     </tbody></table></div>
     <?php else: ?><p class="text-muted small">No stock items tracked yet.</p><?php endif; ?>
-    <p class="small mt-2"><a href="school-bursar.php?page=inventory&export=stock_report" class="text-primary" onclick="return confirm('Download stock report as CSV?')"><i class="fas fa-download me-1"></i>Download Stock Report</a></p>
+    <p class="small mt-2"><a href="?page=inventory&export=stock_report" class="text-primary" onclick="return confirm('Download stock report as CSV?')"><i class="fas fa-download me-1"></i>Download Stock Report</a></p>
     </div>
   </div>
 </div>
@@ -861,7 +861,7 @@ while ($pg = $pgAll2->fetch_assoc()):
 ?>
 <div class="modal fade" id="pgModal<?= $pk ?>" tabindex="-1" aria-labelledby="pgModalLabel<?= $pk ?>" aria-hidden="true">
   <div class="modal-dialog modal-lg"><div class="modal-content">
-    <form method="post" action="school-bursar.php?page=payment-providers">
+    <form method="post" action="?page=payment-providers">
       <?= csrfField() ?>
       <input type="hidden" name="action" value="update_provider_config">
       <input type="hidden" name="provider_key" value="<?= $pk ?>">
@@ -919,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>
     <h5>Page Not Found</h5>
     <p class="text-muted">The requested page "<?= htmlspecialchars($page) ?>" does not exist.</p>
-    <a href="school-bursar.php?page=overview" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Overview</a>
+    <a href="?page=overview" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Overview</a>
   </div>
 </div>
 <?php endif; ?>
