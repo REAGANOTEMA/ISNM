@@ -1144,6 +1144,12 @@ $pageTitle = 'Computer Lab Manager';
                 </div>
             </div>
         </div>
+        <?php else: ?>
+        <div class="section-card">
+            <h2><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Section Not Found</h2>
+            <p class="text-muted">The requested section "<?= htmlspecialchars($section) ?>" was not found.</p>
+            <a href="?page=home" class="btn btn-sm btn-primary"><i class="fas fa-home me-1"></i>Back to Dashboard</a>
+        </div>
         <?php endif; ?>
     </div>
 </div>

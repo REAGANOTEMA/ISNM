@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
-$allowedApprovalRoles = ['admin','director','school principal','director general','registrar','bursar'];
+$allowedApprovalRoles = ['admin','director','school principal','director general','registrar','bursar','academic registrar','deputy principal','hr manager','school bursar','director finance','director academics','ceo'];
 $approvalRole = strtolower(trim($_SESSION['role'] ?? ''));
 if (!in_array($approvalRole, $allowedApprovalRoles)) {
     echo json_encode(['success' => false, 'error' => 'Insufficient permissions for approval actions']);

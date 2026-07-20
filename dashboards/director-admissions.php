@@ -99,8 +99,24 @@ function adCount($conn, $status) {
 }
 
 // --- Active tab ---
-$tab = $_GET['tab'] ?? 'applications';
-if ($tab === 'home') $tab = 'applications';
+$pageTabMap = [
+    'overview'       => 'applications',
+    'applicants'     => 'applications',
+    'requirements'   => 'requirements',
+    'analytics'      => 'applications',
+    'registration'   => 'enrolled',
+    'communications' => 'applications',
+    'submissions'    => 'applications',
+    'reports'        => 'applications',
+    'students'       => 'enrolled',
+    'activity'       => 'applications',
+    'home'           => 'applications',
+    'applications'   => 'applications',
+    'clearance'      => 'clearance',
+    'enrolled'       => 'enrolled',
+];
+$rawTab = $_GET['tab'] ?? $_GET['page'] ?? 'applications';
+$tab = $pageTabMap[$rawTab] ?? $rawTab;
 
 // --- POST / AJAX handlers ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

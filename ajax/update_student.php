@@ -5,7 +5,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
-$allowedStaffRoles = ['admin','bursar','accountant','finance','deputy principal','school principal','director','registrar','exam_officer','ict','hr'];
+$allowedStaffRoles = ['admin','bursar','accountant','finance','deputy principal','school principal','director','registrar','exam_officer','ict','hr','director general','ceo','academic registrar','school bursar','director finance','hr manager','system administrator','school secretary','director admissions'];
 $staffRole = strtolower(trim($_SESSION['role'] ?? ''));
 if (!in_array($staffRole, $allowedStaffRoles)) {
     echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);

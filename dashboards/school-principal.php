@@ -69,6 +69,11 @@ $viewAliases = [
     'exports' => 'institutional_reports',
     'print' => 'institutional_reports',
     'notifications' => 'communications',
+    'analytics' => 'home',
+    'profile' => 'home',
+    'preferences' => 'home',
+    'security' => 'home',
+    'activity-logs' => 'home',
     'home' => 'home',
 ];
 if (isset($viewAliases[$view])) $view = $viewAliases[$view];

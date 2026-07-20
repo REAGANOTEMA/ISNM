@@ -32,8 +32,8 @@ $route = str_replace($basePath, '', parse_url($requestUri, PHP_URL_PATH));
 $route = trim($route, '/');
 
 $parts = explode('/', $route, 2);
-$module = $parts[0] ?? '';
-$action = $parts[1] ?? 'index';
+$module = preg_replace('/[^a-z0-9_-]/i', '', $parts[0] ?? '');
+$action = preg_replace('/[^a-z0-9_]/i', '', $parts[1] ?? 'index');
 
 if (!$module) {
     Response::error('No module specified', 400);
@@ -61,5 +61,5 @@ try {
     $handler->$action();
 } catch (Throwable $e) {
     error_log("[API] {$e->getMessage()} in {$e->getFile()}:{$e->getLine()}");
-    Response::error('Internal server error: ' . $e->getMessage(), 500);
+    Response::error('Internal server error', 500);
 }

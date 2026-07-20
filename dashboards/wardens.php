@@ -397,6 +397,7 @@ $pageToSection = [
     'welfare'       => 'students',
     'reports'       => 'overview',
     'warden_requisition' => 'store',
+    'store-requisition' => 'store',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';

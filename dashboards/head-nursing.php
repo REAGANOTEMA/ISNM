@@ -209,9 +209,9 @@ $pageToSection = [
     'timetable'  => 'timetable',
     'courses'    => 'courses',
     'staff'      => 'staff',
+    'incidents'  => 'overview',
 ];
 $page  = $_GET['page'] ?? 'home';
-if ($page === 'incidents') $page = 'incident_reports';
 $section = $pageToSection[$page] ?? 'overview';
 
 $profileImageUrl = '../images/username.png';

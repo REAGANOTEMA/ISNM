@@ -18,6 +18,7 @@ if (!empty($_SESSION['user_id'])) {
 }
 
 $action = $_POST['action'] ?? '';
+$isAjax = (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest');
 $referrer = $_SERVER['HTTP_REFERER'] ?? '../dashboards/security.php';
 $allowedHost = $_SERVER['SERVER_NAME'] ?? '';
 if (!empty($allowedHost) && isset(parse_url($referrer)['host']) && parse_url($referrer)['host'] !== $allowedHost) {
@@ -196,8 +197,22 @@ switch ($action) {
         break;
 
     default:
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unknown action.']);
+            exit;
+        }
         $_SESSION['error'] = "Unknown action.";
         break;
+}
+
+if ($isAjax) {
+    header('Content-Type: application/json');
+    $successMsg = $_SESSION['success'] ?? '';
+    $errorMsg = $_SESSION['error'] ?? '';
+    unset($_SESSION['success'], $_SESSION['error']);
+    echo json_encode(['success' => !empty($successMsg), 'message' => $successMsg ?: $errorMsg]);
+    exit;
 }
 
 header("Location: $referrer");

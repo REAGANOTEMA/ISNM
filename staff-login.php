@@ -26,7 +26,6 @@ require_once __DIR__ . '/auth-service.php';
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-error_log("STAFF-LOGIN: SID=" . session_id() . " csrf=" . $_SESSION['csrf_token']);
 $auth_service = new AuthenticationService();
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
 if (!$requested_position && !empty($_SESSION['requested_position'])) {

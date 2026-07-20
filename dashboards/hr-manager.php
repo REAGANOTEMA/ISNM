@@ -637,6 +637,47 @@ $pageTitle = 'HR Manager';
     </tbody></table></div>
   </div>
 </div>
+<?php elseif ($page === 'approvals'): ?>
+<div class="section-card">
+  <h3 class="section-title"><i class="fas fa-check-double me-2"></i>Staff Approvals</h3>
+  <p class="text-muted mb-3">Pending approvals for staff-related requests.</p>
+  <?php if ($staff_conn): ?>
+  <?php
+  $pendingApprovals = [];
+  $pa = $staff_conn->query("SELECT ar.*, s.full_name as requested_by_name FROM approval_requests ar LEFT JOIN staff s ON ar.requested_by=s.id WHERE ar.status='pending' AND (ar.module='hr' OR ar.module='staff') ORDER BY ar.created_at DESC LIMIT 50");
+  if ($pa) while ($row = $pa->fetch_assoc()) $pendingApprovals[] = $row;
+  ?>
+  <?php if (!empty($pendingApprovals)): ?>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead><tr><th>#</th><th>Request</th><th>Requested By</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>
+        <?php foreach ($pendingApprovals as $i => $ap): ?>
+        <tr>
+          <td><?= $i + 1 ?></td>
+          <td><?= htmlspecialchars($ap['description'] ?? $ap['request_type'] ?? '-') ?></td>
+          <td><?= htmlspecialchars($ap['requested_by_name'] ?? '-') ?></td>
+          <td><?= $ap['created_at'] ?? '-' ?></td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="approveHRRequest(<?= $ap['id'] ?>)">Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="rejectHRRequest(<?= $ap['id'] ?>)">Reject</button>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php else: ?>
+  <div class="text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x mb-2 text-success"></i><p>No pending approvals.</p></div>
+  <?php endif; ?>
+  <?php else: ?>
+  <div class="text-center py-4 text-muted">Database connection unavailable.</div>
+  <?php endif; ?>
+</div>
+<script>
+function approveHRRequest(id){if(!confirm('Approve this request?'))return;var fd=new FormData();fd.append('action','approve_request');fd.append('id',id);fd.append('csrf_token','<?= htmlspecialchars($_SESSION['csrf_token']) ?>');fetch('hr-manager.php',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});}
+function rejectHRRequest(id){var reason=prompt('Reason for rejection:');if(reason===null)return;var fd=new FormData();fd.append('action','reject_request');fd.append('id',id);fd.append('reason',reason);fd.append('csrf_token','<?= htmlspecialchars($_SESSION['csrf_token']) ?>');fetch('hr-manager.php',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});}
+</script>
 <?php else: ?>
 <div class="section-card" style="padding:40px;text-align:center">
   <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>

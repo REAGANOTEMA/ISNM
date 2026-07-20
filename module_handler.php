@@ -302,7 +302,7 @@ switch ($action) {
             }
             echo json_encode($result);
         } elseif (isAllowedTable($moduleName)) {
-            $conn = getDirectDbConn();
+            $conn = getDirectDbConn($moduleName);
             if (!$conn) { echo json_encode(['error' => 'No database connection']); break; }
             $validCols = directTableColumns($conn, $moduleName);
             $filtered = [];
@@ -353,7 +353,7 @@ switch ($action) {
             if (isset($result['success']) && $result['success']) $registry->logAccess($module['id'], $staffId, 'update', $id, $data);
             echo json_encode($result);
         } elseif (isAllowedTable($moduleName)) {
-            $conn = getDirectDbConn();
+            $conn = getDirectDbConn($moduleName);
             if (!$conn) { echo json_encode(['error' => 'No database connection']); break; }
             $validCols = directTableColumns($conn, $moduleName);
             $sets = []; $vals = []; $types = '';
@@ -392,7 +392,7 @@ switch ($action) {
             if (isset($result['success']) && $result['success']) $registry->logAccess($module['id'], $staffId, 'delete', $id);
             echo json_encode($result);
         } elseif (isAllowedTable($moduleName)) {
-            $conn = getDirectDbConn();
+            $conn = getDirectDbConn($moduleName);
             if (!$conn) { echo json_encode(['error' => 'No database connection']); break; }
             $sql = "DELETE FROM `{$moduleName}` WHERE id = ?";
             $stmt = $conn->prepare($sql);

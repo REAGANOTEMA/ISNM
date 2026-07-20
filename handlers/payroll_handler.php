@@ -7,7 +7,7 @@
 require_once __DIR__ . '/../includes/payroll_functions.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['director general', 'ceo', 'school bursar', 'director finance', 'hr manager', 'hr']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $staffId = (int)($user['id'] ?? 0);
@@ -26,6 +26,7 @@ if (!empty($_SESSION['user_id'])) {
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $isAjax = (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') || (($_POST['format'] ?? '') === 'json');
+if ($isAjax) header('Content-Type: application/json');
 $referrer = $_SERVER['HTTP_REFERER'] ?? '../payroll.php';
 $allowedHost = $_SERVER['SERVER_NAME'] ?? '';
 if (!empty($allowedHost) && isset(parse_url($referrer)['host']) && parse_url($referrer)['host'] !== $allowedHost) {
