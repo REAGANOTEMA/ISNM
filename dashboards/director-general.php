@@ -1378,7 +1378,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php
 $dgNewsList = [];
 $allStaffList = [];
-echo '---DGSECTION=' . var_export($dgSection, true) . '---';
+
 switch ($dgSection):
     case 'home': ?>
         <div id="home" class="content-section dashboard-section active" data-section="home">
@@ -1435,7 +1435,7 @@ switch ($dgSection):
 <?php break; ?>
 <?php case 'executive': ?>
 <div id="executive" class="content-section dashboard-section active" data-section="executive">
-  <?php echo '<!-- EXECUTIVE_CASE_REACHED -->'; ?>
+
   <?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
   <div class="section-card">
     <?php dgToolbar('Executive Overview', 'fa-chart-simple', 'Updated live'); ?>
