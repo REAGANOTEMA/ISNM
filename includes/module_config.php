@@ -196,8 +196,8 @@ function getModuleConfig(): array {
                            'registrar','director','academics','lecturer','head','senior','nursing','midwifery',
                            'non-teaching','matron','warden','sickbay','driver','security','computer lab','store'],
             'children' => [
-                ['title' => 'All Requisitions',    'route' => 'store-requisition.php','roles' => '*'],
-                ['title' => 'My Requests',         'route' => 'store-requisition.php?tab=my_requests','roles' => '*'],
+                ['title' => 'All Requisitions',    'route' => '../store-requisition.php','roles' => '*'],
+                ['title' => 'My Requests',         'route' => '../store-requisition.php?tab=my_requests','roles' => '*'],
                 ['title' => 'Department Requests', 'route' => 'department-requests.php','roles' => '*'],
             ],
         ],

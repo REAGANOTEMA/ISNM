@@ -266,14 +266,14 @@ function getRoleOperations(string $role): array {
             ['label' => 'Meals & Accommodation','icon'=>'fas fa-utensils',     'page'=>'meals'],
             ['label' => 'Sick Bay',             'icon'=>'fas fa-plus-circle',  'page'=>'sickbay'],
             ['label' => 'Student Welfare',      'icon'=>'fas fa-heart',        'page'=>'welfare'],
-            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'store-requisition.php'],
+            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'../store-requisition.php'],
         ],
         'wardens' => [
             ['label' => 'Hostel Management',    'icon'=>'fas fa-bed',          'page'=>'hostel'],
             ['label' => 'Discipline',           'icon'=>'fas fa-gavel',        'page'=>'discipline'],
             ['label' => 'Student Welfare',      'icon'=>'fas fa-heart',        'page'=>'welfare'],
             ['label' => 'Hostel Reports',       'icon'=>'fas fa-file-alt',     'page'=>'reports'],
-            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'store-requisition.php'],
+            ['label' => 'Store Requisition',    'icon'=>'fas fa-clipboard-list','page'=>'store-requisition', 'href'=>'../store-requisition.php'],
         ],
         'drivers' => [
             ['label' => 'Dashboard',           'icon'=>'fas fa-home',            'page'=>'home'],
