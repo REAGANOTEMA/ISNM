@@ -178,10 +178,13 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
     $news = [];
     if ($staff_conn) {
         $stmt = $staff_conn->prepare("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT ?");
-        $stmt->bind_param("i", $limit);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $r = $stmt->get_result();
-        if ($r) while ($row = $r->fetch_assoc()) $news[] = $row;
+        if ($stmt) {
+            $stmt->bind_param("i", $limit);
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            $r = $stmt->get_result();
+            if ($r) while ($row = $r->fetch_assoc()) $news[] = $row;
+            $stmt->close();
+        }
     }
 
     // ---- Messages ----

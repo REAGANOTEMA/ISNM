@@ -20,9 +20,13 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $where .= " ORDER BY category, item_name";
                 if ($types) {
                     $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`store_items` $where");
-                    $stmt->bind_param($types, ...$params);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
+                    if ($stmt) {
+                        $stmt->bind_param($types, ...$params);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else {
+                        $result = null;
+                    }
                 } else {
                     $result = $conn->query("SELECT * FROM `$staff_db`.`store_items` $where");
                 }
@@ -44,19 +48,23 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 if (!$item_name) { $response['message'] = 'Item name required'; break; }
                 if ($id > 0) {
                     $stmt = $conn->prepare("UPDATE `$staff_db`.`store_items` SET item_name=?, category=?, unit=?, quantity_in_stock=?, minimum_level=?, unit_price=?, location=? WHERE id=?");
-                    $stmt->bind_param('sssiddsi', $item_name, $category, $unit, $qty, $min, $price, $location, $id);
+                    if ($stmt) {
+                        $stmt->bind_param('sssiddsi', $item_name, $category, $unit, $qty, $min, $price, $location, $id);
+                    }
                 } else {
                     $status_val = 'Active';
                     if ($qty <= 0) $status_val = 'Out of Stock';
                     elseif ($qty <= $min) $status_val = 'Low Stock';
                     $stmt = $conn->prepare("INSERT INTO `$staff_db`.`store_items` (item_name, category, unit, quantity_in_stock, minimum_level, unit_price, location, status) VALUES (?,?,?,?,?,?,?,?)");
-                    $stmt->bind_param('sssiddss', $item_name, $category, $unit, $qty, $min, $price, $location, $status_val);
+                    if ($stmt) {
+                        $stmt->bind_param('sssiddss', $item_name, $category, $unit, $qty, $min, $price, $location, $status_val);
+                    }
                 }
-                if ($stmt->execute()) {
+                if ($stmt && $stmt->execute()) {
                     $response['success'] = true;
                     $response['message'] = $id > 0 ? 'Item updated' : 'Item added';
                 } else {
-                    $response['message'] = 'Failed: ' . $conn->error;
+                    $response['message'] = 'Failed: ' . ($stmt ? $conn->error : 'Prepare failed');
                 }
                 break;
 
@@ -64,11 +72,15 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $id = (int)($_POST['item_id'] ?? 0);
                 if (!$id) { $response['message'] = 'Invalid ID'; break; }
                 $stmt = $conn->prepare("DELETE FROM `$staff_db`.`store_items` WHERE id=?");
-                $stmt->bind_param('i', $id);
-                $stmt->execute();
-                $stmt->close();
-                $response['success'] = true;
-                $response['message'] = 'Item deleted';
+                if ($stmt) {
+                    $stmt->bind_param('i', $id);
+                    $stmt->execute();
+                    $stmt->close();
+                    $response['success'] = true;
+                    $response['message'] = 'Item deleted';
+                } else {
+                    $response['message'] = 'Failed: ' . $conn->error;
+                }
                 break;
 
             case 'update_stock':
@@ -81,15 +93,23 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 elseif ($min >= 0 && $qty <= $min) $status_val = 'Low Stock';
                 if ($min >= 0) {
                     $stmt = $conn->prepare("UPDATE `$staff_db`.`store_items` SET quantity_in_stock=?, status=?, minimum_level=? WHERE id=?");
-                    $stmt->bind_param('issi', $qty, $status_val, $min, $id);
+                    if ($stmt) {
+                        $stmt->bind_param('issi', $qty, $status_val, $min, $id);
+                    }
                 } else {
                     $stmt = $conn->prepare("UPDATE `$staff_db`.`store_items` SET quantity_in_stock=?, status=? WHERE id=?");
-                    $stmt->bind_param('isi', $qty, $status_val, $id);
+                    if ($stmt) {
+                        $stmt->bind_param('isi', $qty, $status_val, $id);
+                    }
                 }
-                $stmt->execute();
-                $stmt->close();
-                $response['success'] = true;
-                $response['message'] = 'Stock updated';
+                if ($stmt) {
+                    $stmt->execute();
+                    $stmt->close();
+                    $response['success'] = true;
+                    $response['message'] = 'Stock updated';
+                } else {
+                    $response['message'] = 'Failed: ' . $conn->error;
+                }
                 break;
 
             // ── Requisitions ──
@@ -104,9 +124,13 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $where .= " ORDER BY r.created_at DESC";
                 if ($types) {
                     $stmt = $conn->prepare("SELECT r.*, s.full_name AS requested_by_name FROM `$staff_db`.`store_requisitions` r LEFT JOIN `$staff_db`.`staff` s ON r.requested_by = s.id $where");
-                    $stmt->bind_param($types, ...$params);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
+                    if ($stmt) {
+                        $stmt->bind_param($types, ...$params);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else {
+                        $result = null;
+                    }
                 } else {
                     $result = $conn->query("SELECT r.*, s.full_name AS requested_by_name FROM `$staff_db`.`store_requisitions` r LEFT JOIN `$staff_db`.`staff` s ON r.requested_by = s.id $where");
                 }
@@ -125,17 +149,21 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 if (!$item_name) { $response['message'] = 'Item name required'; break; }
                 if ($id > 0) {
                     $stmt = $conn->prepare("UPDATE `$staff_db`.`store_requisitions` SET item_name=?, quantity_requested=?, purpose=?, department=? WHERE id=?");
-                    $stmt->bind_param('siisi', $item_name, $qty_req, $purpose, $dept, $id);
+                    if ($stmt) {
+                        $stmt->bind_param('siisi', $item_name, $qty_req, $purpose, $dept, $id);
+                    }
                 } else {
                     $req_no = 'REQ-' . date('Y') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
                     $stmt = $conn->prepare("INSERT INTO `$staff_db`.`store_requisitions` (requisition_number, requested_by, requestor_name, department, item_name, quantity_requested, purpose) VALUES (?,?,?,?,?,?,?)");
-                    $stmt->bind_param('sissisi', $req_no, $user_id, $user_name, $dept, $item_name, $qty_req, $purpose);
+                    if ($stmt) {
+                        $stmt->bind_param('sissisi', $req_no, $user_id, $user_name, $dept, $item_name, $qty_req, $purpose);
+                    }
                 }
-                if ($stmt->execute()) {
+                if ($stmt && $stmt->execute()) {
                     $response['success'] = true;
                     $response['message'] = $id > 0 ? 'Requisition updated' : 'Requisition submitted';
                 } else {
-                    $response['message'] = 'Failed: ' . $conn->error;
+                    $response['message'] = 'Failed: ' . ($stmt ? $conn->error : 'Prepare failed');
                 }
                 break;
 
@@ -153,10 +181,14 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $params_a[] = $id;
                 $types_a .= 'i';
                 $stmt = $conn->prepare("UPDATE `$staff_db`.`store_requisitions` SET status=?$extra WHERE id=?");
-                $stmt->bind_param($types_a, ...$params_a);
-                if ($stmt->execute()) {
-                    $response['success'] = true;
-                    $response['message'] = 'Status updated';
+                if ($stmt) {
+                    $stmt->bind_param($types_a, ...$params_a);
+                    if ($stmt->execute()) {
+                        $response['success'] = true;
+                        $response['message'] = 'Status updated';
+                    } else {
+                        $response['message'] = 'Failed: ' . $conn->error;
+                    }
                 } else {
                     $response['message'] = 'Failed: ' . $conn->error;
                 }
@@ -166,11 +198,15 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $id = (int)($_POST['req_id'] ?? 0);
                 if (!$id) { $response['message'] = 'Invalid ID'; break; }
                 $stmt = $conn->prepare("DELETE FROM `$staff_db`.`store_requisitions` WHERE id=?");
-                $stmt->bind_param('i', $id);
-                $stmt->execute();
-                $stmt->close();
-                $response['success'] = true;
-                $response['message'] = 'Requisition deleted';
+                if ($stmt) {
+                    $stmt->bind_param('i', $id);
+                    $stmt->execute();
+                    $stmt->close();
+                    $response['success'] = true;
+                    $response['message'] = 'Requisition deleted';
+                } else {
+                    $response['message'] = 'Failed: ' . $conn->error;
+                }
                 break;
 
             // ── Student Application Requirements (per student) ──
@@ -198,10 +234,14 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $verified_at = null;
                 if ($status === 'Cleared' || $status === 'Verified') { $verified_by = $user_name; $verified_at = date('Y-m-d H:i:s'); }
                 $stmt = $conn->prepare("INSERT INTO `$staff_db`.`student_application_requirements` (student_number, student_name, requirement_name, category, status, remarks, verified_by, verified_at) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status), remarks=VALUES(remarks), verified_by=VALUES(verified_by), verified_at=VALUES(verified_at)");
-                $stmt->bind_param('ssssssss', $student_num, $student_name, $req_name, $category, $status, $remarks, $verified_by, $verified_at);
-                if ($stmt->execute()) {
-                    $response['success'] = true;
-                    $response['message'] = 'Requirement updated';
+                if ($stmt) {
+                    $stmt->bind_param('ssssssss', $student_num, $student_name, $req_name, $category, $status, $remarks, $verified_by, $verified_at);
+                    if ($stmt->execute()) {
+                        $response['success'] = true;
+                        $response['message'] = 'Requirement updated';
+                    } else {
+                        $response['message'] = 'Failed: ' . $conn->error;
+                    }
                 } else {
                     $response['message'] = 'Failed: ' . $conn->error;
                 }
@@ -221,14 +261,18 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                     ['Medical Report','Application'],['Recommendation Letter (LC1)','Application']
                 ];
                 $ins = $conn->prepare("INSERT INTO `$staff_db`.`student_application_requirements` (student_number, student_name, requirement_name, category, status) VALUES (?,?,?,?,?)");
-                foreach ($apps as $a) {
-                    $status = 'Pending';
-                    $ins->bind_param('sssss', $student_num, $student_name, $a[0], $a[1], $status);
-                    $ins->execute();
+                if ($ins) {
+                    foreach ($apps as $a) {
+                        $status = 'Pending';
+                        $ins->bind_param('sssss', $student_num, $student_name, $a[0], $a[1], $status);
+                        $ins->execute();
+                    }
+                    $ins->close();
+                    $response['success'] = true;
+                    $response['message'] = 'Application requirements initialized';
+                } else {
+                    $response['message'] = 'Failed: ' . $conn->error;
                 }
-                $ins->close();
-                $response['success'] = true;
-                $response['message'] = 'Application requirements initialized';
                 break;
 
             case 'clear_student_requirement':
@@ -239,12 +283,16 @@ if (!function_exists('handleSecretaryRequirementsAjax')) {
                 $v_by = $cleared ? $user_name : null;
                 $v_at = $cleared ? date('Y-m-d H:i:s') : null;
                 $stmt = $conn->prepare("UPDATE `$staff_db`.`student_application_requirements` SET status=?, verified_by=?, verified_at=? WHERE id=?");
-                $stmt->bind_param('sssi', $new_status, $v_by, $v_at, $id);
-                if ($stmt->execute()) {
-                    $response['success'] = true;
-                    $response['message'] = $cleared ? 'Requirement cleared' : 'Requirement unmarked';
+                if ($stmt) {
+                    $stmt->bind_param('sssi', $new_status, $v_by, $v_at, $id);
+                    if ($stmt->execute()) {
+                        $response['success'] = true;
+                        $response['message'] = $cleared ? 'Requirement cleared' : 'Requirement unmarked';
+                    } else {
+                        $response['message'] = 'Failed';
+                    }
                 } else {
-                    $response['message'] = 'Failed';
+                    $response['message'] = 'Failed: ' . $conn->error;
                 }
                 break;
 

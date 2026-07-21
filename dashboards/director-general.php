@@ -380,11 +380,13 @@ if (isset($_GET['ajax'])) {
             $v_at = $cleared ? date('Y-m-d H:i:s') : null;
             if ($conn) {
                 $stmt = $conn->prepare("UPDATE `$staff_db`.`student_application_requirements` SET status=?, verified_by=?, verified_at=? WHERE id=?");
-                $stmt->bind_param('sssi', $new_status, $v_by, $v_at, $id);
-                if ($stmt->execute()) {
-                    echo json_encode(['success' => true, 'message' => $cleared ? 'Requirement cleared' : 'Requirement unmarked']); exit;
+                if ($stmt) {
+                    $stmt->bind_param('sssi', $new_status, $v_by, $v_at, $id);
+                    if ($stmt->execute()) {
+                        echo json_encode(['success' => true, 'message' => $cleared ? 'Requirement cleared' : 'Requirement unmarked']); exit;
+                    }
+                    $stmt->close();
                 }
-                $stmt->close();
             }
             echo json_encode(['success' => false, 'message' => 'Failed to update']); exit;
     }
