@@ -36,10 +36,11 @@ register_shutdown_function(function () {
         echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
         echo '<body><div class="card"><h2>Internal Server Error</h2>';
         echo '<p>The system encountered an internal error. Our team has been notified.</p>';
-        if (defined('APP_DEBUG') && APP_DEBUG) {
-            echo '<p style="font-size:12px;color:#999;text-align:left;background:#f8fafc;padding:12px;border-radius:6px;word-break:break-all">';
-            echo '<strong>' . $file . ':' . $line . '</strong><br>' . $msg . '</p>';
-        }
+        echo '<p style="font-size:11px;color:#991b1b;text-align:left;background:#fef2f2;padding:12px;border-radius:6px;word-break:break-all;border:1px solid #fecaca">';
+        echo '<strong>Error:</strong> ' . $msg . '<br>';
+        echo '<strong>File:</strong> ' . $file . ':' . $line . '<br>';
+        echo '<strong>PHP:</strong> ' . PHP_VERSION;
+        echo '</p>';
         $base = (basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'dashboards') ? '..' : '.';
         echo '<a href="' . $base . '/health-check.php" class="btn">Run Health Check</a>';
         echo '<br><br><a href="' . $base . '/staff-login.php" style="font-size:13px">Back to Login</a>';
