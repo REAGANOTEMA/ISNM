@@ -78,8 +78,10 @@ function sanitizeInput($data) {
 }
 }
 
+if (!function_exists('isLoggedIn')) {
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
 }
 
 if (!function_exists('hasPermission')) {
@@ -91,19 +93,25 @@ function hasPermission($permission) {
 }
 }
 
+if (!function_exists('redirect')) {
 function redirect($url) {
     header("Location: $url");
     exit();
 }
+}
 
+if (!function_exists('flashMessage')) {
 function flashMessage($type, $message) {
     $_SESSION['flash'][$type] = $message;
 }
+}
 
+if (!function_exists('getFlashMessages')) {
 function getFlashMessages() {
     $messages = $_SESSION['flash'] ?? [];
     unset($_SESSION['flash']);
     return $messages;
+}
 }
 
 function generateFileName($originalName) {
