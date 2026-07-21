@@ -34,8 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $iexp  = trim($_POST['insurance_expiry'] ?? '');
                 if ($vnum && $vtype) {
                     $stmt = $conn->prepare("INSERT INTO transport_vehicles (vehicle_number, vehicle_type, capacity, fuel_type, insurance_expiry, status) VALUES (?, ?, ?, ?, ?, 'Available')");
-                    $stmt->bind_param('ssiss', $vnum, $vtype, $cap, $ftype, $iexp);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('ssiss', $vnum, $vtype, $cap, $ftype, $iexp); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Vehicle added successfully.';
                 } else {
                     $flash = 'Vehicle number and type are required.';
@@ -53,8 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $iexp   = trim($_POST['insurance_expiry'] ?? '');
                 if ($vid) {
                     $stmt = $conn->prepare("UPDATE transport_vehicles SET vehicle_number=?, vehicle_type=?, capacity=?, fuel_type=?, insurance_expiry=?, status=? WHERE id=?");
-                    $stmt->bind_param('ssisssi', $vnum, $vtype, $cap, $ftype, $iexp, $status, $vid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('ssisssi', $vnum, $vtype, $cap, $ftype, $iexp, $status, $vid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Vehicle updated successfully.';
                 }
                 break;
@@ -63,8 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $vid = (int)($_POST['vehicle_id'] ?? 0);
                 if ($vid) {
                     $stmt = $conn->prepare("DELETE FROM transport_vehicles WHERE id=?");
-                    $stmt->bind_param('i', $vid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('i', $vid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Vehicle deleted successfully.';
                 }
                 break;
@@ -80,8 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $notes = trim($_POST['notes'] ?? '');
                 if ($rname && $start && $end) {
                     $stmt = $conn->prepare("INSERT INTO transport_routes (route_name, start_location, end_location, distance_km, estimated_duration_minutes, route_type, fare_amount, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
-                    $stmt->bind_param('sssdiids', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('sssdiids', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Route added successfully.';
                 } else {
                     $flash = 'Route name, start, and end locations are required.';
@@ -102,8 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $status = trim($_POST['status'] ?? 'active');
                 if ($rid) {
                     $stmt = $conn->prepare("UPDATE transport_routes SET route_name=?, start_location=?, end_location=?, distance_km=?, estimated_duration_minutes=?, route_type=?, fare_amount=?, notes=?, status=? WHERE id=?");
-                    $stmt->bind_param('sssdiidssi', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes, $status, $rid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('sssdiidssi', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes, $status, $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Route updated successfully.';
                 }
                 break;
@@ -112,8 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $rid = (int)($_POST['route_id'] ?? 0);
                 if ($rid) {
                     $stmt = $conn->prepare("DELETE FROM transport_routes WHERE id=?");
-                    $stmt->bind_param('i', $rid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Route deleted successfully.';
                 }
                 break;
@@ -134,8 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     $rname = '';
                     if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("INSERT INTO transport_trips (vehicle_id, driver_id, route_id, route_name, departure_time, arrival_time, passengers_count, fuel_cost, trip_distance, trip_fare, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
-                    $stmt->bind_param('iiisssiddss', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $notes);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('iiisssiddss', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Trip added successfully.';
                 } else {
                     $flash = 'Vehicle and route are required.';
@@ -161,8 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     $rname = '';
                     if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("UPDATE transport_trips SET vehicle_id=?, driver_id=?, route_id=?, route_name=?, departure_time=?, arrival_time=?, passengers_count=?, fuel_cost=?, trip_distance=?, trip_fare=?, status=?, notes=? WHERE id=?");
-                    $stmt->bind_param('iiisssiddssi', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $status, $notes, $tid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('iiisssiddssi', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $status, $notes, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Trip updated successfully.';
                 }
                 break;
@@ -171,8 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $tid = (int)($_POST['trip_id'] ?? 0);
                 if ($tid) {
                     $stmt = $conn->prepare("DELETE FROM transport_trips WHERE id=?");
-                    $stmt->bind_param('i', $tid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('i', $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Trip deleted successfully.';
                 }
                 break;
@@ -181,8 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $tid = (int)($_POST['trip_id'] ?? 0);
                 if ($tid) {
                     $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='pending', requested_by=? WHERE id=?");
-                    $stmt->bind_param('ii', $user_id, $tid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('ii', $user_id, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $stmt->close();
                     $flash = 'Trip submitted for Director General approval.';
                 }
@@ -192,8 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $tid = (int)($_POST['trip_id'] ?? 0);
                 if ($tid) {
                     $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='approved', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?");
-                    $stmt->bind_param('ii', $user_id, $tid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('ii', $user_id, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $stmt->close();
                     $flash = 'Trip approved successfully.';
                 }
@@ -204,8 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $reason = trim($_POST['rejection_reason'] ?? 'No reason');
                 if ($tid) {
                     $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='rejected', rejection_reason=?, dg_approved_by=?, dg_approved_at=NOW() WHERE id=?");
-                    $stmt->bind_param('sii', $reason, $user_id, $tid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('sii', $reason, $user_id, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $stmt->close();
                     $flash = 'Trip rejected.';
                 }
@@ -222,8 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $year  = trim($_POST['academic_year'] ?? '2025/2026');
                 if ($sname) {
                     $stmt = $conn->prepare("INSERT INTO transport_student_assignments (student_id, student_name, registration_number, route_id, vehicle_id, pickup_point, dropoff_point, academic_year, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
-                    $stmt->bind_param('issiiisss', $sid, $sname, $sreg, $rid, $vid, $pick, $drop, $year);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('issiiisss', $sid, $sname, $sreg, $rid, $vid, $pick, $drop, $year); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Student assigned successfully.';
                 } else {
                     $flash = 'Student name is required.';
@@ -244,8 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $status = trim($_POST['status'] ?? 'active');
                 if ($aid) {
                     $stmt = $conn->prepare("UPDATE transport_student_assignments SET student_id=?, student_name=?, registration_number=?, route_id=?, vehicle_id=?, pickup_point=?, dropoff_point=?, academic_year=?, status=? WHERE id=?");
-                    $stmt->bind_param('issiiisssi', $sid, $sname, $sreg, $rid, $vid, $pick, $drop, $year, $status, $aid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('issiiisssi', $sid, $sname, $sreg, $rid, $vid, $pick, $drop, $year, $status, $aid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Student assignment updated.';
                 }
                 break;
@@ -254,8 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $aid = (int)($_POST['assignment_id'] ?? 0);
                 if ($aid) {
                     $stmt = $conn->prepare("DELETE FROM transport_student_assignments WHERE id=?");
-                    $stmt->bind_param('i', $aid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('i', $aid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Student assignment removed.';
                 }
                 break;
@@ -270,8 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $station = trim($_POST['station'] ?? '');
                 if ($vid && $fdate && $liters > 0) {
                     $stmt = $conn->prepare("INSERT INTO transport_fuel_log (vehicle_id, driver_id, fuel_date, liters, cost, odometer_reading, station) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->bind_param('iisddds', $vid, $did, $fdate, $liters, $cost, $odo, $station);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('iisddds', $vid, $did, $fdate, $liters, $cost, $odo, $station); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Fuel log added successfully.';
                 } else {
                     $flash = 'Vehicle, date, and liters are required.';
@@ -290,8 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $station = trim($_POST['station'] ?? '');
                 if ($fid) {
                     $stmt = $conn->prepare("UPDATE transport_fuel_log SET vehicle_id=?, driver_id=?, fuel_date=?, liters=?, cost=?, odometer_reading=?, station=? WHERE id=?");
-                    $stmt->bind_param('iisddsii', $vid, $did, $fdate, $liters, $cost, $odo, $station, $fid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('iisddsii', $vid, $did, $fdate, $liters, $cost, $odo, $station, $fid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Fuel log updated.';
                 }
                 break;
@@ -300,8 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $fid = (int)($_POST['fuel_id'] ?? 0);
                 if ($fid) {
                     $stmt = $conn->prepare("DELETE FROM transport_fuel_log WHERE id=?");
-                    $stmt->bind_param('i', $fid);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if ($stmt) { $stmt->bind_param('i', $fid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Fuel log deleted.';
                 }
                 break;
@@ -393,19 +375,19 @@ foreach (['edit_vehicle','edit_route','edit_trip','edit_student','edit_fuel'] as
         $edit_type = $param;
         switch ($param) {
             case 'edit_vehicle':
-                $stmt = $conn->prepare("SELECT * FROM transport_vehicles WHERE id=?"); $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc();
+                $stmt = $conn->prepare("SELECT * FROM transport_vehicles WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc(); }
                 break;
             case 'edit_route':
-                $stmt = $conn->prepare("SELECT * FROM transport_routes WHERE id=?"); $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc();
+                $stmt = $conn->prepare("SELECT * FROM transport_routes WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc(); }
                 break;
             case 'edit_trip':
-                $stmt = $conn->prepare("SELECT * FROM transport_trips WHERE id=?"); $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc();
+                $stmt = $conn->prepare("SELECT * FROM transport_trips WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc(); }
                 break;
             case 'edit_student':
-                $stmt = $conn->prepare("SELECT * FROM transport_student_assignments WHERE id=?"); $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc();
+                $stmt = $conn->prepare("SELECT * FROM transport_student_assignments WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc(); }
                 break;
             case 'edit_fuel':
-                $stmt = $conn->prepare("SELECT * FROM transport_fuel_log WHERE id=?"); $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc();
+                $stmt = $conn->prepare("SELECT * FROM transport_fuel_log WHERE id=?"); if ($stmt) { $stmt->bind_param('i', $eid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $edit_entity = $stmt->get_result()->fetch_assoc(); }
                 break;
         }
         break;

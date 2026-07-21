@@ -525,6 +525,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     header('Location: director-finance.php'); exit;
 }
+
+// -- Report Generation (print/PDF) --
+$report = $_GET['report'] ?? '';
+if ($report) {
+    header('Content-Type: text/html; charset=utf-8');
+    $from = $_GET['from'] ?? date('Y-m-01', strtotime('-1 month'));
+    $to = $_GET['to'] ?? date('Y-m-d');
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}.text-end{text-align:right}.fw-bold{font-weight:700}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
+    echo '<div class="no-print text-end mb-2"><button onclick="window.close()" class="btn btn-sm btn-outline-secondary" style="padding:6px 16px">Close</button></div>';
+
+    if ($report === 'income_statement') {
+        echo '<h2>Income Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
+        $rev = 0;
+        if ($students) {
+            $stmt = $students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");
+            if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $rev = (float)$r->fetch_assoc()['t']; $stmt->close(); }
+        }
+        $exp = 0;
+        $stmt = $staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $exp = (float)$r->fetch_assoc()['t']; $stmt->close(); }
+        echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
+        echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
+        echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';
+        $r2=null; $s2=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category");
+        if($s2){$s2->bind_param('ss',$from,$to);if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };$r2=$s2->get_result();$s2->close();}
+        if($r2) while($row=$r2->fetch_assoc()){ echo '<tr><td>&nbsp;&nbsp;'.htmlspecialchars($row['expense_category']).'</td><td class="text-end">'.number_format($row['t'],0).'</td></tr>'; }
+        echo '<tr><td>Total Expenses</td><td class="text-end fw-bold">'.number_format($exp,0).'</td></tr>';
+        echo '<tr><td><strong>Net Income</strong></td><td class="text-end fw-bold" style="color:'.($rev-$exp>=0?'green':'red').'">'.number_format($rev-$exp,0).'</td></tr>';
+        echo '</tbody></table>';
+    } elseif ($report === 'expense_report') {
+        echo '<h2>Expense Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
+        $sr=null; $ss=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE DATE(e.expense_date) BETWEEN ? AND ? ORDER BY e.expense_date DESC");
+        if($ss){$ss->bind_param('ss',$from,$to);if (!$ss->execute()) { error_log('$ss execute failed: ' . ($ss->error ?? 'unknown')); };$sr=$ss->get_result();$ss->close();}
+        echo '<table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+        if($sr) while($row=$sr->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['expense_id']).'</td><td>'.htmlspecialchars($row['expense_category']).'</td><td>'.htmlspecialchars($row['description']).'</td><td class="text-end">'.number_format($row['amount'],0).'</td><td>'.$row['expense_date'].'</td><td>'.$row['status'].'</td></tr>'; }
+        echo '</tbody></table>';
+    } elseif ($report === 'fee_collection') {
+        echo '<h2>Fee Collection Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
+        $qr=null; $qs=$students->prepare("SELECT p.payment_reference,s.full_name student_name,s.student_number,s.program,p.amount_received,p.payment_method,p.payment_date,p.status FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC");
+        if($qs){$qs->bind_param('ss',$from,$to);if (!$qs->execute()) { error_log('$qs execute failed: ' . ($qs->error ?? 'unknown')); };$qr=$qs->get_result();$qs->close();}
+        echo '<table><thead><tr><th>Receipt</th><th>Student</th><th>Program</th><th class="text-end">Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+        $tt=0; if($qr) while($row=$qr->fetch_assoc()){ $tt+=$row['amount_received']; echo '<tr><td>'.htmlspecialchars($row['payment_reference']).'</td><td>'.htmlspecialchars($row['student_name']??$row['student_number']).'</td><td>'.htmlspecialchars($row['program']??'-').'</td><td class="text-end">'.number_format($row['amount_received'],0).'</td><td>'.htmlspecialchars($row['payment_method']).'</td><td>'.$row['payment_date'].'</td><td>'.$row['status'].'</td></tr>'; }
+        echo '<tr><td colspan="3"><strong>Total</strong></td><td class="text-end fw-bold">'.number_format($tt,0).'</td><td colspan="3"></td></tr>';
+        echo '</tbody></table>';
+    } elseif ($report === 'tax_report') {
+        echo '<h2>URA Tax Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
+        $rev=0; if($students){$rs=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$rr=$rs->get_result();$rs->close();if($rr)$rev=(float)$rr->fetch_assoc()['t'];}}
+        $exp=0; $es=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");if($es){$es->bind_param('ss',$from,$to);if (!$es->execute()) { error_log('$es execute failed: ' . ($es->error ?? 'unknown')); };$er=$es->get_result();$es->close();if($er)$exp=(float)$er->fetch_assoc()['t'];}
+        $taxable = max(0,$rev-$exp);
+        echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
+        echo '<tr><td>Gross Revenue</td><td class="text-end">'.number_format($rev,0).'</td></tr>';
+        echo '<tr><td>Allowable Expenses</td><td class="text-end">'.number_format($exp,0).'</td></tr>';
+        echo '<tr><td>Taxable Income</td><td class="text-end">'.number_format($taxable,0).'</td></tr>';
+        echo '<tr><td>Estimated VAT (18%)</td><td class="text-end">'.number_format($rev*0.18,0).'</td></tr>';
+        echo '<tr><td>Withholding Tax (6%)</td><td class="text-end">'.number_format($exp*0.06,0).'</td></tr>';
+        echo '</tbody></table>';
+    }
+    echo '</body></html>'; exit;
+}
+
 $sv = $_SESSION['fin_success'] ?? ''; $ev = $_SESSION['fin_error'] ?? '';
 unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 ?>
@@ -2037,66 +2097,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </div>
 <div class="modal-footer"><button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record Payment</button></div>
 </form></div></div></div>
-
-// -- Report Generation (print/PDF) --
-$report = $_GET['report'] ?? '';
-if ($report) {
-    header('Content-Type: text/html; charset=utf-8');
-    $from = $_GET['from'] ?? date('Y-m-01', strtotime('-1 month'));
-    $to = $_GET['to'] ?? date('Y-m-d');
-    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}.text-end{text-align:right}.fw-bold{font-weight:700}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
-    echo '<div class="no-print text-end mb-2"><button onclick="window.close()" class="btn btn-sm btn-outline-secondary" style="padding:6px 16px">Close</button></div>';
-
-    if ($report === 'income_statement') {
-        echo '<h2>Income Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev = 0;
-        if ($students) {
-            $stmt = $students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");
-            if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $rev = (float)$r->fetch_assoc()['t']; $stmt->close(); }
-        }
-        $exp = 0;
-        $stmt = $staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");
-        if ($stmt) { $stmt->bind_param('ss', $from, $to); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); if ($r) $exp = (float)$r->fetch_assoc()['t']; $stmt->close(); }
-        echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
-        echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
-        echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';
-        $r2=null; $s2=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category");
-        if($s2){$s2->bind_param('ss',$from,$to);if (!$s2->execute()) { error_log('$s2 execute failed: ' . ($s2->error ?? 'unknown')); };$r2=$s2->get_result();$s2->close();}
-        if($r2) while($row=$r2->fetch_assoc()){ echo '<tr><td>&nbsp;&nbsp;'.htmlspecialchars($row['expense_category']).'</td><td class="text-end">'.number_format($row['t'],0).'</td></tr>'; }
-        echo '<tr><td>Total Expenses</td><td class="text-end fw-bold">'.number_format($exp,0).'</td></tr>';
-        echo '<tr><td><strong>Net Income</strong></td><td class="text-end fw-bold" style="color:'.($rev-$exp>=0?'green':'red').'">'.number_format($rev-$exp,0).'</td></tr>';
-        echo '</tbody></table>';
-    } elseif ($report === 'expense_report') {
-        echo '<h2>Expense Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $sr=null; $ss=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE DATE(e.expense_date) BETWEEN ? AND ? ORDER BY e.expense_date DESC");
-        if($ss){$ss->bind_param('ss',$from,$to);if (!$ss->execute()) { error_log('$ss execute failed: ' . ($ss->error ?? 'unknown')); };$sr=$ss->get_result();$ss->close();}
-        echo '<table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>';
-        if($sr) while($row=$sr->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['expense_id']).'</td><td>'.htmlspecialchars($row['expense_category']).'</td><td>'.htmlspecialchars($row['description']).'</td><td class="text-end">'.number_format($row['amount'],0).'</td><td>'.$row['expense_date'].'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '</tbody></table>';
-    } elseif ($report === 'fee_collection') {
-        echo '<h2>Fee Collection Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $qr=null; $qs=$students->prepare("SELECT p.payment_reference,s.full_name student_name,s.student_number,s.program,p.amount_received,p.payment_method,p.payment_date,p.status FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC");
-        if($qs){$qs->bind_param('ss',$from,$to);if (!$qs->execute()) { error_log('$qs execute failed: ' . ($qs->error ?? 'unknown')); };$qr=$qs->get_result();$qs->close();}
-        echo '<table><thead><tr><th>Receipt</th><th>Student</th><th>Program</th><th class="text-end">Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>';
-        $tt=0; if($qr) while($row=$qr->fetch_assoc()){ $tt+=$row['amount_received']; echo '<tr><td>'.htmlspecialchars($row['payment_reference']).'</td><td>'.htmlspecialchars($row['student_name']??$row['student_number']).'</td><td>'.htmlspecialchars($row['program']??'-').'</td><td class="text-end">'.number_format($row['amount_received'],0).'</td><td>'.htmlspecialchars($row['payment_method']).'</td><td>'.$row['payment_date'].'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '<tr><td colspan="3"><strong>Total</strong></td><td class="text-end fw-bold">'.number_format($tt,0).'</td><td colspan="3"></td></tr>';
-        echo '</tbody></table>';
-    } elseif ($report === 'tax_report') {
-        echo '<h2>URA Tax Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev=0; if($students){$rs=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");if($rs){$rs->bind_param('ss',$from,$to);if (!$rs->execute()) { error_log('$rs execute failed: ' . ($rs->error ?? 'unknown')); };$rr=$rs->get_result();$rs->close();if($rr)$rev=(float)$rr->fetch_assoc()['t'];}}
-        $exp=0; $es=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");if($es){$es->bind_param('ss',$from,$to);if (!$es->execute()) { error_log('$es execute failed: ' . ($es->error ?? 'unknown')); };$er=$es->get_result();$es->close();if($er)$exp=(float)$er->fetch_assoc()['t'];}
-        $taxable = max(0,$rev-$exp);
-        echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
-        echo '<tr><td>Gross Revenue</td><td class="text-end">'.number_format($rev,0).'</td></tr>';
-        echo '<tr><td>Allowable Expenses</td><td class="text-end">'.number_format($exp,0).'</td></tr>';
-        echo '<tr><td>Taxable Income</td><td class="text-end">'.number_format($taxable,0).'</td></tr>';
-        echo '<tr><td>Estimated VAT (18%)</td><td class="text-end">'.number_format($rev*0.18,0).'</td></tr>';
-        echo '<tr><td>Withholding Tax (6%)</td><td class="text-end">'.number_format($exp*0.06,0).'</td></tr>';
-        echo '</tbody></table>';
-    }
-    echo '</body></html>'; exit;
-}
-?>
 
 <!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
