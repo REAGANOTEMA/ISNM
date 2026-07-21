@@ -24,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $closing = trim($_POST['closing_date'] ?? '');
         if ($title) {
             $stmt = $conn->prepare("INSERT INTO staff_recruitment (position_title, department, description, requirements, salary_range, posted_date, closing_date, status) VALUES (?, ?, ?, ?, ?, CURDATE(), ?, 'Open')");
-            $stmt->bind_param('ssssss', $title, $dept, $desc, $req, $salary, $closing);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssssss', $title, $dept, $desc, $req, $salary, $closing);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'Position title required'; }
     } elseif ($action === 'update_position' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
@@ -39,19 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $status = trim($_POST['status'] ?? 'Open');
         if ($id && $title) {
             $stmt = $conn->prepare("UPDATE staff_recruitment SET position_title=?, department=?, description=?, requirements=?, salary_range=?, status=? WHERE id=?");
-            $stmt->bind_param('ssssssi', $title, $dept, $desc, $req, $salary, $status, $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssssssi', $title, $dept, $desc, $req, $salary, $status, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID and title required'; }
     } elseif ($action === 'delete_position' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM staff_recruitment WHERE id=?");
-            $stmt->bind_param('i', $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID required'; }
     }
     echo json_encode($response); exit;

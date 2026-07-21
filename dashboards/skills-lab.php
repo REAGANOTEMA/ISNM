@@ -31,11 +31,13 @@ if ($view === 'equipment' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_equipment WHERE equipment_name LIKE ? OR equipment_code LIKE ? ORDER BY equipment_name ASC");
-                $stmt->bind_param("ss", $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("ss", $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT * FROM lab_equipment ORDER BY equipment_name ASC");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -59,14 +61,18 @@ if ($view === 'equipment' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_equipment SET equipment_code=?, equipment_name=?, category=?, condition_status=?, quantity=?, location=?, last_maintenance=?, status=? WHERE id=?");
-            $stmt->bind_param("ssssisssi", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("ssssisssi", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_equipment (equipment_code, equipment_name, category, condition_status, quantity, location, last_maintenance, status) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssssisss", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("ssssisss", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -88,11 +94,13 @@ if ($view === 'checkouts' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id WHERE c.borrower_id LIKE ? OR c.borrower_name LIKE ? OR e.equipment_name LIKE ? ORDER BY c.checkout_date DESC LIMIT 200");
-                $stmt->bind_param("sss", $like, $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("sss", $like, $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -115,14 +123,18 @@ if ($view === 'checkouts' && $ajax === 'save') {
             $ard = $data['actual_return'] ?: null;
             $stat = $data['status'] ?? 'checked_out';
             $stmt = $db->prepare("UPDATE lab_checkouts SET expected_return=?, actual_return=?, status=?, notes=? WHERE id=?");
-            $stmt->bind_param("ssssi", $erd, $ard, $stat, $notes, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("ssssi", $erd, $ard, $stat, $notes, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_checkouts (equipment_id, borrower_id, borrower_name, expected_return, notes) VALUES (?,?,?,?,?)");
-            $stmt->bind_param("issss", $eid, $bid, $bname, $erd, $notes);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("issss", $eid, $bid, $bname, $erd, $notes);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -132,19 +144,27 @@ if ($view === 'checkouts' && $ajax === 'return' && $id) {
     header('Content-Type: application/json');
     try {
         $stmt = $db->prepare("SELECT equipment_id FROM lab_checkouts WHERE id=?");
-        $stmt->bind_param("i", $id);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $r = $stmt->get_result();
-        if ($c = $r->fetch_assoc()) {
-            $stmt->close();
-            $stmt = $db->prepare("UPDATE lab_checkouts SET actual_return=CURDATE(), status='returned' WHERE id=?");
+        if ($stmt) {
             $stmt->bind_param("i", $id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            echo json_encode(['success' => true]);
+            $r = $stmt->get_result();
+            if ($c = $r->fetch_assoc()) {
+                $stmt->close();
+                $stmt = $db->prepare("UPDATE lab_checkouts SET actual_return=CURDATE(), status='returned' WHERE id=?");
+                if ($stmt) {
+                    $stmt->bind_param("i", $id);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $stmt->close();
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to prepare update']);
+                }
+            } else {
+                $stmt->close();
+                echo json_encode(['success' => false, 'error' => 'Not found']);
+            }
         } else {
-            $stmt->close();
-            echo json_encode(['success' => false, 'error' => 'Not found']);
+            echo json_encode(['success' => false, 'error' => 'Failed to prepare statement']);
         }
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
     exit;
@@ -165,11 +185,13 @@ if ($view === 'sessions' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_sessions WHERE session_name LIKE ? OR instructor_name LIKE ? ORDER BY scheduled_date DESC LIMIT 200");
-                $stmt->bind_param("ss", $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("ss", $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT * FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -195,14 +217,18 @@ if ($view === 'sessions' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_sessions SET session_name=?, instructor_id=?, instructor_name=?, scheduled_date=?, scheduled_time=?, duration_minutes=?, max_students=?, room=?, status=?, notes=? WHERE id=?");
-            $stmt->bind_param("sisssiisssi", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("sisssiisssi", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_sessions (session_name, instructor_id, instructor_name, scheduled_date, scheduled_time, duration_minutes, max_students, room, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("sisssiisss", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("sisssiisss", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -224,11 +250,13 @@ if ($view === 'skills' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id WHERE d.skill_name LIKE ? OR d.description LIKE ? ORDER BY d.demo_date DESC LIMIT 200");
-                $stmt->bind_param("ss", $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("ss", $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id ORDER BY d.demo_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -250,14 +278,18 @@ if ($view === 'skills' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_demonstrations SET session_id=?, skill_name=?, description=?, instructor_id=?, demo_date=?, students_count=? WHERE id=?");
-            $stmt->bind_param("isssiii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("isssiii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_demonstrations (session_id, skill_name, description, instructor_id, demo_date, students_count) VALUES (?,?,?,?,?,?)");
-            $stmt->bind_param("isssii", $sesid, $skn, $desc, $iid, $ddate, $scount);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("isssii", $sesid, $skn, $desc, $iid, $ddate, $scount);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -279,11 +311,13 @@ if ($view === 'consumables' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_consumables WHERE item_name LIKE ? OR category LIKE ? ORDER BY item_name ASC");
-                $stmt->bind_param("ss", $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("ss", $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT * FROM lab_consumables ORDER BY item_name ASC");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -308,14 +342,18 @@ if ($view === 'consumables' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_consumables SET item_name=?, category=?, quantity=?, unit=?, min_stock_level=?, unit_cost=?, supplier=?, last_ordered_date=?, notes=? WHERE id=?");
-            $stmt->bind_param("sssdssssi", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("sssdssssi", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES (?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("sssdsssss", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("sssdsssss", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -337,11 +375,13 @@ if ($view === 'attendance' && $ajax === 'get') {
             $sessionId = isset($_GET['session_id']) ? (int)$_GET['session_id'] : 0;
             if ($sessionId) {
                 $stmt = $db->prepare("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id WHERE a.session_id=? ORDER BY a.created_at DESC LIMIT 300");
-                $stmt->bind_param("i", $sessionId);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("i", $sessionId);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -359,17 +399,19 @@ if ($view === 'attendance' && $ajax === 'save') {
     $mid = (int)($user['id'] ?? 0);
     $success = 0;
     $stmt = $db->prepare("INSERT INTO lab_attendance (session_id, student_id, attendance_status, check_in_time, marked_by) VALUES (?, ?, ?, CURTIME(), ?) ON DUPLICATE KEY UPDATE attendance_status=?, marked_by=?");
-    foreach ($students as $s) {
-        $stid = $s['student_id'] ?? '';
-        $stat = $s['attendance_status'] ?? 'present';
-        if (!$stid) continue;
-        try {
-            $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $success++;
-        } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
+    if ($stmt) {
+        foreach ($students as $s) {
+            $stid = $s['student_id'] ?? '';
+            $stat = $s['attendance_status'] ?? 'present';
+            if (!$stid) continue;
+            try {
+                $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $success++;
+            } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
+        }
+        $stmt->close();
     }
-    $stmt->close();
     echo json_encode(['success' => true, 'updated' => $success]); exit;
 }
 if ($view === 'attendance' && $ajax === 'delete' && $id) {
@@ -401,11 +443,13 @@ if ($view === 'incidents' && $ajax === 'get') {
             if ($q) {
                 $like = '%' . $q . '%';
                 $stmt = $db->prepare("SELECT * FROM lab_incidents WHERE description LIKE ? OR incident_type LIKE ? ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
-                $stmt->bind_param("ss", $like, $like);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $r = $stmt->get_result();
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                if ($stmt) {
+                    $stmt->bind_param("ss", $like, $like);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $r = $stmt->get_result();
+                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                }
             } else {
                 $r = $db->query("SELECT * FROM lab_incidents ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
@@ -431,14 +475,18 @@ if ($view === 'incidents' && $ajax === 'save') {
     try {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_incidents SET incident_date=?, incident_time=?, incident_type=?, severity=?, description=?, equipment_involved=?, student_involved=?, action_taken=?, status=? WHERE id=?");
-            $stmt->bind_param("sssssssssi", $idate, $itime, $itype, $sev, $desc, $ei, $si, $at, $stat, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("sssssssssi", $idate, $itime, $itype, $sev, $desc, $ei, $si, $at, $stat, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssiissssss", $idate, $itime, $uid, $itype, $sev, $desc, $ei, $si, $at, $stat);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("ssiissssss", $idate, $itime, $uid, $itype, $sev, $desc, $ei, $si, $at, $stat);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }

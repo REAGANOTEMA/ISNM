@@ -248,3 +248,17 @@ if (!function_exists('renderEmptyState')) {
         return '<div class="empty-state text-center py-5"><i class="' . htmlspecialchars($icon) . ' fa-3x text-muted mb-3"></i><p class="text-muted">' . htmlspecialchars($message) . '</p>' . ($extra ? '<p>' . $extra . '</p>' : '') . '</div>';
     }
 }
+
+// Fallback for flashMessage / getFlashMessages if config.php was never loaded
+if (!function_exists('flashMessage')) {
+    function flashMessage($type, $message) {
+        $_SESSION['flash'][$type] = $message;
+    }
+}
+if (!function_exists('getFlashMessages')) {
+    function getFlashMessages() {
+        $messages = $_SESSION['flash'] ?? [];
+        unset($_SESSION['flash']);
+        return $messages;
+    }
+}

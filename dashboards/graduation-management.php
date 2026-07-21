@@ -39,37 +39,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $award = trim($_POST['award'] ?? '');
             if (!$sname) { echo json_encode(['success' => false, 'message' => 'Student name required']); exit; }
             $stmt = $conn->prepare("INSERT INTO $tbl (student_name, full_name, program, program_name, index_number, award, award_title, status, created_at) VALUES (?,?,?,?,?,?,'Diploma','pending',NOW())");
-            $stmt->bind_param('ssssss', $sname, $sname, $prog, $prog, $idx, $award);
-            $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssssss', $sname, $sname, $prog, $prog, $idx, $award);
+                $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Candidate added' : 'Failed']); exit;
 
         case 'approve_candidate':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE $tbl SET status='approved' WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Approved' : 'Failed']); exit;
 
         case 'reject_candidate':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE $tbl SET status='rejected' WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Rejected' : 'Failed']); exit;
 
         case 'delete_candidate':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM $tbl WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'search':
             $q = '%' . trim($_POST['q'] ?? '') . '%';
             $candidates = [];
             $stmt = $conn->prepare("SELECT * FROM $tbl WHERE student_name LIKE ? OR full_name LIKE ? OR index_number LIKE ? OR program LIKE ? ORDER BY created_at DESC LIMIT 100");
-            $stmt->bind_param('ssss', $q, $q, $q, $q); $stmt->execute(); $r = $stmt->get_result();
-            while ($row = $r->fetch_assoc()) { $row['_source'] = $tbl; $candidates[] = $row; } $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssss', $q, $q, $q, $q); $stmt->execute(); $r = $stmt->get_result();
+                while ($row = $r->fetch_assoc()) { $row['_source'] = $tbl; $candidates[] = $row; } $stmt->close();
+            }
             echo json_encode(['success' => true, 'data' => $candidates]); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

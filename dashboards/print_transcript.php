@@ -15,11 +15,15 @@ if ($student_id <= 0) {
 }
 
 $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-$stmt->bind_param("i", $student_id);
-if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-$student_result = $stmt->get_result();
-$student = $student_result ? $student_result->fetch_assoc() : null;
-$stmt->close();
+if ($stmt) {
+    $stmt->bind_param("i", $student_id);
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+    $student_result = $stmt->get_result();
+    $student = $student_result ? $student_result->fetch_assoc() : null;
+    $stmt->close();
+} else {
+    $student = null;
+}
 
 if (!$student) {
     $_SESSION['error'] = 'Student not found.';
@@ -30,11 +34,15 @@ $student['full_name'] = $student['full_name'] ?: trim(($student['first_name']??'
 $student['registration_number'] = $student['registration_number'] ?: $student['student_number'] ?: '';
 
 $stmt = $staff_conn->prepare("SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year, semester");
-$stmt->bind_param("i", $student_id);
-if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-$records_result = $stmt->get_result();
-$records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
-$stmt->close();
+if ($stmt) {
+    $stmt->bind_param("i", $student_id);
+    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+    $records_result = $stmt->get_result();
+    $records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
+    $stmt->close();
+} else {
+    $records = [];
+}
 
 $type = $_GET['type'] ?? $docSettings['transcript_default_type'] ?? 'transcript';
 echo generateTranscriptHTML($student, $records, $type, $docSettings);

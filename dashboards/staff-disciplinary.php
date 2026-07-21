@@ -24,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $action_taken = trim($_POST['action_taken'] ?? '');
         if ($staff_id && $offense) {
             $stmt = $conn->prepare("INSERT INTO disciplinary_actions (staff_id, offense_type, description, incident_date, action_taken, status) VALUES (?, ?, ?, ?, ?, 'Open')");
-            $stmt->bind_param('issss', $staff_id, $offense, $desc, $date, $action_taken);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('issss', $staff_id, $offense, $desc, $date, $action_taken);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else {
             $response['error'] = 'Staff and offense type are required';
         }
@@ -37,10 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $action_taken = trim($_POST['action_taken'] ?? '');
         if ($id && $status) {
             $stmt = $conn->prepare("UPDATE disciplinary_actions SET status=?, action_taken=? WHERE id=?");
-            $stmt->bind_param('ssi', $status, $action_taken, $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssi', $status, $action_taken, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else {
             $response['error'] = 'Case ID and status are required';
         }
@@ -48,10 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM disciplinary_actions WHERE id=?");
-            $stmt->bind_param('i', $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else {
             $response['error'] = 'Case ID is required';
         }

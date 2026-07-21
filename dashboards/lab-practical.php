@@ -66,9 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $max = (int)($_POST['max_students'] ?? 0);
             if (!$name) { echo json_encode(['success' => false, 'message' => 'Session name is required']); exit; }
             $stmt = $conn->prepare("INSERT INTO lab_practical_sessions (session_name, subject, session_date, session_time, location, instructor, max_students, status) VALUES (?,?,?,?,?,?,?,'scheduled')");
-            $stmt->bind_param('ssssssi', $name, $subject, $date, $time, $location, $instructor, $max);
-            $ok = $stmt->execute(); $stmt->close();
-            echo json_encode(['success' => $ok, 'message' => $ok ? 'Session added' : 'Failed to add session']); exit;
+            if ($stmt) {
+                $stmt->bind_param('ssssssi', $name, $subject, $date, $time, $location, $instructor, $max);
+                $ok = $stmt->execute(); $stmt->close();
+                echo json_encode(['success' => $ok, 'message' => $ok ? 'Session added' : 'Failed to add session']); exit;
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare statement']); exit;
 
         case 'update_session':
             $id = (int)($_POST['id'] ?? 0);
@@ -82,16 +85,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $status = trim($_POST['status'] ?? 'scheduled');
             if (!$id || !$name) { echo json_encode(['success' => false, 'message' => 'Missing required fields']); exit; }
             $stmt = $conn->prepare("UPDATE lab_practical_sessions SET session_name=?, subject=?, session_date=?, session_time=?, location=?, instructor=?, max_students=?, status=? WHERE id=?");
-            $stmt->bind_param('ssssssisi', $name, $subject, $date, $time, $location, $instructor, $max, $status, $id);
-            $ok = $stmt->execute(); $stmt->close();
-            echo json_encode(['success' => $ok, 'message' => $ok ? 'Session updated' : 'Failed to update']); exit;
+            if ($stmt) {
+                $stmt->bind_param('ssssssisi', $name, $subject, $date, $time, $location, $instructor, $max, $status, $id);
+                $ok = $stmt->execute(); $stmt->close();
+                echo json_encode(['success' => $ok, 'message' => $ok ? 'Session updated' : 'Failed to update']); exit;
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare statement']); exit;
 
         case 'delete_session':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM lab_practical_sessions WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
-            echo json_encode(['success' => $ok, 'message' => $ok ? 'Session deleted' : 'Failed to delete']); exit;
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+                echo json_encode(['success' => $ok, 'message' => $ok ? 'Session deleted' : 'Failed to delete']); exit;
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare statement']); exit;
 
         case 'add_attendance':
             $sid = (int)($_POST['session_id'] ?? 0);
@@ -102,27 +111,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $notes = trim($_POST['notes'] ?? '');
             if (!$student) { echo json_encode(['success' => false, 'message' => 'Student name is required']); exit; }
             $stmt = $conn->prepare("INSERT INTO lab_attendance (session_id, student_name, student_id, session_date, status, notes) VALUES (?,?,?,?,?,?)");
-            $stmt->bind_param('isssss', $sid, $student, $sidNum, $date, $status, $notes);
-            $ok = $stmt->execute(); $stmt->close();
-            echo json_encode(['success' => $ok, 'message' => $ok ? 'Attendance recorded' : 'Failed']); exit;
+            if ($stmt) {
+                $stmt->bind_param('isssss', $sid, $student, $sidNum, $date, $status, $notes);
+                $ok = $stmt->execute(); $stmt->close();
+                echo json_encode(['success' => $ok, 'message' => $ok ? 'Attendance recorded' : 'Failed']); exit;
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare statement']); exit;
 
         case 'delete_attendance':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM lab_attendance WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
-            echo json_encode(['success' => $ok, 'message' => $ok ? 'Record deleted' : 'Failed']); exit;
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+                echo json_encode(['success' => $ok, 'message' => $ok ? 'Record deleted' : 'Failed']); exit;
+            }
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare statement']); exit;
 
         case 'search':
             $q = '%' . trim($_POST['query'] ?? '') . '%';
             $sessions = [];
             $stmt = $conn->prepare("SELECT * FROM lab_practical_sessions WHERE session_name LIKE ? OR subject LIKE ? OR instructor LIKE ? OR location LIKE ? ORDER BY session_date DESC LIMIT 100");
-            $stmt->bind_param('ssss', $q, $q, $q, $q);
-            if ($stmt->execute()) {
-                $res = $stmt->get_result();
-                while ($row = $res->fetch_assoc()) { $row['_source'] = 'lab_practical_sessions'; $sessions[] = $row; }
+            if ($stmt) {
+                $stmt->bind_param('ssss', $q, $q, $q, $q);
+                if ($stmt->execute()) {
+                    $res = $stmt->get_result();
+                    while ($row = $res->fetch_assoc()) { $row['_source'] = 'lab_practical_sessions'; $sessions[] = $row; }
+                }
+                $stmt->close();
             }
-            $stmt->close();
             echo json_encode(['success' => true, 'data' => $sessions]); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

@@ -38,8 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             if (!$name) { echo json_encode(['success' => false, 'message' => 'Staff name required']); exit; }
             $stmt = $conn->prepare("INSERT INTO duty_rosters (staff_name, shift, roster_date, location, notes, created_by, created_at) VALUES (?,?,?,?,?,?,NOW())");
             $uid = (int)($user['id'] ?? 0);
-            $stmt->bind_param('sssssi', $name, $shift, $date, $loc, $notes, $uid);
-            $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('sssssi', $name, $shift, $date, $loc, $notes, $uid);
+                $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Roster added' : 'Failed']); exit;
 
         case 'update_roster':
@@ -47,22 +49,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $status = trim($_POST['status'] ?? 'scheduled');
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE duty_rosters SET status=? WHERE id=?");
-            $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Updated' : 'Failed']); exit;
 
         case 'delete_roster':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM duty_rosters WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'search':
             $q = '%' . trim($_POST['q'] ?? '') . '%';
             $rosters = [];
             $stmt = $conn->prepare("SELECT * FROM duty_rosters WHERE staff_name LIKE ? OR shift LIKE ? OR location LIKE ? ORDER BY roster_date DESC LIMIT 100");
-            $stmt->bind_param('sss', $q, $q, $q); $stmt->execute(); $r = $stmt->get_result();
-            while ($row = $r->fetch_assoc()) $rosters[] = $row; $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('sss', $q, $q, $q); $stmt->execute(); $r = $stmt->get_result();
+                while ($row = $r->fetch_assoc()) $rosters[] = $row; $stmt->close();
+            }
             echo json_encode(['success' => true, 'data' => $rosters]); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

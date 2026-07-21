@@ -52,11 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 }
 
                 $stmt = $conn->prepare("INSERT INTO academic_timetable (timetable_id, academic_year, semester, program_code, course_code, day_of_week, start_time, end_time, venue, lecturer_id, timetable_status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssssssssi', $timetableId, $academicYear, $semester, $programCode, $courseCode, $dayOfWeek, $startTime, $endTime, $venue, $lecturerId, $status, $userId);
-                $stmt->execute();
-                $newId = $stmt->insert_id;
-                $stmt->close();
-                echo json_encode(['success' => true, 'message' => 'Entry added.', 'id' => $newId]);
+                if ($stmt) {
+                    $stmt->bind_param('sssssssssssi', $timetableId, $academicYear, $semester, $programCode, $courseCode, $dayOfWeek, $startTime, $endTime, $venue, $lecturerId, $status, $userId);
+                    $stmt->execute();
+                    $newId = $stmt->insert_id;
+                    $stmt->close();
+                    echo json_encode(['success' => true, 'message' => 'Entry added.', 'id' => $newId]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to prepare statement.']);
+                }
                 break;
 
             case 'update_entry':
@@ -82,11 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 }
 
                 $stmt = $conn->prepare("UPDATE academic_timetable SET academic_year=?, semester=?, program_code=?, course_code=?, day_of_week=?, start_time=?, end_time=?, venue=?, lecturer_id=?, timetable_status=? WHERE id=?");
-                $stmt->bind_param('sssssssssii', $academicYear, $semester, $programCode, $courseCode, $dayOfWeek, $startTime, $endTime, $venue, $lecturerId, $status, $id);
-                $stmt->execute();
-                $affected = $stmt->affected_rows;
-                $stmt->close();
-                echo json_encode(['success' => true, 'message' => $affected > 0 ? 'Entry updated.' : 'No changes made.', 'affected' => $affected]);
+                if ($stmt) {
+                    $stmt->bind_param('sssssssssii', $academicYear, $semester, $programCode, $courseCode, $dayOfWeek, $startTime, $endTime, $venue, $lecturerId, $status, $id);
+                    $stmt->execute();
+                    $affected = $stmt->affected_rows;
+                    $stmt->close();
+                    echo json_encode(['success' => true, 'message' => $affected > 0 ? 'Entry updated.' : 'No changes made.', 'affected' => $affected]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to prepare statement.']);
+                }
                 break;
 
             case 'delete_entry':
@@ -96,11 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     exit;
                 }
                 $stmt = $conn->prepare("DELETE FROM academic_timetable WHERE id=?");
-                $stmt->bind_param('i', $id);
-                $stmt->execute();
-                $affected = $stmt->affected_rows;
-                $stmt->close();
-                echo json_encode(['success' => $affected > 0, 'message' => $affected > 0 ? 'Entry deleted.' : 'Entry not found.']);
+                if ($stmt) {
+                    $stmt->bind_param('i', $id);
+                    $stmt->execute();
+                    $affected = $stmt->affected_rows;
+                    $stmt->close();
+                    echo json_encode(['success' => $affected > 0, 'message' => $affected > 0 ? 'Entry deleted.' : 'Entry not found.']);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to prepare statement.']);
+                }
                 break;
 
             case 'search':
@@ -111,17 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 }
                 $like = "%{$q}%";
                 $stmt = $conn->prepare("SELECT t.*, s.full_name as instructor FROM academic_timetable t LEFT JOIN staff s ON t.lecturer_id=s.id WHERE t.course_code LIKE ? OR t.venue LIKE ? OR t.day_of_week LIKE ? OR s.full_name LIKE ? OR t.semester LIKE ? OR t.program_code LIKE ? OR t.timetable_id LIKE ? ORDER BY FIELD(t.day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), t.start_time LIMIT 50");
-                $stmt->bind_param('sssssss', $like, $like, $like, $like, $like, $like, $like);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $rows = [];
-                while ($row = $result->fetch_assoc()) {
-                    $row['start_time'] = $row['start_time'] ? date('H:i', strtotime($row['start_time'])) : '';
-                    $row['end_time'] = $row['end_time'] ? date('H:i', strtotime($row['end_time'])) : '';
-                    $rows[] = $row;
+                if ($stmt) {
+                    $stmt->bind_param('sssssss', $like, $like, $like, $like, $like, $like, $like);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $rows = [];
+                    while ($row = $result->fetch_assoc()) {
+                        $row['start_time'] = $row['start_time'] ? date('H:i', strtotime($row['start_time'])) : '';
+                        $row['end_time'] = $row['end_time'] ? date('H:i', strtotime($row['end_time'])) : '';
+                        $rows[] = $row;
+                    }
+                    $stmt->close();
+                    echo json_encode(['success' => true, 'data' => $rows]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to prepare statement.']);
                 }
-                $stmt->close();
-                echo json_encode(['success' => true, 'data' => $rows]);
                 break;
 
             default:

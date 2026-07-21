@@ -33,10 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $eed = $_POST['exam_end_date'] ?? null;
         if ($ay) {
             $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,?,?,'Active')");
-            $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = "Calendar entry added for $ay.";
+            if ($stmt) {
+                $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = "Calendar entry added for $ay.";
+            }
         }
         header('Location: academic-calendar.php'); exit;
     }
@@ -44,10 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM academic_calendar WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Calendar entry deleted.';
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Calendar entry deleted.';
+            }
         }
         header('Location: academic-calendar.php'); exit;
     }
@@ -64,7 +68,7 @@ $pageTitle = 'Academic Calendar';
 <div class="main" style="margin-left:270px;padding:32px">
 <div class="page-title-card"><h2><i class="fas fa-calendar-alt me-2"></i>Academic Calendar</h2><p>View semesters, exam periods, and key academic deadlines</p></div>
 
-<?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
+<?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2"><?= htmlspecialchars($_SESSION['success'] ?? ''); unset($_SESSION['success']); ?></div><?php endif; ?>
 
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">

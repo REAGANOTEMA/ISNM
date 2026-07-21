@@ -66,9 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $pr = $_POST['purpose'] ?? '';
         $ug = $_POST['urgency'] ?? 'Normal';
         $stmt = $conn->prepare("INSERT INTO department_requests (request_number, from_department, to_department, item_name, quantity, unit, purpose, urgency, status, requested_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
-        $stmt->bind_param("ssssissii", $rn, $fd, $td, $in, $qty, $un, $pr, $ug, $userId);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $stmt->close();
+        if ($stmt) {
+            $stmt->bind_param("ssssissii", $rn, $fd, $td, $in, $qty, $un, $pr, $ug, $userId);
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            $stmt->close();
+        }
         $msg = ['t' => 'success', 'm' => "Request <strong>$rn</strong> created."];
         header('Location: department-requests.php'); exit;
     }
@@ -77,9 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = (int)($_POST['request_id'] ?? 0);
         if ($id > 0) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Approved', approved_by=?, updated_at=NOW() WHERE id=? AND status='Pending'");
-            $stmt->bind_param("ii", $userId, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("ii", $userId, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request approved.'];
         }
         header('Location: department-requests.php'); exit;
@@ -90,9 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $nt = $_POST['notes'] ?? '';
         if ($id > 0) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Rejected', notes=?, updated_at=NOW() WHERE id=? AND status='Pending'");
-            $stmt->bind_param("si", $nt, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param("si", $nt, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request rejected.'];
         }
         header('Location: department-requests.php'); exit;
@@ -105,13 +111,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             if ($nt) {
                 $stmt = $conn->prepare("UPDATE department_requests SET status='Fulfilled', approved_by=?, notes=CONCAT(IFNULL(notes,''), ?), updated_at=NOW() WHERE id=? AND status='Approved'");
                 $nl = "\n" . $nt;
-                $stmt->bind_param("isi", $userId, $nl, $id);
+                if ($stmt) { $stmt->bind_param("isi", $userId, $nl, $id); }
             } else {
                 $stmt = $conn->prepare("UPDATE department_requests SET status='Fulfilled', approved_by=?, updated_at=NOW() WHERE id=? AND status='Approved'");
-                $stmt->bind_param("ii", $userId, $id);
+                if ($stmt) { $stmt->bind_param("ii", $userId, $id); }
             }
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
+            if ($stmt) {
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+            }
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request fulfilled.'];
         }
         header('Location: department-requests.php'); exit;

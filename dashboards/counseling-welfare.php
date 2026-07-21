@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $status = trim($_POST['status'] ?? 'scheduled');
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE counseling_sessions SET status=? WHERE id=?");
-            $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Updated' : 'Failed']);
             exit;
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM counseling_sessions WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']);
             exit;
 
@@ -61,12 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             if ($priority) {
                 $stmt = $conn->prepare("UPDATE student_welfare_cases SET status=?, priority=? WHERE id=?");
-                $stmt->bind_param('ssi', $status, $priority, $id);
+                if ($stmt) { $stmt->bind_param('ssi', $status, $priority, $id); }
             } else {
                 $stmt = $conn->prepare("UPDATE student_welfare_cases SET status=? WHERE id=?");
-                $stmt->bind_param('si', $status, $id);
+                if ($stmt) { $stmt->bind_param('si', $status, $id); }
             }
-            $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Updated' : 'Failed']);
             exit;
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM student_welfare_cases WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']);
             exit;
     }

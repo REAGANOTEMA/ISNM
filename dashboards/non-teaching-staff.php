@@ -122,10 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         $assignedBy  = trim($_POST['assigned_by'] ?? '');
         if (!$title) { echo json_encode(['success'=>false,'message'=>'Title is required']); exit; }
         $stmt = $db->prepare("INSERT INTO staff_tasks (staff_id,title,description,priority,category,due_date,assigned_by) VALUES (?,?,?,?,?,?,?)");
-        $stmt->bind_param('issssss', $user_id, $title, $description, $priority, $category, $dueDate, $assignedBy);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task created','id'=>$db->insert_id]); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to create task']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('issssss', $user_id, $title, $description, $priority, $category, $dueDate, $assignedBy);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task created','id'=>$db->insert_id]); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to create task']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Task: Update status ──
@@ -135,10 +138,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         $newStatus = $_POST['status'] ?? 'completed';
         if (!in_array($newStatus, ['pending','in_progress','completed','cancelled'])) { echo json_encode(['success'=>false,'message'=>'Invalid status']); exit; }
         $stmt = $db->prepare("UPDATE staff_tasks SET status=? WHERE id=? AND staff_id=?");
-        $stmt->bind_param('sii', $newStatus, $taskId, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task updated']); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to update task']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('sii', $newStatus, $taskId, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task updated']); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to update task']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Task: Delete ──
@@ -146,10 +152,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         if (!nts_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
         $taskId = (int)($_POST['task_id'] ?? 0);
         $stmt = $db->prepare("DELETE FROM staff_tasks WHERE id=? AND staff_id=?");
-        $stmt->bind_param('ii', $taskId, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task deleted']); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to delete task']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('ii', $taskId, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Task deleted']); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to delete task']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Attendance: Check In ──
@@ -161,10 +170,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         $hour = (int)date('H');
         $status = ($hour > 9) ? 'Late' : 'Present';
         $stmt = $db->prepare("INSERT INTO staff_attendance (staff_id,date,check_in,notes,status) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE check_in=VALUES(check_in),notes=VALUES(notes),status=VALUES(status)");
-        $stmt->bind_param('issss', $user_id, $today, $checkTime, $notes, $status);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Checked in successfully','time'=>$checkTime,'status'=>$status]); }
-        else { echo json_encode(['success'=>false,'message'=>'Check-in failed']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('issss', $user_id, $today, $checkTime, $notes, $status);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Checked in successfully','time'=>$checkTime,'status'=>$status]); }
+            else { echo json_encode(['success'=>false,'message'=>'Check-in failed']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Attendance: Check Out ──
@@ -173,11 +185,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         $today = date('Y-m-d');
         $checkOutTime = date('H:i:s');
         $stmt = $db->prepare("UPDATE staff_attendance SET check_out=? WHERE staff_id=? AND date=? AND check_out IS NULL");
-        $stmt->bind_param('sis', $checkOutTime, $user_id, $today);
-        if ($stmt->execute() && $stmt->affected_rows > 0) { echo json_encode(['success'=>true,'message'=>'Checked out successfully','time'=>$checkOutTime]); }
-        elseif ($stmt->affected_rows === 0) { echo json_encode(['success'=>false,'message'=>'No check-in found for today or already checked out']); }
-        else { echo json_encode(['success'=>false,'message'=>'Check-out failed']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('sis', $checkOutTime, $user_id, $today);
+            if ($stmt->execute() && $stmt->affected_rows > 0) { echo json_encode(['success'=>true,'message'=>'Checked out successfully','time'=>$checkOutTime]); }
+            elseif ($stmt->affected_rows === 0) { echo json_encode(['success'=>false,'message'=>'No check-in found for today or already checked out']); }
+            else { echo json_encode(['success'=>false,'message'=>'Check-out failed']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Leave: Submit request ──
@@ -197,10 +212,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         $days  = $end->diff($start)->days + 1;
         if ($days < 1) { echo json_encode(['success'=>false,'message'=>'Invalid date range']); exit; }
         $stmt = $db->prepare("INSERT INTO staff_leave_requests (staff_id,leave_type,start_date,end_date,days,reason,emergency_contact,handover_notes) VALUES (?,?,?,?,?,?,?,?)");
-        $stmt->bind_param('isssisss', $user_id, $leaveType, $startDate, $endDate, $days, $reason, $emergencyContact, $handoverNotes);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Leave request submitted','id'=>$db->insert_id,'days'=>$days]); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to submit leave request']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('isssisss', $user_id, $leaveType, $startDate, $endDate, $days, $reason, $emergencyContact, $handoverNotes);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Leave request submitted','id'=>$db->insert_id,'days'=>$days]); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to submit leave request']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Leave: Cancel request ──
@@ -208,10 +226,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($conn || $ctx['staff'])) {
         if (!nts_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF token']); exit; }
         $leaveId = (int)($_POST['leave_id'] ?? 0);
         $stmt = $db->prepare("UPDATE staff_leave_requests SET status='cancelled' WHERE id=? AND staff_id=? AND status='pending'");
-        $stmt->bind_param('ii', $leaveId, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Leave request cancelled']); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to cancel leave request']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('ii', $leaveId, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Leave request cancelled']); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to cancel leave request']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;
@@ -337,10 +358,12 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         try {
                             $conn->query("CREATE TABLE IF NOT EXISTS staff_tasks (id INT AUTO_INCREMENT PRIMARY KEY,staff_id INT NOT NULL,title VARCHAR(255) NOT NULL,description TEXT,priority ENUM('low','medium','high','urgent') DEFAULT 'medium',category VARCHAR(100),due_date DATE,assigned_by VARCHAR(255),status ENUM('pending','in_progress','completed','cancelled') DEFAULT 'pending',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
                             $stmt = $conn->prepare("SELECT * FROM staff_tasks WHERE staff_id=? ORDER BY FIELD(status,'pending','in_progress','completed','cancelled'), due_date ASC");
-                            $stmt->bind_param('i', $user_id);
-                            $stmt->execute();
-                            $staff_tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                            $stmt->close();
+                            if ($stmt) {
+                                $stmt->bind_param('i', $user_id);
+                                $stmt->execute();
+                                $staff_tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                                $stmt->close();
+                            }
                         } catch (Exception $e) { error_log('nts tasks: ' . $e->getMessage()); }
                     }
                     ?>
@@ -400,20 +423,24 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             $conn->query("CREATE TABLE IF NOT EXISTS staff_attendance (id INT AUTO_INCREMENT PRIMARY KEY,staff_id INT NOT NULL,date DATE NOT NULL,check_in TIME,check_out TIME,notes TEXT,status ENUM('Present','Absent','Late','Half Day') DEFAULT 'Present',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
                             $today = date('Y-m-d');
                             $stmt = $conn->prepare("SELECT * FROM staff_attendance WHERE staff_id=? AND date=?");
-                            $stmt->bind_param('is', $user_id, $today);
-                            $stmt->execute();
-                            $today_attendance = $stmt->get_result()->fetch_assoc();
-                            $stmt->close();
-                            $stmt = $conn->prepare("SELECT status,COUNT(*) as cnt FROM staff_attendance WHERE staff_id=? AND MONTH(date)=MONTH(CURDATE()) AND YEAR(date)=YEAR(CURDATE()) GROUP BY status");
-                            $stmt->bind_param('i', $user_id);
-                            $stmt->execute();
-                            $res = $stmt->get_result();
-                            while ($row = $res->fetch_assoc()) {
-                                if ($row['status']==='Present') $month_present = (int)$row['cnt'];
-                                elseif ($row['status']==='Late') $month_late = (int)$row['cnt'];
-                                elseif ($row['status']==='Absent') $month_absent = (int)$row['cnt'];
+                            if ($stmt) {
+                                $stmt->bind_param('is', $user_id, $today);
+                                $stmt->execute();
+                                $today_attendance = $stmt->get_result()->fetch_assoc();
+                                $stmt->close();
                             }
-                            $stmt->close();
+                            $stmt = $conn->prepare("SELECT status,COUNT(*) as cnt FROM staff_attendance WHERE staff_id=? AND MONTH(date)=MONTH(CURDATE()) AND YEAR(date)=YEAR(CURDATE()) GROUP BY status");
+                            if ($stmt) {
+                                $stmt->bind_param('i', $user_id);
+                                $stmt->execute();
+                                $res = $stmt->get_result();
+                                while ($row = $res->fetch_assoc()) {
+                                    if ($row['status']==='Present') $month_present = (int)$row['cnt'];
+                                    elseif ($row['status']==='Late') $month_late = (int)$row['cnt'];
+                                    elseif ($row['status']==='Absent') $month_absent = (int)$row['cnt'];
+                                }
+                                $stmt->close();
+                            }
                         } catch (Exception $e) { error_log('nts attendance: ' . $e->getMessage()); }
                     }
                     ?>
@@ -464,10 +491,12 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         try {
                             $conn->query("CREATE TABLE IF NOT EXISTS staff_leave_requests (id INT AUTO_INCREMENT PRIMARY KEY,staff_id INT NOT NULL,leave_type VARCHAR(50) NOT NULL,start_date DATE NOT NULL,end_date DATE NOT NULL,days INT NOT NULL DEFAULT 1,reason TEXT,emergency_contact VARCHAR(255),handover_notes TEXT,status ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
                             $stmt = $conn->prepare("SELECT * FROM staff_leave_requests WHERE staff_id=? ORDER BY created_at DESC LIMIT 10");
-                            $stmt->bind_param('i', $user_id);
-                            $stmt->execute();
-                            $leave_requests = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                            $stmt->close();
+                            if ($stmt) {
+                                $stmt->bind_param('i', $user_id);
+                                $stmt->execute();
+                                $leave_requests = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                                $stmt->close();
+                            }
                         } catch (Exception $e) { error_log('nts leave: ' . $e->getMessage()); }
                     }
                     ?>

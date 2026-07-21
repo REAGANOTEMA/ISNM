@@ -86,26 +86,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM fuel_management WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'delete_trip':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM trip_logs WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'search':
             $q = '%' . trim($_POST['q'] ?? '') . '%';
             $fuelResults = [];
             $stmt = $conn->prepare("SELECT f.*, v.vehicle_name FROM fuel_management f LEFT JOIN vehicles v ON f.vehicle_id=v.id WHERE v.vehicle_name LIKE ? OR f.fueling_date LIKE ? ORDER BY f.fueling_date DESC LIMIT 100");
-            $stmt->bind_param('ss', $q, $q); $stmt->execute(); $r = $stmt->get_result();
-            while ($row = $r->fetch_assoc()) $fuelResults[] = $row; $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ss', $q, $q); $stmt->execute(); $r = $stmt->get_result();
+                while ($row = $r->fetch_assoc()) $fuelResults[] = $row; $stmt->close();
+            }
             $tripResults = [];
             $stmt2 = $conn->prepare("SELECT t.*, v.vehicle_name, s.full_name AS driver_name FROM trip_logs t LEFT JOIN vehicles v ON t.vehicle_id=v.id LEFT JOIN staff s ON t.driver_id=s.id WHERE v.vehicle_name LIKE ? OR t.route_name LIKE ? OR t.end_location LIKE ? OR s.full_name LIKE ? ORDER BY t.trip_date DESC LIMIT 100");
-            $stmt2->bind_param('ssss', $q, $q, $q, $q); $stmt2->execute(); $r2 = $stmt2->get_result();
-            while ($row = $r2->fetch_assoc()) $tripResults[] = $row; $stmt2->close();
+            if ($stmt2) {
+                $stmt2->bind_param('ssss', $q, $q, $q, $q); $stmt2->execute(); $r2 = $stmt2->get_result();
+                while ($row = $r2->fetch_assoc()) $tripResults[] = $row; $stmt2->close();
+            }
             echo json_encode(['success' => true, 'fuel' => $fuelResults, 'trips' => $tripResults]); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

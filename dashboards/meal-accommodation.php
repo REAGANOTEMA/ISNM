@@ -23,10 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Meal type and date are required.');
             }
             $stmt = $conn->prepare("INSERT INTO meal_tracking (meal_type, menu, prepared_by, meal_date, status) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param('sssss', $mealType, $menu, $preparedBy, $mealDate, $status);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success'] = 'Meal record added successfully.';
+            if ($stmt) {
+                $stmt->bind_param('sssss', $mealType, $menu, $preparedBy, $mealDate, $status);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = 'Meal record added successfully.';
+            }
         } elseif ($action === 'add_inspection') {
             $roomNumber = trim($_POST['room_number'] ?? '');
             $inspector  = trim($_POST['inspector'] ?? '');
@@ -38,10 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Room, inspector, and date are required.');
             }
             $stmt = $conn->prepare("INSERT INTO room_inspections (room_number, inspector, inspection_date, score, notes, status) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('ssssss', $roomNumber, $inspector, $inspDate, $score, $notes, $status);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success'] = 'Inspection record added successfully.';
+            if ($stmt) {
+                $stmt->bind_param('ssssss', $roomNumber, $inspector, $inspDate, $score, $notes, $status);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = 'Inspection record added successfully.';
+            }
         } elseif ($action === 'update_inspection') {
             $id     = (int)($_POST['inspection_id'] ?? 0);
             $status = trim($_POST['status'] ?? '');
@@ -50,10 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Invalid inspection record.');
             }
             $stmt = $conn->prepare("UPDATE room_inspections SET status=?, notes=? WHERE id=?");
-            $stmt->bind_param('ssi', $status, $notes, $id);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success'] = 'Inspection updated successfully.';
+            if ($stmt) {
+                $stmt->bind_param('ssi', $status, $notes, $id);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = 'Inspection updated successfully.';
+            }
         }
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();

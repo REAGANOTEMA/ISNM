@@ -27,14 +27,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $desc = trim($_POST['description'] ?? '');
             if (!$title) { echo json_encode(['success' => false, 'message' => 'Title required']); exit; }
             $stmt = $conn->prepare("INSERT INTO library_digital_resources (title, author_creator, resource_type, access_level, publication_year, description, added_date, created_at) VALUES (?,?,?,?,?,?,CURDATE(),NOW())");
-            $stmt->bind_param('ssssss', $title, $author, $rtype, $alevel, $pyear, $desc); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssssss', $title, $author, $rtype, $alevel, $pyear, $desc); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Resource added' : 'Failed']); exit;
 
         case 'delete_resource':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM library_digital_resources WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'add_lab':
@@ -44,21 +48,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $desc = trim($_POST['description'] ?? '');
             if (!$name) { echo json_encode(['success' => false, 'message' => 'Lab name required']); exit; }
             $stmt = $conn->prepare("INSERT INTO skills_laboratory (lab_name, location, capacity, status, description, created_at) VALUES (?,?,?,'Active',?,NOW())");
-            $stmt->bind_param('ssis', $name, $loc, $cap, $desc); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssis', $name, $loc, $cap, $desc); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Lab added' : 'Failed']); exit;
 
         case 'update_lab':
             $id = (int)($_POST['id'] ?? 0); $status = trim($_POST['status'] ?? 'Active');
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE skills_laboratory SET status=? WHERE id=?");
-            $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Updated' : 'Failed']); exit;
 
         case 'delete_lab':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM skills_laboratory WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

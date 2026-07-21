@@ -986,10 +986,10 @@ $sectionTitles = [
 
 <div class="reg-content">
   <?php if (!empty($_SESSION['success'])): ?>
-  <div class="alert alert-success py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  <div class="alert alert-success py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success'] ?? ''); unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
   <?php endif; ?>
   <?php if (!empty($_SESSION['error'])): ?>
-  <div class="alert alert-danger py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  <div class="alert alert-danger py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['error'] ?? ''); unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
   <?php endif; ?>
 
   <div class="d-flex justify-content-between align-items-center mb-3">

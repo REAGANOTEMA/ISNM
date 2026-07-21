@@ -14,13 +14,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
         $deadline = $_POST['deadline'] ?? '';
         if ($deadline) {
             $stmt = $conn->prepare("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES (?, ?, ?, 'pending', ?)");
-            $stmt->bind_param("sssi", $name, $desc, $deadline, $userId);
+            if ($stmt) { $stmt->bind_param("sssi", $name, $desc, $deadline, $userId); }
         } else {
             $stmt = $conn->prepare("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES (?, ?, NULL, 'pending', ?)");
-            $stmt->bind_param("ssi", $name, $desc, $userId);
+            if ($stmt) { $stmt->bind_param("ssi", $name, $desc, $userId); }
         }
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $stmt->close();
+        if ($stmt) {
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            $stmt->close();
+        }
         header('Location: accreditation.php'); exit;
     }
 }

@@ -25,40 +25,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $max = (int)($_POST['max_participants'] ?? 50);
         if ($name) {
             $stmt = $conn->prepare("INSERT INTO trainings (name, training_type, provider, start_date, end_date, description, max_participants, status) VALUES (?,?,?,?,?,?,?,'Planned')");
-            $stmt->bind_param('ssssssi', $name, $type, $provider, $start, $end, $desc, $max);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssssssi', $name, $type, $provider, $start, $end, $desc, $max);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'Training name required'; }
     } elseif ($action === 'enroll_staff' && $conn) {
         $training_id = (int)($_POST['training_id'] ?? 0);
         $staff_id = (int)($_POST['staff_id'] ?? 0);
         if ($training_id && $staff_id) {
             $stmt = $conn->prepare("INSERT INTO employee_training (training_id, staff_id, status) VALUES (?,?,'Enrolled')");
-            $stmt->bind_param('ii', $training_id, $staff_id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ii', $training_id, $staff_id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'Training and staff required'; }
     } elseif ($action === 'update_enrollment' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
         if ($id && $status) {
             $stmt = $conn->prepare("UPDATE employee_training SET status=?, completion_date=IF(?='Completed',CURDATE(),completion_date) WHERE id=?");
-            $stmt->bind_param('ssi', $status, $status, $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('ssi', $status, $status, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID and status required'; }
     } elseif ($action === 'delete_training' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $conn->query("DELETE FROM employee_training WHERE training_id=$id");
             $stmt = $conn->prepare("DELETE FROM trainings WHERE id=?");
-            $stmt->bind_param('i', $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID required'; }
     }
     echo json_encode($response); exit;

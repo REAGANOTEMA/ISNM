@@ -56,17 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET chemical_code=?, chemical_name=?, chemical_type=?, cas_number=?, hazard_class=?, storage_location=?, quantity_on_hand=?, unit_of_measure=?, reorder_level=?, supplier=?, expiry_date=?, date_received=?, status=? WHERE id=?");
-            $stmt->bind_param("sssssssdsssssi", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $status, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Chemical updated successfully.';
+            if ($stmt) {
+                $stmt->bind_param("sssssssdsssssi", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $status, $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Chemical updated successfully.';
+            }
         } else {
             $received_by = intval($user_id);
             $stmt = $staff_conn->prepare("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("sssssssdssssis", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $received_by, $status);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Chemical added successfully.';
+            if ($stmt) {
+                $stmt->bind_param("sssssssdssssis", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $received_by, $status);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Chemical added successfully.';
+            }
         }
         header('Location: chemical-inventory.php'); exit;
     }
@@ -77,11 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $adjust_qty = (float)($_POST['adjust_quantity'] ?? 0);
         if ($id > 0 && $adjust_qty > 0) {
             $stmt = $staff_conn->prepare("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $qrChem = $stmt->get_result();
-            $chem = $qrChem ? $qrChem->fetch_assoc() : null;
-            $stmt->close();
+            $chem = null;
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $qrChem = $stmt->get_result();
+                $chem = $qrChem ? $qrChem->fetch_assoc() : null;
+                $stmt->close();
+            }
             if ($chem) {
                 $cq = (float)$chem['quantity_on_hand'];
                 $nq = ($adjust_type === 'add') ? $cq + $adjust_qty : max(0, $cq - $adjust_qty);
@@ -89,10 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $exp = $chem['expiry_date'];
                 $ns = ($exp && $exp <= date('Y-m-d')) ? 'Expired' : ($nq <= 0 ? 'Discontinued' : ($rol !== null && $nq <= (float)$rol ? 'Low Stock' : 'In Stock'));
                 $stmt2 = $staff_conn->prepare("UPDATE chemical_inventory SET quantity_on_hand=?, status=? WHERE id=?");
-                $stmt2->bind_param("dsi", $nq, $ns, $id);
-                if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
-                $stmt2->close();
-                $_SESSION['success'] = "Stock adjusted. New qty: $nq";
+                if ($stmt2) {
+                    $stmt2->bind_param("dsi", $nq, $ns, $id);
+                    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
+                    $stmt2->close();
+                    $_SESSION['success'] = "Stock adjusted. New qty: $nq";
+                }
             }
         }
         header('Location: chemical-inventory.php'); exit;
@@ -102,10 +111,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Chemical marked as disposed.';
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Chemical marked as disposed.';
+            }
         }
         header('Location: chemical-inventory.php'); exit;
     }
@@ -114,10 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
             $stmt = $staff_conn->prepare("DELETE FROM chemical_inventory WHERE id=?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Chemical deleted.';
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Chemical deleted.';
+            }
         }
         header('Location: chemical-inventory.php'); exit;
     }

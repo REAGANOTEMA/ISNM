@@ -21,10 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $last_day = trim($_POST['last_working_date'] ?? '');
         if ($staff_id && $reason) {
             $stmt = $conn->prepare("INSERT INTO staff_resignations (staff_id, resignation_date, last_working_date, reason, status) VALUES (?, CURDATE(), ?, ?, 'pending')");
-            $stmt->bind_param('iss', $staff_id, $last_day, $reason);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('iss', $staff_id, $last_day, $reason);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'Staff and reason required'; }
     } elseif ($action === 'process_resignation' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
@@ -32,20 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $notes = trim($_POST['notes'] ?? '');
         if ($id && $status) {
             $stmt = $conn->prepare("UPDATE staff_resignations SET status=?, notes=CONCAT(IFNULL(notes,''),?) WHERE id=?");
-            $notesWithSep = "\nProcessed: ".$notes;
-            $stmt->bind_param('ssi', $status, $notesWithSep, $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $notesWithSep = "\nProcessed: ".$notes;
+                $stmt->bind_param('ssi', $status, $notesWithSep, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID and status required'; }
     } elseif ($action === 'delete_resignation' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM staff_resignations WHERE id=?");
-            $stmt->bind_param('i', $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID required'; }
     }
     echo json_encode($response); exit;

@@ -120,10 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         $desc      = trim($_POST['description'] ?? '');
         if (!$studentId || !$caseType) { echo json_encode(['success'=>false,'message'=>'Student and case type required']); exit; }
         $stmt = $staffDb->prepare("INSERT INTO welfare_cases (student_id,case_type,description,reported_by) VALUES (?,?,?,?)");
-        $stmt->bind_param('issi', $studentId, $caseType, $desc, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case created','id'=>$staffDb->insert_id]); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to create welfare case']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('issi', $studentId, $caseType, $desc, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case created','id'=>$staffDb->insert_id]); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to create welfare case']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Welfare: Update status ──
@@ -133,10 +136,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         $newState = $_POST['status'] ?? 'open';
         if (!in_array($newState, ['open','in_progress','resolved','closed'])) { echo json_encode(['success'=>false,'message'=>'Invalid status']); exit; }
         $stmt = $staffDb->prepare("UPDATE welfare_cases SET status=? WHERE id=?");
-        $stmt->bind_param('si', $newState, $caseId);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case updated']); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to update']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('si', $newState, $caseId);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Welfare case updated']); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to update']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Feedback: Submit suggestion ──
@@ -148,10 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         $priority = $_POST['priority'] ?? 'normal';
         if (!$subject || !$message) { echo json_encode(['success'=>false,'message'=>'Subject and message required']); exit; }
         $stmt = $staffDb->prepare("INSERT INTO guild_feedback (staff_id,category,subject,message,priority) VALUES (?,?,?,?,?)");
-        $stmt->bind_param('issss', $user_id, $category, $subject, $message, $priority);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Feedback submitted','id'=>$staffDb->insert_id]); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to submit feedback']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('issss', $user_id, $category, $subject, $message, $priority);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Feedback submitted','id'=>$staffDb->insert_id]); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to submit feedback']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Events: Create guild event ──
@@ -166,10 +175,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         $eventType = trim($_POST['event_type'] ?? 'Guild');
         if (!$title || !$eventDate) { echo json_encode(['success'=>false,'message'=>'Title and date required']); exit; }
         $stmt = $staffDb->prepare("INSERT INTO calendar_events (title,description,event_date,start_time,end_time,LOCATION,event_type,created_by) VALUES (?,?,?,?,?,?,?,?)");
-        $stmt->bind_param('sssssssi', $title, $desc, $eventDate, $startTime, $endTime, $location, $eventType, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event created','id'=>$staffDb->insert_id]); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to create event']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('sssssssi', $title, $desc, $eventDate, $startTime, $endTime, $location, $eventType, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event created','id'=>$staffDb->insert_id]); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to create event']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     // ── Events: Delete event ──
@@ -177,10 +189,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $eventId = (int)($_POST['event_id'] ?? 0);
         $stmt = $staffDb->prepare("DELETE FROM calendar_events WHERE id=? AND created_by=?");
-        $stmt->bind_param('ii', $eventId, $user_id);
-        if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event deleted']); }
-        else { echo json_encode(['success'=>false,'message'=>'Failed to delete']); }
-        $stmt->close(); exit;
+        if ($stmt) {
+            $stmt->bind_param('ii', $eventId, $user_id);
+            if ($stmt->execute()) { echo json_encode(['success'=>true,'message'=>'Event deleted']); }
+            else { echo json_encode(['success'=>false,'message'=>'Failed to delete']); }
+            $stmt->close();
+        } else { echo json_encode(['success'=>false,'message'=>'Failed to prepare statement']); }
+        exit;
     }
 
     echo json_encode(['success'=>false,'message'=>'Unknown action']); exit;

@@ -19,36 +19,44 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
             $desc = $_POST['description'] ?? '';
             if ($action === 'add') {
                 $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("ssss", $code, $name, $dept, $desc);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $stmt->close();
-                $_SESSION['success'] = "Cost center '$name' added.";
+                if ($stmt) {
+                    $stmt->bind_param("ssss", $code, $name, $dept, $desc);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $stmt->close();
+                    $_SESSION['success'] = "Cost center '$name' added.";
+                }
             } else {
                 $id = (int)($_POST['id'] ?? 0);
                 $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
-                $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-                $stmt->close();
-                $_SESSION['success'] = "Cost center '$name' updated.";
+                if ($stmt) {
+                    $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
+                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $stmt->close();
+                    $_SESSION['success'] = "Cost center '$name' updated.";
+                }
             }
             header('Location: cost-center-management.php'); exit;
         }
         if ($action === 'toggle') {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Cost center status toggled.';
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Cost center status toggled.';
+            }
             header('Location: cost-center-management.php'); exit;
         }
         if ($action === 'delete') {
             $id = (int)($_POST['id'] ?? 0);
             $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
-            $stmt->bind_param("i", $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            $stmt->close();
-            $_SESSION['success'] = 'Cost center deleted.';
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                $stmt->close();
+                $_SESSION['success'] = 'Cost center deleted.';
+            }
             header('Location: cost-center-management.php'); exit;
         }
     }

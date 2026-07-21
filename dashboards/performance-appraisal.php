@@ -26,10 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($staff_id) {
             $stmt = $conn->prepare("INSERT INTO staff_appraisals (staff_id, reviewer_id, score, rating, comments, appraisal_period, status, created_at) VALUES (?,?,?,?,?,?,'Pending',NOW())");
             $uid = (int)($_SESSION['user_id'] ?? 0);
-            $stmt->bind_param('iidsss', $staff_id, $uid, $score, $rating, $comments, $period);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('iidsss', $staff_id, $uid, $score, $rating, $comments, $period);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'Staff required'; }
     } elseif ($action === 'update_appraisal' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
@@ -39,19 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $comments = trim($_POST['comments'] ?? '');
         if ($id && $status) {
             $stmt = $conn->prepare("UPDATE staff_appraisals SET score=?, rating=?, status=?, comments=? WHERE id=?");
-            $stmt->bind_param('dsssi', $score, $rating, $status, $comments, $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('dsssi', $score, $rating, $status, $comments, $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID and status required'; }
     } elseif ($action === 'delete_appraisal' && $conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM staff_appraisals WHERE id=?");
-            $stmt->bind_param('i', $id);
-            $response['success'] = $stmt->execute();
-            $response['error'] = $stmt->error;
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
         } else { $response['error'] = 'ID required'; }
     }
     echo json_encode($response); exit;

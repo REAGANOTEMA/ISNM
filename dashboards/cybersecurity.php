@@ -26,21 +26,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $reporter = trim($_POST['reported_by'] ?? '');
             if (!$type) { echo json_encode(['success' => false, 'message' => 'Incident type required']); exit; }
             $stmt = $conn->prepare("INSERT INTO security_incidents (incident_type, description, severity, status, reported_by, created_at) VALUES (?,?,?,'Open',?,NOW())");
-            $stmt->bind_param('ssss', $type, $desc, $sev, $reporter); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('ssss', $type, $desc, $sev, $reporter); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Incident added' : 'Failed']); exit;
 
         case 'update_incident':
             $id = (int)($_POST['id'] ?? 0); $status = trim($_POST['status'] ?? 'Open');
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("UPDATE security_incidents SET status=? WHERE id=?");
-            $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('si', $status, $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Updated' : 'Failed']); exit;
 
         case 'delete_incident':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM security_incidents WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
 
         case 'add_access_log':
@@ -51,14 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
             $status = trim($_POST['status'] ?? 'allowed');
             if (!$uid) { echo json_encode(['success' => false, 'message' => 'User ID required']); exit; }
             $stmt = $conn->prepare("INSERT INTO security_access_logs (user_id, access_type, location, ip_address, status, accessed_at) VALUES (?,?,?,?,?,NOW())");
-            $stmt->bind_param('sssss', $uid, $atype, $loc, $ip, $status); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('sssss', $uid, $atype, $loc, $ip, $status); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Log added' : 'Failed']); exit;
 
         case 'delete_access_log':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { echo json_encode(['success' => false, 'message' => 'Missing ID']); exit; }
             $stmt = $conn->prepare("DELETE FROM security_access_logs WHERE id=?");
-            $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close();
+            if ($stmt) { $stmt->bind_param('i', $id); $ok = $stmt->execute(); $stmt->close(); } else { $ok = false; }
             echo json_encode(['success' => $ok, 'message' => $ok ? 'Deleted' : 'Failed']); exit;
     }
     echo json_encode(['success' => false, 'message' => 'Unknown action']); exit;

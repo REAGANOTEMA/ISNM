@@ -3144,7 +3144,8 @@ function dgExportCSV() {
 </div>
         <?php break;
     default: ?>
-        <?php header('Location: director-general.php?page=home'); exit; ?>
+        <script>window.location.href='director-general.php?page=home';</script>
+        <?php exit; ?>
         <?php break;
 endswitch; ?>
 
