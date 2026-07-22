@@ -9,7 +9,7 @@ if (!function_exists('syncStudentRecord')) {
     /**
      * Synchronize a student record across all 4 databases.
      *
-     * @param array $student Associative array of student fields (must include student_number, first_name, surname, etc.)
+     * @param array $student Associative array of student fields
      * @param string $mode 'insert' for new records, 'update' for existing
      * @return array{success: bool, results: array<string, bool>, errors: array<string, string>}
      */
@@ -38,11 +38,15 @@ if (!function_exists('syncStudentRecord')) {
         }
         unset($t);
 
-        $cols = ['student_id', 'student_number', 'index_number', 'registration_number',
-                 'first_name', 'surname', 'other_name', 'full_name', 'email', 'phone',
-                 'gender', 'date_of_birth', 'program', 'level', 'set_name', 'intake',
-                 'status', 'guardian_name', 'guardian_phone', 'address', 'nationality',
-                 'photo_path', 'application_id'];
+        $cols = ['student_id', 'student_number', 'admission_number', 'index_number', 'registration_number',
+                 'national_student_id_number', 'first_name', 'surname', 'other_name', 'full_name',
+                 'email', 'phone', 'mobile_number', 'gender', 'date_of_birth',
+                 'program', 'course', 'level', 'set_name', 'current_year', 'current_semester',
+                 'intake', 'status', 'guardian_name', 'guardian_phone', 'guardian_email',
+                 'emergency_contact_name', 'emergency_contact_phone',
+                 'district', 'county', 'address', 'nationality', 'religion', 'marital_status',
+                 'student_category', 'sponsor', 'stream', 'class_name',
+                 'photo_path', 'application_id', 'password'];
 
         $present = [];
         $placeholders = [];
@@ -153,6 +157,42 @@ if (!function_exists('deleteStudentAcrossDatabases')) {
             if (!$results[$label]) {
                 $errors[$label] = $stmt->error;
             }
+            $stmt->close();
+        }
+
+        $allOk = count(array_filter($results)) === count($results);
+        return ['success' => $allOk, 'results' => $results, 'errors' => $errors];
+    }
+}
+
+if (!function_exists('syncStatusAcrossDatabases')) {
+    /**
+     * Synchronize student status across all databases.
+     */
+    function syncStatusAcrossDatabases(string $studentNumber, string $newStatus): array {
+        $results = [];
+        $errors  = [];
+
+        $targets = [
+            'staffs'   => 'getStaffConnection',
+            'students' => 'getStudentsConnection',
+            'website'  => 'getWebsiteConnection',
+            'ict'      => 'getICTConnection',
+        ];
+
+        foreach ($targets as $label => $getter) {
+            if (!function_exists($getter)) { $errors[$label] = 'Getter not found'; $results[$label] = false; continue; }
+            $conn = call_user_func($getter);
+            if (!$conn) { $errors[$label] = 'No connection'; $results[$label] = false; continue; }
+
+            $tableExists = $conn->query("SHOW TABLES LIKE 'students'");
+            if (!$tableExists || $tableExists->num_rows === 0) { $results[$label] = true; continue; }
+
+            $stmt = $conn->prepare("UPDATE students SET status = ?, updated_at = NOW() WHERE student_number = ?");
+            if (!$stmt) { $errors[$label] = 'Prepare failed'; $results[$label] = false; continue; }
+            $stmt->bind_param('ss', $newStatus, $studentNumber);
+            $results[$label] = $stmt->execute();
+            if (!$results[$label]) { $errors[$label] = $stmt->error; }
             $stmt->close();
         }
 

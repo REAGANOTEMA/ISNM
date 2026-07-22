@@ -136,16 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Auto-create student_profiles
                     $conn->query("CREATE TABLE IF NOT EXISTS student_profiles (
                         id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
-                        admission_status VARCHAR(50) DEFAULT 'Registered',
-                        fee_status VARCHAR(50) DEFAULT 'unpaid',
-                        academic_status VARCHAR(50) DEFAULT 'Active',
-                        profile_completed TINYINT(1) DEFAULT 0,
-                        documents_verified TINYINT(1) DEFAULT 0,
-                        notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        profile_type ENUM('Academic','Finance','Library','Attendance','Medical','Requirements','General') NOT NULL DEFAULT 'General',
+                        profile_data LONGTEXT DEFAULT NULL,
+                        status ENUM('Active','Inactive','Suspended') DEFAULT 'Active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        UNIQUE KEY uk_sp_student (student_id)
+                        UNIQUE KEY uk_profile_student_type (student_id, profile_type),
+                        KEY idx_sp_student (student_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                    @$conn->query("INSERT IGNORE INTO student_profiles (student_id, admission_status, fee_status) VALUES ($new_student_id, 'Registered', 'unpaid')");
+                    @$conn->query("INSERT IGNORE INTO student_profiles (student_id, profile_type) VALUES ($new_student_id, 'General')");
 
                     // Auto-create student_financial_profiles
                     $conn->query("CREATE TABLE IF NOT EXISTS student_financial_profiles (
@@ -153,25 +152,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         total_fees DECIMAL(14,2) DEFAULT 0.00,
                         total_paid DECIMAL(14,2) DEFAULT 0.00,
                         balance DECIMAL(14,2) DEFAULT 0.00,
-                        fee_status ENUM('unpaid','partial','paid','overdue') DEFAULT 'unpaid',
+                        status ENUM('pending','partial','paid','overdue') DEFAULT 'pending',
+                        academic_year VARCHAR(20) DEFAULT NULL,
+                        semester VARCHAR(20) DEFAULT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        UNIQUE KEY uk_sfp_student (student_id)
+                        UNIQUE KEY uk_sfp_student (student_id),
+                        KEY idx_sfp_student (student_id),
+                        KEY idx_sfp_status (status)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                    @$conn->query("INSERT IGNORE INTO student_financial_profiles (student_id, fee_status) VALUES ($new_student_id, 'unpaid')");
+                    @$conn->query("INSERT IGNORE INTO student_financial_profiles (student_id, status) VALUES ($new_student_id, 'pending')");
 
                     // Auto-create student_academic_profiles
                     $conn->query("CREATE TABLE IF NOT EXISTS student_academic_profiles (
                         id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
-                        current_gpa DECIMAL(4,2) DEFAULT NULL,
-                        cumulative_credits INT DEFAULT 0,
-                        academic_standing VARCHAR(50) DEFAULT 'Good Standing',
-                        enrollment_date DATE DEFAULT NULL,
+                        current_program VARCHAR(200) DEFAULT NULL,
+                        current_year INT DEFAULT 1,
+                        current_semester VARCHAR(20) DEFAULT NULL,
+                        academic_year VARCHAR(20) DEFAULT NULL,
+                        gpa DECIMAL(5,2) DEFAULT NULL,
+                        cumulative_gpa DECIMAL(5,2) DEFAULT NULL,
+                        total_credits INT DEFAULT 0,
+                        earned_credits INT DEFAULT 0,
+                        academic_standing ENUM('Good Standing','Probation','Suspended','Dismissed') DEFAULT 'Good Standing',
+                        advisor_name VARCHAR(200) DEFAULT NULL,
+                        advisor_email VARCHAR(100) DEFAULT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        UNIQUE KEY uk_sap_student (student_id)
+                        UNIQUE KEY uk_sap_student (student_id),
+                        KEY idx_sap_student (student_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                    @$conn->query("INSERT IGNORE INTO student_academic_profiles (student_id, enrollment_date) VALUES ($new_student_id, CURDATE())");
+                    @$conn->query("INSERT IGNORE INTO student_academic_profiles (student_id, current_program, current_year) VALUES ($new_student_id, '$program', $year)");
+
+                    // Auto-create student_medical_profiles
+                    $conn->query("CREATE TABLE IF NOT EXISTS student_medical_profiles (
+                        id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
+                        blood_group VARCHAR(10) DEFAULT NULL,
+                        medical_conditions TEXT DEFAULT NULL,
+                        allergies TEXT DEFAULT NULL,
+                        disability TINYINT(1) DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        UNIQUE KEY uk_smp_student (student_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    @$conn->query("INSERT IGNORE INTO student_medical_profiles (student_id) VALUES ($new_student_id)");
+
+                    // Auto-create student_requirements_status for all active requirements
+                    $conn->query("CREATE TABLE IF NOT EXISTS student_requirements_status (
+                        id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
+                        requirement_id INT NOT NULL,
+                        status ENUM('Not Submitted','Pending','Submitted','Verified','Rejected','Missing','Received','Not Yet Given') NOT NULL DEFAULT 'Not Submitted',
+                        document_path VARCHAR(500) DEFAULT NULL,
+                        document_name VARCHAR(255) DEFAULT NULL,
+                        remarks TEXT DEFAULT NULL,
+                        verified_by INT DEFAULT NULL,
+                        verified_by_name VARCHAR(200) DEFAULT NULL,
+                        verified_at TIMESTAMP NULL DEFAULT NULL,
+                        submission_date DATE DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        UNIQUE KEY uk_srs_student_req (student_id, requirement_id),
+                        KEY idx_srs_student (student_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    $reqResult = $conn->query("SELECT id FROM admission_requirements WHERE is_active = 1");
+                    if ($reqResult) {
+                        while ($reqRow = $reqResult->fetch_assoc()) {
+                            @$conn->query("INSERT IGNORE INTO student_requirements_status (student_id, requirement_id, status) VALUES ($new_student_id, {$reqRow['id']}, 'Not Submitted')");
+                        }
+                    }
+
+                    // Sync to other databases
+                    if (function_exists('syncStudentRecord')) {
+                        syncStudentRecord([
+                            'student_id' => $new_student_id,
+                            'student_number' => $student_number,
+                            'first_name' => $first_name,
+                            'surname' => $surname,
+                            'full_name' => $full_name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'gender' => $gender,
+                            'program' => $program,
+                            'status' => 'Active',
+                        ], 'insert');
+                    }
                 }
                 $_SESSION['success'] = "Student '$full_name' added successfully. Index: $index_number | Password: $temp_password";
             } else {
