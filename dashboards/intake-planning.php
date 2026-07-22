@@ -95,7 +95,7 @@ if ($conn) {
         ];
         $ins = $conn->prepare("INSERT INTO intake_plans (program_name, target_students, academic_year, semester, status) VALUES (?, ?, ?, ?, ?)");
         if ($ins) {
-            foreach ($seeds as $s) { $ins->bind_param('sisss', $s[0], $s[1], $s[2], $s[3], $s[4]); $ins->execute(); }
+            foreach ($seeds as $s) { $ins->bind_param('sisss', $s[0], (int)$s[1], $s[2], $s[3], $s[4]); $ins->execute(); }
             $ins->close();
         }
     }

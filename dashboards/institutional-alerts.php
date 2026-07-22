@@ -147,7 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </thead>
                         <tbody>
                             <?php foreach ($alerts as $a):
-                                $isExpired = $a['expires_at'] && strtotime($a['expires_at']) < time();
+                                $expiresAt = $a['expires_at'] ?? null;
+                                $isExpired = $expiresAt && strtotime($expiresAt) < time();
                                 if ($a['is_resolved']) { $status = 'resolved'; $statusLabel = 'Resolved'; }
                                 elseif ($isExpired) { $status = 'expired'; $statusLabel = 'Expired'; }
                                 else { $status = 'active'; $statusLabel = 'Active'; }
@@ -158,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <td><span class="badge priority-<?= $a['priority'] ?>"><?= htmlspecialchars($a['priority']) ?></span></td>
                                 <td><span class="badge status-<?= $status ?>"><?= $statusLabel ?></span></td>
                                 <td class="small"><?= date('d M Y H:i', strtotime($a['created_at'])) ?></td>
-                                <td class="small"><?= !empty($a['expires_at']) ? date('d M Y', strtotime($a['expires_at'])) : 'â€”' ?></td>
+                                <td class="small"><?= !empty($expiresAt) ? date('d M Y', strtotime($expiresAt)) : '&mdash;' ?></td>â€”' ?></td>
                                 <td class="text-end">
                                     <form method="POST" class="d-inline" onsubmit="return confirm('<?= $a['is_resolved'] ? 'Reactivate' : 'Deactivate' ?> this alert?')">
                                         <input type="hidden" name="action" value="toggle_resolved">

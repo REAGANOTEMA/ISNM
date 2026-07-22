@@ -7,6 +7,7 @@
  * Every endpoint returns standardized JSON via Response class.
  */
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/EnterpriseAuth.php';
 
 $allowedOrigins = ['http://localhost', 'http://localhost:3000', 'http://127.0.0.1'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

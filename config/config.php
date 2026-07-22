@@ -4,7 +4,9 @@
  */
 
 // Start session
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Application settings
 define('APP_NAME', 'ISNM Student Management System');
