@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['bursar','registrar','director','finance']);
 $conn = $ctx['staff'];
+$students_conn = $ctx['students'];
 $user = $ctx['user'];
 
 $staff_id = $user['id'] ?? 0;
@@ -92,16 +93,35 @@ if ($conn) {
     $templates_result = $conn->query($templates_sql);
     $templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : [];
 
-    // Get recent receipts
-    $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
-                     FROM generated_documents gd 
-                     JOIN staff s ON gd.generated_by = s.id 
-                     LEFT JOIN igangaschool_students.students st ON gd.student_id = st.id 
-                     WHERE gd.document_type = 'Receipt' 
-                     ORDER BY gd.generation_date DESC 
-                     LIMIT 10";
-    $receipts_result = $conn->query($receipts_sql);
-    $receipts = ($receipts_result) ? $receipts_result->fetch_all(MYSQLI_ASSOC) : [];
+    // Get recent receipts (students are in the students DB)
+    $receipts = [];
+    if ($students_conn) {
+        $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
+                         FROM generated_documents gd 
+                         JOIN staff s ON gd.generated_by = s.id 
+                         LEFT JOIN students st ON gd.student_id = st.id 
+                         WHERE gd.document_type = 'Receipt' 
+                         ORDER BY gd.generation_date DESC 
+                         LIMIT 10";
+        $receipts_result = $conn->query($receipts_sql);
+        if (!$receipts_result && $students_conn) {
+            // Fallback: fetch generated_docs from staff DB, student names from students DB
+            $docs = [];
+            $dr = $conn->query("SELECT gd.*, s.full_name as generated_by_name FROM generated_documents gd JOIN staff s ON gd.generated_by = s.id WHERE gd.document_type = 'Receipt' ORDER BY gd.generation_date DESC LIMIT 10");
+            if ($dr) $docs = $dr->fetch_all(MYSQLI_ASSOC);
+            foreach ($docs as &$d) {
+                $d['student_name'] = '';
+                if (!empty($d['student_id'])) {
+                    $st = $students_conn->prepare("SELECT full_name FROM students WHERE id = ? LIMIT 1");
+                    if ($st) { $st->bind_param('i', $d['student_id']); $st->execute(); $sr = $st->get_result(); if ($sr && $row = $sr->fetch_assoc()) $d['student_name'] = $row['full_name']; $st->close(); }
+                }
+            }
+            unset($d);
+            $receipts = $docs;
+        } elseif ($receipts_result) {
+            $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
+        }
+    }
 }
 ?>
 
