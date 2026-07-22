@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 22, 2026 at 10:17 AM
+-- Generation Time: Jul 22, 2026 at 04:59 PM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -6887,12 +6887,22 @@ CREATE TABLE `income_tax_rates` (
 CREATE TABLE `institutional_alerts` (
   `id` int(10) UNSIGNED NOT NULL,
   `title` varchar(255) NOT NULL,
+  `message` text DEFAULT NULL,
+  `alert_title` varchar(255) DEFAULT NULL,
+  `alert_message` text DEFAULT NULL,
   `description` text DEFAULT NULL,
   `alert_type` varchar(30) DEFAULT 'info',
+  `severity` varchar(20) DEFAULT 'info',
   `priority` enum('low','medium','high','critical') DEFAULT 'medium',
+  `category` varchar(100) DEFAULT 'other',
   `department_code` varchar(20) DEFAULT NULL,
+  `target_role` varchar(100) DEFAULT NULL,
   `source` varchar(100) DEFAULT NULL,
+  `source_url` varchar(500) DEFAULT NULL,
+  `is_auto_generated` tinyint(1) DEFAULT 0,
+  `is_read` tinyint(1) DEFAULT 0,
   `is_resolved` tinyint(1) DEFAULT 0,
+  `expires_at` datetime DEFAULT NULL,
   `resolved_by` int(10) UNSIGNED DEFAULT NULL,
   `resolved_at` datetime DEFAULT NULL,
   `created_by` int(10) UNSIGNED DEFAULT NULL,
@@ -6903,23 +6913,23 @@ CREATE TABLE `institutional_alerts` (
 -- Dumping data for table `institutional_alerts`
 --
 
-INSERT INTO `institutional_alerts` (`id`, `title`, `description`, `alert_type`, `priority`, `department_code`, `source`, `is_resolved`, `resolved_by`, `resolved_at`, `created_by`, `created_at`) VALUES
-(1, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', 'info', 'high', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:28:34'),
-(2, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', 'info', 'medium', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:28:34'),
-(3, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:28:34'),
-(4, 'Test Alert', 'Test', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:33:53'),
-(5, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', 'info', 'high', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:37:17'),
-(6, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', 'info', 'medium', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:37:17'),
-(7, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:37:17'),
-(8, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', 'info', 'high', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:41:08'),
-(9, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', 'info', 'medium', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:41:08'),
-(10, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:41:08'),
-(11, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', 'info', 'high', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:45:03'),
-(12, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', 'info', 'medium', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:45:03'),
-(13, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:45:03'),
-(14, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', 'info', 'high', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:46:53'),
-(15, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', 'info', 'medium', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:46:53'),
-(16, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', 'info', 'low', NULL, NULL, 0, NULL, NULL, NULL, '2026-06-20 01:46:53');
+INSERT INTO `institutional_alerts` (`id`, `title`, `message`, `alert_title`, `alert_message`, `description`, `alert_type`, `severity`, `priority`, `category`, `department_code`, `target_role`, `source`, `source_url`, `is_auto_generated`, `is_read`, `is_resolved`, `expires_at`, `resolved_by`, `resolved_at`, `created_by`, `created_at`) VALUES
+(1, 'Staff Attendance Drop', NULL, NULL, NULL, 'Staff attendance dropped below 80% this week.', 'info', 'info', 'high', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:28:34'),
+(2, 'Fee Collection Target', NULL, NULL, NULL, 'Monthly fee collection at 65% of target.', 'info', 'info', 'medium', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:28:34'),
+(3, 'Exam Preparation', NULL, NULL, NULL, 'Final exams scheduled in 3 weeks.', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:28:34'),
+(4, 'Test Alert', NULL, NULL, NULL, 'Test', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:33:53'),
+(5, 'Staff Attendance Drop', NULL, NULL, NULL, 'Staff attendance dropped below 80% this week.', 'info', 'info', 'high', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:37:17'),
+(6, 'Fee Collection Target', NULL, NULL, NULL, 'Monthly fee collection at 65% of target.', 'info', 'info', 'medium', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:37:17'),
+(7, 'Exam Preparation', NULL, NULL, NULL, 'Final exams scheduled in 3 weeks.', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:37:17'),
+(8, 'Staff Attendance Drop', NULL, NULL, NULL, 'Staff attendance dropped below 80% this week.', 'info', 'info', 'high', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:41:08'),
+(9, 'Fee Collection Target', NULL, NULL, NULL, 'Monthly fee collection at 65% of target.', 'info', 'info', 'medium', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:41:08'),
+(10, 'Exam Preparation', NULL, NULL, NULL, 'Final exams scheduled in 3 weeks.', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:41:08'),
+(11, 'Staff Attendance Drop', NULL, NULL, NULL, 'Staff attendance dropped below 80% this week.', 'info', 'info', 'high', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:45:03'),
+(12, 'Fee Collection Target', NULL, NULL, NULL, 'Monthly fee collection at 65% of target.', 'info', 'info', 'medium', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:45:03'),
+(13, 'Exam Preparation', NULL, NULL, NULL, 'Final exams scheduled in 3 weeks.', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:45:03'),
+(14, 'Staff Attendance Drop', NULL, NULL, NULL, 'Staff attendance dropped below 80% this week.', 'info', 'info', 'high', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:46:53'),
+(15, 'Fee Collection Target', NULL, NULL, NULL, 'Monthly fee collection at 65% of target.', 'info', 'info', 'medium', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:46:53'),
+(16, 'Exam Preparation', NULL, NULL, NULL, 'Final exams scheduled in 3 weeks.', 'info', 'info', 'low', 'other', NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-20 01:46:53');
 
 -- --------------------------------------------------------
 
@@ -10671,14 +10681,21 @@ CREATE TABLE `news` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
+  `summary` text DEFAULT NULL,
   `content` longtext DEFAULT NULL,
   `excerpt` text DEFAULT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `tags` varchar(500) DEFAULT NULL,
   `featured_image` varchar(500) DEFAULT NULL,
   `author_id` int(11) DEFAULT NULL,
   `author_name` varchar(255) DEFAULT NULL,
+  `views` int(11) DEFAULT 0,
   `author_role` varchar(255) DEFAULT NULL,
-  `status` enum('draft','published','archived') DEFAULT 'draft',
+  `status` enum('draft','published','scheduled','archived') DEFAULT 'draft',
+  `is_featured` tinyint(1) DEFAULT 0,
   `published_at` datetime DEFAULT NULL,
+  `scheduled_at` datetime DEFAULT NULL,
+  `archived_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -10691,13 +10708,26 @@ CREATE TABLE `news` (
 
 CREATE TABLE `news_categories` (
   `id` int(11) NOT NULL,
-  `category_name` varchar(100) NOT NULL,
+  `name` varchar(100) NOT NULL,
   `slug` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
   `is_active` tinyint(1) DEFAULT 1,
-  `display_order` int(11) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `news_categories`
+--
+
+INSERT INTO `news_categories` (`id`, `name`, `slug`, `description`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'General', 'general', 'General news and announcements', 1, 1, '2026-07-22 08:57:09'),
+(2, 'Academic', 'academic', 'Academic news and updates', 2, 1, '2026-07-22 08:57:09'),
+(3, 'Events', 'events', 'Upcoming and past events', 3, 1, '2026-07-22 08:57:09'),
+(4, 'Sports', 'sports', 'Sports news and results', 4, 1, '2026-07-22 08:57:09'),
+(5, 'Announcements', 'announcements', 'Important announcements', 5, 1, '2026-07-22 08:57:09'),
+(6, 'Staff', 'staff', 'Staff-related news', 6, 1, '2026-07-22 08:57:09'),
+(7, 'Student Life', 'student-life', 'Student life and activities', 7, 1, '2026-07-22 08:57:09');
 
 -- --------------------------------------------------------
 
@@ -12601,13 +12631,28 @@ INSERT INTO `pending_students` (`id`, `first_name`, `middle_name`, `last_name`, 
 CREATE TABLE `performance_indicators` (
   `id` int(10) UNSIGNED NOT NULL,
   `indicator_name` varchar(200) DEFAULT NULL,
+  `indicator_category` varchar(100) DEFAULT 'General',
   `target_value` decimal(12,2) DEFAULT NULL,
   `actual_value` decimal(12,2) DEFAULT NULL,
   `period` varchar(50) DEFAULT NULL,
   `department` varchar(100) DEFAULT NULL,
-  `status` varchar(30) DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `performance_indicators`
+--
+
+INSERT INTO `performance_indicators` (`id`, `indicator_name`, `indicator_category`, `target_value`, `actual_value`, `period`, `department`, `status`, `created_at`) VALUES
+(1, 'Student Pass Rate', 'Academic', 75.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(2, 'Staff Attendance Rate', 'HR', 90.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(3, 'Student Enrollment Growth', 'Admissions', 10.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(4, 'Fee Collection Rate', 'Finance', 85.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(5, 'Library Utilization', 'Facilities', 60.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(6, 'Clinical Placement Completion', 'Clinical', 80.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(7, 'ICT Infrastructure Uptime', 'ICT', 99.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10'),
+(8, 'Student Satisfaction Score', 'Quality', 4.00, NULL, NULL, NULL, 'active', '2026-07-22 08:57:10');
 
 -- --------------------------------------------------------
 
@@ -12869,14 +12914,14 @@ CREATE TABLE `push_subscriptions` (
 CREATE TABLE `quality_assurance` (
   `id` int(11) NOT NULL,
   `review_title` varchar(300) DEFAULT NULL,
-  `review_type` varchar(200) DEFAULT NULL,
   `department` varchar(200) DEFAULT NULL,
-  `reviewer` varchar(200) DEFAULT NULL,
-  `score` decimal(5,2) DEFAULT NULL,
+  `review_area` varchar(200) DEFAULT NULL,
   `findings` text DEFAULT NULL,
   `recommendations` text DEFAULT NULL,
-  `status` enum('draft','completed','reviewed') DEFAULT 'draft',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `reviewed_by` int(11) DEFAULT NULL,
+  `review_date` date DEFAULT NULL,
+  `status` enum('Draft','Pending','Pass','Fail','Needs Improvement','Completed','Reviewed') DEFAULT 'Draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -14231,7 +14276,7 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `date_of_birth`, `gender`, `nin`, `password`, `role_id`, `position`, `department`, `is_active`, `status`, `hire_date`, `last_login`, `login_attempts`, `locked_until`, `is_first_login`, `password_changed`, `profile_photo`, `staff_category`, `created_at`, `updated_at`) VALUES
-(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 1, 'Director General', 'Executive', 1, 'Active', '2026-07-15', '2026-07-21 14:03:16', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-21 14:03:16'),
+(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 1, 'Director General', 'Executive', 1, 'Active', '2026-07-15', '2026-07-22 13:19:14', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-22 13:19:14'),
 (2, 'CEO-001', 'Chief Executive Officer', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 2, 'CEO', 'Executive', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39'),
 (3, 'DA-001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$erOn9wIoOagBWYuWUdD0j.Gihha85DXHtW.2Tdf2G1NxA98UrrB7y', 3, 'Director Academics', 'Academic Affairs', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39'),
 (4, 'DF-001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 4, 'Director Finance', 'Finance', 1, 'Active', '2026-07-15', '2026-07-21 14:46:29', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-21 14:46:29'),
@@ -14994,7 +15039,10 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (703, 4, 'Login', 'User logged in successfully', 'authentication', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 14:46:29'),
 (704, 18, 'Login', 'User logged in successfully', 'authentication', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 15:18:09'),
 (705, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 15:33:12'),
-(706, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06');
+(706, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06'),
+(707, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 07:46:09'),
+(708, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 10:39:24'),
+(709, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14');
 
 -- --------------------------------------------------------
 
@@ -15737,7 +15785,10 @@ INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `ip_addre
 (442, 4, 'sasgtqed2kgruokp3v0t96qssb', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 14:46:29', '2026-07-21 18:16:29'),
 (443, 18, 'di238ana2sbhsqie15321m17dn', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 15:18:09', '2026-07-21 18:48:09'),
 (444, 1, 'iq6p7oqavvoj2eteuc6kfks3ss', '102.86.5.102', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-21 15:33:12', '2026-07-21 19:03:12'),
-(445, 1, 'u6a8lmq9d5lvq77428b96qnh91', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06', '2026-07-21 22:11:06');
+(445, 1, 'u6a8lmq9d5lvq77428b96qnh91', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06', '2026-07-21 22:11:06'),
+(446, 1, '7gorb79ckj91alpr7n3bvvurp7', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 07:46:09', '2026-07-22 11:16:09'),
+(447, 1, '404pfcnj4c2s6fu5k63ch8p7pc', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 10:39:24', '2026-07-22 14:09:24'),
+(448, 1, 'd8rn9q23vchehef9qoasn5mjlj', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14', '2026-07-22 16:49:14');
 
 -- --------------------------------------------------------
 
@@ -22876,7 +22927,7 @@ ALTER TABLE `news`
 --
 ALTER TABLE `news_categories`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_category_slug` (`slug`);
+  ADD UNIQUE KEY `uk_nc_slug` (`slug`);
 
 --
 -- Indexes for table `news_images`
@@ -23342,7 +23393,9 @@ ALTER TABLE `pending_students`
 -- Indexes for table `performance_indicators`
 --
 ALTER TABLE `performance_indicators`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pi_status` (`status`),
+  ADD KEY `idx_pi_category` (`indicator_category`);
 
 --
 -- Indexes for table `performance_metrics`
@@ -23419,7 +23472,9 @@ ALTER TABLE `push_subscriptions`
 -- Indexes for table `quality_assurance`
 --
 ALTER TABLE `quality_assurance`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_qa_dept` (`department`),
+  ADD KEY `idx_qa_status` (`status`);
 
 --
 -- Indexes for table `quality_assurance_reviews`
@@ -27049,7 +27104,7 @@ ALTER TABLE `news`
 -- AUTO_INCREMENT for table `news_categories`
 --
 ALTER TABLE `news_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `news_images`
@@ -27439,7 +27494,7 @@ ALTER TABLE `pending_students`
 -- AUTO_INCREMENT for table `performance_indicators`
 --
 ALTER TABLE `performance_indicators`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `performance_metrics`
@@ -27901,7 +27956,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=707;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=710;
 
 --
 -- AUTO_INCREMENT for table `staff_appraisals`
@@ -27979,7 +28034,7 @@ ALTER TABLE `staff_licenses`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=446;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=449;
 
 --
 -- AUTO_INCREMENT for table `staff_messages`

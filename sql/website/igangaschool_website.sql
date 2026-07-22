@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 22, 2026 at 10:17 AM
+-- Generation Time: Jul 22, 2026 at 04:59 PM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -4087,14 +4087,21 @@ CREATE TABLE `news` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
+  `summary` text DEFAULT NULL,
   `content` longtext DEFAULT NULL,
   `excerpt` text DEFAULT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `tags` varchar(500) DEFAULT NULL,
   `featured_image` varchar(500) DEFAULT NULL,
   `author_id` int(11) DEFAULT NULL,
   `author_name` varchar(255) DEFAULT NULL,
   `author_role` varchar(255) DEFAULT NULL,
-  `status` enum('draft','published','archived') DEFAULT 'draft',
+  `views` int(11) DEFAULT 0,
+  `status` enum('draft','published','scheduled','archived') DEFAULT 'draft',
+  `is_featured` tinyint(1) DEFAULT 0,
   `published_at` datetime DEFAULT NULL,
+  `scheduled_at` datetime DEFAULT NULL,
+  `archived_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -4107,13 +4114,26 @@ CREATE TABLE `news` (
 
 CREATE TABLE `news_categories` (
   `id` int(11) NOT NULL,
-  `category_name` varchar(100) NOT NULL,
+  `name` varchar(100) NOT NULL,
   `slug` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
   `is_active` tinyint(1) DEFAULT 1,
-  `display_order` int(11) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `news_categories`
+--
+
+INSERT INTO `news_categories` (`id`, `name`, `slug`, `description`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'General', 'general', 'General news and announcements', 1, 1, '2026-07-22 08:57:09'),
+(2, 'Academic', 'academic', 'Academic news and updates', 2, 1, '2026-07-22 08:57:09'),
+(3, 'Events', 'events', 'Upcoming and past events', 3, 1, '2026-07-22 08:57:09'),
+(4, 'Sports', 'sports', 'Sports news and results', 4, 1, '2026-07-22 08:57:09'),
+(5, 'Announcements', 'announcements', 'Important announcements', 5, 1, '2026-07-22 08:57:09'),
+(6, 'Staff', 'staff', 'Staff-related news', 6, 1, '2026-07-22 08:57:09'),
+(7, 'Student Life', 'student-life', 'Student life and activities', 7, 1, '2026-07-22 08:57:09');
 
 -- --------------------------------------------------------
 
@@ -9354,7 +9374,7 @@ ALTER TABLE `news`
 --
 ALTER TABLE `news_categories`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_category_slug` (`slug`);
+  ADD UNIQUE KEY `uk_nc_slug` (`slug`);
 
 --
 -- Indexes for table `notes`
@@ -10936,7 +10956,7 @@ ALTER TABLE `news`
 -- AUTO_INCREMENT for table `news_categories`
 --
 ALTER TABLE `news_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `notes`
