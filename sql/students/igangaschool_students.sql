@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 16, 2026 at 10:57 PM
+-- Generation Time: Jul 22, 2026 at 10:17 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -414,6 +414,94 @@ CREATE TABLE `appointments` (
   `created_by` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_actions`
+--
+
+CREATE TABLE `approval_actions` (
+  `id` int(11) NOT NULL,
+  `request_id` int(11) DEFAULT 0,
+  `approval_request_id` int(11) DEFAULT 0,
+  `stage_id` int(11) DEFAULT 0,
+  `action_by` int(11) DEFAULT 0,
+  `approver_id` int(11) DEFAULT 0,
+  `action_type` varchar(50) DEFAULT '',
+  `action` varchar(20) DEFAULT '',
+  `comments` text DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `decision` varchar(50) DEFAULT '',
+  `previous_stage_order` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_requests`
+--
+
+CREATE TABLE `approval_requests` (
+  `id` int(11) NOT NULL,
+  `workflow_id` int(11) DEFAULT 0,
+  `request_number` varchar(100) DEFAULT '',
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `priority` varchar(50) DEFAULT 'Medium',
+  `requester_id` int(11) DEFAULT 0,
+  `requester_name` varchar(200) DEFAULT '',
+  `requester_role` varchar(100) DEFAULT '',
+  `current_stage_id` int(11) DEFAULT 0,
+  `current_stage_order` int(11) DEFAULT 1,
+  `status` varchar(50) DEFAULT 'Active',
+  `reference_type` varchar(100) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `reference_url` varchar(500) DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `final_approval_at` datetime DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `requester_type` varchar(20) DEFAULT 'staff'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_stages`
+--
+
+CREATE TABLE `approval_stages` (
+  `id` int(11) NOT NULL,
+  `workflow_id` int(11) NOT NULL,
+  `stage_name` varchar(255) NOT NULL,
+  `stage_order` int(11) DEFAULT 1,
+  `approver_role` varchar(100) DEFAULT '',
+  `assigned_role_id` int(11) DEFAULT 0,
+  `assigned_role_name` varchar(100) DEFAULT '',
+  `is_final` tinyint(1) DEFAULT 0,
+  `is_mandatory` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_workflows`
+--
+
+CREATE TABLE `approval_workflows` (
+  `id` int(11) NOT NULL,
+  `workflow_name` varchar(255) DEFAULT '',
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `category` varchar(100) DEFAULT '',
+  `target_table` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -2055,6 +2143,21 @@ INSERT INTO `course_catalog` (`id`, `course_code`, `course_name`, `program`, `le
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `course_prerequisites`
+--
+
+CREATE TABLE `course_prerequisites` (
+  `id` int(11) NOT NULL,
+  `course_code` varchar(20) NOT NULL,
+  `prerequisite_code` varchar(20) NOT NULL,
+  `minimum_grade` varchar(5) DEFAULT 'D',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `daily_sick_records`
 --
 
@@ -3414,6 +3517,25 @@ CREATE TABLE `lab_incidents` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_inventory_items`
+--
+
+CREATE TABLE `lab_inventory_items` (
+  `id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `quantity` int(11) DEFAULT 0,
+  `minimum_level` int(11) DEFAULT 0,
+  `unit` varchar(50) DEFAULT 'piece',
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('Active','Inactive','Out of Stock') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_practical_sessions`
 --
 
@@ -4666,6 +4788,24 @@ CREATE TABLE `payroll_approvals` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `payroll_history`
+--
+
+CREATE TABLE `payroll_history` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `gross_salary` decimal(14,2) DEFAULT 0.00,
+  `deductions` decimal(14,2) DEFAULT 0.00,
+  `net_salary` decimal(14,2) DEFAULT 0.00,
+  `payment_date` date DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT '',
+  `status` varchar(50) DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `payroll_records`
 --
 
@@ -5359,6 +5499,109 @@ CREATE TABLE `staff_trainings` (
 ,`notes` text
 ,`created_at` timestamp
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_categories`
+--
+
+CREATE TABLE `store_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(200) DEFAULT '',
+  `description` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory`
+--
+
+CREATE TABLE `store_inventory` (
+  `id` int(11) NOT NULL,
+  `item_code` varchar(50) DEFAULT '',
+  `item_name` varchar(200) DEFAULT '',
+  `category_id` int(11) DEFAULT NULL,
+  `unit` varchar(50) DEFAULT '',
+  `quantity` decimal(14,2) DEFAULT 0.00,
+  `reorder_level` decimal(14,2) DEFAULT 0.00,
+  `unit_cost` decimal(14,2) DEFAULT 0.00,
+  `location` varchar(200) DEFAULT '',
+  `batch_number` varchar(100) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `supplier` varchar(200) DEFAULT '',
+  `status` varchar(20) DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory_transactions`
+--
+
+CREATE TABLE `store_inventory_transactions` (
+  `id` int(11) NOT NULL,
+  `item_id` int(11) DEFAULT 0,
+  `transaction_type` varchar(50) DEFAULT '',
+  `quantity` decimal(14,2) DEFAULT 0.00,
+  `quantity_before` decimal(14,2) DEFAULT NULL,
+  `quantity_after` decimal(14,2) DEFAULT NULL,
+  `reason` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_requests`
+--
+
+CREATE TABLE `store_requests` (
+  `id` int(11) NOT NULL,
+  `request_number` varchar(50) DEFAULT '',
+  `requested_by` int(11) DEFAULT 0,
+  `requester_name` varchar(255) DEFAULT '',
+  `requester_role` varchar(50) DEFAULT '',
+  `department` varchar(100) DEFAULT '',
+  `urgency` varchar(50) DEFAULT 'Normal',
+  `status` varchar(50) DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `items` text DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `fulfilled_by` int(11) DEFAULT NULL,
+  `fulfilled_at` datetime DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `approval_request_id` int(11) DEFAULT NULL,
+  `forwarded_to` int(11) DEFAULT NULL,
+  `forwarded_to_role` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_request_items`
+--
+
+CREATE TABLE `store_request_items` (
+  `id` int(11) NOT NULL,
+  `request_id` int(11) DEFAULT 0,
+  `item_id` int(11) DEFAULT 0,
+  `quantity_requested` decimal(14,2) DEFAULT 0.00,
+  `quantity_fulfilled` decimal(14,2) DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -7370,6 +7613,21 @@ INSERT INTO `student_invoices` (`id`, `invoice_number`, `student_id`, `fee_assig
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_login_attempts`
+--
+
+CREATE TABLE `student_login_attempts` (
+  `id` int(11) NOT NULL,
+  `student_number` varchar(50) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `attempted_at` datetime DEFAULT current_timestamp(),
+  `success` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `student_login_view`
 -- (See below for the actual view)
 --
@@ -8125,6 +8383,37 @@ ALTER TABLE `appointments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_aa_request` (`request_id`),
+  ADD KEY `idx_aa_action_by` (`action_by`);
+
+--
+-- Indexes for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ar_status` (`status`),
+  ADD KEY `idx_ar_requester` (`requester_id`),
+  ADD KEY `idx_ar_workflow` (`workflow_id`),
+  ADD KEY `idx_ar_ref` (`reference_type`,`reference_id`);
+
+--
+-- Indexes for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_as_workflow` (`workflow_id`);
+
+--
+-- Indexes for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `assets`
 --
 ALTER TABLE `assets`
@@ -8544,6 +8833,14 @@ ALTER TABLE `course_catalog`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `course_prerequisites`
+--
+ALTER TABLE `course_prerequisites`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_course_prereq` (`course_code`,`prerequisite_code`),
+  ADD KEY `idx_course` (`course_code`);
+
+--
 -- Indexes for table `daily_sick_records`
 --
 ALTER TABLE `daily_sick_records`
@@ -8830,6 +9127,12 @@ ALTER TABLE `lab_incidents`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `lab_inventory_items`
+--
+ALTER TABLE `lab_inventory_items`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `lab_practical_sessions`
 --
 ALTER TABLE `lab_practical_sessions`
@@ -9101,6 +9404,13 @@ ALTER TABLE `payroll_approvals`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `payroll_history`
+--
+ALTER TABLE `payroll_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`);
+
+--
 -- Indexes for table `payroll_records`
 --
 ALTER TABLE `payroll_records`
@@ -9296,6 +9606,43 @@ ALTER TABLE `staff_training`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_si_status` (`status`),
+  ADD KEY `idx_si_category` (`category_id`);
+
+--
+-- Indexes for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sit_item` (`item_id`);
+
+--
+-- Indexes for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sr_status` (`status`),
+  ADD KEY `idx_sr_by` (`requested_by`),
+  ADD KEY `idx_sr_number` (`request_number`);
+
+--
+-- Indexes for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sri_request` (`request_id`);
+
+--
 -- Indexes for table `strategic_initiatives`
 --
 ALTER TABLE `strategic_initiatives`
@@ -9419,6 +9766,14 @@ ALTER TABLE `student_hostel_allocations`
 --
 ALTER TABLE `student_invoices`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_login_attempts`
+--
+ALTER TABLE `student_login_attempts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_number` (`student_number`),
+  ADD KEY `idx_attempted_at` (`attempted_at`);
 
 --
 -- Indexes for table `student_messages`
@@ -9671,6 +10026,30 @@ ALTER TABLE `applications`
 -- AUTO_INCREMENT for table `appointments`
 --
 ALTER TABLE `appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -10022,6 +10401,12 @@ ALTER TABLE `course_catalog`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=189;
 
 --
+-- AUTO_INCREMENT for table `course_prerequisites`
+--
+ALTER TABLE `course_prerequisites`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `daily_sick_records`
 --
 ALTER TABLE `daily_sick_records`
@@ -10286,6 +10671,12 @@ ALTER TABLE `lab_incidents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_inventory_items`
+--
+ALTER TABLE `lab_inventory_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_practical_sessions`
 --
 ALTER TABLE `lab_practical_sessions`
@@ -10502,6 +10893,12 @@ ALTER TABLE `payroll_approvals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `payroll_history`
+--
+ALTER TABLE `payroll_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payroll_records`
 --
 ALTER TABLE `payroll_records`
@@ -10676,6 +11073,36 @@ ALTER TABLE `staff_training`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `strategic_initiatives`
 --
 ALTER TABLE `strategic_initiatives`
@@ -10788,6 +11215,12 @@ ALTER TABLE `student_hostel_allocations`
 --
 ALTER TABLE `student_invoices`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
+
+--
+-- AUTO_INCREMENT for table `student_login_attempts`
+--
+ALTER TABLE `student_login_attempts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `student_messages`

@@ -10,7 +10,7 @@
 if (!function_exists('getPendingApprovals')) {
 function getPendingApprovals($conn, $limit = 10) {
     $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
-    $result = $conn->query("SELECT ar.*, aw.workflow_name, s.full_name AS requester_name FROM `$staff_db`.approval_requests ar LEFT JOIN `$staff_db`.approval_workflows aw ON ar.workflow_id = aw.id LEFT JOIN `$staff_db`.staff s ON ar.requested_by = s.id WHERE ar.status = 'Pending' ORDER BY ar.created_at DESC LIMIT $limit");
+    $result = $conn->query("SELECT ar.*, aw.workflow_name, s.full_name AS requester_name FROM `$staff_db`.approval_requests ar LEFT JOIN `$staff_db`.approval_workflows aw ON ar.workflow_id = aw.id LEFT JOIN `$staff_db`.staff s ON ar.requester_id = s.id WHERE ar.status = 'Pending' ORDER BY ar.created_at DESC LIMIT $limit");
     $requests = [];
     if ($result) { while ($row = $result->fetch_assoc()) { $requests[] = $row; } }
     return $requests;

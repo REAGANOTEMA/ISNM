@@ -26,19 +26,27 @@ if ($staffConn) {
         rejection_reason TEXT,
         fulfilled_by INT,
         fulfilled_at DATETIME,
+        approved_by INT DEFAULT NULL,
+        approved_at DATETIME DEFAULT NULL,
+        approval_request_id INT DEFAULT NULL,
+        forwarded_to INT DEFAULT NULL,
+        forwarded_to_role VARCHAR(100) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_status (status),
         INDEX idx_requested_by (requested_by)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     @$staffConn->query($createTable);
-    // Add missing columns if they don't exist
-    foreach (['requester_name' => "VARCHAR(255) DEFAULT ''", 'requester_role' => "VARCHAR(50) DEFAULT ''", 'items' => 'TEXT', 'rejection_reason' => 'TEXT', 'fulfilled_by' => 'INT', 'fulfilled_at' => 'DATETIME', 'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'] as $col => $type) {
+    foreach (['requester_name' => "VARCHAR(255) DEFAULT ''", 'requester_role' => "VARCHAR(50) DEFAULT ''", 'items' => 'TEXT', 'rejection_reason' => 'TEXT', 'fulfilled_by' => 'INT', 'fulfilled_at' => 'DATETIME', 'approved_by' => 'INT DEFAULT NULL', 'approved_at' => 'DATETIME DEFAULT NULL', 'approval_request_id' => 'INT DEFAULT NULL', 'forwarded_to' => 'INT DEFAULT NULL', 'forwarded_to_role' => "VARCHAR(100) DEFAULT NULL", 'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'] as $col => $type) {
         @$staffConn->query("ALTER TABLE store_requests ADD COLUMN IF NOT EXISTS `$col` $type");
     }
+    @$staffConn->query("CREATE TABLE IF NOT EXISTS store_categories (id INT AUTO_INCREMENT PRIMARY KEY, category_name VARCHAR(200) DEFAULT '', description TEXT, status VARCHAR(20) DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$staffConn->query("CREATE TABLE IF NOT EXISTS store_inventory (id INT AUTO_INCREMENT PRIMARY KEY, item_code VARCHAR(50) DEFAULT '', item_name VARCHAR(200) DEFAULT '', category_id INT DEFAULT NULL, unit VARCHAR(50) DEFAULT '', quantity DECIMAL(14,2) DEFAULT 0, reorder_level DECIMAL(14,2) DEFAULT 0, unit_cost DECIMAL(14,2) DEFAULT 0, location VARCHAR(200) DEFAULT '', batch_number VARCHAR(100) DEFAULT NULL, expiry_date DATE DEFAULT NULL, supplier VARCHAR(200) DEFAULT '', status VARCHAR(20) DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$staffConn->query("CREATE TABLE IF NOT EXISTS store_request_items (id INT AUTO_INCREMENT PRIMARY KEY, request_id INT DEFAULT 0, item_id INT DEFAULT 0, quantity_requested DECIMAL(14,2) DEFAULT 0, quantity_fulfilled DECIMAL(14,2) DEFAULT 0, notes TEXT, status VARCHAR(50) DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$staffConn->query("CREATE TABLE IF NOT EXISTS store_inventory_transactions (id INT AUTO_INCREMENT PRIMARY KEY, item_id INT DEFAULT 0, transaction_type VARCHAR(50) DEFAULT '', quantity DECIMAL(14,2) DEFAULT 0, quantity_before DECIMAL(14,2) DEFAULT NULL, quantity_after DECIMAL(14,2) DEFAULT NULL, reason TEXT, created_by INT DEFAULT NULL, reference_type VARCHAR(50) DEFAULT NULL, reference_id INT DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// â”€â”€ POST Handlers â”€â”€
+// ── POST Handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffConn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'];

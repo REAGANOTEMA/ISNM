@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 16, 2026 at 10:57 PM
+-- Generation Time: Jul 22, 2026 at 10:17 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.22
 
@@ -419,6 +419,94 @@ CREATE TABLE `appointments` (
   `created_by` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_actions`
+--
+
+CREATE TABLE `approval_actions` (
+  `id` int(11) NOT NULL,
+  `request_id` int(11) DEFAULT 0,
+  `approval_request_id` int(11) DEFAULT 0,
+  `stage_id` int(11) DEFAULT 0,
+  `action_by` int(11) DEFAULT 0,
+  `approver_id` int(11) DEFAULT 0,
+  `action_type` varchar(50) DEFAULT '',
+  `action` varchar(20) DEFAULT '',
+  `comments` text DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `decision` varchar(50) DEFAULT '',
+  `previous_stage_order` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_requests`
+--
+
+CREATE TABLE `approval_requests` (
+  `id` int(11) NOT NULL,
+  `workflow_id` int(11) DEFAULT 0,
+  `request_number` varchar(100) DEFAULT '',
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `priority` varchar(50) DEFAULT 'Medium',
+  `requester_id` int(11) DEFAULT 0,
+  `requester_name` varchar(200) DEFAULT '',
+  `requester_role` varchar(100) DEFAULT '',
+  `current_stage_id` int(11) DEFAULT 0,
+  `current_stage_order` int(11) DEFAULT 1,
+  `status` varchar(50) DEFAULT 'Active',
+  `reference_type` varchar(100) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `reference_url` varchar(500) DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `final_approval_at` datetime DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `requester_type` varchar(20) DEFAULT 'staff'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_stages`
+--
+
+CREATE TABLE `approval_stages` (
+  `id` int(11) NOT NULL,
+  `workflow_id` int(11) NOT NULL,
+  `stage_name` varchar(255) NOT NULL,
+  `stage_order` int(11) DEFAULT 1,
+  `approver_role` varchar(100) DEFAULT '',
+  `assigned_role_id` int(11) DEFAULT 0,
+  `assigned_role_name` varchar(100) DEFAULT '',
+  `is_final` tinyint(1) DEFAULT 0,
+  `is_mandatory` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_workflows`
+--
+
+CREATE TABLE `approval_workflows` (
+  `id` int(11) NOT NULL,
+  `workflow_name` varchar(255) DEFAULT '',
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `category` varchar(100) DEFAULT '',
+  `target_table` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -3466,6 +3554,30 @@ CREATE TABLE `ict_failed_logins` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `ict_incidents`
+--
+
+CREATE TABLE `ict_incidents` (
+  `id` int(11) NOT NULL,
+  `incident_type` varchar(100) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `severity` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `reported_by` int(11) DEFAULT NULL,
+  `reported_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `affected_system` varchar(255) DEFAULT NULL,
+  `status` enum('Open','In Progress','Resolved','Closed','Escalated') DEFAULT 'Open',
+  `resolution_notes` text DEFAULT NULL,
+  `date_reported` datetime DEFAULT current_timestamp(),
+  `date_resolved` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ict_login_sessions`
 --
 
@@ -3481,6 +3593,33 @@ CREATE TABLE `ict_login_sessions` (
   `session_duration_sec` int(11) DEFAULT 0,
   `status` enum('active','expired','terminated') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_maintenance_requests`
+--
+
+CREATE TABLE `ict_maintenance_requests` (
+  `id` int(11) NOT NULL,
+  `asset_id` int(11) DEFAULT NULL,
+  `asset_name` varchar(255) DEFAULT NULL,
+  `request_type` enum('Repair','Upgrade','Replacement','Installation','Other') DEFAULT 'Repair',
+  `description` text NOT NULL,
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `requested_by` int(11) DEFAULT NULL,
+  `requested_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('Requested','Approved','In Progress','Completed','Rejected') DEFAULT 'Requested',
+  `estimated_cost` decimal(10,2) DEFAULT NULL,
+  `actual_cost` decimal(10,2) DEFAULT NULL,
+  `completion_notes` text DEFAULT NULL,
+  `date_requested` datetime DEFAULT current_timestamp(),
+  `date_completed` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3504,6 +3643,31 @@ CREATE TABLE `ict_module_permissions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `ict_network_devices`
+--
+
+CREATE TABLE `ict_network_devices` (
+  `id` int(11) NOT NULL,
+  `device_name` varchar(255) NOT NULL,
+  `device_type` enum('Router','Switch','Access Point','Firewall','Server','Other') NOT NULL,
+  `manufacturer` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `mac_address` varchar(17) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive','Maintenance','Retired') DEFAULT 'Active',
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ict_network_logs`
 --
 
@@ -3515,6 +3679,26 @@ CREATE TABLE `ict_network_logs` (
   `severity` enum('info','warning','error','critical') DEFAULT 'info',
   `logged_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_reports`
+--
+
+CREATE TABLE `ict_reports` (
+  `id` int(11) NOT NULL,
+  `report_title` varchar(255) NOT NULL,
+  `report_type` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `content` longtext DEFAULT NULL,
+  `generated_by` int(11) DEFAULT NULL,
+  `report_period_start` date DEFAULT NULL,
+  `report_period_end` date DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `status` enum('Draft','Final','Archived') DEFAULT 'Draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3560,6 +3744,76 @@ CREATE TABLE `ict_servers` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_software_inventory`
+--
+
+CREATE TABLE `ict_software_inventory` (
+  `id` int(11) NOT NULL,
+  `software_name` varchar(255) NOT NULL,
+  `version` varchar(50) DEFAULT NULL,
+  `developer` varchar(255) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `license_type` enum('Free','Open Source','Commercial','Educational','Trial') DEFAULT 'Free',
+  `total_licenses` int(11) DEFAULT 0,
+  `used_licenses` int(11) DEFAULT 0,
+  `cost_per_license` decimal(10,2) DEFAULT 0.00,
+  `purchase_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `status` enum('Active','Expired','Under Review') DEFAULT 'Active',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_software_licenses`
+--
+
+CREATE TABLE `ict_software_licenses` (
+  `id` int(11) NOT NULL,
+  `software_id` int(11) NOT NULL,
+  `license_key` varchar(500) DEFAULT NULL,
+  `license_type` varchar(50) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `assignment_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `status` enum('Available','Assigned','Expired','Revoked') DEFAULT 'Available',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_support_tickets`
+--
+
+CREATE TABLE `ict_support_tickets` (
+  `id` int(11) NOT NULL,
+  `ticket_number` varchar(20) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `reported_by` int(11) NOT NULL,
+  `reported_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `status` enum('Open','In Progress','Waiting','Resolved','Closed') DEFAULT 'Open',
+  `resolution_notes` text DEFAULT NULL,
+  `date_created` datetime DEFAULT current_timestamp(),
+  `date_assigned` datetime DEFAULT NULL,
+  `date_resolved` datetime DEFAULT NULL,
+  `date_closed` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3672,6 +3926,38 @@ INSERT INTO `ict_system_settings` (`id`, `setting_key`, `setting_value`, `settin
 (8, 'system_health_interval', '5', 'monitoring', 'System health check interval in minutes', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
 (9, 'notify_critical_alerts', 'true', 'alerts', 'Send notifications for critical alerts', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
 (10, 'maintenance_mode', 'false', 'system', 'System maintenance mode flag', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_ticket_assignments`
+--
+
+CREATE TABLE `ict_ticket_assignments` (
+  `id` int(11) NOT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `assigned_to` int(11) NOT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `assignment_date` datetime DEFAULT current_timestamp(),
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_ticket_comments`
+--
+
+CREATE TABLE `ict_ticket_comments` (
+  `id` int(11) NOT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `commenter_id` int(11) NOT NULL,
+  `commenter_name` varchar(255) DEFAULT NULL,
+  `comment` text NOT NULL,
+  `is_internal` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -5478,6 +5764,24 @@ CREATE TABLE `payroll_approvals` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `payroll_history`
+--
+
+CREATE TABLE `payroll_history` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `gross_salary` decimal(14,2) DEFAULT 0.00,
+  `deductions` decimal(14,2) DEFAULT 0.00,
+  `net_salary` decimal(14,2) DEFAULT 0.00,
+  `payment_date` date DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT '',
+  `status` varchar(50) DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `payroll_records`
 --
 
@@ -6289,6 +6593,109 @@ CREATE TABLE `staff_trainings` (
 ,`notes` text
 ,`created_at` timestamp
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_categories`
+--
+
+CREATE TABLE `store_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(200) DEFAULT '',
+  `description` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory`
+--
+
+CREATE TABLE `store_inventory` (
+  `id` int(11) NOT NULL,
+  `item_code` varchar(50) DEFAULT '',
+  `item_name` varchar(200) DEFAULT '',
+  `category_id` int(11) DEFAULT NULL,
+  `unit` varchar(50) DEFAULT '',
+  `quantity` decimal(14,2) DEFAULT 0.00,
+  `reorder_level` decimal(14,2) DEFAULT 0.00,
+  `unit_cost` decimal(14,2) DEFAULT 0.00,
+  `location` varchar(200) DEFAULT '',
+  `batch_number` varchar(100) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `supplier` varchar(200) DEFAULT '',
+  `status` varchar(20) DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory_transactions`
+--
+
+CREATE TABLE `store_inventory_transactions` (
+  `id` int(11) NOT NULL,
+  `item_id` int(11) DEFAULT 0,
+  `transaction_type` varchar(50) DEFAULT '',
+  `quantity` decimal(14,2) DEFAULT 0.00,
+  `quantity_before` decimal(14,2) DEFAULT NULL,
+  `quantity_after` decimal(14,2) DEFAULT NULL,
+  `reason` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_requests`
+--
+
+CREATE TABLE `store_requests` (
+  `id` int(11) NOT NULL,
+  `request_number` varchar(50) DEFAULT '',
+  `requested_by` int(11) DEFAULT 0,
+  `requester_name` varchar(255) DEFAULT '',
+  `requester_role` varchar(50) DEFAULT '',
+  `department` varchar(100) DEFAULT '',
+  `urgency` varchar(50) DEFAULT 'Normal',
+  `status` varchar(50) DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `items` text DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `fulfilled_by` int(11) DEFAULT NULL,
+  `fulfilled_at` datetime DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `approval_request_id` int(11) DEFAULT NULL,
+  `forwarded_to` int(11) DEFAULT NULL,
+  `forwarded_to_role` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_request_items`
+--
+
+CREATE TABLE `store_request_items` (
+  `id` int(11) NOT NULL,
+  `request_id` int(11) DEFAULT 0,
+  `item_id` int(11) DEFAULT 0,
+  `quantity_requested` decimal(14,2) DEFAULT 0.00,
+  `quantity_fulfilled` decimal(14,2) DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -9211,6 +9618,37 @@ ALTER TABLE `appointments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_aa_request` (`request_id`),
+  ADD KEY `idx_aa_action_by` (`action_by`);
+
+--
+-- Indexes for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ar_status` (`status`),
+  ADD KEY `idx_ar_requester` (`requester_id`),
+  ADD KEY `idx_ar_workflow` (`workflow_id`),
+  ADD KEY `idx_ar_ref` (`reference_type`,`reference_id`);
+
+--
+-- Indexes for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_as_workflow` (`workflow_id`);
+
+--
+-- Indexes for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `assets`
 --
 ALTER TABLE `assets`
@@ -9950,6 +10388,15 @@ ALTER TABLE `ict_failed_logins`
   ADD KEY `attempted_at` (`attempted_at`);
 
 --
+-- Indexes for table `ict_incidents`
+--
+ALTER TABLE `ict_incidents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_severity` (`severity`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_date` (`date_reported`);
+
+--
 -- Indexes for table `ict_login_sessions`
 --
 ALTER TABLE `ict_login_sessions`
@@ -9959,11 +10406,27 @@ ALTER TABLE `ict_login_sessions`
   ADD KEY `login_at` (`login_at`);
 
 --
+-- Indexes for table `ict_maintenance_requests`
+--
+ALTER TABLE `ict_maintenance_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`);
+
+--
 -- Indexes for table `ict_module_permissions`
 --
 ALTER TABLE `ict_module_permissions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `module_role` (`module_name`,`role_keyword`);
+
+--
+-- Indexes for table `ict_network_devices`
+--
+ALTER TABLE `ict_network_devices`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`device_type`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `ict_network_logs`
@@ -9974,6 +10437,14 @@ ALTER TABLE `ict_network_logs`
   ADD KEY `log_type` (`log_type`),
   ADD KEY `severity` (`severity`),
   ADD KEY `logged_at` (`logged_at`);
+
+--
+-- Indexes for table `ict_reports`
+--
+ALTER TABLE `ict_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`report_type`),
+  ADD KEY `idx_date` (`created_at`);
 
 --
 -- Indexes for table `ict_security_logs`
@@ -9992,6 +10463,32 @@ ALTER TABLE `ict_servers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `server_name` (`server_name`),
   ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `ict_software_inventory`
+--
+ALTER TABLE `ict_software_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `ict_software_licenses`
+--
+ALTER TABLE `ict_software_licenses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_software` (`software_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `ict_support_tickets`
+--
+ALTER TABLE `ict_support_tickets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_ticket_number` (`ticket_number`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_reported_by` (`reported_by`);
 
 --
 -- Indexes for table `ict_system_alerts`
@@ -10037,6 +10534,21 @@ ALTER TABLE `ict_system_settings`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `setting_key` (`setting_key`),
   ADD KEY `setting_group` (`setting_group`);
+
+--
+-- Indexes for table `ict_ticket_assignments`
+--
+ALTER TABLE `ict_ticket_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ticket` (`ticket_id`),
+  ADD KEY `idx_assigned` (`assigned_to`);
+
+--
+-- Indexes for table `ict_ticket_comments`
+--
+ALTER TABLE `ict_ticket_comments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ticket` (`ticket_id`);
 
 --
 -- Indexes for table `ict_wifi_devices`
@@ -10450,6 +10962,13 @@ ALTER TABLE `payroll_approvals`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `payroll_history`
+--
+ALTER TABLE `payroll_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`);
+
+--
 -- Indexes for table `payroll_records`
 --
 ALTER TABLE `payroll_records`
@@ -10669,6 +11188,43 @@ ALTER TABLE `staff_training`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_si_status` (`status`),
+  ADD KEY `idx_si_category` (`category_id`);
+
+--
+-- Indexes for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sit_item` (`item_id`);
+
+--
+-- Indexes for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sr_status` (`status`),
+  ADD KEY `idx_sr_by` (`requested_by`),
+  ADD KEY `idx_sr_number` (`request_number`);
+
+--
+-- Indexes for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sri_request` (`request_id`);
 
 --
 -- Indexes for table `strategic_initiatives`
@@ -11106,6 +11662,30 @@ ALTER TABLE `applications`
 -- AUTO_INCREMENT for table `appointments`
 --
 ALTER TABLE `appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -11727,9 +12307,21 @@ ALTER TABLE `ict_failed_logins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `ict_incidents`
+--
+ALTER TABLE `ict_incidents`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `ict_login_sessions`
 --
 ALTER TABLE `ict_login_sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_maintenance_requests`
+--
+ALTER TABLE `ict_maintenance_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -11739,9 +12331,21 @@ ALTER TABLE `ict_module_permissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `ict_network_devices`
+--
+ALTER TABLE `ict_network_devices`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `ict_network_logs`
 --
 ALTER TABLE `ict_network_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_reports`
+--
+ALTER TABLE `ict_reports`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -11754,6 +12358,24 @@ ALTER TABLE `ict_security_logs`
 -- AUTO_INCREMENT for table `ict_servers`
 --
 ALTER TABLE `ict_servers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_software_inventory`
+--
+ALTER TABLE `ict_software_inventory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_software_licenses`
+--
+ALTER TABLE `ict_software_licenses`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_support_tickets`
+--
+ALTER TABLE `ict_support_tickets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -11785,6 +12407,18 @@ ALTER TABLE `ict_system_notifications`
 --
 ALTER TABLE `ict_system_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `ict_ticket_assignments`
+--
+ALTER TABLE `ict_ticket_assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ict_ticket_comments`
+--
+ALTER TABLE `ict_ticket_comments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `ict_wifi_devices`
@@ -12099,6 +12733,12 @@ ALTER TABLE `payroll_approvals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `payroll_history`
+--
+ALTER TABLE `payroll_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payroll_records`
 --
 ALTER TABLE `payroll_records`
@@ -12288,6 +12928,36 @@ ALTER TABLE `staff_tasks`
 -- AUTO_INCREMENT for table `staff_training`
 --
 ALTER TABLE `staff_training`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
