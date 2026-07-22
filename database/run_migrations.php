@@ -198,6 +198,19 @@ if ($stu) {
         PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'fee_structures');
 
+    addTable($stu, 'students', "CREATE TABLE `fee_adjustments` (
+        `id` INT(11) NOT NULL AUTO_INCREMENT,
+        `adjustment_number` VARCHAR(50) DEFAULT NULL,
+        `student_id` INT(11) NOT NULL,
+        `adjustment_type` VARCHAR(50) DEFAULT 'Discount',
+        `amount` DECIMAL(12,2) NOT NULL DEFAULT 0,
+        `discount_type` VARCHAR(50) DEFAULT NULL,
+        `reason` TEXT DEFAULT NULL,
+        `created_by` INT(11) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        INDEX `idx_fa_student` (`student_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'fee_adjustments');
     addColumn($stu, 'students', 'fee_adjustments', 'adjustment_number', "VARCHAR(50) DEFAULT NULL");
     addColumn($stu, 'students', 'fee_adjustments', 'created_by', "INT(11) DEFAULT NULL");
     addColumn($stu, 'students', 'fee_adjustments', 'discount_type', "VARCHAR(50) DEFAULT NULL");

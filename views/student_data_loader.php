@@ -27,7 +27,94 @@ class StudentDataLoader {
         $fromFiles = $this->loadFromExcelFiles();
         $merged = $this->mergeStudents($fromDb, $fromFiles);
         $this->cachedData = $merged;
+
+        // Auto-import Excel-only students into DB so future queries are unified
+        $this->autoImportExcelStudents($fromDb, $fromFiles);
+
         return $merged;
+    }
+
+    /**
+     * Auto-import students found only in Excel files into the database,
+     * so all dashboards query the single source of truth.
+     */
+    private function autoImportExcelStudents(array $dbStudents, array $excelStudents) {
+        if (empty($excelStudents)) return;
+
+        try {
+            $conn = getStudentsConnection();
+            if (!$conn) return;
+
+            // Build lookup of existing DB students by index_number
+            $existingIndexNumbers = [];
+            foreach ($dbStudents as $s) {
+                $idx = strtolower(trim($s['index_number'] ?? ''));
+                if ($idx !== '') $existingIndexNumbers[$idx] = true;
+            }
+
+            $imported = 0;
+            foreach ($excelStudents as $s) {
+                $idx = strtolower(trim($s['index_number'] ?? ''));
+                if ($idx === '' || isset($existingIndexNumbers[$idx])) continue;
+
+                $stmt = $conn->prepare("INSERT IGNORE INTO students 
+                    (first_name, surname, other_name, full_name, gender, index_number, 
+                     registration_number, student_number, national_student_id_number,
+                     phone, mobile_number, email, program, course, level, set_name, 
+                     year, current_year, date_of_birth, nationality, district, 
+                     intake_year, intake_period, status, created_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())");
+                if (!$stmt) continue;
+
+                $surname = $s['surname'] ?? '';
+                $firstName = $s['first_name'] ?? '';
+                $fullName = $s['full_name'] ?? trim("$firstName $surname");
+
+                $stmt->bind_param('ssssssssssssssssssssssss',
+                    $firstName,
+                    $surname,
+                    $s['other_name'] ?? '',
+                    $fullName,
+                    $s['gender'] ?? 'Other',
+                    $s['index_number'] ?? '',
+                    $s['registration_number'] ?? '',
+                    $s['student_number'] ?? '',
+                    $s['national_id'] ?? '',
+                    $s['phone'] ?? '',
+                    $s['mobile_number'] ?? '',
+                    $s['email'] ?? '',
+                    $s['program'] ?? '',
+                    $s['program'] ?? '',
+                    $s['level'] ?? '',
+                    $s['set'] ?? '',
+                    $s['intake_year'] ?? date('Y'),
+                    $s['year'] ?? $s['intake_year'] ?? date('Y'),
+                    $s['date_of_birth'] ?? null,
+                    $s['nationality'] ?? 'Uganda',
+                    $s['district'] ?? '',
+                    $s['intake_year'] ?? date('Y'),
+                    $s['intake_period'] ?? '',
+                    'Active'
+                );
+
+                if ($stmt->execute()) {
+                    $newId = $stmt->insert_id;
+                    if ($newId > 0) {
+                        $existingIndexNumbers[$idx] = true;
+                        $imported++;
+                        // Auto-create student_profiles
+                        $conn->query("INSERT IGNORE INTO student_profiles (student_id, admission_status, fee_status) VALUES ($newId, 'Registered', 'unpaid')");
+                    }
+                }
+                $stmt->close();
+            }
+
+            if ($imported > 0) {
+                error_log("StudentDataLoader: Auto-imported {$imported} students from Excel files into DB");
+            }
+        } catch (Throwable $e) {
+            error_log('StudentDataLoader auto-import: ' . $e->getMessage());
+        }
     }
 
     private function loadFromDatabase() {
@@ -409,12 +496,14 @@ class StudentDataLoader {
 
     public function getFilterOptions() {
         $students = $this->loadAllStudents();
+        $years = array_values(array_filter(array_unique(array_column($students, 'intake_year'))));
         return [
             'programs' => array_values(array_filter(array_unique(array_column($students, 'program')))),
             'levels' => array_values(array_filter(array_unique(array_column($students, 'level')))),
             'sets' => array_values(array_filter(array_unique(array_column($students, 'set')))),
             'genders' => array_values(array_filter(array_unique(array_column($students, 'gender')))),
-            'years' => array_values(array_filter(array_unique(array_column($students, 'intake_year')))),
+            'years' => $years,
+            'intake_years' => $years,
         ];
     }
 

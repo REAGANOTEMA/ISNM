@@ -133,11 +133,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_student_id = $stmt->insert_id;
                 $stmt->close();
                 if ($new_student_id > 0) {
-                    $chk = @$conn->query("SHOW TABLES LIKE 'student_profiles'");
-                    if ($chk && $chk->num_rows > 0) {
-                        $sp = $conn->prepare("INSERT IGNORE INTO student_profiles (student_id, admission_status, fee_status) VALUES (?,?,'unpaid')");
-                        if ($sp) { $sp->bind_param('is', $new_student_id, 'Registered'); $sp->execute(); $sp->close(); }
-                    }
+                    // Auto-create student_profiles
+                    $conn->query("CREATE TABLE IF NOT EXISTS student_profiles (
+                        id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
+                        admission_status VARCHAR(50) DEFAULT 'Registered',
+                        fee_status VARCHAR(50) DEFAULT 'unpaid',
+                        academic_status VARCHAR(50) DEFAULT 'Active',
+                        profile_completed TINYINT(1) DEFAULT 0,
+                        documents_verified TINYINT(1) DEFAULT 0,
+                        notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        UNIQUE KEY uk_sp_student (student_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    @$conn->query("INSERT IGNORE INTO student_profiles (student_id, admission_status, fee_status) VALUES ($new_student_id, 'Registered', 'unpaid')");
+
+                    // Auto-create student_financial_profiles
+                    $conn->query("CREATE TABLE IF NOT EXISTS student_financial_profiles (
+                        id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
+                        total_fees DECIMAL(14,2) DEFAULT 0.00,
+                        total_paid DECIMAL(14,2) DEFAULT 0.00,
+                        balance DECIMAL(14,2) DEFAULT 0.00,
+                        fee_status ENUM('unpaid','partial','paid','overdue') DEFAULT 'unpaid',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        UNIQUE KEY uk_sfp_student (student_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    @$conn->query("INSERT IGNORE INTO student_financial_profiles (student_id, fee_status) VALUES ($new_student_id, 'unpaid')");
+
+                    // Auto-create student_academic_profiles
+                    $conn->query("CREATE TABLE IF NOT EXISTS student_academic_profiles (
+                        id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL,
+                        current_gpa DECIMAL(4,2) DEFAULT NULL,
+                        cumulative_credits INT DEFAULT 0,
+                        academic_standing VARCHAR(50) DEFAULT 'Good Standing',
+                        enrollment_date DATE DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        UNIQUE KEY uk_sap_student (student_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    @$conn->query("INSERT IGNORE INTO student_academic_profiles (student_id, enrollment_date) VALUES ($new_student_id, CURDATE())");
                 }
                 $_SESSION['success'] = "Student '$full_name' added successfully. Index: $index_number | Password: $temp_password";
             } else {

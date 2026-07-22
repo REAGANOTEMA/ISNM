@@ -17,10 +17,41 @@ class StudentFinance {
     }
     
     /**
+     * Ensure student_finance table exists
+     */
+    private function ensureTable() {
+        try {
+            $this->conn->query("CREATE TABLE IF NOT EXISTS `student_finance` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `student_id` int(11) NOT NULL,
+                `tuition_fee` decimal(14,2) DEFAULT 0.00,
+                `amount_paid` decimal(14,2) DEFAULT 0.00,
+                `payment_method` varchar(50) DEFAULT NULL,
+                `payment_date` date DEFAULT NULL,
+                `payment_status` enum('pending','partial','paid','overdue') DEFAULT 'pending',
+                `semester` varchar(50) DEFAULT NULL,
+                `academic_year` varchar(20) DEFAULT NULL,
+                `receipt_number` varchar(100) DEFAULT NULL,
+                `received_by` int(11) DEFAULT NULL,
+                `notes` text DEFAULT NULL,
+                `created_at` timestamp DEFAULT current_timestamp(),
+                `updated_at` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                PRIMARY KEY (`id`),
+                KEY `idx_sf_student` (`student_id`),
+                KEY `idx_sf_status` (`payment_status`),
+                KEY `idx_sf_year` (`academic_year`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        } catch (Exception $e) {
+            error_log('StudentFinance ensureTable: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get student finance records
      */
     public function getStudentFinance($studentId) {
         try {
+            $this->ensureTable();
             $query = "SELECT sf.*, s.full_name, s.registration_number 
                       FROM student_finance sf 
                       JOIN students s ON sf.student_id = s.id 
