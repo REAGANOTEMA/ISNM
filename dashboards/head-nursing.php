@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $year_of_study = intval($_POST['year_of_study'] ?? 1);
         if ($student_id && $student_name && $program) {
             $stmt = $conn->prepare("INSERT INTO nursing_students (student_id, student_name, program, year_of_study, clinical_hours, status) VALUES (?, ?, ?, ?, 0, 'Active') ON DUPLICATE KEY UPDATE student_name=VALUES(student_name), program=VALUES(program), year_of_study=VALUES(year_of_study)");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("sssi", $student_id, $student_name, $program, $year_of_study);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -44,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $status = trim($_POST['status'] ?? 'Active');
         if ($id && $student_name && $program) {
             $stmt = $conn->prepare("UPDATE nursing_students SET student_name=?, program=?, year_of_study=?, status=? WHERE id=?");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("ssisi", $student_name, $program, $year_of_study, $status, $id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -73,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $supervisor = trim($_POST['supervisor'] ?? '');
         if ($student_id && $facility_name && $start_date) {
             $stmt = $conn->prepare("INSERT INTO nursing_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, hours_completed, status, notes) VALUES (?, ?, ?, ?, ?, ?, 0, 'Active', '')");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=clinical'); exit; }
             $stmt->bind_param("ssssss", $student_id, $facility_name, $department, $start_date, $end_date, $supervisor);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -91,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $hours_completed = intval($_POST['hours_completed'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("UPDATE nursing_clinical_placements SET status=?, notes=?, hours_completed=? WHERE id=?");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=clinical'); exit; }
             $stmt->bind_param("ssii", $status, $notes, $hours_completed, $id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -121,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $comments = trim($_POST['comments'] ?? '');
         if ($student_id && $skill_id) {
             $stmt = $conn->prepare("INSERT INTO nursing_practical_assessment (student_id, skill_id, assessment_date, score, grade, assessor, comments, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Completed')");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("sisdsss", $student_id, $skill_id, $assessment_date, $score, $grade, $assessor, $comments);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -140,6 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $assessor = trim($_POST['assessor'] ?? '');
         if ($id) {
             $stmt = $conn->prepare("UPDATE nursing_practical_assessment SET score=?, grade=?, comments=?, assessor=? WHERE id=?");
+            if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("dsssi", $score, $grade, $comments, $assessor, $id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
@@ -160,6 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $position = trim($_POST['position'] ?? '');
             if ($name && $email) {
                 $stmt = $conn->prepare("INSERT INTO staff (full_name, email, phone, department, position, status) VALUES (?, ?, ?, 'Nursing', ?, 'Active')");
+                if (!$stmt) { $response['error'] = 'Database error: ' . $conn->error; echo json_encode($response); exit; }
                 $stmt->bind_param('ssss', $name, $email, $phone, $position);
                 $response['success'] = $stmt->execute();
                 $response['error'] = $stmt->error;
@@ -176,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $status = trim($_POST['status'] ?? 'Active');
             if ($id && $name && $email) {
                 $stmt = $conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, status=? WHERE id=?");
+                if (!$stmt) { $response['error'] = 'Database error: ' . $conn->error; echo json_encode($response); exit; }
                 $stmt->bind_param('sssssi', $name, $email, $phone, $position, $status, $id);
                 $response['success'] = $stmt->execute();
                 $response['error'] = $stmt->error;
@@ -187,6 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
                 $stmt = $conn->prepare("DELETE FROM staff WHERE id=?");
+                if (!$stmt) { $response['error'] = 'Database error: ' . $conn->error; echo json_encode($response); exit; }
                 $stmt->bind_param('i', $id);
                 $response['success'] = $stmt->execute();
                 $response['error'] = $stmt->error;

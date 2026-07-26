@@ -20,6 +20,8 @@ if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS student_discipline (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, student_name VARCHAR(200) DEFAULT '', incident_type VARCHAR(100) DEFAULT '', incident_date DATE, action_taken VARCHAR(255) DEFAULT '', description TEXT, reported_by INT, status VARCHAR(30) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS hostel_allocations (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, room_id INT NOT NULL, hostel_room_id INT DEFAULT NULL, academic_year VARCHAR(20) DEFAULT '', semester VARCHAR(50) DEFAULT '', check_in_date DATE DEFAULT NULL, check_out_date DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS hostel_rooms (id INT AUTO_INCREMENT PRIMARY KEY, room_number VARCHAR(50) NOT NULL, hostel_name VARCHAR(200) DEFAULT '', hostel_id INT DEFAULT NULL, capacity INT DEFAULT 1, occupancy INT DEFAULT 0, total_beds INT DEFAULT 1, room_type VARCHAR(50) DEFAULT 'Standard', status VARCHAR(50) DEFAULT 'Available', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_counseling_sessions (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, student_name VARCHAR(200) DEFAULT '', session_type VARCHAR(50) DEFAULT '', session_date DATE DEFAULT NULL, session_time TIME DEFAULT NULL, counselor_id INT DEFAULT 0, counselor_name VARCHAR(200) DEFAULT '', notes TEXT, action_plan TEXT, status VARCHAR(50) DEFAULT 'Scheduled', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_date (session_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_activities (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255) DEFAULT '', activity_name VARCHAR(255) DEFAULT '', activity_type VARCHAR(100) DEFAULT '', description TEXT, activity_date DATE DEFAULT NULL, location VARCHAR(255) DEFAULT '', status VARCHAR(50) DEFAULT 'Planned', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_date (activity_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 if (empty($_SESSION['csrf_token'])) {
@@ -54,8 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $assigned_to_name = trim($_POST['assigned_to_name'] ?? '');
 
         $stmt = $stuConn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
-        $stmt->bind_param("i", $student_id);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        if ($stmt) { $stmt->bind_param("i", $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
         $student = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
@@ -65,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         } else {
             $stmt = $conn->prepare("INSERT INTO welfare_cases (student_id, student_name, case_type, description, reported_by, reported_by_name, assigned_to, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open')");
             $sname = $student['full_name'];
-            $stmt->bind_param("isssissi", $student_id, $sname, $case_type, $description, $user_id, $user_name, $assigned_to, $priority);
+            $stmt->bind_param("isssisis", $student_id, $sname, $case_type, $description, $user_id, $user_name, $assigned_to, $priority);
             if ($stmt->execute()) {
                 $flash = 'Welfare case created.';
                 $flashType = 'success';
@@ -97,15 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $params[] = $case_id;
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        if ($stmt->execute()) {
+        if ($stmt) { $stmt->bind_param($types, ...$params); if ($stmt->execute()) {
             $flash = 'Case updated.';
             $flashType = 'success';
         } else {
             $flash = 'Failed to update case.';
             $flashType = 'danger';
         }
-        $stmt->close();
+        $stmt->close(); }
     }
 
     if ($action === 'delete_welfare_case') {
@@ -113,15 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $delStmt = $conn->prepare("DELETE FROM welfare_actions WHERE case_id = ?");
         if ($delStmt) { $delStmt->bind_param("i", $case_id); $delStmt->execute(); $delStmt->close(); }
         $stmt = $conn->prepare("DELETE FROM welfare_cases WHERE id = ?");
-        $stmt->bind_param("i", $case_id);
-        if ($stmt->execute()) {
+        if ($stmt) { $stmt->bind_param("i", $case_id); if ($stmt->execute()) {
             $flash = 'Case deleted.';
             $flashType = 'success';
         } else {
             $flash = 'Failed to delete case.';
             $flashType = 'danger';
         }
-        $stmt->close();
+        $stmt->close(); }
     }
 
     if ($action === 'add_welfare_action') {
@@ -130,15 +129,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $notes = trim($_POST['notes'] ?? '');
 
         $stmt = $conn->prepare("INSERT INTO welfare_actions (case_id, action_by, action_by_name, action_type, notes) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("iisss", $case_id, $user_id, $user_name, $action_type, $notes);
-        if ($stmt->execute()) {
+        if ($stmt) { $stmt->bind_param("iisss", $case_id, $user_id, $user_name, $action_type, $notes); if ($stmt->execute()) {
             $flash = 'Action added.';
             $flashType = 'success';
         } else {
             $flash = 'Failed to add action.';
             $flashType = 'danger';
         }
-        $stmt->close();
+        $stmt->close(); }
     }
 
     if ($action === 'add_discipline_case') {
@@ -149,10 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $description = trim($_POST['description'] ?? '');
 
         $stmt = $stuConn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
-        $stmt->bind_param("i", $student_id);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $student = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param("i", $student_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+        $student = $stmt ? $stmt->get_result()->fetch_assoc() : null;
+        if ($stmt) $stmt->close();
 
         if (!$student) {
             $flash = 'Student not found.';
@@ -175,15 +172,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if ($action === 'delete_discipline_case') {
         $case_id = (int)($_POST['case_id'] ?? 0);
         $stmt = $conn->prepare("DELETE FROM student_discipline WHERE id = ?");
-        $stmt->bind_param("i", $case_id);
-        if ($stmt->execute()) {
+        if ($stmt) { $stmt->bind_param("i", $case_id); if ($stmt->execute()) {
             $flash = 'Discipline case deleted.';
             $flashType = 'success';
         } else {
             $flash = 'Failed to delete discipline case.';
             $flashType = 'danger';
         }
-        $stmt->close();
+        $stmt->close(); }
     }
 
     if ($action === 'create_warden_requisition') {
@@ -224,11 +220,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 } else {
                     $flash = "Failed to create request.";
                     $flashType = "danger";
-                }
-                $stmt->close();
+            }
+            $stmt->close(); }
             }
         }
-    }
 
     if ($action === 'schedule_session') {
         $student_id = (int)($_POST['student_id'] ?? 0);
@@ -249,15 +244,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         } else {
             $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, student_name, session_type, session_date, session_time, counselor_id, counselor_name, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
             $sname = $st['full_name'];
-            $stmt->bind_param("issssis", $student_id, $sname, $session_type, $session_date, $session_time, $user_id, $user_name, $notes);
-            if ($stmt->execute()) {
+            if ($stmt) { $stmt->bind_param("issssis", $student_id, $sname, $session_type, $session_date, $session_time, $user_id, $user_name, $notes); if ($stmt->execute()) {
                 $flash = 'Counseling session scheduled.';
                 $flashType = 'success';
             } else {
                 $flash = 'Failed to schedule session.';
                 $flashType = 'danger';
             }
-            $stmt->close();
+            $stmt->close(); }
         }
     }
 
@@ -280,15 +274,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         } else {
             $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, student_name, session_type, session_date, counselor_id, counselor_name, notes, action_plan, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Completed')");
             $sname = $st['full_name'];
-            $stmt->bind_param("isssisss", $student_id, $sname, $session_type, $session_date, $user_id, $user_name, $notes, $action_plan);
-            if ($stmt->execute()) {
+            if ($stmt) { $stmt->bind_param("isssisss", $student_id, $sname, $session_type, $session_date, $user_id, $user_name, $notes, $action_plan); if ($stmt->execute()) {
                 $flash = 'Counseling record saved.';
                 $flashType = 'success';
             } else {
                 $flash = 'Failed to save record.';
                 $flashType = 'danger';
             }
-            $stmt->close();
+            $stmt->close(); }
         }
     }
 }
@@ -317,8 +310,7 @@ if ($conn && !empty($all_welfare_cases)) {
     $placeholders = implode(',', array_fill(0, count($case_ids), '?'));
     $types = str_repeat('i', count($case_ids));
     $stmt = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id IN ($placeholders) ORDER BY created_at ASC");
-    $stmt->bind_param($types, ...$case_ids);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+    if ($stmt) { $stmt->bind_param($types, ...$case_ids); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
     $r = $stmt->get_result();
     if ($r) {
         while ($row = $r->fetch_assoc()) {
@@ -387,8 +379,7 @@ if ($conn) {
     $r = $conn->query("SELECT si.id, si.item_name, si.item_code, si.unit, si.quantity, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
     if ($r) while ($row = $r->fetch_assoc()) $storeInventory[] = $row;
     $stmt = $conn->prepare("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=? ORDER BY sr.created_at DESC LIMIT 20");
-    $stmt->bind_param('i', $user_id);
-    $r2 = $stmt->execute() ? $stmt->get_result() : null;
+    if ($stmt) { $stmt->bind_param('i', $user_id); $r2 = $stmt->execute() ? $stmt->get_result() : null; }
     if ($r2) while ($row = $r2->fetch_assoc()) $myRequests[] = $row;
     $stmt->close();
 }
@@ -415,24 +406,21 @@ $view_case_id = isset($_GET['view']) ? (int)$_GET['view'] : 0;
 $edit_case = null;
 if ($edit_case_id && $conn) {
     $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN {$students_db_name}.students s ON wc.student_id=s.id WHERE wc.id = ?");
-    $stmt->bind_param("i", $edit_case_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $edit_case = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+    if ($stmt) { $stmt->bind_param("i", $edit_case_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+    $edit_case = $stmt ? $stmt->get_result()->fetch_assoc() : null;
+    if ($stmt) $stmt->close();
 }
 $view_case = null;
 if ($view_case_id && $conn) {
     $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN {$students_db_name}.students s ON wc.student_id=s.id WHERE wc.id = ?");
-    $stmt->bind_param("i", $view_case_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $view_case = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+    if ($stmt) { $stmt->bind_param("i", $view_case_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+    $view_case = $stmt ? $stmt->get_result()->fetch_assoc() : null;
+    if ($stmt) $stmt->close();
     if ($view_case) {
         $stmt2 = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id = ? ORDER BY created_at ASC");
-        $stmt2->bind_param("i", $view_case_id);
-        if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
-        $view_case_actions = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt2->close();
+        if ($stmt2) { $stmt2->bind_param("i", $view_case_id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; }
+        $view_case_actions = $stmt2 ? $stmt2->get_result()->fetch_all(MYSQLI_ASSOC) : [];
+        if ($stmt2) $stmt2->close();
     }
 }
 ?>

@@ -353,7 +353,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     <td><strong>#<?= (int)$inc['id'] ?></strong></td>
                     <td><?= htmlspecialchars($inc['incident_type']) ?></td>
                     <td><small><?= htmlspecialchars($inc['location'] ?? '-') ?></small></td>
-                    <td><span class="badge bg-success">Low</span></td>
+                    <td><span class="badge bg-<?= ($inc['severity'] === 'Critical') ? 'danger' : (($inc['severity'] === 'High') ? 'warning' : (($inc['severity'] === 'Medium') ? 'info' : 'secondary')) ?>"><?= htmlspecialchars($inc['severity'] ?? 'Low') ?></span></td>
                     <td><span class="badge bg-<?= $statusBadge ?>"><?= htmlspecialchars($inc['status']) ?></span></td>
                     <td><small><?= htmlspecialchars($inc['reported_by'] ?? '-') ?></small></td>
                     <td><small><?= !empty($inc['created_at']) ? date('d M Y, g:i A', strtotime($inc['created_at'])) : '-' ?></small></td>
@@ -527,7 +527,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
   </div>
 </div>
-<?php
+<?php break;
     case 'emergency': ?>
 
     <h4 class="fw-bold mb-3"><i class="fas fa-ambulance me-2"></i>Emergency Contacts</h4>

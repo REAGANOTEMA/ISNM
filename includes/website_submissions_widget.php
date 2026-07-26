@@ -113,6 +113,7 @@ if (!function_exists('renderWebsiteSubmissionsWidget')) {
             echo '<td style="white-space:nowrap;">';
             // Approve action
             echo '<form method="POST" style="display:inline;" onsubmit="return confirm(\'Approve this submission?\')">';
+            echo '<input type="hidden" name="csrf_token" value="' . (csrf_token() ?? '') . '">';
             echo '<input type="hidden" name="ws_action" value="approve">';
             echo '<input type="hidden" name="ws_type" value="' . htmlspecialchars($t) . '">';
             echo '<input type="hidden" name="ws_id" value="' . $id . '">';
@@ -120,6 +121,7 @@ if (!function_exists('renderWebsiteSubmissionsWidget')) {
             echo '</form>';
             // Resolve action
             echo '<form method="POST" style="display:inline;" onsubmit="return confirm(\'Mark as resolved?\')">';
+            echo '<input type="hidden" name="csrf_token" value="' . (csrf_token() ?? '') . '">';
             echo '<input type="hidden" name="ws_action" value="resolve">';
             echo '<input type="hidden" name="ws_type" value="' . htmlspecialchars($t) . '">';
             echo '<input type="hidden" name="ws_id" value="' . $id . '">';

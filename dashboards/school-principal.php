@@ -50,8 +50,21 @@ $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section'] ?? 'overview'; if ($view === 'overview') $view = 'home';
 $viewAliases = [
     'academic' => 'academic_dashboard',
+    'program-performance' => 'program_performance',
+    'exam-monitoring' => 'exam_monitoring',
+    'clinical-training' => 'clinical_training',
+    'academic-quality' => 'academic_quality',
     'student-affairs' => 'student_welfare',
+    'discipline' => 'discipline_oversight',
+    'student-appeals' => 'student_appeals',
+    'student-progress' => 'student_progress',
+    'student-risk' => 'student_risk',
+    'graduation-readiness' => 'graduation_readiness',
+    'staff-appraisals' => 'staff_appraisals',
+    'staff-development' => 'staff_development',
     'operations' => 'institutional_operations',
+    'strategic-plans' => 'strategic_plans',
+    'institutional-kpis' => 'institutional_kpis',
     'approvals' => 'approval_center',
     'tasks' => 'action_tracking',
     'schedules' => 'meetings',
@@ -296,6 +309,18 @@ if ($view === 'meeting_action_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
+// -- AJAX: meeting_get --
+if ($view === 'meeting_get' && $ajax === '1') {
+    header('Content-Type: application/json');
+    $mid = (int)($_GET['id']??0);
+    $meeting = null;
+    if ($students && $mid) {
+        $stmt = $students->prepare("SELECT * FROM {$students_db}.meetings WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $r = $stmt->get_result(); if ($r) $meeting = $r->fetch_assoc(); $stmt->close(); }
+    }
+    echo json_encode(['success'=>($meeting!==null),'meeting'=>$meeting]); exit;
+}
+
 // -- AJAX WRITE: submit_approval_action --
 if ($view === 'submit_approval_action' && $ajax === '1') {
     header('Content-Type: application/json');
@@ -510,7 +535,7 @@ if ($view === 'submit_staff_appraisal' && $ajax === '1') {
 if ($view === 'approve_graduation' && $ajax === '1') {
     header('Content-Type: application/json');
     $sid = (int)($_POST['student_id']??0);
-    if ($sid) { $stmt = $students->prepare("UPDATE students SET status='Graduated' WHERE id=?"); $stmt->bind_param("i", $sid); $ok = $stmt->execute(); echo json_encode(['success'=>($ok && $stmt->affected_rows>0)]); $stmt->close(); exit; }
+    if ($sid) { $stmt = $students->prepare("UPDATE students SET status='Graduated' WHERE id=?"); if ($stmt) { $stmt->bind_param("i", $sid); $ok = $stmt->execute(); echo json_encode(['success'=>($ok && $stmt->affected_rows>0)]); $stmt->close(); } else { echo json_encode(['success'=>false,'error'=>'Prepare failed']); } exit; }
     echo json_encode(['success'=>false]); exit;
 }
 
@@ -586,7 +611,7 @@ try {
     if ($students) {
         $r = $students->query("SELECT COUNT(*) c FROM students WHERE status='Active'"); if ($r) $totalStudents = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT ROUND(AVG(IFNULL(attendance_percentage,0)),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $attRate = (float)($r->fetch_assoc()['v']??0);
-        $r = $staff->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM examination_records WHERE grade IS NOT NULL) t FROM examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
+        $r = $staff->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM {$staff_db}.examination_records WHERE grade IS NOT NULL) t FROM {$staff_db}.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $welfareAlerts = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $upMt = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='Completed'"); if ($r) $revTotal = (float)$r->fetch_assoc()['v'];
@@ -747,6 +772,12 @@ var h='';
 items.forEach(function(a){h+='<div class="approval-card"><div class="ac-title">'+esc(a.title)+'</div><div class="ac-meta">Requester: '+esc(a.requester)+' | '+esc(a.created_at)+'</div><div class="ac-actions"><button class="btn btn-success btn-sm" onclick="processApproval('+a.id+',\'grade_approval\',\'approve\')"><i class="fas fa-check me-1"></i>Approve</button><button class="btn btn-danger btn-sm" onclick="processApproval('+a.id+',\'grade_approval\',\'reject\')"><i class="fas fa-times me-1"></i>Reject</button><button class="btn btn-warning btn-sm" onclick="processApproval('+a.id+',\'grade_approval\',\'return\')"><i class="fas fa-undo me-1"></i>Return</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none" onclick="processApproval('+a.id+',\'grade_approval\',\'escalate\')"><i class="fas fa-arrow-up me-1"></i>DG</button></div></div>';});
 el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
+}
+function processApproval(id,src,action){
+var comments=prompt('Enter comments for this action:'); if(comments===null) comments='';
+var fd=new FormData();fd.append('id',id);fd.append('source',src);fd.append('action',action);fd.append('comments',comments);fd.append('csrf_token', window.CSRF_TOKEN);
+fetch('school-principal.php?view=submit_approval_action&ajax=1',{method:'POST',body:fd})
+.then(function(r){return r.json()}).then(function(d){if(d.success){loadResultApprovals();alert('Action completed.');}else{alert('Action failed.');}}).catch(function(){alert('Error.');});
 }
 document.addEventListener('DOMContentLoaded',loadResultApprovals);
 </script>
@@ -1197,6 +1228,12 @@ h+='<div class="ac-actions"><button class="btn btn-success btn-sm" onclick="proc
 el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
+function processApproval(id,src,action){
+var comments=prompt('Enter comments for this action:'); if(comments===null) comments='';
+var fd=new FormData();fd.append('id',id);fd.append('source',src);fd.append('action',action);fd.append('comments',comments);fd.append('csrf_token', window.CSRF_TOKEN);
+fetch('school-principal.php?view=submit_approval_action&ajax=1',{method:'POST',body:fd})
+.then(function(r){return r.json()}).then(function(d){if(d.success){loadApprovals('all');alert('Action completed.');}else{alert('Action failed.');}}).catch(function(){alert('Error.');});
+}
 document.addEventListener('DOMContentLoaded',function(){loadApprovals('all');});
 </script>
 <?php endif; ?>
@@ -1240,7 +1277,7 @@ h+='</tbody></table></div>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small p-3">Failed.</div>';});
 }
 function viewMeeting(id){
-fetch('school-secretary.php?view=meeting_get&ajax=1&id='+id).then(function(r){return r.json()}).then(function(d){
+fetch('school-principal.php?view=meeting_get&ajax=1&id='+id).then(function(r){return r.json()}).then(function(d){
 if(!d||!d.meeting){alert('Not found');return;}var m=d.meeting;
 alert('Title: '+m.title+'\nDate: '+m.meeting_date+'\nTime: '+(m.start_time||'--')+' - '+(m.end_time||'--')+'\nLocation: '+(m.location||'--')+'\nType: '+(m.meeting_type||'')+'\nStatus: '+m.status+'\n\nAgenda:\n'+(m.agenda||'N/A'));
 }).catch(function(){alert('Failed.');});
@@ -1497,7 +1534,7 @@ try { if ($students) { $r = $students->query("SELECT * FROM {$students_db}.princ
 <?php if ($view === 'announcements'): ?>
 <div class="scard"><div class="sch"><i class="fas fa-bullhorn me-2"></i>Announcements</div><div class="scb p-0">
 <?php
-try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 20"); if ($r) while ($a = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold">'.htmlspecialchars($a['title']).'</div><div class="small text-muted">'.htmlspecialchars(mb_substr($a['body']??'',0,200)).'</div><div class="time">'.htmlspecialchars($a['created_at']).'</div></div>'; } } } catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
+try { if ($students) { $r = $students->query("SELECT * FROM {$students_db}.announcements ORDER BY created_at DESC LIMIT 20"); if ($r) while ($a = $r->fetch_assoc()) { echo '<div class="act-item"><div class="fw-bold">'.htmlspecialchars($a['title']).'</div><div class="small text-muted">'.htmlspecialchars(mb_substr($a['body']??'',0,200)).'</div><div class="time">'.htmlspecialchars($a['created_at']).'</div></div>'; } } } catch (Exception $e) { error_log('school-principal context: ' . $e->getMessage()); }
 ?>
 </div></div>
 <?php endif; ?>

@@ -256,35 +256,53 @@ document.addEventListener('DOMContentLoaded', function() {
   var title = document.querySelector('.school-title');
   if (!track || !title) return;
 
-  var speed = 1.2;
-  var restartMargin = 80;
+  var speed = 1.0;
+  var LOGO_W = 80;
   var offset = 0;
   var lastTime = null;
   var started = false;
+  var paused = false;
+  var pauseElapsed = 0;
+  var PAUSE_MS = 2500;
 
   function animate(time) {
     if (!lastTime) lastTime = time;
-    var dt = (time - lastTime) / 16.67;
+    var dt = time - lastTime;
     lastTime = time;
 
-    var textW = title.offsetWidth;
+    var textW = title.scrollWidth;
     var containerW = track.parentElement.offsetWidth;
+    if (containerW < 1) { requestAnimationFrame(animate); return; }
 
     if (!started && textW > 0) {
       offset = containerW;
       started = true;
     }
 
-    offset -= speed * dt;
+    if (paused) {
+      pauseElapsed += dt;
+      if (pauseElapsed >= PAUSE_MS) {
+        paused = false;
+        offset = containerW;
+      }
+      track.style.transform = 'translateX(' + offset + 'px)';
+      requestAnimationFrame(animate);
+      return;
+    }
 
+    offset -= speed * (dt / 16.67);
+
+    var stopOffset;
     if (textW > containerW) {
-      if (offset <= -(textW - containerW + restartMargin)) {
-        offset = containerW;
-      }
+      stopOffset = -(textW - containerW + LOGO_W * 0.25);
     } else {
-      if (offset <= -restartMargin) {
-        offset = containerW;
-      }
+      stopOffset = -(LOGO_W * 0.5);
+    }
+
+    if (offset <= stopOffset) {
+      offset = stopOffset;
+      paused = true;
+      pauseElapsed = 0;
     }
 
     track.style.transform = 'translateX(' + offset + 'px)';

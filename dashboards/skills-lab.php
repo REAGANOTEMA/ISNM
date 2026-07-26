@@ -20,6 +20,16 @@ $q = $_GET['q'] ?? '';
 
 $db = $students;
 
+if ($db) {
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_equipment` (id INT AUTO_INCREMENT PRIMARY KEY, equipment_code VARCHAR(50) DEFAULT '', equipment_name VARCHAR(200) DEFAULT '', category VARCHAR(100) DEFAULT '', condition_status VARCHAR(50) DEFAULT 'Good', quantity INT DEFAULT 0, location VARCHAR(200) DEFAULT '', last_maintenance DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Available', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_checkouts` (id INT AUTO_INCREMENT PRIMARY KEY, equipment_id INT DEFAULT 0, borrower_id VARCHAR(50) DEFAULT '', borrower_name VARCHAR(200) DEFAULT '', checkout_date DATE DEFAULT NULL, expected_return DATE DEFAULT NULL, actual_return DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'checked_out', notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_equipment (equipment_id), KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_sessions` (id INT AUTO_INCREMENT PRIMARY KEY, session_name VARCHAR(200) DEFAULT '', instructor_id INT DEFAULT 0, instructor_name VARCHAR(200) DEFAULT '', scheduled_date DATE DEFAULT NULL, scheduled_time TIME DEFAULT NULL, duration_minutes INT DEFAULT 60, max_students INT DEFAULT 30, room VARCHAR(100) DEFAULT '', status VARCHAR(50) DEFAULT 'scheduled', notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_date (scheduled_date), KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_demonstrations` (id INT AUTO_INCREMENT PRIMARY KEY, session_id INT DEFAULT 0, skill_name VARCHAR(200) DEFAULT '', description TEXT, instructor_id INT DEFAULT 0, demo_date DATE DEFAULT NULL, students_count INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_session (session_id), KEY idx_date (demo_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_consumables` (id INT AUTO_INCREMENT PRIMARY KEY, item_name VARCHAR(200) DEFAULT '', category VARCHAR(100) DEFAULT '', quantity DECIMAL(14,2) DEFAULT 0, unit VARCHAR(50) DEFAULT 'pieces', min_stock_level DECIMAL(14,2) DEFAULT 10, unit_cost DECIMAL(14,2) DEFAULT 0, supplier VARCHAR(200) DEFAULT '', last_ordered_date DATE DEFAULT NULL, notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_category (category)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_attendance` (id INT AUTO_INCREMENT PRIMARY KEY, session_id INT DEFAULT 0, student_id INT DEFAULT 0, attendance_status VARCHAR(50) DEFAULT 'present', check_in_time TIME DEFAULT NULL, marked_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uk_session_student (session_id, student_id), KEY idx_session (session_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$db->query("CREATE TABLE IF NOT EXISTS `lab_incidents` (id INT AUTO_INCREMENT PRIMARY KEY, incident_date DATE DEFAULT NULL, incident_time TIME DEFAULT NULL, reported_by VARCHAR(200) DEFAULT '', incident_type VARCHAR(100) DEFAULT '', severity VARCHAR(50) DEFAULT 'Low', description TEXT, equipment_involved VARCHAR(200) DEFAULT '', student_involved VARCHAR(200) DEFAULT '', action_taken TEXT, status VARCHAR(50) DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_date (incident_date), KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // â”€â”€ AJAX Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Equipment CRUD
@@ -279,14 +289,14 @@ if ($view === 'skills' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_demonstrations SET session_id=?, skill_name=?, description=?, instructor_id=?, demo_date=?, students_count=? WHERE id=?");
             if ($stmt) {
-                $stmt->bind_param("isssiii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
+                $stmt->bind_param("issisii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_demonstrations (session_id, skill_name, description, instructor_id, demo_date, students_count) VALUES (?,?,?,?,?,?)");
             if ($stmt) {
-                $stmt->bind_param("isssii", $sesid, $skn, $desc, $iid, $ddate, $scount);
+                $stmt->bind_param("issisi", $sesid, $skn, $desc, $iid, $ddate, $scount);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
@@ -343,14 +353,14 @@ if ($view === 'consumables' && $ajax === 'save') {
         if ($id) {
             $stmt = $db->prepare("UPDATE lab_consumables SET item_name=?, category=?, quantity=?, unit=?, min_stock_level=?, unit_cost=?, supplier=?, last_ordered_date=?, notes=? WHERE id=?");
             if ($stmt) {
-                $stmt->bind_param("sssdssssi", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
+                $stmt->bind_param("ssdsdssssi", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
         } else {
             $stmt = $db->prepare("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES (?,?,?,?,?,?,?,?,?)");
             if ($stmt) {
-                $stmt->bind_param("sssdsssss", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
+                $stmt->bind_param("ssdsdssss", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
@@ -405,7 +415,7 @@ if ($view === 'attendance' && $ajax === 'save') {
             $stat = $s['attendance_status'] ?? 'present';
             if (!$stid) continue;
             try {
-                $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
+                $stmt->bind_param("issisi", $sid, $stid, $stat, $mid, $stat, $mid);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $success++;
             } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }

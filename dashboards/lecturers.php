@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Add assessment â”€â”€
     if ($action === 'add_assessment' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_assessments (lecturer_id, student_id, course_name, assessment_type, title, total_marks, marks_obtained, assessment_date, comments) VALUES (?,?,?,?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("iisssiiis",
             $user_id,
             $_POST['student_id'],
@@ -66,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Update assessment â”€â”€
     if ($action === 'update_assessment' && $conn) {
         $stmt = $conn->prepare("UPDATE teaching_assessments SET course_name=?, assessment_type=?, title=?, total_marks=?, marks_obtained=?, assessment_date=?, comments=? WHERE id=? AND lecturer_id=?");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("sssiiisii",
             $_POST['course_name'],
             $_POST['assessment_type'],
@@ -85,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Delete assessment â”€â”€
     if ($action === 'delete_assessment' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_assessments WHERE id=? AND lecturer_id=?");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("ii", $_POST['assessment_id'], $user_id);
         $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Assessment deleted']);
         $stmt->close();
@@ -94,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Add resource â”€â”€
     if ($action === 'add_resource' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id, title, resource_type, file_path, url, description, course_name) VALUES (?,?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("issssss",
             $user_id,
             $_POST['title'],
@@ -111,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Delete resource â”€â”€
     if ($action === 'delete_resource' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_resources WHERE id=? AND lecturer_id=?");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("ii", $_POST['resource_id'], $user_id);
         $ok = $stmt->execute(); if (!$ok) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Resource deleted']);
         $stmt->close();
@@ -120,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // â”€â”€ Add announcement â”€â”€
     if ($action === 'add_announcement' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_announcements (lecturer_id, title, content, target_audience, is_published) VALUES (?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("isssi",
             $user_id,
             $_POST['title'],
@@ -133,60 +139,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }    // courseMaterials - store as teaching_resource
     if ($action === 'add_course_material' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id, title, resource_type, description) VALUES (?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("isss", $user_id, $_POST['title'], $_POST['file_type'], $_POST['description']);
         $ok = $stmt->execute(); if (!$ok) { error_log('material: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Material added']); $stmt->close(); exit;
     }
     // syllabus - store in course_syllabi
     if ($action === 'add_syllabus' && $conn) {
         $stmt = $conn->prepare("INSERT INTO course_syllabi (lecturer_id, course_id, course_name, semester, topics, learning_outcomes) VALUES (?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("isssss", $user_id, $_POST['course_id'], $_POST['course_name'], $_POST['semester'], $_POST['topics'], $_POST['learning_outcomes']);
         $ok = $stmt->execute(); if (!$ok) { error_log('syllabus: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Syllabus added']); $stmt->close(); exit;
     }
     // lessonPlan - store in lesson_plans
     if ($action === 'add_lesson_plan' && $conn) {
         $stmt = $conn->prepare("INSERT INTO lesson_plans (lecturer_id, course_id, week_number, topic, objectives, activities) VALUES (?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("isisss", $user_id, $_POST['course_id'], $_POST['week_number'], $_POST['topic'], $_POST['objectives'], $_POST['activities']);
         $ok = $stmt->execute(); if (!$ok) { error_log('lesson_plan: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Lesson plan added']); $stmt->close(); exit;
     }
     // courseEvaluation - store in course_evaluations
     if ($action === 'add_evaluation' && $conn) {
         $stmt = $conn->prepare("INSERT INTO course_evaluations (lecturer_id, course_id, course_name, semester, questions, feedback) VALUES (?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("isssss", $user_id, $_POST['course_id'], $_POST['course_c_name'], $_POST['semester'], $_POST['questions'], $_POST['feedback']);
         $ok = $stmt->execute(); if (!$ok) { error_log('evaluation: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Evaluation added']); $stmt->close(); exit;
     }
     // addLecture - store in lecture_schedule
     if ($action === 'add_lecture' && $conn) {
         $stmt = $conn->prepare("INSERT INTO lecture_schedule (lecturer_id, course_id, topic, lecture_date, start_time, end_time, venue, status) VALUES (?,?,?,?,?,?,?,'scheduled')");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("issssss", $user_id, $_POST['course_id'], $_POST['topic'], $_POST['lecture_date'], $_POST['start_time'], $_POST['end_time'], $_POST['venue']);
         $ok = $stmt->execute(); if (!$ok) { error_log('lecture: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Lecture added']); $stmt->close(); exit;
     }
     // rescheduleLecture - update lecture_schedule
     if ($action === 'reschedule_lecture' && $conn) {
         $stmt = $conn->prepare("UPDATE lecture_schedule SET lecture_date=?, start_time=?, end_time=?, reason=? WHERE id=? AND lecturer_id=?");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("ssssii", $_POST['new_date'], $_POST['start_time'], $_POST['end_time'], $_POST['reason'], $_POST['lecture_id'], $user_id);
         $ok = $stmt->execute(); if (!$ok) { error_log('reschedule: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Lecture rescheduled']); $stmt->close(); exit;
     }
     // cancelLecture - update lecture_schedule
     if ($action === 'cancel_lecture' && $conn) {
         $stmt = $conn->prepare("UPDATE lecture_schedule SET status='cancelled', reason=? WHERE id=? AND lecturer_id=?");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("sii", $_POST['reason'], $_POST['lecture_id'], $user_id);
         $ok = $stmt->execute(); if (!$ok) { error_log('cancel: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Lecture cancelled']); $stmt->close(); exit;
     }
     // attendance - store in student_attendance
     if ($action === 'add_attendance' && $conn) {
         $stmt = $conn->prepare("INSERT INTO student_attendance (course_id, student_id, date, status, notes) VALUES (?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'error' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("ssiss", $_POST['course_name'], $_POST['student_id'], $_POST['date'], $_POST['status'], $_POST['notes']);
         $ok = $stmt->execute(); if (!$ok) { error_log('attendance: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'error' => $stmt->error ?? null]); $stmt->close(); exit;
     }
     // studentCounseling - store in lecturer_counseling
     if ($action === 'add_counseling' && $conn) {
         $stmt = $conn->prepare("INSERT INTO lecturer_counseling (lecturer_id, student_id, concern, action_outcome, follow_up) VALUES (?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("iisss", $user_id, $_POST['student_id'], $_POST['concern'], $_POST['action_taken'], $_POST['follow_up']);
         $ok = $stmt->execute(); if (!$ok) { error_log('counseling: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Counseling record added']); $stmt->close(); exit;
     }
     // gradeSubmission - store in academic_records
     if ($action === 'submit_grade' && $conn) {
         $stmt = $conn->prepare("INSERT INTO academic_records (lecturer_id, student_id, course_id, assessment_type, marks, grade) VALUES (?,?,?,?,?,?)");
+        if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
         $stmt->bind_param("iissss", $user_id, $_POST['student_id'], $_POST['course_name'], $_POST['assessment_type'], $_POST['score'], $_POST['grade']);
         $ok = $stmt->execute(); if (!$ok) { error_log('grade: ' . ($stmt->error ?? 'u')); } echo json_encode(['success' => $ok, 'message' => $stmt->error ?: 'Grade submitted']); $stmt->close(); exit;
     }

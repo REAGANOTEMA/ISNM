@@ -27,6 +27,23 @@ $migrate($staff); $migrate($students);
 if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section'] ?? 'overview'; if ($view === 'overview') $view = 'home';
+$view_aliases = [
+    'student-appeals' => 'student-appeals',
+    'student-progress' => 'student-progress',
+    'student-risk' => 'student-risk',
+    'program-performance' => 'program-performance',
+    'exam-monitoring' => 'exam-monitoring',
+    'clinical-training' => 'clinical-training',
+    'academic-quality' => 'academic-quality',
+    'discipline' => 'discipline',
+    'student-welfare' => 'student-welfare',
+    'budget-planning' => 'budget-planning',
+    'infrastructure' => 'infrastructure',
+    'deputy-reports' => 'deputy-reports',
+];
+if (isset($view_aliases[$view])) {
+    $view = $view_aliases[$view];
+}
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
 function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function dep_success($m) { $_SESSION['dep_success'] = $m; }

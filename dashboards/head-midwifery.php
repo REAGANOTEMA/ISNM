@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id) {
             try {
                 $stmt = $conn->prepare("DELETE FROM midwifery_students WHERE id=?");
+                if (!$stmt) { $error = $conn->error; goto render_head_midwifery; }
                 $stmt->bind_param('i', $id);
                 if ($stmt->execute()) {
                     $flash = '<div class="alert alert-success">Student deleted.</div>';
@@ -95,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($sid && $facility && $start) {
             try {
                 $stmt = $conn->prepare("INSERT INTO midwifery_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, deliveries_observed, deliveries_assisted, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', '')");
+                if (!$stmt) { $error = $conn->error; goto render_head_midwifery; }
                 $stmt->bind_param('ssssssii', $sid, $facility, $dept, $start, $end, $sup, $dObs, $dAss);
                 if ($stmt->execute()) {
                     $flash = '<div class="alert alert-success">Placement added successfully.</div>';
@@ -350,6 +352,7 @@ if ($conn) {
         }
     } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
+render_head_midwifery:
 ?>
 
 <!DOCTYPE html>

@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $notes = trim($_POST['notes'] ?? '');
                 if ($rname && $start && $end) {
                     $stmt = $conn->prepare("INSERT INTO transport_routes (route_name, start_location, end_location, distance_km, estimated_duration_minutes, route_type, fare_amount, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
-                    if ($stmt) { $stmt->bind_param('sssdiids', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+                    if ($stmt) { $stmt->bind_param('sssdidsd', $rname, $start, $end, $dist, $dur, $rtype, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Route added successfully.';
                 } else {
                     $flash = 'Route name, start, and end locations are required.';
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     $rname = '';
                     if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("INSERT INTO transport_trips (vehicle_id, driver_id, route_id, route_name, departure_time, arrival_time, passengers_count, fuel_cost, trip_distance, trip_fare, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
-                    if ($stmt) { $stmt->bind_param('iiisssiddss', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+                    if ($stmt) { $stmt->bind_param('iiisssiddsd', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Trip added successfully.';
                 } else {
                     $flash = 'Vehicle and route are required.';
@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     $rname = '';
                     if ($rnstmt) { $rnstmt->bind_param('i', $rid); $rnstmt->execute(); $rnres = $rnstmt->get_result(); $rnrow = $rnres ? $rnres->fetch_row() : null; $rname = $rnrow ? $rnrow[0] : ''; $rnstmt->close(); }
                     $stmt = $conn->prepare("UPDATE transport_trips SET vehicle_id=?, driver_id=?, route_id=?, route_name=?, departure_time=?, arrival_time=?, passengers_count=?, fuel_cost=?, trip_distance=?, trip_fare=?, status=?, notes=? WHERE id=?");
-                    if ($stmt) { $stmt->bind_param('iiisssiddssi', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $status, $notes, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
+                    if ($stmt) { $stmt->bind_param('iiisssiddsssi', $vid, $did, $rid, $rname, $dep, $arr, $pax, $fcost, $dist, $fare, $status, $notes, $tid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; }
                     $flash = 'Trip updated successfully.';
                 }
                 break;
@@ -300,6 +300,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 if (isset($_GET['flash'])) {
     $flash = $_GET['flash'] ?? '';
     $flashType = $_GET['flash_type'] ?? 'success';
+}
+
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_vehicles` (id INT AUTO_INCREMENT PRIMARY KEY, vehicle_number VARCHAR(50) NOT NULL, vehicle_type VARCHAR(100) DEFAULT '', capacity INT DEFAULT 0, fuel_type VARCHAR(50) DEFAULT 'Diesel', insurance_expiry DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Available', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_routes` (id INT AUTO_INCREMENT PRIMARY KEY, route_name VARCHAR(200) NOT NULL, start_location VARCHAR(200) DEFAULT '', end_location VARCHAR(200) DEFAULT '', distance_km DECIMAL(10,2) DEFAULT 0, estimated_duration_minutes INT DEFAULT 0, route_type VARCHAR(50) DEFAULT 'Regular', fare_amount DECIMAL(14,2) DEFAULT 0, notes TEXT, status VARCHAR(50) DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_trips` (id INT AUTO_INCREMENT PRIMARY KEY, vehicle_id INT DEFAULT NULL, driver_id INT DEFAULT NULL, route_id INT DEFAULT NULL, route_name VARCHAR(200) DEFAULT '', departure_time DATETIME DEFAULT NULL, arrival_time DATETIME DEFAULT NULL, passengers_count INT DEFAULT 0, fuel_cost DECIMAL(14,2) DEFAULT 0, trip_distance DECIMAL(10,2) DEFAULT 0, trip_fare DECIMAL(14,2) DEFAULT 0, notes TEXT, status VARCHAR(50) DEFAULT 'Scheduled', student_count INT DEFAULT 0, requested_by INT DEFAULT NULL, dg_approval_status VARCHAR(50) DEFAULT 'none', dg_approved_by INT DEFAULT NULL, dg_approved_at DATETIME DEFAULT NULL, rejection_reason TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_vehicle (vehicle_id), KEY idx_driver (driver_id), KEY idx_route (route_id), KEY idx_date (departure_time), KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_student_assignments` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT DEFAULT 0, student_name VARCHAR(200) DEFAULT '', registration_number VARCHAR(50) DEFAULT '', route_id INT DEFAULT NULL, vehicle_id INT DEFAULT NULL, pickup_point VARCHAR(200) DEFAULT '', dropoff_point VARCHAR(200) DEFAULT '', academic_year VARCHAR(20) DEFAULT '', status VARCHAR(50) DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_route (route_id), KEY idx_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_fuel_log` (id INT AUTO_INCREMENT PRIMARY KEY, vehicle_id INT DEFAULT NULL, driver_id INT DEFAULT NULL, fuel_date DATE DEFAULT NULL, liters DECIMAL(10,2) DEFAULT 0, cost DECIMAL(14,2) DEFAULT 0, odometer_reading DECIMAL(10,0) DEFAULT 0, station VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_vehicle (vehicle_id), KEY idx_driver (driver_id), KEY idx_date (fuel_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Page Routing Ã¢â€â‚¬Ã¢â€â‚¬

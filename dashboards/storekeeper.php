@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         } else {
             $stmt = $staffConn->prepare("INSERT INTO store_inventory (item_code, item_name, category_id, unit, quantity, reorder_level, unit_cost, location, batch_number, expiry_date, supplier, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')");
             if ($stmt) {
-                $stmt->bind_param("sssiiidssss", $itemCode, $itemName, $categoryId, $unit, $qty, $reorderLevel, $unitCost, $location, $batchNumber, $expiryDate, $supplier);
+                $stmt->bind_param("ssisdidssss", $itemCode, $itemName, $categoryId, $unit, $qty, $reorderLevel, $unitCost, $location, $batchNumber, $expiryDate, $supplier);
                 if ($stmt->execute()) { $_SESSION['store_msg'] = ['type'=>'success','text'=>'Item "' . htmlspecialchars($itemName) . '" added.']; }
                 else { $_SESSION['store_msg'] = ['type'=>'error','text'=>'Failed to add item.']; }
                 $stmt->close();
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         } else {
             $stmt = $staffConn->prepare("UPDATE store_inventory SET item_code=?, item_name=?, category_id=?, unit=?, quantity=?, reorder_level=?, unit_cost=?, location=?, batch_number=?, expiry_date=?, supplier=?, status=? WHERE id=?");
             if ($stmt) {
-                $stmt->bind_param("sssidsdsssssi", $itemCode, $itemName, $categoryId, $unit, $qty, $reorderLevel, $unitCost, $location, $batchNumber, $expiryDate, $supplier, $status, $itemId);
+                $stmt->bind_param("ssisdidsssssi", $itemCode, $itemName, $categoryId, $unit, $qty, $reorderLevel, $unitCost, $location, $batchNumber, $expiryDate, $supplier, $status, $itemId);
                 if ($stmt->execute()) { $_SESSION['store_msg'] = ['type'=>'success','text'=>'Item updated.']; }
                 else { $_SESSION['store_msg'] = ['type'=>'error','text'=>'Failed to update item.']; }
                 $stmt->close();

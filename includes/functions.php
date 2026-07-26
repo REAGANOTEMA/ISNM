@@ -387,9 +387,12 @@ function auditTrail($user_id, $action, $details, $ip_address = null) {
     $sql = "INSERT INTO staff_audit_logs (staff_id, action, old_values, ip_address, user_agent, created_at) 
             VALUES (?, ?, ?, ?, ?, NOW())";
     
-    $stmt = $GLOBALS['conn']->prepare($sql);
+    $conn = getStaffConnection();
+    if (!$conn) return;
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return;
     $stmt->bind_param("issss", $user_id, $action, $details, $ip_address, $user_agent);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+    $stmt->execute();
     $stmt->close();
 }
 
@@ -454,9 +457,9 @@ function getSystemStatistics() {
         'total_balance' => 0
     ];
     try {
-        $stats['finance']['total_fees'] = executeQuery('staffs', "SELECT SUM(amount) as total FROM fee_accounts")[0]['total'] ?? 0;
-        $stats['finance']['total_paid'] = executeQuery('staffs', "SELECT SUM(amount) as total FROM payment_records WHERE status = 'Completed'")[0]['total'] ?? 0;
-        $stats['finance']['total_balance'] = executeQuery('staffs', "SELECT SUM(balance) as total FROM fee_accounts")[0]['total'] ?? 0;
+        $stats['finance']['total_fees'] = executeQuery('students', "SELECT SUM(amount) as total FROM fee_accounts")[0]['total'] ?? 0;
+        $stats['finance']['total_paid'] = executeQuery('students', "SELECT SUM(amount) as total FROM payment_records WHERE status = 'Completed'")[0]['total'] ?? 0;
+        $stats['finance']['total_balance'] = executeQuery('students', "SELECT SUM(balance) as total FROM fee_accounts")[0]['total'] ?? 0;
     } catch (Exception $e) {
         error_log('Finance stats error: ' . $e->getMessage());
     }

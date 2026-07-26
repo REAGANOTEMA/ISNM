@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
                 $stmt = $conn->prepare("INSERT INTO welfare_cases (student_id, student_name, case_type, description, reported_by, reported_by_name, assigned_to, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open')");
                 if ($stmt) {
-                    $stmt->bind_param("issssiis", $student_id, $student_name, $case_type, $description, $user_id, $user_name, $user_id, $priority);
+                    $stmt->bind_param("isssisis", $student_id, $student_name, $case_type, $description, $user_id, $user_name, $user_id, $priority);
                     if ($stmt->execute()) {
                         $_SESSION['success'] = "Welfare case created successfully.";
                     } else {

@@ -9,6 +9,7 @@ $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Sickbay Staff';
 $user_role = $user['role'] ?? 'Sickbay';
 $user_id = (int)($user['id'] ?? 0);
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
 // ─── Ensure tables exist ───
 if ($staff_conn) {
@@ -180,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $recs = trim($_POST['recommendations']);
         $recommender = trim($_POST['recommended_by'] ?? $user_name);
         $stmt = $staff_conn->prepare("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?, 'Pending', ?, ?, ?, ?)");
-        if ($stmt) { $stmt->bind_param('sisssisssssisii', $leave_num, $sid, $sname, $snum, $prog, $year, $sick_id, $other_sick, $from, $to, $recommender, $bed, $recs, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('sisssissssissi', $leave_num, $sid, $sname, $snum, $prog, $year, $sick_id, $other_sick, $from, $to, $recommender, $bed, $recs, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Sick leave issued. #'.$leave_num;
         header('Location: sickbay.php?section=leave'); exit;
     }
@@ -337,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $follow_up = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         $notes = trim($_POST['notes']);
         $stmt = $staff_conn->prepare("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?, 'Reported', ?,?)");
-        if ($stmt) { $stmt->bind_param('sisssssssiiii', $inc_num, $sid, $itype, $symptoms, $severity, $location, $action_taken, $treatment, $referred, $parent_notified, $follow_up, $user_id, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('sisssssssisis', $inc_num, $sid, $itype, $symptoms, $severity, $location, $action_taken, $treatment, $referred, $parent_notified, $follow_up, $user_id, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Health incident reported. #'.$inc_num;
         header('Location: sickbay.php?section=health-incidents'); exit;
     }
@@ -379,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         $notes = trim($_POST['notes']);
         $stmt = $staff_conn->prepare("INSERT INTO sickbay_visits (student_id, student_name, visit_date, symptoms, diagnosis, treatment, medication_given, nurse_id, nurse_name, status, follow_up_date, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('isssssssssss', $sid, $sname, $vdate, $symptoms, $diagnosis, $treatment, $medication, $user_id, $user_name, $status, $fud, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($stmt) { $stmt->bind_param('issssssissss', $sid, $sname, $vdate, $symptoms, $diagnosis, $treatment, $medication, $user_id, $user_name, $status, $fud, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = 'Sickbay visit recorded.';
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -503,15 +504,15 @@ $today_visits = sb_q($staff_conn, "SELECT COUNT(*) FROM daily_sick_records WHERE
 $pending_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHERE status = 'Pending' AND (is_deleted = 0 OR is_deleted IS NULL)");
 $active_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHERE status IN ('Approved','Extended') AND leave_to >= CURDATE() AND (is_deleted = 0 OR is_deleted IS NULL)");
 $critical_cases = sb_q($staff_conn, "SELECT COUNT(*) FROM daily_sick_records WHERE severity = 'Critical' AND visit_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND (is_deleted = 0 OR is_deleted IS NULL)");
-$recent_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschool_students.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.created_at DESC LIMIT 10");
+$recent_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN {$students_db_name}.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.created_at DESC LIMIT 10");
 $low_stock_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE status IN ('Low Stock','Out of Stock')");
 $low_stock_count = !empty($low_stock_meds) ? (int)$low_stock_meds[0]['cnt'] : 0;
 $expiring_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND expiry_date >= CURDATE()");
 $expiring_count = !empty($expiring_meds) ? (int)$expiring_meds[0]['cnt'] : 0;
 $sicknesses = sb_fetch($staff_conn, "SELECT * FROM sickness_directory ORDER BY sickness_name ASC");
 $sickness_list = sb_fetch($staff_conn, "SELECT * FROM sickness_directory WHERE status='Active' ORDER BY sickness_name ASC");
-$daily_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschool_students.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.visit_date DESC, dsr.visit_time DESC LIMIT 200");
-$leave_records = sb_fetch($staff_conn, "SELECT sl.*, s.full_name as student_full_name FROM student_sick_leave sl LEFT JOIN igangaschool_students.students s ON sl.student_id = s.id WHERE (sl.is_deleted = 0 OR sl.is_deleted IS NULL) ORDER BY sl.created_at DESC LIMIT 200");
+$daily_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN {$students_db_name}.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.visit_date DESC, dsr.visit_time DESC LIMIT 200");
+$leave_records = sb_fetch($staff_conn, "SELECT sl.*, s.full_name as student_full_name FROM student_sick_leave sl LEFT JOIN {$students_db_name}.students s ON sl.student_id = s.id WHERE (sl.is_deleted = 0 OR sl.is_deleted IS NULL) ORDER BY sl.created_at DESC LIMIT 200");
 $medicines = sb_fetch($staff_conn, "SELECT * FROM sickbay_medicine_stock ORDER BY medicine_name ASC");
 $medicine_transactions = sb_fetch($staff_conn, "SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id ORDER BY smt.created_at DESC LIMIT 50");
 $sickbay_visits = sb_fetch($staff_conn, "SELECT * FROM sickbay_visits ORDER BY visit_date DESC, id DESC LIMIT 200");
@@ -523,11 +524,11 @@ foreach ($sb_settings_rows as $row) { $sb_settings[$row['setting_key']] = $row['
 
 $health_records_list = []; $health_incidents_list = [];
 if ($staff_conn) {
-    $health_records_list = sb_fetch($staff_conn, "SELECT shr.*, s.full_name, s.student_number, s.program FROM student_health_records shr LEFT JOIN igangaschool_students.students s ON shr.student_id = s.id ORDER BY s.full_name ASC LIMIT 200");
-    $health_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM health_incidents hi LEFT JOIN igangaschool_students.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
-    $student_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM student_health_incidents hi LEFT JOIN igangaschool_students.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $health_records_list = sb_fetch($staff_conn, "SELECT shr.*, s.full_name, s.student_number, s.program FROM student_health_records shr LEFT JOIN {$students_db_name}.students s ON shr.student_id = s.id ORDER BY s.full_name ASC LIMIT 200");
+    $health_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM health_incidents hi LEFT JOIN {$students_db_name}.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $student_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM student_health_incidents hi LEFT JOIN {$students_db_name}.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
     $emergency_contacts_list = sb_fetch($staff_conn, "SELECT * FROM emergency_contacts WHERE is_active = 1 ORDER BY priority ASC");
-    $student_contacts_list = sb_fetch($staff_conn, "SELECT sec.*, s.full_name FROM student_emergency_contacts sec LEFT JOIN igangaschool_students.students s ON sec.student_id = s.id ORDER BY s.full_name LIMIT 200");
+    $student_contacts_list = sb_fetch($staff_conn, "SELECT sec.*, s.full_name FROM student_emergency_contacts sec LEFT JOIN {$students_db_name}.students s ON sec.student_id = s.id ORDER BY s.full_name LIMIT 200");
 }
 $recent_activities = [];
 if ($staff_conn) {

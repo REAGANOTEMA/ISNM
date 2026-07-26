@@ -52,7 +52,7 @@ class User {
             $query = "INSERT INTO users (username, password, full_name, email, role, staff_id, status) 
                       VALUES (?, ?, ?, ?, ?, ?, 'active')";
             
-            $hashedPassword = password_hash($data['password'], HASH_ALGO);
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
             
             $params = [
                 $data['username'],
