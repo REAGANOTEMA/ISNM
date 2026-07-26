@@ -260,24 +260,30 @@ document.addEventListener('DOMContentLoaded', function() {
   var restartMargin = 80;
   var offset = 0;
   var lastTime = null;
+  var started = false;
 
   function animate(time) {
     if (!lastTime) lastTime = time;
     var dt = (time - lastTime) / 16.67;
     lastTime = time;
 
-    offset -= speed * dt;
-
     var textW = title.offsetWidth;
     var containerW = track.parentElement.offsetWidth;
 
+    if (!started && textW > 0) {
+      offset = containerW;
+      started = true;
+    }
+
+    offset -= speed * dt;
+
     if (textW > containerW) {
       if (offset <= -(textW - containerW + restartMargin)) {
-        offset = 0;
+        offset = containerW;
       }
     } else {
       if (offset <= -restartMargin) {
-        offset = 0;
+        offset = containerW;
       }
     }
 
