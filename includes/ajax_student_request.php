@@ -1,6 +1,6 @@
 <?php
 session_start();
-include_once 'config.php';
+include_once __DIR__ . '/../config/database.php';
 include_once 'functions.php';
 include_once 'auth_functions.php';
 
@@ -27,9 +27,12 @@ try {
     
     switch ($action) {
         case 'request_bus':
+            $studentsConn = getStudentsConnection();
+            if (!$studentsConn) throw new Exception('Database connection failed');
+
             // Update student bus request status
             $update_sql = "UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE student_id = ?";
-            $stmt = $conn->prepare($update_sql);
+            $stmt = $studentsConn->prepare($update_sql);
             $stmt->bind_param("s", $student_id);
             
             if ($stmt->execute()) {
@@ -37,18 +40,24 @@ try {
                 logActivity($student_id, 'Student', 'Bus Request', 'Student applied for bus service', 'students', $student_id);
                 
                 // Create notification for administrators
-                $notification_sql = "INSERT INTO notifications (user_id, notification_type, title, message) 
-                                   SELECT user_id, 'bus_request', 'New Bus Request', 
-                                   CONCAT('Student ', ?, ' has applied for bus service') 
-                                   FROM users WHERE role IN ('School Principal', 'School Secretary', 'Academic Registrar')";
-                $notif_stmt = $conn->prepare($notification_sql);
-                $notif_stmt->bind_param("s", $_SESSION['first_name'] . ' ' . $_SESSION['last_name']);
-                if (!$notif_stmt->execute()) { error_log('$notif_stmt execute failed: ' . ($notif_stmt->error ?? 'unknown')); };
+                $staffConn = getStaffConnection();
+                if ($staffConn) {
+                    $fullName = ($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '');
+                    $notification_sql = "INSERT INTO notifications (user_id, notification_type, title, message) 
+                                       SELECT id, 'bus_request', 'New Bus Request', 
+                                       CONCAT('Student ', ?, ' has applied for bus service') 
+                                       FROM staff WHERE role IN ('School Principal', 'School Secretary', 'Academic Registrar')";
+                    $notif_stmt = $staffConn->prepare($notification_sql);
+                    $notif_stmt->bind_param("s", $fullName);
+                    if (!$notif_stmt->execute()) { error_log('$notif_stmt execute failed: ' . ($notif_stmt->error ?? 'unknown')); };
+                    $notif_stmt->close();
+                }
                 
                 echo json_encode(['success' => true, 'message' => 'Bus service request submitted successfully']);
             } else {
                 throw new Exception('Failed to submit bus request');
             }
+            $stmt->close();
             break;
             
         default:

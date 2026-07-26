@@ -8,6 +8,14 @@ $user = $ctx['user'];
 
 $pageTitle = 'Student Downloads';
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_downloads (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, file_name VARCHAR(200) NOT NULL, file_type VARCHAR(50) DEFAULT 'Other', file_size VARCHAR(50) DEFAULT '', description TEXT, uploaded_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+if ($studentsConn) {
+    @$studentsConn->query("CREATE TABLE IF NOT EXISTS student_downloads (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, file_name VARCHAR(200) NOT NULL, file_type VARCHAR(50) DEFAULT 'Other', file_size VARCHAR(50) DEFAULT '', description TEXT, uploaded_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $flashSuccess = $_SESSION['success'] ?? '';
 $flashError = $_SESSION['error'] ?? '';
 unset($_SESSION['success'], $_SESSION['error']);

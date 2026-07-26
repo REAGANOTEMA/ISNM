@@ -7,6 +7,29 @@ $user = $ctx['user'];
 
 $pageTitle = 'Student Requests & Messages';
 
+// Ensure tables exist
+if ($studentsConn) {
+    $studentsConn->query("CREATE TABLE IF NOT EXISTS student_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id VARCHAR(50) NOT NULL,
+        student_name VARCHAR(255) DEFAULT NULL,
+        request_type VARCHAR(100) NOT NULL,
+        description TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $studentsConn->query("CREATE TABLE IF NOT EXISTS student_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sender_name VARCHAR(255) DEFAULT NULL,
+        `from` VARCHAR(255) DEFAULT NULL,
+        subject VARCHAR(255) DEFAULT NULL,
+        message TEXT,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $requests = [];
 foreach ([$studentsConn, $conn] as $db) {
     if (!$db) continue;

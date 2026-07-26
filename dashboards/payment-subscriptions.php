@@ -14,6 +14,11 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+if ($studentsDb) {
+    $studentsDb->query("CREATE TABLE IF NOT EXISTS payment_subscriptions (id INT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(50) DEFAULT '', subscription_type VARCHAR(50) DEFAULT 'fee_installment', reference_type VARCHAR(50) DEFAULT '', reference_id INT DEFAULT 0, total_amount DECIMAL(14,2) DEFAULT 0, installment_amount DECIMAL(14,2) DEFAULT 0, frequency VARCHAR(20) DEFAULT 'monthly', total_installments INT DEFAULT 1, installments_collected INT DEFAULT 0, start_date DATE DEFAULT NULL, next_due_date DATE DEFAULT NULL, end_date DATE DEFAULT NULL, payment_method VARCHAR(50) DEFAULT 'mobile_money', payment_provider VARCHAR(100) DEFAULT '', phone_number VARCHAR(50) DEFAULT '', status VARCHAR(50) DEFAULT 'active', notes TEXT, created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_ps_student (student_id), INDEX idx_ps_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $studentsDb->query("CREATE TABLE IF NOT EXISTS subscription_deductions (id INT AUTO_INCREMENT PRIMARY KEY, subscription_id INT NOT NULL, student_id VARCHAR(50) DEFAULT '', installment_number INT DEFAULT 0, amount DECIMAL(14,2) DEFAULT 0, due_date DATE DEFAULT NULL, processed_date DATETIME DEFAULT NULL, status VARCHAR(50) DEFAULT 'pending', payment_reference VARCHAR(100) DEFAULT '', payment_id INT DEFAULT NULL, failure_reason TEXT, attempt_count INT DEFAULT 0, last_attempt_date DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_sd_sub (subscription_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $studentId = $_GET['student_id'] ?? '';
 $subscriptions = $studentId ? getStudentSubscriptions($studentId) : [];
 $allSubscriptions = [];

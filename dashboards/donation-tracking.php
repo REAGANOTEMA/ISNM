@@ -114,10 +114,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $websiteConn) {
 // Fetch donations
 $donations = [];
 if ($websiteConn) {
-    $result = $websiteConn->query("SELECT d.*, s.full_name as received_by_name FROM donations d LEFT JOIN staff s ON d.received_by = s.id ORDER BY d.created_at DESC LIMIT 200");
+    $result = $websiteConn->query("SELECT d.* FROM donations d ORDER BY d.created_at DESC LIMIT 200");
     if ($result) {
         while ($row = $result->fetch_assoc()) $donations[] = $row;
     }
+}
+// Enrich with staff names from staff DB
+if ($conn && !empty($donations)) {
+    $staffIds = array_unique(array_filter(array_column($donations, 'received_by'), fn($v) => $v > 0));
+    $staffNames = [];
+    if (!empty($staffIds)) {
+        $placeholders = implode(',', array_fill(0, count($staffIds), '?'));
+        $types = str_repeat('i', count($staffIds));
+        $stmt = $conn->prepare("SELECT id, full_name FROM staff WHERE id IN ($placeholders)");
+        if ($stmt) {
+            $stmt->bind_param($types, ...$staffIds);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if ($r) while ($row = $r->fetch_assoc()) $staffNames[$row['id']] = $row['full_name'];
+            $stmt->close();
+        }
+    }
+    foreach ($donations as &$d) {
+        $d['received_by_name'] = $staffNames[$d['received_by']] ?? null;
+    }
+    unset($d);
 }
 
 // Calculate stats

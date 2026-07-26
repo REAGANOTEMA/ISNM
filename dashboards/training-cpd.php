@@ -3,6 +3,12 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal','head']);
 $conn = $ctx['staff'];
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS trainings (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(200) NOT NULL, training_type VARCHAR(100) DEFAULT '', provider VARCHAR(200) DEFAULT '', start_date DATE DEFAULT NULL, end_date DATE DEFAULT NULL, description TEXT, max_participants INT DEFAULT 50, status VARCHAR(50) DEFAULT 'Planned', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS employee_training (id INT AUTO_INCREMENT PRIMARY KEY, training_id INT NOT NULL, staff_id INT NOT NULL, status VARCHAR(50) DEFAULT 'Enrolled', completion_date DATE DEFAULT NULL, certificate_path VARCHAR(500) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_training (training_id), KEY idx_staff (staff_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 
 // Handle POST actions

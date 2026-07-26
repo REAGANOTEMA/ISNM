@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 22, 2026 at 05:58 PM
+-- Generation Time: Jul 26, 2026 at 11:21 AM
 -- Server version: 10.11.18-MariaDB
--- PHP Version: 8.4.22
+-- PHP Version: 8.4.23
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -476,6 +476,21 @@ CREATE TABLE `access_logs` (
   `user_agent` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `accommodation_requests`
+--
+
+CREATE TABLE `accommodation_requests` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT 0,
+  `request_type` varchar(100) DEFAULT '',
+  `description` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -3555,6 +3570,26 @@ CREATE TABLE `compliance_tracking` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `computer_repairs`
+--
+
+CREATE TABLE `computer_repairs` (
+  `id` int(11) NOT NULL,
+  `computer_id` int(11) DEFAULT 0,
+  `issue_description` text NOT NULL,
+  `priority` varchar(50) DEFAULT 'medium',
+  `status` varchar(50) DEFAULT 'open',
+  `reported_by` varchar(200) DEFAULT '',
+  `reported_date` date DEFAULT NULL,
+  `resolved_date` date DEFAULT NULL,
+  `resolution_notes` text DEFAULT NULL,
+  `cost` decimal(14,2) DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `contact_directory`
 --
 
@@ -4027,6 +4062,21 @@ CREATE TABLE `course_evaluations` (
   `course_content` decimal(3,1) DEFAULT NULL,
   `comments` text DEFAULT NULL,
   `evaluator_type` enum('Student','Peer','External') DEFAULT 'Student',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course_prerequisites`
+--
+
+CREATE TABLE `course_prerequisites` (
+  `id` int(11) NOT NULL,
+  `course_code` varchar(50) NOT NULL,
+  `prerequisite_code` varchar(50) NOT NULL,
+  `program_code` varchar(50) DEFAULT '',
+  `status` varchar(50) DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -6318,6 +6368,21 @@ CREATE TABLE `health_incidents` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `hostel`
+--
+
+CREATE TABLE `hostel` (
+  `id` int(11) NOT NULL,
+  `hostel_name` varchar(200) DEFAULT '',
+  `location` varchar(200) DEFAULT '',
+  `capacity` int(11) DEFAULT 0,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `hostel_activities`
 --
 
@@ -6352,6 +6417,23 @@ CREATE TABLE `hostel_allocations` (
   `status` enum('Active','Checked Out','Cancelled') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_assignments`
+--
+
+CREATE TABLE `hostel_assignments` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT 0,
+  `hostel_room_id` int(11) DEFAULT 0,
+  `academic_year` varchar(20) DEFAULT '',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -6709,6 +6791,637 @@ CREATE TABLE `hr_users` (
 
 INSERT INTO `hr_users` (`id`, `email`, `password_hash`, `full_name`, `role`, `status`, `last_login`, `created_at`, `login_attempts`, `locked_until`) VALUES
 (1, 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$R9gdnzRVbjZSfYyWLMLNQuCGR8kALruSeGNve8gp0vk/XO5FDV4LW', 'HR Manager', 'hr_manager', 'active', NULL, '2026-07-16 19:31:18', 0, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_assets`
+--
+
+CREATE TABLE `ict_assets` (
+  `id` int(11) NOT NULL,
+  `asset_number` varchar(100) NOT NULL,
+  `barcode` varchar(255) DEFAULT NULL,
+  `qr_code` varchar(255) DEFAULT NULL,
+  `serial_number` varchar(255) DEFAULT NULL,
+  `asset_name` varchar(200) NOT NULL,
+  `asset_type` enum('computer','printer','scanner','projector','network','server','ups','software','accessory','other') DEFAULT 'other',
+  `brand` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `current_status` enum('active','in_maintenance','retired','transferred') DEFAULT 'active',
+  `assigned_staff_id` int(11) DEFAULT NULL,
+  `assigned_department` varchar(200) DEFAULT NULL,
+  `current_location` varchar(255) DEFAULT NULL,
+  `purchase_cost` decimal(15,2) DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_asset_assignments`
+--
+
+CREATE TABLE `ict_asset_assignments` (
+  `id` int(11) NOT NULL,
+  `asset_id` int(11) NOT NULL,
+  `assigned_to_staff_id` int(11) DEFAULT NULL,
+  `assigned_department` varchar(200) DEFAULT NULL,
+  `assignment_date` date NOT NULL,
+  `expected_return_date` date DEFAULT NULL,
+  `actual_return_date` date DEFAULT NULL,
+  `assignment_notes` text DEFAULT NULL,
+  `condition_at_assignment` varchar(200) DEFAULT NULL,
+  `condition_at_return` varchar(200) DEFAULT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `status` enum('active','returned','transferred') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_asset_categories`
+--
+
+CREATE TABLE `ict_asset_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_asset_maintenance`
+--
+
+CREATE TABLE `ict_asset_maintenance` (
+  `id` int(11) NOT NULL,
+  `asset_id` int(11) NOT NULL,
+  `maintenance_type` enum('routine','repair','upgrade','cleaning','other') DEFAULT 'routine',
+  `description` text NOT NULL,
+  `performed_by` varchar(200) DEFAULT NULL,
+  `cost` decimal(15,2) DEFAULT 0.00,
+  `parts_replaced` text DEFAULT NULL,
+  `service_provider` varchar(200) DEFAULT NULL,
+  `status` enum('scheduled','in_progress','completed','cancelled') DEFAULT 'scheduled',
+  `scheduled_date` date DEFAULT NULL,
+  `completed_date` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_asset_warranty`
+--
+
+CREATE TABLE `ict_asset_warranty` (
+  `id` int(11) NOT NULL,
+  `asset_id` int(11) NOT NULL,
+  `warranty_provider` varchar(200) DEFAULT NULL,
+  `warranty_type` enum('standard','extended','onsite','carry_in') DEFAULT 'standard',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `coverage_details` text DEFAULT NULL,
+  `contact_phone` varchar(50) DEFAULT NULL,
+  `contact_email` varchar(100) DEFAULT NULL,
+  `status` enum('active','expired','claimed') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_audit_logs`
+--
+
+CREATE TABLE `ict_audit_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `resource_type` varchar(100) DEFAULT NULL,
+  `resource_id` int(11) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_backup_logs`
+--
+
+CREATE TABLE `ict_backup_logs` (
+  `id` int(11) NOT NULL,
+  `backup_id` int(11) DEFAULT NULL,
+  `log_message` text NOT NULL,
+  `log_level` enum('info','warning','error') DEFAULT 'info',
+  `logged_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_device_categories`
+--
+
+CREATE TABLE `ict_device_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(200) NOT NULL,
+  `device_type` enum('computer','printer','scanner','projector','network','server','ups','accessory','other') DEFAULT 'other',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_failed_logins`
+--
+
+CREATE TABLE `ict_failed_logins` (
+  `id` int(11) NOT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `attempted_at` timestamp NULL DEFAULT current_timestamp(),
+  `reason` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_incidents`
+--
+
+CREATE TABLE `ict_incidents` (
+  `id` int(11) NOT NULL,
+  `incident_type` varchar(100) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `severity` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `reported_by` int(11) DEFAULT NULL,
+  `reported_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `affected_system` varchar(255) DEFAULT NULL,
+  `status` enum('Open','In Progress','Resolved','Closed','Escalated') DEFAULT 'Open',
+  `resolution_notes` text DEFAULT NULL,
+  `date_reported` datetime DEFAULT current_timestamp(),
+  `date_resolved` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_login_sessions`
+--
+
+CREATE TABLE `ict_login_sessions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `user_type` enum('staff','student') DEFAULT 'staff',
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `login_at` timestamp NULL DEFAULT current_timestamp(),
+  `last_activity` timestamp NULL DEFAULT NULL,
+  `logout_at` timestamp NULL DEFAULT NULL,
+  `session_duration_sec` int(11) DEFAULT 0,
+  `status` enum('active','expired','terminated') DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_maintenance_requests`
+--
+
+CREATE TABLE `ict_maintenance_requests` (
+  `id` int(11) NOT NULL,
+  `asset_id` int(11) DEFAULT NULL,
+  `asset_name` varchar(255) DEFAULT NULL,
+  `request_type` enum('Repair','Upgrade','Replacement','Installation','Other') DEFAULT 'Repair',
+  `description` text NOT NULL,
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `requested_by` int(11) DEFAULT NULL,
+  `requested_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('Requested','Approved','In Progress','Completed','Rejected') DEFAULT 'Requested',
+  `estimated_cost` decimal(10,2) DEFAULT NULL,
+  `actual_cost` decimal(10,2) DEFAULT NULL,
+  `completion_notes` text DEFAULT NULL,
+  `date_requested` datetime DEFAULT current_timestamp(),
+  `date_completed` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_module_permissions`
+--
+
+CREATE TABLE `ict_module_permissions` (
+  `id` int(11) NOT NULL,
+  `module_name` varchar(100) NOT NULL,
+  `role_keyword` varchar(50) NOT NULL,
+  `can_view` tinyint(1) DEFAULT 1,
+  `can_create` tinyint(1) DEFAULT 0,
+  `can_edit` tinyint(1) DEFAULT 0,
+  `can_delete` tinyint(1) DEFAULT 0,
+  `can_approve` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_network_devices`
+--
+
+CREATE TABLE `ict_network_devices` (
+  `id` int(11) NOT NULL,
+  `device_name` varchar(255) NOT NULL,
+  `device_type` enum('Router','Switch','Access Point','Firewall','Server','Other') NOT NULL,
+  `manufacturer` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `mac_address` varchar(17) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive','Maintenance','Retired') DEFAULT 'Active',
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_network_logs`
+--
+
+CREATE TABLE `ict_network_logs` (
+  `id` int(11) NOT NULL,
+  `device_id` int(11) DEFAULT NULL,
+  `log_type` enum('status_change','error','performance','security','config_change') DEFAULT 'status_change',
+  `message` text NOT NULL,
+  `severity` enum('info','warning','error','critical') DEFAULT 'info',
+  `logged_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_reports`
+--
+
+CREATE TABLE `ict_reports` (
+  `id` int(11) NOT NULL,
+  `report_title` varchar(255) NOT NULL,
+  `report_type` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `content` longtext DEFAULT NULL,
+  `generated_by` int(11) DEFAULT NULL,
+  `report_period_start` date DEFAULT NULL,
+  `report_period_end` date DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `status` enum('Draft','Final','Archived') DEFAULT 'Draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_security_logs`
+--
+
+CREATE TABLE `ict_security_logs` (
+  `id` int(11) NOT NULL,
+  `event_type` enum('login','logout','failed_login','permission_change','account_lock','password_change','user_create','user_delete','settings_change','other') NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `severity` enum('info','warning','critical') DEFAULT 'info',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_servers`
+--
+
+CREATE TABLE `ict_servers` (
+  `id` int(11) NOT NULL,
+  `server_name` varchar(200) NOT NULL,
+  `hostname` varchar(200) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `server_type` enum('physical','virtual','cloud') DEFAULT 'physical',
+  `os` varchar(100) DEFAULT NULL,
+  `os_version` varchar(100) DEFAULT NULL,
+  `cpu_cores` int(11) DEFAULT 0,
+  `ram_gb` int(11) DEFAULT 0,
+  `storage_gb` int(11) DEFAULT 0,
+  `purpose` text DEFAULT NULL,
+  `location` varchar(200) DEFAULT NULL,
+  `status` enum('online','offline','maintenance','decommissioned') DEFAULT 'online',
+  `uptime_hours` int(11) DEFAULT 0,
+  `last_reboot` timestamp NULL DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_software_inventory`
+--
+
+CREATE TABLE `ict_software_inventory` (
+  `id` int(11) NOT NULL,
+  `software_name` varchar(255) NOT NULL,
+  `version` varchar(50) DEFAULT NULL,
+  `developer` varchar(255) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `license_type` enum('Free','Open Source','Commercial','Educational','Trial') DEFAULT 'Free',
+  `total_licenses` int(11) DEFAULT 0,
+  `used_licenses` int(11) DEFAULT 0,
+  `cost_per_license` decimal(10,2) DEFAULT 0.00,
+  `purchase_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `status` enum('Active','Expired','Under Review') DEFAULT 'Active',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_software_licenses`
+--
+
+CREATE TABLE `ict_software_licenses` (
+  `id` int(11) NOT NULL,
+  `software_id` int(11) NOT NULL,
+  `license_key` varchar(500) DEFAULT NULL,
+  `license_type` varchar(50) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `assignment_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `status` enum('Available','Assigned','Expired','Revoked') DEFAULT 'Available',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_support_tickets`
+--
+
+CREATE TABLE `ict_support_tickets` (
+  `id` int(11) NOT NULL,
+  `ticket_number` varchar(20) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `reported_by` int(11) NOT NULL,
+  `reported_by_name` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `status` enum('Open','In Progress','Waiting','Resolved','Closed') DEFAULT 'Open',
+  `resolution_notes` text DEFAULT NULL,
+  `date_created` datetime DEFAULT current_timestamp(),
+  `date_assigned` datetime DEFAULT NULL,
+  `date_resolved` datetime DEFAULT NULL,
+  `date_closed` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_system_alerts`
+--
+
+CREATE TABLE `ict_system_alerts` (
+  `id` int(11) NOT NULL,
+  `alert_type` enum('system','security','backup','performance','network','storage') NOT NULL,
+  `severity` enum('info','warning','critical') DEFAULT 'info',
+  `title` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `acknowledged_by` int(11) DEFAULT NULL,
+  `acknowledged_at` timestamp NULL DEFAULT NULL,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `status` enum('active','acknowledged','resolved') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_system_backups`
+--
+
+CREATE TABLE `ict_system_backups` (
+  `id` int(11) NOT NULL,
+  `backup_name` varchar(200) NOT NULL,
+  `backup_type` enum('database','file','full','incremental') DEFAULT 'database',
+  `target_database` varchar(100) DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `file_size_mb` decimal(15,2) DEFAULT 0.00,
+  `checksum` varchar(64) DEFAULT NULL,
+  `status` enum('running','completed','failed','verified') DEFAULT 'running',
+  `initiated_by` int(11) DEFAULT NULL,
+  `started_at` timestamp NULL DEFAULT current_timestamp(),
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_system_health`
+--
+
+CREATE TABLE `ict_system_health` (
+  `id` int(11) NOT NULL,
+  `check_type` enum('cpu','memory','disk','network','database','service') NOT NULL,
+  `check_name` varchar(200) DEFAULT NULL,
+  `status` enum('healthy','warning','critical','unknown') DEFAULT 'healthy',
+  `value` varchar(255) DEFAULT NULL,
+  `threshold` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `checked_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_system_notifications`
+--
+
+CREATE TABLE `ict_system_notifications` (
+  `id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `notification_type` enum('info','warning','critical','success') DEFAULT 'info',
+  `category` varchar(100) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `is_dismissed` tinyint(1) DEFAULT 0,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_system_settings`
+--
+
+CREATE TABLE `ict_system_settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_group` varchar(100) DEFAULT 'general',
+  `description` text DEFAULT NULL,
+  `is_encrypted` tinyint(1) DEFAULT 0,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_ticket_assignments`
+--
+
+CREATE TABLE `ict_ticket_assignments` (
+  `id` int(11) NOT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `assigned_to` int(11) NOT NULL,
+  `assigned_to_name` varchar(255) DEFAULT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `assignment_date` datetime DEFAULT current_timestamp(),
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_ticket_comments`
+--
+
+CREATE TABLE `ict_ticket_comments` (
+  `id` int(11) NOT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `commenter_id` int(11) NOT NULL,
+  `commenter_name` varchar(255) DEFAULT NULL,
+  `comment` text NOT NULL,
+  `is_internal` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ict_wifi_devices`
+--
+
+CREATE TABLE `ict_wifi_devices` (
+  `id` int(11) NOT NULL,
+  `device_name` varchar(200) NOT NULL,
+  `ssid` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `mac_address` varchar(17) DEFAULT NULL,
+  `location` varchar(200) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `firmware_version` varchar(50) DEFAULT NULL,
+  `status` enum('online','offline','maintenance') DEFAULT 'online',
+  `connected_clients` int(11) DEFAULT 0,
+  `max_clients` int(11) DEFAULT 50,
+  `band` enum('2.4ghz','5ghz','dual') DEFAULT 'dual',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `id_card_print_history`
+--
+
+CREATE TABLE `id_card_print_history` (
+  `id` int(11) NOT NULL,
+  `card_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `print_type` enum('new','reprint','bulk') DEFAULT 'new',
+  `reason` varchar(200) DEFAULT NULL,
+  `printed_by` int(11) DEFAULT NULL,
+  `print_date` timestamp NULL DEFAULT current_timestamp(),
+  `copies` int(11) DEFAULT 1,
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `id_card_replacements`
+--
+
+CREATE TABLE `id_card_replacements` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `original_card_id` int(11) DEFAULT NULL,
+  `reason` enum('lost','damaged','stolen','name_change','info_update','other') NOT NULL,
+  `description` text DEFAULT NULL,
+  `charge_amount` decimal(10,2) DEFAULT 0.00,
+  `payment_status` enum('pending','paid','waived') DEFAULT 'pending',
+  `approved_by` int(11) DEFAULT NULL,
+  `replacement_date` timestamp NULL DEFAULT current_timestamp(),
+  `new_card_id` int(11) DEFAULT NULL,
+  `status` enum('pending','approved','completed','rejected') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -7327,6 +8040,29 @@ CREATE TABLE `it_infrastructure` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `it_support_tickets`
+--
+
+CREATE TABLE `it_support_tickets` (
+  `id` int(11) NOT NULL,
+  `ticket_number` varchar(50) NOT NULL,
+  `requester_name` varchar(200) DEFAULT '',
+  `requester_email` varchar(100) DEFAULT '',
+  `requester_type` varchar(50) DEFAULT '',
+  `issue_type` varchar(100) DEFAULT '',
+  `priority` varchar(50) DEFAULT 'medium',
+  `description` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'open',
+  `assigned_to` int(11) DEFAULT NULL,
+  `resolution_notes` text DEFAULT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `job_applications`
 --
 
@@ -7384,6 +8120,29 @@ CREATE TABLE `job_vacancies` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_asset_assignments`
+--
+
+CREATE TABLE `lab_asset_assignments` (
+  `id` int(11) NOT NULL,
+  `asset_type` enum('computer','equipment','accessory') NOT NULL,
+  `asset_id` int(11) NOT NULL,
+  `assigned_to_type` enum('student','staff','lecturer','lab') DEFAULT 'lab',
+  `assigned_to_id` int(11) DEFAULT NULL,
+  `lab_room_id` int(11) DEFAULT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `assigned_date` date NOT NULL,
+  `return_date` date DEFAULT NULL,
+  `purpose` text DEFAULT NULL,
+  `status` enum('active','returned','transferred') DEFAULT 'active',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_attendance`
 --
 
@@ -7397,6 +8156,33 @@ CREATE TABLE `lab_attendance` (
   `marked_by` int(11) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_bookings`
+--
+
+CREATE TABLE `lab_bookings` (
+  `id` int(11) NOT NULL,
+  `booking_reference` varchar(50) NOT NULL,
+  `course_name` varchar(100) NOT NULL,
+  `instructor_name` varchar(100) NOT NULL,
+  `instructor_email` varchar(100) DEFAULT NULL,
+  `booking_date` date NOT NULL,
+  `time_slot` varchar(50) NOT NULL,
+  `number_of_students` int(11) NOT NULL,
+  `purpose` text DEFAULT NULL,
+  `special_requirements` text DEFAULT NULL,
+  `status` enum('pending','confirmed','cancelled','completed') DEFAULT 'pending',
+  `approved_by` int(11) DEFAULT NULL,
+  `lab_assigned` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `lab_room_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -7436,6 +8222,55 @@ CREATE TABLE `lab_chemical_inventory` (
   `reorder_level` decimal(10,2) DEFAULT NULL,
   `status` varchar(20) DEFAULT 'in_stock',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_computers`
+--
+
+CREATE TABLE `lab_computers` (
+  `id` int(11) NOT NULL,
+  `computer_id` varchar(50) NOT NULL,
+  `computer_name` varchar(100) NOT NULL,
+  `lab_name` varchar(100) DEFAULT NULL,
+  `location` varchar(100) NOT NULL,
+  `status` enum('online','offline','maintenance','deleted') DEFAULT 'online',
+  `ip_address` varchar(45) DEFAULT NULL,
+  `mac_address` varchar(17) DEFAULT NULL,
+  `specifications` text DEFAULT NULL,
+  `os_installed` varchar(100) DEFAULT NULL,
+  `operating_system` varchar(100) DEFAULT NULL,
+  `last_maintenance` date DEFAULT NULL,
+  `next_maintenance` date DEFAULT NULL,
+  `issues_reported` text DEFAULT NULL,
+  `assigned_to` varchar(100) DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_computer_assignments`
+--
+
+CREATE TABLE `lab_computer_assignments` (
+  `id` int(11) NOT NULL,
+  `computer_id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `staff_id` int(11) DEFAULT NULL,
+  `assignment_type` enum('student','staff','lecturer') DEFAULT 'student',
+  `assigned_by` int(11) DEFAULT NULL,
+  `assigned_date` date NOT NULL,
+  `return_date` date DEFAULT NULL,
+  `purpose` text DEFAULT NULL,
+  `status` enum('active','returned','transferred') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -7648,6 +8483,25 @@ CREATE TABLE `lab_inventory` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_inventory_items`
+--
+
+CREATE TABLE `lab_inventory_items` (
+  `id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `category` varchar(100) DEFAULT 'General',
+  `quantity` int(11) DEFAULT 0,
+  `minimum_level` int(11) DEFAULT 0,
+  `unit` varchar(50) DEFAULT 'piece',
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('Active','Inactive','Out of Stock') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_practical_sessions`
 --
 
@@ -7688,6 +8542,22 @@ CREATE TABLE `lab_printing_jobs` (
   `requested_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_rooms`
+--
+
+CREATE TABLE `lab_rooms` (
+  `id` int(11) NOT NULL,
+  `room_name` varchar(200) NOT NULL,
+  `location` varchar(200) DEFAULT '',
+  `capacity` int(11) DEFAULT 0,
+  `status` varchar(50) DEFAULT 'active',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -7767,6 +8637,26 @@ CREATE TABLE `lab_skills_sessions` (
   `max_participants` int(11) DEFAULT NULL,
   `status` varchar(20) DEFAULT 'scheduled',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_usage_stats`
+--
+
+CREATE TABLE `lab_usage_stats` (
+  `id` int(11) NOT NULL,
+  `lab_name` varchar(100) NOT NULL,
+  `date` date NOT NULL,
+  `total_sessions` int(11) DEFAULT 0,
+  `total_users` int(11) DEFAULT 0,
+  `peak_concurrent_users` int(11) DEFAULT 0,
+  `average_session_duration` int(11) DEFAULT 0,
+  `computers_used` int(11) DEFAULT 0,
+  `computers_available` int(11) DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -10033,6 +10923,27 @@ CREATE TABLE `library_transactions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `maintenance_logs`
+--
+
+CREATE TABLE `maintenance_logs` (
+  `id` int(11) NOT NULL,
+  `computer_id` varchar(50) NOT NULL,
+  `maintenance_type` enum('routine','repair','upgrade','cleaning') NOT NULL,
+  `description` text NOT NULL,
+  `performed_by` varchar(100) NOT NULL,
+  `cost` decimal(10,2) DEFAULT 0.00,
+  `parts_replaced` text DEFAULT NULL,
+  `status` enum('scheduled','in_progress','completed','cancelled') DEFAULT 'scheduled',
+  `scheduled_date` date DEFAULT NULL,
+  `completed_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `maintenance_requests`
 --
 
@@ -10794,6 +11705,28 @@ CREATE TABLE `national_exam_results` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `network_devices`
+--
+
+CREATE TABLE `network_devices` (
+  `id` int(11) NOT NULL,
+  `device_name` varchar(100) NOT NULL,
+  `device_type` enum('router','switch','access_point','firewall','server','other') NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `mac_address` varchar(17) DEFAULT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `status` enum('online','offline','maintenance') DEFAULT 'online',
+  `firmware_version` varchar(50) DEFAULT NULL,
+  `last_check` timestamp NULL DEFAULT NULL,
+  `uptime_hours` int(11) DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `news`
 --
 
@@ -11147,6 +12080,21 @@ CREATE TABLE `onboarding_checklist` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `onboarding_completions`
+--
+
+CREATE TABLE `onboarding_completions` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) DEFAULT 0,
+  `task_id` int(11) DEFAULT 0,
+  `completed_by` int(11) DEFAULT 0,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `onboarding_tasks`
 --
 
@@ -11160,6 +12108,22 @@ CREATE TABLE `onboarding_tasks` (
   `completed_at` datetime DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pages`
+--
+
+CREATE TABLE `pages` (
+  `id` int(11) NOT NULL,
+  `title` varchar(300) NOT NULL,
+  `slug` varchar(300) NOT NULL,
+  `content` longtext DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -11513,6 +12477,32 @@ INSERT INTO `payment_gateway_settings` (`id`, `setting_key`, `setting_value`, `s
 (11, 'bank_account_number', '', 'bank_transfer', 'Bank account number', NULL, '2026-07-14 07:52:06', '2026-07-14 07:52:06'),
 (12, 'bank_swift_code', '', 'bank_transfer', 'SWIFT/BIC code', NULL, '2026-07-14 07:52:06', '2026-07-14 07:52:06'),
 (13, 'bank_branch', 'Iganga', 'bank_transfer', 'Bank branch', NULL, '2026-07-14 07:52:06', '2026-07-14 07:52:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_history`
+--
+
+CREATE TABLE `payment_history` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `payment_reference` varchar(50) NOT NULL,
+  `fee_type` varchar(100) NOT NULL,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(50) DEFAULT 'Cash',
+  `transaction_ref` varchar(100) DEFAULT NULL,
+  `receipt_number` varchar(100) DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `status` enum('completed','pending','cancelled','refunded') DEFAULT 'completed',
+  `received_by` int(11) DEFAULT NULL,
+  `received_by_name` varchar(200) DEFAULT NULL,
+  `verified_by` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -12871,6 +13861,53 @@ INSERT INTO `principal_notices` (`id`, `title`, `content`, `audience`, `publishe
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `printing_charges`
+--
+
+CREATE TABLE `printing_charges` (
+  `id` int(11) NOT NULL,
+  `print_type` enum('bw','color','photocopy') NOT NULL,
+  `paper_size` enum('A4','A3','letter','legal') DEFAULT 'A4',
+  `charge_per_page` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `description` varchar(200) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `printing_jobs`
+--
+
+CREATE TABLE `printing_jobs` (
+  `id` int(11) NOT NULL,
+  `job_number` varchar(50) NOT NULL,
+  `requester_name` varchar(200) NOT NULL,
+  `requester_type` enum('student','staff') NOT NULL,
+  `requester_id` int(11) DEFAULT NULL,
+  `document_name` varchar(200) DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `pages` int(11) NOT NULL DEFAULT 1,
+  `copies` int(11) DEFAULT 1,
+  `print_type` enum('bw','color','photocopy') DEFAULT 'bw',
+  `paper_size` enum('A4','A3','letter','legal') DEFAULT 'A4',
+  `charge_per_page` decimal(10,2) DEFAULT 0.00,
+  `total_charge` decimal(10,2) DEFAULT 0.00,
+  `payment_status` enum('pending','paid','waived') DEFAULT 'pending',
+  `status` enum('pending','printing','completed','cancelled') DEFAULT 'pending',
+  `printed_by` int(11) DEFAULT NULL,
+  `printed_at` timestamp NULL DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `procurement_requests`
 --
 
@@ -13059,6 +14096,24 @@ CREATE TABLE `quality_assurance_reviews` (
   `status` varchar(50) DEFAULT 'Pending',
   `findings` text DEFAULT NULL,
   `recommendations` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quality_standards`
+--
+
+CREATE TABLE `quality_standards` (
+  `id` int(11) NOT NULL,
+  `standard_code` varchar(50) DEFAULT '',
+  `standard_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `department` varchar(200) DEFAULT '',
+  `compliance_status` varchar(50) DEFAULT 'Pending',
+  `last_reviewed` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -13401,6 +14456,21 @@ CREATE TABLE `request_tracking` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `requirement_categories`
+--
+
+CREATE TABLE `requirement_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -14313,6 +15383,49 @@ CREATE TABLE `sms_logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `software_installations`
+--
+
+CREATE TABLE `software_installations` (
+  `id` int(11) NOT NULL,
+  `software_id` int(11) DEFAULT NULL,
+  `computer_id` int(11) DEFAULT NULL,
+  `lab_room_id` int(11) DEFAULT NULL,
+  `installed_by` varchar(200) DEFAULT NULL,
+  `installation_date` date DEFAULT NULL,
+  `license_key_used` varchar(200) DEFAULT NULL,
+  `version_installed` varchar(50) DEFAULT NULL,
+  `status` enum('installed','updated','removed') DEFAULT 'installed',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `software_inventory`
+--
+
+CREATE TABLE `software_inventory` (
+  `id` int(11) NOT NULL,
+  `software_name` varchar(200) NOT NULL,
+  `version` varchar(50) DEFAULT NULL,
+  `license_key` varchar(200) DEFAULT NULL,
+  `license_type` enum('free','commercial','educational','trial') DEFAULT 'educational',
+  `license_expiry` date DEFAULT NULL,
+  `installation_count` int(11) DEFAULT 0,
+  `update_available` tinyint(1) DEFAULT 0,
+  `latest_version` varchar(50) DEFAULT NULL,
+  `download_url` varchar(500) DEFAULT NULL,
+  `category` enum('os','office','development','design','antivirus','utility','other') DEFAULT 'utility',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sponsorships`
 --
 
@@ -14412,14 +15525,14 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `date_of_birth`, `gender`, `nin`, `password`, `role_id`, `position`, `department`, `is_active`, `status`, `hire_date`, `last_login`, `login_attempts`, `locked_until`, `is_first_login`, `password_changed`, `profile_photo`, `staff_category`, `created_at`, `updated_at`, `highest_qualification`, `year_of_experience`, `resignation_date`, `address`, `marital_status`, `nationality`, `religion`, `passport`) VALUES
-(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 1, 'Director General', 'Executive', 1, 'Active', '2026-07-15', '2026-07-22 13:19:14', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-22 13:19:14', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
+(1, 'DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 1, 'Director General', 'Executive', 1, 'Active', '2026-07-15', '2026-07-24 08:46:52', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-24 08:46:52', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (2, 'CEO-001', 'Chief Executive Officer', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 2, 'CEO', 'Executive', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (3, 'DA-001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$erOn9wIoOagBWYuWUdD0j.Gihha85DXHtW.2Tdf2G1NxA98UrrB7y', 3, 'Director Academics', 'Academic Affairs', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (4, 'DF-001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$y.BKuKDLYdoUeFMfgXtqQOO3h4fYssrcoZB3aKgDX.VrvY4uqVG7q', 4, 'Director Finance', 'Finance', 1, 'Active', '2026-07-15', '2026-07-21 14:46:29', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-21 14:46:29', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
-(5, 'PRIN-001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$u7JCF3voi9a1vA606rayJuxMZNiFPC0KY0/JKG24uiocTgwhBvX4O', 7, 'School Principal', 'Administration', 1, 'Active', '2026-07-15', '2026-07-15 14:30:03', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
+(5, 'PRIN-001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$u7JCF3voi9a1vA606rayJuxMZNiFPC0KY0/JKG24uiocTgwhBvX4O', 7, 'School Principal', 'Administration', 1, 'Active', '2026-07-15', '2026-07-24 09:17:39', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-24 09:17:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (6, 'DP-001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$7AaHUF/Nok9WVUjeHdMRWesGEQ7IVm5/lOwFvhmd3rm2DU9P6WXwO', 8, 'Deputy Principal', 'Administration', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (7, 'AR-001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 9, 'Academic Registrar', 'Academic Registrar', 1, 'Active', '2026-07-15', '2026-07-16 15:12:12', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
-(8, 'HR-001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$R9gdnzRVbjZSfYyWLMLNQuCGR8kALruSeGNve8gp0vk/XO5FDV4LW', 12, 'HR Manager', 'Human Resources', 1, 'Active', '2026-07-15', '2026-07-20 11:55:45', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-20 11:55:45', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
+(8, 'HR-001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$R9gdnzRVbjZSfYyWLMLNQuCGR8kALruSeGNve8gp0vk/XO5FDV4LW', 12, 'HR Manager', 'Human Resources', 1, 'Active', '2026-07-15', '2026-07-24 08:48:47', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-24 08:48:47', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (9, 'SEC-001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 11, 'School Secretary', 'Administration', 1, 'Active', '2026-07-15', '2026-07-21 14:25:41', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-21 14:25:41', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (10, 'LIB-001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$u7JCF3voi9a1vA606rayJuxMZNiFPC0KY0/JKG24uiocTgwhBvX4O', 13, 'School Librarian', 'Library', 1, 'Active', '2026-07-15', '2026-07-16 15:16:59', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (11, 'NUR-001', 'Head of Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$yekD0q9asIJGIeIRauUlw.uquoCYqTrY3f6PmIzxCgraB8UUjLR.O', 14, 'Head of Nursing', 'Nursing', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
@@ -14429,12 +15542,12 @@ INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `date_of_b
 (15, 'MAT-001', 'Matron', 'matron@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$7AaHUF/Nok9WVUjeHdMRWesGEQ7IVm5/lOwFvhmd3rm2DU9P6WXwO', 21, 'Matron', 'Student Welfare', 1, 'Active', '2026-07-15', '2026-07-16 15:22:27', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (16, 'WAR-001', 'Warden', 'warden@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 22, 'Warden', 'Student Welfare', 1, 'Active', '2026-07-15', '2026-07-16 15:25:19', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (17, 'SKB-001', 'Sickbay Nurse', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$u7JCF3voi9a1vA606rayJuxMZNiFPC0KY0/JKG24uiocTgwhBvX4O', 24, 'Sickbay Nurse', 'Student Welfare', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
-(18, 'DRV-001', 'Driver', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$yekD0q9asIJGIeIRauUlw.uquoCYqTrY3f6PmIzxCgraB8UUjLR.O', 20, 'Driver', 'Transport', 1, 'Active', '2026-07-15', '2026-07-21 15:18:09', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-21 15:18:09', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
+(18, 'DRV-001', 'Driver', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$yekD0q9asIJGIeIRauUlw.uquoCYqTrY3f6PmIzxCgraB8UUjLR.O', 20, 'Driver', 'Transport', 1, 'Active', '2026-07-15', '2026-07-24 08:32:59', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-24 08:32:59', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (19, 'SEC2-001', 'Security Officer', 'security@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$0TXXDluAYavgyjrnMqYqquhxnAn1FpQkPobTPEkth.FP5gEj3cHB.', 18, 'Security Officer', 'Security', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:40', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (20, 'STO-001', 'Storekeeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$i1iR9ophK7vfAGM3zZRiieq/KAd14faOFPBT9Wd.30G6vh9T9Jhp2', 19, 'Storekeeper', 'Store', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:40', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (21, 'G-001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$yekD0q9asIJGIeIRauUlw.uquoCYqTrY3f6PmIzxCgraB8UUjLR.O', 23, 'Guild President', 'Student Government', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (22, 'ADM-001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$g1IB4tmEP35yggGeDEb3R.CvE1XIokmSshxw/7BkfSaD3isN7R9Yy', 6, 'Director Admissions', 'Admissions', 1, 'Active', '2026-07-15', '2026-07-20 18:38:02', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-20 18:38:02', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
-(23, 'ICT-001', 'Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 5, 'Director ICT', 'ICT', 1, 'Active', '2026-07-15', '2026-07-20 12:52:09', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-20 12:52:09', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
+(23, 'ICT-001', 'Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 5, 'Director ICT', 'ICT', 1, 'Active', '2026-07-15', '2026-07-24 08:31:06', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-24 08:31:06', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (24, 'SKL-001', 'Skills Lab Manager', 'skillslab@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 27, 'Skills Lab Manager', 'Skills Laboratory', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (25, 'CLB-001', 'Computer Lab Manager', 'computerlab@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$L8E0ikt7T0FpFDjPUYX8eenzvzzKCsviru2UO/.sYd.GCzXdgQ1DC', 26, 'Computer Lab Manager', 'ICT', 1, 'Active', '2026-07-15', '2026-07-20 14:12:56', 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-20 14:12:56', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
 (26, 'EVT-001', 'Events Coordinator', 'events@igangaschoolofnursingandmidwifery.ac.ug', NULL, NULL, NULL, NULL, '$2y$10$WXB/sJwqKDHMUDZpYj3VZOwdj4Nrpw3lGGE2b/SYkAbODyglBOD8q', 29, 'Events Coordinator', 'Administration', 1, 'Active', '2026-07-15', NULL, 0, NULL, 0, 1, NULL, 'non-teaching', '2026-07-15 10:07:19', '2026-07-16 19:01:39', NULL, 0, NULL, NULL, NULL, 'Ugandan', NULL, NULL),
@@ -15178,7 +16291,25 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (706, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06'),
 (707, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 07:46:09'),
 (708, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 10:39:24'),
-(709, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14');
+(709, 1, 'Login', 'User logged in successfully', 'authentication', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14'),
+(710, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:30:25'),
+(711, 1, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:30:50'),
+(712, 23, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:31:06'),
+(713, 23, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:31:16'),
+(714, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:31:39'),
+(715, 1, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:32:22'),
+(716, 18, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:32:59'),
+(717, 18, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:33:42'),
+(718, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:46:53'),
+(719, 1, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:47:06'),
+(720, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:47:15'),
+(721, 1, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:06'),
+(722, 1, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:23'),
+(723, 1, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:34'),
+(724, 8, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:47'),
+(725, 8, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:49:41'),
+(726, 5, 'Login', 'User logged in successfully', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 09:17:39'),
+(727, 5, 'Logout', 'User logged out', 'authentication', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 09:19:25');
 
 -- --------------------------------------------------------
 
@@ -15924,7 +17055,16 @@ INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `ip_addre
 (445, 1, 'u6a8lmq9d5lvq77428b96qnh91', '41.210.159.246', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-21 18:41:06', '2026-07-21 22:11:06'),
 (446, 1, '7gorb79ckj91alpr7n3bvvurp7', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 07:46:09', '2026-07-22 11:16:09'),
 (447, 1, '404pfcnj4c2s6fu5k63ch8p7pc', '102.86.3.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-22 10:39:24', '2026-07-22 14:09:24'),
-(448, 1, 'd8rn9q23vchehef9qoasn5mjlj', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14', '2026-07-22 16:49:14');
+(448, 1, 'd8rn9q23vchehef9qoasn5mjlj', '102.86.3.64', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36', '2026-07-22 13:19:14', '2026-07-22 16:49:14'),
+(449, 1, 'vk8s0pokn5vb1v70ajgj03jak4', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:30:25', '2026-07-24 12:00:25'),
+(450, 23, '11jq96fmi9r5s53jcho15ifeiq', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:31:06', '2026-07-24 12:01:06'),
+(451, 1, 'hbh0ovkae3c287j2dfsg02phie', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:31:39', '2026-07-24 12:01:39'),
+(452, 18, 'ufcue55i4um68fgnusr6tnohqb', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:32:59', '2026-07-24 12:02:59'),
+(453, 1, 'h0k007saq3ulnpngmnktt0dm61', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:46:53', '2026-07-24 12:16:53'),
+(454, 1, 'idclef9md5v0j96qvk5hvv0jlp', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:47:15', '2026-07-24 12:17:15'),
+(455, 1, 'u5ok5m0kvoe80rlnpsoohemm0v', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:23', '2026-07-24 12:18:23'),
+(456, 8, 'puvpviuhnt7pkr73oo4tjcs2rg', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 08:48:47', '2026-07-24 12:18:47'),
+(457, 5, 'ndpjmmtdo1k9fr9sq6mdg6abl9', '41.210.146.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', '2026-07-24 09:17:39', '2026-07-24 12:47:39');
 
 -- --------------------------------------------------------
 
@@ -17414,6 +18554,28 @@ INSERT INTO `student_academic_records` (`id`, `student_id`, `semester`, `academi
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_accounts`
+--
+
+CREATE TABLE `student_accounts` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive','Locked') DEFAULT 'Active',
+  `is_first_login` tinyint(1) DEFAULT 1,
+  `password_changed` tinyint(1) DEFAULT 0,
+  `login_attempts` int(11) DEFAULT 0,
+  `locked_until` timestamp NULL DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_activities`
 --
 
@@ -17656,6 +18818,26 @@ INSERT INTO `student_attendance` (`id`, `student_id`, `date`, `subject`, `course
 (98, 0, '2024-09-17', NULL, 'CNN101', 'Present', NULL, NULL, '2026-07-03 04:51:14', '2026-07-14 16:52:54'),
 (99, 0, '2024-09-24', NULL, 'CNN101', 'Present', NULL, NULL, '2026-07-03 04:51:14', '2026-07-14 16:52:54'),
 (100, 0, '2024-10-01', NULL, 'CNN101', 'Present', NULL, NULL, '2026-07-03 04:51:14', '2026-07-14 16:52:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_attendance_profiles`
+--
+
+CREATE TABLE `student_attendance_profiles` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `total_days` int(11) DEFAULT 0,
+  `days_present` int(11) DEFAULT 0,
+  `days_absent` int(11) DEFAULT 0,
+  `days_excused` int(11) DEFAULT 0,
+  `attendance_rate` decimal(5,2) DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -18764,6 +19946,25 @@ CREATE TABLE `student_finance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_financial_profiles`
+--
+
+CREATE TABLE `student_financial_profiles` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `total_fees` decimal(14,2) DEFAULT 0.00,
+  `total_paid` decimal(14,2) DEFAULT 0.00,
+  `balance` decimal(14,2) DEFAULT 0.00,
+  `status` enum('pending','partial','paid','overdue') DEFAULT 'pending',
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_guardian`
 --
 
@@ -18829,6 +20030,23 @@ CREATE TABLE `student_hostel_allocations` (
   `status` enum('Active','Vacated','Transferred') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_id_cards`
+--
+
+CREATE TABLE `student_id_cards` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `card_number` varchar(50) NOT NULL,
+  `card_type` varchar(50) DEFAULT 'student',
+  `status` varchar(50) DEFAULT 'active',
+  `issued_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -19038,6 +20256,25 @@ CREATE TABLE `student_library_borrowing` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_library_profiles`
+--
+
+CREATE TABLE `student_library_profiles` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `library_card_number` varchar(50) DEFAULT NULL,
+  `total_borrowed` int(11) DEFAULT 0,
+  `currently_borrowed` int(11) DEFAULT 0,
+  `overdue_books` int(11) DEFAULT 0,
+  `fines_amount` decimal(10,2) DEFAULT 0.00,
+  `status` enum('Active','Suspended','Inactive') DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_logbook`
 --
 
@@ -19063,6 +20300,20 @@ CREATE TABLE `student_logbook` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_login_attempts`
+--
+
+CREATE TABLE `student_login_attempts` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `ip_address` varchar(50) DEFAULT '',
+  `success` tinyint(1) DEFAULT 0,
+  `attempted_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `student_login_view`
 -- (See below for the actual view)
 --
@@ -19078,6 +20329,41 @@ CREATE TABLE `student_login_view` (
 ,`login_attempts` int(11)
 ,`is_first_login` tinyint(1)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_medical`
+--
+
+CREATE TABLE `student_medical` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `blood_group` varchar(10) DEFAULT NULL,
+  `allergies` text DEFAULT NULL,
+  `medical_conditions` text DEFAULT NULL,
+  `medications` text DEFAULT NULL,
+  `emergency_medical_notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_medical_profiles`
+--
+
+CREATE TABLE `student_medical_profiles` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `blood_group` varchar(10) DEFAULT NULL,
+  `medical_conditions` text DEFAULT NULL,
+  `allergies` text DEFAULT NULL,
+  `disability` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -19376,6 +20662,28 @@ CREATE TABLE `student_requirements` (
   `verified_by` int(11) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_requirements_status`
+--
+
+CREATE TABLE `student_requirements_status` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `requirement_id` int(11) NOT NULL,
+  `status` enum('Not Submitted','Pending','Submitted','Verified','Rejected','Missing','Received','Not Yet Given') NOT NULL DEFAULT 'Not Submitted',
+  `document_path` varchar(500) DEFAULT NULL,
+  `document_name` varchar(255) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `verified_by` int(11) DEFAULT NULL,
+  `verified_by_name` varchar(200) DEFAULT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `submission_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -20102,6 +21410,22 @@ INSERT INTO `transcript_templates` (`id`, `template_name`, `template_html`, `ori
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `transport_drivers`
+--
+
+CREATE TABLE `transport_drivers` (
+  `id` int(11) NOT NULL,
+  `staff_id` int(11) DEFAULT 0,
+  `driver_name` varchar(200) DEFAULT '',
+  `license_number` varchar(100) DEFAULT '',
+  `phone` varchar(50) DEFAULT '',
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `transport_fuel_log`
 --
 
@@ -20358,6 +21682,24 @@ CREATE TABLE `vehicles` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `vehicle_maintenance`
+--
+
+CREATE TABLE `vehicle_maintenance` (
+  `id` int(11) NOT NULL,
+  `vehicle_id` int(11) DEFAULT 0,
+  `maintenance_type` varchar(100) DEFAULT '',
+  `description` text DEFAULT NULL,
+  `cost` decimal(14,2) DEFAULT 0.00,
+  `maintenance_date` date DEFAULT NULL,
+  `next_maintenance` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Completed',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `view_program_grouping`
 --
 
@@ -20425,6 +21767,92 @@ CREATE TABLE `volunteer_applications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `v_computer_availability`
+--
+
+CREATE TABLE `v_computer_availability` (
+  `location` varchar(100) DEFAULT NULL,
+  `total_computers` bigint(20) DEFAULT NULL,
+  `online_count` decimal(23,0) DEFAULT NULL,
+  `offline_count` decimal(23,0) DEFAULT NULL,
+  `maintenance_count` decimal(23,0) DEFAULT NULL,
+  `availability_percentage` decimal(29,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `v_payment_summary`
+--
+
+CREATE TABLE `v_payment_summary` (
+  `id` int(11) DEFAULT NULL,
+  `payment_reference` varchar(50) DEFAULT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `student_name` varchar(300) DEFAULT NULL,
+  `amount_received` decimal(12,2) DEFAULT NULL,
+  `payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other') DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `status` enum('Pending','Completed','Failed','Reversed') DEFAULT NULL,
+  `received_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `v_requirements_overview`
+--
+
+CREATE TABLE `v_requirements_overview` (
+  `student_id` int(11) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `full_name` varchar(300) DEFAULT NULL,
+  `total_requirements` bigint(21) DEFAULT NULL,
+  `verified_count` decimal(23,0) DEFAULT NULL,
+  `pending_count` decimal(23,0) DEFAULT NULL,
+  `completion_percentage` decimal(28,1) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `v_student_summary`
+--
+
+CREATE TABLE `v_student_summary` (
+  `id` int(11) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `admission_number` varchar(50) DEFAULT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  `surname` varchar(100) DEFAULT NULL,
+  `other_name` varchar(100) DEFAULT NULL,
+  `full_name` varchar(300) DEFAULT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `level` varchar(50) DEFAULT NULL,
+  `current_year` int(11) DEFAULT NULL,
+  `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') DEFAULT NULL,
+  `registration_status` enum('Pending','Registered','Completed') DEFAULT NULL,
+  `district` varchar(100) DEFAULT NULL,
+  `religion` varchar(50) DEFAULT NULL,
+  `stream` varchar(50) DEFAULT NULL,
+  `class_name` varchar(100) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `intake_year` varchar(10) DEFAULT NULL,
+  `intake_period` varchar(20) DEFAULT NULL,
+  `total_fees` decimal(14,2) DEFAULT NULL,
+  `total_paid` decimal(14,2) DEFAULT NULL,
+  `fee_balance` decimal(14,2) DEFAULT NULL,
+  `fee_status` enum('pending','partial','paid','overdue') DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
 
@@ -20623,6 +22051,13 @@ ALTER TABLE `access_control_logs`
 ALTER TABLE `access_logs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_access_user` (`user_id`);
+
+--
+-- Indexes for table `accommodation_requests`
+--
+ALTER TABLE `accommodation_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student` (`student_id`);
 
 --
 -- Indexes for table `accreditation_management`
@@ -21652,6 +23087,12 @@ ALTER TABLE `compliance_tracking`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `computer_repairs`
+--
+ALTER TABLE `computer_repairs`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `contact_directory`
 --
 ALTER TABLE `contact_directory`
@@ -21735,6 +23176,13 @@ ALTER TABLE `course_evaluations`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_lecturer` (`lecturer_id`),
   ADD KEY `idx_course` (`course_code`);
+
+--
+-- Indexes for table `course_prerequisites`
+--
+ALTER TABLE `course_prerequisites`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_cp_course` (`course_code`);
 
 --
 -- Indexes for table `course_registrations`
@@ -22370,6 +23818,12 @@ ALTER TABLE `health_incidents`
   ADD KEY `idx_student_id` (`student_id`);
 
 --
+-- Indexes for table `hostel`
+--
+ALTER TABLE `hostel`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `hostel_activities`
 --
 ALTER TABLE `hostel_activities`
@@ -22381,6 +23835,13 @@ ALTER TABLE `hostel_activities`
 --
 ALTER TABLE `hostel_allocations`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hostel_assignments`
+--
+ALTER TABLE `hostel_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student` (`student_id`);
 
 --
 -- Indexes for table `hostel_blocks`
@@ -22683,6 +24144,14 @@ ALTER TABLE `it_infrastructure`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `it_support_tickets`
+--
+ALTER TABLE `it_support_tickets`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ist_status` (`status`),
+  ADD KEY `idx_ist_priority` (`priority`);
+
+--
 -- Indexes for table `job_applications`
 --
 ALTER TABLE `job_applications`
@@ -22791,6 +24260,12 @@ ALTER TABLE `lab_practical_sessions`
 -- Indexes for table `lab_printing_jobs`
 --
 ALTER TABLE `lab_printing_jobs`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_rooms`
+--
+ALTER TABLE `lab_rooms`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -23241,11 +24716,24 @@ ALTER TABLE `onboarding_checklist`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `onboarding_completions`
+--
+ALTER TABLE `onboarding_completions`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `onboarding_tasks`
 --
 ALTER TABLE `onboarding_tasks`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_ot_staff` (`staff_id`);
+
+--
+-- Indexes for table `pages`
+--
+ALTER TABLE `pages`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
 
 --
 -- Indexes for table `parent_meetings`
@@ -23687,6 +25175,12 @@ ALTER TABLE `quality_assurance_reviews`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_review_date` (`review_date`);
+
+--
+-- Indexes for table `quality_standards`
+--
+ALTER TABLE `quality_standards`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `real_time_updates`
@@ -24601,6 +26095,15 @@ ALTER TABLE `student_finance`
   ADD KEY `idx_sf_student` (`student_id`);
 
 --
+-- Indexes for table `student_financial_profiles`
+--
+ALTER TABLE `student_financial_profiles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sfp_student` (`student_id`),
+  ADD KEY `idx_sfp_student` (`student_id`),
+  ADD KEY `idx_sfp_status` (`status`);
+
+--
 -- Indexes for table `student_guardian`
 --
 ALTER TABLE `student_guardian`
@@ -24630,6 +26133,13 @@ ALTER TABLE `student_hostel_allocations`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `student_id_cards`
+--
+ALTER TABLE `student_id_cards`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sic_student` (`student_id`);
+
+--
 -- Indexes for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
@@ -24652,6 +26162,20 @@ ALTER TABLE `student_logbook`
   ADD KEY `idx_student` (`student_id`),
   ADD KEY `idx_placement` (`placement_id`),
   ADD KEY `idx_date` (`entry_date`);
+
+--
+-- Indexes for table `student_login_attempts`
+--
+ALTER TABLE `student_login_attempts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sla_student` (`student_id`);
+
+--
+-- Indexes for table `student_medical_profiles`
+--
+ALTER TABLE `student_medical_profiles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_smp_student` (`student_id`);
 
 --
 -- Indexes for table `student_medications`
@@ -24741,6 +26265,14 @@ ALTER TABLE `student_requests`
 --
 ALTER TABLE `student_requirements`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_requirements_status`
+--
+ALTER TABLE `student_requirements_status`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_srs_student_req` (`student_id`,`requirement_id`),
+  ADD KEY `idx_srs_student` (`student_id`);
 
 --
 -- Indexes for table `student_semester_gpa`
@@ -24950,6 +26482,12 @@ ALTER TABLE `transcript_templates`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `transport_drivers`
+--
+ALTER TABLE `transport_drivers`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `transport_fuel_log`
 --
 ALTER TABLE `transport_fuel_log`
@@ -25021,6 +26559,13 @@ ALTER TABLE `vehicles`
   ADD UNIQUE KEY `license_plate` (`license_plate`),
   ADD KEY `idx_vehicles_status` (`status`),
   ADD KEY `idx_vehicles_type` (`vehicle_type`);
+
+--
+-- Indexes for table `vehicle_maintenance`
+--
+ALTER TABLE `vehicle_maintenance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_vehicle` (`vehicle_id`);
 
 --
 -- Indexes for table `visitor_logs`
@@ -25164,6 +26709,12 @@ ALTER TABLE `access_control_logs`
 -- AUTO_INCREMENT for table `access_logs`
 --
 ALTER TABLE `access_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `accommodation_requests`
+--
+ALTER TABLE `accommodation_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -26025,6 +27576,12 @@ ALTER TABLE `compliance_tracking`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `computer_repairs`
+--
+ALTER TABLE `computer_repairs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `contact_directory`
 --
 ALTER TABLE `contact_directory`
@@ -26094,6 +27651,12 @@ ALTER TABLE `course_catalog`
 -- AUTO_INCREMENT for table `course_evaluations`
 --
 ALTER TABLE `course_evaluations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `course_prerequisites`
+--
+ALTER TABLE `course_prerequisites`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -26649,6 +28212,12 @@ ALTER TABLE `health_incidents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `hostel`
+--
+ALTER TABLE `hostel`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `hostel_activities`
 --
 ALTER TABLE `hostel_activities`
@@ -26658,6 +28227,12 @@ ALTER TABLE `hostel_activities`
 -- AUTO_INCREMENT for table `hostel_allocations`
 --
 ALTER TABLE `hostel_allocations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_assignments`
+--
+ALTER TABLE `hostel_assignments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -26925,6 +28500,12 @@ ALTER TABLE `it_infrastructure`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `it_support_tickets`
+--
+ALTER TABLE `it_support_tickets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `job_applications`
 --
 ALTER TABLE `job_applications`
@@ -27030,6 +28611,12 @@ ALTER TABLE `lab_practical_sessions`
 -- AUTO_INCREMENT for table `lab_printing_jobs`
 --
 ALTER TABLE `lab_printing_jobs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_rooms`
+--
+ALTER TABLE `lab_rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -27429,9 +29016,21 @@ ALTER TABLE `onboarding_checklist`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `onboarding_completions`
+--
+ALTER TABLE `onboarding_completions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `onboarding_tasks`
 --
 ALTER TABLE `onboarding_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pages`
+--
+ALTER TABLE `pages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -27798,6 +29397,12 @@ ALTER TABLE `quality_assurance`
 -- AUTO_INCREMENT for table `quality_assurance_reviews`
 --
 ALTER TABLE `quality_assurance_reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `quality_standards`
+--
+ALTER TABLE `quality_standards`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28182,7 +29787,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=710;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=728;
 
 --
 -- AUTO_INCREMENT for table `staff_appraisals`
@@ -28260,7 +29865,7 @@ ALTER TABLE `staff_licenses`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=449;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=458;
 
 --
 -- AUTO_INCREMENT for table `staff_messages`
@@ -28581,6 +30186,12 @@ ALTER TABLE `student_finance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `student_financial_profiles`
+--
+ALTER TABLE `student_financial_profiles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_guardian`
 --
 ALTER TABLE `student_guardian`
@@ -28605,6 +30216,12 @@ ALTER TABLE `student_hostel_allocations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `student_id_cards`
+--
+ALTER TABLE `student_id_cards`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
@@ -28620,6 +30237,18 @@ ALTER TABLE `student_library_borrowing`
 -- AUTO_INCREMENT for table `student_logbook`
 --
 ALTER TABLE `student_logbook`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_login_attempts`
+--
+ALTER TABLE `student_login_attempts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_medical_profiles`
+--
+ALTER TABLE `student_medical_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28698,6 +30327,12 @@ ALTER TABLE `student_requests`
 -- AUTO_INCREMENT for table `student_requirements`
 --
 ALTER TABLE `student_requirements`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_requirements_status`
+--
+ALTER TABLE `student_requirements_status`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28881,6 +30516,12 @@ ALTER TABLE `transcript_templates`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `transport_drivers`
+--
+ALTER TABLE `transport_drivers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `transport_fuel_log`
 --
 ALTER TABLE `transport_fuel_log`
@@ -28938,6 +30579,12 @@ ALTER TABLE `user_sessions`
 -- AUTO_INCREMENT for table `vehicles`
 --
 ALTER TABLE `vehicles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `vehicle_maintenance`
+--
+ALTER TABLE `vehicle_maintenance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

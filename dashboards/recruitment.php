@@ -3,6 +3,37 @@ $pageTitle = 'Recruitment';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal']);
 $conn = $ctx['staff'];
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_recruitment` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        position_title VARCHAR(200) NOT NULL,
+        department VARCHAR(100) DEFAULT '',
+        description TEXT,
+        requirements TEXT,
+        salary_range VARCHAR(100) DEFAULT '',
+        posted_date DATE DEFAULT NULL,
+        closing_date DATE DEFAULT NULL,
+        status VARCHAR(30) DEFAULT 'Open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`job_applications` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        position_id INT DEFAULT 0,
+        applicant_name VARCHAR(200) DEFAULT '',
+        email VARCHAR(200) DEFAULT '',
+        phone VARCHAR(50) DEFAULT '',
+        resume_path VARCHAR(500) DEFAULT '',
+        cover_letter TEXT,
+        status VARCHAR(50) DEFAULT 'Applied',
+        notes TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_position (position_id),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 
 // Handle POST actions

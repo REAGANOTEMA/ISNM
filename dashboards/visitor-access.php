@@ -6,6 +6,12 @@ $user = $ctx['user'];
 
 $pageTitle = 'Visitor & Access Control';
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS visitor_logs (id INT AUTO_INCREMENT PRIMARY KEY, visitor_name VARCHAR(200) DEFAULT '', visitor_phone VARCHAR(50) DEFAULT '', visitor_id_number VARCHAR(100) DEFAULT '', purpose VARCHAR(300) DEFAULT '', person_visiting VARCHAR(200) DEFAULT '', check_in_time DATETIME DEFAULT NULL, check_out_time DATETIME DEFAULT NULL, status VARCHAR(50) DEFAULT 'Checked In', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS access_control_logs (id INT AUTO_INCREMENT PRIMARY KEY, access_point VARCHAR(200) DEFAULT '', access_type VARCHAR(50) DEFAULT '', person_name VARCHAR(200) DEFAULT '', status VARCHAR(50) DEFAULT 'granted', notes TEXT, access_time DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // ── POST handler ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     $action = $_POST['action'] ?? '';

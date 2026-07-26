@@ -3,6 +3,21 @@ $pageTitle = 'Staff Attendance';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
 $conn = $ctx['staff'];
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`attendance` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        date DATE NOT NULL,
+        check_in TIME DEFAULT NULL,
+        check_out TIME DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'Present',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff_date (staff_id, date),
+        KEY idx_date (date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
 require_once __DIR__ . '/../includes/config_enhanced.php';
 
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }

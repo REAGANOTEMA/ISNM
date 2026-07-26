@@ -78,6 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
 
 $rosters = [];
 if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    @$conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`duty_rosters` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_name VARCHAR(200),
+        shift VARCHAR(100),
+        roster_date DATE,
+        location VARCHAR(200),
+        status VARCHAR(30) DEFAULT 'scheduled',
+        notes TEXT,
+        created_by INT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$r = $conn->query("SELECT * FROM duty_rosters ORDER BY roster_date DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $rosters[] = $row;
     if (empty($rosters)) {

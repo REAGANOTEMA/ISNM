@@ -6,6 +6,11 @@ $user = $ctx['user'];
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS onboarding_checklist (id INT AUTO_INCREMENT PRIMARY KEY, item_name VARCHAR(200) DEFAULT '', department VARCHAR(50) DEFAULT 'all', status VARCHAR(50) DEFAULT 'active', staff_id INT DEFAULT 0, created_by INT DEFAULT 0, completed_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

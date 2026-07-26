@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $uid = (int)($user['id']??0);
         if ($title && $body) {
             $stmt = $conn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,expires_at) VALUES (?,?,?,?,?,?)");
-            $stmt->bind_param("ssssi", $title, $body, $audience, $priority, $uid, $expires);
+            $stmt->bind_param("ssssis", $title, $body, $audience, $priority, $uid, $expires);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Announcement published.';

@@ -5,6 +5,46 @@ $ctx = bootstrapStaffDashboard(['hostel','matron','warden','registrar','director
 $conn = $ctx['staff'];
 $conn2 = $ctx['students'] ?? null;
 
+$hdb_init = $conn2 ?: $conn;
+$hprefix_init = ($hdb_init === $conn && !$conn2) ? 'igangaschool_students.' : '';
+if ($hdb_init) {
+    @$hdb_init->query("CREATE TABLE IF NOT EXISTS `{$hprefix_init}`hostel_rooms (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        room_number VARCHAR(50) NOT NULL,
+        hostel_name VARCHAR(200) DEFAULT '',
+        hostel_id INT DEFAULT NULL,
+        capacity INT DEFAULT 4,
+        occupancy INT DEFAULT 0,
+        room_type VARCHAR(50) DEFAULT 'Standard',
+        status VARCHAR(30) DEFAULT 'Available',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_status (status),
+        KEY idx_hostel (hostel_name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$hdb_init->query("CREATE TABLE IF NOT EXISTS `{$hprefix_init}`hostel_allocations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id VARCHAR(50) NOT NULL,
+        room_id INT NOT NULL,
+        academic_year VARCHAR(10) DEFAULT '',
+        semester VARCHAR(50) DEFAULT '',
+        check_in_date DATE DEFAULT NULL,
+        check_out_date DATE DEFAULT NULL,
+        status VARCHAR(30) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_room (room_id),
+        KEY idx_student (student_id),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$hdb_init->query("CREATE TABLE IF NOT EXISTS `{$hprefix_init}`hostel (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        description TEXT,
+        capacity INT DEFAULT 0,
+        status VARCHAR(30) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];
 

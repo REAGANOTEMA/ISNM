@@ -28,6 +28,229 @@ $page  = $_GET['page'] ?? 'overview';
 $sub   = $_GET['sub'] ?? '';
 $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
+// --- Auto-create HR tables if they don't exist ---
+if ($staff_conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $hrMigrate = [
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_types` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            leave_type_name VARCHAR(100) NOT NULL,
+            days_per_year INT DEFAULT 0,
+            description TEXT,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_requests` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            leave_type_id INT NOT NULL,
+            start_date DATE NOT NULL,
+            end_date DATE NOT NULL,
+            reason TEXT,
+            status ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
+            reviewed_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_balances` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            leave_type_id INT NOT NULL,
+            total_days INT DEFAULT 0,
+            used_days INT DEFAULT 0,
+            year INT NOT NULL,
+            UNIQUE KEY uk_leave_balance (staff_id, leave_type_id, year)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_attendance` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            date DATE NOT NULL,
+            status VARCHAR(50) DEFAULT 'present',
+            time_in TIME DEFAULT NULL,
+            time_out TIME DEFAULT NULL,
+            recorded_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_attendance (staff_id, date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`job_vacancies` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            department_id INT DEFAULT NULL,
+            description TEXT,
+            requirements TEXT,
+            salary_range VARCHAR(100),
+            status ENUM('open','closed','filled','cancelled') DEFAULT 'open',
+            posted_date DATE DEFAULT NULL,
+            closing_date DATE DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`job_applications` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            position_id INT DEFAULT NULL,
+            applicant_name VARCHAR(200) NOT NULL,
+            email VARCHAR(200),
+            phone VARCHAR(50),
+            application_status ENUM('received','shortlisted','interviewed','offered','hired','rejected') DEFAULT 'received',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_disciplinary` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            incident_date DATE DEFAULT NULL,
+            offense_type VARCHAR(200) NOT NULL,
+            description TEXT,
+            action_taken TEXT,
+            status ENUM('open','investigating','resolved','dismissed') DEFAULT 'open',
+            reported_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_training` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            training_name VARCHAR(255) NOT NULL,
+            training_type VARCHAR(100) DEFAULT 'workshop',
+            provider VARCHAR(200),
+            start_date DATE DEFAULT NULL,
+            end_date DATE DEFAULT NULL,
+            status ENUM('scheduled','ongoing','completed','cancelled') DEFAULT 'scheduled',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`performance_reviews` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            reviewer_id INT DEFAULT 0,
+            review_period VARCHAR(100),
+            overall_score DECIMAL(5,2) DEFAULT 0,
+            comments TEXT,
+            status ENUM('draft','submitted','completed') DEFAULT 'draft',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`employment_contracts` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            contract_type VARCHAR(100) DEFAULT 'contract',
+            start_date DATE DEFAULT NULL,
+            end_date DATE DEFAULT NULL,
+            salary DECIMAL(14,2) DEFAULT 0,
+            terms TEXT,
+            status ENUM('active','expired','terminated','renewed') DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_licenses` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            license_type VARCHAR(200) NOT NULL,
+            license_number VARCHAR(100),
+            issuing_body VARCHAR(200),
+            issue_date DATE DEFAULT NULL,
+            expiry_date DATE DEFAULT NULL,
+            status ENUM('valid','expired','pending_renewal','revoked') DEFAULT 'valid',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`hr_announcements` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            content TEXT,
+            priority VARCHAR(50) DEFAULT 'normal',
+            created_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`onboarding_checklist` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            item_name VARCHAR(255) NOT NULL,
+            description TEXT,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`promotion_recommendations` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            recommended_by INT DEFAULT 0,
+            from_position VARCHAR(200),
+            to_position VARCHAR(200),
+            reason TEXT,
+            status ENUM('pending','approved','rejected') DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`salary_structures` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            base_salary DECIMAL(14,2) DEFAULT 0,
+            basic_salary DECIMAL(14,2) DEFAULT 0,
+            housing_allowance DECIMAL(14,2) DEFAULT 0,
+            transport_allowance DECIMAL(14,2) DEFAULT 0,
+            other_allowances DECIMAL(14,2) DEFAULT 0,
+            effective_date DATE DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_salary_staff (staff_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`payroll_employees` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            pay_grade VARCHAR(50),
+            bank_name VARCHAR(200),
+            bank_account VARCHAR(100),
+            tax_number VARCHAR(100),
+            status VARCHAR(50) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_payroll_staff (staff_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_work_history` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT NOT NULL,
+            position VARCHAR(200),
+            department VARCHAR(200),
+            start_date DATE DEFAULT NULL,
+            end_date DATE DEFAULT NULL,
+            reason_for_change TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`approval_requests` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            module VARCHAR(100),
+            request_type VARCHAR(200),
+            description TEXT,
+            requested_by INT DEFAULT 0,
+            status ENUM('pending','approved','rejected') DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`hr_activity_log` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT DEFAULT NULL,
+            action VARCHAR(200),
+            module VARCHAR(100),
+            description TEXT,
+            ip_address VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`departments` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(200) NOT NULL,
+            department_name VARCHAR(200) NOT NULL,
+            code VARCHAR(50),
+            description TEXT,
+            head_id INT DEFAULT NULL,
+            status ENUM('active','inactive') DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    ];
+    // Seed default leave types if empty
+    $chk = $staff_conn->query("SELECT COUNT(*) c FROM leave_types");
+    if ($chk && (int)$chk->fetch_assoc()['c'] === 0) {
+        $staff_conn->query("INSERT IGNORE INTO leave_types (leave_type_name, days_per_year, description) VALUES
+            ('Annual Leave', 30, 'Yearly vacation leave'),
+            ('Sick Leave', 15, 'Medical leave'),
+            ('Maternity Leave', 90, 'Maternity leave'),
+            ('Paternity Leave', 14, 'Paternity leave'),
+            ('Compassionate Leave', 7, 'Family emergency leave'),
+            ('Study Leave', 30, 'Academic study leave'),
+            ('Public Holiday', 0, 'Public holidays')");
+    }
+    foreach ($hrMigrate as $sql) {
+        try { $staff_conn->query($sql); } catch (Exception $e) { error_log('HR migrate: ' . $e->getMessage()); }
+    }
+}
+
 // â”€â”€ Handle POST actions â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {

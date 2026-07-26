@@ -33,6 +33,135 @@ $user_id   = (int)($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_name = $user['full_name'] ?? ($_SESSION['full_name'] ?? 'Director General');
 
+// --- Auto-create tables used by DG dashboard ---
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $dgMigrate = [
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_activity_log` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id INT DEFAULT NULL,
+            activity_type VARCHAR(100) DEFAULT '',
+            activity_description TEXT,
+            ip_address VARCHAR(50) DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_staff (staff_id), KEY idx_type (activity_type)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_departments` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            department_name VARCHAR(200) NOT NULL,
+            department_code VARCHAR(50) DEFAULT NULL,
+            department_level VARCHAR(50) DEFAULT 'department',
+            head_id INT DEFAULT NULL,
+            description TEXT,
+            status VARCHAR(50) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`director_news` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(300) NOT NULL,
+            slug VARCHAR(300) DEFAULT '',
+            content TEXT,
+            excerpt TEXT,
+            featured_image VARCHAR(500) DEFAULT '',
+            author_id INT DEFAULT NULL,
+            status VARCHAR(50) DEFAULT 'draft',
+            published_at DATETIME DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`cms_events` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(300) NOT NULL,
+            description TEXT,
+            event_date DATE DEFAULT NULL,
+            event_type VARCHAR(100) DEFAULT '',
+            location VARCHAR(300) DEFAULT '',
+            is_active TINYINT(1) DEFAULT 1,
+            created_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`cms_testimonials` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            content TEXT,
+            author_name VARCHAR(200) DEFAULT '',
+            author_role VARCHAR(100) DEFAULT '',
+            rating INT DEFAULT 5,
+            is_featured TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`cms_faqs` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            question VARCHAR(500) NOT NULL,
+            answer TEXT,
+            category VARCHAR(100) DEFAULT '',
+            sort_order INT DEFAULT 0,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`cms_settings` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            setting_key VARCHAR(100) NOT NULL,
+            setting_value TEXT,
+            description VARCHAR(500) DEFAULT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_key (setting_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`pending_students` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            first_name VARCHAR(100) DEFAULT '',
+            middle_name VARCHAR(100) DEFAULT '',
+            last_name VARCHAR(100) DEFAULT '',
+            student_number VARCHAR(50) DEFAULT '',
+            program VARCHAR(200) DEFAULT '',
+            level INT DEFAULT 1,
+            intake_year VARCHAR(20) DEFAULT '',
+            intake_period VARCHAR(50) DEFAULT '',
+            phone VARCHAR(50) DEFAULT '',
+            email VARCHAR(150) DEFAULT '',
+            date_of_birth DATE DEFAULT NULL,
+            submitted_by INT DEFAULT NULL,
+            status VARCHAR(50) DEFAULT 'pending_approval',
+            reviewed_by INT DEFAULT NULL,
+            reviewed_at TIMESTAMP NULL DEFAULT NULL,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`alerts` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(300) DEFAULT '',
+            description TEXT,
+            alert_type VARCHAR(100) DEFAULT 'info',
+            severity VARCHAR(50) DEFAULT 'normal',
+            status VARCHAR(50) DEFAULT 'active',
+            created_by INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`transport_trips` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            vehicle_id INT DEFAULT NULL,
+            driver_id INT DEFAULT NULL,
+            requested_by INT DEFAULT NULL,
+            origin VARCHAR(300) DEFAULT '',
+            destination VARCHAR(300) DEFAULT '',
+            departure_time DATETIME DEFAULT NULL,
+            return_time DATETIME DEFAULT NULL,
+            purpose TEXT,
+            passengers_count INT DEFAULT 0,
+            dg_approval_status VARCHAR(50) DEFAULT 'pending',
+            dg_approved_by INT DEFAULT NULL,
+            dg_approved_at DATETIME DEFAULT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    ];
+    foreach ($dgMigrate as $sql) {
+        try { $conn->query($sql); } catch (Exception $e) { error_log('DG migrate: ' . $e->getMessage()); }
+    }
+}
+
 $overview            = getInstitutionOverviewStats();
 $total_students      = $overview['total_students'];
 $total_staff         = $overview['total_staff'];

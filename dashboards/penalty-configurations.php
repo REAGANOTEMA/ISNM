@@ -8,6 +8,10 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+if ($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS penalty_configurations (id INT AUTO_INCREMENT PRIMARY KEY, penalty_name VARCHAR(100) NOT NULL, penalty_type VARCHAR(100) DEFAULT '', amount DECIMAL(14,2) DEFAULT 0, description TEXT, is_active TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         die('Invalid CSRF token');

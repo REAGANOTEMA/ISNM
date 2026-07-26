@@ -2,6 +2,53 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr', 'director', 'admin']);
 $conn = $ctx['staff'];
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_types` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type_name VARCHAR(100) NOT NULL,
+        description TEXT,
+        default_days INT DEFAULT 0,
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_requests` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        leave_type_id INT DEFAULT 0,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        reason TEXT,
+        status VARCHAR(50) DEFAULT 'Pending',
+        reviewed_by INT DEFAULT 0,
+        reviewed_at DATETIME DEFAULT NULL,
+        comments TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_staff (staff_id),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_balance` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        staff_id INT NOT NULL,
+        leave_type_id INT DEFAULT 0,
+        year YEAR DEFAULT NULL,
+        balance_days INT DEFAULT 0,
+        used_days INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_staff_type_year (staff_id, leave_type_id, year)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Seed default leave types if empty
+    $chk = $conn->query("SELECT COUNT(*) c FROM leave_types");
+    if ($chk && (int)$chk->fetch_assoc()['c'] === 0) {
+        $conn->query("INSERT INTO leave_types (type_name, description, default_days) VALUES 
+            ('Annual Leave', 'Yearly paid leave', 21),
+            ('Sick Leave', 'Medical leave', 14),
+            ('Maternity Leave', 'Maternity/paternity leave', 90),
+            ('Compassionate Leave', 'Emergency leave', 5),
+            ('Study Leave', 'Educational leave', 30),
+            ('Unpaid Leave', 'Leave without pay', 0)");
+    }
+}
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Leave Management';

@@ -44,11 +44,20 @@ if (!function_exists('validateIndexNumber')) {
 
 // Generate unique ID for various records
 function generateUniqueId($prefix, $table, $field) {
-    global $conn;
-    
     $allowed_tables = ['students', 'staffs', 'users', 'courses', 'departments'];
     $allowed_fields = ['id', 'student_id', 'staff_id', 'registration_number', 'index_number'];
     if (!in_array($table, $allowed_tables, true) || !in_array($field, $allowed_fields, true)) {
+        return uniqid();
+    }
+
+    $conn = null;
+    if (in_array($table, ['staffs', 'users', 'departments'])) {
+        $conn = getStaffConnection();
+    } else {
+        $conn = getStudentsConnection();
+    }
+
+    if (!$conn) {
         return uniqid();
     }
 
@@ -56,14 +65,19 @@ function generateUniqueId($prefix, $table, $field) {
         $year = date('Y');
         $random = mt_rand(10000, 99999);
         $unique_id = "$prefix/$year/$random";
-        
-        $check_sql = "SELECT COUNT(*) as count FROM $table WHERE $field = ?";
-        $check_result = DatabaseConnection::executeQuery($table, $check_sql, [$unique_id], 's');
-        if (empty($check_result) || !isset($check_result[0]['count'])) {
+
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM `$table` WHERE `$field` = ?");
+        if (!$stmt) return uniqid();
+        $stmt->bind_param('s', $unique_id);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (empty($result) || !isset($result['count'])) {
             return uniqid();
         }
-    } while ($check_result[0]['count'] > 0);
-    
+    } while ($result['count'] > 0);
+
     return $unique_id;
 }
 

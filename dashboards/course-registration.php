@@ -7,6 +7,11 @@ $studentsConn = $ctx['students'];
 $conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Course Registration';
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS course_registrations (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, student_number VARCHAR(50) DEFAULT '', course_code VARCHAR(50) DEFAULT '', course_name VARCHAR(200) DEFAULT '', semester VARCHAR(100) DEFAULT '', academic_year VARCHAR(20) DEFAULT '', status VARCHAR(50) DEFAULT 'Registered', grade VARCHAR(10) DEFAULT '', marks DECIMAL(8,2) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_student_num (student_number)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // ── AJAX CRUD Handler ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
     header('Content-Type: application/json');

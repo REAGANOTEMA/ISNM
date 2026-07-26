@@ -9,6 +9,10 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+if ($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS proof_of_payments (id INT AUTO_INCREMENT PRIMARY KEY, proof_number VARCHAR(50) DEFAULT '', student_id INT DEFAULT 0, payment_id INT DEFAULT 0, document_path VARCHAR(500) DEFAULT '', document_type VARCHAR(50) DEFAULT '', notes TEXT, verified TINYINT(1) DEFAULT 0, verified_by INT DEFAULT NULL, verified_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_pop_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         die('Invalid CSRF token');

@@ -25,6 +25,13 @@ $user_name = $_SESSION['full_name'] ?? '';
 
 // User data already available from bootstrapStaffDashboard session
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS teaching_assessments (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, student_id INT, course_name VARCHAR(200) NOT NULL DEFAULT '', assessment_type VARCHAR(50) NOT NULL DEFAULT 'assignment', title VARCHAR(200) NOT NULL DEFAULT '', total_marks DECIMAL(6,2) DEFAULT 100, marks_obtained DECIMAL(6,2) DEFAULT NULL, assessment_date DATE NOT NULL, comments TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS teaching_resources (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', resource_type VARCHAR(100) DEFAULT '', file_path VARCHAR(500) DEFAULT '', url VARCHAR(500) DEFAULT '', description TEXT, course_name VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS teaching_announcements (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', content TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', is_published TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // â”€â”€ POST handlers â”€â”€
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 

@@ -9,7 +9,7 @@ class Announcements {
     private $conn;
     
     public function __construct() {
-        $this->conn = getConnection();
+        $this->conn = getStaffConnection();
     }
     
     public function __destruct() {

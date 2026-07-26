@@ -22,6 +22,12 @@ if (stripos($staff_role, 'Director') !== false ||
     $can_generate_receipts = true;
 }
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS receipt_templates (id INT AUTO_INCREMENT PRIMARY KEY, template_name VARCHAR(200) NOT NULL, template_type VARCHAR(100) DEFAULT '', template_content LONGTEXT, is_active TINYINT(1) DEFAULT 1, is_default TINYINT(1) DEFAULT 0, created_by INT DEFAULT 0, is_deleted TINYINT(1) DEFAULT 0, deleted_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS generated_documents (id INT AUTO_INCREMENT PRIMARY KEY, document_type VARCHAR(50) NOT NULL, student_id INT NOT NULL, document_title VARCHAR(300) DEFAULT '', document_content LONGTEXT, document_number VARCHAR(100) DEFAULT NULL, generated_by INT DEFAULT 0, generation_date DATETIME DEFAULT NULL, file_path VARCHAR(500) DEFAULT '', access_code VARCHAR(100) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', is_archived TINYINT(1) DEFAULT 0, is_downloadable TINYINT(1) DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_type (document_type)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (!$can_generate_receipts) {
     $_SESSION['error'] = "You don't have permission to generate receipts.";
     header("Location: ../staff-login.php");

@@ -6,6 +6,11 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Student Attendance';
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_attendance (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, attendance_date DATE DEFAULT NULL, time_in TIME DEFAULT NULL, time_out TIME DEFAULT NULL, status VARCHAR(50) DEFAULT 'Present', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_date (attendance_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

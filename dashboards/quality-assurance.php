@@ -5,6 +5,37 @@ $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`quality_assurance` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        department VARCHAR(200) DEFAULT '',
+        review_area VARCHAR(200) DEFAULT '',
+        assessment_type VARCHAR(100) DEFAULT '',
+        title VARCHAR(300) DEFAULT '',
+        assessment_period VARCHAR(100) DEFAULT '',
+        findings TEXT,
+        recommendations TEXT,
+        reviewed_by VARCHAR(200) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_status (status),
+        KEY idx_department (department)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`performance_indicators` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        indicator_name VARCHAR(200) NOT NULL,
+        indicator_category VARCHAR(100) DEFAULT '',
+        target_value VARCHAR(100) DEFAULT '',
+        actual_value VARCHAR(100) DEFAULT '',
+        status VARCHAR(30) DEFAULT 'active',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_category (indicator_category),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 generateCsrfToken();
 $flash = getFlashMessages();
 

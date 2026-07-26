@@ -7,6 +7,85 @@ $auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
+
+if ($conn) {
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_incidents` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        incident_type VARCHAR(100) NOT NULL,
+        location VARCHAR(200) DEFAULT '',
+        severity VARCHAR(30) DEFAULT 'Medium',
+        description TEXT,
+        reported_by VARCHAR(200) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'Reported',
+        resolution_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_status (status),
+        KEY idx_date (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_patrols` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        guard_id INT DEFAULT NULL,
+        officer_name VARCHAR(200) DEFAULT '',
+        patrol_area VARCHAR(200) DEFAULT '',
+        patrol_date DATE DEFAULT NULL,
+        start_time DATETIME DEFAULT NULL,
+        end_time DATETIME DEFAULT NULL,
+        notes TEXT,
+        status VARCHAR(50) DEFAULT 'Scheduled',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_date (patrol_date),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_visitors` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        visitor_name VARCHAR(200) NOT NULL,
+        id_number VARCHAR(100) DEFAULT '',
+        badge_number VARCHAR(100) DEFAULT '',
+        visitor_phone VARCHAR(50) DEFAULT '',
+        visitor_nature VARCHAR(100) DEFAULT '',
+        person_to_visit_name VARCHAR(200) DEFAULT '',
+        visit_date DATE DEFAULT NULL,
+        actual_arrival DATETIME DEFAULT NULL,
+        actual_departure DATETIME DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'Checked In',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_date (visit_date),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_equipment` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        equipment_name VARCHAR(200) NOT NULL,
+        equipment_type VARCHAR(100) DEFAULT '',
+        location VARCHAR(200) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'Operational',
+        next_maintenance_date DATE DEFAULT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_type (equipment_type),
+        KEY idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`access_control_logs` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        person_name VARCHAR(200) DEFAULT '',
+        card_id VARCHAR(100) DEFAULT '',
+        direction VARCHAR(10) DEFAULT 'in',
+        access_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+        location VARCHAR(200) DEFAULT '',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_date (access_time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_emergency_contacts` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        contact_name VARCHAR(200) NOT NULL,
+        contact_type VARCHAR(100) DEFAULT '',
+        phone_number VARCHAR(50) DEFAULT '',
+        email VARCHAR(200) DEFAULT '',
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_type (contact_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
 $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';

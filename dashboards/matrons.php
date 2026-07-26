@@ -12,6 +12,16 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS welfare_cases (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, student_name VARCHAR(200) DEFAULT '', case_type VARCHAR(100) DEFAULT '', description TEXT, reported_by INT, reported_by_name VARCHAR(200) DEFAULT '', assigned_to INT DEFAULT 0, priority VARCHAR(50) DEFAULT 'Medium', status VARCHAR(30) DEFAULT 'Open', resolution_notes TEXT, resolved_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS welfare_actions (id INT AUTO_INCREMENT PRIMARY KEY, case_id INT NOT NULL, action_by INT, action_by_name VARCHAR(120) DEFAULT '', action_type VARCHAR(50) DEFAULT 'Comment', notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_case (case_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_discipline (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, student_name VARCHAR(200) DEFAULT '', incident_type VARCHAR(100) DEFAULT '', incident_date DATE, action_taken VARCHAR(255) DEFAULT '', description TEXT, reported_by INT, status VARCHAR(30) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS hostel_allocations (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, room_id INT NOT NULL, hostel_room_id INT DEFAULT NULL, academic_year VARCHAR(20) DEFAULT '', semester VARCHAR(50) DEFAULT '', check_in_date DATE DEFAULT NULL, check_out_date DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS room_assignments (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, room_number VARCHAR(50) NOT NULL, bed_number VARCHAR(50), hostel VARCHAR(100) NOT NULL, status VARCHAR(50) DEFAULT 'Active', assigned_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS hostel_activities (id INT AUTO_INCREMENT PRIMARY KEY, activity_name VARCHAR(255) NOT NULL, description TEXT, activity_date DATE NOT NULL, location VARCHAR(255), status VARCHAR(50) DEFAULT 'Planned', created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

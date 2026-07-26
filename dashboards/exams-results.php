@@ -15,6 +15,11 @@ if (empty($_SESSION['csrf_token'])) {
 }
 $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
 
+if ($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS examination_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) NOT NULL, exam_type VARCHAR(50) DEFAULT 'Final', exam_number VARCHAR(100) DEFAULT '', marks_obtained DECIMAL(8,2) DEFAULT 0.00, total_marks DECIMAL(8,2) DEFAULT 100.00, grade VARCHAR(5) DEFAULT '', continuous_assessment_marks DECIMAL(8,2) DEFAULT 0.00, final_exam_marks DECIMAL(8,2) DEFAULT 0.00, grade_status VARCHAR(50) DEFAULT 'Pending', lecturer_id INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_er_student (student_id), INDEX idx_er_exam (exam_number)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $conn->query("CREATE TABLE IF NOT EXISTS academic_course_catalog (id INT AUTO_INCREMENT PRIMARY KEY, course_code VARCHAR(50) NOT NULL, course_title VARCHAR(300) NOT NULL, credits DECIMAL(5,2) DEFAULT 0.00, program_code VARCHAR(50) DEFAULT '', year_of_study INT DEFAULT 1, semester VARCHAR(100) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_acc_program (program_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // â”€â”€ AJAX endpoint for exam student list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['exam'])) {
     header('Content-Type: application/json');

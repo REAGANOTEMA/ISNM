@@ -19,10 +19,20 @@ if (empty($student_id)) {
     exit();
 }
 
-// Get student information
+// Get student information using students DB connection
+$studentsConn = getStudentsConnection();
+if (!$studentsConn) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+    exit();
+}
+
 $student_sql = "SELECT * FROM students WHERE student_id = ?";
-$student_result = executeQuery($student_sql, [$student_id], 's');
-$student = $student_result[0] ?? null;
+$student_stmt = $studentsConn->prepare($student_sql);
+$student_stmt->bind_param('s', $student_id);
+$student_stmt->execute();
+$student_result = $student_stmt->get_result();
+$student = $student_result ? $student_result->fetch_assoc() : null;
+$student_stmt->close();
 
 if (!$student) {
     echo json_encode(['success' => false, 'message' => 'Student not found']);
@@ -31,11 +41,21 @@ if (!$student) {
 
 // Get academic records
 $records_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year ASC, semester ASC";
-$academic_records = executeQuery($records_sql, [$student_id], 's');
+$rec_stmt = $studentsConn->prepare($records_sql);
+$rec_stmt->bind_param('s', $student_id);
+$rec_stmt->execute();
+$rec_result = $rec_stmt->get_result();
+$academic_records = $rec_result ? $rec_result->fetch_all(MYSQLI_ASSOC) : [];
+$rec_stmt->close();
 
 // Get academic summary
 $summary_sql = "SELECT * FROM academic_summary WHERE student_id = ? ORDER BY academic_year ASC, semester ASC";
-$academic_summary = executeQuery($summary_sql, [$student_id], 's');
+$sum_stmt = $studentsConn->prepare($summary_sql);
+$sum_stmt->bind_param('s', $student_id);
+$sum_stmt->execute();
+$sum_result = $sum_stmt->get_result();
+$academic_summary = $sum_result ? $sum_result->fetch_all(MYSQLI_ASSOC) : [];
+$sum_stmt->close();
 
 // Get photo URL
 $photo_url = getPassportPhotoUrl($student['profile_image']);

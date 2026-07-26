@@ -7,6 +7,31 @@ $user = $ctx['user'];
 
 $pageTitle = 'Portal Messages';
 
+// Ensure tables exist
+if ($websiteConn) {
+    $websiteConn->query("CREATE TABLE IF NOT EXISTS portal_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sender_name VARCHAR(255) DEFAULT NULL,
+        recipient_name VARCHAR(255) DEFAULT NULL,
+        subject VARCHAR(255) DEFAULT NULL,
+        message TEXT,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+$connForNotif = $websiteConn ?: $conn;
+if ($connForNotif) {
+    $connForNotif->query("CREATE TABLE IF NOT EXISTS notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT DEFAULT NULL,
+        notification_type VARCHAR(100) DEFAULT 'info',
+        title VARCHAR(255) DEFAULT NULL,
+        message TEXT,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $messages = [];
 if ($websiteConn) {
     $r = $websiteConn->query("SELECT * FROM portal_messages ORDER BY created_at DESC LIMIT 100");

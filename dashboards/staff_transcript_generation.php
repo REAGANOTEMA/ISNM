@@ -23,6 +23,11 @@ if (stripos($staff_role, 'Academic Registrar') !== false ||
     $can_generate_transcripts = true;
 }
 
+// ─── Ensure tables exist ───
+if ($staff_conn) {
+    @$staff_conn->query("CREATE TABLE IF NOT EXISTS academic_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) DEFAULT '', course_name VARCHAR(300) DEFAULT '', assessment_type VARCHAR(50) DEFAULT 'Exam', academic_year VARCHAR(20) DEFAULT '', semester VARCHAR(50) DEFAULT '', marks DECIMAL(8,2) DEFAULT 0, marks_obtained DECIMAL(8,2) DEFAULT 0, grade VARCHAR(5) DEFAULT '', gpa DECIMAL(4,2) DEFAULT 0, credits INT DEFAULT 0, graded_by INT DEFAULT 0, lecturer_id INT DEFAULT 0, staff_id INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if (!$can_generate_transcripts) {
     $_SESSION['error'] = "You don't have permission to generate transcripts.";
     header("Location: ../staff-login.php");

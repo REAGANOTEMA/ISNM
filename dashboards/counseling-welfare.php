@@ -4,6 +4,12 @@ $ctx = bootstrapStaffDashboard(['director', 'principal', 'deputy', 'matron', 'wa
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
+// ─── Ensure tables exist ───
+if ($conn) {
+    @$conn->query("CREATE TABLE IF NOT EXISTS counseling_sessions (id INT AUTO_INCREMENT PRIMARY KEY, student_name VARCHAR(200) NOT NULL, session_type VARCHAR(50) DEFAULT 'general', counselor_name VARCHAR(200) DEFAULT '', notes TEXT, session_date DATE DEFAULT NULL, status VARCHAR(30) DEFAULT 'scheduled', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS student_welfare_cases (id INT AUTO_INCREMENT PRIMARY KEY, student_name VARCHAR(200) NOT NULL, issue_description TEXT, priority VARCHAR(20) DEFAULT 'normal', status VARCHAR(30) DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 // ── AJAX CRUD Handler ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
     header('Content-Type: application/json');
