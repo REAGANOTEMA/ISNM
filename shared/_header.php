@@ -80,7 +80,13 @@ include_once __DIR__ . '/../includes/functions.php';
     </div>
     
     <div class="header-title">
-      <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+      <div class="title-wrapper">
+        <div class="ticker-wrapper">
+          <div class="ticker-track">
+            <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+          </div>
+        </div>
+      </div>
       <p class="school-motto">"Chosen to Serve, Based on a disciplined mind for health action"</p>
     </div>
     
@@ -242,4 +248,43 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+</script>
+
+<script>
+(function(){
+  var track = document.querySelector('.ticker-track');
+  var title = document.querySelector('.school-title');
+  if (!track || !title) return;
+
+  var speed = 1.2;
+  var restartMargin = 80;
+  var offset = 0;
+  var lastTime = null;
+
+  function animate(time) {
+    if (!lastTime) lastTime = time;
+    var dt = (time - lastTime) / 16.67;
+    lastTime = time;
+
+    offset -= speed * dt;
+
+    var textW = title.offsetWidth;
+    var containerW = track.parentElement.offsetWidth;
+
+    if (textW > containerW) {
+      if (offset <= -(textW - containerW + restartMargin)) {
+        offset = 0;
+      }
+    } else {
+      if (offset <= -restartMargin) {
+        offset = 0;
+      }
+    }
+
+    track.style.transform = 'translateX(' + offset + 'px)';
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+})();
 </script>

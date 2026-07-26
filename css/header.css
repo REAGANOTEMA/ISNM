@@ -414,7 +414,6 @@
     .ticker-track {
       display: flex;
       white-space: nowrap;
-      animation: tickerScroll 20s linear infinite;
       will-change: transform;
     }
     
@@ -442,9 +441,7 @@
         0px -2px 0px rgba(255, 255, 255, 0.05);
       
       /* Color Cycling Animation - 5 Second Intervals */
-      animation: 
-        tickerScroll 20s linear infinite,
-        colorCycle 25s ease-in-out infinite;
+      animation: colorCycle 25s ease-in-out infinite;
       
       /* Initial color */
       color: var(--isnm-yellow);
@@ -1723,9 +1720,7 @@
           0px 3px 0px rgba(0, 0, 0, 0.4),
           0px 0px 15px rgba(255, 215, 0, 0.2);
         /* Color cycling continues on mobile */
-        animation: 
-          tickerScrollMobile 15s linear infinite,
-          colorCycle 25s ease-in-out infinite;
+        animation: colorCycle 25s ease-in-out infinite;
       }
       
       .school-motto {
@@ -1739,7 +1734,6 @@
       
       /* Prevent horizontal overflow */
       .ticker-track {
-        animation: tickerScrollMobile 15s linear infinite;
         will-change: transform;
       }
       
@@ -1781,19 +1775,6 @@
       .ticker-wrapper {
         height: 35px;
       }
-      
-      .ticker-track {
-        animation: tickerScrollTablet 13s linear infinite;
-      }
-      
-      @keyframes tickerScrollTablet {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-50%);
-        }
-      }
     }
     
     @media (max-width: 480px) {
@@ -1822,9 +1803,7 @@
           0px 2px 0px rgba(0, 0, 0, 0.5),
           0px 0px 10px rgba(255, 215, 0, 0.15);
         /* Color cycling continues */
-        animation: 
-          tickerScrollSmall 12s linear infinite,
-          colorCycle 25s ease-in-out infinite;
+        animation: colorCycle 25s ease-in-out infinite;
       }
       
       .school-motto {
@@ -1835,19 +1814,6 @@
       
       .ticker-wrapper {
         height: 30px;
-      }
-      
-      .ticker-track {
-        animation: tickerScrollSmall 12s linear infinite;
-      }
-      
-      @keyframes tickerScrollSmall {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-50%);
-        }
       }
     }
     
