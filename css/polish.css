@@ -22,9 +22,13 @@
   }
 }
 
-/* --- Simplified School Title (remove color cycling) --- */
+/* --- School Title: let JS ticker handle scrolling, disable CSS animation --- */
+.ticker-track {
+  animation: none !important;
+}
+
 .school-title {
-  animation: tickerScroll 20s linear infinite !important;
+  animation: none !important;
   color: var(--isnm-yellow) !important;
   text-shadow:
     0px 1px 0px rgba(0,0,0,0.8),
@@ -35,18 +39,18 @@
 
 @media (max-width: 991px) {
   .school-title {
-    animation: tickerScrollMobile 15s linear infinite !important;
+    animation: none !important;
     color: var(--isnm-yellow) !important;
   }
 }
 @media (max-width: 768px) {
   .school-title {
-    animation: tickerScrollTablet 13s linear infinite !important;
+    animation: none !important;
   }
 }
 @media (max-width: 480px) {
   .school-title {
-    animation: tickerScrollSmall 12s linear infinite !important;
+    animation: none !important;
   }
 }
 

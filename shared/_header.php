@@ -72,6 +72,11 @@ include_once __DIR__ . '/../includes/functions.php';
 
 <!-- ISNM Header -->
 <header class="isnm-header">
+  <div class="header-full-ticker">
+    <div class="ticker-track">
+      <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+    </div>
+  </div>
   <div class="header-container">
     <div class="header-logo">
       <a href="index.php" class="logo-link">
@@ -80,13 +85,6 @@ include_once __DIR__ . '/../includes/functions.php';
     </div>
     
     <div class="header-title">
-      <div class="title-wrapper">
-        <div class="ticker-wrapper">
-          <div class="ticker-track">
-            <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-          </div>
-        </div>
-      </div>
       <p class="school-motto">"Chosen to Serve, Based on a disciplined mind for health action"</p>
     </div>
     
@@ -252,17 +250,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 (function(){
-  var track = document.querySelector('.ticker-track');
+  var track = document.querySelector('.header-full-ticker .ticker-track');
   var title = document.querySelector('.school-title');
   if (!track || !title) return;
 
-  var speed = 1.0;
+  var speed = 1.2;
   var offset = 0;
   var lastTime = null;
   var started = false;
-  var paused = false;
-  var pauseElapsed = 0;
-  var PAUSE_MS = 2500;
 
   function animate(time) {
     if (!lastTime) lastTime = time;
@@ -273,28 +268,15 @@ document.addEventListener('DOMContentLoaded', function() {
     var containerW = track.parentElement.offsetWidth;
     if (containerW < 1) { requestAnimationFrame(animate); return; }
 
-    if (!started && textW > 0) {
+    if (!started) {
       offset = containerW;
       started = true;
     }
 
-    if (paused) {
-      pauseElapsed += dt;
-      if (pauseElapsed >= PAUSE_MS) {
-        paused = false;
-        offset = containerW;
-      }
-      track.style.transform = 'translateX(' + offset + 'px)';
-      requestAnimationFrame(animate);
-      return;
-    }
-
     offset -= speed * (dt / 16.67);
 
-    if (offset <= 0) {
-      offset = 0;
-      paused = true;
-      pauseElapsed = 0;
+    if (offset <= -textW) {
+      offset = containerW;
     }
 
     track.style.transform = 'translateX(' + offset + 'px)';
