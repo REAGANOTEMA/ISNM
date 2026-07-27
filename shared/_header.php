@@ -72,26 +72,31 @@ include_once __DIR__ . '/../includes/functions.php';
 
 <!-- ISNM Header -->
 <header class="isnm-header">
-  <div class="header-full-ticker">
-    <div class="ticker-track">
-      <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-    </div>
-  </div>
   <div class="header-container">
-    <div class="header-logo">
-      <a href="index.php" class="logo-link">
-        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
-      </a>
+    <div class="header-row-top">
+      <div class="header-logo">
+        <a href="index.php" class="logo-link">
+          <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
+        </a>
+      </div>
+      
+      <div class="header-ticker-area">
+        <div class="ticker-overflow">
+          <div class="ticker-track">
+            <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+          </div>
+        </div>
+      </div>
+      
+      <div class="header-logo">
+        <a href="index.php" class="logo-link">
+          <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
+        </a>
+      </div>
     </div>
     
-    <div class="header-title">
+    <div class="header-row-bottom">
       <p class="school-motto">"Chosen to Serve, Based on a disciplined mind for health action"</p>
-    </div>
-    
-    <div class="header-logo">
-      <a href="index.php" class="logo-link">
-        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
-      </a>
     </div>
   </div>
 </header>
@@ -250,11 +255,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 (function(){
-  var track = document.querySelector('.header-full-ticker .ticker-track');
+  var track = document.querySelector('.ticker-track');
   var title = document.querySelector('.school-title');
-  if (!track || !title) return;
+  var overflow = document.querySelector('.ticker-overflow');
+  if (!track || !title || !overflow) return;
 
-  var speed = 1.2;
+  var speed = 1.5;
   var offset = 0;
   var lastTime = null;
   var started = false;
@@ -265,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     lastTime = time;
 
     var textW = title.scrollWidth;
-    var containerW = track.parentElement.offsetWidth;
+    var containerW = overflow.offsetWidth;
     if (containerW < 1) { requestAnimationFrame(animate); return; }
 
     if (!started) {
