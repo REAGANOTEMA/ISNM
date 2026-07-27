@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (containerW < 1) { requestAnimationFrame(animate); return; }
 
     if (!started && textW > 0) {
-      offset = -textW;
+      offset = containerW;
       started = true;
     }
 
@@ -282,19 +282,17 @@ document.addEventListener('DOMContentLoaded', function() {
       pauseElapsed += dt;
       if (pauseElapsed >= PAUSE_MS) {
         paused = false;
-        offset = -textW;
+        offset = containerW;
       }
       track.style.transform = 'translateX(' + offset + 'px)';
       requestAnimationFrame(animate);
       return;
     }
 
-    offset += speed * (dt / 16.67);
+    offset -= speed * (dt / 16.67);
 
-    var stopOffset = Math.max(0, containerW - textW);
-
-    if (offset >= stopOffset) {
-      offset = stopOffset;
+    if (offset <= 0) {
+      offset = 0;
       paused = true;
       pauseElapsed = 0;
     }
