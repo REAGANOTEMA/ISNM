@@ -257,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!track || !title) return;
 
   var speed = 1.0;
-  var LOGO_W = 80;
   var offset = 0;
   var lastTime = null;
   var started = false;
@@ -275,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (containerW < 1) { requestAnimationFrame(animate); return; }
 
     if (!started && textW > 0) {
-      offset = containerW;
+      offset = -textW;
       started = true;
     }
 
@@ -283,23 +282,18 @@ document.addEventListener('DOMContentLoaded', function() {
       pauseElapsed += dt;
       if (pauseElapsed >= PAUSE_MS) {
         paused = false;
-        offset = containerW;
+        offset = -textW;
       }
       track.style.transform = 'translateX(' + offset + 'px)';
       requestAnimationFrame(animate);
       return;
     }
 
-    offset -= speed * (dt / 16.67);
+    offset += speed * (dt / 16.67);
 
-    var stopOffset;
-    if (textW > containerW) {
-      stopOffset = -(textW - containerW + LOGO_W * 0.25);
-    } else {
-      stopOffset = -(LOGO_W * 0.5);
-    }
+    var stopOffset = Math.max(0, containerW - textW);
 
-    if (offset <= stopOffset) {
+    if (offset >= stopOffset) {
       offset = stopOffset;
       paused = true;
       pauseElapsed = 0;
