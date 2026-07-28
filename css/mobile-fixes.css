@@ -294,8 +294,8 @@ img {
   }
 
   .header-row-top {
-    padding: 10px 14px !important;
-    gap: 10px !important;
+    padding: 6px 10px !important;
+    gap: 8px !important;
   }
 
   .header-container .header-logo:last-child {
@@ -303,43 +303,16 @@ img {
   }
 
   .logo-img {
-    height: 50px !important;
-    width: 50px !important;
-  }
-
-  .header-ticker-area {
     height: 40px !important;
-  }
-
-  .school-title {
-    font-size: 1.2rem !important;
-    letter-spacing: 1.5px !important;
-    padding-right: 30px !important;
-  }
-
-  .school-motto {
-    font-size: 0.78rem !important;
-    padding: 5px 14px 8px !important;
-  }
-}
-
-@media (max-width: 575px) {
-  .header-row-top {
-    padding: 8px 10px !important;
-    gap: 8px !important;
-  }
-
-  .logo-img {
-    height: 44px !important;
-    width: 44px !important;
+    width: 40px !important;
   }
 
   .header-ticker-area {
-    height: 36px !important;
+    height: 34px !important;
   }
 
   .school-title {
-    font-size: 1rem !important;
+    font-size: 0.92rem !important;
     letter-spacing: 1px !important;
     padding-right: 20px !important;
   }
@@ -350,19 +323,52 @@ img {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 575px) {
+  .header-row-top {
+    padding: 5px 8px !important;
+    gap: 6px !important;
+  }
+
   .logo-img {
-    height: 38px !important;
-    width: 38px !important;
+    height: 36px !important;
+    width: 36px !important;
+  }
+
+  .header-ticker-area {
+    height: 30px !important;
   }
 
   .school-title {
-    font-size: 0.85rem !important;
+    font-size: 0.82rem !important;
     letter-spacing: 0.5px !important;
+    padding-right: 16px !important;
   }
 
   .school-motto {
     font-size: 0.65rem !important;
+    padding: 3px 8px 5px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .logo-img {
+    height: 32px !important;
+    width: 32px !important;
+  }
+
+  .header-ticker-area {
+    height: 26px !important;
+  }
+
+  .school-title {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.3px !important;
+    padding-right: 12px !important;
+  }
+
+  .school-motto {
+    font-size: 0.6rem !important;
+    padding: 2px 6px 4px !important;
   }
 }
 

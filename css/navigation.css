@@ -41,8 +41,8 @@
   align-items: center !important;
   justify-content: space-between !important;
   width: 100% !important;
-  padding: 12px 20px !important;
-  gap: 16px !important;
+  padding: 8px 16px !important;
+  gap: 12px !important;
 }
 
 /* Logo Styles */
@@ -65,20 +65,20 @@
 }
 
 .logo-img {
-  height: 65px !important;
-  width: 65px !important;
+  height: 52px !important;
+  width: 52px !important;
   object-fit: contain !important;
   border-radius: 50% !important;
-  border: 3px solid #FFD700 !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
   transition: all 0.3s ease !important;
   background: #FFF8DC !important;
-  padding: 3px !important;
+  padding: 2px !important;
 }
 
 .logo-img:hover {
   transform: scale(1.05) !important;
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4) !important;
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4) !important;
 }
 
 /* ── Ticker Area (between logos) ── */
@@ -87,7 +87,7 @@
   min-width: 0 !important;
   overflow: hidden !important;
   position: relative !important;
-  height: 50px !important;
+  height: 44px !important;
   display: flex !important;
   align-items: center !important;
 }
@@ -110,19 +110,19 @@
 
 .school-title {
   font-family: 'Playfair Display', serif !important;
-  font-weight: 800 !important;
-  font-size: 1.7rem !important;
+  font-weight: 700 !important;
+  font-size: 1.15rem !important;
   margin: 0 !important;
   color: #FFD700 !important;
   text-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.5),
-    0px 0px 20px rgba(255, 215, 0, 0.15) !important;
+    0px 1px 3px rgba(0, 0, 0, 0.5),
+    0px 0px 12px rgba(255, 215, 0, 0.1) !important;
   line-height: 1.2 !important;
-  letter-spacing: 3px !important;
+  letter-spacing: 2px !important;
   white-space: nowrap !important;
   text-transform: uppercase !important;
   display: inline-block !important;
-  padding-right: 60px !important;
+  padding-right: 40px !important;
   animation: none !important;
 }
 
@@ -130,14 +130,14 @@
 .header-row-bottom {
   width: 100% !important;
   text-align: center !important;
-  padding: 6px 20px 10px !important;
+  padding: 5px 20px 8px !important;
   border-top: 1px solid rgba(255, 215, 0, 0.2) !important;
 }
 
 .school-motto {
   font-family: 'Poppins', sans-serif !important;
   font-weight: 300 !important;
-  font-size: 0.88rem !important;
+  font-size: 0.78rem !important;
   color: #FFF8DC !important;
   margin: 0 !important;
   font-style: italic !important;
@@ -516,26 +516,27 @@
    ============================================ */
 @media (max-width: 991px) {
   .header-row-top {
-    padding: 10px 14px !important;
-    gap: 10px !important;
+    padding: 7px 12px !important;
+    gap: 8px !important;
   }
 
   .logo-img {
-    height: 50px !important;
-    width: 50px !important;
+    height: 42px !important;
+    width: 42px !important;
   }
 
   .header-ticker-area {
-    height: 40px !important;
+    height: 36px !important;
   }
 
   .school-title {
-    font-size: 1.2rem !important;
-    letter-spacing: 1.5px !important;
+    font-size: 1rem !important;
+    letter-spacing: 1px !important;
   }
 
   .school-motto {
-    font-size: 0.82rem !important;
+    font-size: 0.72rem !important;
+    padding: 4px 12px 6px !important;
   }
 
   .isnm-navbar .navbar-collapse {
