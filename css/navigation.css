@@ -95,16 +95,16 @@
 .school-title {
   font-family: 'Playfair Display', serif !important;
   font-weight: 900 !important;
-  font-size: 1.1rem !important;
+  font-size: 1.55rem !important;
   margin: 0 !important;
   color: #FFD700 !important;
   text-shadow:
     0 1px 0 #b8960c,
     0 2px 0 #a0820b,
     0 3px 0 #8a700a,
-    0 4px 6px rgba(0, 0, 0, 0.4) !important;
+    0 4px 8px rgba(0, 0, 0, 0.5) !important;
   line-height: 1 !important;
-  letter-spacing: 2px !important;
+  letter-spacing: 2.5px !important;
   text-transform: uppercase !important;
   white-space: nowrap !important;
   display: inline-block !important;

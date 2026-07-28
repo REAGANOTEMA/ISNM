@@ -286,16 +286,38 @@ img {
 
 
 /* ══════════════════════════════════════════════════════════════
-   HEADER — Compact Mobile
+   HEADER — Mobile (scaled to match bigger desktop title)
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 991px) {
   .header-row-main {
-    padding: 3px 10px !important;
-    gap: 6px !important;
+    padding: 4px 10px !important;
+    gap: 8px !important;
   }
 
   .header-row-main .header-logo:last-child {
     display: none !important;
+  }
+
+  .logo-img {
+    height: 42px !important;
+    width: 42px !important;
+  }
+
+  .school-title {
+    font-size: 1.2rem !important;
+    letter-spacing: 2px !important;
+  }
+
+  .school-motto {
+    font-size: 0.65rem !important;
+    padding: 3px 10px !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .header-row-main {
+    padding: 3px 8px !important;
+    gap: 6px !important;
   }
 
   .logo-img {
@@ -305,51 +327,34 @@ img {
 
   .school-title {
     font-size: 0.95rem !important;
-    letter-spacing: 1px !important;
+    letter-spacing: 1.5px !important;
   }
 
   .school-motto {
-    font-size: 0.62rem !important;
+    font-size: 0.58rem !important;
     padding: 2px 8px !important;
   }
 }
 
-@media (max-width: 575px) {
+@media (max-width: 360px) {
   .header-row-main {
-    padding: 3px 8px !important;
+    padding: 3px 6px !important;
     gap: 5px !important;
   }
 
   .logo-img {
-    height: 32px !important;
-    width: 32px !important;
+    height: 30px !important;
+    width: 30px !important;
   }
 
   .school-title {
-    font-size: 0.8rem !important;
-    letter-spacing: 0.5px !important;
-  }
-
-  .school-motto {
-    font-size: 0.55rem !important;
-    padding: 2px 6px !important;
-  }
-}
-
-@media (max-width: 360px) {
-  .logo-img {
-    height: 28px !important;
-    width: 28px !important;
-  }
-
-  .school-title {
-    font-size: 0.7rem !important;
-    letter-spacing: 0.3px !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 1px !important;
   }
 
   .school-motto {
     font-size: 0.5rem !important;
-    padding: 2px 4px !important;
+    padding: 2px 6px !important;
   }
 }
 

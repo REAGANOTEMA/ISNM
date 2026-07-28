@@ -137,18 +137,18 @@ section.py-5 {
 @media (max-width: 575px) {
   .header-row-main {
     padding: 3px 8px;
-    gap: 5px;
+    gap: 6px;
   }
   .logo-img {
-    height: 32px;
-    width: 32px;
+    height: 36px;
+    width: 36px;
   }
   .school-title {
-    font-size: 0.8rem !important;
-    letter-spacing: 0.5px;
+    font-size: 0.95rem !important;
+    letter-spacing: 1.5px;
   }
   .school-motto {
-    font-size: 0.55rem;
+    font-size: 0.58rem;
   }
   .hero-section {
     min-height: 90dvh;
