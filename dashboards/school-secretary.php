@@ -2103,7 +2103,14 @@ if ($edit_id) {
     </div>
 </div>
 <?php else: ?>
-<script>window.location.replace('?page=home');</script>
+<div class="content-section">
+  <div class="section-card" style="padding:40px;text-align:center">
+    <i class="fas fa-tools fa-2x text-muted mb-3"></i>
+    <h5><?= ucfirst(str_replace(['_','-'],' ',$page)) ?></h5>
+    <p class="text-muted">This module is currently under development.</p>
+    <a href="?page=home" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Dashboard</a>
+  </div>
+</div>
 <?php endif; ?>
     </div>
 </div><!-- /page-content -->

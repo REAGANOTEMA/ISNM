@@ -25,6 +25,7 @@ if (empty($_SESSION['csrf_token'])) {
 $user_role    = $_SESSION['role'] ?? '';
 
 $page  = $_GET['page'] ?? 'overview';
+if ($page === 'home') $page = 'overview';
 $sub   = $_GET['sub'] ?? '';
 $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
@@ -901,6 +902,13 @@ $pageTitle = 'HR Manager';
 function approveHRRequest(id){if(!confirm('Approve this request?'))return;var fd=new FormData();fd.append('action','approve_request');fd.append('id',id);fd.append('csrf_token','<?= htmlspecialchars($_SESSION['csrf_token']) ?>');fetch('hr-manager.php',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});}
 function rejectHRRequest(id){var reason=prompt('Reason for rejection:');if(reason===null)return;var fd=new FormData();fd.append('action','reject_request');fd.append('id',id);fd.append('reason',reason);fd.append('csrf_token','<?= htmlspecialchars($_SESSION['csrf_token']) ?>');fetch('hr-manager.php',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed');}).catch(function(){alert('Error');});}
 </script>
+<?php elseif (in_array($page, ['notifications','announcements','profile','preferences','security','activity-logs','activity_logs'])): ?>
+<div class="section-card" style="padding:40px;text-align:center">
+  <i class="fas fa-tools fa-2x text-muted mb-3"></i>
+  <h5><?= ucfirst(str_replace(['_','-'],' ',$page)) ?></h5>
+  <p class="text-muted">This module is currently under development.</p>
+  <a href="hr-manager.php?page=overview" class="btn btn-primary btn-sm mt-2"><i class="fas fa-home me-1"></i>Back to Overview</a>
+</div>
 <?php else: ?>
 <div class="section-card" style="padding:40px;text-align:center">
   <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>

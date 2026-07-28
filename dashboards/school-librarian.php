@@ -322,7 +322,9 @@ $pageToSection = [
     'activities'   => 'activities',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
-$section = $pageToSection[$requestedPage] ?? 'overview';
+$section = $pageToSection[$requestedPage] ?? 'coming_soon';
+$comingSoonPages = ['notifications','announcements','profile','preferences','security','activity-logs'];
+$isComingSoon = in_array($requestedPage, $comingSoonPages);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -671,6 +673,15 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             </div>
                         </div>
                         <?php endforeach; ?>
+                    </div>
+                </section>
+
+                <section id="coming_soon" class="dashboard-section<?= $isComingSoon?' active':'' ?>" data-section="coming_soon">
+                    <div class="section-card text-center py-5">
+                        <i class="fas fa-tools fa-3x mb-3" style="color:#94a3b8;"></i>
+                        <h4 class="fw-bold"><?= ucfirst(str_replace(['_','-'],' ',$requestedPage)) ?></h4>
+                        <p class="text-muted mb-4">This module is currently under development. Content will be available soon.</p>
+                        <button class="btn btn-primary" onclick="window.location='school-librarian.php?page=home'"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</button>
                     </div>
                 </section>
     </div>

@@ -1429,12 +1429,19 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 var newContent = doc.querySelector('.lec-content');
                 if (newContent && contentArea) {
                     contentArea.innerHTML = newContent.innerHTML;
+                    var initFns = [];
                     contentArea.querySelectorAll('script').forEach(function(oldScript) {
                         var newScript = document.createElement('script');
                         if (oldScript.src) { newScript.src = oldScript.src; }
-                        else { newScript.textContent = oldScript.textContent; }
+                        else {
+                            var code = oldScript.textContent;
+                            newScript.textContent = code;
+                            var fnMatch = code.match(/document\.addEventListener\s*\(\s*['"]DOMContentLoaded['"]\s*,\s*(\w+)/);
+                            if (fnMatch && typeof window[fnMatch[1]] === 'function') initFns.push(fnMatch[1]);
+                        }
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
+                    setTimeout(function() { initFns.forEach(function(fn) { try { window[fn](); } catch(e) { console.warn('[ISNM] init', fn, e); } }); }, 80);
                 }
                 hideLoading();
             })
