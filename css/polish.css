@@ -152,20 +152,20 @@ section.py-5 {
 
 /* --- Responsive tweaks for 360-575px --- */
 @media (max-width: 575px) {
-  .header-row-top {
-    padding: 6px 10px;
-    gap: 8px;
+  .header-row-main {
+    padding: 5px 8px;
+    gap: 6px;
   }
   .logo-img {
-    height: 36px;
-    width: 36px;
+    height: 34px;
+    width: 34px;
   }
   .school-title {
-    font-size: 0.9rem !important;
-    letter-spacing: 0.5px;
+    font-size: 0.82rem !important;
+    letter-spacing: 0.3px;
   }
   .school-motto {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   .hero-section {
     min-height: 90dvh;
