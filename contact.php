@@ -28,15 +28,10 @@ include_once 'shared/_header.php';
     </nav>
 
     <!-- Contact Information Section -->
-    <section class="contact-info-section py-5 animate-on-scroll">
+    <section class="contact-info-section animate-on-scroll">
       <div class="container">
         <div class="section-header text-center">
-          <div class="header-icon">
-            <i class="fas fa-address-book"></i>
-          </div>
-          <span class="tag tag-gold"><i class="fas fa-envelope"></i> Get in Touch</span>
           <h2 class="section-title">Our Contact Information</h2>
-          <div class="section-divider section-divider-center"></div>
           <p class="section-subtitle">We're here to help and answer any questions you might have</p>
         </div>
         
@@ -76,18 +71,6 @@ include_once 'shared/_header.php';
               <p><i class="fas fa-at"></i> info@igangaschoolofnursingandmidwifery.ac.ug</p>
               <p><i class="fas fa-graduation-cap"></i> admissions@igangaschoolofnursingandmidwifery.ac.ug</p>
               <p><i class="fas fa-info-circle"></i> registrar@igangaschoolofnursingandmidwifery.ac.ug</p>
-            </div>
-          </div>
-          
-          <div class="contact-card animate-slide-up animate-delay-4" style="animation-delay: 0.4s; cursor:pointer;">
-            <div class="contact-icon">
-              <i class="fas fa-globe"></i>
-            </div>
-            <h4>Website & Social</h4>
-            <div class="contact-details">
-              <p><i class="fas fa-globe-africa"></i> www.igangaschoolofnursingandmidwifery.ac.ug</p>
-              <p><i class="fas fa-share-alt"></i> Follow us on social media</p>
-              <p><i class="fab fa-facebook"></i> Facebook: @ISNMUganda</p>
             </div>
           </div>
         </div>

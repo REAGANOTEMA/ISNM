@@ -291,11 +291,15 @@ try {
               <div class="d-flex gap-3 mt-4 flex-wrap">
                 <a href="about.php" class="btn-3d btn-green">
                   <span class="shine"></span>
-                  <i class="fas fa-info-circle me-2"></i>Learn More About Us
+                  <i class="fas fa-info-circle me-2"></i>Learn More
                 </a>
-                <a href="volunteer.php" class="btn-3d btn-chocolate cta-pulse">
+                <a href="programs.php" class="btn-3d btn-yellow">
                   <span class="shine"></span>
-                  <i class="fas fa-hands-helping me-2"></i>Volunteer With Us
+                  <i class="fas fa-graduation-cap me-2"></i>Programs
+                </a>
+                <a href="donation.php" class="btn-3d btn-chocolate cta-pulse">
+                  <span class="shine"></span>
+                  <i class="fas fa-hand-holding-heart me-2"></i>Donate
                 </a>
               </div>
             </div>
@@ -322,33 +326,33 @@ try {
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6 animate-on-scroll">
-            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
+            <div class="feature-card" onclick="window.location='programs.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='programs.php'">
               <div class="feature-icon">
                 <i class="fas fa-award"></i>
               </div>
               <h4>Accredited Programs</h4>
               <p>Fully accredited by Uganda Nurses and Midwives Council and Ministry of Education & Sports</p>
-              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-sitemap me-1"></i> View Organogram</a>
+              <a href="programs.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-graduation-cap me-1"></i> View Programs</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-1">
-            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
+            <div class="feature-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
               <div class="feature-icon icon-green">
                 <i class="fas fa-user-md"></i>
               </div>
               <h4>Expert Faculty</h4>
               <p>Learn from experienced healthcare professionals and dedicated educators</p>
-              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-users me-1"></i> Meet Our Team</a>
+              <a href="about.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-users me-1"></i> Meet Our Team</a>
             </div>
           </div>
           <div class="col-lg-4 col-md-6 animate-on-scroll animate-delay-2">
-            <div class="feature-card" onclick="window.location='organogram.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='organogram.php'">
+            <div class="feature-card" onclick="window.location='history.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='history.php'">
               <div class="feature-icon icon-blue">
                 <i class="fas fa-hospital"></i>
               </div>
               <h4>Clinical Placement</h4>
               <p>Hands-on training at 6+ major hospitals and healthcare facilities across Uganda</p>
-              <a href="organogram.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-sitemap me-1"></i> View Organogram</a>
+              <a href="history.php" class="btn-3d btn-yellow btn-3d-sm mt-3" onclick="event.stopPropagation()"><span class="shine"></span><i class="fas fa-history me-1"></i> Our History</a>
             </div>
           </div>
         </div>

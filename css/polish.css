@@ -258,14 +258,48 @@ section.py-5 {
   flex: 1;
 }
 
-/* --- Contact grid equal height --- */
+/* --- Contact grid compact --- */
 .contact-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.2rem;
 }
 .contact-card {
   height: 100%;
+  padding: 1.5rem !important;
+  text-align: center;
+}
+.contact-icon {
+  width: 60px !important;
+  height: 60px !important;
+  margin-bottom: 1rem !important;
+}
+.contact-icon i {
+  font-size: 1.8rem !important;
+}
+.contact-card h4 {
+  font-size: 1.1rem !important;
+  margin-bottom: 0.8rem !important;
+}
+.contact-card p {
+  font-size: 0.85rem !important;
+  margin-bottom: 0.3rem !important;
+  line-height: 1.5 !important;
+}
+.contact-card p i {
+  width: 16px;
+  text-align: center;
+  margin-right: 6px;
+  color: #1A237E;
+}
+.contact-info-section {
+  padding: 2rem 0 !important;
+}
+.contact-info-section .section-header {
+  margin-bottom: 1.5rem;
+}
+.contact-info-section .section-title {
+  font-size: 1.3rem;
 }
 
 /* --- Smooth page transitions --- */
@@ -294,9 +328,125 @@ main {
   .contact-form-container {
     padding: 1.5rem;
   }
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .contact-card {
+    padding: 1.2rem !important;
+  }
+  .contact-icon {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  .contact-icon i {
+    font-size: 1.5rem !important;
+  }
+  .contact-card h4 {
+    font-size: 1rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  .contact-card p {
+    font-size: 0.78rem !important;
+  }
+  .contact-info-section {
+    padding: 1.5rem 0 !important;
+  }
   .btn {
     padding: 10px 18px;
     font-size: 0.85rem;
+  }
+
+  /* ── About Section Mobile ── */
+  .about-section .row.align-items-center {
+    gap: 1.5rem;
+  }
+  .about-content {
+    padding-right: 0 !important;
+  }
+  .about-content .tag {
+    font-size: 0.68rem !important;
+  }
+  .about-section .section-title {
+    font-size: 1.15rem !important;
+    margin-bottom: 0.5rem;
+  }
+  .about-section .section-divider {
+    margin-bottom: 0.8rem;
+  }
+  .about-text {
+    font-size: 0.85rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1rem !important;
+  }
+  .about-content .row.g-3 {
+    gap: 0.6rem !important;
+  }
+  .about-content .row.g-3 > .col-md-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .vm-card {
+    padding: 0.9rem !important;
+    text-align: left;
+  }
+  .vm-card-icon {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .vm-card h4 {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .vm-card p {
+    font-size: 0.78rem !important;
+    line-height: 1.4 !important;
+  }
+  .about-content .d-flex.gap-3 {
+    gap: 0.6rem !important;
+  }
+  .about-content .btn-3d {
+    font-size: 0.78rem !important;
+    padding: 8px 14px !important;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .about-image img {
+    min-height: 180px !important;
+    max-height: 250px !important;
+    object-fit: cover;
+  }
+
+  /* ── Why Choose Section Mobile ── */
+  .why-choose-section .section-title {
+    font-size: 1.1rem !important;
+  }
+  .why-choose-section .section-subtitle {
+    font-size: 0.78rem !important;
+  }
+  .feature-card {
+    padding: 1.2rem !important;
+  }
+  .feature-card h4 {
+    font-size: 0.95rem !important;
+  }
+  .feature-card p {
+    font-size: 0.8rem !important;
+    line-height: 1.5 !important;
+  }
+  .feature-icon {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  .feature-card .btn-3d {
+    font-size: 0.75rem !important;
+    padding: 7px 12px !important;
   }
 }
 
