@@ -37,23 +37,6 @@
     0px 4px 0px rgba(0,0,0,0.2) !important;
 }
 
-@media (max-width: 991px) {
-  .school-title {
-    animation: none !important;
-    color: var(--isnm-yellow) !important;
-  }
-}
-@media (max-width: 768px) {
-  .school-title {
-    animation: none !important;
-  }
-}
-@media (max-width: 480px) {
-  .school-title {
-    animation: none !important;
-  }
-}
-
 /* --- Fixed Hero Overlay (only hidden on hero-header pages) --- */
 .hero-header .hero-overlay {
   display: none;
@@ -153,19 +136,19 @@ section.py-5 {
 /* --- Responsive tweaks for 360-575px --- */
 @media (max-width: 575px) {
   .header-row-main {
-    padding: 5px 8px;
-    gap: 6px;
+    padding: 3px 8px;
+    gap: 5px;
   }
   .logo-img {
-    height: 34px;
-    width: 34px;
+    height: 32px;
+    width: 32px;
   }
   .school-title {
-    font-size: 0.82rem !important;
-    letter-spacing: 0.3px;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.5px;
   }
   .school-motto {
-    font-size: 0.62rem;
+    font-size: 0.55rem;
   }
   .hero-section {
     min-height: 90dvh;

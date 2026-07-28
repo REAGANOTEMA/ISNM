@@ -286,43 +286,16 @@ img {
 
 
 /* ══════════════════════════════════════════════════════════════
-   HEADER — Perfect Mobile
+   HEADER — Compact Mobile
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 991px) {
-  .isnm-header {
-    padding: 0 !important;
-  }
-
   .header-row-main {
-    padding: 7px 12px !important;
-    gap: 8px !important;
-  }
-
-  .header-container .header-logo:last-child {
-    display: none !important;
-  }
-
-  .logo-img {
-    height: 42px !important;
-    width: 42px !important;
-  }
-
-  .school-title {
-    font-size: 1.05rem !important;
-    letter-spacing: 1px !important;
-    text-align: left !important;
-  }
-
-  .school-motto {
-    font-size: 0.72rem !important;
-    padding: 4px 10px !important;
-  }
-}
-
-@media (max-width: 575px) {
-  .header-row-main {
-    padding: 5px 8px !important;
+    padding: 3px 10px !important;
     gap: 6px !important;
+  }
+
+  .header-row-main .header-logo:last-child {
+    display: none !important;
   }
 
   .logo-img {
@@ -331,30 +304,52 @@ img {
   }
 
   .school-title {
-    font-size: 0.88rem !important;
-    letter-spacing: 0.5px !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 1px !important;
   }
 
   .school-motto {
-    font-size: 0.65rem !important;
-    padding: 3px 8px !important;
+    font-size: 0.62rem !important;
+    padding: 2px 8px !important;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 575px) {
+  .header-row-main {
+    padding: 3px 8px !important;
+    gap: 5px !important;
+  }
+
   .logo-img {
     height: 32px !important;
     width: 32px !important;
   }
 
   .school-title {
-    font-size: 0.78rem !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .school-motto {
+    font-size: 0.55rem !important;
+    padding: 2px 6px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .logo-img {
+    height: 28px !important;
+    width: 28px !important;
+  }
+
+  .school-title {
+    font-size: 0.7rem !important;
     letter-spacing: 0.3px !important;
   }
 
   .school-motto {
-    font-size: 0.6rem !important;
-    padding: 3px 6px !important;
+    font-size: 0.5rem !important;
+    padding: 2px 4px !important;
   }
 }
 
