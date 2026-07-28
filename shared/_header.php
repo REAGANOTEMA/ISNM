@@ -255,35 +255,45 @@ document.addEventListener('DOMContentLoaded', function() {
   var clip = document.querySelector('.ticker-clip');
   if (!track || !title || !clip) return;
 
-  var speed = 1.5;
-  var offset = 0;
-  var lastTime = null;
-  var started = false;
+  var MQ = window.matchMedia('(min-width: 992px)');
+  var raf = null;
 
-  function animate(time) {
-    if (!lastTime) lastTime = time;
-    var dt = time - lastTime;
-    lastTime = time;
-
-    var textW = title.scrollWidth;
-    var containerW = clip.offsetWidth;
-    if (containerW < 1) { requestAnimationFrame(animate); return; }
-
-    if (!started) {
-      offset = containerW;
-      started = true;
-    }
-
-    offset -= speed * (dt / 16.67);
-
-    if (offset <= -textW) {
-      offset = containerW;
-    }
-
-    track.style.transform = 'translateX(' + offset + 'px)';
-    requestAnimationFrame(animate);
+  function reset() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    track.style.transform = 'translateX(0)';
   }
 
-  requestAnimationFrame(animate);
+  function runDesktop() {
+    if (!MQ.matches) { reset(); return; }
+    var speed = 1.5, offset = 0, lastTime = null, started = false;
+
+    function animate(time) {
+      if (!MQ.matches) { reset(); return; }
+      if (!lastTime) lastTime = time;
+      var dt = time - lastTime;
+      lastTime = time;
+
+      var textW = title.scrollWidth;
+      var containerW = clip.offsetWidth;
+      if (containerW < 1) { raf = requestAnimationFrame(animate); return; }
+
+      if (!started) { offset = containerW; started = true; }
+
+      offset -= speed * (dt / 16.67);
+      if (offset <= -textW) offset = containerW;
+
+      track.style.transform = 'translateX(' + offset + 'px)';
+      raf = requestAnimationFrame(animate);
+    }
+    raf = requestAnimationFrame(animate);
+  }
+
+  MQ.addEventListener('change', function() {
+    reset();
+    if (MQ.matches) runDesktop();
+  });
+
+  if (MQ.matches) runDesktop(); else reset();
 })();
 </script>

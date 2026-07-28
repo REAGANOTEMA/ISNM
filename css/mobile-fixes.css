@@ -298,6 +298,17 @@ img {
     display: none !important;
   }
 
+  /* Static title on mobile — no scrolling, centered */
+  .ticker-track {
+    transform: translateX(0) !important;
+    justify-content: center !important;
+  }
+  .school-title {
+    white-space: normal !important;
+    text-align: center !important;
+    padding-right: 0 !important;
+  }
+
   .logo-img {
     height: 48px !important;
     width: 48px !important;
