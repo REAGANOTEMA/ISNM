@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
-$ctx = bootstrapStaffDashboard(['director','secretary','ict','principal','director general','ceo']);
+$ctx = bootstrapStaffDashboard(['director','secretary','ict','principal','director general','ceo','hr','academic registrar','bursar','librarian','head nursing','head midwifery']);
 $pageTitle = 'News Management';
 
 $auth     = $ctx['auth'];
