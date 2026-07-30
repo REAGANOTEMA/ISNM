@@ -59,7 +59,7 @@ function checkEnterprisePermission($conn, int $roleId, string $permissionSlug): 
         $stmt = $conn->prepare("SELECT permissions FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return false; }
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $stmt->close();
@@ -111,7 +111,7 @@ function getRolePermissions($conn, int $roleId): array {
         $stmt = $conn->prepare("SELECT permissions FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return []; }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($row && !empty($row['permissions'])) {
@@ -136,7 +136,7 @@ function getRoleName($conn, int $roleId): string {
         $stmt = $conn->prepare("SELECT role_name FROM staff_roles WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param('i', $roleId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return ''; }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             $name = $row['role_name'] ?? '';
@@ -186,7 +186,7 @@ function getStaffById($conn, int $staffId): ?array {
         );
         if ($stmt) {
             $stmt->bind_param('i', $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return null; }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             return $row ?: null;
@@ -206,7 +206,7 @@ function getSystemSettingDirect($conn, string $key, $default = null) {
         $stmt = $conn->prepare("SELECT setting_value, setting_type FROM system_settings WHERE setting_key = ?");
         if ($stmt) {
             $stmt->bind_param('s', $key);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return $default; }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($row) {
@@ -260,7 +260,7 @@ function getPendingTaskCount($conn, int $staffId): int {
         $stmt = $conn->prepare("SELECT COUNT(*) cnt FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
         if ($stmt) {
             $stmt->bind_param('i', $staffId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); $stmt->close(); return 0; }
             $cnt = (int)$stmt->get_result()->fetch_assoc()['cnt'];
             $stmt->close();
             return $cnt;

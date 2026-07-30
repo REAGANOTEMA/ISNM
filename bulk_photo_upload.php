@@ -1,6 +1,10 @@
 ﻿<?php
 session_start();
 
+require_once __DIR__ . '/includes/config_enhanced.php';
+require_once __DIR__ . '/includes/enterprise_auth.php';
+require_once __DIR__ . '/includes/photo_upload.php';
+
 if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     header('Location: staff-login.php');
     exit;
@@ -11,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_upload'])) {
     $uploaded_count = 0;
     $error_count = 0;
     $results = [];
+    $staffConn = getStaffConnection();
     
     if (isset($_FILES['photos']) && !empty($_FILES['photos']['name'][0])) {
         $photo_count = count($_FILES['photos']['name']);
@@ -59,7 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_upload'])) {
             'results' => $results
         ];
         
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Bulk Photo Upload', "Uploaded $uploaded_count photos with $error_count errors", 'students', null);
+        if ($staffConn) {
+            logActivity($staffConn, 'bulk_photo_upload', "Uploaded $uploaded_count photos with $error_count errors", (int)($_SESSION['user_id'] ?? 0));
+        }
         
         header("Location: bulk_photo_upload.php");
         exit();
@@ -69,8 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_upload'])) {
 }
 
 // Get all students for dropdown
-$students_sql = "SELECT student_id, first_name, surname, profile_image FROM students ORDER BY surname, first_name";
-$students = executeQuery($students_sql);
+$studentsConn = getStudentsConnection();
+$students = [];
+if ($studentsConn) {
+    $students_result = $studentsConn->query("SELECT id, first_name, surname, profile_image FROM students ORDER BY surname, first_name");
+    if ($students_result) {
+        while ($row = $students_result->fetch_assoc()) $students[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>

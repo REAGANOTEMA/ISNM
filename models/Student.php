@@ -11,6 +11,7 @@ class Student {
 
     public function __construct() {
         $this->conn = getConnection();
+        if (!$this->conn) throw new \RuntimeException('Database connection failed');
     }
 
     public function __destruct() {
@@ -82,7 +83,15 @@ class Student {
      */
     public function create(array $data): array {
         try {
+            if (!$this->conn) return ['success' => false, 'error' => 'Database connection failed'];
             $this->conn->begin_transaction();
+
+            // Parse first_name and surname from full_name if not provided directly
+            if (empty($data['first_name']) && empty($data['surname']) && !empty($data['full_name'])) {
+                $parts = preg_split('/\s+/', trim($data['full_name']), 2);
+                $data['first_name'] = $parts[0] ?? '';
+                $data['surname'] = $parts[1] ?? $parts[0] ?? '';
+            }
 
             // Generate IDs
             $studentNumber = $this->generateStudentNumber();

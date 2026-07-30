@@ -70,6 +70,11 @@ class StudentController {
         $result = $this->student->create($data);
         
         if ($result['success']) {
+            $_SESSION['last_created_student'] = [
+                'student_number' => $result['student_number'] ?? '',
+                'username' => $result['username'] ?? '',
+                'password' => $result['password'] ?? '',
+            ];
             flashMessage('success', 'Student created successfully');
             redirect('students.php');
         } else {
@@ -88,6 +93,11 @@ class StudentController {
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id'])) {
+            redirect('students.php');
+        }
+
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+            flashMessage('error', 'Invalid security token. Please try again.');
             redirect('students.php');
         }
         
