@@ -1334,6 +1334,7 @@ document.addEventListener('DOMContentLoaded', depLoadImprovement);
 
     function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
     function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
+    function hideGlobalLoader() { var gl = document.getElementById('isnmLoader'); if (gl) gl.classList.remove('active'); }
 
     document.querySelectorAll('.child-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -1365,18 +1366,31 @@ document.addEventListener('DOMContentLoaded', depLoadImprovement);
                         else {
                             var code = oldScript.textContent;
                             newScript.textContent = code;
-                            var fnMatch = code.match(/document\.addEventListener\s*\(\s*['"]DOMContentLoaded['"]\s*,\s*(\w+)/);
-                            if (fnMatch && typeof window[fnMatch[1]] === 'function') initFns.push(fnMatch[1]);
+                            var re = /document\.addEventListener\s*\(\s*['"]DOMContentLoaded['"]\s*,\s*(\w+)/g;
+                            var m;
+                            while ((m = re.exec(code)) !== null) {
+                                if (typeof window[m[1]] === 'function' && initFns.indexOf(m[1]) === -1) initFns.push(m[1]);
+                            }
                         }
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                    setTimeout(function() { initFns.forEach(function(fn) { try { window[fn](); } catch(e) { console.warn('[ISNM] init', fn, e); } }); }, 80);
+                    contentArea.querySelectorAll('form[method="POST"]').forEach(function(form) {
+                        if (!form.querySelector('input[name="csrf_token"]')) {
+                            var inp = document.createElement('input');
+                            inp.type = 'hidden'; inp.name = 'csrf_token';
+                            inp.value = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+                            form.appendChild(inp);
+                        }
+                    });
+                    setTimeout(function() { initFns.forEach(function(fn) { try { window[fn](); } catch(e) { console.warn('[ISNM] init', fn, e); } }); }, 120);
                 }
                 hideLoading();
+                hideGlobalLoader();
             })
             .catch(function(err) {
                 console.error('[AJAX Load Error]', err);
                 hideLoading();
+                hideGlobalLoader();
                 window.location.href = href;
             });
         });

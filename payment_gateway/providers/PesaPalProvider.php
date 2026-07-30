@@ -68,12 +68,9 @@ class PesaPalProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $status = $result['data']['payment_status'] ?? 'unknown';
-            $mappedStatus = match($status) {
-                'Completed', 'SUCCESS' => 'successful',
-                'Failed', 'FAILED' => 'failed',
-                'Pending', 'PENDING' => 'processing',
-                default => 'processing',
-            };
+$mappedStatus = 'processing';
+if (in_array($status, ['Completed', 'SUCCESS'])) $mappedStatus = 'successful';
+            elseif (in_array($status, ['Failed', 'FAILED'])) $mappedStatus = 'failed';
             return [
                 'success' => $mappedStatus === 'successful',
                 'status' => $mappedStatus,
@@ -81,20 +78,17 @@ class PesaPalProvider extends BaseProvider {
                 'message' => 'Transaction status: ' . $status,
             ];
         }
-
+        
         return ['success' => false, 'status' => 'unknown', 'message' => 'Could not verify PesaPal transaction.'];
     }
-
+    
     public function processCallback(array $payload, array $headers = []): array {
         $status = $payload['payment_status'] ?? $payload['status'] ?? 'unknown';
         $orderRef = $payload['order_tracking_id'] ?? $payload['order_merchant_reference'] ?? '';
-
-        $mappedStatus = match($status) {
-            'Completed', 'SUCCESS' => 'successful',
-            'Failed', 'FAILED' => 'failed',
-            'Pending', 'PENDING' => 'processing',
-            default => 'processing',
-        };
+        
+        $mappedStatus = 'processing';
+if (in_array($status, ['Completed', 'SUCCESS'])) $mappedStatus = 'successful';
+            elseif (in_array($status, ['Failed', 'FAILED'])) $mappedStatus = 'failed';
 
         return [
             'success' => true,

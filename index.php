@@ -508,7 +508,7 @@ try {
             if ($websiteDB) {
               $newsResult = $websiteDB->query("SELECT id, title, slug, excerpt, featured_image, author_name, published_at FROM news WHERE status = 'published' ORDER BY published_at DESC LIMIT 3");
               if ($newsResult) {
-                $newsItems = $newsResult->fetch_all(MYSQLI_ASSOC);
+                $newsItems = isnm_fetch_all($newsResult);
               }
             }
           } catch (Exception $e) {

@@ -60,12 +60,10 @@ class FlutterwaveProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $status = $result['data']['data']['status'] ?? 'unknown';
-            $mappedStatus = match($status) {
-                'successful' => 'successful',
-                'failed' => 'failed',
-                'cancelled' => 'cancelled',
-                default => 'processing',
-            };
+            $mappedStatus = 'processing';
+if ($status === 'successful') $mappedStatus = 'successful';
+            elseif ($status === 'failed') $mappedStatus = 'failed';
+            elseif ($status === 'cancelled') $mappedStatus = 'cancelled';
             return [
                 'success' => $mappedStatus === 'successful',
                 'status' => $mappedStatus,
@@ -84,12 +82,10 @@ class FlutterwaveProvider extends BaseProvider {
         $txRef = $payload['data']['tx_ref'] ?? '';
         $providerId = $payload['data']['id'] ?? '';
 
-        $mappedStatus = match($status) {
-            'successful' => 'successful',
-            'failed' => 'failed',
-            'cancelled' => 'cancelled',
-            default => 'processing',
-        };
+        $mappedStatus = 'processing';
+if ($status === 'successful') $mappedStatus = 'successful';
+        elseif ($status === 'failed') $mappedStatus = 'failed';
+        elseif ($status === 'cancelled') $mappedStatus = 'cancelled';
 
         return [
             'success' => true,

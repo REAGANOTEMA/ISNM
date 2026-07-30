@@ -127,13 +127,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['pay_now'])) {
                             <div class="col-6">
                                 <label class="provider-option <?= $p['key'] === $provider ? 'selected' : '' ?>" onclick="selectProvider(this, '<?= $p['key'] ?>')">
                                     <input type="radio" name="selected_provider" value="<?= $p['key'] ?>" <?= $p['key'] === $provider ? 'checked' : '' ?>>
-                                    <i class="fas fa-<?= match($p['type']) {
-                                        'mobile_money' => 'mobile-alt',
-                                        'card', 'bank_card', 'card_gateway' => 'credit-card',
-                                        'bank', 'bank_transfer' => 'university',
-                                        'wallet' => 'wallet',
-                                        default => 'money-bill'
-                                    } ?> me-2"></i>
+                                    <i class="fas fa-<?php
+                                    $icon = 'money-bill';
+                                    if ($p['type'] === 'mobile_money') $icon = 'mobile-alt';
+                                    elseif (in_array($p['type'], ['card', 'bank_card', 'card_gateway'])) $icon = 'credit-card';
+                                    elseif (in_array($p['type'], ['bank', 'bank_transfer'])) $icon = 'university';
+                                    elseif ($p['type'] === 'wallet') $icon = 'wallet';
+                                    echo $icon;
+                                ?> me-2"></i>
                                     <?= htmlspecialchars($p['name']) ?>
                                 </label>
                             </div>

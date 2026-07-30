@@ -97,13 +97,14 @@ if ($result) {
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title mb-0">
-                                <i class="fas fa-<?= match($p['provider_type']) {
-                                    'mobile_money' => 'mobile-alt',
-                                    'card', 'bank_card', 'card_gateway' => 'credit-card',
-                                    'bank', 'bank_transfer' => 'university',
-                                    'wallet' => 'wallet',
-                                    default => 'money-bill'
-                                } ?> me-2 text-primary"></i>
+                                <i class="fas fa-<?php
+                                $icon = 'money-bill';
+                                if ($p['provider_type'] === 'mobile_money') $icon = 'mobile-alt';
+                                elseif (in_array($p['provider_type'], ['card', 'bank_card', 'card_gateway'])) $icon = 'credit-card';
+                                elseif (in_array($p['provider_type'], ['bank', 'bank_transfer'])) $icon = 'university';
+                                elseif ($p['provider_type'] === 'wallet') $icon = 'wallet';
+                                echo $icon;
+                            ?> me-2 text-primary"></i>
                                 <?= htmlspecialchars($p['provider_name']) ?>
                             </h5>
                             <span class="badge bg-<?= $p['status'] === 'active' ? 'success' : ($p['status'] === 'sandbox' ? 'warning' : 'secondary') ?>">

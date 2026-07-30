@@ -80,11 +80,9 @@ class ContentVersioning {
         $db = self::getDb();
         if (!$db) return false;
 
-        $table = match($revision['content_type']) {
-            'page' => 'cms_pages',
-            'content_block' => 'cms_content_blocks',
-            default => null,
-        };
+        $table = null;
+if ($revision['content_type'] === 'page') $table = 'cms_pages';
+elseif ($revision['content_type'] === 'content_block') $table = 'cms_content_blocks';
 
         if (!$table) return false;
         $idColumn = $table === 'cms_pages' ? 'id' : 'id';

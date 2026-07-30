@@ -33,26 +33,26 @@ if ($studentsDb) {
 
     // Try students_db library tables first
     $bk = $studentsDb->query("SELECT * FROM library_books ORDER BY book_title LIMIT 50");
-    if ($bk) $books = $bk->fetch_all(MYSQLI_ASSOC);
+    if ($bk) $books = isnm_fetch_all($bk);
 
     $stmt = $studentsDb->prepare("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC LIMIT 20");
     $stmt->bind_param("i", $sidInt);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $bw = $stmt->get_result();
-    if ($bw) $borrowings = $bw->fetch_all(MYSQLI_ASSOC);
+    if ($bw) $borrowings = isnm_fetch_all($bw);
     $stmt->close();
 
     $stmt = $studentsDb->prepare("SELECT * FROM library_fines WHERE student_id=? AND paid=0");
     $stmt->bind_param("i", $sidInt);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $fn = $stmt->get_result();
-    if ($fn) $fines = $fn->fetch_all(MYSQLI_ASSOC);
+    if ($fn) $fines = isnm_fetch_all($fn);
     $stmt->close();
 
     // Fallback to staffs_db
     if (empty($books) && $staffDb) {
         $bk2 = $staffDb->query("SELECT * FROM library_management WHERE status='Available' ORDER BY book_title LIMIT 50");
-        if ($bk2) $books = $bk2->fetch_all(MYSQLI_ASSOC);
+        if ($bk2) $books = isnm_fetch_all($bk2);
     }
 }
 

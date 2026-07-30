@@ -39,7 +39,7 @@ if ($studentsDb) {
         $rg = $studentsDb->query("SELECT * FROM course_registrations WHERE student_id=" . (int)$sidInt . " ORDER BY id DESC");
     }
     if ($rg) {
-        $registrations = $rg->fetch_all(MYSQLI_ASSOC);
+        $registrations = isnm_fetch_all($rg);
     }
 
     $stmt2 = $studentsDb->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? AND year_of_study=? AND status='Active'");
@@ -48,7 +48,7 @@ if ($studentsDb) {
         if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
         $avail = $stmt2->get_result();
         if ($avail) {
-            $availableCourses = $avail->fetch_all(MYSQLI_ASSOC);
+            $availableCourses = isnm_fetch_all($avail);
         }
         $stmt2->close();
     }

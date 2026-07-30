@@ -60,7 +60,7 @@ class StudentFinance {
             
             $stmt = executePrepared($this->conn, $query, 'i', [$studentId]);
             $result = $stmt->get_result();
-            $finance = $result->fetch_all(MYSQLI_ASSOC);
+            $finance = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'finance' => $finance];
@@ -204,7 +204,7 @@ class StudentFinance {
             
             $stmt = executePrepared($this->conn, $query, $types, $params);
             $result = $stmt->get_result();
-            $students = $result->fetch_all(MYSQLI_ASSOC);
+            $students = isnm_fetch_all($result);
             $stmt->close();
             
             // Get total count for pagination

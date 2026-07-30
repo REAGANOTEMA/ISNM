@@ -11,7 +11,7 @@ if ($conn) {
         if ($stmt) {
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            $announcements = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $announcements = $result ? isnm_fetch_all($result) : [];
             $stmt->close();
         }
     } catch (Exception $e) {

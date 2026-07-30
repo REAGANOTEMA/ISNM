@@ -48,12 +48,10 @@ class ContentRenderer {
         $linkUrl = $banner['link_url'] ?? null;
         $linkText = $banner['link_text'] ?? null;
 
-        $posClass = match($position) {
-            'left' => 'text-start',
-            'right' => 'text-end',
-            'bottom-left' => 'text-start align-self-end',
-            default => 'text-center',
-        };
+        $posClass = 'text-center';
+if ($position === 'left') $posClass = 'text-start';
+elseif ($position === 'right') $posClass = 'text-end';
+elseif ($position === 'bottom-left') $posClass = 'text-start align-self-end';
 
         $html = '<section class="cms-hero" style="background-image: url(' . htmlspecialchars($image) . ');">';
         $html .= '<div class="cms-hero-overlay" style="background: ' . htmlspecialchars($overlay) . ';"></div>';
@@ -97,20 +95,32 @@ class ContentRenderer {
 
         // Block content based on type
         $html .= '<div class="cms-block-content animate-on-scroll" data-animation="' . htmlspecialchars($animation) . '" data-delay="100">';
-        $html .= match($block['block_type']) {
-            'text', 'html' => self::renderTextBlock($block),
-            'stats' => self::renderStatsBlock($block),
-            'cards' => self::renderCardsBlock($block),
-            'timeline' => self::renderTimelineBlock($block),
-            'testimonials' => self::renderTestimonialsBlock($block),
-            'cta' => self::renderCTABlock($block),
-            'faq', 'accordion' => self::renderFAQBlock($block),
-            'gallery' => self::renderGalleryBlock($block),
-            'image' => self::renderImageBlock($block),
-            'video' => self::renderVideoBlock($block),
-            'map' => self::renderMapBlock($block),
-            default => '<div class="cms-raw-content">' . ($block['content'] ?? '') . '</div>',
-        };
+        $blockType = $block['block_type'];
+if ($blockType === 'text' || $blockType === 'html') {
+            $html .= self::renderTextBlock($block);
+        } elseif ($blockType === 'stats') {
+            $html .= self::renderStatsBlock($block);
+        } elseif ($blockType === 'cards') {
+            $html .= self::renderCardsBlock($block);
+        } elseif ($blockType === 'timeline') {
+            $html .= self::renderTimelineBlock($block);
+        } elseif ($blockType === 'testimonials') {
+            $html .= self::renderTestimonialsBlock($block);
+        } elseif ($blockType === 'cta') {
+            $html .= self::renderCTABlock($block);
+        } elseif ($blockType === 'faq' || $blockType === 'accordion') {
+            $html .= self::renderFAQBlock($block);
+        } elseif ($blockType === 'gallery') {
+            $html .= self::renderGalleryBlock($block);
+        } elseif ($blockType === 'image') {
+            $html .= self::renderImageBlock($block);
+        } elseif ($blockType === 'video') {
+            $html .= self::renderVideoBlock($block);
+        } elseif ($blockType === 'map') {
+            $html .= self::renderMapBlock($block);
+        } else {
+            $html .= '<div class="cms-raw-content">' . ($block['content'] ?? '') . '</div>';
+        }
         $html .= '</div></div></section>';
         return $html;
     }

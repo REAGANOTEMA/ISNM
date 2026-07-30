@@ -38,7 +38,7 @@ if ($studentsDb) {
     // Try student_timetables first, then timetable
     $tt = $studentsDb->query("SELECT * FROM student_timetables WHERE student_id=$sidInt ORDER BY FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), time_slot");
     if ($tt && $tt->num_rows > 0) {
-        $timetable = $tt->fetch_all(MYSQLI_ASSOC);
+        $timetable = isnm_fetch_all($tt);
     } else {
         $stmt2 = $studentsDb->prepare("SELECT * FROM timetable WHERE program=? AND year_of_study=?");
         if ($stmt2) {
@@ -46,7 +46,7 @@ if ($studentsDb) {
             if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
             $tt2 = $stmt2->get_result();
             if ($tt2) {
-                $timetable = $tt2->fetch_all(MYSQLI_ASSOC);
+                $timetable = isnm_fetch_all($tt2);
             }
             $stmt2->close();
         }

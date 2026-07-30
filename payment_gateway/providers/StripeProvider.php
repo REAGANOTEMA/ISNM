@@ -58,12 +58,9 @@ class StripeProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $status = $result['data']['payment_status'] ?? 'unknown';
-            $mappedStatus = match($status) {
-                'paid' => 'successful',
-                'unpaid' => 'failed',
-                'no_payment_required' => 'successful',
-                default => 'processing',
-            };
+            $mappedStatus = 'processing';
+if ($status === 'paid' || $status === 'no_payment_required') $mappedStatus = 'successful';
+            elseif ($status === 'unpaid') $mappedStatus = 'failed';
             return [
                 'success' => $mappedStatus === 'successful',
                 'status' => $mappedStatus,

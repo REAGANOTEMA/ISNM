@@ -34,13 +34,13 @@ if ($studentsDb) {
     $sidInt = (int)($studentInfo['id'] ?? $userId);
 
     $er = $studentsDb->query("SELECT * FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, semester DESC");
-    $examResults = $er ? $er->fetch_all(MYSQLI_ASSOC) : [];
+    $examResults = $er ? isnm_fetch_all($er) : [];
 
     $se = $studentsDb->query("SELECT DISTINCT academic_year, semester FROM student_academic_records WHERE student_id=$sidInt ORDER BY academic_year DESC, semester DESC");
-    $semesters = $se ? $se->fetch_all(MYSQLI_ASSOC) : [];
+    $semesters = $se ? isnm_fetch_all($se) : [];
 
     $gp = $studentsDb->query("SELECT semester, academic_year, ROUND(AVG(CASE WHEN grade='A' THEN 4.0 WHEN grade='B' THEN 3.0 WHEN grade='C' THEN 2.0 WHEN grade='D' THEN 1.0 ELSE 0 END),2) as gpa FROM student_academic_records WHERE student_id=$sidInt GROUP BY academic_year, semester ORDER BY academic_year DESC, semester DESC");
-    $gpaBySemester = $gp ? $gp->fetch_all(MYSQLI_ASSOC) : [];
+    $gpaBySemester = $gp ? isnm_fetch_all($gp) : [];
 }
 
 $fullName = $studentInfo ? htmlspecialchars(trim(($studentInfo['surname']??'') . ' ' . ($studentInfo['first_name'] ?? $studentInfo['firstname'] ?? ''))) : 'Student';

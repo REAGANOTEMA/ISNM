@@ -34,7 +34,7 @@ class Announcements {
             
             $stmt = executePrepared($this->conn, $query, 'sii', [$userRole, $limit, $offset]);
             $result = $stmt->get_result();
-            $announcements = $result->fetch_all(MYSQLI_ASSOC);
+            $announcements = isnm_fetch_all($result);
             $stmt->close();
             
             // Get total count for pagination
@@ -190,7 +190,7 @@ class Announcements {
             
             $stmt = executePrepared($this->conn, $query, 'sii', [$status, $limit, $offset]);
             $result = $stmt->get_result();
-            $announcements = $result->fetch_all(MYSQLI_ASSOC);
+            $announcements = isnm_fetch_all($result);
             $stmt->close();
             
             // Get total count for pagination

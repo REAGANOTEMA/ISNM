@@ -205,19 +205,14 @@ if ($r) while ($row = $r->fetch_assoc()) $myRequests[] = $row;
             <tbody>
             <?php foreach ($myRequests as $req):
                 $uBadge = $req['urgency']==='urgent'?'srq-badge-danger':($req['urgency']==='high'?'srq-badge-warning':'srq-badge-info');
-                $sBadge = match($req['status']) {
-                    'fulfilled' => 'srq-badge-success',
-                    'approved' => 'srq-badge-success',
-                    'pending_approval' => 'srq-badge-purple',
-                    'pending' => 'srq-badge-warning',
-                    'rejected' => 'srq-badge-danger',
-                    default => 'srq-badge-info'
-                };
-                $sLabel = match($req['status']) {
-                    'pending_approval' => 'Awaiting DG',
-                    'pending' => 'Pending Store',
-                    default => ucfirst($req['status'])
-                };
+                $sBadge = 'srq-badge-info';
+if ($req['status'] === 'fulfilled' || $req['status'] === 'approved') $sBadge = 'srq-badge-success';
+                elseif ($req['status'] === 'pending_approval') $sBadge = 'srq-badge-purple';
+                elseif ($req['status'] === 'pending') $sBadge = 'srq-badge-warning';
+                elseif ($req['status'] === 'rejected') $sBadge = 'srq-badge-danger';
+                $sLabel = ucfirst($req['status']);
+if ($req['status'] === 'pending_approval') $sLabel = 'Awaiting DG';
+                elseif ($req['status'] === 'pending') $sLabel = 'Pending Store';
             ?>
             <tr>
                 <td><strong><?= htmlspecialchars($req['request_number']) ?></strong></td>

@@ -64,43 +64,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
 $leaveTypes = [];
 if ($staffConn) {
     $r = $staffConn->query("SELECT * FROM leave_types WHERE 1=1 ORDER BY leave_type_name");
-    if ($r) $leaveTypes = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $leaveTypes = isnm_fetch_all($r);
 }
 
 $leaveBalances = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT lt.id,lt.type_name,lt.days_per_year,COALESCE(lb.used_days,0) as used_days,(COALESCE(lb.total_days,lt.days_per_year)-COALESCE(lb.used_days,0)) as remaining FROM leave_types lt LEFT JOIN leave_balances lb ON lt.id=lb.leave_type_id AND lb.staff_id=? AND lb.year=YEAR(CURDATE()) ORDER BY lt.type_name");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$leaveBalances=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$leaveBalances=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $myLeaves = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT lr.*,lt.type_name FROM leave_requests lr JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE lr.staff_id=? ORDER BY lr.created_at DESC LIMIT 20");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myLeaves=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myLeaves=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $myPayslips = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT id,payslip_number,salary_month,basic_salary,gross_pay,net_pay,status FROM payslips WHERE staff_id=? ORDER BY salary_month DESC LIMIT 12");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myPayslips=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myPayslips=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $myDuties = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM duty_rosters WHERE staff_id=? AND duty_date>=CURDATE() ORDER BY duty_date LIMIT 10");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDuties=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDuties=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $myDocuments = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM staff_documents WHERE staff_id=? ORDER BY created_at DESC");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDocuments=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myDocuments=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $myNotifications = [];
 if ($staffConn && $userId) {
     $st=$staffConn->prepare("SELECT * FROM staff_notifications WHERE (target_user_id=? OR target_role='all') ORDER BY created_at DESC LIMIT 10");
-    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myNotifications=$st->get_result()->fetch_all(MYSQLI_ASSOC);$st->close();}
+    if($st){$st->bind_param('i',$userId);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); };$myNotifications=isnm_fetch_all($st->get_result());$st->close();}
 }
 
 $pageTitle = 'Staff Portal';

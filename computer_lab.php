@@ -25,7 +25,7 @@ function lab_q($conn, $sql) {
 }
 function lab_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('root_computer_lab getList: ' . $e->getMessage()); return []; }
 }
 function lab_fetch_one($conn, $sql) {
@@ -63,7 +63,7 @@ if ($students_conn) {
     $r = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status='Active'");
     if ($r) $total_students = (int)$r->fetch_assoc()['cnt'];
     $r = $students_conn->query("SELECT id, index_number, full_name, phone, email, program, gender, set_name, status FROM students WHERE status != 'deleted' ORDER BY full_name ASC LIMIT 200");
-    if ($r) $students_list = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $students_list = isnm_fetch_all($r);
 }
 
 // POST handlers
@@ -784,7 +784,7 @@ $pageTitle = 'Computer Lab Manager';
                             $stmt->bind_param("ss", $like, $like);
                             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                             $res = $stmt->get_result();
-                            if ($res) $found = $res->fetch_all(MYSQLI_ASSOC);
+                            if ($res) $found = isnm_fetch_all($res);
                             $stmt->close();
                         }
                         if (!empty($found)):

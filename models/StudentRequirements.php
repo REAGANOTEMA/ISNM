@@ -190,7 +190,7 @@ class StudentRequirements {
 
         // By requirement type
         $r = $this->conn->query("SELECT ar.requirement_name, ar.type, ar.is_mandatory, COUNT(srs.id) as total, SUM(CASE WHEN srs.status = 'Verified' THEN 1 ELSE 0 END) as verified FROM admission_requirements ar LEFT JOIN student_requirements_status srs ON ar.id = srs.requirement_id GROUP BY ar.id ORDER BY ar.display_order");
-        $stats['by_requirement'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $stats['by_requirement'] = $r ? isnm_fetch_all($r) : [];
 
         // Students with all requirements complete
         $r = $this->conn->query("SELECT COUNT(DISTINCT student_id) as count FROM student_requirements_status WHERE status = 'Verified'");

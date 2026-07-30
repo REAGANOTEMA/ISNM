@@ -165,7 +165,7 @@ class User {
             
             $stmt = executePrepared($this->conn, $query, $types, $params);
             $result = $stmt->get_result();
-            $users = $result->fetch_all(MYSQLI_ASSOC);
+            $users = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'users' => $users];
@@ -202,7 +202,7 @@ class User {
             $query = "SELECT * FROM roles ORDER BY name";
             $stmt = executePrepared($this->conn, $query, '', []);
             $result = $stmt->get_result();
-            $roles = $result->fetch_all(MYSQLI_ASSOC);
+            $roles = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'roles' => $roles];

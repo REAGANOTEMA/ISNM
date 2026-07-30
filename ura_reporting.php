@@ -109,7 +109,10 @@ if (isset($_GET['generate'])) {
     $type = $_GET['type'] ?? 'vat';
     $month = (int)($_GET['month'] ?? date('n'));
     $year = (int)($_GET['year'] ?? date('Y'));
-    $prefix = match($type) { 'vat' => 'URA_VAT', 'wht' => 'URA_WHT', 'annual' => 'URA_ANNUAL', default => 'URA' };
+    $prefix = 'URA';
+if ($type === 'vat') $prefix = 'URA_VAT';
+elseif ($type === 'wht') $prefix = 'URA_WHT';
+elseif ($type === 'annual') $prefix = 'URA_ANNUAL';
     $filename = $prefix . '_' . $year . str_pad($month,2,'0',STR_PAD_LEFT) . '_' . date('Ymd') . '.csv';
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="' . $filename . '"');

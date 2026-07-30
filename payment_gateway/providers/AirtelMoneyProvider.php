@@ -80,12 +80,10 @@ class AirtelMoneyProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $status = $result['data']['status'] ?? 'unknown';
-            $mappedStatus = match($status) {
-                'SUCCESSFUL', 'TS' => 'successful',
-                'FAILED', 'TF' => 'failed',
-                'INITIATED', 'TI' => 'pending',
-                default => 'processing',
-            };
+            $mappedStatus = 'processing';
+if ($status === 'SUCCESSFUL' || $status === 'TS') $mappedStatus = 'successful';
+            elseif ($status === 'FAILED' || $status === 'TF') $mappedStatus = 'failed';
+            elseif ($status === 'INITIATED' || $status === 'TI') $mappedStatus = 'pending';
             return [
                 'success' => $mappedStatus === 'successful',
                 'status' => $mappedStatus,
@@ -102,12 +100,10 @@ class AirtelMoneyProvider extends BaseProvider {
         $status = $payload['status'] ?? $payload['transaction']['status'] ?? 'unknown';
         $reference = $payload['reference'] ?? $txnId;
 
-        $mappedStatus = match($status) {
-            'TS', 'SUCCESSFUL', 'COMPLETED' => 'successful',
-            'TF', 'FAILED' => 'failed',
-            'TI', 'INITIATED' => 'processing',
-            default => 'processing',
-        };
+        $mappedStatus = 'processing';
+if ($status === 'TS' || $status === 'SUCCESSFUL' || $status === 'COMPLETED') $mappedStatus = 'successful';
+        elseif ($status === 'TF' || $status === 'FAILED') $mappedStatus = 'failed';
+        elseif ($status === 'TI' || $status === 'INITIATED') $mappedStatus = 'processing';
 
         return [
             'success' => true,

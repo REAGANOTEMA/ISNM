@@ -523,7 +523,7 @@ class Student {
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param($types, ...$params);
             if (!$stmt->execute()) { error_log('Student getAll: ' . $stmt->error); };
-            $students = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $students = isnm_fetch_all($stmt->get_result());
             $stmt->close();
 
             $totalPages = ceil($total / $limit);
@@ -801,7 +801,7 @@ class Student {
             $stmt = $this->conn->prepare("SELECT * FROM student_financial_profiles WHERE student_id = ? ORDER BY academic_year DESC, semester DESC");
             $stmt->bind_param('i', $studentId);
             if (!$stmt->execute()) { throw new Exception($stmt->error); };
-            $finance = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $finance = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'finance' => $finance];
         } catch (Exception $e) {
@@ -856,7 +856,7 @@ class Student {
             ");
             $stmt->bind_param('i', $studentId);
             if (!$stmt->execute()) { throw new Exception($stmt->error); };
-            $requirements = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $requirements = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'requirements' => $requirements];
         } catch (Exception $e) {
@@ -903,7 +903,7 @@ class Student {
             $stmt = $this->conn->prepare("SELECT * FROM student_documents WHERE student_id = ? AND status != 'Deleted' ORDER BY created_at DESC");
             $stmt->bind_param('i', $studentId);
             if (!$stmt->execute()) { throw new Exception($stmt->error); };
-            $docs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $docs = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'documents' => $docs];
         } catch (Exception $e) {
@@ -969,7 +969,7 @@ class Student {
         try {
             $stmt = $this->conn->prepare("SELECT DISTINCT program FROM students WHERE status != 'deleted' AND program IS NOT NULL AND program != '' ORDER BY program");
             if (!$stmt->execute()) { error_log('Student getPrograms: ' . $stmt->error); };
-            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'programs' => array_column($result, 'program')];
         } catch (Exception $e) {
@@ -984,7 +984,7 @@ class Student {
         try {
             $stmt = $this->conn->prepare("SELECT DISTINCT current_year FROM students WHERE status != 'deleted' AND current_year IS NOT NULL ORDER BY current_year");
             if (!$stmt->execute()) { error_log('Student getYears: ' . $stmt->error); };
-            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'years' => array_column($result, 'current_year')];
         } catch (Exception $e) {
@@ -999,7 +999,7 @@ class Student {
         try {
             $stmt = $this->conn->prepare("SELECT DISTINCT district FROM students WHERE status != 'deleted' AND district IS NOT NULL AND district != '' ORDER BY district");
             if (!$stmt->execute()) { error_log('Student getDistricts: ' . $stmt->error); };
-            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'districts' => array_column($result, 'district')];
         } catch (Exception $e) {
@@ -1014,7 +1014,7 @@ class Student {
         try {
             $stmt = $this->conn->prepare("SELECT DISTINCT stream FROM students WHERE status != 'deleted' AND stream IS NOT NULL AND stream != '' ORDER BY stream");
             if (!$stmt->execute()) { error_log('Student getStreams: ' . $stmt->error); };
-            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'streams' => array_column($result, 'stream')];
         } catch (Exception $e) {
@@ -1029,7 +1029,7 @@ class Student {
         try {
             $stmt = $this->conn->prepare("SELECT * FROM admission_requirements WHERE is_active = 1 ORDER BY display_order");
             if (!$stmt->execute()) { error_log('Student getAdmissionRequirements: ' . $stmt->error); };
-            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return ['success' => true, 'requirements' => $result];
         } catch (Exception $e) {

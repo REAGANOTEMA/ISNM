@@ -116,14 +116,11 @@ class PayPalProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && isset($result['data']['status'])) {
             $status = $result['data']['status'];
-            $mappedStatus = match($status) {
-                'COMPLETED' => 'successful',
-                'APPROVED' => 'processing',
-                'CREATED' => 'pending',
-                'VOIDED' => 'cancelled',
-                'PAYER_ACTION_REQUIRED' => 'pending',
-                default => 'processing',
-            };
+            $mappedStatus = 'processing';
+if ($status === 'COMPLETED') $mappedStatus = 'successful';
+            elseif ($status === 'VOIDED') $mappedStatus = 'cancelled';
+            elseif ($status === 'CREATED' || $status === 'PAYER_ACTION_REQUIRED') $mappedStatus = 'pending';
+            elseif ($status === 'APPROVED') $mappedStatus = 'processing';
 
             $amount = null;
             $currency = null;
@@ -152,16 +149,12 @@ class PayPalProvider extends BaseProvider {
         $customId = $resource['custom_id'] ?? '';
 
         // Map PayPal event types to our statuses
-        $mappedStatus = match($eventType) {
-            'PAYMENT.CAPTURE.COMPLETED' => 'successful',
-            'PAYMENT.CAPTURE.DENIED' => 'failed',
-            'PAYMENT.CAPTURE.PENDING' => 'processing',
-            'PAYMENT.CAPTURE.REFUNDED' => 'refunded',
-            'CHECKOUT.ORDER.APPROVED' => 'processing',
-            'CHECKOUT.ORDER.COMPLETED' => 'successful',
-            'CHECKOUT.ORDER.CANCELLED' => 'cancelled',
-            default => 'processing',
-        };
+        $mappedStatus = 'processing';
+if ($eventType === 'PAYMENT.CAPTURE.COMPLETED' || $eventType === 'CHECKOUT.ORDER.COMPLETED') $mappedStatus = 'successful';
+        elseif ($eventType === 'PAYMENT.CAPTURE.DENIED') $mappedStatus = 'failed';
+        elseif ($eventType === 'PAYMENT.CAPTURE.PENDING' || $eventType === 'CHECKOUT.ORDER.APPROVED') $mappedStatus = 'processing';
+        elseif ($eventType === 'PAYMENT.CAPTURE.REFUNDED') $mappedStatus = 'refunded';
+        elseif ($eventType === 'CHECKOUT.ORDER.CANCELLED') $mappedStatus = 'cancelled';
 
         $reference = $customId ?: $orderId;
 

@@ -417,7 +417,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
       <div class="section-header"><h3 class="section-title"><i class="fas fa-hdd text-purple"></i>Database Information</h3></div>
       <div class="small">
         <div class="d-flex justify-content-between py-1"><span>Database Size</span><strong><?= number_format($db_size_mb, 2) ?> MB</strong></div>
-        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count($ict->query("SHOW TABLES")->fetch_all()) : 0 ?></strong></div>
+        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count(isnm_fetch_all($ict->query("SHOW TABLES"))) : 0 ?></strong></div>
         <div class="d-flex justify-content-between py-1"><span>Backups Today</span><strong><?= $today_backups ?></strong></div>
         <div class="d-flex justify-content-between py-1"><span>Total Assets</span><strong><?= $total_assets ?></strong></div>
         <div class="d-flex justify-content-between py-1"><span>Open Tickets</span><strong><?= $open_tickets ?></strong></div>

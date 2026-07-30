@@ -306,6 +306,7 @@ var ISNM_VERSION = '<?= $v ?>';
     document.addEventListener('click', function(e) {
       var link = e.target.closest('a');
       if (!link) return;
+      if (link.classList.contains('child-link')) return;
       var href = link.getAttribute('href') || '';
       if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('http')) return;
       if (link.getAttribute('target') === '_blank') return;

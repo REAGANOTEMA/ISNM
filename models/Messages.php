@@ -33,7 +33,7 @@ class Messages {
             
             $stmt = executePrepared($this->conn, $query, 'iiii', [$userId, $userId, $limit, $offset]);
             $result = $stmt->get_result();
-            $messages = $result->fetch_all(MYSQLI_ASSOC);
+            $messages = isnm_fetch_all($result);
             $stmt->close();
             
             // Mark messages as read if user is receiver
@@ -181,7 +181,7 @@ class Messages {
             
             $stmt = executePrepared($this->conn, $query, 'iiiiii', [$userId1, $userId2, $userId2, $userId1, $limit, $offset]);
             $result = $stmt->get_result();
-            $messages = $result->fetch_all(MYSQLI_ASSOC);
+            $messages = isnm_fetch_all($result);
             $stmt->close();
             
             // Mark messages as read
@@ -218,7 +218,7 @@ class Messages {
             
             $stmt = executePrepared($this->conn, $query, $types, $params);
             $result = $stmt->get_result();
-            $users = $result->fetch_all(MYSQLI_ASSOC);
+            $users = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'users' => $users];

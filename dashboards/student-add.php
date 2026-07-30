@@ -182,7 +182,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         UNIQUE KEY uk_sap_student (student_id),
                         KEY idx_sap_student (student_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                    @$conn->query("INSERT IGNORE INTO student_academic_profiles (student_id, current_program, current_year) VALUES ($new_student_id, '$program', $year)");
+                    $stmt_sap = $conn->prepare("INSERT IGNORE INTO student_academic_profiles (student_id, current_program, current_year) VALUES (?, ?, ?)");
+                    if ($stmt_sap) { $stmt_sap->bind_param('isi', $new_student_id, $program, $year); $stmt_sap->execute(); $stmt_sap->close(); }
 
                     // Auto-create student_medical_profiles
                     $conn->query("CREATE TABLE IF NOT EXISTS student_medical_profiles (

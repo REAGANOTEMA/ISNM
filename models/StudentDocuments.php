@@ -29,7 +29,7 @@ class StudentDocuments {
             
             $stmt = executePrepared($this->conn, $query, 'i', [$studentId]);
             $result = $stmt->get_result();
-            $documents = $result->fetch_all(MYSQLI_ASSOC);
+            $documents = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'documents' => $documents];
@@ -137,7 +137,7 @@ class StudentDocuments {
             $query = "SELECT DISTINCT document_type FROM student_documents ORDER BY document_type";
             $stmt = executePrepared($this->conn, $query, '', []);
             $result = $stmt->get_result();
-            $types = $result->fetch_all(MYSQLI_ASSOC);
+            $types = isnm_fetch_all($result);
             $stmt->close();
             
             return ['success' => true, 'types' => array_column($types, 'document_type')];
@@ -187,7 +187,7 @@ class StudentDocuments {
             
             $stmt = executePrepared($this->conn, $query, $types, $params);
             $result = $stmt->get_result();
-            $students = $result->fetch_all(MYSQLI_ASSOC);
+            $students = isnm_fetch_all($result);
             $stmt->close();
             
             // Get total count for pagination

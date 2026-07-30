@@ -31,7 +31,7 @@ if ($action === 'get_weekly') {
         $stmt->bind_param('i', $userId);
         if ($stmt->execute()) {
             $result = $stmt->get_result();
-            if ($result) $data = $result->fetch_all(MYSQLI_ASSOC);
+            if ($result) $data = isnm_fetch_all($result);
         }
         $stmt->close();
     }

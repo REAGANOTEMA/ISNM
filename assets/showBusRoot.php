@@ -15,7 +15,7 @@ if (isset($_SESSION['uid']) && $_SERVER["REQUEST_METHOD"] === "POST") {
     $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
-        $busStops = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $busStops = isnm_fetch_all($result);
         $totalStops = count($busStops);
 
         $response['status'] = "success";

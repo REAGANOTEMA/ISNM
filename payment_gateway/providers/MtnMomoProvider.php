@@ -74,13 +74,10 @@ class MtnMomoProvider extends BaseProvider {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $status = $result['data']['status'] ?? 'unknown';
-            $mappedStatus = match($status) {
-                'SUCCESSFUL' => 'successful',
-                'FAILED' => 'failed',
-                'REJECTED' => 'failed',
-                'TIMEOUT' => 'expired',
-                default => 'processing',
-            };
+            $mappedStatus = 'processing';
+if ($status === 'SUCCESSFUL') $mappedStatus = 'successful';
+            elseif ($status === 'FAILED' || $status === 'REJECTED') $mappedStatus = 'failed';
+            elseif ($status === 'TIMEOUT') $mappedStatus = 'expired';
             return [
                 'success' => $mappedStatus === 'successful',
                 'status' => $mappedStatus,
@@ -99,12 +96,11 @@ class MtnMomoProvider extends BaseProvider {
         $status = $payload['status'] ?? 'unknown';
         $txnId = $payload['transactionId'] ?? $payload['transaction_id'] ?? '';
 
-        $mappedStatus = match(strtoupper($status)) {
-            'SUCCESSFUL', 'COMPLETED' => 'successful',
-            'FAILED', 'REJECTED' => 'failed',
-            'TIMEOUT' => 'expired',
-            default => 'processing',
-        };
+        $mappedStatus = 'processing';
+$upperStatus = strtoupper($status);
+if ($upperStatus === 'SUCCESSFUL' || $upperStatus === 'COMPLETED') $mappedStatus = 'successful';
+        elseif ($upperStatus === 'FAILED' || $upperStatus === 'REJECTED') $mappedStatus = 'failed';
+        elseif ($upperStatus === 'TIMEOUT') $mappedStatus = 'expired';
 
         return [
             'success' => true,

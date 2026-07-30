@@ -370,6 +370,19 @@ img {
 }
 
 
+/* ── Fixed header on mobile (no scroll away) ─────────────────── */
+@media (max-width: 768px) {
+  .isnm-header {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 1001 !important;
+  }
+  nav.navbar.isnm-navbar {
+    margin-top: 90px;
+  }
+  body { padding-top: 90px; }
+}
+
 /* ══════════════════════════════════════════════════════════════
    FOOTER — Perfect Mobile Layout
    ══════════════════════════════════════════════════════════════ */

@@ -452,6 +452,23 @@ body {
   .main { margin-left: 0 !important; margin-right: 0 !important; }
 }
 
+/* ── Topbar sticky on mobile ────────────────────────────────── */
+@media (max-width: 768px) {
+  .isnm-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 10px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .ent-layout .prin-content {
+    margin-top: 56px;
+    padding-top: 8px;
+  }
+}
+
 /* ── Print Overrides ─────────────────────────────────────────── */
 @media print {
   .sidebar, .dashboard-sidebar,

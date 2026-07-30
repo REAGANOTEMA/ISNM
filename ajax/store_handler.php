@@ -37,7 +37,7 @@ switch ($action) {
             if ($stmt) {
                 $stmt->bind_param("i", $catId);
                 $stmt->execute();
-                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $rows = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
             }
         } else {
@@ -161,7 +161,7 @@ switch ($action) {
         if ($stmt) {
             if ($types) $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($stmt->get_result());
             $stmt->close();
         }
         echo json_encode(['success' => true, 'requisitions' => $rows]);

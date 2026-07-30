@@ -561,7 +561,7 @@ class PaymentService {
         if (!$stmt) return [];
         $stmt->bind_param($types, ...$values);
         if (!$stmt->execute()) return [];
-        $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $results = isnm_fetch_all($stmt->get_result());
         $stmt->close();
 
         return $results;

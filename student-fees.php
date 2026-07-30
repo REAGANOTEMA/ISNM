@@ -39,13 +39,13 @@ if ($studentNumber && $studentsDb) {
         $stmt2 = $studentsDb->prepare("SELECT si.*, fs.fee_name, fs.fee_type as fee_category, fs.amount as structure_amount FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_type COLLATE utf8mb4_unicode_ci = fs.fee_name WHERE si.student_id = ? ORDER BY si.created_at DESC");
         $stmt2->bind_param("i", $studentIntId);
         if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
-        $invoices = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $invoices = isnm_fetch_all($stmt2->get_result());
         $stmt2->close();
 
         $stmt3 = $studentsDb->prepare("SELECT * FROM payments WHERE student_id = ? ORDER BY created_at DESC LIMIT 50");
         $stmt3->bind_param("i", $studentIntId);
         if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
-        $payments = $stmt3->get_result()->fetch_all(MYSQLI_ASSOC);
+        $payments = isnm_fetch_all($stmt3->get_result());
         $stmt3->close();
 
         $totalBilled = 0; $totalPaid = 0;
@@ -297,7 +297,7 @@ try {
         $stmt = $studentsDb->prepare("SELECT * FROM payment_receipts WHERE student_id = ? ORDER BY created_at DESC");
         $stmt->bind_param("i", $studentIntId);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $receipts = isnm_fetch_all($stmt->get_result());
         $stmt->close();
     }
 } catch (Exception $e) { error_log('student-fees context: ' . $e->getMessage()); }

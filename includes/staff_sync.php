@@ -120,7 +120,8 @@ if (!function_exists('deleteStaffAcrossDatabases')) {
         if (!$stmt) return ['success' => false, 'errors' => ['db' => 'Prepare failed']];
         $stmt->bind_param('i', $staffId);
         $ok = $stmt->execute();
+        $err = $stmt->error;
         $stmt->close();
-        return ['success' => $ok, 'errors' => $ok ? [] : ['db' => $stmt->error]];
+        return ['success' => $ok, 'errors' => $ok ? [] : ['db' => $err]];
     }
 }
