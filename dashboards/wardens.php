@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -13,7 +13,7 @@ $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangascho
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// ─── Ensure tables exist ───
+// --- Ensure tables exist ---
 if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS welfare_cases (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, student_name VARCHAR(200) DEFAULT '', case_type VARCHAR(100) DEFAULT '', description TEXT, reported_by INT, reported_by_name VARCHAR(200) DEFAULT '', assigned_to INT DEFAULT 0, priority VARCHAR(50) DEFAULT 'Medium', status VARCHAR(30) DEFAULT 'Open', resolution_notes TEXT, resolved_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS welfare_actions (id INT AUTO_INCREMENT PRIMARY KEY, case_id INT NOT NULL, action_by INT, action_by_name VARCHAR(120) DEFAULT '', action_type VARCHAR(50) DEFAULT 'Comment', notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_case (case_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -300,7 +300,7 @@ $all_welfare_cases = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN {$students_db_name}.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC");
-        if ($r) $all_welfare_cases = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_welfare_cases = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -324,7 +324,7 @@ $today_counseling = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN {$students_db_name}.students s ON cs.student_id=s.id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
-        if ($r) $today_counseling = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $today_counseling = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -332,7 +332,7 @@ $all_discipline_cases = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN {$students_db_name}.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC");
-        if ($r) $all_discipline_cases = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_discipline_cases = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -340,7 +340,7 @@ $hostel_stats = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT hr.hostel_name, hr.total_beds, (SELECT COUNT(*) FROM hostel_allocations ha WHERE ha.hostel_room_id=hr.id AND ha.status='Active') as occupied FROM hostel_rooms hr GROUP BY hr.hostel_name");
-        if ($r) $hostel_stats = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $hostel_stats = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -348,7 +348,7 @@ $upcoming_activities = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM student_activities WHERE activity_date >= CURDATE() ORDER BY activity_date LIMIT 3");
-        if ($r) $upcoming_activities = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $upcoming_activities = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -368,7 +368,7 @@ $staff_list = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT id, CONCAT(first_name,' ',last_name) as full_name FROM staff ORDER BY first_name");
-        if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $staff_list = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('wardens context: ' . $e->getMessage()); }
 }
 
@@ -419,7 +419,7 @@ if ($view_case_id && $conn) {
     if ($view_case) {
         $stmt2 = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id = ? ORDER BY created_at ASC");
         if ($stmt2) { $stmt2->bind_param("i", $view_case_id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; }
-        $view_case_actions = $stmt2 ? $stmt2->get_result()->fetch_all(MYSQLI_ASSOC) : [];
+        $view_case_actions = isnm_fetch_all($stmt2->get_result());
         if ($stmt2) $stmt2->close();
     }
 }
@@ -995,7 +995,7 @@ function updateDateTime() {
 updateDateTime();
 setInterval(updateDateTime, 60000);
 
-// Navigation — delegate to universal section switcher
+// Navigation � delegate to universal section switcher
 document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();

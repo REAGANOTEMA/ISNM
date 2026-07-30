@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $hdb->prepare("SELECT a.*, hr.room_number FROM {$hprefix}hostel_allocations a JOIN {$hprefix}hostel_rooms hr ON a.room_id = hr.id WHERE a.room_id = ? AND a.status = 'Active'");
                 $stmt->bind_param('i', $room_id);
                 $stmt->execute();
-                $allocs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $allocs = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
                 echo json_encode(['success' => true, 'allocations' => $allocs]);
                 break;
@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $hdb->prepare($sql);
                 if (!empty($params)) $stmt->bind_param($types, ...$params);
                 $stmt->execute();
-                $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $results = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
                 echo json_encode(['success' => true, 'rooms' => $results]);
                 break;

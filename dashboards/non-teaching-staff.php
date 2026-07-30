@@ -361,7 +361,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             if ($stmt) {
                                 $stmt->bind_param('i', $user_id);
                                 $stmt->execute();
-                                $staff_tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                                $staff_tasks = isnm_fetch_all($stmt->get_result());
                                 $stmt->close();
                             }
                         } catch (Exception $e) { error_log('nts tasks: ' . $e->getMessage()); }
@@ -494,7 +494,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             if ($stmt) {
                                 $stmt->bind_param('i', $user_id);
                                 $stmt->execute();
-                                $leave_requests = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                                $leave_requests = isnm_fetch_all($stmt->get_result());
                                 $stmt->close();
                             }
                         } catch (Exception $e) { error_log('nts leave: ' . $e->getMessage()); }

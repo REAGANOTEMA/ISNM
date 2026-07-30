@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -255,7 +255,7 @@ $recent_transactions = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT lb.id, CONCAT(s.first_name,' ',s.surname) as member_name, lb.member_id, lb.book_title, lb.borrow_date as transaction_date, lb.return_status as status, lb.due_date FROM `{$students_db_name}`.library_borrowing lb LEFT JOIN `{$students_db_name}`.students s ON lb.student_id=s.student_id ORDER BY lb.borrow_date DESC LIMIT 10");
-        if ($r) $recent_transactions = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $recent_transactions = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
@@ -279,7 +279,7 @@ $recent_members = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT lm.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM `{$students_db_name}`.library_members lm LEFT JOIN `{$students_db_name}`.students s ON lm.student_id=s.student_id ORDER BY lm.registration_date DESC LIMIT 5");
-        if ($r) $recent_members = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $recent_members = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
@@ -288,7 +288,7 @@ $recent_acquisitions = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM `{$students_db_name}`.library_acquisitions ORDER BY acquisition_date DESC LIMIT 5");
-        if ($r) $recent_acquisitions = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $recent_acquisitions = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('school-librarian context: ' . $e->getMessage()); }
 }
 
@@ -728,7 +728,7 @@ $isComingSoon = in_array($requestedPage, $comingSoonPages);
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation — delegate to universal section switcher
+        // Navigation � delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1159,7 +1159,7 @@ $isComingSoon = in_array($requestedPage, $comingSoonPages);
         }
     </script>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

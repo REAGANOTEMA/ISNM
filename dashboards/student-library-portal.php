@@ -49,13 +49,13 @@ if ($staffDb) {
             if (!empty($params)) $stmt->bind_param($types, ...$params);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $r = $stmt->get_result();
-            if ($r) $books = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $books = isnm_fetch_all($r);
             $stmt->close();
         }
 
         if ($userId) {
             $r = $staffDb->query("SELECT b.title, b.author, b.isbn, br.borrow_date, br.due_date, br.return_status, br.late_fee FROM library_borrowing br JOIN library_books b ON br.book_id=b.id WHERE (br.student_id=" . intval($userId) . " OR br.borrower_id=" . intval($userId) . ") AND br.return_status IN ('Borrowed','Overdue') ORDER BY br.due_date ASC");
-            if ($r) $myBorrows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $myBorrows = isnm_fetch_all($r);
             $r = $staffDb->query("SELECT COALESCE(SUM(late_fee),0) total FROM library_borrowing WHERE (student_id=" . intval($userId) . " OR borrower_id=" . intval($userId) . ") AND fine_paid=0");
             if ($r) $myFines = (float)$r->fetch_row()[0];
         }

@@ -66,16 +66,23 @@ class PaymentService {
         $config = $this->providers[$providerKey] ?? null;
         if (!$config) return null;
 
-        $gateway = match($providerKey) {
-            'mtn_momo'   => new MtnMomoGateway($config),
-            'airtel_money'=> new AirtelMoneyGateway($config),
-            'stripe'     => new StripeGateway($config),
-            'flutterwave'=> new FlutterwaveGateway($config),
-            'pesapal'    => new PesapalGateway($config),
-            'paypal'     => new PayPalGateway($config),
-            'bank_transfer' => new BankTransferGateway($config),
-            default      => null,
-        };
+        if ($providerKey === 'mtn_momo') {
+            $gateway = new MtnMomoGateway($config);
+        } elseif ($providerKey === 'airtel_money') {
+            $gateway = new AirtelMoneyGateway($config);
+        } elseif ($providerKey === 'stripe') {
+            $gateway = new StripeGateway($config);
+        } elseif ($providerKey === 'flutterwave') {
+            $gateway = new FlutterwaveGateway($config);
+        } elseif ($providerKey === 'pesapal') {
+            $gateway = new PesapalGateway($config);
+        } elseif ($providerKey === 'paypal') {
+            $gateway = new PayPalGateway($config);
+        } elseif ($providerKey === 'bank_transfer') {
+            $gateway = new BankTransferGateway($config);
+        } else {
+            $gateway = null;
+        }
 
         if ($gateway) {
             $this->gateways[$providerKey] = $gateway;
@@ -474,12 +481,15 @@ class PaymentService {
         $conn = $this->getConnection();
         if (!$conn) return [];
 
-        $where = match($period) {
-            'today' => "AND DATE(created_at) = CURDATE()",
-            'week'  => "AND YEARWEEK(created_at) = YEARWEEK(NOW())",
-            'month' => "AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())",
-            default => '',
-        };
+        if ($period === 'today') {
+            $where = "AND DATE(created_at) = CURDATE()";
+        } elseif ($period === 'week') {
+            $where = "AND YEARWEEK(created_at) = YEARWEEK(NOW())";
+        } elseif ($period === 'month') {
+            $where = "AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())";
+        } else {
+            $where = '';
+        }
 
         $sql = "
             SELECT

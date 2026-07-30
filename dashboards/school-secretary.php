@@ -166,7 +166,7 @@ foreach ($migrations as $sql) { @$conn->query($sql); }
 
 // Add minutes and outcome columns to secretary_meetings if not exist
 $meetingCols = $conn->query("SHOW COLUMNS FROM `$staff_db`.`secretary_meetings` LIKE 'minutes'");
-if ($meetingCols && $meetingCols->num_rows === 0) {
+if ($meetingCols && $meetingCols->num_rows == 0) {
     @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `minutes` TEXT AFTER `attendees`");
     @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `outcome` TEXT AFTER `minutes`");
     @$conn->query("ALTER TABLE `$staff_db`.`secretary_meetings` ADD COLUMN `meeting_type` VARCHAR(100) DEFAULT 'general' AFTER `location`");

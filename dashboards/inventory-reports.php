@@ -52,7 +52,7 @@ $reports = [];
 if ($report_stmt) {
     if (!$report_stmt->execute()) { error_log('$report_stmt execute failed: ' . ($report_stmt->error ?? 'unknown')); };
     $report_result = $report_stmt->get_result();
-    $reports = $report_result ? $report_result->fetch_all(MYSQLI_ASSOC) : [];
+    $reports = isnm_fetch_all($report_result);
     $report_stmt->close();
 }
 

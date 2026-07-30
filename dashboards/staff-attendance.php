@@ -117,7 +117,7 @@ if ($conn) {
     $stmt = $conn->prepare("SELECT COUNT(*) c FROM attendance WHERE date=? AND status='Late'");
     if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $r4 = $stmt->get_result(); if ($r4) $late = (int)$r4->fetch_assoc()['c']; } $stmt->close(); }
     $stmt = $conn->prepare("SELECT a.*, s.full_name staff_name FROM attendance a LEFT JOIN staff s ON a.staff_id=s.id WHERE a.date=? ORDER BY a.check_in ASC");
-    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $a = $stmt->get_result(); if ($a) $attendance = $a->fetch_all(MYSQLI_ASSOC); } $stmt->close(); }
+    if ($stmt) { $stmt->bind_param('s', $today); if ($stmt->execute()) { $a = $stmt->get_result(); if ($a) $attendance = isnm_fetch_all($a); } $stmt->close(); }
 }
 ?>
 <!DOCTYPE html>

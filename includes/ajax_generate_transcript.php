@@ -45,7 +45,7 @@ $rec_stmt = $studentsConn->prepare($records_sql);
 $rec_stmt->bind_param('s', $student_id);
 $rec_stmt->execute();
 $rec_result = $rec_stmt->get_result();
-$academic_records = $rec_result ? $rec_result->fetch_all(MYSQLI_ASSOC) : [];
+$academic_records = $rec_result ? isnm_fetch_all($rec_result) : [];
 $rec_stmt->close();
 
 // Get academic summary
@@ -54,7 +54,7 @@ $sum_stmt = $studentsConn->prepare($summary_sql);
 $sum_stmt->bind_param('s', $student_id);
 $sum_stmt->execute();
 $sum_result = $sum_stmt->get_result();
-$academic_summary = $sum_result ? $sum_result->fetch_all(MYSQLI_ASSOC) : [];
+$academic_summary = $sum_result ? isnm_fetch_all($sum_result) : [];
 $sum_stmt->close();
 
 // Get photo URL

@@ -21,7 +21,7 @@ function tkt_q($conn, $sql) {
 
 function tkt_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('it-support-tickets getList: ' . $e->getMessage()); return []; }
 }
 
@@ -109,7 +109,7 @@ if ($stmt) {
     $r = $stmt->get_result();
     $stmt->close();
 } else $r = null;
-$tickets = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+$tickets = isnm_fetch_all($r);
 
 $staff_list = [];
 if ($staff_conn) {

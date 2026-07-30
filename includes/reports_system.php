@@ -18,31 +18,31 @@ if (!function_exists('getStudentReports')) {
 
         // Total students by status
         $r = $conn->query("SELECT status, COUNT(*) as count FROM students WHERE status != 'deleted' GROUP BY status ORDER BY count DESC");
-        $reports['by_status'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_status'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by program
         $r = $conn->query("SELECT program, COUNT(*) as count FROM students WHERE status = 'Active' AND program != '' GROUP BY program ORDER BY count DESC");
-        $reports['by_program'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_program'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by level
         $r = $conn->query("SELECT level, COUNT(*) as count FROM students WHERE status = 'Active' AND level != '' GROUP BY level ORDER BY level");
-        $reports['by_level'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_level'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by gender
         $r = $conn->query("SELECT gender, COUNT(*) as count FROM students WHERE status = 'Active' GROUP BY gender");
-        $reports['by_gender'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_gender'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by district (top 20)
         $r = $conn->query("SELECT district, COUNT(*) as count FROM students WHERE status = 'Active' AND district != '' GROUP BY district ORDER BY count DESC LIMIT 20");
-        $reports['by_district'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_district'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by stream
         $r = $conn->query("SELECT stream, COUNT(*) as count FROM students WHERE status = 'Active' AND stream != '' GROUP BY stream ORDER BY count DESC");
-        $reports['by_stream'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_stream'] = $r ? isnm_fetch_all($r) : [];
 
         // Students by intake period
         $r = $conn->query("SELECT intake_year, intake_period, COUNT(*) as count FROM students WHERE status != 'deleted' GROUP BY intake_year, intake_period ORDER BY intake_year DESC, intake_period");
-        $reports['by_intake'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_intake'] = $r ? isnm_fetch_all($r) : [];
 
         // New registrations this year vs last year
         $year = date('Y');
@@ -79,16 +79,16 @@ if (!function_exists('getFinanceReports')) {
 
         // Payments by method
         $r = $conn->query("SELECT payment_method, COUNT(*) as count, COALESCE(SUM(amount_received),0) as total FROM payments WHERE status = 'completed' GROUP BY payment_method ORDER BY total DESC");
-        $reports['by_method'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_method'] = $r ? isnm_fetch_all($r) : [];
 
         // Payments by fee type
         $r = $conn->query("SELECT fee_type, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM payment_history WHERE status = 'completed' GROUP BY fee_type ORDER BY total DESC");
-        $reports['by_fee_type'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_fee_type'] = $r ? isnm_fetch_all($r) : [];
 
         // Monthly payments (last 12 months)
         $startDate = date('Y-m-01', strtotime('-11 months'));
         $r = $conn->query("SELECT DATE_FORMAT(payment_date, '%Y-%m') as month, COUNT(*) as count, COALESCE(SUM(amount_received),0) as total FROM payments WHERE status = 'completed' AND payment_date >= '$startDate' GROUP BY month ORDER BY month");
-        $reports['monthly'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['monthly'] = $r ? isnm_fetch_all($r) : [];
 
         // Total expenses
         $r = $conn->query("SELECT COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM expenses WHERE status IN ('approved','paid')");
@@ -96,11 +96,11 @@ if (!function_exists('getFinanceReports')) {
 
         // Expenses by category
         $r = $conn->query("SELECT category, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM expenses WHERE status IN ('approved','paid') GROUP BY category ORDER BY total DESC");
-        $reports['expenses_by_category'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['expenses_by_category'] = $r ? isnm_fetch_all($r) : [];
 
         // Fee status summary
         $r = $conn->query("SELECT status, COUNT(*) as count, COALESCE(SUM(amount),0) as total, COALESCE(SUM(amount_paid),0) as paid FROM student_fee_tracking GROUP BY status");
-        $reports['fee_status'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['fee_status'] = $r ? isnm_fetch_all($r) : [];
 
         // Pending fees total
         $r = $conn->query("SELECT COALESCE(SUM(balance),0) as total FROM student_fee_tracking WHERE status != 'paid'");
@@ -122,7 +122,7 @@ if (!function_exists('getRequirementsReports')) {
 
         // Requirements status summary
         $r = $conn->query("SELECT srs.status, COUNT(*) as count FROM student_requirements_status srs GROUP BY srs.status ORDER BY count DESC");
-        $reports['by_status'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_status'] = $r ? isnm_fetch_all($r) : [];
 
         // Students with all requirements verified
         $r = $conn->query("SELECT COUNT(DISTINCT student_id) as count FROM student_requirements_status WHERE status = 'Verified'");
@@ -134,7 +134,7 @@ if (!function_exists('getRequirementsReports')) {
 
         // Requirements by type
         $r = $conn->query("SELECT ar.requirement_name, ar.type, ar.is_mandatory, COUNT(srs.id) as total, SUM(CASE WHEN srs.status = 'Verified' THEN 1 ELSE 0 END) as verified FROM admission_requirements ar LEFT JOIN student_requirements_status srs ON ar.id = srs.requirement_id GROUP BY ar.id, ar.requirement_name, ar.type, ar.is_mandatory ORDER BY ar.display_order");
-        $reports['by_requirement'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_requirement'] = $r ? isnm_fetch_all($r) : [];
 
         return $reports;
     }
@@ -165,7 +165,7 @@ if (!function_exists('getStudentProfileReport')) {
         $stmt->bind_param('i', $studentId);
         $stmt->execute();
         $r = $stmt->get_result();
-        $report['payments'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $report['payments'] = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
 
         // Total paid
@@ -182,7 +182,7 @@ if (!function_exists('getStudentProfileReport')) {
         $stmt->bind_param('i', $studentId);
         $stmt->execute();
         $r = $stmt->get_result();
-        $report['fee_tracking'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $report['fee_tracking'] = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
 
         // Requirements
@@ -190,7 +190,7 @@ if (!function_exists('getStudentProfileReport')) {
         $stmt->bind_param('i', $studentId);
         $stmt->execute();
         $r = $stmt->get_result();
-        $report['requirements'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $report['requirements'] = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
 
         // Requirement stats
@@ -210,7 +210,7 @@ if (!function_exists('getStudentProfileReport')) {
         $stmt->bind_param('i', $studentId);
         $stmt->execute();
         $r = $stmt->get_result();
-        $report['documents'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $report['documents'] = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
 
         // Status history
@@ -218,7 +218,7 @@ if (!function_exists('getStudentProfileReport')) {
         $stmt->bind_param('i', $studentId);
         $stmt->execute();
         $r = $stmt->get_result();
-        $report['status_history'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $report['status_history'] = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
 
         return $report;
@@ -237,7 +237,7 @@ if (!function_exists('getAcademicReports')) {
 
         // Academic standings
         $r = $conn->query("SELECT academic_standing, COUNT(*) as count FROM student_academic_profiles GROUP BY academic_standing ORDER BY count DESC");
-        $reports['by_standing'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_standing'] = $r ? isnm_fetch_all($r) : [];
 
         // Average GPA
         $r = $conn->query("SELECT AVG(gpa) as avg_gpa, MIN(gpa) as min_gpa, MAX(gpa) as max_gpa FROM student_academic_profiles WHERE gpa IS NOT NULL");
@@ -245,7 +245,7 @@ if (!function_exists('getAcademicReports')) {
 
         // Students by program and year
         $r = $conn->query("SELECT s.program, sap.current_year, COUNT(*) as count FROM students s JOIN student_academic_profiles sap ON s.id = sap.student_id WHERE s.status = 'Active' GROUP BY s.program, sap.current_year ORDER BY s.program, sap.current_year");
-        $reports['by_program_year'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $reports['by_program_year'] = $r ? isnm_fetch_all($r) : [];
 
         return $reports;
     }
@@ -287,11 +287,11 @@ if (!function_exists('getDashboardAnalytics')) {
 
         // Recent activities (last 10 audit logs)
         $r = $conn->query("SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 10");
-        $analytics['recent_activities'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $analytics['recent_activities'] = $r ? isnm_fetch_all($r) : [];
 
         // Program distribution
         $r = $conn->query("SELECT program, COUNT(*) as count FROM students WHERE status = 'Active' GROUP BY program ORDER BY count DESC LIMIT 10");
-        $analytics['program_distribution'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $analytics['program_distribution'] = $r ? isnm_fetch_all($r) : [];
 
         return $analytics;
     }

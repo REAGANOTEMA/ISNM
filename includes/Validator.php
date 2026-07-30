@@ -156,17 +156,24 @@ class Validator {
     // ── Static Sanitizers ──
 
     public static function sanitize(mixed $value, string $type = 'string'): mixed {
-        return match ($type) {
-            'string' => htmlspecialchars(trim((string)$value), ENT_QUOTES, 'UTF-8'),
-            'int' => filter_var($value, FILTER_VALIDATE_INT) !== false ? (int)$value : 0,
-            'float' => filter_var($value, FILTER_VALIDATE_FLOAT) !== false ? (float)$value : 0.0,
-            'email' => strtolower(trim(filter_var($value, FILTER_SANITIZE_EMAIL))),
-            'url' => filter_var($value, FILTER_VALIDATE_URL) ? $value : '',
-            'phone' => preg_replace('/[^\d+]/', '', trim($value)),
-            'alphanumeric' => preg_replace('/[^a-zA-Z0-9]/', '', trim($value)),
-            'bool' => in_array((string)$value, ['1', 'true', 'yes', 'on'], true),
-            default => trim((string)$value),
-        };
+        if ($type === 'string') {
+            return htmlspecialchars(trim((string)$value), ENT_QUOTES, 'UTF-8');
+        } elseif ($type === 'int') {
+            return filter_var($value, FILTER_VALIDATE_INT) !== false ? (int)$value : 0;
+        } elseif ($type === 'float') {
+            return filter_var($value, FILTER_VALIDATE_FLOAT) !== false ? (float)$value : 0.0;
+        } elseif ($type === 'email') {
+            return strtolower(trim(filter_var($value, FILTER_SANITIZE_EMAIL)));
+        } elseif ($type === 'url') {
+            return filter_var($value, FILTER_VALIDATE_URL) ? $value : '';
+        } elseif ($type === 'phone') {
+            return preg_replace('/[^\d+]/', '', trim($value));
+        } elseif ($type === 'alphanumeric') {
+            return preg_replace('/[^a-zA-Z0-9]/', '', trim($value));
+        } elseif ($type === 'bool') {
+            return in_array((string)$value, ['1', 'true', 'yes', 'on'], true);
+        }
+        return trim((string)$value);
     }
 
     public static function sanitizeArray(array $data, array $types): array {

@@ -305,7 +305,7 @@ if (!function_exists('updateStudentBalanceAfterPayment')) {
             error_log('updateStudentBalanceAfterPayment (fee_tracking select) failed: ' . ($stmt->error ?? 'unknown'));
             return false;
         }
-        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $rows = isnm_fetch_all($stmt->get_result());
         $stmt->close();
 
         $remaining = $payment_amount;
@@ -362,7 +362,7 @@ if (!function_exists('updateStudentBalanceAfterPayment')) {
         ");
         $inv_stmt->bind_param("i", $student_id);
         if ($inv_stmt->execute()) {
-            $inv_rows = $inv_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $inv_rows = isnm_fetch_all($inv_stmt->get_result());
             $inv_remaining = $payment_amount;
             foreach ($inv_rows as $inv) {
                 if ($inv_remaining <= 0) break;
@@ -525,7 +525,7 @@ if (!function_exists('generateFinancialStatement')) {
         ");
         $stmt->bind_param("i", $student_id);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $invoices = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $invoices = isnm_fetch_all($stmt->get_result());
         
         $stmt = $conn->prepare("
             SELECT 
@@ -540,7 +540,7 @@ if (!function_exists('generateFinancialStatement')) {
         ");
         $stmt->bind_param("i", $student_id);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-        $payments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $payments = isnm_fetch_all($stmt->get_result());
         
         return [
             'invoices' => $invoices,

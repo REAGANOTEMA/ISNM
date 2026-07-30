@@ -297,12 +297,16 @@ if (!class_exists('MTNMoMoProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['status'] ?? 'UNKNOWN';
-                $mapped = match (strtoupper($raw)) {
-                    'SUCCESSFUL'      => 'successful',
-                    'FAILED','REJECTED' => 'failed',
-                    'TIMEOUT'         => 'expired',
-                    default           => 'processing',
-                };
+                $upper = strtoupper($raw);
+                if ($upper === 'SUCCESSFUL') {
+                    $mapped = 'successful';
+                } elseif (in_array($upper, ['FAILED', 'REJECTED'], true)) {
+                    $mapped = 'failed';
+                } elseif ($upper === 'TIMEOUT') {
+                    $mapped = 'expired';
+                } else {
+                    $mapped = 'processing';
+                }
                 return [
                     'success'         => $mapped === 'successful',
                     'status'          => $mapped,
@@ -328,12 +332,16 @@ if (!class_exists('MTNMoMoProvider', false)) {
             $raw   = $payload['status'] ?? 'unknown';
             $txnId = $payload['transactionId'] ?? $payload['transaction_id'] ?? '';
 
-            $mapped = match (strtoupper($raw)) {
-                'SUCCESSFUL','COMPLETED' => 'successful',
-                'FAILED','REJECTED'     => 'failed',
-                'TIMEOUT'               => 'expired',
-                default                 => 'processing',
-            };
+            $upper = strtoupper($raw);
+            if (in_array($upper, ['SUCCESSFUL', 'COMPLETED'], true)) {
+                $mapped = 'successful';
+            } elseif (in_array($upper, ['FAILED', 'REJECTED'], true)) {
+                $mapped = 'failed';
+            } elseif ($upper === 'TIMEOUT') {
+                $mapped = 'expired';
+            } else {
+                $mapped = 'processing';
+            }
 
             return [
                 'success'                => true,
@@ -434,12 +442,15 @@ if (!class_exists('AirtelMoneyProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['status'] ?? 'unknown';
-                $mapped = match ($raw) {
-                    'TS','SUCCESSFUL' => 'successful',
-                    'TF','FAILED'     => 'failed',
-                    'TI','INITIATED'  => 'pending',
-                    default           => 'processing',
-                };
+                if (in_array($raw, ['TS', 'SUCCESSFUL'], true)) {
+                    $mapped = 'successful';
+                } elseif (in_array($raw, ['TF', 'FAILED'], true)) {
+                    $mapped = 'failed';
+                } elseif (in_array($raw, ['TI', 'INITIATED'], true)) {
+                    $mapped = 'pending';
+                } else {
+                    $mapped = 'processing';
+                }
                 return [
                     'success'         => $mapped === 'successful',
                     'status'          => $mapped,
@@ -463,12 +474,15 @@ if (!class_exists('AirtelMoneyProvider', false)) {
             $raw   = $payload['status'] ?? $payload['transaction']['status'] ?? 'unknown';
             $ref   = $payload['reference'] ?? $txnId;
 
-            $mapped = match ($raw) {
-                'TS','SUCCESSFUL','COMPLETED' => 'successful',
-                'TF','FAILED'                => 'failed',
-                'TI','INITIATED'             => 'processing',
-                default                      => 'processing',
-            };
+            if (in_array($raw, ['TS', 'SUCCESSFUL', 'COMPLETED'], true)) {
+                $mapped = 'successful';
+            } elseif (in_array($raw, ['TF', 'FAILED'], true)) {
+                $mapped = 'failed';
+            } elseif (in_array($raw, ['TI', 'INITIATED'], true)) {
+                $mapped = 'processing';
+            } else {
+                $mapped = 'processing';
+            }
 
             return [
                 'success'                => true,
@@ -554,11 +568,13 @@ if (!class_exists('StripeProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['payment_status'] ?? 'unknown';
-                $mapped = match ($raw) {
-                    'paid','no_payment_required' => 'successful',
-                    'unpaid'                     => 'failed',
-                    default                      => 'processing',
-                };
+                if (in_array($raw, ['paid', 'no_payment_required'], true)) {
+                    $mapped = 'successful';
+                } elseif ($raw === 'unpaid') {
+                    $mapped = 'failed';
+                } else {
+                    $mapped = 'processing';
+                }
                 return [
                     'success'         => $mapped === 'successful',
                     'status'          => $mapped,
@@ -607,11 +623,13 @@ if (!class_exists('StripeProvider', false)) {
             $sessionId = $obj['id'] ?? '';
             $ref       = $obj['client_reference_id'] ?? $sessionId;
 
-            $mapped = match ($type) {
-                'checkout.session.completed' => 'successful',
-                'checkout.session.expired'   => 'expired',
-                default                      => 'processing',
-            };
+            if ($type === 'checkout.session.completed') {
+                $mapped = 'successful';
+            } elseif ($type === 'checkout.session.expired') {
+                $mapped = 'expired';
+            } else {
+                $mapped = 'processing';
+            }
 
             return [
                 'success'                => true,
@@ -698,12 +716,15 @@ if (!class_exists('FlutterwaveProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['data']['status'] ?? 'unknown';
-                $mapped = match ($raw) {
-                    'successful' => 'successful',
-                    'failed'     => 'failed',
-                    'cancelled'  => 'cancelled',
-                    default      => 'processing',
-                };
+                if ($raw === 'successful') {
+                    $mapped = 'successful';
+                } elseif ($raw === 'failed') {
+                    $mapped = 'failed';
+                } elseif ($raw === 'cancelled') {
+                    $mapped = 'cancelled';
+                } else {
+                    $mapped = 'processing';
+                }
                 return [
                     'success'         => $mapped === 'successful',
                     'status'          => $mapped,
@@ -746,12 +767,15 @@ if (!class_exists('FlutterwaveProvider', false)) {
             $txRef = $payload['data']['tx_ref'] ?? '';
             $provId = $payload['data']['id'] ?? '';
 
-            $mapped = match ($raw) {
-                'successful' => 'successful',
-                'failed'     => 'failed',
-                'cancelled'  => 'cancelled',
-                default      => 'processing',
-            };
+            if ($raw === 'successful') {
+                $mapped = 'successful';
+            } elseif ($raw === 'failed') {
+                $mapped = 'failed';
+            } elseif ($raw === 'cancelled') {
+                $mapped = 'cancelled';
+            } else {
+                $mapped = 'processing';
+            }
 
             return [
                 'success'                => true,
@@ -836,12 +860,15 @@ if (!class_exists('PesapalProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['payment_status'] ?? 'unknown';
-                $mapped = match ($raw) {
-                    'Completed','SUCCESS'  => 'successful',
-                    'Failed','FAILED'      => 'failed',
-                    'Pending','PENDING'    => 'processing',
-                    default                => 'processing',
-                };
+                if (in_array($raw, ['Completed', 'SUCCESS'], true)) {
+                    $mapped = 'successful';
+                } elseif (in_array($raw, ['Failed', 'FAILED'], true)) {
+                    $mapped = 'failed';
+                } elseif (in_array($raw, ['Pending', 'PENDING'], true)) {
+                    $mapped = 'processing';
+                } else {
+                    $mapped = 'processing';
+                }
                 return [
                     'success'         => $mapped === 'successful',
                     'status'          => $mapped,
@@ -864,12 +891,15 @@ if (!class_exists('PesapalProvider', false)) {
             $raw     = $payload['payment_status'] ?? $payload['status'] ?? 'unknown';
             $orderRef = $payload['order_tracking_id'] ?? $payload['order_merchant_reference'] ?? '';
 
-            $mapped = match ($raw) {
-                'Completed','SUCCESS' => 'successful',
-                'Failed','FAILED'     => 'failed',
-                'Pending','PENDING'   => 'processing',
-                default               => 'processing',
-            };
+            if (in_array($raw, ['Completed', 'SUCCESS'], true)) {
+                $mapped = 'successful';
+            } elseif (in_array($raw, ['Failed', 'FAILED'], true)) {
+                $mapped = 'failed';
+            } elseif (in_array($raw, ['Pending', 'PENDING'], true)) {
+                $mapped = 'processing';
+            } else {
+                $mapped = 'processing';
+            }
 
             return [
                 'success'                => true,
@@ -976,13 +1006,15 @@ if (!class_exists('PayPalProvider', false)) {
 
             if ($result['http_code'] === 200 && $result['data']) {
                 $raw    = $result['data']['status'] ?? 'unknown';
-                $mapped = match ($raw) {
-                    'COMPLETED' => 'successful',
-                    'VOIDED'    => 'cancelled',
-                    'PENDING'   => 'processing',
-                    'APPROVED'  => 'processing',
-                    default     => 'processing',
-                };
+                if ($raw === 'COMPLETED') {
+                    $mapped = 'successful';
+                } elseif ($raw === 'VOIDED') {
+                    $mapped = 'cancelled';
+                } elseif (in_array($raw, ['PENDING', 'APPROVED'], true)) {
+                    $mapped = 'processing';
+                } else {
+                    $mapped = 'processing';
+                }
                 $amountVal = $result['data']['purchase_units'][0]['amount']['value'] ?? null;
                 return [
                     'success'         => $mapped === 'successful',
@@ -1048,11 +1080,13 @@ if (!class_exists('PayPalProvider', false)) {
             $orderId      = $resource['id'] ?? '';
             $raw          = $resource['status'] ?? 'unknown';
 
-            $mapped = match ($raw) {
-                'COMPLETED' => 'successful',
-                'VOIDED'    => 'cancelled',
-                default     => 'processing',
-            };
+            if ($raw === 'COMPLETED') {
+                $mapped = 'successful';
+            } elseif ($raw === 'VOIDED') {
+                $mapped = 'cancelled';
+            } else {
+                $mapped = 'processing';
+            }
 
             $customId = $resource['custom_id'] ?? $resource['id'] ?? '';
 

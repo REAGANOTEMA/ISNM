@@ -38,7 +38,7 @@ if ($conn) {
 function dr_fetch($conn, $sql) {
     if (!$conn) return [];
     $r = $conn->query($sql);
-    return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+    return isnm_fetch_all($r);
 }
 
 function dr_count($conn, $sql) {

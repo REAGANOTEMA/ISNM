@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
         }
         $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param("isddddi", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
+            $stmt->bind_param("isdddsi", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
             $stmt->close();
         }
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $staffCo
             $reason = "Fulfilled request #$reqId";
             $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (?, 'request_fulfilled', ?, ?, ?, 'request', ?)");
             if ($stmt) {
-                $stmt->bind_param("idssi", $itemId, $qty, $reason, $userId, $reqId);
+                $stmt->bind_param("idsii", $itemId, $qty, $reason, $userId, $reqId);
                 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }
                 $stmt->close();
             }

@@ -90,7 +90,7 @@ if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM trainings WHERE start_date > CURDATE()");
     if ($r) $upcoming = (int)$r->fetch_assoc()['c'];
     $q = $conn->query("SELECT t.name training_name, s.full_name staff_name, t.start_date, t.end_date, et.status FROM employee_training et JOIN trainings t ON et.training_id=t.id LEFT JOIN staff s ON et.staff_id=s.id ORDER BY t.start_date DESC LIMIT 50");
-    if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+    if ($q) $records = isnm_fetch_all($q);
 }
 ?>
 <!DOCTYPE html>

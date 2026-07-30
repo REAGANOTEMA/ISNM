@@ -97,7 +97,7 @@ $templates = []; $receipts = [];
 if ($conn) {
     $templates_sql = "SELECT * FROM receipt_templates WHERE is_active = TRUE ORDER BY template_name";
     $templates_result = $conn->query($templates_sql);
-    $templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : [];
+    $templates = isnm_fetch_all($templates_result);
 
     // Get recent receipts (students are in the students DB)
     $receipts = [];
@@ -114,7 +114,7 @@ if ($conn) {
             // Fallback: fetch generated_docs from staff DB, student names from students DB
             $docs = [];
             $dr = $conn->query("SELECT gd.*, s.full_name as generated_by_name FROM generated_documents gd JOIN staff s ON gd.generated_by = s.id WHERE gd.document_type = 'Receipt' ORDER BY gd.generation_date DESC LIMIT 10");
-            if ($dr) $docs = $dr->fetch_all(MYSQLI_ASSOC);
+            if ($dr) $docs = isnm_fetch_all($dr);
             foreach ($docs as &$d) {
                 $d['student_name'] = '';
                 if (!empty($d['student_id'])) {
@@ -125,7 +125,7 @@ if ($conn) {
             unset($d);
             $receipts = $docs;
         } elseif ($receipts_result) {
-            $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
+            $receipts = isnm_fetch_all($receipts_result);
         }
     }
 }

@@ -43,7 +43,7 @@ if (!$stmt) {
 
 $stmt->execute();
 $record_result = $stmt->get_result();
-$records = $record_result ? $record_result->fetch_all(MYSQLI_ASSOC) : [];
+$records = $record_result ? isnm_fetch_all($record_result) : [];
 $stmt->close();
 
 if (empty($records)) {

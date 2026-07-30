@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
                 elseif ($filter === 'phone') { $s->bind_param("ss", $like, $like); }
                 else { $s->bind_param("sss", $like, $like, $like); }
                 $s->execute();
-                $students = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+                $students = isnm_fetch_all($s->get_result());
                 $s->close();
             }
         }
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffConn) {
         $reqs = [];
         if ($studentId && $staffConn) {
             $s = $staffConn->prepare("SELECT requirement_type, status, verified_date, verified_by FROM student_requirements WHERE student_id=?");
-            if ($s) { $s->bind_param("i", $studentId); $s->execute(); $reqs = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+            if ($s) { $s->bind_param("i", $studentId); $s->execute(); $reqs = isnm_fetch_all($s->get_result()); $s->close(); }
         }
         echo json_encode(['success' => true, 'requirements' => $reqs]);
         exit;

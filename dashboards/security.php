@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -90,7 +90,7 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// ── Page routing ──
+// -- Page routing --
 $pageToSection = [
     'home'                  => 'overview',
     'overview'              => 'overview',
@@ -106,12 +106,12 @@ $pageToSection = [
 $page    = $_GET['page'] ?? 'home';
 $section = $pageToSection[$page] ?? 'overview';
 
-// ── Flash messages ──
+// -- Flash messages --
 $flash_success = $_SESSION['success'] ?? null;
 $flash_error   = $_SESSION['error']   ?? null;
 unset($_SESSION['success'], $_SESSION['error']);
 
-// ── Statistics ──
+// -- Statistics --
 $total_incidents_today = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $security_patrols      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress','Active')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $access_control_checks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM access_control_logs WHERE DATE(access_time) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
@@ -119,7 +119,7 @@ $emergency_alerts      = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM secu
 $cctv_cameras_active   = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_equipment WHERE equipment_type = 'CCTV Camera' AND status = 'Operational'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $total_guards          = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// ── Data: All incidents ──
+// -- Data: All incidents --
 $all_incidents = [];
 if ($conn) {
     try {
@@ -128,72 +128,72 @@ if ($conn) {
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Recent incidents for overview ──
+// -- Data: Recent incidents for overview --
 $recent_incidents = array_slice($all_incidents, 0, 10);
 
-// ── Data: All patrols ──
+// -- Data: All patrols --
 $all_patrols = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.guard_id=s.id ORDER BY sp.patrol_date DESC, sp.start_time DESC LIMIT 100");
-        if ($r) $all_patrols = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_patrols = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Active patrols for overview ──
+// -- Data: Active patrols for overview --
 $active_patrols = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.guard_id=s.id WHERE sp.patrol_date=CURDATE() ORDER BY sp.start_time DESC LIMIT 10");
-        if ($r) $active_patrols = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $active_patrols = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: All visitors ──
+// -- Data: All visitors --
 $all_visitors = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_visitors ORDER BY visit_date DESC, actual_arrival DESC LIMIT 100");
-        if ($r) $all_visitors = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_visitors = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Today's visitors for overview ──
+// -- Data: Today's visitors for overview --
 $today_visitors  = [];
 $visitor_count   = 0;
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_visitors WHERE visit_date = CURDATE() ORDER BY actual_arrival DESC LIMIT 20");
-        if ($r) $today_visitors = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $today_visitors = isnm_fetch_all($r);
         $rq = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE visit_date = CURDATE()");
         if ($rq) $visitor_count = (int) $rq->fetch_row()[0];
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Emergency contacts ──
+// -- Data: Emergency contacts --
 $emergency_contacts = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_emergency_contacts WHERE is_active=1 ORDER BY contact_type");
-        if ($r) $emergency_contacts = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $emergency_contacts = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Equipment due ──
+// -- Data: Equipment due --
 $equipment_due = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_equipment WHERE status!='Retired' AND (next_maintenance_date <= CURDATE() OR next_maintenance_date IS NULL) ORDER BY next_maintenance_date ASC LIMIT 5");
-        if ($r) $equipment_due = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $equipment_due = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 
-// ── Data: Staff list for patrol form ──
+// -- Data: Staff list for patrol form --
 $staff_list = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT id, full_name FROM staff WHERE status='Active' ORDER BY full_name");
-        if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $staff_list = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('security context: ' . $e->getMessage()); }
 }
 $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($_SESSION['csrf_token'] ?? '') . '">';
@@ -233,9 +233,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
 <?php endif; ?>
 
 <?php switch ($section):
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     // OVERVIEW
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     case 'overview': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2"></i>Security Dashboard</h4>
@@ -326,9 +326,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
     <?php break;
 
-    // ═══════════════════════════════════════════════
-    // INCIDENTS — Full CRUD
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
+    // INCIDENTS � Full CRUD
+    // -----------------------------------------------
     case 'incidents': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Security Incidents</h4>
@@ -377,9 +377,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
     <?php break;
 
-    // ═══════════════════════════════════════════════
-    // PATROLS — Full CRUD
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
+    // PATROLS � Full CRUD
+    // -----------------------------------------------
     case 'patrol': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0"><i class="fas fa-walking me-2"></i>Patrol Management</h4>
@@ -403,7 +403,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     $patrolName = $pat['guard_name'] ?? ('Guard #' . ($pat['guard_id'] ?? '?'));
                     $patrolDate = !empty($pat['patrol_date']) ? date('d M Y', strtotime($pat['patrol_date'])) : '-';
                     $patrolStart = !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-';
-                    $patrolEnd = !empty($pat['end_time']) ? date('g:i A', strtotime($pat['end_time'])) : '—';
+                    $patrolEnd = !empty($pat['end_time']) ? date('g:i A', strtotime($pat['end_time'])) : '�';
                 ?>
                 <tr>
                     <td><strong>#<?= (int)$pat['id'] ?></strong></td>
@@ -431,9 +431,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
     <?php break;
 
-    // ═══════════════════════════════════════════════
-    // VISITORS — Full CRUD
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
+    // VISITORS � Full CRUD
+    // -----------------------------------------------
     case 'visitors': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0"><i class="fas fa-id-card me-2"></i>Visitor Management</h4>
@@ -463,7 +463,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     <td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td>
                     <td><small><?= !empty($v['visit_date']) ? date('d M Y', strtotime($v['visit_date'])) : '-' ?></small></td>
                     <td><small><?= !empty($v['actual_arrival']) ? date('g:i A', strtotime($v['actual_arrival'])) : '-' ?></small></td>
-                    <td><small><?= !empty($v['actual_departure']) ? date('g:i A', strtotime($v['actual_departure'])) : '—' ?></small></td>
+                    <td><small><?= !empty($v['actual_departure']) ? date('g:i A', strtotime($v['actual_departure'])) : '�' ?></small></td>
                     <td><span class="badge bg-<?= $vStBadge ?>"><?= htmlspecialchars($v['status']) ?></span></td>
                     <td>
                         <?php if ($v['status'] !== 'Checked Out'): ?>
@@ -484,9 +484,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
     <?php break;
 
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     // EMERGENCY
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     case 'access_control': ?>
 <div class="section-card">
   <div class="section-title"><i class="fas fa-shield-alt"></i> Access Control & Monitoring</div>
@@ -505,7 +505,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
         $logs = [];
         if ($conn) {
             $r = $conn->query("SELECT * FROM access_control_logs WHERE DATE(access_time)=CURDATE() ORDER BY access_time DESC LIMIT 20");
-            if ($r) $logs = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $logs = isnm_fetch_all($r);
         }
         if ($logs): ?>
         <table class="table table-sm small">
@@ -547,9 +547,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     </div>
     <?php break;
 
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     // DEFAULT
-    // ═══════════════════════════════════════════════
+    // -----------------------------------------------
     default: ?>
     <h4 class="fw-bold mb-3"><i class="fas fa-shield-alt me-2"></i>Security Module</h4>
     <div class="card-section"><p class="text-muted">Select a section from the sidebar.</p></div>
@@ -557,9 +557,9 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
 endswitch; ?>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     MODALS — INCIDENTS
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ---------------------------------------------------------------
+     MODALS � INCIDENTS
+     --------------------------------------------------------------- -->
 
 <!-- Add Incident -->
 <div class="modal fade" id="addIncidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -606,9 +606,9 @@ endswitch; ?>
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Delete</button></div>
 </form></div></div></div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     MODALS — PATROLS
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ---------------------------------------------------------------
+     MODALS � PATROLS
+     --------------------------------------------------------------- -->
 
 <!-- Add Patrol -->
 <div class="modal fade" id="addPatrolModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -639,7 +639,7 @@ endswitch; ?>
 <div class="modal-body">
     <input type="hidden" name="action" value="update_patrol">
     <input type="hidden" name="id" id="editPatrolId">
-    <p class="text-muted mb-2"><strong>Patrol #<span id="editPatrolIdDisplay"></span></strong> — <span id="editPatrolArea"></span></p>
+    <p class="text-muted mb-2"><strong>Patrol #<span id="editPatrolIdDisplay"></span></strong> � <span id="editPatrolArea"></span></p>
     <div class="mb-3"><label class="form-label">End Time</label><input type="datetime-local" class="form-control" name="end_time" id="editPatrolEndTime"></div>
     <div class="mb-3"><label class="form-label">Status *</label><select class="form-select" name="status" id="editPatrolStatus" required><option value="In Progress">In Progress</option><option value="Active">Active</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div>
     <div class="mb-3"><label class="form-label">Findings</label><textarea class="form-control" name="findings" id="editPatrolFindings" rows="3" placeholder="Patrol findings..."></textarea></div>
@@ -647,9 +647,9 @@ endswitch; ?>
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button></div>
 </form></div></div></div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     MODALS — VISITORS
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ---------------------------------------------------------------
+     MODALS � VISITORS
+     --------------------------------------------------------------- -->
 
 <!-- Add Visitor (Check In) -->
 <div class="modal fade" id="addVisitorModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">

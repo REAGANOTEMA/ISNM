@@ -35,7 +35,7 @@ if (!function_exists('hrGetStaff')) {
             if ($params) $stmt->bind_param($types, ...$params);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            return $id ? $result->fetch_assoc() : $result->fetch_all(MYSQLI_ASSOC);
+            return $id ? $result->fetch_assoc() : isnm_fetch_all($result);
         }
         return $id ? null : [];
     }
@@ -44,21 +44,21 @@ if (!function_exists('hrGetStaff')) {
 if (!function_exists('hrGetDepartments')) {
     function hrGetDepartments($conn) {
         $result = $conn->query("SELECT * FROM departments ORDER BY department_name");
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        return $result ? isnm_fetch_all($result) : [];
     }
 }
 
 if (!function_exists('hrGetRoles')) {
     function hrGetRoles($conn) {
         $result = $conn->query("SELECT * FROM roles ORDER BY role_name");
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        return $result ? isnm_fetch_all($result) : [];
     }
 }
 
 if (!function_exists('hrGetLeaveTypes')) {
     function hrGetLeaveTypes($conn) {
         $result = $conn->query("SELECT * FROM leave_types ORDER BY leave_type_name");
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        return $result ? isnm_fetch_all($result) : [];
     }
 }
 
@@ -224,7 +224,7 @@ if (!function_exists('hrGetLeaveBalances')) {
         if ($stmt) {
             $stmt->bind_param('i', $staff_id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            return isnm_fetch_all($stmt->get_result());
         }
         return [];
     }
@@ -241,7 +241,7 @@ if (!function_exists('hrCheckLicenseCompliance')) {
         if ($stmt) {
             $stmt->bind_param('i', $staff_id);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            return isnm_fetch_all($stmt->get_result());
         }
         return [];
     }

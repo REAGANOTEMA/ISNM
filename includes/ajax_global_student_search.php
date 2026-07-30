@@ -76,7 +76,7 @@ $searchDb = function ($db, $source) use ($q, &$results, &$seen, $dedupKey) {
     if (!$stmt) return;
     $stmt->bind_param('sssssssss', $like, $like, $like, $like, $like, $like, $like, $like, $like);
     if (!$stmt->execute()) { error_log('global_search execute failed: ' . ($stmt->error ?? 'unknown')); }
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $rows = isnm_fetch_all($stmt->get_result());
     $stmt->close();
 
     foreach ($rows as $r) {

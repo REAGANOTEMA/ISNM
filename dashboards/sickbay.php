@@ -20,6 +20,22 @@ if ($staff_conn) {
     @$staff_conn->query("CREATE TABLE IF NOT EXISTS sickbay_medicine_transactions (id INT AUTO_INCREMENT PRIMARY KEY, transaction_number VARCHAR(100) DEFAULT '', medicine_id INT DEFAULT 0, transaction_type VARCHAR(50) DEFAULT '', quantity INT DEFAULT 0, visit_id INT DEFAULT NULL, performed_by INT DEFAULT 0, transaction_date DATE DEFAULT NULL, notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_medicine (medicine_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$staff_conn->query("CREATE TABLE IF NOT EXISTS sickbay_visits (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT DEFAULT 0, student_name VARCHAR(200) DEFAULT '', visit_date DATE DEFAULT NULL, symptoms TEXT, diagnosis TEXT, treatment TEXT, medication_given TEXT, nurse_id INT DEFAULT 0, nurse_name VARCHAR(200) DEFAULT '', status VARCHAR(50) DEFAULT 'Active', follow_up_date DATE DEFAULT NULL, notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$staff_conn->query("CREATE TABLE IF NOT EXISTS student_health_records (id INT AUTO_INCREMENT PRIMARY KEY, record_number VARCHAR(50) DEFAULT '', student_id INT NOT NULL, blood_type VARCHAR(10) DEFAULT '', allergies TEXT, chronic_conditions TEXT, medications TEXT, emergency_contact_name VARCHAR(200) DEFAULT '', emergency_contact_phone VARCHAR(50) DEFAULT '', emergency_contact_relationship VARCHAR(100) DEFAULT '', insurance_provider VARCHAR(200) DEFAULT '', insurance_number VARCHAR(100) DEFAULT '', notes TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `health_incidents` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY, `student_id` VARCHAR(100), `incident_type` VARCHAR(100), `description` TEXT, `severity` VARCHAR(50) DEFAULT 'medium', `status` VARCHAR(50) DEFAULT 'open', `reported_by` INT, `resolved_by` INT, `resolution_notes` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `sickbay_settings` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY, `setting_key` VARCHAR(100) UNIQUE NOT NULL, `setting_value` TEXT, `updated_by` INT, `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `student_health_incidents` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY, `student_id` VARCHAR(100), `incident_type` VARCHAR(100), `description` TEXT, `severity` VARCHAR(50) DEFAULT 'medium', `status` VARCHAR(50) DEFAULT 'open', `reported_by` INT, `resolved_by` INT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `emergency_contacts` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY, `student_id` VARCHAR(100), `contact_name` VARCHAR(255), `relationship` VARCHAR(100), `phone` VARCHAR(50), `alternative_phone` VARCHAR(50), `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `student_emergency_contacts` LIKE `emergency_contacts`");
+    $staff_conn->query("CREATE TABLE IF NOT EXISTS `staff_activity_log` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY, `staff_id` INT, `action` VARCHAR(255), `description` TEXT, `ip_address` VARCHAR(50), `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 if (empty($_SESSION['csrf_token'])) {
@@ -34,7 +50,7 @@ function sb_q($conn, $sql) {
 
 function sb_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('sickbay getList: ' . $e->getMessage()); return []; }
 }
 
@@ -50,7 +66,7 @@ if ($action_get === 'search_student' && $students_conn) {
         $stmt = $students_conn->prepare("SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR phone LIKE ? LIMIT 10");
         if ($stmt) { $stmt->bind_param('ssss', $like, $like, $like, $like); $result = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
         else $result = null;
-        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? isnm_fetch_all($result) : [];
         echo json_encode($rows);
     } else { echo json_encode([]); }
     exit;
@@ -61,7 +77,7 @@ if ($action_get === 'get_transactions' && $staff_conn) {
     if ($mid > 0) {
         $stmt = $staff_conn->prepare("SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id WHERE smt.medicine_id = ? ORDER BY smt.created_at DESC LIMIT 50");
         if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $r = $stmt->get_result(); $stmt->close(); } else $r = null;
-        $txns = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $txns = $r ? isnm_fetch_all($r) : [];
         echo json_encode($txns);
     } else { echo json_encode([]); }
     exit;
@@ -548,7 +564,7 @@ if ($search_query && $students_conn) {
     $stmt = $students_conn->prepare("SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR phone LIKE ? LIMIT 20");
     if ($stmt) { $stmt->bind_param('ssss', $like, $like, $like, $like); $r = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
     else $r = null;
-    $student_search_results = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+    $student_search_results = $r ? isnm_fetch_all($r) : [];
 }
 
 $pageTitle = 'Sickbay Management System';?>
@@ -730,7 +746,7 @@ $pageTitle = 'Sickbay Management System';?>
 </form></div>
 <div class="health-card"><h2><i class="fas fa-exchange-alt me-2 text-secondary"></i>Stock Transaction</h2>
 <form method="POST" action="sickbay.php"><input type="hidden" name="action" value="stock_transaction">
-<div class="mb-2"><label class="form-label fw-semibold">Medicine <span class="text-danger">*</span></label><select name="medicine_id" class="form-select" required><option value="">-- Select --</option><?php foreach($medicines as $md):?><option value="<?=$md['id']?>"><?=htmlspecialchars($md['medicine_name'])?> (<?=(int)$md['quantity_in_stock']?> <?=htmlspecialchars($md['unit']??'units')?>)</option><?php endforeach;?></select></div>
+<div class="mb-2"><label class="form-label fw-semibold">Medicine <span class="text-danger">*</span></label><select name="medicine_id" class="form-select" required><option value="">-- Select --</option><?php foreach($medicines as $md):?><option value="<?=$md['id']?>"><?=htmlspecialchars($md['medicine_name'])?> (<?=(int)$md['quantity']?> <?=htmlspecialchars($md['unit']??'units')?>)</option><?php endforeach;?></select></div>
 <div class="row g-2 mb-2"><div class="col-4"><label class="form-label fw-semibold">Type</label><select name="transaction_type" class="form-select" required><option value="Purchase">Purchase</option><option value="Issue">Issue</option><option value="Return">Return</option><option value="Damage">Damage</option><option value="Expired">Expired</option></select></div><div class="col-4"><label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label><input type="number" name="quantity" class="form-control" required min="1"></div><div class="col-4"><label class="form-label fw-semibold">Date</label><input type="date" name="transaction_date" class="form-control" value="<?=date('Y-m-d')?>"></div></div>
 <div class="mb-2"><label class="form-label fw-semibold">Notes</label><input type="text" name="notes" class="form-control"></div>
 <button type="submit" class="btn btn-secondary w-100"><i class="fas fa-exchange-alt me-1"></i>Record Transaction</button>
@@ -744,7 +760,7 @@ $pageTitle = 'Sickbay Management System';?>
     switch($md['status']){case'In Stock':$msc='bg-success';break;case'Low Stock':$msc='bg-warning text-dark';break;case'Out of Stock':$msc='bg-danger';break;case'Expired':$msc='bg-secondary';break;default:$msc='bg-secondary';}
     $mcs=$md['status']==='Out of Stock'?'stock-critical':($md['status']==='Low Stock'?'stock-warning':($md['status']==='Expired'?'stock-critical':''));
 ?>
-<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity_in_stock']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'ï¿½'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
+<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'ï¿½'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
 <?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- RECYCLE BIN -->
 <div class="sickbay-section <?=$active_section==='recycle-bin'?'active':''?>" id="sec-recycle-bin">
 <div class="health-card"><h2><i class="fas fa-trash-restore me-2 text-secondary"></i>Recycle Bin</h2>

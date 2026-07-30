@@ -74,10 +74,10 @@ if ($conn) {
     if ($statusFilter !== '') { $w .= " AND lr.status=?"; $bindTypes .= 's'; $bindValues[] = $statusFilter; }
     if ($bindTypes) {
         $stmt = $conn->prepare("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
-        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $q = $stmt->get_result(); if ($q) $records = $q->fetch_all(MYSQLI_ASSOC); $stmt->close(); }
+        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $q = $stmt->get_result(); if ($q) $records = isnm_fetch_all($q); $stmt->close(); }
     } else {
         $q = $conn->query("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
-        if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+        if ($q) $records = isnm_fetch_all($q);
     }
     $lt = $conn->query("SELECT * FROM leave_types ORDER BY type_name");
     if ($lt) while ($row = $lt->fetch_assoc()) $leaveTypes[] = $row;

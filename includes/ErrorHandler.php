@@ -89,14 +89,19 @@ class ErrorHandler {
     }
 
     private static function getErrorType(int $severity): string {
-        return match ($severity) {
-            E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR => 'Fatal Error',
-            E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING => 'Warning',
-            E_PARSE => 'Parse Error',
-            E_NOTICE, E_USER_NOTICE => 'Notice',
-            E_STRICT => 'Strict Standards',
-            E_DEPRECATED, E_USER_DEPRECATED => 'Deprecated',
-            default => 'Unknown',
-        };
+        if (in_array($severity, [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+            return 'Fatal Error';
+        } elseif (in_array($severity, [E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING], true)) {
+            return 'Warning';
+        } elseif ($severity === E_PARSE) {
+            return 'Parse Error';
+        } elseif (in_array($severity, [E_NOTICE, E_USER_NOTICE], true)) {
+            return 'Notice';
+        } elseif ($severity === E_STRICT) {
+            return 'Strict Standards';
+        } elseif (in_array($severity, [E_DEPRECATED, E_USER_DEPRECATED], true)) {
+            return 'Deprecated';
+        }
+        return 'Unknown';
     }
 }

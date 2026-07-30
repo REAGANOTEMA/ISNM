@@ -109,12 +109,15 @@ class PayPalGateway extends AbstractPaymentGateway {
 
         if ($result['http_code'] === 200 && $result['data']) {
             $raw = $result['data']['status'] ?? 'unknown';
-            $mapped = match ($raw) {
-                'COMPLETED' => 'successful',
-                'VOIDED' => 'cancelled',
-                'PENDING', 'APPROVED' => 'processing',
-                default => 'processing',
-            };
+            if ($raw === 'COMPLETED') {
+                $mapped = 'successful';
+            } elseif ($raw === 'VOIDED') {
+                $mapped = 'cancelled';
+            } elseif (in_array($raw, ['PENDING', 'APPROVED'], true)) {
+                $mapped = 'processing';
+            } else {
+                $mapped = 'processing';
+            }
             return [
                 'success' => $mapped === 'successful',
                 'status' => $mapped,

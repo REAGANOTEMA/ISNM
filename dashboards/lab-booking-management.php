@@ -23,7 +23,7 @@ function lb_q($conn, $sql) {
 
 function lb_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('lab-booking getList: ' . $e->getMessage()); return []; }
 }
 
@@ -96,7 +96,7 @@ if ($filter_date !== '') {
 } else {
     $r = $ict_conn->query("SELECT * FROM lab_bookings ORDER BY time_slot ASC, created_at DESC");
 }
-$bookings = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+$bookings = isnm_fetch_all($r);
 
 $time_slots = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'];
 $labs = ['Lab A', 'Lab B', 'Lab C', 'Lab D', 'Computer Lab 1', 'Computer Lab 2'];

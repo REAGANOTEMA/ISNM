@@ -126,7 +126,7 @@ if (!$stmt) {
 $stmt->bind_param('s', $effective_department);
 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $result = $stmt->get_result();
-$items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+$items = $result ? isnm_fetch_all($result) : [];
 $stmt->close();
 
 if (count($items) === 0) {
@@ -135,7 +135,7 @@ if (count($items) === 0) {
         $stmt->bind_param('s', $effective_department);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
-        $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $items = $result ? isnm_fetch_all($result) : [];
         $stmt->close();
     }
 }

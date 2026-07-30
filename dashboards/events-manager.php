@@ -166,13 +166,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $sql = "SELECT e.*, (SELECT COUNT(*) FROM event_attendees WHERE event_id=e.id) as attendee_count FROM events e WHERE " . implode(' AND ', $where) . " ORDER BY e.event_date DESC, e.event_time DESC";
                 if (empty($params)) {
                     $r = $staffConn->query($sql);
-                    $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+                    $rows = isnm_fetch_all($r);
                 } else {
                     $s = $staffConn->prepare($sql);
                     if (!$s) throw new Exception('Prepare failed: ' . $staffConn->error);
                     $s->bind_param($types, ...$params);
                     if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
-                    $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $rows = isnm_fetch_all($s->get_result());
                     $s->close();
                 }
                 echo json_encode(['success' => true, 'events' => $rows]);
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $event_id = (int)($_POST['event_id'] ?? 0);
                 $stmt = $staffConn->prepare("SELECT * FROM event_attendees WHERE event_id=? ORDER BY registered_at DESC");
                 if ($stmt) { $stmt->bind_param('i', $event_id); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else { $r = null; }
-                $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+                $rows = isnm_fetch_all($r);
                 echo json_encode(['success' => true, 'attendees' => $rows]);
                 break;
             }
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $end = preg_replace('/[^0-9\-]/', '', trim($_POST['end'] ?? date('Y-m-t')));
                 $stmt = $staffConn->prepare("SELECT id, title, event_date as start, event_time, location, category, status, description FROM events WHERE status='published' AND event_date BETWEEN ? AND ? ORDER BY event_date");
                 if ($stmt) { $stmt->bind_param('ss', $start, $end); $stmt->execute(); $r = $stmt->get_result(); } else { $r = false; }
-                $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+                $rows = isnm_fetch_all($r);
                 $calendar = [];
                 foreach ($rows as $ev) {
                     $colorMap = ['General'=>'#0d6efd','Academic'=>'#198754','Cultural'=>'#dc3545','Sports'=>'#ffc107','Health'=>'#20c997','Workshop'=>'#6610f2','Meeting'=>'#fd7e14','Ceremony'=>'#d63384'];

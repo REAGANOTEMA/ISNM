@@ -76,7 +76,7 @@ if ($conn) {
     $r4 = $conn->query("SELECT AVG(score) a FROM staff_appraisals WHERE score IS NOT NULL");
     if ($r4 && $row = $r4->fetch_assoc()) $avgScore = round((float)$row['a'], 1);
     $a = $conn->query("SELECT a.*, COALESCE(s.full_name, a.staff_name) staff_name FROM staff_appraisals a LEFT JOIN staff s ON a.staff_id=s.id ORDER BY a.created_at DESC LIMIT 50");
-    if ($a) $appraisals = $a->fetch_all(MYSQLI_ASSOC);
+    if ($a) $appraisals = isnm_fetch_all($a);
 }
 ?>
 <!DOCTYPE html>

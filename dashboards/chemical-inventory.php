@@ -15,7 +15,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 function ci_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('chemical-inventory getChemicals: ' . $e->getMessage()); return []; }
 }
 

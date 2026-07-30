@@ -163,7 +163,7 @@ if ($current_table === 'receipt_templates') {
     if ($stmt) {
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
-        $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $templates = isnm_fetch_all($result);
         $stmt->close();
     }
 } else {
@@ -177,7 +177,7 @@ if ($current_table === 'receipt_templates') {
     if ($stmt) {
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
-        $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $templates = isnm_fetch_all($result);
         $stmt->close();
     }
 }

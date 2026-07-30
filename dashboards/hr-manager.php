@@ -444,38 +444,38 @@ $announcements = []; $onboardingItems = []; $promotions = [];
 
 if ($staff_conn) {
     $rr = $staff_conn->query("SELECT id, role_name FROM staff_roles ORDER BY role_name");
-    if ($rr) $roles = $rr->fetch_all(MYSQLI_ASSOC);
+    if ($rr) $roles = isnm_fetch_all($rr);
     $dd = $staff_conn->query("SELECT id, name, code FROM departments ORDER BY name");
-    if ($dd) $departments = $dd->fetch_all(MYSQLI_ASSOC);
+    if ($dd) $departments = isnm_fetch_all($dd);
 
     $sl = $staff_conn->query("SELECT s.*, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 200");
-    if ($sl) $staffList = $sl->fetch_all(MYSQLI_ASSOC);
+    if ($sl) $staffList = isnm_fetch_all($sl);
     $lr = $staff_conn->query("SELECT lr.*, lt.type_name, s.full_name FROM leave_requests lr JOIN leave_types lt ON lr.leave_type_id=lt.id JOIN staff s ON lr.staff_id=s.id ORDER BY lr.created_at DESC LIMIT 50");
-    if ($lr) $leaveReqs = $lr->fetch_all(MYSQLI_ASSOC);
+    if ($lr) $leaveReqs = isnm_fetch_all($lr);
     $lt = $staff_conn->query("SELECT * FROM leave_types ORDER BY leave_type_name");
-    if ($lt) $leaveTypes = $lt->fetch_all(MYSQLI_ASSOC);
+    if ($lt) $leaveTypes = isnm_fetch_all($lt);
     $jv = $staff_conn->query("SELECT jv.*, d.name as dept_name FROM job_vacancies jv LEFT JOIN departments d ON jv.department_id=d.id ORDER BY jv.posted_date DESC LIMIT 30");
-    if ($jv) $vacancies = $jv->fetch_all(MYSQLI_ASSOC);
+    if ($jv) $vacancies = isnm_fetch_all($jv);
     $ja = $staff_conn->query("SELECT ja.*, jv.title as vacancy_title FROM job_applications ja JOIN job_vacancies jv ON ja.position_id=jv.id ORDER BY ja.created_at DESC LIMIT 50");
-    if ($ja) $applications = $ja->fetch_all(MYSQLI_ASSOC);
+    if ($ja) $applications = isnm_fetch_all($ja);
     $at = $staff_conn->query("SELECT sa.*, s.full_name FROM staff_attendance sa JOIN staff s ON sa.staff_id=s.id WHERE sa.date=CURDATE() ORDER BY s.full_name");
-    if ($at) $attendanceToday = $at->fetch_all(MYSQLI_ASSOC);
+    if ($at) $attendanceToday = isnm_fetch_all($at);
     $dc = $staff_conn->query("SELECT sd.*, s.full_name FROM staff_disciplinary sd JOIN staff s ON sd.staff_id=s.id ORDER BY sd.created_at DESC LIMIT 30");
-    if ($dc) $disciplinaryCases = $dc->fetch_all(MYSQLI_ASSOC);
+    if ($dc) $disciplinaryCases = isnm_fetch_all($dc);
     $tr = $staff_conn->query("SELECT st.*, s.full_name FROM staff_training st JOIN staff s ON st.staff_id=s.id ORDER BY st.start_date DESC LIMIT 30");
-    if ($tr) $trainingRecords = $tr->fetch_all(MYSQLI_ASSOC);
+    if ($tr) $trainingRecords = isnm_fetch_all($tr);
     $pr = $staff_conn->query("SELECT p.*, s.full_name FROM performance_reviews p JOIN staff s ON p.staff_id=s.id ORDER BY p.created_at DESC LIMIT 30");
-    if ($pr) $appraisals = $pr->fetch_all(MYSQLI_ASSOC);
+    if ($pr) $appraisals = isnm_fetch_all($pr);
     $ct = $staff_conn->query("SELECT ec.*, s.full_name FROM employment_contracts ec JOIN staff s ON ec.staff_id=s.id ORDER BY ec.start_date DESC LIMIT 30");
-    if ($ct) $contracts = $ct->fetch_all(MYSQLI_ASSOC);
+    if ($ct) $contracts = isnm_fetch_all($ct);
     $lc = $staff_conn->query("SELECT sl.*, s.full_name FROM staff_licenses sl JOIN staff s ON sl.staff_id=s.id ORDER BY sl.expiry_date ASC LIMIT 30");
-    if ($lc) $licenses = $lc->fetch_all(MYSQLI_ASSOC);
+    if ($lc) $licenses = isnm_fetch_all($lc);
     $an = $staff_conn->query("SELECT * FROM hr_announcements ORDER BY created_at DESC LIMIT 20");
-    if ($an) $announcements = $an->fetch_all(MYSQLI_ASSOC);
+    if ($an) $announcements = isnm_fetch_all($an);
     $ob = $staff_conn->query("SELECT * FROM onboarding_checklist ORDER BY item_name");
-    if ($ob) $onboardingItems = $ob->fetch_all(MYSQLI_ASSOC);
+    if ($ob) $onboardingItems = isnm_fetch_all($ob);
     $pm = $staff_conn->query("SELECT pr.*, s.full_name FROM promotion_recommendations pr JOIN staff s ON pr.staff_id=s.id ORDER BY pr.created_at DESC LIMIT 20");
-    if ($pm) $promotions = $pm->fetch_all(MYSQLI_ASSOC);
+    if ($pm) $promotions = isnm_fetch_all($pm);
 }
 
 $pageTitle = 'HR Manager';

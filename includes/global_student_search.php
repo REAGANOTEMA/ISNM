@@ -97,7 +97,7 @@ if (!function_exists('handleGlobalStudentSearch')) {
             if ($stmt) {
                 $stmt->bind_param('sssssssi', $like, $like, $like, $like, $like, $like, $like, $limit);
                 if ($stmt->execute()) {
-                    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $rows = isnm_fetch_all($stmt->get_result());
                     foreach ($rows as $r) {
                         $num = trim($r['student_number'] ?? '');
                         $norm = $normalise($r, 'students_db');
@@ -132,7 +132,7 @@ if (!function_exists('handleGlobalStudentSearch')) {
             if ($stmt) {
                 $stmt->bind_param('ssssi', $like, $like, $like, $like, $limit);
                 if ($stmt->execute()) {
-                    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $rows = isnm_fetch_all($stmt->get_result());
                     foreach ($rows as $r) {
                         $num  = trim($r['student_number'] ?? '');
                         $norm = $normalise($r, 'student_admission_tracking');
@@ -163,7 +163,7 @@ if (!function_exists('handleGlobalStudentSearch')) {
             if ($stmt) {
                 $stmt->bind_param('ssssi', $like, $like, $like, $like, $limit);
                 if ($stmt->execute()) {
-                    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $rows = isnm_fetch_all($stmt->get_result());
                     foreach ($rows as $r) {
                         $num  = trim($r['application_number'] ?? '');
                         $norm = $normalise($r, 'applicants');

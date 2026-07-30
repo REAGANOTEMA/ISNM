@@ -15,7 +15,7 @@ function lab_q($conn, $sql) {
 }
 function lab_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('computer_lab getList: ' . $e->getMessage()); return []; }
 }
 function lab_fetch_one($conn, $sql) {

@@ -41,7 +41,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'subscription_detail' && isset($_G
         if ($dStmt) {
             $dStmt->bind_param('i', $subId);
             $dStmt->execute();
-            $deductions = $dStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $deductions = isnm_fetch_all($dStmt->get_result());
             $dStmt->close();
         }
     }

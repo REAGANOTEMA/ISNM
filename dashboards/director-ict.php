@@ -32,7 +32,7 @@ function ict_q($conn, $sql) {
 }
 function ict_fetch($conn, $sql) {
     if (!$conn) return [];
-    try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
+    try { $r = $conn->query($sql); if (!$r) return []; return isnm_fetch_all($r); }
     catch (Exception $e) { error_log('director-ict getList: ' . $e->getMessage()); return []; }
 }
 function ict_fetch_one($conn, $sql) {
@@ -1079,7 +1079,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         </div>
                         <div class="col-6">
                             <div class="d-flex justify-content-between py-1"><span>DB Size (ICT)</span><strong><?= number_format($db_size_mb, 2) ?> MB</strong></div>
-                            <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count($ict->query("SHOW TABLES")->fetch_all()) : 0 ?></strong></div>
+<div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count(isnm_fetch_all($ict->query("SHOW TABLES"))) : 0 ?></strong></div>
                             <div class="d-flex justify-content-between py-1"><span>Active Users</span><strong><?= $total_users ?></strong></div>
                         </div>
                     </div>

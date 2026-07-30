@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * Director of Admissions – Complete Dashboard
+ * Director of Admissions � Complete Dashboard
  * Tabs: Applications | Requirements | Enrolled Students
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE $where ORDER BY a.created_at DESC LIMIT $lim";
         $s = $conn->prepare($sql);
         $rows = [];
-        if ($s) { $s->bind_param($types, ...$params); $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+        if ($s) { $s->bind_param($types, ...$params); $s->execute(); $rows = isnm_fetch_all($s->get_result()); $s->close(); }
         echo json_encode($rows);
         exit;
     }
@@ -355,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($s) {
             if ($types) $s->bind_param($types, ...$params);
             $s->execute();
-            $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($s->get_result());
             $s->close();
         }
         echo json_encode($rows);
@@ -372,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rows = [];
         if ($stuConn) {
             $r = $stuConn->query("SELECT id,student_number,registration_number,first_name,surname,full_name,email,phone,program,gender,status,created_at FROM $studentsDb.students WHERE status='Active' ORDER BY full_name LIMIT 300");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $rows = isnm_fetch_all($r);
         }
         echo json_encode($rows);
         exit;
@@ -566,7 +566,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$studentId) { echo json_encode([]); exit; }
         $rows = [];
         $s = $conn->prepare("SELECT * FROM student_requirements WHERE student_id=? ORDER BY created_at DESC");
-        if ($s) { $s->bind_param('i', $studentId); $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+        if ($s) { $s->bind_param('i', $studentId); $s->execute(); $rows = isnm_fetch_all($s->get_result()); $s->close(); }
         echo json_encode($rows);
         exit;
     }
@@ -591,7 +591,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($s) {
             if ($types) $s->bind_param($types, ...$params);
             $s->execute();
-            $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($s->get_result());
             $s->close();
         }
         echo json_encode(['success' => true, 'students' => $rows]);
@@ -663,7 +663,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rows = [];
         if ($studentId) {
             $s = $conn->prepare("SELECT * FROM student_requirements WHERE student_id=? ORDER BY created_at DESC");
-            if ($s) { $s->bind_param("i", $studentId); $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close(); }
+            if ($s) { $s->bind_param("i", $studentId); $s->execute(); $rows = isnm_fetch_all($s->get_result()); $s->close(); }
         }
         $studentName = '';
         if (!empty($rows)) { $studentName = $rows[0]['student_name'] ?? ''; }
@@ -687,14 +687,14 @@ $r1 = $conn->query("SELECT COUNT(*) c FROM student_requirements WHERE status IN 
 
 $programs = [];
 $r = $conn->query("SELECT * FROM academic_programs WHERE status='Active' ORDER BY program_name");
-if ($r) $programs = $r->fetch_all(MYSQLI_ASSOC);
+if ($r) $programs = isnm_fetch_all($r);
 $intakes = [];
 $r = $conn->query("SELECT * FROM intakes ORDER BY intake_year DESC, intake_month");
-if ($r) $intakes = $r->fetch_all(MYSQLI_ASSOC);
+if ($r) $intakes = isnm_fetch_all($r);
 
 $recentApps = [];
 $r = $conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id ORDER BY a.created_at DESC LIMIT 10");
-if ($r) $recentApps = $r->fetch_all(MYSQLI_ASSOC);
+if ($r) $recentApps = isnm_fetch_all($r);
 
 // Get all requirement types from student_requirements
 $reqTypes = [];

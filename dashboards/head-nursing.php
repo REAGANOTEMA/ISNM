@@ -259,7 +259,7 @@ $nursing_students = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM nursing_students ORDER BY student_name LIMIT 100");
-        if ($r) $nursing_students = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $nursing_students = isnm_fetch_all($r);
     } catch (Exception $e) {
         error_log('head-nursing students: ' . $e->getMessage());
     }
@@ -270,7 +270,7 @@ $enrolled_students = [];
 if ($ctx['students']) {
     try {
         $r = $ctx['students']->query("SELECT id, first_name, surname, student_number, program, level, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 100");
-        if ($r) $enrolled_students = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $enrolled_students = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('head-nursing context: ' . $e->getMessage()); }
 }
 
@@ -279,7 +279,7 @@ $clinical_placements = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM nursing_clinical_placements ORDER BY start_date DESC LIMIT 100");
-        if ($r) $clinical_placements = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $clinical_placements = isnm_fetch_all($r);
     } catch (Exception $e) {
         error_log('head-nursing placements: ' . $e->getMessage());
     }
@@ -290,7 +290,7 @@ $practical_assessments = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT pa.*, ns.skill_name FROM nursing_practical_assessment pa LEFT JOIN nursing_skills_training ns ON pa.skill_id = ns.id ORDER BY pa.assessment_date DESC LIMIT 100");
-        if ($r) $practical_assessments = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $practical_assessments = isnm_fetch_all($r);
     } catch (Exception $e) {
         error_log('head-nursing assessments: ' . $e->getMessage());
     }
@@ -301,7 +301,7 @@ $skills_list = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT id, skill_name, category FROM nursing_skills_training ORDER BY skill_name");
-        if ($r) $skills_list = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $skills_list = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('head-nursing context: ' . $e->getMessage()); }
 }
 
@@ -310,7 +310,7 @@ $programs_data = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM {$students_db_name}.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Nursing%' AND status='Active'");
-        if ($r) $programs_data = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $programs_data = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('head-nursing context: ' . $e->getMessage()); }
 }
 
@@ -488,7 +488,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             if ($conn) {
                 try {
                     $cr = $conn->query("SELECT * FROM course_assignments WHERE course_name LIKE '%Nursing%' ORDER BY course_name");
-                    if ($cr) $nursing_course_list = $cr->fetch_all(MYSQLI_ASSOC);
+                    if ($cr) $nursing_course_list = isnm_fetch_all($cr);
                 } catch (Exception $e) { error_log('head-nursing courses: ' . $e->getMessage()); }
             }
             ?>
@@ -595,7 +595,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         $staff_list = [];
                         if ($conn) {
                             $sr = $conn->query("SELECT id, full_name, position, email, phone, status FROM staff WHERE department LIKE '%Nursing%' ORDER BY full_name");
-                            if ($sr) $staff_list = $sr->fetch_all(MYSQLI_ASSOC);
+                            if ($sr) $staff_list = isnm_fetch_all($sr);
                         }
                         if (empty($staff_list)): ?>
                         <tr><td colspan="6" class="text-center text-muted">No nursing staff found</td></tr>

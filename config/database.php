@@ -447,4 +447,18 @@ if (!function_exists('validatePhoneLenient')) {
         return strlen($clean) >= 9;
     }
 }
+
+if (!function_exists('isnm_fetch_all')) {
+    function isnm_fetch_all($result) {
+        if (!$result) return [];
+        if (method_exists($result, 'fetch_all')) {
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+}
 ?>

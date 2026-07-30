@@ -108,7 +108,7 @@ if ($conn) {
     $r4 = $conn->query("SELECT COUNT(*) c FROM job_applications WHERE status='Hired' AND MONTH(updated_at)=MONTH(NOW()) AND YEAR(updated_at)=YEAR(NOW())");
     if ($r4) $hiredThisMonth = (int)$r4->fetch_assoc()['c'];
     $p = $conn->query("SELECT r.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.position_id=r.id) applicants_count FROM staff_recruitment r ORDER BY r.posted_date DESC LIMIT 50");
-    if ($p) $positions = $p->fetch_all(MYSQLI_ASSOC);
+    if ($p) $positions = isnm_fetch_all($p);
 }
 ?>
 <!DOCTYPE html>

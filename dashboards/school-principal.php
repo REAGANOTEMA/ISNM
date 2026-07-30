@@ -1552,7 +1552,7 @@ if ($staff) {
     $r = $staff->query("SELECT COUNT(*) c FROM staff WHERE status='On Leave'"); if ($r) $ol = (int)$r->fetch_assoc()['c'];
     $r = $staff->query("SELECT COUNT(*) c FROM {$staff_db}.staff_appraisals WHERE status='draft' OR status='submitted'"); if ($r) $pa = (int)$r->fetch_assoc()['c'];
     $s = $staff->query("SELECT id, full_name, email, phone, department, position, status FROM staff ORDER BY full_name");
-    if ($s) $staffList = $s->fetch_all(MYSQLI_ASSOC);
+    if ($s) $staffList = isnm_fetch_all($s);
 }
 ?>
 <div class="row g-3 mb-3">

@@ -237,7 +237,8 @@ $pageTitle = 'Donation Tracking';
                 <?php foreach ($categoryTotals as $cat => $total): ?>
                 <div class="col-md-2 col-sm-4">
                     <div class="text-center p-3 rounded bg-light">
-                        <i class="fas fa-<?= match($cat) { 'tuition' => 'graduation-cap', 'infrastructure' => 'building', 'equipment' => 'tools', 'scholarship' => 'award', default => 'heart' } ?> fa-2x text-primary mb-2"></i>
+                        <?php $faIcon = 'heart'; if ($cat === 'tuition') $faIcon = 'graduation-cap'; elseif ($cat === 'infrastructure') $faIcon = 'building'; elseif ($cat === 'equipment') $faIcon = 'tools'; elseif ($cat === 'scholarship') $faIcon = 'award'; ?>
+                        <i class="fas fa-<?= $faIcon ?> fa-2x text-primary mb-2"></i>
                         <h6 class="mb-1 text-capitalize"><?= $cat ?></h6>
                         <strong class="text-success">UGX <?= number_format($total) ?></strong>
                     </div>

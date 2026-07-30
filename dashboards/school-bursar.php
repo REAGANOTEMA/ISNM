@@ -839,7 +839,7 @@ $pgStats = $pgService->getTransactionStats('month');
     <div class="brs-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="font-size:16px"><i class="fas fa-credit-card me-1"></i> Payment Providers</h3>
-        <span class="badge bg-info"><?= count($pgAll ? $pgAll->fetch_all(MYSQLI_ASSOC) : []) ?> configured</span>
+        <span class="badge bg-info"><?= count(isnm_fetch_all($pgAll)) ?> configured</span>
       </div>
       <p class="text-muted small mb-3">Manage payment gateway integrations. Enable providers, enter API credentials, and configure fees. Bank Transfer is always available as manual verification.</p>
       <?php if ($pgAll && $pgAll->num_rows > 0): ?>

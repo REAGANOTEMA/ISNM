@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
     $records_stmt->bind_param($types, ...$params);
     if (!$records_stmt->execute()) { error_log('$records_stmt execute failed: ' . ($records_stmt->error ?? 'unknown')); };
     $records_result = $records_stmt->get_result();
-    $academic_records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
+    $academic_records = isnm_fetch_all($records_result);
     $records_stmt->close();
     
     // Merge catalog credits into records (prefer record's own credits if set)
@@ -304,7 +304,7 @@ function getStudentsForDropdown() {
     if (!$stmt) return [];
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
-    $students = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $students = isnm_fetch_all($result);
     $stmt->close();
     return $students;
 }
@@ -318,7 +318,7 @@ function getAcademicYears() {
     if (!$stmt) return [];
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
-    $years = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $years = isnm_fetch_all($result);
     $stmt->close();
     return $years;
 }
@@ -332,7 +332,7 @@ function getSemesters() {
     if (!$stmt) return [];
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $result = $stmt->get_result();
-    $semesters = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $semesters = isnm_fetch_all($result);
     $stmt->close();
     return $semesters;
 }

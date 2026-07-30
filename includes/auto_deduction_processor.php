@@ -162,7 +162,7 @@ if (!function_exists('getStudentSubscriptions')) {
         $stmt->bind_param("s", $studentId);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
-        $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $result = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
         return $result;
     }
@@ -266,7 +266,7 @@ if (!function_exists('getAllSubscriptions')) {
         }
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $r = $stmt->get_result();
-        $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $result = $r ? isnm_fetch_all($r) : [];
         $stmt->close();
         return $result;
     }

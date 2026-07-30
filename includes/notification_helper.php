@@ -134,7 +134,7 @@ if (!function_exists('getRecentNotifications')) {
             if (!$stmt) return [];
             $stmt->bind_param("isi", $user_id, $user_type, $limit);
             if (!$stmt->execute()) { error_log('getRecentNotifications execute failed: ' . ($stmt->error ?? 'unknown')); }
-            $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($stmt->get_result());
             $stmt->close();
             return $rows;
         } catch (Exception $e) {

@@ -94,7 +94,7 @@ if ($conn) {
     $r4 = $conn->query("SELECT COUNT(*) c FROM disciplinary_actions WHERE MONTH(incident_date)=MONTH(NOW()) AND YEAR(incident_date)=YEAR(NOW())");
     if ($r4) $thisMonth = (int)$r4->fetch_assoc()['c'];
     $c = $conn->query("SELECT d.*, s.full_name staff_name FROM disciplinary_actions d LEFT JOIN staff s ON d.staff_id=s.id ORDER BY d.incident_date DESC LIMIT 50");
-    if ($c) $cases = $c->fetch_all(MYSQLI_ASSOC);
+    if ($c) $cases = isnm_fetch_all($c);
 }
 ?>
 <!DOCTYPE html>

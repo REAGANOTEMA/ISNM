@@ -38,7 +38,7 @@ if ($stmt) {
     $stmt->bind_param("i", $student_id);
     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
     $records_result = $stmt->get_result();
-    $records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
+    $records = $records_result ? isnm_fetch_all($records_result) : [];
     $stmt->close();
 } else {
     $records = [];

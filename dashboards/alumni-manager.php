@@ -206,13 +206,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $sql = "SELECT a.*, (SELECT COUNT(*) FROM alumni_contributions WHERE alumni_id=a.id) as contribution_count FROM alumni a WHERE " . implode(' AND ', $where) . " ORDER BY a.surname ASC, a.first_name ASC";
                 if (empty($params)) {
                     $r = $staffConn->query($sql);
-                    $rows = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+                    $rows = isnm_fetch_all($r);
                 } else {
                     $s = $staffConn->prepare($sql);
                     if (!$s) throw new Exception('Prepare failed: ' . $staffConn->error);
                     $s->bind_param($types, ...$params);
                     if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
-                    $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $rows = isnm_fetch_all($s->get_result());
                     $s->close();
                 }
                 echo json_encode(['success' => true, 'alumni' => $rows]);
@@ -241,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $stmt = $staffConn->prepare("SELECT * FROM alumni_contributions WHERE alumni_id=? ORDER BY contribution_date DESC");
                 $stmt->bind_param("i", $alumni_id);
                 $stmt->execute();
-                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $rows = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
                 echo json_encode(['success' => true, 'contributions' => $rows]);
                 break;
@@ -268,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $stmt = $staffConn->prepare("SELECT * FROM alumni_jobs WHERE alumni_id=? ORDER BY is_current DESC, start_date DESC");
                 $stmt->bind_param("i", $alumni_id);
                 $stmt->execute();
-                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $rows = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
                 echo json_encode(['success' => true, 'jobs' => $rows]);
                 break;
@@ -293,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 $stmt = $staffConn->prepare("SELECT * FROM alumni_events WHERE alumni_id=? ORDER BY event_date DESC");
                 $stmt->bind_param("i", $alumni_id);
                 $stmt->execute();
-                $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $rows = isnm_fetch_all($stmt->get_result());
                 $stmt->close();
                 echo json_encode(['success' => true, 'events' => $rows]);
                 break;

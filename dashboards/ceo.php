@@ -38,7 +38,7 @@ if ($conn) {
 $deptList = []; $deptStaffCounts = [];
 if ($conn) {
     $r = $conn->query("SELECT d.name, d.code, (SELECT COUNT(*) FROM staff WHERE department=d.code) staff_count FROM departments d ORDER BY d.name");
-    if ($r) { $deptList = $r->fetch_all(MYSQLI_ASSOC); $deptStaffCounts = array_column($deptList, 'staff_count', 'code'); }
+    if ($r) { $deptList = isnm_fetch_all($r); $deptStaffCounts = array_column($deptList, 'staff_count', 'code'); }
 }
 $pendingApprovals = 0;
 if ($conn) { $r = $conn->query("SELECT COUNT(*) c FROM approval_requests WHERE status='Pending'"); if ($r) $pendingApprovals = (int)$r->fetch_assoc()['c']; }
@@ -48,17 +48,17 @@ if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM quality_assurance_reviews WHERE status IN ('Pass','Compliant','Approved')"); $qaPass = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $qaPassRate = $qaTotal > 0 ? round($qaPass / $qaTotal * 100) : 0;
     $r = $conn->query("SELECT q.*, u.full_name reviewer_name FROM quality_assurance_reviews q LEFT JOIN staff u ON q.reviewed_by=u.id ORDER BY q.review_date DESC LIMIT 10");
-    if ($r) $qaReviews = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $qaReviews = isnm_fetch_all($r);
 }
 $auditLogs = [];
 if ($conn) {
     $r = $conn->query("SELECT a.*, u.full_name user_name FROM staff_audit_logs a LEFT JOIN staff u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 20");
-    if ($r) $auditLogs = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $auditLogs = isnm_fetch_all($r);
 }
 $recentStudents = [];
 if ($students_conn) {
     $r = $students_conn->query("SELECT id, student_number, full_name, program, status, created_at FROM students ORDER BY created_at DESC LIMIT 10");
-    if ($r) $recentStudents = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $recentStudents = isnm_fetch_all($r);
 }
 ?>
 <!DOCTYPE html>
@@ -138,7 +138,7 @@ if ($students_conn) {
             $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE status='On Leave'"); if ($r) $onLeave = (int)$r->fetch_assoc()['c'];
             $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE MONTH(created_at)=MONTH(NOW()) AND YEAR(created_at)=YEAR(NOW())"); if ($r) $newThisMonth = (int)$r->fetch_assoc()['c'];
             $s = $conn->query("SELECT id, full_name, email, phone, department, position, status FROM staff ORDER BY full_name");
-            if ($s) $staffList = $s->fetch_all(MYSQLI_ASSOC);
+            if ($s) $staffList = isnm_fetch_all($s);
         }
         ?>
         <div class="row g-3 mb-4">

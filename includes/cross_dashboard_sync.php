@@ -48,7 +48,7 @@ if (!function_exists('getCrossDashboardStudent')) {
         $stmt->bind_param('i', $studentId);
         if ($stmt->execute()) {
             $r = $stmt->get_result();
-            $student['_requirements'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+            $student['_requirements'] = $r ? isnm_fetch_all($r) : [];
         }
         $stmt->close();
 
@@ -57,7 +57,7 @@ if (!function_exists('getCrossDashboardStudent')) {
         $stmt->bind_param('i', $studentId);
         if ($stmt->execute()) {
             $r = $stmt->get_result();
-            $student['_payments'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+            $student['_payments'] = $r ? isnm_fetch_all($r) : [];
         }
         $stmt->close();
 
@@ -75,7 +75,7 @@ if (!function_exists('getCrossDashboardStudent')) {
         $stmt->bind_param('i', $studentId);
         if ($stmt->execute()) {
             $r = $stmt->get_result();
-            $student['_documents'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+            $student['_documents'] = $r ? isnm_fetch_all($r) : [];
         }
         $stmt->close();
 
@@ -84,7 +84,7 @@ if (!function_exists('getCrossDashboardStudent')) {
         $stmt->bind_param('i', $studentId);
         if ($stmt->execute()) {
             $r = $stmt->get_result();
-            $student['_status_history'] = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+            $student['_status_history'] = $r ? isnm_fetch_all($r) : [];
         }
         $stmt->close();
 

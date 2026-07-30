@@ -46,7 +46,7 @@ if ($conn) {
         $stmt->bind_param($types, ...$params);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $q = $stmt->get_result();
-        if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+        if ($q) $records = isnm_fetch_all($q);
         $stmt->close();
     }
     if ($programFilter !== '' || $levelFilter !== '') {

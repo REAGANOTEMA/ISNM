@@ -186,7 +186,7 @@ if (!function_exists('getEmployeeActiveAllowances')) {
             $stmt->bind_param('i', $payrollEmployeeId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($result);
             $stmt->close();
 
             return $rows ?: [];
@@ -207,7 +207,7 @@ if (!function_exists('getEmployeeActiveDeductions')) {
             $stmt->bind_param('i', $payrollEmployeeId);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($result);
             $stmt->close();
 
             return $rows ?: [];
@@ -397,7 +397,7 @@ if (!function_exists('processPayrollRun')) {
             $empStmt = $conn->prepare("SELECT pe.id as payroll_employee_id, pe.staff_id, pe.monthly_salary, pe.hourly_rate, pe.payment_method, pe.bank_account_number, pe.mobile_money_number, s.full_name, s.position FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id WHERE pe.payroll_status = 'active' AND s.status = 'Active'");
             if (!$empStmt) { $conn->rollback(); $result['message'] = 'Employee query failed'; return $result; }
             if (!$empStmt->execute()) { error_log('$empStmt execute failed: ' . ($empStmt->error ?? 'unknown')); };
-            $employees = $empStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $employees = isnm_fetch_all($empStmt->get_result());
             $empStmt->close();
 
             $processed = 0;
@@ -549,7 +549,7 @@ if (!function_exists('generatePayslipsForRun')) {
             if (!$itemsStmt) { $result['message'] = 'Items query failed'; return $result; }
             $itemsStmt->bind_param('i', $payrollRunId);
             if (!$itemsStmt->execute()) { error_log('$itemsStmt execute failed: ' . ($itemsStmt->error ?? 'unknown')); };
-            $items = $itemsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = isnm_fetch_all($itemsStmt->get_result());
             $itemsStmt->close();
 
             $periodName = $period['period_name'] ?? '';
@@ -664,7 +664,7 @@ if (!function_exists('getPayrollPeriods')) {
             if (!$stmt) { return []; }
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($result);
             $stmt->close();
 
             return $rows ?: [];
@@ -725,7 +725,7 @@ if (!function_exists('getPayrollEmployees')) {
             $stmt->bind_param('s', $status);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $rows = isnm_fetch_all($result);
             $stmt->close();
 
             return $rows ?: [];

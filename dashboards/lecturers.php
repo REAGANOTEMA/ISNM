@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -25,14 +25,14 @@ $user_name = $_SESSION['full_name'] ?? '';
 
 // User data already available from bootstrapStaffDashboard session
 
-// ─── Ensure tables exist ───
+// --- Ensure tables exist ---
 if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_assessments (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, student_id INT, course_name VARCHAR(200) NOT NULL DEFAULT '', assessment_type VARCHAR(50) NOT NULL DEFAULT 'assignment', title VARCHAR(200) NOT NULL DEFAULT '', total_marks DECIMAL(6,2) DEFAULT 100, marks_obtained DECIMAL(6,2) DEFAULT NULL, assessment_date DATE NOT NULL, comments TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_resources (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', resource_type VARCHAR(100) DEFAULT '', file_path VARCHAR(500) DEFAULT '', url VARCHAR(500) DEFAULT '', description TEXT, course_name VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_announcements (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', content TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', is_published TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// â”€â”€ POST handlers â”€â”€
+// ── POST handlers ──
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
 
-    // â”€â”€ Add assessment â”€â”€
+    // ── Add assessment ──
     if ($action === 'add_assessment' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_assessments (lecturer_id, student_id, course_name, assessment_type, title, total_marks, marks_obtained, assessment_date, comments) VALUES (?,?,?,?,?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // â”€â”€ Update assessment â”€â”€
+    // ── Update assessment ──
     if ($action === 'update_assessment' && $conn) {
         $stmt = $conn->prepare("UPDATE teaching_assessments SET course_name=?, assessment_type=?, title=?, total_marks=?, marks_obtained=?, assessment_date=?, comments=? WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // â”€â”€ Delete assessment â”€â”€
+    // ── Delete assessment ──
     if ($action === 'delete_assessment' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_assessments WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // â”€â”€ Add resource â”€â”€
+    // ── Add resource ──
     if ($action === 'add_resource' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id, title, resource_type, file_path, url, description, course_name) VALUES (?,?,?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // â”€â”€ Delete resource â”€â”€
+    // ── Delete resource ──
     if ($action === 'delete_resource' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_resources WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // â”€â”€ Add announcement â”€â”€
+    // ── Add announcement ──
     if ($action === 'add_announcement' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_announcements (lecturer_id, title, content, target_audience, is_published) VALUES (?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -897,7 +897,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $attendanceRecords = [];
         if ($studentsConn) {
             $att_stmt = $studentsConn->prepare("SELECT sa.*, s.full_name, s.student_number FROM student_attendance sa JOIN students s ON sa.student_id=s.id WHERE sa.course_id IN (SELECT course_id FROM course_assignments WHERE lecturer_id=?) ORDER BY sa.date DESC LIMIT 20");
-            if ($att_stmt) { $att_stmt->bind_param('i', $user_id); $r = $att_stmt->execute() ? $att_stmt->get_result() : null; if ($r) $attendanceRecords = $r->fetch_all(MYSQLI_ASSOC); $att_stmt->close(); }
+            if ($att_stmt) { $att_stmt->bind_param('i', $user_id); $r = $att_stmt->execute() ? $att_stmt->get_result() : null; if ($r) $attendanceRecords = isnm_fetch_all($r); $att_stmt->close(); }
         }
         if (empty($attendanceRecords)): ?><p class="text-muted text-center py-3">No attendance records found for your courses.</p>
         <?php else: ?>
@@ -918,7 +918,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         if ($stmt) {
             $stmt->bind_param('i', $user_id);
             $r = $stmt->execute() ? $stmt->get_result() : null;
-            if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $catRecords = isnm_fetch_all($r);
             $stmt->close();
         }
         }
@@ -940,7 +940,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $examRecords = isnm_fetch_all($r);
         $stmt->close();
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
@@ -981,7 +981,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             $stmt = $conn->prepare("SELECT * FROM lesson_plans WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
             $stmt->bind_param('i', $user_id);
             $r = $stmt->execute() ? $stmt->get_result() : null;
-            if ($r) $lessonPlans = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $lessonPlans = isnm_fetch_all($r);
             $stmt->close();
         }
         if (empty($lessonPlans)): ?><p class="text-muted text-center py-3">No lesson plans created yet.</p>
@@ -1002,7 +1002,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $stmt = $conn->prepare("SELECT * FROM assignments WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $assignments = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $assignments = isnm_fetch_all($r);
         $stmt->close();
         }
         if (empty($assignments)): ?><p class="text-muted text-center py-3">No assignments created yet.</p>
@@ -1390,7 +1390,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </div><!-- /content-area -->
 </div><!-- /lec-content -->
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

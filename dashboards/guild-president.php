@@ -44,19 +44,19 @@ $welfareCases = []; $welfareOpen = 0; $welfareResolved = 0; $counselingSessions 
 $upcomingEvents = []; $sportsEvents = []; $studentDiscipline = []; $disciplineOpen = 0;
 if ($staffDb) {
     $r = $staffDb->query("SELECT wc.*, s.full_name as student_name FROM welfare_cases wc LEFT JOIN {$students_db_name}.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 15");
-    if ($r) $welfareCases = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $welfareCases = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('open','in_progress')");
     if ($r) $welfareOpen = (int)$r->fetch_assoc()['c'];
     $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('resolved','closed')");
     if ($r) $welfareResolved = (int)$r->fetch_assoc()['c'];
     $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschool_students.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
-    if ($r) $counselingSessions = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $counselingSessions = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT * FROM calendar_events WHERE event_date >= CURDATE() AND is_active=1 ORDER BY event_date ASC LIMIT 10");
-    if ($r) $upcomingEvents = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $upcomingEvents = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT * FROM sports_events WHERE event_date >= NOW() ORDER BY event_date ASC LIMIT 10");
-    if ($r) $sportsEvents = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $sportsEvents = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschool_students.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
-    if ($r) $studentDiscipline = $r->fetch_all(MYSQLI_ASSOC);
+    if ($r) $studentDiscipline = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT COUNT(*) c FROM student_discipline_records WHERE status IN ('Pending','Open','Under Investigation')");
     if ($r) $disciplineOpen = (int)$r->fetch_assoc()['c'];
 }
@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
             <div class="col-md-6"><div class="card"><div class="card-body"><h5><i class="fas fa-lightbulb me-2"></i>Student Requests & Suggestions</h5>
                 <?php
                 $studentRequests = [];
-                if ($studentsDb) { $r = $studentsDb->query("SELECT * FROM student_requests ORDER BY created_at DESC LIMIT 10"); if ($r) $studentRequests = $r->fetch_all(MYSQLI_ASSOC); }
+                if ($studentsDb) { $r = $studentsDb->query("SELECT * FROM student_requests ORDER BY created_at DESC LIMIT 10"); if ($r) $studentRequests = isnm_fetch_all($r); }
                 if (empty($studentRequests)): ?><p class="text-muted text-center py-3">No student requests yet.</p>
                 <?php else: ?>
                 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Type</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead><tbody>

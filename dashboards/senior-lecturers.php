@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
@@ -25,14 +25,14 @@ if (file_exists($profileSettingsFile)) {
 
 $studentsConn = $ctx['students'];
 
-// ─── Ensure tables exist ───
+// --- Ensure tables exist ---
 if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_assessments (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, student_id INT, course_name VARCHAR(200) NOT NULL DEFAULT '', assessment_type VARCHAR(50) NOT NULL DEFAULT 'assignment', title VARCHAR(200) NOT NULL DEFAULT '', total_marks DECIMAL(6,2) DEFAULT 100, marks_obtained DECIMAL(6,2) DEFAULT NULL, assessment_date DATE NOT NULL, comments TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_resources (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', resource_type VARCHAR(100) DEFAULT '', file_path VARCHAR(500) DEFAULT '', url VARCHAR(500) DEFAULT '', description TEXT, course_name VARCHAR(200) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_announcements (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', content TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', is_published TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// ─── POST Handlers ───
+// --- POST Handlers ---
 $flash_msg = '';
 $flash_type = 'success';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -316,7 +316,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT ca.*, c.course_name, c.course_code, c.credits, c.level, (SELECT COUNT(*) FROM student_course_registrations scr WHERE scr.course_id=ca.course_id AND scr.status='Active') as student_count FROM course_assignments ca LEFT JOIN courses c ON ca.course_id=c.id WHERE ca.lecturer_id=? AND ca.status='Active'");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $assigned_courses_list = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $assigned_courses_list = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -328,7 +328,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT tt.*, c.course_name, c.course_code FROM academic_timetable tt LEFT JOIN courses c ON tt.course_id=c.id WHERE tt.lecturer_id=? AND tt.day_of_week=DAYNAME(CURDATE()) AND tt.timetable_status='Published' ORDER BY tt.start_time");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $today_schedule = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $today_schedule = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -340,7 +340,7 @@ if ($studentsConn) {
         $stmt = $studentsConn->prepare("SELECT scr.*, s.student_id, s.full_name, s.first_name, s.surname, s.program, c.course_name FROM student_course_registrations scr JOIN students s ON scr.student_id=s.id JOIN course_assignments ca ON scr.course_id=ca.course_id LEFT JOIN courses c ON scr.course_id=c.id WHERE ca.lecturer_id=? AND scr.status='Active' LIMIT 30");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $my_students = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $my_students = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -352,7 +352,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT a.*, c.course_name FROM assessments a LEFT JOIN courses c ON a.course_id=c.id WHERE a.created_by=? ORDER BY a.created_at DESC LIMIT 5");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $recent_assessments = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $recent_assessments = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -379,7 +379,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT * FROM teaching_resources WHERE lecturer_id=? ORDER BY created_at DESC");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $teaching_resources = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $teaching_resources = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -391,7 +391,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT ta.*, st.full_name as student_name FROM teaching_assessments ta LEFT JOIN students st ON ta.student_id=st.id WHERE ta.lecturer_id=? ORDER BY ta.assessment_date DESC");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $all_assessments = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_assessments = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -403,7 +403,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT * FROM teaching_announcements WHERE lecturer_id=? ORDER BY created_at DESC");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $all_announcements = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $all_announcements = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -415,7 +415,7 @@ if ($conn) {
         $stmt = $conn->prepare("SELECT * FROM research_projects WHERE principal_investigator=? ORDER BY start_date DESC LIMIT 3");
         $stmt->bind_param('i', $user_id);
         $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $research_projects = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $research_projects = isnm_fetch_all($r);
         $stmt->close();
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
@@ -974,7 +974,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $attendanceRecords = [];
         if ($studentsConn) {
             $att_stmt = $studentsConn->prepare("SELECT sa.*, s.full_name, s.student_number FROM student_attendance sa JOIN students s ON sa.student_id=s.id WHERE sa.course_id IN (SELECT course_id FROM course_assignments WHERE lecturer_id=?) ORDER BY sa.date DESC LIMIT 20");
-            if ($att_stmt) { $att_stmt->bind_param('i', $user_id); $r = $att_stmt->execute() ? $att_stmt->get_result() : null; if ($r) $attendanceRecords = $r->fetch_all(MYSQLI_ASSOC); $att_stmt->close(); }
+            if ($att_stmt) { $att_stmt->bind_param('i', $user_id); $r = $att_stmt->execute() ? $att_stmt->get_result() : null; if ($r) $attendanceRecords = isnm_fetch_all($r); $att_stmt->close(); }
         }
         if (empty($attendanceRecords)): ?><p class="text-muted text-center py-3">No attendance records found for your courses.</p>
         <?php else: ?>
@@ -992,7 +992,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $catRecords = [];
         if ($conn) {
             $cat_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
-            if ($cat_stmt) { $cat_stmt->bind_param('i', $user_id); $r = $cat_stmt->execute() ? $cat_stmt->get_result() : null; if ($r) $catRecords = $r->fetch_all(MYSQLI_ASSOC); $cat_stmt->close(); }
+            if ($cat_stmt) { $cat_stmt->bind_param('i', $user_id); $r = $cat_stmt->execute() ? $cat_stmt->get_result() : null; if ($r) $catRecords = isnm_fetch_all($r); $cat_stmt->close(); }
         }
         if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
         <?php else: ?>
@@ -1010,7 +1010,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $examRecords = [];
         if ($conn) {
             $exam_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
-            if ($exam_stmt) { $exam_stmt->bind_param('i', $user_id); $r = $exam_stmt->execute() ? $exam_stmt->get_result() : null; if ($r) $examRecords = $r->fetch_all(MYSQLI_ASSOC); $exam_stmt->close(); }
+            if ($exam_stmt) { $exam_stmt->bind_param('i', $user_id); $r = $exam_stmt->execute() ? $exam_stmt->get_result() : null; if ($r) $examRecords = isnm_fetch_all($r); $exam_stmt->close(); }
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
         <?php else: ?>
@@ -1051,7 +1051,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $lessonPlans = [];
         if ($conn) {
             $lp_stmt = $conn->prepare("SELECT * FROM lesson_plans WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
-            if ($lp_stmt) { $lp_stmt->bind_param('i', $user_id); $r = $lp_stmt->execute() ? $lp_stmt->get_result() : null; if ($r) $lessonPlans = $r->fetch_all(MYSQLI_ASSOC); $lp_stmt->close(); }
+            if ($lp_stmt) { $lp_stmt->bind_param('i', $user_id); $r = $lp_stmt->execute() ? $lp_stmt->get_result() : null; if ($r) $lessonPlans = isnm_fetch_all($r); $lp_stmt->close(); }
         }
         if (empty($lessonPlans)): ?><p class="text-muted text-center py-3">No lesson plans created yet.</p>
         <?php else: ?>
@@ -1069,7 +1069,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         $assignments = [];
         if ($conn) {
             $as_stmt = $conn->prepare("SELECT * FROM assignments WHERE lecturer_id=? ORDER BY created_at DESC LIMIT 10");
-            if ($as_stmt) { $as_stmt->bind_param('i', $user_id); $r = $as_stmt->execute() ? $as_stmt->get_result() : null; if ($r) $assignments = $r->fetch_all(MYSQLI_ASSOC); $as_stmt->close(); }
+            if ($as_stmt) { $as_stmt->bind_param('i', $user_id); $r = $as_stmt->execute() ? $as_stmt->get_result() : null; if ($r) $assignments = isnm_fetch_all($r); $as_stmt->close(); }
         }
         if (empty($assignments)): ?><p class="text-muted text-center py-3">No assignments created yet.</p>
         <?php else: ?>
@@ -1112,7 +1112,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation — delegate to universal section switcher
+        // Navigation � delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1371,7 +1371,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         }
     </script>
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- --- AJAX MODULE LOADING --- -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

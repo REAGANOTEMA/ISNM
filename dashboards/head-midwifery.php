@@ -300,7 +300,7 @@ $mw_students = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT id, student_id, student_name, program, year_of_study, clinical_hours, status FROM midwifery_students ORDER BY student_name");
-        if ($r) $mw_students = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $mw_students = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('mw_students: ' . $e->getMessage()); }
 }
 
@@ -309,7 +309,7 @@ $mw_placements = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM midwifery_clinical_placements ORDER BY start_date DESC");
-        if ($r) $mw_placements = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $mw_placements = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('mw_placements: ' . $e->getMessage()); }
 }
 
@@ -318,7 +318,7 @@ $mw_skills = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM midwifery_skills_training ORDER BY category, skill_name");
-        if ($r) $mw_skills = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $mw_skills = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('mw_skills: ' . $e->getMessage()); }
 }
 
@@ -327,7 +327,7 @@ $midwifery_students = [];
 if ($ctx['students']) {
     try {
         $r = $ctx['students']->query("SELECT id, first_name, surname, program, level, status FROM students WHERE program LIKE '%Midwifery%' ORDER BY first_name LIMIT 50");
-        if ($r) $midwifery_students = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $midwifery_students = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
 
@@ -336,7 +336,7 @@ $programs_data = [];
 if ($conn) {
     try {
         $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM {$students_db_name}.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Midwifery%' AND status='Active'");
-        if ($r) $programs_data = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $programs_data = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('head-midwifery context: ' . $e->getMessage()); }
 }
 
@@ -515,7 +515,7 @@ render_head_midwifery:
             if ($conn) {
                 try {
                     $cr = $conn->query("SELECT * FROM course_assignments WHERE course_name LIKE '%Midwifery%' ORDER BY course_name");
-                    if ($cr) $mw_course_list = $cr->fetch_all(MYSQLI_ASSOC);
+                    if ($cr) $mw_course_list = isnm_fetch_all($cr);
                 } catch (Exception $e) { error_log('head-midwifery courses: ' . $e->getMessage()); }
             }
             ?>
@@ -767,7 +767,7 @@ render_head_midwifery:
                         $staff_list = [];
                         if ($conn) {
                             $sr = $conn->query("SELECT id, full_name, position, email, phone, status FROM staff WHERE department LIKE '%Midwifery%' ORDER BY full_name");
-                            if ($sr) $staff_list = $sr->fetch_all(MYSQLI_ASSOC);
+                            if ($sr) $staff_list = isnm_fetch_all($sr);
                         }
                         if (empty($staff_list)): ?>
                         <tr><td colspan="6" class="text-center text-muted">No midwifery staff found</td></tr>

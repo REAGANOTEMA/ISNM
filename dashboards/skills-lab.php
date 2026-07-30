@@ -45,12 +45,12 @@ if ($view === 'equipment' && $ajax === 'get') {
                     $stmt->bind_param("ss", $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT * FROM lab_equipment ORDER BY equipment_name ASC");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -108,12 +108,12 @@ if ($view === 'checkouts' && $ajax === 'get') {
                     $stmt->bind_param("sss", $like, $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -199,12 +199,12 @@ if ($view === 'sessions' && $ajax === 'get') {
                     $stmt->bind_param("ss", $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT * FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 200");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -264,12 +264,12 @@ if ($view === 'skills' && $ajax === 'get') {
                     $stmt->bind_param("ss", $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id ORDER BY d.demo_date DESC LIMIT 200");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -325,12 +325,12 @@ if ($view === 'consumables' && $ajax === 'get') {
                     $stmt->bind_param("ss", $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT * FROM lab_consumables ORDER BY item_name ASC");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -389,12 +389,12 @@ if ($view === 'attendance' && $ajax === 'get') {
                     $stmt->bind_param("i", $sessionId);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -438,7 +438,7 @@ if ($view === 'attendance' && $ajax === 'sessions') {
     if ($db) {
         try {
             $r = $db->query("SELECT id, session_name, scheduled_date FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 50");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($r) $rows = isnm_fetch_all($r);
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
     echo json_encode($rows); exit;
@@ -457,12 +457,12 @@ if ($view === 'incidents' && $ajax === 'get') {
                     $stmt->bind_param("ss", $like, $like);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $r = $stmt->get_result();
-                    if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                    if ($r) $rows = isnm_fetch_all($r);
                     $stmt->close();
                 }
             } else {
                 $r = $db->query("SELECT * FROM lab_incidents ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
-                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                if ($r) $rows = isnm_fetch_all($r);
             }
         } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
     }
@@ -547,7 +547,7 @@ $students_list = [];
 if ($students) {
     try {
         $r = $students->query("SELECT id, student_number, full_name, first_name, surname FROM students WHERE status='Active' ORDER BY first_name ASC LIMIT 500");
-        if ($r) $students_list = $r->fetch_all(MYSQLI_ASSOC);
+        if ($r) $students_list = isnm_fetch_all($r);
     } catch (Exception $e) { error_log('skills-lab context: ' . $e->getMessage()); }
 }
 ?>
