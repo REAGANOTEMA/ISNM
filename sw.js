@@ -1,5 +1,5 @@
 /* ISNM Service Worker - Single consolidated version */
-const CACHE_NAME = 'isnm-static-v5';
+const CACHE_NAME = 'isnm-static-v6';
 
 self.addEventListener('install', () => self.skipWaiting());
 

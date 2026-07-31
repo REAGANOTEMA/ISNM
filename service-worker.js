@@ -3,19 +3,16 @@
  * Handles offline functionality, caching, and push notifications
  */
 
-const CACHE_VERSION = 'isnm-v3';
+const CACHE_VERSION = 'isnm-v4';
 const STATIC_ASSETS = [
-  '/',
-  '/index.php',
   '/css/responsive.css',
   '/css/style.css',
   '/js/app.js',
-  '/offline.html',
   '/manifest.json',
 ];
 
-const DYNAMIC_CACHE = 'isnm-dynamic-v3';
-const API_CACHE = 'isnm-api-v3';
+const DYNAMIC_CACHE = 'isnm-dynamic-v4';
+const API_CACHE = 'isnm-api-v4';
 
 // Install Event - Cache static assets
 self.addEventListener('install', (event) => {
@@ -65,30 +62,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API requests - Network first with API cache fallback
-  if (url.pathname.includes('/includes/') || url.pathname.includes('?action=')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Clone and cache successful responses
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(API_CACHE).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cached response
-          return caches.match(request).then((cached) => {
-            return cached || new Response('Offline - API not available', {
-              status: 503,
-              statusText: 'Service Unavailable',
-            });
-          });
-        })
-    );
+  // Never cache PHP, HTML, or action/API responses. These pages depend on
+  // live database state; serving an old cached error page is worse than a
+  // normal network failure.
+  if (
+    url.pathname.endsWith('.php') ||
+    url.pathname.endsWith('.html') ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('/') ||
+    url.searchParams.has('action') ||
+    url.pathname.includes('/includes/')
+  ) {
     return;
   }
 
@@ -115,26 +99,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML pages - Network first with cache fallback
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(request).then((cached) => {
-          return cached || caches.match('/offline.html').then((offline) => {
-            return offline || new Response('Offline', { status: 503 });
-          });
-        });
-      })
-  );
+  return;
 });
 
 // Background Sync for form submissions
