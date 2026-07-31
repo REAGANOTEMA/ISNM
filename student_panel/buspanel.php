@@ -234,7 +234,7 @@ checkAuth('Student');
             $student_id = $_SESSION['user_id'];
             
             // Prepare and execute SQL query using the enhanced database
-            $query = "SELECT * FROM students WHERE student_id = ?";
+            $query = "SELECT * FROM students WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->bind_param("s", $student_id);
             $stmt->execute();

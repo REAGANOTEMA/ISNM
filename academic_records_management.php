@@ -161,6 +161,124 @@ function handleDeleteMarks() {
     exit();
 }
 
+// Bulk import marks from CSV
+function handleBulkImportMarks() {
+    global $conn;
+
+    if (empty($_FILES['marks_file']) || $_FILES['marks_file']['error'] !== UPLOAD_ERR_OK) {
+        $_SESSION['error'] = "Please select a valid CSV file to import.";
+        header("Location: academic_records_management.php");
+        exit();
+    }
+
+    $file = $_FILES['marks_file'];
+    if ($file['size'] > 5242880) {
+        $_SESSION['error'] = "CSV file exceeds the 5MB size limit.";
+        header("Location: academic_records_management.php");
+        exit();
+    }
+
+    if (strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) !== 'csv') {
+        $_SESSION['error'] = "Only CSV files are allowed.";
+        header("Location: academic_records_management.php");
+        exit();
+    }
+
+    $handle = fopen($file['tmp_name'], 'r');
+    if ($handle === false) {
+        $_SESSION['error'] = "Unable to read the uploaded file.";
+        header("Location: academic_records_management.php");
+        exit();
+    }
+
+    $imported = 0;
+    $skipped = 0;
+    $errors = [];
+    $line = 0;
+    $insertedBy = (int)($_SESSION['user_id'] ?? 0);
+
+    while (($row = fgetcsv($handle)) !== false) {
+        $line++;
+        $row = array_map('trim', $row);
+
+        if ($line === 1) {
+            $joined = strtolower(implode(',', array_slice($row, 0, 3)));
+            if (strpos($joined, 'student') !== false && (strpos($joined, 'year') !== false || strpos($joined, 'semester') !== false)) {
+                continue;
+            }
+        }
+
+        if (count($row) < 7) {
+            $skipped++;
+            $errors[] = "Line $line: not enough columns (expected at least 7).";
+            continue;
+        }
+
+        $student_id     = trim($row[0]);
+        $academic_year  = trim($row[1]);
+        $semester       = trim($row[2]);
+        $course_code    = trim($row[3]);
+        $course_name    = trim($row[4]);
+        $credits        = (float)($row[5] ?? 0);
+        $assessment     = (float)($row[6] ?? 0);
+        $exam           = (float)($row[7] ?? 0);
+        $lecturer       = trim($row[8] ?? '');
+
+        if ($student_id === '' || $course_code === '' || $credits <= 0) {
+            $skipped++;
+            $errors[] = "Line $line: missing student ID, course code, or valid credits.";
+            continue;
+        }
+
+        $total = $assessment + $exam;
+        if ($total >= 80)      { $grade = 'A';  $gradePoints = 4.0; }
+        elseif ($total >= 75)  { $grade = 'B+'; $gradePoints = 3.5; }
+        elseif ($total >= 70)  { $grade = 'B';  $gradePoints = 3.0; }
+        elseif ($total >= 65)  { $grade = 'C+'; $gradePoints = 2.5; }
+        elseif ($total >= 60)  { $grade = 'C';  $gradePoints = 2.0; }
+        elseif ($total >= 55)  { $grade = 'D+'; $gradePoints = 1.5; }
+        elseif ($total >= 50)  { $grade = 'D';  $gradePoints = 1.0; }
+        else                   { $grade = 'F';  $gradePoints = 0.0; }
+
+        $gpaContribution = $gradePoints * $credits;
+
+        try {
+            $sql = "INSERT INTO academic_records (student_id, academic_year, semester, year, course_code, course_name, course_type, credits, assessment_marks, exam_marks, total_marks, grade, grade_points, gpa_contribution, lecturer, entered_by, entry_date)
+                    VALUES (?, ?, ?, ?, ?, ?, 'Course', ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())
+                    ON DUPLICATE KEY UPDATE assessment_marks = VALUES(assessment_marks), exam_marks = VALUES(exam_marks), total_marks = VALUES(total_marks), grade = VALUES(grade), grade_points = VALUES(grade_points), gpa_contribution = VALUES(gpa_contribution), updated_by = VALUES(entered_by), updated_at = CURRENT_TIMESTAMP";
+            $stmt = $conn->prepare($sql);
+            $yearValue = (int)preg_replace('/[^0-9]/', '', $academic_year);
+            $stmt->bind_param("sssisidddssdisi", $student_id, $academic_year, $semester, $yearValue, $course_code, $course_name, $credits, $assessment, $exam, $total, $grade, $gradePoints, $gpaContribution, $lecturer, $insertedBy);
+            if (!$stmt->execute()) {
+                throw new Exception("DB error: " . $stmt->error);
+            }
+            $stmt->close();
+
+            updateStudentGPA($student_id, $academic_year, $semester);
+            $imported++;
+        } catch (Exception $e) {
+            $skipped++;
+            $errors[] = "Line $line: " . $e->getMessage();
+        }
+    }
+
+    fclose($handle);
+
+    if ($imported > 0) {
+        logActivity($insertedBy, $_SESSION['role'] ?? 'Staff', 'Bulk Import', "Imported $imported marks records via CSV", 'academic_records', 0);
+        $_SESSION['success'] = "Bulk import complete: $imported records imported" . ($skipped > 0 ? ", $skipped skipped." : ".");
+    } else {
+        $_SESSION['error'] = "No records were imported." . ($skipped > 0 ? " $skipped rows skipped." : "");
+    }
+    if (!empty($errors)) {
+        $errorLog = array_slice($errors, 0, 20);
+        $_SESSION['bulk_import_errors'] = $errorLog;
+    }
+
+    header("Location: academic_records_management.php");
+    exit();
+}
+
 // Update student GPA
 function updateStudentGPA($student_id, $academic_year, $semester) {
     global $conn;

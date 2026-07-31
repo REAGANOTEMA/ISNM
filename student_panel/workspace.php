@@ -191,8 +191,11 @@ body::-webkit-scrollbar {
        $row=$result2->fetch_assoc();
        $class = $row['class'];
 
-       $query="select * from notes where class='$class' order by s_no desc";
-       $result=mysqli_query($conn,$query);
+       $query = "select * from notes where class = ? order by s_no desc";
+       $stmt = mysqli_prepare($conn, $query);
+       mysqli_stmt_bind_param($stmt, 's', $class);
+       mysqli_stmt_execute($stmt);
+       $result = mysqli_stmt_get_result($stmt);
        if($result->num_rows>0){
         while($rows=$result->fetch_assoc()) {
 

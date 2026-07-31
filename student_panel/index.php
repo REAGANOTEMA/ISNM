@@ -259,14 +259,18 @@
             <div class="leaves " style="margin-top: 20px;">
                 <h2>Syllabus</h2>
                 <?php
-                $id = $_SESSION['uid'];
-                $query_sql = "SELECT * FROM students WHERE id='$id'";
-                $result = mysqli_query($conn, $query_sql);
-                $row = $result->fetch_assoc();
-                $class = $row['class'];
+                $id = (int)$_SESSION['uid'];
+                $stmt = mysqli_prepare($conn, "SELECT class FROM students WHERE id = ?");
+                mysqli_stmt_bind_param($stmt, 'i', $id);
+                mysqli_stmt_execute($stmt);
+                $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                mysqli_stmt_close($stmt);
+                $class = $row['class'] ?? '';
 
-                $sql2 = "SELECT * FROM syllabus WHERE class='$class'";
-                $result2 = mysqli_query($conn, $sql2);
+                $stmt2 = mysqli_prepare($conn, "SELECT * FROM syllabus WHERE class = ?");
+                mysqli_stmt_bind_param($stmt2, 's', $class);
+                mysqli_stmt_execute($stmt2);
+                $result2 = mysqli_stmt_get_result($stmt2);
                 if ($result2->num_rows > 0) {
                     while ($row2 = $result2->fetch_assoc()) {
                         echo "<div class='teacher'>
@@ -310,14 +314,19 @@
                 <div class="updates">
                     <div class="message">
                         <?php
-                        $id = $_SESSION['uid'];
-                        $query_sql2 = "SELECT * FROM students WHERE id='$id'";
-                        $result = mysqli_query($conn, $query_sql2);
-                        $row = $result->fetch_assoc();
-                        $class = $row['class'];
+                        $id = (int)$_SESSION['uid'];
+                        $stmt = mysqli_prepare($conn, "SELECT class FROM students WHERE id = ?");
+                        mysqli_stmt_bind_param($stmt, 'i', $id);
+                        mysqli_stmt_execute($stmt);
+                        $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                        mysqli_stmt_close($stmt);
+                        $class = $row['class'] ?? '';
 
-                        $sql_query = "SELECT * FROM notice WHERE (role = 'student' AND class='$class') OR (role = 'all' OR role='') ORDER BY s_no DESC LIMIT 3";
-                        $result = mysqli_query($conn, $sql_query);
+                        $sql_query = "SELECT * FROM notice WHERE (role = 'student' AND class = ?) OR (role = 'all' OR role = '') ORDER BY s_no DESC LIMIT 3";
+                        $stmt = mysqli_prepare($conn, $sql_query);
+                        mysqli_stmt_bind_param($stmt, 's', $class);
+                        mysqli_stmt_execute($stmt);
+                        $result = mysqli_stmt_get_result($stmt);
                         if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 echo "<p> <b>" . $row['title'] . "</b> <br>" . $row['body'] . "<br></p>";
@@ -339,20 +348,23 @@
             <div class="leaves">
                 <h2>Feedbacks</h2>
                 <?php
-                $id = $_SESSION['uid'];
+                $id = (int)$_SESSION['uid'];
 
-                $sql2 = "SELECT * FROM `feedback` WHERE `receiver_id`='$id' LIMIT 5";
-                $result2 = mysqli_query($conn, $sql2);
+                $stmt = mysqli_prepare($conn, "SELECT * FROM `feedback` WHERE `receiver_id` = ? LIMIT 5");
+                mysqli_stmt_bind_param($stmt, 'i', $id);
+                mysqli_stmt_execute($stmt);
+                $result2 = mysqli_stmt_get_result($stmt);
                 if ($result2->num_rows > 0) {
                     while ($row2 = $result2->fetch_assoc()) {
                         $timestamp = $row2['timestamp'];
                         $formattedDate = date('d M, Y', strtotime($timestamp));
 
-                        $senderId = $row2['sender_id'];
+                        $senderId = (int)$row2['sender_id'];
                         $tableName = ($senderId >= 1000) ? 'admins' : 'teachers';
-                        $sql = "SELECT `fname`, `lname` FROM `$tableName` WHERE id = '$senderId' LIMIT 1";
-
-                        $result = mysqli_query($conn, $sql);
+                        $stmt = mysqli_prepare($conn, "SELECT `fname`, `lname` FROM `$tableName` WHERE id = ? LIMIT 1");
+                        mysqli_stmt_bind_param($stmt, 'i', $senderId);
+                        mysqli_stmt_execute($stmt);
+                        $result = mysqli_stmt_get_result($stmt);
                         if ($result->num_rows > 0) {
                             $row = $result->fetch_assoc();
                             $sender = ucfirst(strtolower($row['fname'])) . " " . strtolower($row['lname']);

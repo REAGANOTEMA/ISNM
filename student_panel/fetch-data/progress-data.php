@@ -20,9 +20,15 @@ if ($result2->num_rows > 0) {
         $examId = $row2['exam_id'];
         $mark = $row2['marks'];
 
-        $query3 = "SELECT * FROM `exams` WHERE `exam_id`='$examId'";
-        $result3 = $conn->query($query3);
+        $stmt3 = $conn->prepare("SELECT * FROM `exams` WHERE `exam_id`=? LIMIT 1");
+        $stmt3->bind_param("s", $examId);
+        $stmt3->execute();
+        $result3 = $stmt3->get_result();
+        $stmt3->close();
         $row3 = $result3->fetch_assoc();
+        if (!$row3) {
+            continue;
+        }
 
         // Formatting date
         $dateDB = $row3['timestamp'];
@@ -48,8 +54,8 @@ if ($result2->num_rows > 0) {
     }
 
     $output[] = array(
-        'error'=>'failed' . $result3->num_rows
-       );
+        'error' => $result2->num_rows . ' records processed'
+    );
 }
 else{
     $output[] = array(

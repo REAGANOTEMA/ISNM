@@ -189,21 +189,23 @@ if (!function_exists('isnm_mysqli_connect')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $oldLevel = error_reporting(0);
 
-        // Hosting credentials loaded from environment / .env, with inline fallback defaults
+        // Hosting credentials are loaded ONLY from environment variables / .env.
+        // No hardcoded passwords are used. Set DB_IGANGA_*_USER / DB_IGANGA_*_PASS in
+        // .env.production (kept out of version control) to connect as the hosting user.
         $hostingCreds = [
-            'igangaschool_students'       => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER',       'igangaschool_students'),       'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS',       '3i%yHc00=cP^ZXwF')],
-            'igangaschool_staffs'         => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',          'igangaschool_staffs'),         'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',         '?e=8Dc^D_1Aq9UQd')],
-            'igangaschool_website'        => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER',         'igangaschool_website'),        'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS',         'tCB0WPn+5l)4!_rY')],
-            'igangaschool_ict'            => ['user' => isnm_env('DB_IGANGA_ICT_USER',             'igangaschool_ict'),            'pass' => isnm_env('DB_IGANGA_ICT_PASS',             'R_@CPx%OifDKqGSy')],
-            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER',     'igangaschoolofl_students_db'), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS',     '3i%yHc00=cP^ZXwF')],
-            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',       'igangaschoolofl_staffs_db'),   'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',       '?e=8Dc^D_1Aq9UQd')],
-            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER',      'igangaschoolofl_website_db'),  'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS',      'tCB0WPn+5l)4!_rY')],
-            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',          'igangaschoolofl_ict'),         'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',          'R_@CPx%OifDKqGSy')],
+            'igangaschool_students'       => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER',       ''), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS',       '')],
+            'igangaschool_staffs'         => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',          ''), 'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',          '')],
+            'igangaschool_website'        => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER',         ''), 'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS',         '')],
+            'igangaschool_ict'            => ['user' => isnm_env('DB_IGANGA_ICT_USER',             ''), 'pass' => isnm_env('DB_IGANGA_ICT_PASS',             '')],
+            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER',     ''), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS',     '')],
+            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',       ''), 'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',       '')],
+            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER',      ''), 'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS',      '')],
+            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',          ''), 'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',          '')],
         ];
 
         $credSet = [];
-        // 1. Hosting creds first (if we know them)
-        if (isset($hostingCreds[$db])) {
+        // 1. Hosting creds first (only when fully supplied via environment)
+        if (isset($hostingCreds[$db]) && $hostingCreds[$db]['user'] !== '' && $hostingCreds[$db]['pass'] !== '') {
             $credSet[] = $hostingCreds[$db] + ['db' => $db];
         }
         // 2. Provided credentials

@@ -5,7 +5,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql = "SELECT * FROM students WHERE status != 'deleted' ORDER BY first_name, surname ASC LIMIT 50";
+$sql = "SELECT * FROM students WHERE bus_request_status = 'accepted' ORDER BY first_name, surname ASC LIMIT 50";
 $result = mysqli_query($conn, $sql);
 
 if ($result) {

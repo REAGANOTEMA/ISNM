@@ -72,6 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 previous_school VARCHAR(255) DEFAULT NULL,
                 uce_results VARCHAR(255) DEFAULT NULL,
                 uace_results VARCHAR(255) DEFAULT NULL,
+                academic_document VARCHAR(500) DEFAULT NULL,
+                photo VARCHAR(500) DEFAULT NULL,
+                uce_certificate_doc VARCHAR(500) DEFAULT NULL,
+                uace_certificate_doc VARCHAR(500) DEFAULT NULL,
+                unmeb_result_slip VARCHAR(500) DEFAULT NULL,
+                unmeb_certificate VARCHAR(500) DEFAULT NULL,
+                enrolment_certificate VARCHAR(500) DEFAULT NULL,
+                practicing_license_doc VARCHAR(500) DEFAULT NULL,
+                academic_transcript VARCHAR(500) DEFAULT NULL,
                 status VARCHAR(50) DEFAULT 'Pending',
                 submitted_at DATETIME DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -83,9 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $applicationId = generateApplicationId();
         $level = sanitizeInput($_POST['levelApplying'] ?? '');
 
-        $uploadDir = 'application_uploads';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        $uploadDir = __DIR__ . '/uploads/applications';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+            throw new Exception('Unable to create upload directory.');
         }
 
         $academicDocResult = handleFileUpload(
@@ -130,6 +139,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $uploadedDocs[$field] = $result['path'];
         }
+
+        $toWebPath = function ($absolute) {
+            if (empty($absolute)) {
+                return null;
+            }
+            $absolute = str_replace('\\', '/', $absolute);
+            return 'uploads/applications/' . basename($absolute);
+        };
+
+        $docColumns = [
+            'academicDocument'   => 'academic_document',
+            'photo'              => 'photo',
+            'uceCertificateDoc'  => 'uce_certificate_doc',
+            'uaceCertificateDoc' => 'uace_certificate_doc',
+            'unmebResultSlip'    => 'unmeb_result_slip',
+            'unmebCertificate'   => 'unmeb_certificate',
+            'enrolmentCertificate' => 'enrolment_certificate',
+            'practicingLicenseDoc' => 'practicing_license_doc',
+            'academicTranscript' => 'academic_transcript',
+        ];
+        $docValues = [];
+        foreach ($docColumns as $field => $column) {
+            $docValues[$column] = $toWebPath($uploadedDocs[$field] ?? null);
+        }
+        $academicDocPath = $toWebPath($academicDocResult['path']);
+        $photoPath = $toWebPath($photoResult['path']);
 
         $websiteDb = getWebsiteConnection();
         if (!$websiteDb) {
@@ -185,18 +220,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 application_number, first_name, surname, other_name,
                 date_of_birth, gender, nationality, phone, email, address,
                 program_applied, previous_school, uce_results, uace_results,
+                academic_document, photo, uce_certificate_doc, uace_certificate_doc,
+                unmeb_result_slip, unmeb_certificate, enrolment_certificate,
+                practicing_license_doc, academic_transcript,
                 status, submitted_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())
         ");
 
         $uceResults = sanitizeInput($_POST['uceIndexNumber'] ?? '') . ' (' . sanitizeInput($_POST['uceYear'] ?? '') . ')';
         $uaceResults = sanitizeInput($_POST['uaceIndexNumber'] ?? '') . ' (' . sanitizeInput($_POST['uaceYear'] ?? '') . ')';
 
-        $stmt->bind_param('ssssssssssssss',
+        $bindOtherName = $otherName ?: null;
+        $bindUceResults = $uceResults ?: null;
+        $bindUaceResults = $uaceResults ?: null;
+
+        $stmt->bind_param('sssssssssssssssssssssss',
             $applicationId,
             $firstName,
             $surname,
-            $otherName ?: null,
+            $bindOtherName,
             $dob,
             $gender,
             $nationality,
@@ -205,8 +247,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $address,
             $course,
             $previousSchool,
-            $uceResults ?: null,
-            $uaceResults ?: null
+            $bindUceResults,
+            $bindUaceResults,
+            $academicDocPath,
+            $photoPath,
+            $docValues['uce_certificate_doc'],
+            $docValues['uace_certificate_doc'],
+            $docValues['unmeb_result_slip'],
+            $docValues['unmeb_certificate'],
+            $docValues['enrolment_certificate'],
+            $docValues['practicing_license_doc'],
+            $docValues['academic_transcript']
         );
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $applicationDbId = $stmt->insert_id;

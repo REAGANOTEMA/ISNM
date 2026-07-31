@@ -164,10 +164,10 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($websiteConn) {
                         if ($featuredImage) {
                             $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, category=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $category, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                            if ($ws) { $ws->bind_param("sssssssssi", $title, $allContent, $excerpt, $category, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         } else {
                             $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, category=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $category, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $category, $status, $published_at, $authorName, $authorRole, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                         }
                     }
                     if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {

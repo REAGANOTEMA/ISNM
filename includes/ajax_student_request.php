@@ -31,7 +31,7 @@ try {
             if (!$studentsConn) throw new Exception('Database connection failed');
 
             // Update student bus request status
-            $update_sql = "UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE student_id = ?";
+            $update_sql = "UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE id = ?";
             $stmt = $studentsConn->prepare($update_sql);
             $stmt->bind_param("s", $student_id);
             

@@ -10,13 +10,13 @@ if(isset($_GET['id'])) {
     $id = intval($_GET['id'] ?? 0);
 
     // Update query
-    $sql = "UPDATE students SET request = 'accepted' WHERE id = ?";
+    $sql = "UPDATE students SET bus_request_status = 'accepted', bus_request_date = NOW() WHERE id = ?";
 
     // Prepare the statement
     $stmt = mysqli_prepare($conn, $sql);
 
     // Bind the 'id' parameter
-    mysqli_stmt_bind_param($stmt, "s", $id);
+    mysqli_stmt_bind_param($stmt, "i", $id);
 
     // Execute the statement
     if(mysqli_stmt_execute($stmt)) {

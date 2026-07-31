@@ -10,13 +10,14 @@ include('../assets/config.php');
        if($_SERVER['REQUEST_METHOD']=="POST"){
           
 
-            $month = date('m');         
+            $month = date('m');
 
-           $id=$_SESSION['uid'];
-           $query="select * from attendance where (student_id='$id') AND (Month(`date`)='$month');";
-          
-
-           $result=$conn->query($query);
+           $id = (int)$_SESSION['uid'];
+           $stmt = $conn->prepare("select * from attendance where (student_id=?) AND (Month(`date`)=?)");
+           $stmt->bind_param("is", $id, $month);
+           $stmt->execute();
+           $result = $stmt->get_result();
+           $stmt->close();
           if($result->num_rows>0){
            
             while($row = $result->fetch_assoc()){

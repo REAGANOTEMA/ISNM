@@ -43,6 +43,20 @@ if ($conn) {
 }
 
 // Get recent activities
+$myDocuments = [];
+if ($conn) {
+    $docQ = $conn->prepare("SELECT * FROM staff_documents WHERE staff_id = ? ORDER BY created_at DESC LIMIT 20");
+    if ($docQ) {
+        $docQ->bind_param('i', $user_id);
+        $docQ->execute();
+        $docRes = $docQ->get_result();
+        while ($docRow = $docRes->fetch_assoc()) {
+            $myDocuments[] = $docRow;
+        }
+        $docQ->close();
+    }
+}
+$documentBaseUrl = '../';
 $recent_activities = [];
 if ($conn) {
     try {
@@ -559,30 +573,43 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                     <div class="documents-overview">
                         <h3>My Documents</h3>
                         <div class="documents-list">
-                            <div class="document-item">
-                                <div class="document-header">
-                                    <h4>Employment Contract</h4>
-                                    <span class="document-type">PDF</span>
-                                </div>
-                                <div class="document-details">
-                                    <div class="detail">
-                                        <span>Size:</span>
-                                        <strong>1.2 MB</strong>
+                            <?php if (!empty($myDocuments)): ?>
+                                <?php foreach ($myDocuments as $doc): ?>
+                                    <?php
+                                    $docPath = $documentBaseUrl . htmlspecialchars($doc['file_path']);
+                                    $docSize = $doc['file_size'] > 1048576
+                                        ? round($doc['file_size'] / 1048576, 1) . ' MB'
+                                        : max(1, round($doc['file_size'] / 1024)) . ' KB';
+                                    $docExt = strtoupper(pathinfo($doc['file_name'] ?? $doc['file_path'], PATHINFO_EXTENSION));
+                                    ?>
+                                    <div class="document-item">
+                                        <div class="document-header">
+                                            <h4><?= htmlspecialchars($doc['document_name']) ?></h4>
+                                            <span class="document-type"><?= htmlspecialchars($docExt) ?></span>
+                                        </div>
+                                        <div class="document-details">
+                                            <div class="detail">
+                                                <span>Size:</span>
+                                                <strong><?= htmlspecialchars($docSize) ?></strong>
+                                            </div>
+                                            <div class="detail">
+                                                <span>Uploaded:</span>
+                                                <strong><?= htmlspecialchars(date('M d, Y', strtotime($doc['created_at']))) ?></strong>
+                                            </div>
+                                            <div class="detail">
+                                                <span>Category:</span>
+                                                <strong><?= htmlspecialchars($doc['document_type']) ?></strong>
+                                            </div>
+                                        </div>
+                                        <div class="document-actions">
+                                            <a class="btn btn-sm btn-outline-primary" href="<?= $docPath ?>" target="_blank">View</a>
+                                            <a class="btn btn-sm btn-outline-success" href="<?= $docPath ?>" download>Download</a>
+                                        </div>
                                     </div>
-                                    <div class="detail">
-                                        <span>Uploaded:</span>
-                                        <strong>Jan 15, 2026</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Category:</span>
-                                        <strong>Employment</strong>
-                                    </div>
-                                </div>
-                                <div class="document-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
-                                    <button class="btn btn-sm btn-outline-success">Download</button>
-                                </div>
-                            </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="text-muted">No documents uploaded yet.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -915,6 +942,56 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             </div>
                         </form>`;
                     break;
+                case 'uploadDocument':
+                    modalTitle.textContent = 'Upload Document';
+                    modalBody.innerHTML = `
+                        <form id="uploadDocumentForm" method="POST" action="../includes/upload_staff_document.php" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="${window.CSRF_TOKEN || ''}">
+                            <div class="mb-3">
+                                <label class="form-label">Document Name</label>
+                                <input type="text" class="form-control" id="docName" placeholder="e.g. Employment Contract">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-control" id="docCategory">
+                                    <option value="Employment">Employment</option>
+                                    <option value="Training">Training</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Medical">Medical</option>
+                                    <option value="Academic">Academic</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">File (PDF, images, docs up to 10MB)</label>
+                                <input type="file" class="form-control" id="docFile" name="document_file" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" id="docNotes" rows="3" placeholder="Optional notes"></textarea>
+                            </div>
+                        </form>
+                        <div class="alert alert-info">Click Save to upload your document.</div>
+                    `;
+                    break;
+                case 'documentLibrary':
+                    modalTitle.textContent = 'Document Library';
+                    modalBody.innerHTML = `
+                        <div class="alert alert-info">
+                            Your uploaded documents appear in the <b>My Documents</b> section of this page.
+                        </div>
+                        <p class="text-muted">Upload documents using the <b>Upload Document</b> button.</p>`;
+                    break;
+                case 'sharedDocuments':
+                    modalTitle.textContent = 'Shared Documents';
+                    modalBody.innerHTML = `
+                        <div class="alert alert-info">Shared documents are managed by the School Secretary.</div>`;
+                    break;
+                case 'documentArchive':
+                    modalTitle.textContent = 'Document Archive';
+                    modalBody.innerHTML = `
+                        <div class="alert alert-info">Archived documents appear here once your documents are archived by the administration.</div>`;
+                    break;
             }
             modal.show();
         }
@@ -944,7 +1021,34 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             modalActionBtn.addEventListener('click', function() {
                 const title = document.getElementById('modalTitle').textContent || '';
 
-                if (title.includes('New Task')) {
+                if (title === 'Upload Document') {
+                    const name = (document.getElementById('docName').value || '').trim();
+                    const fileInput = document.getElementById('docFile');
+                    if (!fileInput.files || !fileInput.files.length) { alert('Please select a file.'); return; }
+                    const cat = document.getElementById('docCategory').value || 'Other';
+                    const notes = document.getElementById('docNotes').value || '';
+                    const fd = new FormData();
+                    fd.append('csrf_token', window.CSRF_TOKEN || '');
+                    fd.append('document_name', name);
+                    fd.append('document_type', cat);
+                    fd.append('notes', notes);
+                    fd.append('document_file', fileInput.files[0]);
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Uploading...</p></div>';
+                    fetch('../includes/upload_staff_document.php', { method: 'POST', body: fd })
+                        .then(r => r.json())
+                        .then(resp => {
+                            if (resp.success) {
+                                modalBody.innerHTML = '<div class="alert alert-success">' + resp.message + '</div>';
+                                setTimeout(() => location.reload(), 800);
+                            } else {
+                                modalBody.innerHTML = '<div class="alert alert-danger">' + resp.message + '</div>';
+                            }
+                        })
+                        .catch(() => { modalBody.innerHTML = '<div class="alert alert-danger">Upload failed. Check file size and type.</div>'; });
+                    return;
+                }
+                else if (title.includes('New Task')) {
                     const fd = new FormData();
                     fd.append('title', document.getElementById('taskTitle').value.trim());
                     fd.append('description', document.getElementById('taskDesc').value.trim());
