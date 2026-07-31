@@ -104,7 +104,7 @@ if (!defined('STUDENTS_DB_USER')) {
     define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', STUDENTS_DB_NAME));
 }
 if (!defined('STUDENTS_DB_PASS')) {
-    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
+    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', '3i%yHc00=cP^ZXwF'));
 }
 if (!defined('STUDENTS_DB_CHARSET')) {
     define('STUDENTS_DB_CHARSET', isnm_env('STUDENTS_DB_CHARSET', DB_CHARSET));
@@ -123,7 +123,7 @@ if (!defined('STAFF_DB_USER')) {
     define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', STAFF_DB_NAME));
 }
 if (!defined('STAFF_DB_PASS')) {
-    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', ''));
+    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', '?e=8Dc^D_1Aq9UQd'));
 }
 if (!defined('STAFF_DB_CHARSET')) {
     define('STAFF_DB_CHARSET', isnm_env('STAFF_DB_CHARSET', DB_CHARSET));
@@ -142,7 +142,7 @@ if (!defined('WEBSITE_DB_USER')) {
     define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', WEBSITE_DB_NAME));
 }
 if (!defined('WEBSITE_DB_PASS')) {
-    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', ''));
+    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', 'tCB0WPn+5l)4!_rY'));
 }
 if (!defined('WEBSITE_DB_CHARSET')) {
     define('WEBSITE_DB_CHARSET', isnm_env('WEBSITE_DB_CHARSET', DB_CHARSET));
@@ -161,7 +161,7 @@ if (!defined('ICT_DB_USER')) {
     define('ICT_DB_USER', isnm_env('ICT_DB_USER', ICT_DB_NAME));
 }
 if (!defined('ICT_DB_PASS')) {
-    define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', ''));
+    define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', 'R_@CPx%OifDKqGSy'));
 }
 if (!defined('ICT_DB_CHARSET')) {
     define('ICT_DB_CHARSET', isnm_env('ICT_DB_CHARSET', DB_CHARSET));
@@ -193,14 +193,14 @@ if (!function_exists('isnm_mysqli_connect')) {
         // No hardcoded passwords are used. Set DB_IGANGA_*_USER / DB_IGANGA_*_PASS in
         // .env.production (kept out of version control) to connect as the hosting user.
         $hostingCreds = [
-            'igangaschool_students'       => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER',       ''), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS',       '')],
-            'igangaschool_staffs'         => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',          ''), 'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',          '')],
-            'igangaschool_website'        => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER',         ''), 'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS',         '')],
-            'igangaschool_ict'            => ['user' => isnm_env('DB_IGANGA_ICT_USER',             ''), 'pass' => isnm_env('DB_IGANGA_ICT_PASS',             '')],
-            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER',     ''), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS',     '')],
-            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',       ''), 'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',       '')],
-            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER',      ''), 'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS',      '')],
-            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',          ''), 'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',          '')],
+            'igangaschool_students'       => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER',       'igangaschool_students'), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS',       '3i%yHc00=cP^ZXwF')],
+            'igangaschool_staffs'         => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',          'igangaschool_staffs'),   'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',          '?e=8Dc^D_1Aq9UQd')],
+            'igangaschool_website'        => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER',         'igangaschool_website'),  'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS',         'tCB0WPn+5l)4!_rY')],
+            'igangaschool_ict'            => ['user' => isnm_env('DB_IGANGA_ICT_USER',             'igangaschool_ict'),      'pass' => isnm_env('DB_IGANGA_ICT_PASS',             'R_@CPx%OifDKqGSy')],
+            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER',     'igangaschool_students'), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS',     '3i%yHc00=cP^ZXwF')],
+            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',       'igangaschool_staffs'),   'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',       '?e=8Dc^D_1Aq9UQd')],
+            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER',      'igangaschool_website'),  'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS',      'tCB0WPn+5l)4!_rY')],
+            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',          'igangaschool_ict'),      'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',          'R_@CPx%OifDKqGSy')],
         ];
 
         $credSet = [];
