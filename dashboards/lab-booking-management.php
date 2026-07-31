@@ -46,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         $purpose = trim($_POST['purpose'] ?? '');
         $requirements = trim($_POST['special_requirements'] ?? '');
         $lab = trim($_POST['lab_assigned'] ?? '');
-        $stmt = $ict_conn->prepare("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, special_requirements, status, lab_assigned, created_by) VALUES (?,?,?,?,?,?,?,?,'pending',?,?)");
-        if ($stmt) { $stmt->bind_param('sssssisssi', $ref, $course, $instructor, $email, $date, $slot, $students, $purpose, $requirements, $lab, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        $stmt = $ict_conn->prepare("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, special_requirements, status, lab_assigned, created_by) VALUES (?,?,?,?,?,?,?,?,?,'pending',?,?)");
+        if ($stmt) { $stmt->bind_param('ssssssisssi', $ref, $course, $instructor, $email, $date, $slot, $students, $purpose, $requirements, $lab, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         $_SESSION['success'] = "Booking $ref created successfully.";
         header('Location: lab-booking-management.php'); exit;
     }

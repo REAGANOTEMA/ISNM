@@ -21,8 +21,7 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    // Don't enable strict_mode — it rejects session IDs from prior page loads
-    // ini_set('session.use_strict_mode', 1);
+    ini_set('session.use_strict_mode', 1);
     $https = false;
     if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
         $https = true;
@@ -407,6 +406,9 @@ switch ($action) {
             if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 $auth_service->createSecureSession($result['user']);
             }
+            if (!empty($_POST['remember'])) {
+                $auth_service->issueRememberMe((int)($result['user']['id'] ?? 0), 'staff');
+            }
 
             // Role-to-dashboard mapping
             $dashboardMap = [
@@ -709,6 +711,9 @@ function handleStudentLogin() {
             header('Location: student-password-setup.php');
         } else {
             $auth_service->createSecureSession($res['user']);
+            if (!empty($_POST['remember'])) {
+                $auth_service->issueRememberMe((int)($res['user']['id'] ?? 0), 'student');
+            }
             unset($_SESSION['student_login_allowed']);
             $_SESSION['success'] = 'Welcome, ' . $res['user']['full_name'];
             session_write_close();
@@ -793,6 +798,12 @@ function handleCreateStudent() {
         session_write_close();
         header('Location: staff-login.php'); exit();
     }
+    require_once __DIR__ . '/includes/auth_functions.php';
+    if (!function_exists('canCreateStudents') || !canCreateStudents()) {
+        $_SESSION['error'] = 'Permission denied: your role is not allowed to create student accounts.';
+        session_write_close();
+        header('Location: staff-login.php'); exit();
+    }
     $data = [
         'index_number' => $_POST['index_number'] ?? '',
         'full_name'    => $_POST['full_name']    ?? '',
@@ -826,6 +837,21 @@ function handleCreateStaff() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
+        session_write_close();
+        header('Location: staff-login.php'); exit();
+    }
+    $actorRole = strtolower((string)($_SESSION['role'] ?? ''));
+    $allowedCreatorRoles = ['system administrator', 'admin', 'owner', 'super admin', 'director general',
+        'ceo', 'hr manager', 'director human resources', 'director of human resources', 'principal'];
+    $canCreate = false;
+    foreach ($allowedCreatorRoles as $allowed) {
+        if ($actorRole === $allowed || strpos($actorRole, $allowed) !== false) {
+            $canCreate = true;
+            break;
+        }
+    }
+    if (!$canCreate) {
+        $_SESSION['error'] = 'Permission denied: your role is not allowed to create staff accounts.';
         session_write_close();
         header('Location: staff-login.php'); exit();
     }

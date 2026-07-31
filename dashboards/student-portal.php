@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
                 if ($upd) { $upd->bind_param("si", $newHash, $student_id); if (!$upd->execute()) { error_log('password change failed: ' . ($upd->error ?? 'unknown')); }; $upd->close(); }
                 // Log the password change
                 $logStmt = $studentsDb->prepare("INSERT INTO student_login_attempts (student_id, ip_address, success, attempted_at) VALUES (?, ?, 1, NOW())");
-                if ($logStmt) { $logStmt->bind_param('is', $student_id, $_SERVER['REMOTE_ADDR'] ?? ''); $logStmt->execute(); $logStmt->close(); }
+                if ($logStmt) { $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? ''; $logStmt->bind_param('is', $student_id, $remoteAddr); $logStmt->execute(); $logStmt->close(); }
                 $_SESSION['success'] = 'Password changed successfully.';
             } else { $_SESSION['error'] = 'Current password is incorrect.'; }
         }
@@ -730,7 +730,7 @@ elseif ($page === 'requirements'):
 $docFilePath = '';
 if ($staffDb && tableExists($staffDb, 'student_documents') && $applicant_id > 0 && !empty($req['requirement_id'])) {
     $dq = $staffDb->prepare("SELECT file_path FROM student_documents WHERE applicant_id=? AND requirement_id=? AND document_status='Active' ORDER BY uploaded_at DESC LIMIT 1");
-    if ($dq) { $dq->bind_param('ii', $applicant_id, (int)$req['requirement_id']); if ($dq->execute()) { $dr = $dq->get_result(); if ($dr && $dr->num_rows) $docFilePath = $dr->fetch_assoc()['file_path'] ?? ''; } $dq->close(); }
+    if ($dq) { $requirementId = (int)$req['requirement_id']; $dq->bind_param('ii', $applicant_id, $requirementId); if ($dq->execute()) { $dr = $dq->get_result(); if ($dr && $dr->num_rows) $docFilePath = $dr->fetch_assoc()['file_path'] ?? ''; } $dq->close(); }
 }
 ?>
 <?php if ($docFilePath): ?>

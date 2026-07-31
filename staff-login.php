@@ -4,8 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    // Disabled strict_mode — it breaks CSRF token handoff between pages
-    // ini_set('session.use_strict_mode', 1);
+    ini_set('session.use_strict_mode', 1);
     ini_set('session.cookie_path', SESSION_COOKIE_PATH);
     $https = false;
     if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {

@@ -136,7 +136,7 @@ if (!function_exists('createSubscription')) {
             INSERT INTO payment_subscriptions (student_id, subscription_type, reference_type, reference_id, total_amount, installment_amount, frequency, total_installments, installments_collected, start_date, next_due_date, payment_method, payment_provider, phone_number, status, notes, created_by)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, CURDATE(), ?, ?, ?, ?, 'active', ?, ?)
         ");
-        $stmt->bind_param('ssiiddsssssss', $studentId, $type, $refType, $refId, $totalAmount, $installmentAmount, $frequency, $installments, $nextDue, $method, $provider, $phone, $notes, $studentId);
+        $stmt->bind_param('sssiddsissssss', $studentId, $type, $refType, $refId, $totalAmount, $installmentAmount, $frequency, $installments, $nextDue, $method, $provider, $phone, $notes, $studentId);
         if ($stmt->execute()) {
             $id = $stmt->insert_id;
             $stmt->close();

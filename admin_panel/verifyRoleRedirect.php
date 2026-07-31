@@ -2,69 +2,67 @@
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-    
-    // Include config with error handling
+
     try {
         include('../assets/config.php');
     } catch (Exception $e) {
-        // Config file error - allow access for development
         $conn = null;
     }
-    
-    if(isset($_SESSION['uid'])){
-        // If database connection is available, check role
-        if (isset($conn) && $conn) {
-            try {
-                $userId = $_SESSION['uid'];
-                $sql = 'SELECT `role` FROM `users` WHERE `users`.`id`=? ;';
 
-                $stmt = mysqli_prepare($conn, $sql);
-                if ($stmt) {
-                    mysqli_stmt_bind_param($stmt, "s", $userId);
-                    mysqli_stmt_execute($stmt);
-                    $result = mysqli_stmt_get_result($stmt);
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
-                    if ($result && $row = mysqli_fetch_assoc($result)) {
-                        if($row['role'] == 'admin'){
-                            // Admin access granted
-                        }else{
-                            // Destroy session inline (cannot rely on include with POST check during page load)
-                            $_SESSION = [];
-                            if (ini_get("session.use_cookies")) {
-                                $params = session_get_cookie_params();
-                                setcookie(session_name(), '', time() - 42000,
-                                    $params["path"], $params["domain"],
-                                    $params["secure"], $params["httponly"]
-                                );
-                            }
-                            session_unset();
-                            session_destroy();
-                            header("Location: ../staff-login.php");
-                            exit();
-                        }
-                    } else {
-                        // User not found - destroy session and redirect
-                        $_SESSION = [];
-                        if (ini_get("session.use_cookies")) {
-                            $params = session_get_cookie_params();
-                            setcookie(session_name(), '', time() - 42000,
-                                $params["path"], $params["domain"],
-                                $params["secure"], $params["httponly"]
-                            );
-                        }
-                        session_unset();
-                        session_destroy();
-                        header("Location: ../staff-login.php");
-                        exit();
-                    }
-                } else {
-                    // Statement preparation failed - allow access for development
-                }
-            } catch (Exception $e) {
-                // Database error - allow access for development
-            }
-        } else {
-            // No database connection - allow access for development
+    $userId = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
+    if (!$userId) {
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
         }
+        session_unset();
+        session_destroy();
+        header("Location: ../staff-login.php");
+        exit();
+    }
+
+    $role = '';
+    $staffConn = getStaffConnection();
+    if ($staffConn) {
+        $sql = 'SELECT LOWER(sr.role_name) AS role_name
+                FROM `igangaschool_staffs`.`staff` s
+                INNER JOIN `igangaschool_staffs`.`staff_roles` sr ON s.role_id = sr.id
+                WHERE s.id = ? LIMIT 1';
+        $stmt = mysqli_prepare($staffConn, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $userId);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row = $result ? mysqli_fetch_assoc($result) : null;
+            $role = strtolower(trim($row['role_name'] ?? ''));
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    $isAdmin = ($role === 'system administrator')
+        || in_array($role, ['admin', 'owner', 'super admin'], true)
+        || strpos($role, 'system') !== false && strpos($role, 'admin') !== false;
+
+    if (!$isAdmin) {
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        session_unset();
+        session_destroy();
+        header("Location: ../staff-login.php");
+        exit();
     }
 ?>

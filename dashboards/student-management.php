@@ -74,7 +74,8 @@ if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`examination_results` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_id INT DEFAULT 0, score DECIMAL(8,2) DEFAULT 0, max_score DECIMAL(8,2) DEFAULT 100, status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`clinical_placements` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, facility_name VARCHAR(300) DEFAULT '', department VARCHAR(200) DEFAULT '', start_date DATE DEFAULT NULL, end_date DATE DEFAULT NULL, status VARCHAR(50) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`student_attendance` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, attendance_date DATE DEFAULT NULL, time_in TIME DEFAULT NULL, time_out TIME DEFAULT NULL, status VARCHAR(50) DEFAULT 'Present', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_date (attendance_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`student_invoices` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, amount DECIMAL(12,2) DEFAULT 0, status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    require_once __DIR__ . '/../includes/student_invoices_schema.php';
+    ensureStudentInvoicesSchema($conn);
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`course_registrations` (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, course_code VARCHAR(50) DEFAULT '', course_id INT DEFAULT 0, academic_year VARCHAR(20) DEFAULT NULL, semester VARCHAR(100) DEFAULT NULL, registration_status VARCHAR(50) DEFAULT 'Registered', status VARCHAR(50) DEFAULT 'Registered', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`assessment_scores` (id INT AUTO_INCREMENT PRIMARY KEY, examination_session_id INT DEFAULT 0, student_id INT NOT NULL, score DECIMAL(8,2) DEFAULT 0, max_score DECIMAL(8,2) DEFAULT 100, entered_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
@@ -131,7 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $date = $_POST['application_date'] ?? date('Y-m-d');
         if ($name && $program) {
             $stmt = $conn->prepare("INSERT INTO student_admissions (application_number,applicant_name,program,academic_year,admission_status,application_date,decided_by,remarks) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE applicant_name=VALUES(applicant_name),program=VALUES(program),admission_status=VALUES(admission_status)");
-            $stmt->bind_param("ssssssi", $app, $name, $program, $year, $status, $date, $uid);
+            $remarks = $_POST['remarks'] ?? '';
+            $stmt->bind_param("ssssssis", $app, $name, $program, $year, $status, $date, $uid, $remarks);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             $_SESSION['success'] = 'Admission record saved.';

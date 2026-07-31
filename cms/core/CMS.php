@@ -218,7 +218,7 @@ class CMS {
         $isPublished = (int)($data['is_published'] ?? 1);
 
         if ($isNew) {
-            $stmt->bind_param('isssssssssii', $pageId, $blockKey, $blockType, $title, $subtitle, $content, $settings, $animation, $bgStyle, $textColor, $sortOrder, $isPublished, $userId);
+            $stmt->bind_param('isssssssssiii', $pageId, $blockKey, $blockType, $title, $subtitle, $content, $settings, $animation, $bgStyle, $textColor, $sortOrder, $isPublished, $userId);
         } else {
             $id = (int)$data['id'];
             $stmt->bind_param('isssssssssiii', $pageId, $blockKey, $blockType, $title, $subtitle, $content, $settings, $animation, $bgStyle, $textColor, $sortOrder, $isPublished, $id);

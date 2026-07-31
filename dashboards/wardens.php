@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         } else {
             $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, student_name, session_type, session_date, session_time, counselor_id, counselor_name, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
             $sname = $st['full_name'];
-            if ($stmt) { $stmt->bind_param("issssis", $student_id, $sname, $session_type, $session_date, $session_time, $user_id, $user_name, $notes); if ($stmt->execute()) {
+            if ($stmt) { $stmt->bind_param("issssiss", $student_id, $sname, $session_type, $session_date, $session_time, $user_id, $user_name, $notes); if ($stmt->execute()) {
                 $flash = 'Counseling session scheduled.';
                 $flashType = 'success';
             } else {
@@ -995,7 +995,7 @@ function updateDateTime() {
 updateDateTime();
 setInterval(updateDateTime, 60000);
 
-// Navigation — delegate to universal section switcher
+// Navigation ï¿½ delegate to universal section switcher
 document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();

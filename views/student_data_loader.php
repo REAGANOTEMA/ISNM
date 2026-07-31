@@ -70,31 +70,56 @@ class StudentDataLoader {
                 $firstName = $s['first_name'] ?? '';
                 $fullName = $s['full_name'] ?? trim("$firstName $surname");
 
+                $fFirstName = $firstName;
+                $fSurname = $surname;
+                $fOtherName = $s['other_name'] ?? '';
+                $fFullName = $fullName;
+                $fGender = $s['gender'] ?? 'Other';
+                $fIndexNumber = $s['index_number'] ?? '';
+                $fRegistrationNumber = $s['registration_number'] ?? '';
+                $fStudentNumber = $s['student_number'] ?? '';
+                $fNationalId = $s['national_id'] ?? '';
+                $fPhone = $s['phone'] ?? '';
+                $fMobileNumber = $s['mobile_number'] ?? '';
+                $fEmail = $s['email'] ?? '';
+                $fProgram = $s['program'] ?? '';
+                $fCourse = $s['program'] ?? '';
+                $fLevel = $s['level'] ?? '';
+                $fSet = $s['set'] ?? '';
+                $fYear = $s['intake_year'] ?? date('Y');
+                $fCurrentYear = $s['year'] ?? $s['intake_year'] ?? date('Y');
+                $fDob = $s['date_of_birth'] ?? null;
+                $fNationality = $s['nationality'] ?? 'Uganda';
+                $fDistrict = $s['district'] ?? '';
+                $fIntakeYear = $s['intake_year'] ?? date('Y');
+                $fIntakePeriod = $s['intake_period'] ?? '';
+                $fStatus = 'Active';
+
                 $stmt->bind_param('ssssssssssssssssssssssss',
-                    $firstName,
-                    $surname,
-                    $s['other_name'] ?? '',
-                    $fullName,
-                    $s['gender'] ?? 'Other',
-                    $s['index_number'] ?? '',
-                    $s['registration_number'] ?? '',
-                    $s['student_number'] ?? '',
-                    $s['national_id'] ?? '',
-                    $s['phone'] ?? '',
-                    $s['mobile_number'] ?? '',
-                    $s['email'] ?? '',
-                    $s['program'] ?? '',
-                    $s['program'] ?? '',
-                    $s['level'] ?? '',
-                    $s['set'] ?? '',
-                    $s['intake_year'] ?? date('Y'),
-                    $s['year'] ?? $s['intake_year'] ?? date('Y'),
-                    $s['date_of_birth'] ?? null,
-                    $s['nationality'] ?? 'Uganda',
-                    $s['district'] ?? '',
-                    $s['intake_year'] ?? date('Y'),
-                    $s['intake_period'] ?? '',
-                    'Active'
+                    $fFirstName,
+                    $fSurname,
+                    $fOtherName,
+                    $fFullName,
+                    $fGender,
+                    $fIndexNumber,
+                    $fRegistrationNumber,
+                    $fStudentNumber,
+                    $fNationalId,
+                    $fPhone,
+                    $fMobileNumber,
+                    $fEmail,
+                    $fProgram,
+                    $fCourse,
+                    $fLevel,
+                    $fSet,
+                    $fYear,
+                    $fCurrentYear,
+                    $fDob,
+                    $fNationality,
+                    $fDistrict,
+                    $fIntakeYear,
+                    $fIntakePeriod,
+                    $fStatus
                 );
 
                 if ($stmt->execute()) {

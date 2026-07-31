@@ -75,7 +75,7 @@ if ($action === 'create_student') {
     $intake_period = date('n') <= 6 ? 'January' : 'July';
     
     $stmt = $students_conn->prepare("INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW())");
-    $stmt->bind_param("ssssssssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em, $intake_year, $intake_period, $password_hash);
+    $stmt->bind_param("ssssssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em, $intake_year, $intake_period, $password_hash);
     if ($stmt->execute()) {
         $id = $students_conn->insert_id;
         echo json_encode(['success' => true, 'student' => [
@@ -217,7 +217,7 @@ if ($action === 'generate_transcript') {
         $title = "Academic Transcript - ".($student['full_name']??'');
         $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, $userId, ?, ?, NOW())");
         $stmt4->bind_param("iss", $sid, $title, $html);
-        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
+        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); throw new Exception('Transcript record save failed'); }
         $doc_id = $staff_conn->insert_id;
         $stmt4->close();
         
@@ -226,7 +226,7 @@ if ($action === 'generate_transcript') {
         $academic_year = date('Y');
         $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), $userId)");
         $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
-        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
+        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); throw new Exception('Transcript registry save failed'); }
         $stmt5->close();
         
         $staff_conn->commit();
@@ -301,7 +301,7 @@ if ($action === 'generate_certificate') {
         $title = "Certificate of $cert_type - ".($student['full_name']??'');
         $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, $userId, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title, $html);
-        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); throw new Exception('Certificate record save failed'); }
         $doc_id = $staff_conn->insert_id;
         $stmt3->close();
         
@@ -309,8 +309,8 @@ if ($action === 'generate_certificate') {
         $full_name_val = $student['full_name']??'';
         $course_val = $student['program']??'';
         $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', $userId, NOW())");
-        $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
-        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); };
+        $stmt4->bind_param("sisss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
+        if (!$stmt4->execute()) { error_log('$stmt4 execute failed: ' . ($stmt4->error ?? 'unknown')); throw new Exception('Certificate registry save failed'); }
         $stmt4->close();
         
         $staff_conn->commit();
@@ -396,7 +396,7 @@ if ($action === 'auto_generate_all') {
         $title_t = "Academic Transcript - ".($student['full_name']??'');
         $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, $userId, ?, ?, NOW())");
         $stmt3->bind_param("iss", $sid, $title_t, $t_html);
-        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); };
+        if (!$stmt3->execute()) { error_log('$stmt3 execute failed: ' . ($stmt3->error ?? 'unknown')); throw new Exception('Transcript record save failed'); }
         $t_doc_id = $staff_conn->insert_id;
         $stmt3->close();
         
@@ -421,7 +421,7 @@ if ($action === 'auto_generate_all') {
         $title_c = "Certificate - ".($student['full_name']??'');
         $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, $userId, ?, ?, NOW())");
         $stmt5->bind_param("iss", $sid, $title_c, $c_html);
-        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); };
+        if (!$stmt5->execute()) { error_log('$stmt5 execute failed: ' . ($stmt5->error ?? 'unknown')); throw new Exception('Certificate record save failed'); }
         $c_doc_id = $staff_conn->insert_id;
         $stmt5->close();
         

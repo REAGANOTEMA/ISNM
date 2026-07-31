@@ -17,6 +17,7 @@ $students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangascho
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'] ?? '';
+    $formError = '';
 
     if ($action === 'add_student') {
         $student_id = trim($_POST['student_id'] ?? '');
@@ -27,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("INSERT INTO nursing_students (student_id, student_name, program, year_of_study, clinical_hours, status) VALUES (?, ?, ?, ?, 0, 'Active') ON DUPLICATE KEY UPDATE student_name=VALUES(student_name), program=VALUES(program), year_of_study=VALUES(year_of_study)");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("sssi", $student_id, $student_name, $program, $year_of_study);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Nursing student added successfully.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Nursing student added successfully.'; }
         } else {
             $_SESSION['error'] = 'All student fields are required.';
         }
@@ -47,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("UPDATE nursing_students SET student_name=?, program=?, year_of_study=?, status=? WHERE id=?");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("ssisi", $student_name, $program, $year_of_study, $status, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Student updated successfully.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Student updated successfully.'; }
         }
         header('Location: head-nursing.php?page=students');
         exit;
@@ -59,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM nursing_students WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Student deleted.';
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Student deleted.'; }
         }
         header('Location: head-nursing.php?page=students');
         exit;
@@ -77,9 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("INSERT INTO nursing_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, hours_completed, status, notes) VALUES (?, ?, ?, ?, ?, ?, 0, 'Active', '')");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=clinical'); exit; }
             $stmt->bind_param("ssssss", $student_id, $facility_name, $department, $start_date, $end_date, $supervisor);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Clinical placement added.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Clinical placement added.'; }
         } else {
             $_SESSION['error'] = 'Student ID, facility, and start date are required.';
         }
@@ -96,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("UPDATE nursing_clinical_placements SET status=?, notes=?, hours_completed=? WHERE id=?");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=clinical'); exit; }
             $stmt->bind_param("ssii", $status, $notes, $hours_completed, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Placement updated.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Placement updated.'; }
         }
         header('Location: head-nursing.php?page=clinical');
         exit;
@@ -108,8 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM nursing_clinical_placements WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Placement deleted.';
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Placement deleted.'; }
         }
         header('Location: head-nursing.php?page=clinical');
         exit;
@@ -127,9 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("INSERT INTO nursing_practical_assessment (student_id, skill_id, assessment_date, score, grade, assessor, comments, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Completed')");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("sisdsss", $student_id, $skill_id, $assessment_date, $score, $grade, $assessor, $comments);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Assessment recorded.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Assessment recorded.'; }
         } else {
             $_SESSION['error'] = 'Student ID and skill are required.';
         }
@@ -147,9 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("UPDATE nursing_practical_assessment SET score=?, grade=?, comments=?, assessor=? WHERE id=?");
             if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; header('Location: head-nursing.php?page=students'); exit; }
             $stmt->bind_param("dsssi", $score, $grade, $comments, $assessor, $id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
-            $_SESSION['success'] = 'Assessment updated.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Assessment updated.'; }
         }
         header('Location: head-nursing.php?page=students');
         exit;

@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               WHERE student_id = ?";
                 
                 $stmt = $conn->prepare($update_sql);
-                $stmt->bind_param("sssssssssssssssssss", 
+                $stmt->bind_param("ssssssssssssssssssss", 
                     $_POST['first_name'], $_POST['surname'], $_POST['other_name'],
                     $_POST['date_of_birth'], $_POST['gender'], $_POST['nationality'],
                     $_POST['address'], $_POST['phone'], $_POST['email'],

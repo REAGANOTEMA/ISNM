@@ -25,7 +25,8 @@ $isSuper = $auth->hasFullInstitutionAccess($userRole);
 // Auto-create tables used by this dashboard
 if ($stuConn) {
     $stuConn->query("CREATE TABLE IF NOT EXISTS student_fee_assignments (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, fee_structure_id INT DEFAULT 0, assigned_amount DECIMAL(14,2) DEFAULT 0, paid_amount DECIMAL(14,2) DEFAULT 0, status VARCHAR(50) DEFAULT 'Pending', academic_year VARCHAR(20) DEFAULT '', semester VARCHAR(100) DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_sa_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $stuConn->query("CREATE TABLE IF NOT EXISTS student_invoices (id INT AUTO_INCREMENT PRIMARY KEY, invoice_number VARCHAR(50) DEFAULT '', student_id INT NOT NULL, total_amount DECIMAL(14,2) DEFAULT 0, amount_paid DECIMAL(14,2) DEFAULT 0, balance DECIMAL(14,2) DEFAULT 0, net_amount DECIMAL(14,2) DEFAULT 0, tuition_amount DECIMAL(14,2) DEFAULT 0, accommodation_amount DECIMAL(14,2) DEFAULT 0, status VARCHAR(50) DEFAULT 'pending', due_date DATE DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_si_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    require_once __DIR__ . '/../includes/student_invoices_schema.php';
+    ensureStudentInvoicesSchema($stuConn);
     $stuConn->query("CREATE TABLE IF NOT EXISTS student_fees (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, fee_name VARCHAR(200) DEFAULT '', amount DECIMAL(14,2) DEFAULT 0, paid_amount DECIMAL(14,2) DEFAULT 0, balance DECIMAL(14,2) DEFAULT 0, academic_year VARCHAR(20) DEFAULT '', status VARCHAR(50) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_sf_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $stuConn->query("CREATE TABLE IF NOT EXISTS student_notifications (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, title VARCHAR(300) DEFAULT '', message TEXT, type VARCHAR(50) DEFAULT 'general', priority VARCHAR(20) DEFAULT 'Medium', is_read TINYINT(1) DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_sn_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $stuConn->query("CREATE TABLE IF NOT EXISTS fee_adjustments (id INT AUTO_INCREMENT PRIMARY KEY, adjustment_number VARCHAR(50) DEFAULT '', student_id INT NOT NULL, adjustment_type VARCHAR(50) DEFAULT 'Discount', amount DECIMAL(14,2) DEFAULT 0, reason TEXT, created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_fa_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -161,7 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $net = $gross - $paye - $nssfEmp;
                     $det = $staffConn->prepare("INSERT INTO payroll_details (payroll_run_id, staff_id, basic_salary, gross_pay, paye_tax, nssf_employee, nssf_employer, other_deductions, net_pay) VALUES (?,?,?,?,?,?,?,?,?)");
                     if ($det) {
-                        $det->bind_param('iiddddddd', $runId, $emp['staff_id'], $base, $gross, $paye, $nssfEmp, $nssfEmpr, 0.0, $net);
+                        $otherDeductions = 0.0;
+                        $det->bind_param('iiddddddd', $runId, $emp['staff_id'], $base, $gross, $paye, $nssfEmp, $nssfEmpr, $otherDeductions, $net);
                         if (!$det->execute()) throw new Exception('Failed to insert payroll details for staff ' . $emp['staff_id'] . ': ' . $det->error);
                         $det->close();
                     }
@@ -206,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $studentId = (int)($_POST['student_id'] ?? 0); $msg = trim($_POST['message'] ?? '');
         if ($studentId && $msg) {
             $stmt = $stuConn->prepare("INSERT INTO student_notifications (student_id, title, message, type, priority, is_read) VALUES (?,?,?,'Fee','Medium',0)");
-            if ($stmt) { $stmt->bind_param('iss', $studentId, 'Fee Reminder', $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Reminder sent.'; } }
+            if ($stmt) { $reminderTitle = 'Fee Reminder'; $stmt->bind_param('iss', $studentId, $reminderTitle, $msg); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); } else { $_SESSION['success'] = 'Reminder sent.'; } }
         }
         header('Location: ?page=communications'); exit;
     }
@@ -277,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($amount == 0) continue;
                 $txnDateFormatted = date('Y-m-d', strtotime($txnDate));
                 $stmt = $staffConn->prepare("INSERT INTO bank_reconciliation (reconciliation_date, bank_balance, book_balance, difference, notes, status, reconciled_by) VALUES (?,?,?,0,?,'completed',?) ON DUPLICATE KEY UPDATE bank_balance=VALUES(bank_balance)");
-                if ($stmt) { $stmt->bind_param('sddssi', $txnDateFormatted, $balance, $balance, "CSV: $desc (UGX $amount)", $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($stmt) { $descFull = "CSV: $desc (UGX $amount)"; $stmt->bind_param('sddsi', $txnDateFormatted, $balance, $balance, $descFull, $userId); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $imported++; $totalAmount += abs($amount);
             }
             $_SESSION['success'] = "Bank CSV imported: $imported transactions, total UGX " . number_format($totalAmount);
@@ -306,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if($st){$st->bind_param('ssd', $start, $end, $amount);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
         } else {
             $st=$staffConn->prepare("INSERT INTO bursar_withholding_tax (tax_date, payee_name, description, gross_amount, wht_rate, wht_amount, status) VALUES (?,?,?,?,6.00,?,'active')");
-            if($st){$st->bind_param('sssdd', $date, 'Default', $period, $amount, $amount * 0.06);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
+            if($st){$periodName = 'Default'; $dutyTax = $amount * 0.06; $st->bind_param('sssdd', $date, $periodName, $period, $amount, $dutyTax);if (!$st->execute()) { error_log('$st execute failed: ' . ($st->error ?? 'unknown')); } else { $_SESSION['success'] = 'Tax record added.'; }$st->close();}
         }
         header('Location: ?page=ura'); exit;
     }

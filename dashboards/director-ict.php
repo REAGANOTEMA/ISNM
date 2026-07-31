@@ -137,17 +137,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $track = $staff_conn->prepare("INSERT INTO student_admission_tracking (student_number, index_number, application_number, full_name, program, intake, admission_date, admission_status, requirements_total) VALUES (?,?,?,?,?,?,?,'Registered',?)");
             $trackAppNum = 'ICT-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
-            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, date('Y-m-d'), $rc);
+            $admissionDate = date('Y-m-d');
+            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, $admissionDate, $rc);
             if (!$track->execute()) throw new Exception('Tracking insert failed: ' . $track->error);
             $track->close();
         }
 
         if ($students_conn) {
             $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-            $s_ins->bind_param('sssssssssssssssssssssss',
-                $student_number, $reg_number, $firstName, $surname, '', $full_name,
+            $otherName = '';
+            $intakeYear = (string)date('Y');
+            $s_ins->bind_param('ssssssssssssssssssssss',
+                $student_number, $reg_number, $firstName, $surname, $otherName, $full_name,
                 $email, $phone, $program, $program,
-                $year, $level, (string)date('Y'), $intake, $dob,
+                $year, $level, $intakeYear, $intake, $dob,
                 $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password
             );
             if (!$s_ins->execute()) throw new Exception('Student insert failed: ' . $s_ins->error);
@@ -155,7 +158,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $s_ins->close();
             if ($s_id > 0) {
                 $prof = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
-                $prof->bind_param('iss', $s_id, 'Registered', 'unpaid');
+                $admStatus = 'Registered';
+                $payStatus = 'unpaid';
+                $prof->bind_param('iss', $s_id, $admStatus, $payStatus);
                 if (!$prof->execute()) error_log('ICT student_profiles insert failed: ' . ($prof->error ?? 'unknown'));
                 $prof->close();
             }

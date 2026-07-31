@@ -86,12 +86,17 @@ try {
             VALUES (?, ?, ?, ?, 3)
         ");
         
+        $programsError = false;
         foreach ($default_programs as $prog) {
             $stmt->bind_param('ssss', $prog[0], $prog[1], $prog[2], $prog[3]);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $programsError = true; error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         }
         $stmt->close();
-        $messages[] = 'âœ“ Default programs created';
+        if ($programsError) {
+            $messages[] = 'âœ— Error creating one or more default programs: ' . $conn->error;
+        } else {
+            $messages[] = 'âœ“ Default programs created';
+        }
     } else {
         $messages[] = 'âœ“ Programs already configured';
     }

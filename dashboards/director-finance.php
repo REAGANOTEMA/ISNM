@@ -35,10 +35,13 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.store_inventory_transactions (id INT AUTO_INCREMENT PRIMARY KEY, item_id INT DEFAULT 0, transaction_type VARCHAR(50) DEFAULT '', quantity DECIMAL(14,2) DEFAULT 0, quantity_before DECIMAL(14,2) DEFAULT NULL, quantity_after DECIMAL(14,2) DEFAULT NULL, reason TEXT, created_by INT DEFAULT NULL, reference_type VARCHAR(50) DEFAULT NULL, reference_id INT DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.general_ledger (id INT AUTO_INCREMENT PRIMARY KEY, entry_date DATE DEFAULT NULL, account_code VARCHAR(20) DEFAULT '', account_name VARCHAR(200) DEFAULT '', description TEXT, debit_amount DECIMAL(14,2) DEFAULT 0, credit_amount DECIMAL(14,2) DEFAULT 0, reference_type VARCHAR(50) DEFAULT '', reference_id INT DEFAULT 0, status VARCHAR(50) DEFAULT 'posted', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_gl_date (entry_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.salary_structures (id INT AUTO_INCREMENT PRIMARY KEY, staff_id INT NOT NULL, basic_salary DECIMAL(14,2) DEFAULT 0, total_allowances DECIMAL(14,2) DEFAULT 0, total_deductions DECIMAL(14,2) DEFAULT 0, net_salary DECIMAL(14,2) DEFAULT 0, status VARCHAR(50) DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_ss_staff (staff_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_invoices (id INT AUTO_INCREMENT PRIMARY KEY, invoice_number VARCHAR(50) DEFAULT '', student_id INT NOT NULL, total_amount DECIMAL(14,2) DEFAULT 0, amount_paid DECIMAL(14,2) DEFAULT 0, balance DECIMAL(14,2) DEFAULT 0, tuition_amount DECIMAL(14,2) DEFAULT 0, accommodation_amount DECIMAL(14,2) DEFAULT 0, status VARCHAR(50) DEFAULT 'pending', due_date DATE DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_si_student (student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.staff_activity_log (id INT AUTO_INCREMENT PRIMARY KEY, staff_id INT DEFAULT 0, activity_type VARCHAR(50) DEFAULT 'general', activity_description TEXT, ip_address VARCHAR(50) DEFAULT NULL, user_agent VARCHAR(500) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_sal_date (created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
+if ($students) {
+    require_once __DIR__ . '/../includes/student_invoices_schema.php';
+    ensureStudentInvoicesSchema($students);
+}
 $page = $_GET['page'] ?? '';
 $pageMap = ['revenue'=>'revenue_summary','budget'=>'budget_planning','expenditure'=>'expenditure_monitoring','payroll'=>'payroll_review','ledger'=>'general_ledger','audit'=>'audit_logs','procurement'=>'purchase_requests','assets'=>'asset_register'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? ($pageMap[$page] ?? 'overview');
@@ -463,7 +466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $payDate = date('Y-m-d');
         if($students&&$sid&&$amt){
             $stmt=$students->prepare("INSERT INTO {$students_db}.payments (payment_reference,student_id,amount_received,payment_method,payment_date,status,processed_by) VALUES (?,?,?,?,?,?,?)");
-            if($stmt){$stmt->bind_param('sidsssi',$ref,$sid,$amt,$pm,$payDate,'pending',$uid);if($stmt->execute()){fin_success("Payment $ref recorded.");}else{fin_error('Write failed.');}$stmt->close();}else{fin_error('Write failed.');}
+            if($stmt){$payStatus='pending';$stmt->bind_param('sidsssi',$ref,$sid,$amt,$pm,$payDate,$payStatus,$uid);if($stmt->execute()){fin_success("Payment $ref recorded.");}else{fin_error('Write failed.');}$stmt->close();}else{fin_error('Write failed.');}
         }else{ fin_error('Student and amount required.'); }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }

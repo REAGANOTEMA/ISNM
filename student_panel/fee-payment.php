@@ -2,27 +2,41 @@
 
 <?php include("./verifyRoleRedirect.php"); ?>
 
-<?php include("../assets/config.php"); 
+<?php include("../assets/config.php");
+
+require_once __DIR__ . '/../includes/student_invoices_schema.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
-    $student_id = $_SESSION['uid'];
-    $class = $_POST['class'] ?? '';
-    $instalment = $_POST['instalment'] ?? '';
-    $amount = floatval($_POST['amount']);
-    $payment_ref = 'PAY-' . time() . '-' . $student_id;
-    
-    $insert_sql = "INSERT INTO student_invoices (student_id, fee_type, total_amount, amount_paid, balance, status, issue_date, created_by) 
-                   SELECT id, ?, ?, ?, 0, 'Pending', CURDATE(), ? FROM students WHERE id = ? LIMIT 1";
-    $stmt = mysqli_prepare($conn, $insert_sql);
-    if ($stmt) {
-        $fee_type = $instalment;
-        $paid = $amount;
-        mysqli_stmt_bind_param($stmt, "sddii", $fee_type, $paid, $paid, $student_id, $student_id);
-        mysqli_stmt_execute($stmt);
-        $msg = "Payment record submitted successfully!";
-        mysqli_stmt_close($stmt);
+    $student_id = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
+    $instalment = trim($_POST['instalment'] ?? '');
+    $class      = trim($_POST['class'] ?? '');
+    $amount     = floatval($_POST['amount'] ?? 0);
+
+    if (!$student_id || $amount <= 0) {
+        $msg = "Payment failed: invalid student or amount.";
+    } elseif (!ensureStudentInvoicesSchema($conn)) {
+        $msg = "Payment failed: invoices table unavailable.";
     } else {
-        $msg = "Error processing payment.";
+        $invoice_number = 'INV-' . $student_id . '-' . date('Ymd-His');
+        $fee_type       = $instalment !== '' ? $instalment : 'Tuition';
+
+        $insert_sql = "INSERT INTO student_invoices
+                       (invoice_number, student_id, fee_type, description, total_amount, discount_amount, amount_paid, status, issue_date, created_by)
+                       VALUES (?, ?, ?, ?, ?, 0, ?, 'Pending', CURDATE(), ?)";
+        $stmt = mysqli_prepare($conn, $insert_sql);
+        if ($stmt) {
+            $desc = $class !== '' && $class !== 'Open this select menu' ? 'Class: ' . $class : 'Portal fee payment';
+            mysqli_stmt_bind_param($stmt, "sisddi", $invoice_number, $student_id, $fee_type, $desc, $amount, $amount, $student_id);
+            if (mysqli_stmt_execute($stmt)) {
+                $msg = "Payment record submitted successfully! Ref: " . $invoice_number;
+            } else {
+                error_log('fee-payment insert failed: ' . mysqli_stmt_error($stmt));
+                $msg = "Error processing payment: " . mysqli_stmt_error($stmt);
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $msg = "Error processing payment: " . mysqli_error($conn);
+        }
     }
 }
 ?>

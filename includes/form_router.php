@@ -156,7 +156,7 @@ class FormRouter {
         );
         
         if ($stmt) {
-            $stmt->bind_param('iss', $staffId, $title, $message);
+            $stmt->bind_param('isss', $staffId, $title, $message, $type);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }

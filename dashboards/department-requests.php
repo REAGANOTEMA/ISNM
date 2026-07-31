@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         die('Invalid CSRF token');
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
 
     if ($action === 'create') {
         $rn = 'DR-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
@@ -68,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         $stmt = $conn->prepare("INSERT INTO department_requests (request_number, from_department, to_department, item_name, quantity, unit, purpose, urgency, status, requested_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
         if ($stmt) {
             $stmt->bind_param("ssssissii", $rn, $fd, $td, $in, $qty, $un, $pr, $ug, $userId);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
-        $msg = ['t' => 'success', 'm' => "Request <strong>$rn</strong> created."];
+        if ($formError) { $msg = ['t' => 'error', 'm' => $formError]; } else { $msg = ['t' => 'success', 'm' => "Request <strong>$rn</strong> created."]; }
         header('Location: department-requests.php'); exit;
     }
 
@@ -81,10 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Approved', approved_by=?, updated_at=NOW() WHERE id=? AND status='Pending'");
             if ($stmt) {
                 $stmt->bind_param("ii", $userId, $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
-            $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request approved.'];
+            if ($formError) { $_SESSION['dr_msg'] = ['t' => 'error', 'm' => $formError]; } else { $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request approved.']; }
         }
         header('Location: department-requests.php'); exit;
     }
@@ -96,10 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("UPDATE department_requests SET status='Rejected', notes=?, updated_at=NOW() WHERE id=? AND status='Pending'");
             if ($stmt) {
                 $stmt->bind_param("si", $nt, $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
-            $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request rejected.'];
+            if ($formError) { $_SESSION['dr_msg'] = ['t' => 'error', 'm' => $formError]; } else { $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request rejected.']; }
         }
         header('Location: department-requests.php'); exit;
     }
@@ -117,10 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 if ($stmt) { $stmt->bind_param("ii", $userId, $id); }
             }
             if ($stmt) {
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
-            $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request fulfilled.'];
+            if ($formError) { $_SESSION['dr_msg'] = ['t' => 'error', 'm' => $formError]; } else { $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request fulfilled.']; }
         }
         header('Location: department-requests.php'); exit;
     }

@@ -126,7 +126,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
         header("Location: staff_transcript_generation.php");
         exit();
     }
-    $save_stmt->bind_param("sissss", 'Transcript', $student_id, $staff_id, 'Academic Transcript', $transcript_content, $access_code);
+    $docType = 'Transcript';
+    $docTitle = 'Academic Transcript';
+    $save_stmt->bind_param("sissss", $docType, $student_id, $staff_id, $docTitle, $transcript_content, $access_code);
     
     if ($save_stmt->execute()) {
         $_SESSION['success'] = "Transcript generated successfully! Transcript Number: $transcript_number";

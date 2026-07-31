@@ -34,14 +34,18 @@
     $theme = "light";
    
     // Try to get theme from database if connection is available
-    if (isset($_SESSION['uid']) && isset($conn) && $conn) {
+    if (isset($conn) && $conn) {
         try {
-            $uid = intval($_SESSION['uid']);
-            $query = "SELECT theme FROM users WHERE id='$uid'";
-            $result = mysqli_query($conn, $query);
-            if($result && mysqli_num_rows($result) > 0){
-                $row = mysqli_fetch_array($result);
-                $theme = $row['theme'];
+            $query = "SELECT setting_value FROM settings WHERE setting_key = 'theme' LIMIT 1";
+            $stmt = mysqli_prepare($conn, $query);
+            if ($stmt) {
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                if ($result && mysqli_num_rows($result) > 0) {
+                    $row = mysqli_fetch_array($result);
+                    $theme = $row['setting_value'] ?: "light";
+                }
+                mysqli_stmt_close($stmt);
             }
         } catch (Exception $e) {
             // Database error - use default theme

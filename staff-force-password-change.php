@@ -37,10 +37,12 @@ if ($conn) {
 
 // Handle password change POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
-    $new_password     = $_POST['new_password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-
-    if (empty($new_password) || empty($confirm_password)) {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
+    } elseif (empty($new_password = $_POST['new_password'] ?? '') || empty($confirm_password = $_POST['confirm_password'] ?? '')) {
         $error = 'All fields are required.';
     } elseif ($new_password !== $confirm_password) {
         $error = 'Passwords do not match.';

@@ -228,7 +228,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("INSERT INTO payroll_loans (payroll_employee_id, loan_number, loan_type, principal_amount, interest_rate, installments, installment_amount, loan_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $stmt->bind_param('issididisi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
+            $stmt->bind_param('issddidsi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
             if (!$stmt->execute()) { error_log('payroll add_loan failed: ' . ($stmt->error ?? 'unknown')); $_SESSION['error'] = 'Failed to record loan.'; } else { $_SESSION['success'] = 'Loan recorded.'; }
             $stmt->close();
 

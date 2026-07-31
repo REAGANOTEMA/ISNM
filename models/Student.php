@@ -193,7 +193,7 @@ class Student {
                 $data['notes'] ?? null,
             ];
 
-            $types = 'sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssiiiiiiisssssssiiiiis';
+            $types = 'sssssssssssssssiiisssssssssssssssssssssssssssssssiis';
 
             $stmt = $this->conn->prepare($query);
             if (!$stmt) {
@@ -891,7 +891,7 @@ class Student {
                         verified_at = CASE WHEN VALUES(status) = 'Verified' THEN NOW() ELSE verified_at END,
                         updated_at = NOW()";
             $stmt = $this->conn->prepare($query);
-            $stmt->bind_param('iisssiiss', $studentId, $requirementId, $status, $remarks, $verifiedBy, $verifiedByName, $documentPath, $documentName);
+            $stmt->bind_param('iississs', $studentId, $requirementId, $status, $remarks, $verifiedBy, $verifiedByName, $documentPath, $documentName);
             if (!$stmt->execute()) throw new Exception($stmt->error);
             $stmt->close();
 
@@ -1055,8 +1055,9 @@ class Student {
             $userId = $_SESSION['user_id'] ?? null;
             $username = $_SESSION['username'] ?? $_SESSION['first_name'] ?? 'system';
             $role = $_SESSION['role'] ?? 'system';
+            $entityType = 'student';
             $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-            $stmt->bind_param('isssis', $userId, $username, $role, $entityId, $description, $ip);
+            $stmt->bind_param('isssiss', $userId, $username, $role, $entityType, $entityId, $description, $ip);
             if (!$stmt->execute()) error_log('Audit log failed: ' . $stmt->error);
             $stmt->close();
         } catch (Exception $e) {

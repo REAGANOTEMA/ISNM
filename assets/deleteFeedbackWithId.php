@@ -1,5 +1,8 @@
 <?php
 include("config.php");
+
+if (!function_exists('isnm_require_staff_role')) { require_once __DIR__ . '/config.php'; }
+isnm_require_staff_role();
 $response = array();
 
 if (isset($_POST["feedbackid"])) {

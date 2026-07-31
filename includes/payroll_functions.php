@@ -463,7 +463,7 @@ if (!function_exists('processPayrollRun')) {
 
                 $itemStmt = $conn->prepare("INSERT INTO payroll_items (payroll_run_id, payroll_employee_id, staff_id, basic_salary, total_allowances, total_bonus, total_overtime, total_statutory_deductions, total_other_deductions, paye_tax, nssf_employee, nssf_employer, net_pay, bank_account, mobile_money, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')");
                 if ($itemStmt) {
-                    $itemStmt->bind_param('iiidddddddddsss', $payrollRunId, $peId, $staffId, $basic, $totalAllowAmt, $totalBonus, $totalOvertime, $totalStatDed, $totalOtherDed, $payeTax, $nssfEmployee, $nssfEmployer, $netPay, $bankAcc, $mobileMoney, $payMethod);
+                    $itemStmt->bind_param('iiiddddddddddsss', $payrollRunId, $peId, $staffId, $basic, $totalAllowAmt, $totalBonus, $totalOvertime, $totalStatDed, $totalOtherDed, $payeTax, $nssfEmployee, $nssfEmployer, $netPay, $bankAcc, $mobileMoney, $payMethod);
                     if ($itemStmt->execute()) {
                         $processed++;
                         $totalGross += $grossPay;
@@ -488,7 +488,7 @@ if (!function_exists('processPayrollRun')) {
 
             $updateStmt = $conn->prepare("UPDATE payroll_runs SET total_employees = ?, total_gross = ?, total_allowances = ?, total_deductions = ?, total_statutory = ?, total_tax = ?, total_nssf = ?, total_employer_nssf = ?, total_net = ?, status = 'completed' WHERE id = ?");
             if ($updateStmt) {
-                $updateStmt->bind_param('idddddddddi', $processed, $totalGross, $totalAllow, $totalDed, $totalStat, $totalTax, $totalNssf, $totalEmployerNssf, $totalNet, $payrollRunId);
+                $updateStmt->bind_param('iddddddddi', $processed, $totalGross, $totalAllow, $totalDed, $totalStat, $totalTax, $totalNssf, $totalEmployerNssf, $totalNet, $payrollRunId);
                 if (!$updateStmt->execute()) { error_log('$updateStmt execute failed: ' . ($updateStmt->error ?? 'unknown')); };
                 $updateStmt->close();
             }

@@ -101,7 +101,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'Failed to send message']);
             exit;
         }
-        $stmt->bind_param("issssssi", $sender_id, $sender_name, $sender_role, $recipient_id, $recipient_name, $subject, $message, $priority, $parent_id);
+        $stmt->bind_param("ississssi", $sender_id, $sender_name, $sender_role, $recipient_id, $recipient_name, $subject, $message, $priority, $parent_id);
 
         if ($stmt->execute()) {
             $new_id = $stmt->insert_id;

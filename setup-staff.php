@@ -542,31 +542,14 @@ function runSetup(&$output) {
         if ($r) { logMsg($output, "  ✓ payments table ready"); $ret['payments_created'] = true; }
         else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['payments_created'] = false; }
 
-        // student_invoices
+        // student_invoices (authoritative schema — see includes/student_invoices_schema.php)
         logMsg($output, "\n=== Creating student_invoices table ===");
-        $r = $stuConn->query("CREATE TABLE IF NOT EXISTS `student_invoices` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `invoice_number` varchar(50) NOT NULL,
-            `student_id` int(11) NOT NULL,
-            `fee_assignment_id` int(11) DEFAULT NULL,
-            `fee_type` varchar(100) NOT NULL,
-            `description` text DEFAULT NULL,
-            `total_amount` decimal(12,2) NOT NULL,
-            `discount_amount` decimal(12,2) DEFAULT 0.00,
-            `net_amount` decimal(12,2) GENERATED ALWAYS AS (`total_amount` - `discount_amount`) STORED,
-            `amount_paid` decimal(12,2) DEFAULT 0.00,
-            `balance` decimal(12,2) GENERATED ALWAYS AS (`net_amount` - `amount_paid`) STORED,
-            `status` enum('Draft','Pending','Partially Paid','Paid','Overdue','Cancelled','Waived') DEFAULT 'Pending',
-            `due_date` date DEFAULT NULL,
-            `issue_date` date DEFAULT curdate(),
-            `payment_method` varchar(50) DEFAULT NULL,
-            `created_by` int(11) DEFAULT NULL,
-            `created_at` timestamp NULL DEFAULT current_timestamp(),
-            `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-            PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-        if ($r) { logMsg($output, "  ✓ student_invoices table ready"); $ret['student_invoices_created'] = true; }
-        else { logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['student_invoices_created'] = false; }
+        require_once __DIR__ . '/includes/student_invoices_schema.php';
+        if (ensureStudentInvoicesSchema($stuConn)) {
+            logMsg($output, "  ✓ student_invoices table ready"); $ret['student_invoices_created'] = true;
+        } else {
+            logMsg($output, "  ✗ Error: " . $stuConn->error); $ret['student_invoices_created'] = false;
+        }
     } else {
         logMsg($output, "  SKIPPED: Students database not connected");
     }

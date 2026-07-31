@@ -514,7 +514,7 @@ class AuthenticationService {
             ini_set('session.use_only_cookies', 1);
             ini_set('session.cookie_httponly', 1);
             ini_set('session.cookie_samesite', 'Lax');
-            // ini_set('session.use_strict_mode', 1);
+            ini_set('session.use_strict_mode', 1);
             $https = false;
             if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
                 $https = true;
@@ -589,9 +589,163 @@ class AuthenticationService {
         return true;
     }
 
+    /**
+     * Issue a persistent "remember me" token stored in the database
+     * (staff_login_sessions for staff, user_sessions for students) and set
+     * an HttpOnly cookie. The DB only ever stores the SHA-256 hash.
+     */
+    public function issueRememberMe(int $userId, string $type) {
+        if ($userId <= 0) return false;
+        $type    = $type === 'staff' ? 'staff' : 'student';
+        $token   = bin2hex(random_bytes(32));
+        $hash    = hash('sha256', $token);
+        $expires = date('Y-m-d H:i:s', time() + 2592000); // 30 days
+        $ip      = $_SERVER['REMOTE_ADDR']     ?? '';
+        $ua      = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+        if ($type === 'staff') {
+            $conn = getStaffConnection();
+            if (!$conn) return false;
+            $s = $conn->prepare("INSERT INTO staff_login_sessions (staff_id, session_token, ip_address, user_agent, expires_at) VALUES (?,?,?,?,?)");
+            if (!$s) return false;
+            $s->bind_param('issss', $userId, $hash, $ip, $ua, $expires);
+        } else {
+            $conn = getConnection();
+            if (!$conn) return false;
+            $s = $conn->prepare("INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent, expires_at) VALUES (?,?,?,?,?)");
+            if (!$s) return false;
+            $s->bind_param('issss', $userId, $hash, $ip, $ua, $expires);
+        }
+        if (!$s->execute()) { error_log('issueRememberMe execute failed: ' . ($s->error ?? 'unknown')); $s->close(); return false; }
+        $s->close();
+
+        setcookie('isnm_remember_' . $type, $token, [
+            'expires'  => time() + 2592000,
+            'path'     => defined('SESSION_COOKIE_PATH') ? SESSION_COOKIE_PATH : '/',
+            'secure'   => !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        return true;
+    }
+
+    /**
+     * Restore a session from a valid "remember me" cookie (token rotation on use).
+     * Returns true when a session was created.
+     */
+    public function restoreRememberMe() {
+        try {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) return false;
+
+            $type = null; $cookie = null;
+            if (!empty($_COOKIE['isnm_remember_staff']))   { $type = 'staff';   $cookie = (string)$_COOKIE['isnm_remember_staff']; }
+            elseif (!empty($_COOKIE['isnm_remember_student'])) { $type = 'student'; $cookie = (string)$_COOKIE['isnm_remember_student']; }
+            if ($type === null || $cookie === '') return false;
+            if (strlen($cookie) !== 64 || !ctype_xdigit($cookie)) {
+                $this->clearRememberMe();
+                return false;
+            }
+            $hash = hash('sha256', $cookie);
+
+            $user = null;
+            if ($type === 'staff') {
+                $conn = getStaffConnection();
+                if (!$conn) return false;
+                $s = $conn->prepare(
+                    "SELECT sls.staff_id, s.email, s.full_name, s.phone, s.position, s.department, s.is_first_login, sr.role_name
+                     FROM staff_login_sessions sls
+                     JOIN staff s ON s.id = sls.staff_id
+                     LEFT JOIN staff_roles sr ON s.role_id = sr.id
+                     WHERE sls.session_token = ? AND sls.expires_at > NOW()
+                     LIMIT 1"
+                );
+                if (!$s) return false;
+                $s->bind_param('s', $hash);
+                if (!$s->execute()) { error_log('restoreRememberMe staff execute failed: ' . ($s->error ?? 'unknown')); $s->close(); return false; }
+                $row = $s->get_result()->fetch_assoc();
+                $s->close();
+                if (!$row || empty($row['staff_id'])) return false;
+                $del = $conn->prepare("DELETE FROM staff_login_sessions WHERE session_token = ?");
+                if ($del) { $del->bind_param('s', $hash); if (!$del->execute()) { error_log('$del execute failed: ' . ($del->error ?? 'unknown')); }; $del->close(); }
+                $roleName = $row['role_name'] ?? ($row['position'] ?? 'Staff');
+                $user = [
+                    'id'             => (int)$row['staff_id'],
+                    'email'          => $row['email']    ?? '',
+                    'full_name'      => $row['full_name'] ?? '',
+                    'phone'          => $row['phone']    ?? '',
+                    'role'           => $roleName,
+                    'type'           => 'staff',
+                    'position'       => $row['position']    ?? '',
+                    'department'     => $row['department']  ?? '',
+                    'is_first_login' => (bool)($row['is_first_login'] ?? false),
+                ];
+            } else {
+                $conn = getConnection();
+                if (!$conn) return false;
+                $s = $conn->prepare(
+                    "SELECT u.user_id, s.id, s.index_number, TRIM(CONCAT_WS(' ', s.first_name, NULLIF(s.other_name,''), s.surname)) AS full_name, s.phone
+                     FROM user_sessions u
+                     JOIN students s ON s.id = u.user_id
+                     WHERE u.session_token = ? AND u.expires_at > NOW()
+                     LIMIT 1"
+                );
+                if (!$s) return false;
+                $s->bind_param('s', $hash);
+                if (!$s->execute()) { error_log('restoreRememberMe student execute failed: ' . ($s->error ?? 'unknown')); $s->close(); return false; }
+                $row = $s->get_result()->fetch_assoc();
+                $s->close();
+                if (!$row || empty($row['user_id'])) return false;
+                $del = $conn->prepare("DELETE FROM user_sessions WHERE session_token = ?");
+                if ($del) { $del->bind_param('s', $hash); if (!$del->execute()) { error_log('$del execute failed: ' . ($del->error ?? 'unknown')); }; $del->close(); }
+                $user = [
+                    'id'           => (int)$row['id'],
+                    'index_number' => $row['index_number'] ?? '',
+                    'full_name'    => $row['full_name'] ?? '',
+                    'phone'        => $row['phone'] ?? '',
+                    'role'         => 'student',
+                    'type'         => 'student',
+                ];
+            }
+
+            $this->createSecureSession($user);
+            $this->issueRememberMe((int)$user['id'], $type); // rotate token
+            return true;
+        } catch (\Throwable $e) {
+            error_log('restoreRememberMe failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Remove the "remember me" token from the DB and clear the cookie.
+     */
+    public function clearRememberMe() {
+        foreach (['staff', 'student'] as $t) {
+            if (empty($_COOKIE['isnm_remember_' . $t])) continue;
+            $hash = hash('sha256', (string)$_COOKIE['isnm_remember_' . $t]);
+            if ($t === 'staff') { $conn = getStaffConnection(); }
+            else { $conn = getConnection(); }
+            if ($conn) {
+                $table = $t === 'staff' ? 'staff_login_sessions' : 'user_sessions';
+                $col   = $t === 'staff' ? 'staff_id' : 'user_id';
+                $s = $conn->prepare("DELETE FROM `$table` WHERE session_token = ?");
+                if ($s) { $s->bind_param('s', $hash); if (!$s->execute()) { error_log('clearRememberMe execute failed: ' . ($s->error ?? 'unknown')); }; $s->close(); }
+            }
+            setcookie('isnm_remember_' . $t, '', [
+                'expires'  => time() - 3600,
+                'path'     => defined('SESSION_COOKIE_PATH') ? SESSION_COOKIE_PATH : '/',
+                'secure'   => !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off',
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+    }
+
     public function isAuthenticated() {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+        if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) return true;
+        return $this->restoreRememberMe();
     }
 
     public function checkSessionValidity() {
@@ -646,6 +800,7 @@ class AuthenticationService {
 
     public function logout() {
         if (session_status() === PHP_SESSION_NONE) session_start();
+        $this->clearRememberMe();
         if (isset($_SESSION['type'], $_SESSION['user_id']) && $_SESSION['type'] === 'staff') {
             $conn = getStaffConnection();
             if ($conn) {

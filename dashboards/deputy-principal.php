@@ -262,10 +262,11 @@ if ($view === 'forward_approval' && $ajax === '1' && $staff) {
         $sn = $uname;
         $timestamp = date('Y-m-d H:i:s');
         $newMsg = "[Deputy Review by $sn at $timestamp: $comm]\n[Forwarded to Principal for final approval]";
+        $formError = '';
         $stmt = $staff->prepare("UPDATE {$students_db}.communication_log SET is_read=1, message=CONCAT(message,'\n\n',?) WHERE id=?");
         if ($stmt) {
             $stmt->bind_param("si", $newMsg, $aid);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
         
@@ -275,9 +276,10 @@ if ($view === 'forward_approval' && $ajax === '1' && $staff) {
         $stmt2 = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,?,?,?,?)");
         if ($stmt2) {
             $stmt2->bind_param("issss", $uid, $sn, $role, $subject, $body);
-            if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
+            if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
             $stmt2->close();
         }
+        if ($formError) { echo json_encode(['success'=>false, 'message'=>$formError]); exit; }
         echo json_encode(['success'=>true]); exit;
     }
     echo json_encode(['success'=>false]); exit;
@@ -431,6 +433,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
     $act = $_POST['action'];
+$formError = '';
     if ($act === 'add_student_deputy' && $students) {
         $fn  = trim($_POST['first_name'] ?? '');
         $sn  = trim($_POST['surname'] ?? '');
@@ -471,7 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $tid='TT-'.date('Ymd').'-'.mt_rand(1000,9999);
         $stmt = $staff->prepare("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         if ($stmt) {
-            $stmt->bind_param("sssssssssi", $tid, $ay, $sem, $prog, $cc, $dow, $st, $et, $venue, $lid, $uid);
+            $stmt->bind_param("sssssssssii", $tid, $ay, $sem, $prog, $cc, $dow, $st, $et, $venue, $lid, $uid);
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             if ($staff->affected_rows>0) { dep_success("Class scheduled: $cc ($dow $st-$et)"); } else { dep_error('Failed to schedule: '.$staff->error); }
             $stmt->close();
@@ -508,10 +511,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt = $staff->prepare("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES (?,?,?,?)");
                 if ($stmt) {
                     $stmt->bind_param("siss", $dtype, $uid, $title, $fpath);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
-                dep_success("Material '$title' uploaded.");
+                if ($formError) { dep_error($formError); } else { dep_success("Material '$title' uploaded."); }
             } else { dep_error('Upload failed.'); }
         } else { dep_error('Title and file required.'); }
         header("Location: deputy-principal.php?section=academic_monitoring"); exit;
@@ -541,9 +544,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $students->prepare("UPDATE clinical_placements_students SET competency_score=?, supervisor_evaluation=?, logbook_submitted=1, status='Completed' WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("dsi", $score, $eval, $pid);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                dep_success('Evaluation recorded.');
+                if ($formError) { dep_error($formError); } else { dep_success('Evaluation recorded.'); }
             }
         } else { dep_error('Placement ID required.'); }
         header("Location: deputy-principal.php?section=clinical_placement_monitoring"); exit;

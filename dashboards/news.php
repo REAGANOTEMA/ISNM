@@ -94,7 +94,7 @@ function logActivity($conn, $userId, $action, $description) {
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent, created_at) VALUES (?, 'news', ?, 'news_management', ?, ?, NOW())");
     if ($stmt) {
-        $stmt->bind_param('issss', $userId, $action, $description, $ip, $ua);
+        $stmt->bind_param('isss', $userId, $description, $ip, $ua);
         @$stmt->execute();
         $stmt->close();
     }
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $staff->prepare("INSERT INTO news (title,slug,summary,content,featured_image,category,tags,status,is_featured,published_at,scheduled_at,author_id,author_name,views,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,NOW())");
             if ($stmt) {
                 $nullDt = null;
-                $stmt->bind_param('ssssssssiiss', $title,$slug,$summary,$content,$featured,$category,$tags,$status,$isFeat,$pubAt,$schedAt,$userId,$autName);
+                $stmt->bind_param('ssssssssissis', $title,$slug,$summary,$content,$featured,$category,$tags,$status,$isFeat,$pubAt,$schedAt,$userId,$autName);
                 @$stmt->execute();
                 $newId = $stmt->insert_id;
                 $stmt->close();

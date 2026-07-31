@@ -1,5 +1,8 @@
 <?php
 include("config.php");
+
+if (!function_exists('isnm_require_staff_role')) { require_once __DIR__ . '/config.php'; }
+isnm_require_staff_role();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo 'Method not allowed'; exit; }
 
 $studentid = intval($_POST['studentid'] ?? 0);

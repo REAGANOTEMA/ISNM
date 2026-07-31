@@ -169,21 +169,13 @@ if ($stu) {
         INDEX `idx_student_id` (`student_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_fee_assignments');
 
-    // Ensure student_invoices exists
-    addTable($stu, 'students', "CREATE TABLE `student_invoices` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `invoice_number` VARCHAR(50) NOT NULL,
-        `student_id` INT(11) NOT NULL,
-        `net_amount` DECIMAL(12,2) DEFAULT 0,
-        `amount_paid` DECIMAL(12,2) DEFAULT 0,
-        `status` VARCHAR(20) DEFAULT 'Pending',
-        `due_date` DATE DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        UNIQUE KEY `uk_invoice_number` (`invoice_number`),
-        INDEX `idx_student_id` (`student_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'student_invoices');
+    // Ensure student_invoices exists (authoritative schema — see includes/student_invoices_schema.php)
+    require_once __DIR__ . '/../includes/student_invoices_schema.php';
+    if (ensureStudentInvoicesSchema($stu)) {
+        $results['students'][] = "student_invoices: READY";
+    } else {
+        $results['errors'][] = "students/student_invoices: " . ($stu->error ?? 'schema repair failed');
+    }
 
     // Ensure fee_structures exists
     addTable($stu, 'students', "CREATE TABLE `fee_structures` (

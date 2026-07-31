@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         die('Invalid CSRF token');
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
 
     if ($action === 'save_chemical') {
         $id = (int)($_POST['id'] ?? 0);
@@ -58,18 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET chemical_code=?, chemical_name=?, chemical_type=?, cas_number=?, hazard_class=?, storage_location=?, quantity_on_hand=?, unit_of_measure=?, reorder_level=?, supplier=?, expiry_date=?, date_received=?, status=? WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("sssssssdsssssi", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $status, $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Chemical updated successfully.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Chemical updated successfully.'; }
             }
         } else {
             $received_by = intval($user_id);
             $stmt = $staff_conn->prepare("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             if ($stmt) {
                 $stmt->bind_param("sssssssdssssis", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $received_by, $status);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Chemical added successfully.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Chemical added successfully.'; }
             }
         }
         header('Location: chemical-inventory.php'); exit;
@@ -98,9 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $stmt2 = $staff_conn->prepare("UPDATE chemical_inventory SET quantity_on_hand=?, status=? WHERE id=?");
                 if ($stmt2) {
                     $stmt2->bind_param("dsi", $nq, $ns, $id);
-                    if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
+                    if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); };
                     $stmt2->close();
-                    $_SESSION['success'] = "Stock adjusted. New qty: $nq";
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Stock adjusted. New qty: $nq"; }
                 }
             }
         }
@@ -113,9 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("i", $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Chemical marked as disposed.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Chemical marked as disposed.'; }
             }
         }
         header('Location: chemical-inventory.php'); exit;
@@ -127,9 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $stmt = $staff_conn->prepare("DELETE FROM chemical_inventory WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("i", $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Chemical deleted.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Chemical deleted.'; }
             }
         }
         header('Location: chemical-inventory.php'); exit;

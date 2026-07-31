@@ -32,7 +32,8 @@ if (!empty($_SESSION['dashboard_profile_image_url'])) {
                 $studentConn = getStudentsConnection();
                 if ($studentConn) {
                     $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
-                    $q->bind_param('i', (int)$_SESSION['user_id']);
+                    $userId = (int)($_SESSION['user_id'] ?? 0);
+                    $q->bind_param('i', $userId);
                     if (!$q->execute()) { error_log('$q execute failed: ' . ($q->error ?? 'unknown')); };
                     $photoRow = $q->get_result()->fetch_assoc();
                     $q->close();

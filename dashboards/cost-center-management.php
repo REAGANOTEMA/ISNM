@@ -12,6 +12,7 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
             $_SESSION['error'] = 'Invalid security token.'; header('Location: cost-center-management.php'); exit;
         }
         $action = $_POST['action'] ?? '';
+        $formError = '';
         if ($action === 'add' || $action === 'edit') {
             $code = $_POST['cost_center_code'] ?? '';
             $name = $_POST['cost_center_name'] ?? '';
@@ -21,18 +22,18 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
                 $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
                 if ($stmt) {
                     $stmt->bind_param("ssss", $code, $name, $dept, $desc);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
-                    $_SESSION['success'] = "Cost center '$name' added.";
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Cost center '$name' added."; }
                 }
             } else {
                 $id = (int)($_POST['id'] ?? 0);
                 $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
                 if ($stmt) {
                     $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
-                    $_SESSION['success'] = "Cost center '$name' updated.";
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Cost center '$name' updated."; }
                 }
             }
             header('Location: cost-center-management.php'); exit;
@@ -42,9 +43,9 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
             $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("i", $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Cost center status toggled.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Cost center status toggled.'; }
             }
             header('Location: cost-center-management.php'); exit;
         }
@@ -53,9 +54,9 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
             $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param("i", $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Cost center deleted.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Cost center deleted.'; }
             }
             header('Location: cost-center-management.php'); exit;
         }
@@ -83,6 +84,9 @@ $pageTitle = 'Cost Center Management';
     <div class="content-header">
         <h1><i class="fas fa-coins"></i> Cost Center Management</h1>
     </div>
+    <?php if (!empty($_SESSION['error'])): ?>
+    <div class="alert alert-danger py-2"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
     <?php if (!empty($_SESSION['success'])): ?>
     <div class="alert alert-success py-2"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div>
     <?php endif; ?>

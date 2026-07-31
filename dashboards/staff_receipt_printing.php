@@ -79,7 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt']) &
             exit();
         }
         $access_code = 'REC_' . uniqid();
-        $save_stmt->bind_param("sissss", $receipt_type, $student_id, $staff_id, 'Receipt #' . $receipt_number, $content, $access_code);
+        $title = 'Receipt #' . $receipt_number;
+        $save_stmt->bind_param("sissss", $receipt_type, $student_id, $staff_id, $title, $content, $access_code);
         
         if ($save_stmt->execute()) {
             $_SESSION['success'] = "Receipt generated successfully! Receipt Number: $receipt_number";

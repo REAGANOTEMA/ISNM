@@ -1,6 +1,6 @@
 <?php
 /**
- * Director of Admissions – Complete Dashboard
+ * Director of Admissions ï¿½ Complete Dashboard
  * Tabs: Applications | Requirements | Enrolled Students
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
@@ -202,25 +202,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ck = $conn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1");
             if ($ck) { $rc = (int)$ck->fetch_assoc()['c']; }
             $track = $conn->prepare("INSERT INTO student_admission_tracking (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
-            $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, date('Y-m-d'), 'Registered', 0, $rc);
+            $regDate = date('Y-m-d');
+            $statusVal = 'Registered';
+            $zeroFlag = 0;
+            $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, $regDate, $statusVal, $zeroFlag, $rc);
             if (!$track->execute()) { error_log('track execute failed: ' . ($track->error ?? 'unknown')); };
 
             if ($stuConn) {
-                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (index_number, student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (index_number, student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $intakeYear = (string)date('Y');
+                $setName = '';
                 $s_ins->bind_param('sssssssssssssssssssssssss',
                     $index_number, $student_number, $reg_number, $first_name, $surname, $other_name, $full_name,
                     $applicant['email'], $applicant['phone'], $program_name, $program_name,
-                    $year, $level, (string)date('Y'), $intake, $applicant['date_of_birth'],
+                    $year, $level, $intakeYear, $intake, $applicant['date_of_birth'],
                     $applicant['gender'], $applicant['address'], $applicant['guardian_name'],
                     $applicant['guardian_phone'], $applicant['nationality'],
                     $applicant['emergency_contact_name'], $applicant['emergency_contact_phone'],
-                    '', $hashed_password
+                    $setName, $hashed_password
                 );
                 if (!$s_ins->execute()) { error_log('s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                 $s_id = $stuConn->insert_id;
                 if ($s_id > 0) {
                     $prof = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
-                    $prof->bind_param('iss', $s_id, $applicant['status'], 'unpaid');
+                    $payStatus = 'unpaid';
+                    $prof->bind_param('iss', $s_id, $applicant['status'], $payStatus);
                     if (!$prof->execute()) { error_log('prof execute failed: ' . ($prof->error ?? 'unknown')); };
                 }
             }
@@ -482,16 +488,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $track = $conn->prepare("INSERT INTO student_admission_tracking (student_number, index_number, application_number, full_name, program, intake, admission_date, admission_status, requirements_total) VALUES (?,?,?,?,?,?,?,'Registered',?)");
             $trackAppNum = 'DR-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
-            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, date('Y-m-d'), $rc);
+            $admissionDate = date('Y-m-d');
+            $track->bind_param('sssssssi', $student_number, $index_number, $trackAppNum, $full_name, $program, $intake, $admissionDate, $rc);
             if (!$track->execute()) throw new Exception('Tracking insert failed: ' . $track->error);
             $track->close();
 
             if ($stuConn) {
                 $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-                $s_ins->bind_param('sssssssssssssssssssssss',
-                    $student_number, $reg_number, $firstName, $surname, '', $full_name,
+                $otherName = '';
+                $intakeYear = (string)date('Y');
+                $s_ins->bind_param('ssssssssssssssssssssss',
+                    $student_number, $reg_number, $firstName, $surname, $otherName, $full_name,
                     $email, $phone, $program, $program,
-                    $year, $level, (string)date('Y'), $intake, $dob,
+                    $year, $level, $intakeYear, $intake, $dob,
                     $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password
                 );
                 if (!$s_ins->execute()) throw new Exception('Student insert failed: ' . $s_ins->error);
@@ -499,7 +508,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $s_ins->close();
                 if ($s_id > 0) {
                     $prof = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
-                    $prof->bind_param('iss', $s_id, 'Registered', 'unpaid');
+                    $admStatus = 'Registered';
+                    $payStatus = 'unpaid';
+                    $prof->bind_param('iss', $s_id, $admStatus, $payStatus);
                     if (!$prof->execute()) error_log('prof execute failed: ' . ($prof->error ?? 'unknown'));
                     $prof->close();
                 }

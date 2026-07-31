@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         header('Location: academic-calendar.php'); exit;
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
     if ($action === 'add_calendar') {
         $ay = $_POST['academic_year'] ?? '';
         $sem = $_POST['semester'] ?? '';
@@ -35,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,?,?,'Active')");
             if ($stmt) {
                 $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = "Calendar entry added for $ay.";
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Calendar entry added for $ay."; }
             }
         }
         header('Location: academic-calendar.php'); exit;
@@ -48,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             $stmt = $conn->prepare("DELETE FROM academic_calendar WHERE id = ?");
             if ($stmt) {
                 $stmt->bind_param("i", $id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
-                $_SESSION['success'] = 'Calendar entry deleted.';
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Calendar entry deleted.'; }
             }
         }
         header('Location: academic-calendar.php'); exit;
@@ -68,6 +69,7 @@ $pageTitle = 'Academic Calendar';
 <div class="main" style="margin-left:270px;padding:32px">
 <div class="page-title-card"><h2><i class="fas fa-calendar-alt me-2"></i>Academic Calendar</h2><p>View semesters, exam periods, and key academic deadlines</p></div>
 
+<?php if(!empty($_SESSION['error'])): ?><div class="alert alert-danger py-2"><?= htmlspecialchars($_SESSION['error'] ?? ''); unset($_SESSION['error']); ?></div><?php endif; ?>
 <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2"><?= htmlspecialchars($_SESSION['success'] ?? ''); unset($_SESSION['success']); ?></div><?php endif; ?>
 
 <div class="card mb-4">

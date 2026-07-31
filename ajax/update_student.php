@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $hist = $conn->prepare("INSERT INTO student_status_history (student_id, old_status, new_status, reason, changed_by, changed_by_name) VALUES (?, ?, ?, ?, ?, ?)");
         $userId = (int)($_SESSION['user_id'] ?? 0);
         $userName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? ''));
-        $hist->bind_param('isssi', $id, $oldStatus, $newStatus, $reason, $userId);
+        $hist->bind_param('isssis', $id, $oldStatus, $newStatus, $reason, $userId, $userName);
         if (!$hist->execute()) error_log('Status history insert failed: ' . $hist->error);
         $hist->close();
 
@@ -387,7 +387,7 @@ $stmt = $conn->prepare("UPDATE students SET
     hostel_required=?, transport_required=?, notes=?,
     blood_group=?, medical_conditions=?, allergies=?,
     updated_at=NOW() WHERE id=?");
-$stmt->bind_param("ssssssssssssssssisssssssssssssssssssssssssssssi",
+$stmt->bind_param("ssssssssssssssssssssssssssssssssssssssssssiissssi",
     $first_name, $surname, $other_name,
     $full_name, $gender,
     $index_number, $registration_number,

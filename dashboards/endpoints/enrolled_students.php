@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['lecturer']);
 header('Content-Type: application/json');
 
 $user_id = (int)($ctx['user']['id'] ?? 0);

@@ -2,6 +2,9 @@
     session_start();
     include('config.php');
 
+if (!function_exists('isnm_require_staff_role')) { require_once __DIR__ . '/config.php'; }
+isnm_require_staff_role();
+
     if(isset($_POST['dbLine'])){
         $sr_no = $_POST['dbLine'] ?? '';
 

@@ -294,7 +294,7 @@ class PaymentService {
 
         $metadataJson = json_encode($data['metadata'] ?? []);
 
-        $stmt->bind_param("sssssiisssssdddssssiss",
+        $stmt->bind_param("sssssiissssdsddssssss",
             $data['transaction_ref'],
             $data['provider_key'],
             $data['provider_txn_id'],
@@ -402,7 +402,7 @@ class PaymentService {
         ");
         $status = $gatewayResult['success'] ? 'processing' : 'failed';
         $providerRefundId = $gatewayResult['refund_id'] ?? '';
-        $stmt2->bind_param("sssissis", $refundRef, $providerRefundId, $amount, $reason, $status, $initiatedBy, $transactionRef);
+        $stmt2->bind_param("ssdssis", $refundRef, $providerRefundId, $amount, $reason, $status, $initiatedBy, $transactionRef);
         $stmt2->execute();
         $stmt2->close();
 

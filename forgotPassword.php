@@ -14,16 +14,26 @@ ini_set('log_errors', 1);
     $response['status'] = '';
     $response['message'] = '';
 
+    $csrfSent = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrfSent)) {
+        $response['status'] = 'ERROR';
+        $response['message'] = 'Invalid security token. Please refresh the page and try again.';
+        echo json_encode($response);
+        exit;
+    }
+
     if(isset($_POST['otp']) && isset($_POST['email'])){
 
-        $email = $_POST['email'] ?? '';
+        $email = trim($_POST['email'] ?? '');
         $otp = ($_POST['otp'] ?? '') . '';
 
-        $generatedOtp = $_SESSION['otp'];
+        $generatedOtp = $_SESSION['otp'] ?? '';
 
-        if((int)$otp === $generatedOtp){
+        if ($generatedOtp !== '' && hash_equals($generatedOtp, $otp)) {
             $response['status'] = 'success';
             $response['message'] = 'otp matched';
+            $_SESSION['otp_verified'] = true;
+            $_SESSION['otp_email'] = $email;
             unset($_SESSION['otp']);
         }else{
             $response['status'] = 'ERROR';
@@ -33,8 +43,22 @@ ini_set('log_errors', 1);
 
     }else if(isset($_POST['password']) && isset($_POST['email'])){
 
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
+        if (empty($_SESSION['otp_verified']) || !isset($_SESSION['otp_email']) || !hash_equals($_SESSION['otp_email'], trim($_POST['email'] ?? ''))) {
+            $response['status'] = 'ERROR';
+            $response['message'] = 'OTP verification required before resetting your password.';
+            echo json_encode($response);
+            exit;
+        }
+
+        $email = trim($_POST['email'] ?? '');
+        $password = (string)($_POST['password'] ?? '');
+
+        if (strlen($password) < 8) {
+            $response['status'] = 'ERROR';
+            $response['message'] = 'Password must be at least 8 characters long.';
+            echo json_encode($response);
+            exit;
+        }
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -53,6 +77,7 @@ ini_set('log_errors', 1);
 
             $row = mysqli_fetch_assoc($result);
             $_SESSION['uid'] = $row['id'];
+            unset($_SESSION['otp_verified'], $_SESSION['otp_email']);
             $response['status'] = 'update_success';
             $response['message'] = 'Password successfully updated';
         }else{
@@ -90,6 +115,7 @@ ini_set('log_errors', 1);
                     $response['status'] = 'success';
                     $response['email'] = $email . '';
                     $_SESSION['otp'] = $OTP . "";
+                    unset($_SESSION['otp_verified'], $_SESSION['otp_email']);
                 } catch (Exception $e) {
                     $response['status'] = 'ERROR';
                     $response['message'] = 'Something went wrong!';

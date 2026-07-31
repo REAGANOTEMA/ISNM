@@ -1,6 +1,9 @@
 <?php
 
 include("config.php");
+
+if (!function_exists('isnm_require_admin_role')) { require_once __DIR__ . '/config.php'; }
+isnm_require_admin_role();
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {

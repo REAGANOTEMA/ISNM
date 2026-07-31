@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         die('Invalid CSRF token');
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
     if ($staffDb && $action==='add_contract') {
         $staff_id = (int)($_POST['staff_id']??0);
         $type = trim($_POST['contract_type']??'');
@@ -64,11 +65,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             $stmt = $staffDb->prepare("INSERT INTO staff_contracts (contract_number,staff_id,contract_type,start_date,end_date,job_title,department,salary,probation_period,notice_period,contract_terms,benefits,signed_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");
             if ($stmt) {
                 $stmt->bind_param('sisssssdiisss',$cnum,$staff_id,$type,$start,$end,$job,$dept,$salary,$probation,$notice,$terms,$benefits,$signed);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $eid = $stmt->insert_id;
                 $stmt->close();
                 if (function_exists('logActivity')) logActivity($staffDb, $user['id']??0, "Added contract $cnum for staff ID $staff_id");
-                $_SESSION['success'] = "Contract $cnum created successfully.";
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Contract $cnum created successfully."; }
             }
         }
         header('Location: contracts-management.php'); exit;
@@ -76,9 +77,10 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     if ($staffDb && $action==='terminate_contract') {
         $cid = (int)($_POST['contract_id']??0);
         if ($cid) {
-            $staffDb->query("UPDATE staff_contracts SET status='Terminated', updated_at=NOW() WHERE id=" . intval($cid));
+            $ok = $staffDb->query("UPDATE staff_contracts SET status='Terminated', updated_at=NOW() WHERE id=" . intval($cid));
+            if (!$ok) { $formError = 'Database error: ' . ($staffDb->error ?? 'unknown'); }
             if (function_exists('logActivity')) logActivity($staffDb, $user['id']??0, "Terminated contract #$cid");
-            $_SESSION['success'] = 'Contract terminated.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Contract terminated.'; }
         }
         header('Location: contracts-management.php'); exit;
     }
@@ -86,20 +88,23 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $cid = (int)($_POST['contract_id']??0);
         $newEnd = trim($_POST['new_end_date']??'');
         if ($cid && $newEnd) {
-            $staffDb->query("UPDATE staff_contracts SET status='Renewed', updated_at=NOW() WHERE id=" . intval($cid));
-            $r = $staffDb->query("SELECT * FROM staff_contracts WHERE id=" . intval($cid));
-            $old = $r ? $r->fetch_assoc() : null;
+            $r = $staffDb->query("UPDATE staff_contracts SET status='Renewed', updated_at=NOW() WHERE id=" . intval($cid));
+            if (!$r) { $formError = 'Database error: ' . ($staffDb->error ?? 'unknown'); }
+            $r2 = $staffDb->query("SELECT * FROM staff_contracts WHERE id=" . intval($cid));
+            $old = $r2 ? $r2->fetch_assoc() : null;
             if ($old) {
                 $stmt = $staffDb->prepare("INSERT INTO staff_contracts (contract_number,staff_id,contract_type,start_date,end_date,job_title,department,salary,probation_period,notice_period,contract_terms,benefits,signed_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");
                 if ($stmt) {
                     $newNum = 'CTR-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
-                    $stmt->bind_param('sisssssdiisss',$newNum,$old['staff_id'],$old['contract_type'],date('Y-m-d'),$newEnd,$old['job_title'],$old['department'],$old['salary'],$old['probation_period'],$old['notice_period'],$old['contract_terms'],$old['benefits'],date('Y-m-d'));
-                    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                    $startDate = date('Y-m-d');
+                    $signedDate = date('Y-m-d');
+                    $stmt->bind_param('sisssssdiisss',$newNum,$old['staff_id'],$old['contract_type'],$startDate,$newEnd,$old['job_title'],$old['department'],$old['salary'],$old['probation_period'],$old['notice_period'],$old['contract_terms'],$old['benefits'],$signedDate);
+                    if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $stmt->close();
                 }
             }
             if (function_exists('logActivity')) logActivity($staffDb, $user['id']??0, "Renewed contract #$cid");
-            $_SESSION['success'] = 'Contract renewed with new end date.';
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Contract renewed with new end date.'; }
         }
         header('Location: contracts-management.php'); exit;
     }

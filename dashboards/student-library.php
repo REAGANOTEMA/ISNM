@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
                     if ($row && $row['status'] === 'Available') {
                         $stmt = $staffDb->prepare("INSERT INTO library_borrowing (member_id, student_id, book_id, book_title, borrow_date, due_date, return_status) VALUES (?, ?, ?, ?, CURDATE(), ?, 'Borrowed')");
                         if ($stmt) {
-                            $stmt->bind_param('siisss', $memberId, $studentId, $bookId, $bookTitle, $dueDate);
+                            $stmt->bind_param('siiss', $memberId, $studentId, $bookId, $bookTitle, $dueDate);
                             if ($stmt->execute()) {
                                 $upd = $staffDb->prepare("UPDATE library_books SET status = 'Borrowed' WHERE id = ?");
                                 if ($upd) {

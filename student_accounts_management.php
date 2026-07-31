@@ -200,7 +200,7 @@ function handleAddStudent() {
     $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, 'active', NOW())";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
+    $stmt->bind_param("sssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
     
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
@@ -240,7 +240,7 @@ function handleUpdateStudent() {
     $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, date_of_birth = ?, gender = ?, nationality = ?, address = ?, phone = ?, email = ?, program = ?, level = ?, intake_year = ?, intake_period = ?, status = ?, guardian_name = ?, guardian_phone = ?, guardian_email = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE student_id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssssssssssssssss", $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $status, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $student_id);
+    $stmt->bind_param("ssssssssssssssssssss", $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $status, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $student_id);
     
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
@@ -318,7 +318,7 @@ function handleImportStudents() {
                     $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?)";
                     
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone);
+                    $stmt->bind_param("sssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone);
                     
                     if ($stmt->execute()) {
                         $imported++;

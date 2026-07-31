@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -197,6 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         handleWebsiteSubmissionsAction($website_conn);
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
     if ($action === 'add_academic_year') {
         $year = trim($_POST['academic_year'] ?? '');
         $start = $_POST['start_date'] ?? null;
@@ -265,8 +266,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
-                    if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
-                    $_SESSION['success'] = "Student $fullName registered (#$studentNum). Password: $temp_password"; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)");
+                    if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Student $fullName registered (#$studentNum). Password: $temp_password"; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)"); }
                     $nid = createNotification('New Student Registered', "Student $fullName (#$studentNum) was registered.", 'academic-registrar.php?page=student-records', 'success', 'fas fa-user-graduate');
                     if ($nid) notifyAllStaff($nid);
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
@@ -282,8 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             if ($stmt) { $stmt->bind_param('sii', $newProgram, $newLevel, $sid);
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("INSERT INTO student_progression (student_id, to_year, academic_year, progression_type, approved_by, status) VALUES (?, ?, ?, 'Transfer', ?, 'Approved')");
-                    $transferYear = date('Y'); if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newLevel, $transferYear, $user_id); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
-                    $_SESSION['success'] = 'Student transferred successfully.'; logAudit($staff, $user_id, 'TRANSFER', 'student', $sid, "Transferred to $newProgram level $newLevel. $remarks");
+                    $transferYear = date('Y'); if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newLevel, $transferYear, $user_id); if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Student transferred successfully.'; logAudit($staff, $user_id, 'TRANSFER', 'student', $sid, "Transferred to $newProgram level $newLevel. $remarks"); }
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID and new program required.';
         redirectBack('student-records');
@@ -382,11 +383,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                         while ($row = $res->fetch_assoc()) {
                             $gp = calculateGPA($row['marks_obtained'], $row['total_marks']);
                             $istmt = $staff->prepare("INSERT INTO transcript_items (transcript_id, course_code, marks_obtained, grade, grade_point) VALUES (?, ?, ?, ?, ?)");
-                            if ($istmt) { $istmt->bind_param('idsds', $trid, $row['course_code'], $row['marks_obtained'], $row['grade'], $gp); if (!$istmt->execute()) { error_log('$istmt execute failed: ' . ($istmt->error ?? 'unknown')); }; $istmt->close(); }
+                            if ($istmt) { $istmt->bind_param('idsds', $trid, $row['course_code'], $row['marks_obtained'], $row['grade'], $gp); if (!$istmt->execute()) { $formError = 'Database error: ' . ($istmt->error ?? 'unknown'); error_log('$istmt execute failed: ' . ($istmt->error ?? 'unknown')); }; $istmt->close(); }
                         }
                         $res->close();
                     }
-                    $_SESSION['success'] = "Transcript $tn generated."; logAudit($staff, $user_id, 'GENERATE', 'transcript', $trid, "Generated transcript $tn for student $sid");
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Transcript $tn generated."; logAudit($staff, $user_id, 'GENERATE', 'transcript', $trid, "Generated transcript $tn for student $sid"); }
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID required.';
         redirectBack('transcripts');
@@ -421,8 +422,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             if ($stmt) { $stmt->bind_param('iis', $cid, $user_id, $remarks);
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("UPDATE graduation_candidates SET status = 'Approved by Registrar' WHERE id = ?");
-                    if ($stmt2) { $stmt2->bind_param('i', $cid); if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
-                    $_SESSION['success'] = 'Graduation approved.'; logAudit($staff, $user_id, 'APPROVE', 'graduation', $cid, 'Registrar approved graduation candidate');
+                    if ($stmt2) { $stmt2->bind_param('i', $cid); if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Graduation approved.'; logAudit($staff, $user_id, 'APPROVE', 'graduation', $cid, 'Registrar approved graduation candidate'); }
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         }
         redirectBack('graduation');
@@ -557,7 +558,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             if ($stmt) { $stmt->bind_param('ssi', $ay, $sem, $user_id);
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("UPDATE grading_approval_workflow gw JOIN examination_records er ON gw.examination_record_id=er.id SET gw.published_at=NOW() WHERE er.grade_status='Verified' AND gw.published_at IS NULL");
-                    if ($stmt2) { if (!$stmt2->execute()) { error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
+                    if ($stmt2) { if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
                     $stuConn = getStudentsConnection();
                     if ($stuConn) {
                         $nStmt = $staff->prepare("SELECT DISTINCT er.student_id, s.full_name FROM examination_records er LEFT JOIN {$students_db}.students s ON er.student_id=s.id WHERE er.academic_year=? AND er.semester=? AND er.grade_status='Verified'");
@@ -569,7 +570,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
                             $nRes->close(); $nStmt->close();
                         }
                     }
-                    $_SESSION['success'] = "Results published for $ay $sem."; logAudit($staff, $user_id, 'PUBLISH', 'result', 0, "Published results for $ay $sem");
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Results published for $ay $sem."; logAudit($staff, $user_id, 'PUBLISH', 'result', 0, "Published results for $ay $sem"); }
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         }
         redirectBack('results');
@@ -795,7 +796,7 @@ if ($ajaxAction === 'archive_document') {
     $table = $type === 'certificate' ? 'certificates' : ($type === 'transcript' ? 'transcripts' : null);
     if (!$table) { echo json_encode(['success' => false, 'error' => 'Invalid document type']); exit; }
     $stmt = $staff->prepare("UPDATE {$table} SET is_archived = 1 WHERE id = ?");
-    if ($stmt) { $stmt->bind_param('i', $did); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close();
+    if ($stmt) { $stmt->bind_param('i', $did); if (!$stmt->execute()) { echo json_encode(['success' => false, 'error' => 'Archive failed: ' . ($stmt->error ?? 'unknown')]); $stmt->close(); exit; } $stmt->close();
         echo json_encode(['success' => true]);
         logAudit($staff, $user_id, 'ARCHIVE', $type, $did, "Archived $type $did");
     } else echo json_encode(['success' => false, 'error' => $staff->error]);

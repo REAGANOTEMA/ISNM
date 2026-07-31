@@ -38,7 +38,8 @@ if ($roleCheck) {
     if (!$roleRow) {
         $insRole = $conn->prepare("INSERT INTO staff_roles (id, role_name, role_description, hierarchy_level, dashboard_path, is_active) VALUES (?, ?, ?, ?, ?, 1) ON DUPLICATE KEY UPDATE role_name = VALUES(role_name)");
         if ($insRole) {
-            $insRole->bind_param('isssi', $roleId, $fullName, $fullName, $roleId, 'dashboards/school-bursar.php');
+            $dashboardPath = 'dashboards/school-bursar.php';
+            $insRole->bind_param('isssi', $roleId, $fullName, $fullName, $roleId, $dashboardPath);
             if ($insRole->execute()) {
                 $results['role'] = 'Created/updated staff_roles id=' . $roleId;
             } else {

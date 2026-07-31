@@ -528,6 +528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
         header('Location: director-general.php?page=news'); exit;
     }
+    $formError = '';
     $action   = $_POST['dg_news_action'] ?? '';
     $title    = trim($_POST['dg_news_title'] ?? '');
     $content  = trim($_POST['dg_news_content'] ?? '');
@@ -557,14 +558,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             $stmt = $conn->prepare("INSERT INTO director_news (title,slug,content,excerpt,featured_image,author_id,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,NOW())");
             if ($stmt) {
                 $stmt->bind_param('sssssiss', $title, $slug, $content, $excerpt, $featuredImage, $user_id, $status, $published_at);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $newId = $stmt->insert_id;
                 $stmt->close();
                 if ($websiteConn && $newId) {
                     $ws = $websiteConn->prepare("INSERT INTO news (id,title,slug,content,excerpt,featured_image,author_id,author_name,author_role,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())");
                     if ($ws) {
                         $ws->bind_param('isssssissss', $newId, $title, $slug, $content, $excerpt, $featuredImage, $user_id, $user_name, $user_role, $status, $published_at);
-                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
+                        if (!$ws->execute()) { $formError = 'Database error: ' . ($ws->error ?? 'unknown'); error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                 }
@@ -583,20 +584,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                         }
                     }
                 }
-                $_SESSION['nw_success'] = 'News article created successfully.';
+                if ($formError) { $_SESSION['nw_error'] = $formError; } else { $_SESSION['nw_success'] = 'News article created successfully.'; }
             }
         } else {
             $stmt = $conn->prepare("UPDATE director_news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?,published_at)" . ($featuredImage ? ",featured_image=?" : "") . " WHERE id=?");
             if ($stmt) {
                 if ($featuredImage) { $stmt->bind_param('ssssssi', $title, $content, $excerpt, $status, $published_at, $featuredImage, $news_id); }
                 else { $stmt->bind_param('sssssi', $title, $content, $excerpt, $status, $published_at, $news_id); }
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 if ($websiteConn) {
                     $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?,published_at), author_name=?, author_role=? WHERE id=?");
                     if ($ws) {
                         $ws->bind_param('sssssssi', $title, $content, $excerpt, $status, $published_at, $user_name, $user_role, $news_id);
-                        if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
+                        if (!$ws->execute()) { $formError = 'Database error: ' . ($ws->error ?? 'unknown'); error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); };
                         $ws->close();
                     }
                 }
@@ -604,7 +605,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                     $nid = createNotification('News Updated: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
                     if ($nid) { notifyAllStaff($nid); }
                 }
-                $_SESSION['nw_success'] = 'News article updated.';
+                if ($formError) { $_SESSION['nw_error'] = $formError; } else { $_SESSION['nw_success'] = 'News article updated.'; }
             }
         }
         header('Location: director-general.php?page=news'); exit;
@@ -617,11 +618,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
             $stmt = $conn->prepare("UPDATE director_news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
             if ($stmt) {
                 $stmt->bind_param('ssi', $newStatus, $pubAt, $news_id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
                 if ($websiteConn) {
                     $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?,published_at) WHERE id=?");
-                    if ($ws) { $ws->bind_param('ssi', $newStatus, $pubAt, $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                    if ($ws) { $ws->bind_param('ssi', $newStatus, $pubAt, $news_id); if (!$ws->execute()) { $formError = 'Database error: ' . ($ws->error ?? 'unknown'); error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
                 }
                 if ($newStatus === 'published') {
                     $snConn = getStudentsConnection();
@@ -644,12 +645,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
         $stmt = $conn->prepare("DELETE FROM director_news WHERE id=?");
         if ($stmt) {
             $stmt->bind_param('i', $news_id);
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
             if (!empty($imgRow['featured_image'])) { $imgPath = __DIR__ . '/../' . $imgRow['featured_image']; if (file_exists($imgPath)) @unlink($imgPath); }
             if ($websiteConn) {
                 $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?");
-                if ($ws) { $ws->bind_param('i', $news_id); if (!$ws->execute()) { error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
+                if ($ws) { $ws->bind_param('i', $news_id); if (!$ws->execute()) { $formError = 'Database error: ' . ($ws->error ?? 'unknown'); error_log('$ws execute failed: ' . ($ws->error ?? 'unknown')); }; $ws->close(); }
             }
             $_SESSION['nw_success'] = 'News article deleted.';
         }
@@ -675,14 +676,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
         if ($action === 'create') {
             $stmt = $conn->prepare("INSERT INTO cms_events (title,description,event_date,event_type,location,is_active,created_by,created_at) VALUES (?,?,?,?,?,?,?,NOW())");
             if ($stmt) {
-                $stmt->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $_active1 = 1, $user_id);
+                $activeFlag = 1;
+                $stmt->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $activeFlag, $user_id);
                 if (!$stmt->execute()) { error_log('events create failed: ' . ($stmt->error ?? 'unknown')); }
                 $newId = $stmt->insert_id;
                 $stmt->close();
                 if ($websiteConn && $newId) {
                     $ws = $websiteConn->prepare("INSERT INTO cms_events (title,description,event_date,event_type,location,is_active,created_by,created_at) VALUES (?,?,?,?,?,?,?,NOW())");
                     if ($ws) {
-                        $ws->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, 1, $user_id);
+                        $ws->bind_param('sssssii', $ev_title, $ev_desc, $ev_date, $ev_type, $ev_location, $activeFlag, $user_id);
                         if (!$ws->execute()) { error_log('events website insert failed: ' . ($ws->error ?? 'unknown')); }
                         $ws->close();
                     }
@@ -760,14 +762,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action
         if ($action === 'create') {
             $stmt = $conn->prepare("INSERT INTO cms_testimonials (content,author_name,author_role,rating,is_featured,created_at) VALUES (?,?,?,?,0,NOW())");
             if ($stmt) {
-                $stmt->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, $_feat = 0);
+                $stmt->bind_param('sssi', $tm_content, $tm_author, $tm_role, $tm_rating);
                 if (!$stmt->execute()) { error_log('testimonials create failed: ' . ($stmt->error ?? 'unknown')); }
                 $newId = $stmt->insert_id;
                 $stmt->close();
                 if ($websiteConn && $newId) {
                     $ws = $websiteConn->prepare("INSERT INTO cms_testimonials (content,author_name,author_role,rating,is_featured,created_at) VALUES (?,?,?,?,0,NOW())");
                     if ($ws) {
-                        $ws->bind_param('sssii', $tm_content, $tm_author, $tm_role, $tm_rating, 0);
+                        $ws->bind_param('sssi', $tm_content, $tm_author, $tm_role, $tm_rating);
                         if (!$ws->execute()) { error_log('testimonials ws insert failed: ' . ($ws->error ?? 'unknown')); }
                         $ws->close();
                     }
@@ -848,14 +850,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
             }
             $stmt = $conn->prepare("INSERT INTO cms_faqs (question,answer,category,sort_order,is_active,created_at) VALUES (?,?,?,?,1,NOW())");
             if ($stmt) {
-                $stmt->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $maxOrder, $_act = 1);
+                $stmt->bind_param('sssi', $faq_q, $faq_a, $faq_cat, $maxOrder);
                 if (!$stmt->execute()) { error_log('faqs create failed: ' . ($stmt->error ?? 'unknown')); }
                 $newId = $stmt->insert_id;
                 $stmt->close();
                 if ($websiteConn && $newId) {
                     $ws = $websiteConn->prepare("INSERT INTO cms_faqs (question,answer,category,sort_order,is_active,created_at) VALUES (?,?,?,?,1,NOW())");
                     if ($ws) {
-                        $ws->bind_param('sssii', $faq_q, $faq_a, $faq_cat, $maxOrder, 1);
+                        $ws->bind_param('sssi', $faq_q, $faq_a, $faq_cat, $maxOrder);
                         if (!$ws->execute()) { error_log('faqs ws insert failed: ' . ($ws->error ?? 'unknown')); }
                         $ws->close();
                     }
@@ -966,7 +968,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
             $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
             if ($stmt) {
                 $stmt->bind_param('ssssi', $title, $body, $target, $priority, $user_id);
-                if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+                if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                 $stmt->close();
             }
             $_SESSION['success'] = "Announcement published to all $target.";

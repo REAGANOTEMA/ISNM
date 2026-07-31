@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id && $sid && $facility) {
             try {
                 $stmt = $conn->prepare("UPDATE midwifery_clinical_placements SET student_id=?, facility_name=?, department=?, start_date=?, end_date=?, supervisor=?, deliveries_observed=?, deliveries_assisted=?, status=?, notes=? WHERE id=?");
-                $stmt->bind_param('ssssssiiissi', $sid, $facility, $dept, $start, $end, $sup, $dObs, $dAss, $status, $notes, $id);
+                $stmt->bind_param('ssssssiissi', $sid, $facility, $dept, $start, $end, $sup, $dObs, $dAss, $status, $notes, $id);
                 if ($stmt->execute()) {
                     $flash = '<div class="alert alert-success">Placement updated.</div>';
                 } else {

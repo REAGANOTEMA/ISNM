@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $students_conn->prepare("INSERT INTO students (index_number, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, intake_period, status, password, is_first_login, password_changed, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1, NOW())");
         if ($stmt) {
             $intakePeriod = date('n') <= 6 ? 'January' : 'July';
-            $stmt->bind_param("ssssssssssssssi", $index, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $dob, $intakeYear, $intakePeriod, $password_hash);
+            $stmt->bind_param("sssssssssssss", $index, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $dob, $intakeYear, $intakePeriod, $password_hash);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Student $fn added successfully! Index: $index | Password: $temp_password — student can log in at student-login.php";
             } else {

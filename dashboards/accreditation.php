@@ -8,6 +8,7 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
+    $formError = '';
     if ($_POST['action'] === 'add_requirement') {
         $name = $_POST['name'] ?? '';
         $desc = $_POST['description'] ?? '';
@@ -20,9 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $conn) {
             if ($stmt) { $stmt->bind_param("ssi", $name, $desc, $userId); }
         }
         if ($stmt) {
-            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $stmt->close();
         }
+        if ($formError) { $_SESSION['error'] = $formError; }
         header('Location: accreditation.php'); exit;
     }
 }
@@ -49,6 +51,9 @@ $pageTitle = 'Accreditation & Compliance';
     <div class="content-header">
         <h1><i class="fas fa-certificate"></i> Accreditation & Compliance</h1>
     </div>
+    <?php if (!empty($_SESSION['error'])): ?>
+    <div class="alert alert-danger py-2"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
     <div class="row mb-4">
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Requirements</h6><h3><?= count($requirements) ?></h3></div></div></div>
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Compliance Records</h6><h3><?= count($compliance) ?></h3></div></div></div>

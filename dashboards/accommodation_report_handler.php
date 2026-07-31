@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['matron', 'warden']);
 header('Content-Type: application/json');
 
 $conn = $ctx['staff'];

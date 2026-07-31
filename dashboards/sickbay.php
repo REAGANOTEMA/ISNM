@@ -111,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         die('Invalid CSRF token');
     }
     $action = $_POST['action'] ?? '';
+    $formError = '';
 
     if ($action === 'save_sickness') {
         $id = (int)($_POST['id'] ?? 0);
@@ -124,12 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $s = trim($_POST['status']);
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickness_directory SET sickness_code=?, sickness_name=?, category=?, common_symptoms=?, description=?, is_contagious=?, typical_treatment=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssisii', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Sickness updated successfully.';
+            if ($stmt) { $stmt->bind_param('sssssisii', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sickness updated successfully.'; }
         } else {
             $stmt = $staff_conn->prepare("INSERT INTO sickness_directory (sickness_code, sickness_name, category, common_symptoms, description, is_contagious, typical_treatment, status, created_by) VALUES (?,?,?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sssssissi', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Sickness added successfully.';
+            if ($stmt) { $stmt->bind_param('sssssissi', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $user_id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sickness added successfully.'; }
         }
         header('Location: sickbay.php?section=sickness'); exit;
     }
@@ -138,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickness_directory SET status='Inactive' WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Sickness deactivated.';
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sickness deactivated.'; }
         }
         header('Location: sickbay.php?section=sickness'); exit;
     }
@@ -167,8 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         $notes = trim($_POST['notes']);
         $stmt = $staff_conn->prepare("INSERT INTO daily_sick_records (record_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, temperature, blood_pressure, symptoms, diagnosis, treatment_given, medicines_prescribed, severity, status, referred_to, attended_by, visit_date, visit_time, follow_up_date, notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('sissssisissssssssssssii', $rec_num, $sid, $sname, $snum, $prog, $year, $sick_id, $sick_name, $temp, $bp, $symp, $diag, $treat, $meds, $sev, $stat, $ref, $user_name, $vdate, $vtime, $fud, $notes, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-        $_SESSION['success'] = 'Sick record saved. #'.$rec_num;
+        if ($stmt) { $stmt->bind_param('sissssisissssssssssssii', $rec_num, $sid, $sname, $snum, $prog, $year, $sick_id, $sick_name, $temp, $bp, $symp, $diag, $treat, $meds, $sev, $stat, $ref, $user_name, $vdate, $vtime, $fud, $notes, $user_id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sick record saved. #'.$rec_num; }
         header('Location: sickbay.php?section=daily-records'); exit;
     }
 
@@ -176,8 +177,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $rid = (int)($_POST['record_id'] ?? 0);
         if ($rid > 0) {
             $stmt = $staff_conn->prepare("UPDATE daily_sick_records SET is_deleted=1, deleted_at=NOW() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Record moved to Recycle Bin.';
+            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Record moved to Recycle Bin.'; }
         }
         header('Location: sickbay.php?section=daily-records'); exit;
     }
@@ -197,8 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $recs = trim($_POST['recommendations']);
         $recommender = trim($_POST['recommended_by'] ?? $user_name);
         $stmt = $staff_conn->prepare("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?, 'Pending', ?, ?, ?, ?)");
-        if ($stmt) { $stmt->bind_param('sisssissssissi', $leave_num, $sid, $sname, $snum, $prog, $year, $sick_id, $other_sick, $from, $to, $recommender, $bed, $recs, $user_id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-        $_SESSION['success'] = 'Sick leave issued. #'.$leave_num;
+        if ($stmt) { $stmt->bind_param('sisssissssissi', $leave_num, $sid, $sname, $snum, $prog, $year, $sick_id, $other_sick, $from, $to, $recommender, $bed, $recs, $user_id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sick leave issued. #'.$leave_num; }
         header('Location: sickbay.php?section=leave'); exit;
     }
 
@@ -206,8 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $lid = (int)($_POST['id'] ?? 0);
         if ($lid > 0) {
             $stmt = $staff_conn->prepare("UPDATE student_sick_leave SET is_deleted=1, deleted_at=NOW() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $lid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Leave moved to Recycle Bin.';
+            if ($stmt) { $stmt->bind_param('i', $lid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Leave moved to Recycle Bin.'; }
         }
         header('Location: sickbay.php?section=leave'); exit;
     }
@@ -239,12 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine updated.';
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine updated.'; }
         } else {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine added.';
+            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine added.'; }
         }
         header('Location: sickbay.php?section=medicine'); exit;
     }
@@ -253,8 +254,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $mid = (int)($_POST['medicine_id'] ?? 0);
         if ($mid > 0) {
             $stmt = $staff_conn->prepare("DELETE FROM sickbay_medicine_stock WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine deleted.';
+            if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine deleted.'; }
         }
         header('Location: sickbay.php?section=medicine'); exit;
     }
@@ -278,10 +279,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0;
                 $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
                 $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET quantity=?, status=? WHERE id=?");
-                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES (?,?,?,?,?,?,?)");
-                if ($stmt) { $stmt->bind_param('sisissi', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-                $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
+                if ($stmt) { $stmt->bind_param('sisissi', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq"; }
             }
         }
         header('Location: sickbay.php?section=medicine'); exit;
@@ -291,8 +292,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $rid = (int)($_POST['id'] ?? 0);
         if ($rid > 0) {
             $stmt = $staff_conn->prepare("UPDATE daily_sick_records SET is_deleted=0, deleted_at=NULL WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Record restored.';
+            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Record restored.'; }
         }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
@@ -301,8 +302,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $rid = (int)($_POST['id'] ?? 0);
         if ($rid > 0) {
             $stmt = $staff_conn->prepare("DELETE FROM daily_sick_records WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Record permanently deleted.';
+            if ($stmt) { $stmt->bind_param('i', $rid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Record permanently deleted.'; }
         }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
@@ -328,13 +329,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
             $row = $existing->fetch_assoc();
             $rid = (int)$row['id'];
             $stmt = $staff_conn->prepare("UPDATE student_health_records SET blood_type=?, allergies=?, chronic_conditions=?, medications=?, emergency_contact_name=?, emergency_contact_phone=?, emergency_contact_relationship=?, insurance_provider=?, insurance_number=?, notes=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssssssssssi', $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes, $rid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Health record updated.';
+            if ($stmt) { $stmt->bind_param('ssssssssssi', $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes, $rid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Health record updated.'; }
         } else {
             $rn = 'HR-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
             $stmt = $staff_conn->prepare("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sissssssssss', $rn, $sid, $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Health record created.';
+            if ($stmt) { $stmt->bind_param('sissssssssss', $rn, $sid, $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Health record created.'; }
         }
         header('Location: sickbay.php?section=health-records'); exit;
     }
@@ -354,8 +355,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $follow_up = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         $notes = trim($_POST['notes']);
         $stmt = $staff_conn->prepare("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?, 'Reported', ?,?)");
-        if ($stmt) { $stmt->bind_param('sisssssssisis', $inc_num, $sid, $itype, $symptoms, $severity, $location, $action_taken, $treatment, $referred, $parent_notified, $follow_up, $user_id, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-        $_SESSION['success'] = 'Health incident reported. #'.$inc_num;
+        if ($stmt) { $stmt->bind_param('sisssssssisis', $inc_num, $sid, $itype, $symptoms, $severity, $location, $action_taken, $treatment, $referred, $parent_notified, $follow_up, $user_id, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Health incident reported. #'.$inc_num; }
         header('Location: sickbay.php?section=health-incidents'); exit;
     }
 
@@ -363,8 +364,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $iid = (int)($_POST['id'] ?? 0);
         if ($iid > 0) {
             $stmt = $staff_conn->prepare("UPDATE health_incidents SET status='Resolved' WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $iid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Incident resolved.';
+            if ($stmt) { $stmt->bind_param('i', $iid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Incident resolved.'; }
         }
         header('Location: sickbay.php?section=health-incidents'); exit;
     }
@@ -378,9 +379,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $vals = [$reorder, $threshold, $auto, $notify];
         for ($i = 0; $i < count($keys); $i++) {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)");
-            if ($stmt) { $stmt->bind_param('si', $keys[$i], $vals[$i]); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($stmt) { $stmt->bind_param('si', $keys[$i], $vals[$i]); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
         }
-        $_SESSION['success'] = 'Settings saved.';
+        if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Settings saved.'; }
         header('Location: sickbay.php?section=settings'); exit;
     }
 
@@ -396,8 +397,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         $notes = trim($_POST['notes']);
         $stmt = $staff_conn->prepare("INSERT INTO sickbay_visits (student_id, student_name, visit_date, symptoms, diagnosis, treatment, medication_given, nurse_id, nurse_name, status, follow_up_date, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-        if ($stmt) { $stmt->bind_param('issssssissss', $sid, $sname, $vdate, $symptoms, $diagnosis, $treatment, $medication, $user_id, $user_name, $status, $fud, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-        $_SESSION['success'] = 'Sickbay visit recorded.';
+        if ($stmt) { $stmt->bind_param('issssssissss', $sid, $sname, $vdate, $symptoms, $diagnosis, $treatment, $medication, $user_id, $user_name, $status, $fud, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+        if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Sickbay visit recorded.'; }
         header('Location: sickbay.php?section=visits'); exit;
     }
 
@@ -411,8 +412,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_visits SET status=?, treatment=?, medication_given=?, diagnosis=?, notes=?, follow_up_date=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssssssi', $status, $treatment, $medication, $diagnosis, $notes, $fud, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Visit updated.';
+            if ($stmt) { $stmt->bind_param('ssssssi', $status, $treatment, $medication, $diagnosis, $notes, $fud, $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Visit updated.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -421,8 +422,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
             $stmt = $staff_conn->prepare("DELETE FROM sickbay_visits WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Visit deleted.';
+            if ($stmt) { $stmt->bind_param('i', $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Visit deleted.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -438,12 +439,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine updated.';
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine updated.'; }
         } else {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine added.';
+            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine added.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -459,8 +460,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
             $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine updated.';
+            if ($stmt) { $stmt->bind_param('ssissssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine updated.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -469,8 +470,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $mid = (int)($_POST['id'] ?? 0);
         if ($mid > 0) {
             $stmt = $staff_conn->prepare("DELETE FROM sickbay_medicine_stock WHERE id=?");
-            if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Medicine deleted.';
+            if ($stmt) { $stmt->bind_param('i', $mid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Medicine deleted.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }
@@ -490,10 +491,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
                 $rl = (int)$med['reorder_level'];
                 $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
                 $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET quantity=?, status=? WHERE id=?");
-                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
                 $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (medicine_id, transaction_type, quantity, visit_id, performed_by, notes) VALUES (?, 'Dispense', ?, ?, ?, ?)");
-                if ($stmt) { $stmt->bind_param('iiiis', $mid, $qty, $vid, $user_id, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-                $_SESSION['success'] = "Dispensed $qty. New stock: $nq";
+                if ($stmt) { $stmt->bind_param('iiiis', $mid, $qty, $vid, $user_id, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+                if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Dispensed $qty. New stock: $nq"; }
             }
         }
         header('Location: sickbay.php?section=visits'); exit;
@@ -507,8 +508,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $notes = trim($_POST['notes']);
         if ($mid > 0 && $qty > 0) {
             $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (medicine_id, transaction_type, quantity, visit_id, performed_by, notes) VALUES (?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('isiiis', $mid, $ttype, $qty, $vid, $user_id, $notes); if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
-            $_SESSION['success'] = 'Transaction recorded.';
+            if ($stmt) { $stmt->bind_param('isiiis', $mid, $ttype, $qty, $vid, $user_id, $notes); if (!$stmt->execute()) { $formError = 'Database error: ' . ($stmt->error ?? 'unknown'); error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); }; $stmt->close(); }
+            if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = 'Transaction recorded.'; }
         }
         header('Location: sickbay.php?section=visits'); exit;
     }

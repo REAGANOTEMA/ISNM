@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!$stmt) { echo 'Database error: ' . $conn->error; exit; }
 
         $year = $currentYear;
-        $stmt->bind_param("ssssssiiissssssssi",
+        $stmt->bind_param("sssssssiisssssssssi",
             $fname, $lname, $otherName, $full_name,
             $gender, $course, $course, $currentYear, $year, $level, $level,
             $phone, $phone, $email, $address, $nationality,

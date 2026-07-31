@@ -264,7 +264,8 @@ if (isset($_REQUEST['ajax'])) {
                 $ck = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
                 $track = $conn->prepare("INSERT INTO `$staff_db`.`student_admission_tracking` (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
-                $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, $admission_date, $status, 0, $rc);
+                $zeroFlag = 0;
+                $track->bind_param('ssssssii', $student_number, $full_name, $program_name, $intake, $admission_date, $status, $zeroFlag, $rc);
                 if (!$track->execute()) { error_log('$track execute failed: ' . ($track->error ?? 'unknown')); };
                 $reqs = $conn->query("SELECT id FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
                 if ($reqs) {
@@ -278,13 +279,15 @@ if (isset($_REQUEST['ajax'])) {
                     $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
                     $last_name = $parts[1] ?? $surname;
                     $year = 1; $level = 'Year 1';
-                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
-                    $s_ins->bind_param('ssssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $set_name, $hashed_password);
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                    $intakeYear = (string)date('Y');
+                    $s_ins->bind_param('ssssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, $intakeYear, $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $set_name, $hashed_password);
                     if (!$s_ins->execute()) { error_log('$s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {
                         $prof = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
-                        $prof->bind_param('iss', $s_id, $status, 'unpaid');
+                        $payStatus = 'unpaid';
+                        $prof->bind_param('iss', $s_id, $status, $payStatus);
                         if (!$prof->execute()) { error_log('$prof execute failed: ' . ($prof->error ?? 'unknown')); };
                     }
                 }

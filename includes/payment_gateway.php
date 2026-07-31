@@ -1784,7 +1784,7 @@ if (!class_exists('PaymentGateway', false)) {
             $provRefundId = $result['refund_id'] ?? null;
             $approvedAt   = $approvedBy > 0 ? date('Y-m-d H:i:s') : null;
 
-            $stmt->bind_param('sissssss',
+            $stmt->bind_param('sissdssis',
                 $refundRef, $origId, $providerKey, $provRefundId,
                 $amount, $reason, $status, $approvedBy, $approvedAt
             );
@@ -1806,7 +1806,7 @@ if (!class_exists('PaymentGateway', false)) {
             $hdrs = json_encode($headers);
             $body = json_encode($payload);
             $ip   = $_SERVER['REMOTE_ADDR'] ?? '';
-            $stmt->bind_param('ssss', $providerKey, $type, $hdrs, $body, $ip);
+            $stmt->bind_param('sssss', $providerKey, $type, $hdrs, $body, $ip);
             $stmt->execute();
             $stmt->close();
         }
