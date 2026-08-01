@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 bootstrapStaffDashboard();
 require_once __DIR__ . '/config/database.php';

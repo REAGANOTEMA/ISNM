@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $rootPath = '..';
 
 // Cache-busting version — bump on every deploy

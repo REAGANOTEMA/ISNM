@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * @deprecated This file is no longer used by any dashboard page.
  * Navigation is now handled by sidebar.php and module_config.php.

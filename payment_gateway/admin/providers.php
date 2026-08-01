@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Payment Provider Admin — Configure and manage payment providers.
  * Access: /payment_gateway/admin/providers.php

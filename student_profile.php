@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Comprehensive Student Profile System
  * Updated to work with current ISNM database structure and role-based access control
@@ -7,9 +7,13 @@
 require_once 'config/database.php';
 require_once 'auth-service.php';
 require_once __DIR__ . '/includes/financial_functions.php';
+require_once __DIR__ . '/includes/photo_upload.php';
+require_once 'includes/config.php';
 
 // Start session and check authentication
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['user_id'])) {
     header("Location: student-login.php");
     exit();
@@ -74,7 +78,7 @@ function canEditStudentProfile($viewer_role, $viewer_type, $target_student_id = 
 }
 
 // Get student ID from URL or use current user
-$student_id = $_GET['id'] ?? $current_user_id;
+$student_id = (int)($_GET['id'] ?? $current_user_id);
 
 // Verify permissions
 if (!canViewStudentProfile($current_role, $current_type, $student_id)) {
@@ -84,12 +88,9 @@ if (!canViewStudentProfile($current_role, $current_type, $student_id)) {
 }
 
 // Get student information
-$student_sql = "SELECT s.*, u.full_name, u.email, u.phone, u.last_login 
-                FROM students s 
-                JOIN users u ON s.student_id = u.user_id 
-                WHERE s.student_id = ?";
+$student_sql = "SELECT * FROM students WHERE id = ?";
 $stmt = $conn->prepare($student_sql);
-$stmt->bind_param("s", $student_id);
+$stmt->bind_param("i", $student_id);
 if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
 $student_result = $stmt->get_result();
 
@@ -120,23 +121,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               first_name = ?, surname = ?, other_name = ?, 
                               date_of_birth = ?, gender = ?, nationality = ?, 
                               address = ?, phone = ?, email = ?, 
-                              program = ?, level = ?, intake_year = ?, 
-                              intake_period = ?, guardian_name = ?, 
-                              guardian_phone = ?, guardian_email = ?, 
-                              medical_conditions = ?, emergency_contact_name = ?, 
-                              emergency_contact_phone = ? 
-                              WHERE student_id = ?";
+                              program = ?, level = ?, intake_date = ?, 
+                              guardian_name = ?, guardian_phone = ?, 
+                              emergency_contact_name = ?, emergency_contact_phone = ?, 
+                              emergency_contact_email = ? 
+                              WHERE id = ?";
                 
+                $intake_date = trim($_POST['intake_date'] ?? '') ?: null;
+                $p_first_name = $_POST['first_name'] ?? '';
+                $p_surname = $_POST['surname'] ?? '';
+                $p_other_name = $_POST['other_name'] ?? '';
+                $p_dob = $_POST['date_of_birth'] ?? '';
+                $p_gender = $_POST['gender'] ?? '';
+                $p_nationality = $_POST['nationality'] ?? '';
+                $p_address = $_POST['address'] ?? '';
+                $p_phone = $_POST['phone'] ?? '';
+                $p_email = $_POST['email'] ?? '';
+                $p_program = $_POST['program'] ?? '';
+                $p_level = $_POST['level'] ?? '';
+                $p_guardian_name = $_POST['guardian_name'] ?? '';
+                $p_guardian_phone = $_POST['guardian_phone'] ?? '';
+                $p_ec_name = $_POST['emergency_contact_name'] ?? '';
+                $p_ec_phone = $_POST['emergency_contact_phone'] ?? '';
+                $p_ec_email = $_POST['emergency_contact_email'] ?? '';
                 $stmt = $conn->prepare($update_sql);
-                $stmt->bind_param("ssssssssssssssssssss", 
-                    $_POST['first_name'], $_POST['surname'], $_POST['other_name'],
-                    $_POST['date_of_birth'], $_POST['gender'], $_POST['nationality'],
-                    $_POST['address'], $_POST['phone'], $_POST['email'],
-                    $_POST['program'], $_POST['level'], $_POST['intake_year'],
-                    $_POST['intake_period'], $_POST['guardian_name'],
-                    $_POST['guardian_phone'], $_POST['guardian_email'],
-                    $_POST['medical_conditions'], $_POST['emergency_contact_name'],
-                    $_POST['emergency_contact_phone'], $student_id);
+                $stmt->bind_param("sssssssssssssssssi",
+                    $p_first_name, $p_surname, $p_other_name,
+                    $p_dob, $p_gender, $p_nationality,
+                    $p_address, $p_phone, $p_email,
+                    $p_program, $p_level, $intake_date,
+                    $p_guardian_name, $p_guardian_phone,
+                    $p_ec_name, $p_ec_phone,
+                    $p_ec_email, $student_id);
                 
                 if ($stmt->execute()) {
                     $_SESSION['success'] = "Profile updated successfully!";
@@ -161,9 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 $new_status = $_POST['status'] ?? '';
-                $update_status_sql = "UPDATE students SET status = ? WHERE student_id = ?";
+                $update_status_sql = "UPDATE students SET status = ? WHERE id = ?";
                 $stmt = $conn->prepare($update_status_sql);
-                $stmt->bind_param("ss", $new_status, $student_id);
+                $stmt->bind_param("si", $new_status, $student_id);
                 
                 if ($stmt->execute()) {
                     $_SESSION['success'] = "Student status updated successfully!";
@@ -194,9 +210,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $filepath = $upload_dir . $filename;
                         
                         if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $filepath)) {
-                            $update_photo_sql = "UPDATE students SET profile_picture = ?, profile_image = ? WHERE student_id = ?";
+                            $update_photo_sql = "UPDATE students SET profile_picture = ? WHERE id = ?";
                             $stmt = $conn->prepare($update_photo_sql);
-                            $stmt->bind_param("sss", $filename, $filename, $student_id);
+                            $stmt->bind_param("si", $filename, $student_id);
                             
                             if ($stmt->execute()) {
                                 $_SESSION['success'] = "Profile image updated successfully!";
@@ -231,9 +247,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit();
                 }
 
-                $stmt = $conn->prepare("SELECT password FROM students WHERE student_id = ?");
+                $stmt = $conn->prepare("SELECT password FROM students WHERE id = ?");
                 if ($stmt) {
-                    $stmt->bind_param("s", $student_id);
+                    $stmt->bind_param("i", $student_id);
                     if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
                     $row = $stmt->get_result()->fetch_assoc();
                     $stmt->close();
@@ -244,9 +260,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         exit();
                     }
                     $newHash = password_hash($new, PASSWORD_DEFAULT);
-                    $upd = $conn->prepare("UPDATE students SET password = ? WHERE student_id = ?");
+                    $upd = $conn->prepare("UPDATE students SET password = ? WHERE id = ?");
                     if ($upd) {
-                        $upd->bind_param("ss", $newHash, $student_id);
+                        $upd->bind_param("si", $newHash, $student_id);
                         if (!$upd->execute()) { error_log('$upd execute failed: ' . ($upd->error ?? 'unknown')); };
                         $upd->close();
                         $_SESSION['success'] = 'Password changed successfully.';
@@ -271,49 +287,65 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
-// Get academic records (if table exists)
+// Get academic records (from staffs database)
 $academic_records = [];
 try {
-    $academic_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
-    $stmt = $conn->prepare($academic_sql);
-    $stmt->bind_param("s", $student_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $academic_records[] = $row;
+    $staffConn = getStaffConnection();
+    if ($staffConn) {
+        $academic_sql = "SELECT academic_year, semester, year, gpa FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
+        $stmt = $staffConn->prepare($academic_sql);
+        if ($stmt) {
+            $stmt->bind_param("i", $student_id);
+            if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $academic_records[] = $row;
+            }
+            $stmt->close();
+        }
     }
-} catch (Exception $e) {
-    error_log('student_profile context: ' . $e->getMessage());
+} catch (Throwable $e) {
+    error_log('student_profile academic_records: ' . $e->getMessage());
 }
 
-// Get fee information (if table exists)
+// Get fee information (student_invoices + fee_structures)
 $fee_accounts = [];
 try {
-    $fee_sql = "SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
+    $fee_sql = "SELECT fs.academic_year AS academic_year, fs.semester AS semester, si.total_amount AS total_fees, si.amount_paid AS amount_paid, si.balance AS balance, si.status AS status, si.due_date AS due_date
+                FROM student_invoices si
+                LEFT JOIN student_fee_assignments sfa ON sfa.id = si.fee_assignment_id
+                LEFT JOIN fee_structures fs ON fs.id = sfa.fee_structure_id
+                WHERE si.student_id = ? ORDER BY si.created_at DESC";
     $stmt = $conn->prepare($fee_sql);
-    $stmt->bind_param("s", $student_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $fee_accounts[] = $row;
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $fee_accounts[] = $row;
+        }
+        $stmt->close();
     }
-} catch (Exception $e) {
-    error_log('student_profile context: ' . $e->getMessage());
+} catch (Throwable $e) {
+    error_log('student_profile fee_accounts: ' . $e->getMessage());
 }
 
-// Get payment history (if table exists)
+// Get payment history (payments table)
 $payment_history = [];
 try {
-    $payment_sql = "SELECT * FROM fee_payments WHERE student_id = ? ORDER BY payment_date DESC LIMIT 10";
+    $payment_sql = "SELECT payment_date, payment_reference AS receipt_number, amount_received AS amount_paid, payment_method, transaction_ref AS payment_provider, status FROM payments WHERE student_id = ? ORDER BY payment_date DESC LIMIT 10";
     $stmt = $conn->prepare($payment_sql);
-    $stmt->bind_param("s", $student_id);
-    if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $payment_history[] = $row;
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $payment_history[] = $row;
+        }
+        $stmt->close();
     }
-} catch (Exception $e) {
-    error_log('student_profile context: ' . $e->getMessage());
+} catch (Throwable $e) {
+    error_log('student_profile payment_history: ' . $e->getMessage());
 }
 
 // Calculate total balance
@@ -340,10 +372,10 @@ function handleProfileUpdate() {
     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
     $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
     
-    $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, phone = ?, email = ?, address = ?, emergency_contact_name = ?, emergency_contact_phone = ?, updated_at = CURRENT_TIMESTAMP WHERE student_id = ?";
+    $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, phone = ?, email = ?, address = ?, emergency_contact_name = ?, emergency_contact_phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $emergency_contact_name, $emergency_contact_phone, $student_id);
+    $stmt->bind_param("ssssssssi", $first_name, $surname, $other_name, $phone, $email, $address, $emergency_contact_name, $emergency_contact_phone, $student_id);
     
     if ($stmt->execute()) {
         logActivity($student_id, 'Student', 'Profile Updated', "Student updated their profile information", 'students', $student_id);
@@ -392,20 +424,26 @@ function handlePhotoDelete() {
     $student_id = $_SESSION['user_id'];
     
     // Get current photo from profile_picture column
-    $current_photo_sql = "SELECT profile_picture, profile_image FROM students WHERE student_id = ?";
-    $current_result = executeQuery($current_photo_sql, [$student_id], 's');
-    $current_row = $current_result[0] ?? [];
-    $current_photo = $current_row['profile_picture'] ?: $current_row['profile_image'] ?: '';
+    $current_photo_sql = "SELECT profile_picture FROM students WHERE id = ?";
+    $stmt = $conn->prepare($current_photo_sql);
+    $current_row = [];
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $current_row = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+    }
+    $current_photo = $current_row['profile_picture'] ?? '';
     
     // Delete photo file if it's not default
     if ($current_photo && $current_photo !== 'default-student.png') {
         deletePassportPhoto($current_photo);
     }
     
-    // Update both columns to default
-    $update_sql = "UPDATE students SET profile_picture = 'default-student.png', profile_image = 'default-student.png' WHERE student_id = ?";
+    // Reset to default
+    $update_sql = "UPDATE students SET profile_picture = 'default-student.png' WHERE id = ?";
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("s", $student_id);
+    $stmt->bind_param("i", $student_id);
     
     if ($stmt->execute()) {
         logActivity($student_id, 'Student', 'Photo Deleted', "Student deleted their profile photo", 'students', $student_id);
@@ -422,15 +460,21 @@ function handlePhotoDelete() {
 function handlePasswordChange() {
     global $conn;
     
-    $student_id = $_SESSION['user_id'];
+    $student_id = (int)$_SESSION['user_id'];
     $current_password = $_POST['current_password'] ?? '';
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     
     // Get current password hash
-    $user_sql = "SELECT password FROM users WHERE user_id = ?";
-    $user_result = executeQuery($user_sql, [$student_id], 's');
-    $user = $user_result[0] ?? null;
+    $user_sql = "SELECT id, password FROM students WHERE id = ?";
+    $stmt = $conn->prepare($user_sql);
+    $user = null;
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    }
     
     if (!$user) {
         $_SESSION['error'] = "User account not found";
@@ -439,12 +483,12 @@ function handlePasswordChange() {
     }
     
     // Verify current password using bcrypt, with legacy plaintext upgrade
-    if (!password_verify($current_password, $user['password'])) {
-        if ($current_password === $user['password']) {
+    if (!password_verify($current_password, $user['password'] ?? '')) {
+        if (!empty($user['password']) && $current_password === $user['password']) {
             $newHash = password_hash($new_password, PASSWORD_DEFAULT);
-            $upStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $upStmt = $conn->prepare("UPDATE students SET password = ? WHERE id = ?");
             if ($upStmt) {
-                $upStmt->bind_param('si', $newHash, $user['id']);
+                $upStmt->bind_param('si', $newHash, $student_id);
                 if (!$upStmt->execute()) { error_log('password upgrade failed: ' . ($upStmt->error ?? 'unknown')); };
                 $upStmt->close();
             }
@@ -470,9 +514,9 @@ function handlePasswordChange() {
     
     // Update password
     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    $update_sql = "UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
+    $update_sql = "UPDATE students SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("ss", $hashed_password, $student_id);
+    $stmt->bind_param("si", $hashed_password, $student_id);
     
     if ($stmt->execute()) {
         logActivity($student_id, 'Student', 'Password Changed', "Student changed their password", 'students', $student_id);
@@ -1005,7 +1049,7 @@ function handlePasswordChange() {
         <!-- Profile Header -->
         <div class="profile-header fade-in">
             <div class="profile-photo-container">
-                <?php $photoForDisplay = $student['profile_picture'] ?: $student['profile_image'] ?: 'default-student.png'; ?>
+                <?php $photoForDisplay = $student['profile_picture'] ?? 'default-student.png'; ?>
                 <img src="<?php echo getPassportPhotoUrl($photoForDisplay); ?>" alt="Profile Photo" class="profile-photo" onclick="document.getElementById('photoInput').click()">
                 <div class="mt-3">
                     <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('photoInput').click()">
@@ -1020,7 +1064,7 @@ function handlePasswordChange() {
             </div>
             <div class="profile-info">
                 <h1 class="profile-name"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?></h1>
-                <p class="profile-id"><?php echo htmlspecialchars($student['student_id']); ?></p>
+                <p class="profile-id"><?php echo htmlspecialchars($student['student_number'] ?? ''); ?></p>
                 <p class="mb-0"><i class="fas fa-graduation-cap"></i> <?php echo htmlspecialchars($student['program']); ?> , <?php echo htmlspecialchars($student['level']); ?></p>
             </div>
         </div>
@@ -1133,8 +1177,8 @@ function handlePasswordChange() {
                             </div>
                             <div class="col-lg-6 col-md-12">
                                 <div class="info-item">
-                                    <div class="info-label">Intake Year</div>
-                                    <div class="info-value"><?php echo htmlspecialchars($student['intake_year']); ?></div>
+                                    <div class="info-label">Intake Date</div>
+                                    <input type="date" class="form-control" name="intake_date" value="<?php echo htmlspecialchars($student['intake_date'] ?? ''); ?>">
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-12">
@@ -1189,25 +1233,25 @@ function handlePasswordChange() {
                                 <tbody>
                                     <?php foreach ($academic_records as $record): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($record['academic_year']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['semester']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['year']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['academic_year'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($record['semester'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($record['year'] ?? '-'); ?></td>
                                             <td>
-                                                <?php if ($record['gpa']): ?>
+                                                <?php if (!empty($record['gpa'])): ?>
                                                     <span class="badge bg-success"><?php echo number_format($record['gpa'], 2); ?></span>
                                                 <?php else: ?>
                                                     <span class="badge bg-secondary">N/A</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <?php if ($record['class_position']): ?>
+                                                <?php if (!empty($record['class_position'])): ?>
                                                     <?php echo htmlspecialchars($record['class_position']); ?>/<?php echo htmlspecialchars($record['total_students']); ?>
                                                 <?php else: ?>
                                                     <span class="text-muted">N/A</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <?php if ($record['attendance_percentage']): ?>
+                                                <?php if (!empty($record['attendance_percentage'])): ?>
                                                     <?php echo number_format($record['attendance_percentage'], 1); ?>%
                                                 <?php else: ?>
                                                     <span class="text-muted">N/A</span>
@@ -1280,21 +1324,21 @@ function handlePasswordChange() {
                                 <tbody>
                                     <?php foreach ($fee_accounts as $account): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($account['academic_year']); ?></td>
-                                            <td><?php echo htmlspecialchars($account['program']); ?></td>
-                                            <td><?php echo htmlspecialchars($account['year']); ?></td>
-                                            <td><?php echo htmlspecialchars($account['semester']); ?></td>
-                                            <td><?php echo formatCurrency($account['total_fees']); ?></td>
-                                            <td><?php echo formatCurrency($account['amount_paid']); ?></td>
+                                            <td><?php echo htmlspecialchars($account['academic_year'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($student['program'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($student['current_year'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($account['semester'] ?? '-'); ?></td>
+                                            <td><?php echo formatCurrency($account['total_fees'] ?? 0); ?></td>
+                                            <td><?php echo formatCurrency($account['amount_paid'] ?? 0); ?></td>
                                             <td>
-                                                <span class="badge <?php echo $account['balance'] > 0 ? 'bg-warning' : 'bg-success'; ?>">
-                                                    <?php echo formatCurrency($account['balance']); ?>
+                                                <span class="badge <?php echo ($account['balance'] ?? 0) > 0 ? 'bg-warning' : 'bg-success'; ?>">
+                                                    <?php echo formatCurrency($account['balance'] ?? 0); ?>
                                                 </span>
                                             </td>
                                             <td><?php echo formatDate($account['due_date'] ?? 'Not set'); ?></td>
                                             <td>
-                                                <span class="badge bg-<?php echo $account['status'] === 'fully_paid' ? 'success' : ($account['status'] === 'partially_paid' ? 'warning' : 'danger'); ?>">
-                                                    <?php echo ucfirst(str_replace('_', ' ', $account['status'])); ?>
+                                                <span class="badge bg-<?php echo in_array($account['status'] ?? '', ['Paid', 'Overdue'], true) ? 'success' : (($account['status'] ?? '') === 'Partially Paid' ? 'warning' : 'danger'); ?>">
+                                                    <?php echo htmlspecialchars($account['status'] ?? 'Pending'); ?>
                                                 </span>
                                             </td>
                                         </tr>
@@ -1320,9 +1364,9 @@ function handlePasswordChange() {
                                     <tbody>
                                         <?php foreach ($payment_history as $payment): ?>
                                             <tr>
-                                                <td><?php echo formatDate($payment['payment_date']); ?></td>
-                                                <td><?php echo htmlspecialchars($payment['receipt_number']); ?></td>
-                                                <td><?php echo formatCurrency($payment['amount_paid']); ?></td>
+                                                <td><?php echo formatDate($payment['payment_date'] ?? ''); ?></td>
+                                                <td><?php echo htmlspecialchars($payment['receipt_number'] ?? '-'); ?></td>
+                                                <td><?php echo formatCurrency($payment['amount_paid'] ?? 0); ?></td>
                                                 <td>
                                                     <?php
                                                         $pm = strtolower($payment['payment_method'] ?? '');
@@ -1333,8 +1377,8 @@ function handlePasswordChange() {
                                                     <?= htmlspecialchars(getPaymentProviderName($logo_provider)) ?>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-<?php echo $payment['status'] === 'verified' ? 'success' : 'warning'; ?>">
-                                                        <?php echo ucfirst($payment['status']); ?>
+                                                    <span class="badge bg-<?php echo ($payment['status'] ?? '') === 'verified' ? 'success' : 'warning'; ?>">
+                                                        <?php echo ucfirst($payment['status'] ?? 'Unknown'); ?>
                                                     </span>
                                                 </td>
                                             </tr>

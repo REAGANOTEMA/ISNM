@@ -1,4 +1,4 @@
-﻿<!-- Enhanced ISNM Footer with Stripes -->
+<!-- Enhanced ISNM Footer with Stripes -->
 <footer class="isnm-footer">
   <!-- Top Stripes -->
   <div class="footer-stripes-top"></div>

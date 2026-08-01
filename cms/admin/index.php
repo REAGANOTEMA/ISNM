@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * CMS Admin Panel — Content Management Dashboard
  * Accessible by authorized officials to manage website content

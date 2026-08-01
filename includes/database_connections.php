@@ -341,7 +341,12 @@ if (!function_exists('getWebsiteConnection')) {
 
 if (!function_exists('executeQuery')) {
     function executeQuery($database, $sql = '', $params = [], $types = '') {
-        // Backward compatibility: called as executeQuery($sql_string)
+        // Backward compatibility: called as executeQuery($sql_string) or executeQuery($sql_string, $params, $types)
+        if (is_array($sql)) {
+            $params = $sql;
+            $sql = $database;
+            $database = 'staffs';
+        }
         if (empty($sql) && is_string($database) && (strpos($database, 'SELECT') === 0 || strpos($database, 'INSERT') === 0 || strpos($database, 'UPDATE') === 0 || strpos($database, 'DELETE') === 0)) {
             $sql = $database;
             $database = 'staffs';

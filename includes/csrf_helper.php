@@ -16,6 +16,12 @@ if (!function_exists('csrfField')) {
     }
 }
 
+if (!function_exists('csrf_field')) {
+    function csrf_field() {
+        return csrfField();
+    }
+}
+
 if (!function_exists('verifyCsrfToken')) {
     function verifyCsrfToken() {
         if (!isset($_POST['csrf_token'], $_SESSION['csrf_token'])) return false;

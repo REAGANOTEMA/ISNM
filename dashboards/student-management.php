@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 $ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);

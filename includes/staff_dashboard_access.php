@@ -72,6 +72,8 @@ if (!function_exists('bootstrapStaffDashboard')) {
             session_start();
         }
 
+        require_once __DIR__ . '/csrf_helper.php';
+
         global $auth_service;
         if (!isset($auth_service) || !($auth_service instanceof AuthenticationService)) {
             $auth_service = new AuthenticationService();

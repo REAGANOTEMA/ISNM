@@ -18,7 +18,7 @@ if (!function_exists('processAutoDeductions')) {
         $subscriptions = $conn->query("
             SELECT ps.*, s.full_name, s.phone, s.program, s.student_number
             FROM payment_subscriptions ps
-            LEFT JOIN students s ON CAST(s.id AS CHAR) = ps.student_id
+            LEFT JOIN students s ON s.id = ps.student_id
             WHERE ps.status = 'active'
               AND ps.next_due_date <= CURDATE()
               AND (ps.end_date IS NULL OR ps.end_date >= CURDATE())
@@ -247,7 +247,7 @@ if (!function_exists('getAllSubscriptions')) {
                 (SELECT SUM(sd.amount) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id AND sd.status = 'success') AS total_collected,
                 (SELECT COUNT(*) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id) AS total_attempts
             FROM payment_subscriptions ps
-            LEFT JOIN students s ON CAST(s.id AS CHAR) = ps.student_id
+            LEFT JOIN students s ON s.id = ps.student_id
         ";
         if ($status) {
             $sql .= " WHERE ps.status = ?";

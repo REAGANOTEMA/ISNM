@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include("../assets/noSessionRedirect.php"); 
 include('./fetch-data/verfyRoleRedirect.php');
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);

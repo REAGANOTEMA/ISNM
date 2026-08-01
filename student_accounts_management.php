@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -123,7 +123,7 @@ $offset = ($page - 1) * $per_page;
 
 $count_sql = "SELECT COUNT(*) as total FROM students $where_clause";
 $count_result = executeQuery($count_sql, $params, $types);
-$total_students = $count_result[0]['total'];
+$total_students = $count_result[0]['total'] ?? 0;
 $total_pages = ceil($total_students / $per_page);
 
 $sql = "SELECT * FROM students $where_clause ORDER BY surname, first_name LIMIT ? OFFSET ?";
@@ -176,8 +176,9 @@ function handleAddStudent() {
     $check_stmt->bind_param("s", $student_id);
     if (!$check_stmt->execute()) { error_log('$check_stmt execute failed: ' . ($check_stmt->error ?? 'unknown')); };
     $check_result = $check_stmt->get_result();
+    $check_row = $check_result ? $check_result->fetch_assoc() : null;
     
-    if ($check_result->fetch_assoc()['count'] > 0) {
+    if (($check_row['count'] ?? 0) > 0) {
         $_SESSION['error'] = "Student ID already exists. Please try again.";
         header("Location: student_accounts_management.php");
         exit();
@@ -189,8 +190,9 @@ function handleAddStudent() {
     $check_phone_stmt->bind_param("s", $phone);
     if (!$check_phone_stmt->execute()) { error_log('$check_phone_stmt execute failed: ' . ($check_phone_stmt->error ?? 'unknown')); };
     $check_phone_result = $check_phone_stmt->get_result();
+    $check_phone_row = $check_phone_result ? $check_phone_result->fetch_assoc() : null;
     
-    if ($check_phone_result->fetch_assoc()['count'] > 0) {
+    if (($check_phone_row['count'] ?? 0) > 0) {
         $_SESSION['error'] = "A student with this phone number already exists.";
         header("Location: student_accounts_management.php");
         exit();
@@ -262,7 +264,7 @@ function handleDeleteStudent() {
     $check_sql = "SELECT COUNT(*) as count FROM payments WHERE student_id = (SELECT id FROM students WHERE student_id = ? LIMIT 1)";
     $check_result = executeQuery($check_sql, [$student_id], 's');
     
-    if ($check_result[0]['count'] > 0) {
+    if (($check_result[0]['count'] ?? 0) > 0) {
         $_SESSION['error'] = "Cannot delete student with payment records. Please archive instead.";
     } else {
         $sql = "DELETE FROM students WHERE student_id = ?";
@@ -402,7 +404,7 @@ function generateStudentId() {
         
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
         $check_result = executeQuery($check_sql, [$student_id], 's');
-    } while ($check_result[0]['count'] > 0);
+    } while (($check_result[0]['count'] ?? 0) > 0);
     
     return $student_id;
 }
@@ -797,7 +799,7 @@ function generateStudentId() {
                                 <?php 
                                 $active_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'active'";
                                 $active_result = executeQuery($active_sql);
-                                echo number_format($active_result[0]['count']);
+                                echo number_format($active_result[0]['count'] ?? 0);
                                 ?>
                             </div>
                             <div class="text-muted">Active Students</div>
@@ -816,7 +818,7 @@ function generateStudentId() {
                                 <?php 
                                 $programs_sql = "SELECT COUNT(DISTINCT program) as count FROM students";
                                 $programs_result = executeQuery($programs_sql);
-                                echo number_format($programs_result[0]['count']);
+                                echo number_format($programs_result[0]['count'] ?? 0);
                                 ?>
                             </div>
                             <div class="text-muted">Programs</div>
@@ -836,7 +838,7 @@ function generateStudentId() {
                                 $current_year = date('Y');
                                 $year_sql = "SELECT COUNT(*) as count FROM students WHERE intake_year = ?";
                                 $year_result = executeQuery($year_sql, [$current_year], 's');
-                                echo number_format($year_result[0]['count']);
+                                echo number_format($year_result[0]['count'] ?? 0);
                                 ?>
                             </div>
                             <div class="text-muted">Current Year</div>

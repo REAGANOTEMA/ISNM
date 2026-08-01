@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Include unified authentication system
 require_once 'auth-service.php';
 

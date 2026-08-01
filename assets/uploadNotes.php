@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $newName = $senderId . time() . "." . $fileExtension;
 
         $folder = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "notesUploads" . DIRECTORY_SEPARATOR . $newName;
-
+        if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
         if (move_uploaded_file($tempname, $folder)) {
 
             $query = "INSERT INTO `notes` (`s_no`, `sender_id`, `editor_id`, `class`, `subject`, `title`, `comment`, `file`, `timestamp`) VALUES (NULL,?,?,?,?,?,?,?, current_timestamp());";

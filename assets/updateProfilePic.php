@@ -68,7 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         
                     if ($deleted) {
                         $folder = ".." . DIRECTORY_SEPARATOR . "adminUploads" . DIRECTORY_SEPARATOR  . $newName . "." . $file_extension;
-        
+                        if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
+
                         $response['test'] = $tempname . " || " . $folder;
         
                         if (move_uploaded_file($tempname, $folder)) {
@@ -150,7 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             
                         if ($deleted) {
                             $folder = ".." . DIRECTORY_SEPARATOR . "teacherUploads" . DIRECTORY_SEPARATOR  . $newName . "." . $file_extension;
-            
+                            if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
+
                             $response['test'] = $tempname . " || " . $folder;
             
                             if (move_uploaded_file($tempname, $folder)) {
@@ -232,7 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         
                     if ($deleted) {
                         $folder = ".." . DIRECTORY_SEPARATOR . "studentUploads" . DIRECTORY_SEPARATOR  . $newName . "." . $file_extension;
-        
+                        if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
+
                         $response['test'] = $tempname . " || " . $folder;
         
                         if (move_uploaded_file($tempname, $folder)) {

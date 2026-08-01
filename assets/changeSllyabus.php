@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $newName = $senderId . time() . "." . $fileExtension;
 
                     $folder = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "syllabusUploads" . DIRECTORY_SEPARATOR . $newName;
-
+                    if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
                     if (move_uploaded_file($tempname, $folder)) {
                         $query = "UPDATE `syllabus` SET `file` = ? WHERE `s_no` = ?;";
 
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $newName = $senderId . time() . "." . $fileExtension;
 
                 $folder = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "syllabusUploads" . DIRECTORY_SEPARATOR . $newName;
-
+                if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
                 if (move_uploaded_file($tempname, $folder)) {
                     $query = "UPDATE `syllabus` SET `file` = ? WHERE `s_no` = ?;";
 

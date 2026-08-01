@@ -1,7 +1,27 @@
-﻿<?php
-session_start();
+<?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
+    $https = false;
+    if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
+        $https = true;
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $https = in_array(strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']), ['https', 'wss'], true);
+    }
+    if ($https) {
+        ini_set('session.cookie_secure', 1);
+    } else {
+        ini_set('session.cookie_secure', 0);
+    }
+    session_start();
+}
 
 if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'student') {
     header('Location: ../student-login.php');

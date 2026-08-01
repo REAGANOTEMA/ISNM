@@ -512,14 +512,16 @@ if (!function_exists('generateFinancialStatement')) {
         $stmt = $conn->prepare("
             SELECT 
                 si.invoice_number,
-                si.academic_year,
-                si.semester,
+                fs.academic_year,
+                fs.semester,
                 si.total_amount,
                 si.amount_paid,
                 si.balance,
                 si.status,
                 si.due_date
             FROM student_invoices si
+            LEFT JOIN student_fee_assignments sfa ON sfa.id = si.fee_assignment_id
+            LEFT JOIN fee_structures fs ON fs.id = sfa.fee_structure_id
             WHERE si.student_id = ?
             ORDER BY si.created_at DESC
         ");

@@ -28,7 +28,7 @@ $stats = [];
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'subscription_detail' && isset($_GET['id']) && $studentsDb) {
     header('Content-Type: application/json');
     $subId = (int)$_GET['id'];
-    $stmt = $studentsDb->prepare("SELECT ps.*, s.full_name, s.student_number, s.program FROM payment_subscriptions ps LEFT JOIN students s ON CAST(s.id AS CHAR) = ps.student_id WHERE ps.id = ?");
+    $stmt = $studentsDb->prepare("SELECT ps.*, s.full_name, s.student_number, s.program FROM payment_subscriptions ps LEFT JOIN students s ON s.id = ps.student_id WHERE ps.id = ?");
     if ($stmt) {
         $stmt->bind_param('i', $subId);
         $stmt->execute();

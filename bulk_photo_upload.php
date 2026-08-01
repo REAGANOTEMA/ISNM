@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once __DIR__ . '/includes/config_enhanced.php';
@@ -255,7 +255,7 @@ if ($studentsConn) {
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars(($_SESSION['full_name'] ?? '') ?: 'Staff'); ?>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="#" onclick="event.preventDefault();var f=document.createElement('form');f.method='POST';f.action='logout.php';document.body.appendChild(f);f.submit();">

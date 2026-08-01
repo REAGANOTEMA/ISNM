@@ -534,7 +534,7 @@ class AuthenticationService {
         session_regenerate_id(true);
         $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
         $_SESSION['user_id']        = $user['id'];
-        $_SESSION['email']          = $user['email'];
+        $_SESSION['email']          = $user['email']      ?? '';
         $_SESSION['full_name']      = $user['full_name'];
         $_SESSION['role']           = $user['role'];
         $_SESSION['type']           = $user['type'];

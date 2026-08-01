@@ -20,6 +20,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 if (!function_exists('executeQuery')) {
 function executeQuery($database, $sql = '', $params = [], $types = '') {
+    if (is_array($sql)) {
+        $params = $sql;
+        $sql = $database;
+        $database = null;
+    }
     if (empty($sql) && is_string($database)) {
         $sql = $database;
         $database = null;

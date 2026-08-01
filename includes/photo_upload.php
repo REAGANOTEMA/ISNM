@@ -159,13 +159,21 @@ function getPassportPhotoUrl($filename) {
 
 function updateStudentPhoto($student_id, $filename) {
     global $conn;
+    if (!$conn) $conn = getConnection();
     
     // Get current photo to delete old one
-    $current_photo_sql = "SELECT profile_image FROM students WHERE student_id = ?";
-    $current_result = executeQuery($conn, $current_photo_sql, [$student_id], 's');
+    $current_photo_sql = "SELECT profile_picture FROM students WHERE id = ?";
+    $stmt = $conn->prepare($current_photo_sql);
+    $current_result = [];
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $current_result = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+    }
     
     if (!empty($current_result)) {
-        $current_photo = $current_result[0]['profile_image'];
+        $current_photo = $current_result['profile_picture'];
         
         // Delete old photo if it's not the default
         if ($current_photo !== 'default-student.png') {
@@ -173,13 +181,16 @@ function updateStudentPhoto($student_id, $filename) {
         }
     }
     
-    // Update database with new photo (both columns for consistency)
-    $update_sql = "UPDATE students SET profile_image = ?, profile_picture = ? WHERE student_id = ?";
+    // Update database with new photo
+    $update_sql = "UPDATE students SET profile_picture = ? WHERE id = ?";
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("sss", $filename, $filename, $student_id);
+    if (!$stmt) return false;
+    $stmt->bind_param("si", $filename, $student_id);
     
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Photo Updated', "Updated passport photo for student: $student_id", 'students', $student_id);
+        if (function_exists('logActivity')) {
+            logActivity($_SESSION['user_id'], $_SESSION['role'], 'Photo Updated', "Updated passport photo for student: $student_id", 'students', $student_id);
+        }
         return true;
     }
     
@@ -222,12 +233,20 @@ function validatePassportPhotoRequirements($file) {
 
 function createPhotoGallery($student_id) {
     global $conn;
+    if (!$conn) $conn = getConnection();
     // Create a gallery view for student photos
-    $photo_sql = "SELECT profile_image FROM students WHERE student_id = ?";
-    $result = executeQuery($conn, $photo_sql, [$student_id], 's');
+    $photo_sql = "SELECT profile_picture FROM students WHERE id = ?";
+    $stmt = $conn->prepare($photo_sql);
+    $result = [];
+    if ($stmt) {
+        $stmt->bind_param("i", $student_id);
+        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $result = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+    }
     
     if (!empty($result)) {
-        $photo = $result[0]['profile_image'];
+        $photo = $result['profile_picture'];
         $photo_url = getPassportPhotoUrl($photo);
         
         return [

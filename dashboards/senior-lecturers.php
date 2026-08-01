@@ -314,10 +314,7 @@ $assigned_courses_list = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT ca.*, c.course_name, c.course_code, c.credits, c.level, (SELECT COUNT(*) FROM student_course_registrations scr WHERE scr.course_id=ca.course_id AND scr.status='Active') as student_count FROM course_assignments ca LEFT JOIN courses c ON ca.course_id=c.id WHERE ca.lecturer_id=? AND ca.status='Active'");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $assigned_courses_list = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $assigned_courses_list = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -326,10 +323,7 @@ $today_schedule = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT tt.*, c.course_name, c.course_code FROM academic_timetable tt LEFT JOIN courses c ON tt.course_id=c.id WHERE tt.lecturer_id=? AND tt.day_of_week=DAYNAME(CURDATE()) AND tt.timetable_status='Published' ORDER BY tt.start_time");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $today_schedule = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $today_schedule = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -337,11 +331,8 @@ if ($conn) {
 $my_students = [];
 if ($studentsConn) {
     try {
-        $stmt = $studentsConn->prepare("SELECT scr.*, s.student_id, s.full_name, s.first_name, s.surname, s.program, c.course_name FROM student_course_registrations scr JOIN students s ON scr.student_id=s.id JOIN course_assignments ca ON scr.course_id=ca.course_id LEFT JOIN courses c ON scr.course_id=c.id WHERE ca.lecturer_id=? AND scr.status='Active' LIMIT 30");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $my_students = isnm_fetch_all($r);
-        $stmt->close();
+        $stmt = $studentsConn->prepare("SELECT scr.*, s.student_number, s.full_name, s.first_name, s.surname, s.program, c.course_name FROM student_course_registrations scr JOIN students s ON scr.student_id=s.id JOIN course_assignments ca ON scr.course_id=ca.course_id LEFT JOIN courses c ON scr.course_id=c.id WHERE ca.lecturer_id=? AND scr.status='Active' LIMIT 30");
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $my_students = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -350,10 +341,7 @@ $recent_assessments = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT a.*, c.course_name FROM assessments a LEFT JOIN courses c ON a.course_id=c.id WHERE a.created_by=? ORDER BY a.created_at DESC LIMIT 5");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $recent_assessments = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $recent_assessments = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -363,12 +351,14 @@ $total_grades = 0;
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT grade, COUNT(*) as c FROM academic_records WHERE lecturer_id=? AND grade IS NOT NULL GROUP BY grade");
+        if ($stmt) {
         $stmt->bind_param('i', $user_id);
         if ($stmt->execute()) {
             $r = $stmt->get_result();
             if ($r) while ($row = $r->fetch_assoc()) { $g = strtoupper(trim($row['grade'])); if (isset($grade_distribution[$g])) $grade_distribution[$g] = (int)$row['c']; $total_grades += (int)$row['c']; }
         }
         $stmt->close();
+        }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -377,10 +367,7 @@ $teaching_resources = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT * FROM teaching_resources WHERE lecturer_id=? ORDER BY created_at DESC");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $teaching_resources = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $teaching_resources = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -388,11 +375,8 @@ if ($conn) {
 $all_assessments = [];
 if ($conn) {
     try {
-        $stmt = $conn->prepare("SELECT ta.*, st.full_name as student_name FROM teaching_assessments ta LEFT JOIN students st ON ta.student_id=st.id WHERE ta.lecturer_id=? ORDER BY ta.assessment_date DESC");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $all_assessments = isnm_fetch_all($r);
-        $stmt->close();
+        $stmt = $conn->prepare("SELECT ta.*, st.full_name as student_name FROM teaching_assessments ta LEFT JOIN {$students_db_name}.students st ON ta.student_id=st.id WHERE ta.lecturer_id=? ORDER BY ta.assessment_date DESC");
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $all_assessments = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -401,10 +385,7 @@ $all_announcements = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT * FROM teaching_announcements WHERE lecturer_id=? ORDER BY created_at DESC");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $all_announcements = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $all_announcements = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -413,10 +394,7 @@ $research_projects = [];
 if ($conn) {
     try {
         $stmt = $conn->prepare("SELECT * FROM research_projects WHERE principal_investigator=? ORDER BY start_date DESC LIMIT 3");
-        $stmt->bind_param('i', $user_id);
-        $r = $stmt->execute() ? $stmt->get_result() : null;
-        if ($r) $research_projects = isnm_fetch_all($r);
-        $stmt->close();
+        if ($stmt) { $stmt->bind_param('i', $user_id); $r = $stmt->execute() ? $stmt->get_result() : null; if ($r) $research_projects = isnm_fetch_all($r); $stmt->close(); }
     } catch (Exception $e) { error_log('senior-lecturers context: ' . $e->getMessage()); }
 }
 
@@ -991,7 +969,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $catRecords = [];
         if ($conn) {
-            $cat_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
+            $cat_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_code=c.course_code LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type IN ('CAT','Assignment','Quiz') ORDER BY ar.created_at DESC LIMIT 20");
             if ($cat_stmt) { $cat_stmt->bind_param('i', $user_id); $r = $cat_stmt->execute() ? $cat_stmt->get_result() : null; if ($r) $catRecords = isnm_fetch_all($r); $cat_stmt->close(); }
         }
         if (empty($catRecords)): ?><p class="text-muted text-center py-3">No CAT marks recorded yet.</p>
@@ -1009,7 +987,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         <?php
         $examRecords = [];
         if ($conn) {
-            $exam_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_id=c.id LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
+            $exam_stmt = $conn->prepare("SELECT ar.*, c.course_name, c.course_code, s.full_name as student_name FROM academic_records ar LEFT JOIN courses c ON ar.course_code=c.course_code LEFT JOIN {$students_db_name}.students s ON ar.student_id=s.id WHERE ar.lecturer_id=? AND ar.assessment_type='Exam' ORDER BY ar.created_at DESC LIMIT 20");
             if ($exam_stmt) { $exam_stmt->bind_param('i', $user_id); $r = $exam_stmt->execute() ? $exam_stmt->get_result() : null; if ($r) $examRecords = isnm_fetch_all($r); $exam_stmt->close(); }
         }
         if (empty($examRecords)): ?><p class="text-muted text-center py-3">No exam marks recorded yet.</p>
@@ -1112,7 +1090,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation — delegate to universal section switcher
+        // Navigation ï¿½ delegate to universal section switcher
         document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();

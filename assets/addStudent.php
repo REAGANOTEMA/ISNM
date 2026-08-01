@@ -50,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (in_array($fileExtension, $allowedExtensions)) {
             $newName = "S" . time() . rand(1000, 9999) . "." . $fileExtension;
             $folder = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "studentUploads" . DIRECTORY_SEPARATOR . $newName;
+            if (!is_dir(dirname($folder))) @mkdir(dirname($folder), 0755, true);
             if (move_uploaded_file($tempname, $folder)) {
                 $imageName = $newName;
             }

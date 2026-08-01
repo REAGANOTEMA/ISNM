@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISNM Student Search Page
  * Uses the configured staff database connection.

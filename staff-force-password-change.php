@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once 'auth-service.php';
 require_once 'config/database.php';
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Payment Checkout Page
  * Renders a unified payment form for any provider.

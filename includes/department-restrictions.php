@@ -126,7 +126,7 @@ class DepartmentRestrictions {
         $base_query = "SELECT ar.*, s.first_name, s.surname, s.student_id, c.course_name, p.program_name, d.name as department_name
                      FROM academic_records ar
                      JOIN students s ON ar.student_id = s.id
-                     JOIN courses c ON ar.course_id = c.id
+                     LEFT JOIN courses c ON ar.course_code = c.course_code
                      LEFT JOIN programs p ON s.program_id = p.id
                      LEFT JOIN departments d ON p.department_id = d.id
                      WHERE 1=1";

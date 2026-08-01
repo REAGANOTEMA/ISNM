@@ -1,5 +1,6 @@
-﻿<?php
+<?php
 require_once 'auth-service.php';
+require_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
