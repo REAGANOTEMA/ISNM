@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -11531,7 +11531,7 @@ ALTER TABLE `website_announcements`
 --
 DROP TABLE IF EXISTS `staff_trainings`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `staff_trainings`  AS SELECT `staff_training`.`id` AS `id`, `staff_training`.`staff_id` AS `staff_id`, `staff_training`.`training_name` AS `training_name`, `staff_training`.`training_type` AS `training_type`, `staff_training`.`provider` AS `provider`, `staff_training`.`start_date` AS `start_date`, `staff_training`.`end_date` AS `end_date`, `staff_training`.`status` AS `status`, `staff_training`.`notes` AS `notes`, `staff_training`.`created_at` AS `created_at` FROM `staff_training` ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `staff_trainings`  AS SELECT `staff_training`.`id` AS `id`, `staff_training`.`staff_id` AS `staff_id`, `staff_training`.`training_name` AS `training_name`, `staff_training`.`training_type` AS `training_type`, `staff_training`.`provider` AS `provider`, `staff_training`.`start_date` AS `start_date`, `staff_training`.`end_date` AS `end_date`, `staff_training`.`status` AS `status`, `staff_training`.`notes` AS `notes`, `staff_training`.`created_at` AS `created_at` FROM `staff_training` ;
 
 -- --------------------------------------------------------
 
@@ -11540,7 +11540,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFIN
 --
 DROP TABLE IF EXISTS `student_dashboard_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where `student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`) group by `student_academic_records`.`student_id`) `sa` on(`s`.`id` = `sa`.`student_id`)) left join (select `student_attendance`.`student_id` AS `student_id`,sum(case when `student_attendance`.`status` = 'Present' then 1 else 0 end) * 100.0 / count(0) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on(`s`.`id` = `sa2`.`student_id`)) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where `student_fees`.`status` in ('Unpaid','Partially Paid','Overdue') group by `student_fees`.`student_id`) `sf` on(`s`.`id` = `sf`.`student_id`)) WHERE `s`.`status` = 'Active' ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where `student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`) group by `student_academic_records`.`student_id`) `sa` on(`s`.`id` = `sa`.`student_id`)) left join (select `student_attendance`.`student_id` AS `student_id`,sum(case when `student_attendance`.`status` = 'Present' then 1 else 0 end) * 100.0 / count(0) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on(`s`.`id` = `sa2`.`student_id`)) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where `student_fees`.`status` in ('Unpaid','Partially Paid','Overdue') group by `student_fees`.`student_id`) `sf` on(`s`.`id` = `sf`.`student_id`)) WHERE `s`.`status` = 'Active' ;
 
 -- --------------------------------------------------------
 
@@ -11549,7 +11549,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFIN
 --
 DROP TABLE IF EXISTS `student_login_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE `students`.`status` = 'Active' ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE `students`.`status` = 'Active' ;
 
 --
 -- Constraints for dumped tables

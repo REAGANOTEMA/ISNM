@@ -7,7 +7,7 @@
  *   - igangaschool_system  (all ERP tables: students, staff, finance, ICT, payroll, ...)
  *   - igangaschool_website (public website content)
  *
- * STUDENTS_*/STAFF_*/ICT_*/PAYROLL_* constants are kept as aliases of the
+ * STUDENTS, STAFF, ICT and PAYROLL constants are kept as aliases of the
  * system database for backward compatibility.
  */
 
