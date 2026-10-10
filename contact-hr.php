@@ -30,12 +30,13 @@
 <p class="dept-subtitle">Staff recruitment, employment inquiries, and HR support</p>
 <div class="contact-btn-group">
 <a href="mailto:hr@igangaschoolofnursingandmidwifery.ac.ug" class="contact-btn email"><i class="fas fa-envelope"></i> hr@igangaschool...</a>
-<a href="https://wa.me/256730314979?text=Hello%20HR%20Department" target="_blank" class="contact-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp HR</a>
-<a href="tel:+256730314979" class="contact-btn call"><i class="fas fa-phone"></i> Call HR</a>
+<a href="https://wa.me/256730314979?text=Hello%20HR%20Department" target="_blank" class="contact-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp HR (Airtel)</a>
+<a href="tel:+256772514889" class="contact-btn call"><i class="fas fa-phone"></i> Call HR (MTN)</a>
 </div>
 <div class="dept-details">
 <h4><i class="fas fa-info-circle me-2"></i>About Human Resources</h4>
 <p><i class="fas fa-check-circle me-2"></i> We handle staff recruitment, employment verification, payroll inquiries, and HR policies.</p>
+<p><i class="fab fa-whatsapp me-2"></i> WhatsApp (Airtel): <strong>+256 730 314 979</strong> — WhatsApp only. Call (MTN): <strong>+256 772 514 889</strong>.</p>
 <p><i class="fas fa-clock me-2"></i> Office Hours: Mon-Fri, 8:00 AM - 5:00 PM</p>
 <p><i class="fas fa-map-marker-alt me-2"></i> Located at Administration Block, ISNM Main Campus</p>
 </div>

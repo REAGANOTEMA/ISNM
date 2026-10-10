@@ -11,6 +11,7 @@
           <h4>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h4>
           <p><i class="fas fa-map-marker-alt"></i> P.O. Box 418, Iganga, Uganda</p>
           <p><i class="fas fa-phone"></i> Tel: 0782 990 403 | 0782 633 253 | 0753 393 340</p>
+          <p><i class="fab fa-whatsapp"></i> WhatsApp: <a href="https://wa.me/256784341555?text=Hello%2C%20I%20would%20like%20to%20reach%20the%20Director%20of%20ISNM" target="_blank" rel="noopener">+256 784 341 555</a></p>
           <p><i class="fas fa-envelope"></i> Email: iganganursingschool@gmail.com</p>
           <p><i class="fas fa-globe"></i> Website: <a href="https://igangaschoolofnursingandmidwifery.ac.ug" target="_blank" rel="noopener">igangaschoolofnursingandmidwifery.ac.ug</a></p>
           
@@ -48,18 +49,18 @@
         <div class="footer-developer">
           <h5><i class="fas fa-code me-2"></i>Designed and Developed by</h5>
           <div class="developer-info">
-            <h6><i class="fas fa-user me-2"></i>Reagan Otema</h6>
+            <h6><i class="fas fa-laptop-code me-2"></i><a href="https://reagansoftinnovation.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">ReaganSoft Innovation Limited</a></h6>
             <div class="contact-info">
-              <p><i class="fab fa-whatsapp me-2"></i> MTN WhatsApp: <a href="https://wa.me/256772514889" target="_blank">+256772514889</a></p>
-              <p><i class="fab fa-whatsapp me-2"></i> Airtel WhatsApp: <a href="https://wa.me/256730314979" target="_blank">+256730314979</a></p>
-              <p><i class="fas fa-envelope me-2"></i> Email: <a href="mailto:softwareengineer@igangaschoolofnursingandmidwifery.ac.ug">softwareengineer@igangaschoolofnursingandmidwifery.ac.ug</a></p>
+              <p><i class="fas fa-globe me-2"></i> Website: <a href="https://reagansoftinnovation.com" target="_blank" rel="noopener">reagansoftinnovation.com</a></p>
+              <p><i class="fab fa-whatsapp me-2"></i> MTN (WhatsApp &amp; Call): <a href="https://wa.me/256772514889?text=Hello%20ReaganSoft%20Innovation%20Limited" target="_blank">+256772514889</a></p>
+              <p><i class="fab fa-whatsapp me-2"></i> Airtel (WhatsApp only): <a href="https://wa.me/256730314979?text=Hello%20ReaganSoft%20Innovation%20Limited" target="_blank">+256730314979</a></p>
             </div>
             <div class="developer-note">
               <p><i class="fas fa-tools me-2"></i> For system errors, contact via WhatsApp</p>
             </div>
             
             <!-- Developer 3D Button -->
-            <button class="btn-3d btn-sm mt-3" onclick="window.open('https://wa.me/256772514889', '_blank')">
+            <button class="btn-3d btn-sm mt-3" onclick="window.open('https://wa.me/256772514889?text=Hello%20ReaganSoft%20Innovation%20Limited%2C%20I%20need%20support', '_blank')">
               <i class="fas fa-comment me-2"></i>Contact Developer
             </button>
           </div>
@@ -825,10 +826,10 @@
   <i class="fas fa-chevron-up"></i>
 </button>
 
-<!-- WhatsApp Floating Button -->
-<div id="whatsappFloat" onclick="window.open('https://wa.me/256700451998','_blank')">
+<!-- WhatsApp Floating Button — Message the Director directly -->
+<div id="whatsappFloat" onclick="window.open('https://wa.me/256784341555?text=Hello%20Director%2C%20I%20would%20like%20to%20reach%20you%20from%20the%20ISNM%20website.','_blank')">
   <i class="fab fa-whatsapp"></i>
-  <span>Chat with us</span>
+  <span>Message the Director</span>
 </div>
 
 <!-- Scroll Animation Observer -->

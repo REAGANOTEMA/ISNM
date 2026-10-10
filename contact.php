@@ -58,6 +58,7 @@ include_once 'shared/_header.php';
               <p><i class="fas fa-user-tie"></i> Principal: +256 782 990 403</p>
               <p><i class="fas fa-user-shield"></i> Deputy Principal: 0782 633 253</p>
               <p><i class="fas fa-user-cog"></i> Director: 0753 393 340</p>
+              <p><i class="fab fa-whatsapp"></i> Director WhatsApp: <a href="https://wa.me/256784341555?text=Hello%20Director%2C%20I%20would%20like%20to%20reach%20you%20from%20the%20ISNM%20website." target="_blank" rel="noopener" style="color:#059669;font-weight:600;">+256 784 341 555</a></p>
               <p><i class="fas fa-users"></i> HRM: +256 703 999 796</p>
             </div>
           </div>
@@ -73,6 +74,19 @@ include_once 'shared/_header.php';
               <p><i class="fas fa-info-circle"></i> registrar@igangaschoolofnursingandmidwifery.ac.ug</p>
             </div>
           </div>
+        </div>
+
+        <!-- Message the Director Directly -->
+        <div class="director-message-card animate-slide-up animate-delay-2" style="animation-delay: 0.25s; margin-top: 30px; background: linear-gradient(135deg,#ecfdf5,#f0fdf4); border: 2px solid #a7f3d0; border-radius: 16px; padding: 28px; text-align: center; box-shadow: 0 4px 20px rgba(5,150,105,0.12);">
+          <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <h4 style="color:#0f172a;font-weight:700;margin-bottom:6px;">Message the Director Directly</h4>
+          <p style="color:#475569;font-size:14px;margin-bottom:18px;">Send a WhatsApp message straight to the Director of ISNM on <strong>+256 784 341 555</strong></p>
+          <a href="https://wa.me/256784341555?text=Hello%20Director%2C%20I%20would%20like%20to%20reach%20you%20from%20the%20ISNM%20website." target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;transition:all 0.2s ease;box-shadow:0 4px 16px rgba(37,211,102,0.35);">
+            <i class="fab fa-whatsapp" style="font-size:20px;"></i> Open WhatsApp Chat
+          </a>
+          <p style="color:#64748b;font-size:12px;margin-top:14px;margin-bottom:0;"><i class="fas fa-shield-alt me-1"></i> Your message opens directly in WhatsApp — no phone number needed.</p>
         </div>
       </div>
     </section>

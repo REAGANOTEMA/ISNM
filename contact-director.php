@@ -30,12 +30,13 @@
 <p class="dept-subtitle">Executive leadership, institutional strategy, and high-level communications</p>
 <div class="contact-btn-group">
 <a href="mailto:director@igangaschoolofnursingandmidwifery.ac.ug" class="contact-btn email"><i class="fas fa-envelope"></i> director@igangaschool...</a>
-<a href="https://wa.me/256772514889?text=Hello%20Director%20General" target="_blank" class="contact-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Director</a>
-<a href="tel:+256772514889" class="contact-btn call"><i class="fas fa-phone"></i> Call Director</a>
+<a href="https://wa.me/256784341555?text=Hello%20Director%2C%20I%20would%20like%20to%20reach%20you%20regarding%20an%20important%20matter%20concerning%20ISNM." target="_blank" class="contact-btn whatsapp"><i class="fab fa-whatsapp"></i> Message the Director</a>
+<a href="tel:+256753393340" class="contact-btn call"><i class="fas fa-phone"></i> Call Director</a>
 </div>
 <div class="dept-details">
 <h4><i class="fas fa-info-circle me-2"></i>About the Director General</h4>
 <p><i class="fas fa-check-circle me-2"></i> The Director General provides strategic leadership and oversees all institution operations. For partnership proposals, policy matters, and executive communications.</p>
+<p><i class="fab fa-whatsapp me-2"></i> You can send a direct WhatsApp message to the Director on <strong>+256 784 341 555</strong> — tap the green button above and your message will open directly in WhatsApp.</p>
 <p><i class="fas fa-clock me-2"></i> Appointment required. Office Hours: Mon-Fri, 9:00 AM - 4:00 PM</p>
 <p><i class="fas fa-map-marker-alt me-2"></i> Located at Executive Office, Administration Block, ISNM Main Campus</p>
 </div>

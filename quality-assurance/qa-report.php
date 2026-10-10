@@ -528,8 +528,8 @@ if (isset($_GET['run_qa']) && $_GET['run_qa'] == 'true') {
     
     <footer class="mt-5 py-3 bg-light text-center">
         <p>&copy; 2026 Iganga School of Nursing and Midwifery , Quality Assurance Report</p>
-        <p>Designed and Developed by Reagan Otema</p>
-        <p>MTN WhatsApp: +256772514889 | Airtel WhatsApp: +256730314979</p>
+        <p>Designed and Developed by <a href="https://reagansoftinnovation.com" target="_blank" rel="noopener">ReaganSoft Innovation Limited</a></p>
+        <p>MTN (WhatsApp &amp; Call): +256772514889 | Airtel (WhatsApp only): +256730314979 | School WhatsApp: +256784341555</p>
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

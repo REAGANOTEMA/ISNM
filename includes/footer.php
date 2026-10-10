@@ -85,7 +85,16 @@
                         </svg>
                         <div>
                             <p class="contact-label">Phone</p>
-                            <p class="contact-value">+256 700 123 456</p>
+                            <p class="contact-value">0782 990 403 | 0782 633 253 | 0753 393 340</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-1-1 3.5-3.5-3.5-3.5 1-1 4.5 4.5-4.5 4.5z"/>
+                        </svg>
+                        <div>
+                            <p class="contact-label">WhatsApp (Director)</p>
+                            <p class="contact-value"><a href="https://wa.me/256784341555?text=Hello%20Director%2C%20I%20would%20like%20to%20reach%20you%20from%20the%20ISNM%20website." target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">+256 784 341 555</a></p>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -106,6 +115,7 @@
             <div class="footer-bottom-content">
                 <div class="footer-copyright">
                     <p>&copy; <?php echo date('Y'); ?> Iganga School of Nursing and Midwifery. All rights reserved.</p>
+                    <p style="margin-top:6px;font-size:12px;opacity:0.8;">Designed &amp; Developed by <a href="https://reagansoftinnovation.com" target="_blank" rel="noopener" style="color:var(--accent-color);text-decoration:underline;">ReaganSoft Innovation Limited</a></p>
                 </div>
                 <div class="footer-legal">
                     <a href="/privacy-policy.php" class="footer-legal-link">Privacy Policy</a>
