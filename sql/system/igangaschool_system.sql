@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.2
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 31, 2026 at 08:28 AM
--- Server version: 10.11.18-MariaDB
--- PHP Version: 8.4.23
+-- Generation Time: Oct 10, 2026 at 09:14 AM
+-- Server version: 10.11.19-MariaDB
+-- PHP Version: 8.4.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `igangaschool_staffs`
+-- Database: `igangaschool_system`
 --
 
 DELIMITER $$
@@ -35,10 +35,15 @@ CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_sch
     END IF;
 END$$
 
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
+    DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
+    ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
+END$$
+
 CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `get_dashboard_statistics` (IN `p_user_id` INT, IN `p_role` VARCHAR(100))   BEGIN
     SELECT
-        (SELECT COUNT(*) FROM igangaschool_staffs.staff WHERE status='Active') AS total_staff,
-        (SELECT COUNT(*) FROM igangaschool_students.students WHERE status='Active') AS total_students,
+        (SELECT COUNT(*) FROM igangaschool_system.staff WHERE status='Active') AS total_staff,
+        (SELECT COUNT(*) FROM igangaschool_system.students WHERE status='Active') AS total_students,
         0 AS pending_applications,
         2 AS active_programs,
         0 AS total_revenue,
@@ -161,7 +166,7 @@ CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `sp_student_fee_status` (IN 
     WHERE s.id = p_student_id
     AND (p_academic_year IS NULL OR fp.academic_year = p_academic_year);
 
-    -- Also get payment history
+    
     SELECT
         payment_reference,
         amount_received,
@@ -365,7 +370,9 @@ CREATE TABLE `academic_records` (
   `entry_date` date DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `credit_units` int(11) DEFAULT 0,
+  `score` decimal(5,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -734,14 +741,16 @@ CREATE TABLE `admission_requirements` (
 --
 
 INSERT INTO `admission_requirements` (`id`, `requirement_name`, `type`, `display_order`, `is_mandatory`, `is_active`, `created_at`) VALUES
-(1, 'Admission Letter', 'Document', 1, 1, 1, '2026-07-16 09:01:23'),
-(2, 'Academic Transcripts', 'Document', 2, 1, 1, '2026-07-16 09:01:23'),
-(3, 'National ID', 'Document', 3, 1, 1, '2026-07-16 09:01:23'),
-(4, 'Passport Photo', 'Photo', 4, 1, 1, '2026-07-16 09:01:23'),
-(5, 'Medical Certificate', 'Document', 5, 1, 1, '2026-07-16 09:01:23'),
-(6, 'Birth Certificate', 'Document', 6, 1, 1, '2026-07-16 09:01:23'),
-(7, 'Recommendation Letter', 'Document', 7, 0, 1, '2026-07-16 09:01:23'),
-(8, 'Fee Receipt', 'Document', 8, 0, 1, '2026-07-16 09:01:23');
+(1, 'Birth Certificate', 'Certificate', 1, 1, 1, '2026-07-22 14:14:37'),
+(2, 'Transfer Letter', 'Document', 2, 1, 1, '2026-07-22 14:14:37'),
+(3, 'Passport Photos', 'Photo', 3, 1, 1, '2026-07-22 14:14:37'),
+(4, 'Medical Form', 'Form', 4, 1, 1, '2026-07-22 14:14:37'),
+(5, 'National ID', 'ID', 5, 0, 1, '2026-07-22 14:14:37'),
+(6, 'Report Card', 'Document', 6, 1, 1, '2026-07-22 14:14:37'),
+(7, 'Recommendation Letter', 'Document', 7, 0, 1, '2026-07-22 14:14:37'),
+(8, 'Fee Receipt', 'Document', 8, 1, 1, '2026-07-22 14:14:37'),
+(9, 'Registration Form', 'Form', 9, 1, 1, '2026-07-22 14:14:37'),
+(10, 'Other Required Documents', 'Other', 10, 0, 1, '2026-07-22 14:14:37');
 
 -- --------------------------------------------------------
 
@@ -1171,32 +1180,34 @@ CREATE TABLE `appraisal_ratings` (
 --
 
 CREATE TABLE `approval_actions` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `request_id` int(10) UNSIGNED NOT NULL,
-  `stage_id` int(10) UNSIGNED DEFAULT NULL,
-  `action_by` int(10) UNSIGNED DEFAULT NULL,
-  `action_type` varchar(30) NOT NULL,
+  `id` int(11) NOT NULL,
+  `request_id` int(11) DEFAULT 0,
+  `approval_request_id` int(11) DEFAULT 0,
+  `stage_id` int(11) DEFAULT 0,
+  `action_by` int(11) DEFAULT 0,
+  `approver_id` int(11) DEFAULT 0,
+  `action_type` varchar(50) DEFAULT '',
+  `action` varchar(20) DEFAULT '',
   `comments` text DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `decision` varchar(30) DEFAULT NULL,
-  `previous_stage_order` int(10) UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `approval_request_id` int(11) DEFAULT 0
+  `decision` varchar(50) DEFAULT '',
+  `previous_stage_order` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `approval_actions`
 --
 
-INSERT INTO `approval_actions` (`id`, `request_id`, `stage_id`, `action_by`, `action_type`, `comments`, `notes`, `decision`, `previous_stage_order`, `created_at`, `approval_request_id`) VALUES
-(1, 3, 2, 1, 'reject', 'yes', NULL, 'Rejected', 2, '2026-06-24 01:32:00', 0),
-(2, 1, 160, 2, 'create', 'Request created: Laboratory Equipment Restock', NULL, NULL, NULL, '2026-06-19 22:47:50', 0),
-(3, 2, 160, 3, 'create', 'Request created: Office Stationery Order', NULL, NULL, NULL, '2026-06-19 19:47:50', 0),
-(4, 3, 160, 4, 'create', 'Request created: Medical Consumables', NULL, NULL, NULL, '2026-06-19 00:47:50', 0),
-(5, 4, 161, 5, 'create', 'Request created: New Student: Akello Grace', NULL, NULL, NULL, '2026-06-19 21:47:50', 0),
-(6, 5, 161, 5, 'create', 'Request created: New Student: Bwire John', NULL, NULL, NULL, '2026-06-19 00:47:50', 0),
-(7, 6, 160, 2, 'create', 'Request created: End of Year Examination Schedule', NULL, NULL, NULL, '2026-06-19 18:47:50', 0),
-(8, 7, 191, 24, 'created', 'Request created', NULL, 'Pending', 0, '2026-07-05 14:41:21', 0);
+INSERT INTO `approval_actions` (`id`, `request_id`, `approval_request_id`, `stage_id`, `action_by`, `approver_id`, `action_type`, `action`, `comments`, `notes`, `decision`, `previous_stage_order`, `created_at`) VALUES
+(1, 3, 0, 2, 1, 0, 'reject', '', 'yes', NULL, 'Rejected', 2, '2026-06-24 01:32:00'),
+(2, 1, 0, 160, 2, 0, 'create', '', 'Request created: Laboratory Equipment Restock', NULL, NULL, NULL, '2026-06-19 22:47:50'),
+(3, 2, 0, 160, 3, 0, 'create', '', 'Request created: Office Stationery Order', NULL, NULL, NULL, '2026-06-19 19:47:50'),
+(4, 3, 0, 160, 4, 0, 'create', '', 'Request created: Medical Consumables', NULL, NULL, NULL, '2026-06-19 00:47:50'),
+(5, 4, 0, 161, 5, 0, 'create', '', 'Request created: New Student: Akello Grace', NULL, NULL, NULL, '2026-06-19 21:47:50'),
+(6, 5, 0, 161, 5, 0, 'create', '', 'Request created: New Student: Bwire John', NULL, NULL, NULL, '2026-06-19 00:47:50'),
+(7, 6, 0, 160, 2, 0, 'create', '', 'Request created: End of Year Examination Schedule', NULL, NULL, NULL, '2026-06-19 18:47:50'),
+(8, 7, 0, 191, 24, 0, 'created', '', 'Request created', NULL, 'Pending', 0, '2026-07-05 14:41:21');
 
 -- --------------------------------------------------------
 
@@ -1250,31 +1261,33 @@ INSERT INTO `approval_requests` (`id`, `workflow_id`, `request_number`, `title`,
 --
 
 CREATE TABLE `approval_stages` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `workflow_id` int(10) UNSIGNED NOT NULL,
-  `stage_name` varchar(120) NOT NULL,
-  `stage_order` int(10) UNSIGNED NOT NULL,
-  `assigned_role_id` int(10) UNSIGNED DEFAULT NULL,
-  `assigned_role_name` varchar(80) DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `workflow_id` int(11) NOT NULL,
+  `stage_name` varchar(255) NOT NULL,
+  `stage_order` int(11) DEFAULT 1,
+  `approver_role` varchar(100) DEFAULT '',
+  `assigned_role_id` int(11) DEFAULT 0,
+  `assigned_role_name` varchar(100) DEFAULT '',
   `is_final` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `is_mandatory` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `approval_stages`
 --
 
-INSERT INTO `approval_stages` (`id`, `workflow_id`, `stage_name`, `stage_order`, `assigned_role_id`, `assigned_role_name`, `is_final`, `created_at`) VALUES
-(188, 125, 'Director ICT Review', 1, NULL, 'Director ICT', 0, '2026-06-29 13:41:38'),
-(189, 125, 'Director General Final Approval', 2, NULL, 'Director General', 1, '2026-06-29 13:41:38'),
-(190, 122, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:38'),
-(191, 123, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(192, 124, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(193, 126, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(194, 127, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(195, 128, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(196, 129, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39'),
-(197, 130, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:41:39');
+INSERT INTO `approval_stages` (`id`, `workflow_id`, `stage_name`, `stage_order`, `approver_role`, `assigned_role_id`, `assigned_role_name`, `is_final`, `is_mandatory`, `created_at`) VALUES
+(188, 125, 'Director ICT Review', 1, '', NULL, 'Director ICT', 0, 1, '2026-06-29 13:41:38'),
+(189, 125, 'Director General Final Approval', 2, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:38'),
+(190, 122, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:38'),
+(191, 123, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(192, 124, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(193, 126, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(194, 127, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(195, 128, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(196, 129, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39'),
+(197, 130, 'Director General Approval', 1, '', NULL, 'Director General', 1, 1, '2026-06-29 13:41:39');
 
 -- --------------------------------------------------------
 
@@ -1283,31 +1296,33 @@ INSERT INTO `approval_stages` (`id`, `workflow_id`, `stage_name`, `stage_order`,
 --
 
 CREATE TABLE `approval_workflows` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `workflow_name` varchar(120) NOT NULL,
-  `category` varchar(60) DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `workflow_name` varchar(255) DEFAULT '',
+  `name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
+  `category` varchar(100) DEFAULT '',
+  `target_table` varchar(100) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `approval_workflows`
 --
 
-INSERT INTO `approval_workflows` (`id`, `workflow_name`, `category`, `description`, `is_active`, `created_at`) VALUES
-(122, 'General Department Request', 'General Administration', 'Standard approval workflow for general administrative requests requiring Director General sign-off', 1, '2026-06-27 00:17:17'),
-(123, 'HR Request', 'Human Resources', 'HR-related requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(124, 'Finance Request', 'Finance', 'Financial requests and budget approvals requiring Director General sign-off', 1, '2026-06-27 00:17:17'),
-(125, 'ICT Request', 'ICT', 'ICT department requests requiring departmental review and Director General approval', 1, '2026-06-27 00:17:17'),
-(126, 'Academic Request', 'Academic', 'Academic affairs requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(127, 'Admissions Request', 'Admissions', 'Admissions-related requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(128, 'Library Request', 'Library', 'Library resource and service requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(129, 'Store Requisition', 'Store & Assets', 'Store and asset requisitions requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(130, 'Student Registration', 'Academic', 'Student registration requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(160, 'Transport Trip Approval', 'transport', 'DG approval for new transport trips', 1, '2026-07-01 06:22:53'),
-(161, 'Vehicle Purchase Approval', 'transport', 'DG approval for new vehicle acquisitions', 1, '2026-07-01 06:22:53'),
-(162, 'Route Change Approval', 'transport', 'DG approval for route modifications', 1, '2026-07-01 06:22:53');
+INSERT INTO `approval_workflows` (`id`, `workflow_name`, `name`, `description`, `category`, `target_table`, `is_active`, `created_at`) VALUES
+(122, 'General Department Request', '', 'Standard approval workflow for general administrative requests requiring Director General sign-off', 'General Administration', NULL, 1, '2026-06-27 00:17:17'),
+(123, 'HR Request', '', 'HR-related requests requiring Director General approval', 'Human Resources', NULL, 1, '2026-06-27 00:17:17'),
+(124, 'Finance Request', '', 'Financial requests and budget approvals requiring Director General sign-off', 'Finance', NULL, 1, '2026-06-27 00:17:17'),
+(125, 'ICT Request', '', 'ICT department requests requiring departmental review and Director General approval', 'ICT', NULL, 1, '2026-06-27 00:17:17'),
+(126, 'Academic Request', '', 'Academic affairs requests requiring Director General approval', 'Academic', NULL, 1, '2026-06-27 00:17:17'),
+(127, 'Admissions Request', '', 'Admissions-related requests requiring Director General approval', 'Admissions', NULL, 1, '2026-06-27 00:17:17'),
+(128, 'Library Request', '', 'Library resource and service requests requiring Director General approval', 'Library', NULL, 1, '2026-06-27 00:17:17'),
+(129, 'Store Requisition', '', 'Store and asset requisitions requiring Director General approval', 'Store & Assets', NULL, 1, '2026-06-27 00:17:17'),
+(130, 'Student Registration', '', 'Student registration requests requiring Director General approval', 'Academic', NULL, 1, '2026-06-27 00:17:17'),
+(160, 'Transport Trip Approval', '', 'DG approval for new transport trips', 'transport', NULL, 1, '2026-07-01 06:22:53'),
+(161, 'Vehicle Purchase Approval', '', 'DG approval for new vehicle acquisitions', 'transport', NULL, 1, '2026-07-01 06:22:53'),
+(162, 'Route Change Approval', '', 'DG approval for route modifications', 'transport', NULL, 1, '2026-07-01 06:22:53');
 
 -- --------------------------------------------------------
 
@@ -1335,12 +1350,15 @@ CREATE TABLE `assessments` (
 
 CREATE TABLE `assessment_scores` (
   `id` int(11) NOT NULL,
-  `assessment_id` int(11) NOT NULL,
+  `examination_session_id` int(11) DEFAULT 0,
   `student_id` int(11) NOT NULL,
-  `score` decimal(5,2) DEFAULT NULL,
+  `score` decimal(8,2) DEFAULT 0.00,
+  `max_score` decimal(8,2) DEFAULT 100.00,
+  `entered_by` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `assessment_id` int(11) NOT NULL,
   `feedback` text DEFAULT NULL,
-  `graded_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `graded_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1609,14 +1627,14 @@ CREATE TABLE `bank_accounts` (
 
 CREATE TABLE `bank_reconciliation` (
   `id` int(11) NOT NULL,
-  `reconciliation_date` date NOT NULL,
-  `bank_balance` decimal(15,2) DEFAULT NULL,
-  `book_balance` decimal(15,2) DEFAULT NULL,
-  `difference` decimal(15,2) DEFAULT NULL,
+  `reconciliation_date` date DEFAULT NULL,
+  `bank_balance` decimal(14,2) DEFAULT 0.00,
+  `book_balance` decimal(14,2) DEFAULT 0.00,
+  `difference` decimal(14,2) DEFAULT 0.00,
   `notes` text DEFAULT NULL,
-  `status` varchar(20) DEFAULT 'unreconciled',
+  `status` varchar(20) DEFAULT 'completed',
   `reconciled_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2252,6 +2270,17 @@ CREATE TABLE `bursar_users` (
   `login_attempts` int(11) DEFAULT 0,
   `locked_until` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bursar_users`
+--
+
+INSERT INTO `bursar_users` (`id`, `email`, `password_hash`, `full_name`, `phone`, `role`, `status`, `last_login`, `created_at`, `updated_at`, `login_attempts`, `locked_until`) VALUES
+(1, 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$t8ruNUyglG3NmMVoQn10LOVy7rNJJkFM1lCD75BUvd9G62HMPQOLa', 'School Bursar', NULL, 'bursar', 'active', NULL, '2026-07-16 19:31:18', '2026-07-16 19:31:18', 0, NULL),
+(2, 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$t8ruNUyglG3NmMVoQn10LOVy7rNJJkFM1lCD75BUvd9G62HMPQOLa', 'School Bursar', NULL, 'bursar', 'active', NULL, '2026-07-16 19:52:40', '2026-07-16 19:52:40', 0, NULL),
+(3, 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$t8ruNUyglG3NmMVoQn10LOVy7rNJJkFM1lCD75BUvd9G62HMPQOLa', 'School Bursar', NULL, 'bursar', 'active', NULL, '2026-07-16 19:52:51', '2026-07-16 19:52:51', 0, NULL),
+(4, 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$t8ruNUyglG3NmMVoQn10LOVy7rNJJkFM1lCD75BUvd9G62HMPQOLa', 'School Bursar', NULL, 'bursar', 'active', NULL, '2026-07-16 19:53:02', '2026-07-16 19:53:02', 0, NULL),
+(5, 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$t8ruNUyglG3NmMVoQn10LOVy7rNJJkFM1lCD75BUvd9G62HMPQOLa', 'School Bursar', NULL, 'bursar', 'active', NULL, '2026-07-16 19:53:14', '2026-07-16 19:53:14', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -3577,16 +3606,29 @@ CREATE TABLE `compliance_tracking` (
 
 CREATE TABLE `computer_repairs` (
   `id` int(11) NOT NULL,
-  `computer_id` int(11) DEFAULT 0,
+  `repair_number` varchar(50) NOT NULL,
+  `computer_id` int(11) DEFAULT NULL,
+  `equipment_id` int(11) DEFAULT NULL,
+  `reported_by` varchar(200) NOT NULL,
+  `reporter_type` enum('student','staff','lecturer') DEFAULT 'student',
+  `reporter_id` int(11) DEFAULT NULL,
   `issue_description` text NOT NULL,
-  `priority` varchar(50) DEFAULT 'medium',
-  `status` varchar(50) DEFAULT 'open',
-  `reported_by` varchar(200) DEFAULT '',
-  `reported_date` date DEFAULT NULL,
-  `resolved_date` date DEFAULT NULL,
+  `issue_category` enum('hardware','software','network','other') DEFAULT 'other',
+  `priority` enum('low','medium','high','critical') DEFAULT 'medium',
+  `assigned_technician` varchar(200) DEFAULT NULL,
+  `diagnosis` text DEFAULT NULL,
+  `resolution` text DEFAULT NULL,
+  `parts_replaced` text DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT 0.00,
+  `status` enum('reported','diagnosed','in_progress','completed','closed','cancelled') DEFAULT 'reported',
+  `reported_date` timestamp NULL DEFAULT current_timestamp(),
+  `diagnosed_date` timestamp NULL DEFAULT NULL,
+  `completed_date` timestamp NULL DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `resolution_notes` text DEFAULT NULL,
-  `cost` decimal(14,2) DEFAULT 0.00,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `resolved_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -4075,11 +4117,13 @@ CREATE TABLE `course_evaluations` (
 
 CREATE TABLE `course_prerequisites` (
   `id` int(11) NOT NULL,
-  `course_code` varchar(50) NOT NULL,
-  `prerequisite_code` varchar(50) NOT NULL,
+  `course_code` varchar(20) NOT NULL,
+  `prerequisite_code` varchar(20) NOT NULL,
+  `minimum_grade` varchar(5) DEFAULT 'D',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
   `program_code` varchar(50) DEFAULT '',
-  `status` varchar(50) DEFAULT 'Active',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `status` varchar(50) DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -4090,14 +4134,17 @@ CREATE TABLE `course_prerequisites` (
 
 CREATE TABLE `course_registrations` (
   `id` int(11) NOT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `course_id` int(11) DEFAULT NULL,
+  `student_id` int(11) NOT NULL,
+  `course_code` varchar(50) DEFAULT '',
+  `course_id` int(11) DEFAULT 0,
   `academic_year` varchar(20) DEFAULT NULL,
-  `semester` varchar(30) DEFAULT NULL,
-  `status` enum('Pending','Submitted','Registered','Approved','Rejected','Dropped') DEFAULT 'Pending',
+  `semester` varchar(100) DEFAULT NULL,
+  `registration_status` varchar(50) DEFAULT 'Registered',
+  `status` varchar(50) DEFAULT 'Registered',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
   `registration_date` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -5046,7 +5093,9 @@ CREATE TABLE `examination_results` (
   `grade` varchar(5) DEFAULT NULL,
   `status` varchar(50) DEFAULT 'Draft',
   `entered_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `max_score` decimal(8,2) DEFAULT 100.00,
+  `score` decimal(8,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5616,23 +5665,23 @@ CREATE TABLE `fee_adjustments` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `fee_payments`
--- (See below for the actual view)
+-- Table structure for table `fee_payments`
 --
+
 CREATE TABLE `fee_payments` (
-`id` int(11)
-,`student_id` int(11)
-,`fee_account_id` int(11)
-,`amount_paid` decimal(12,2)
-,`payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other')
-,`receipt_number` varchar(50)
-,`status` enum('Pending','Completed','Failed','Reversed')
-,`payment_date` date
-,`notes` text
-,`processed_by` int(11)
-,`created_at` timestamp
-,`updated_at` timestamp
-);
+  `id` int(11) DEFAULT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `fee_account_id` int(11) DEFAULT NULL,
+  `amount_paid` decimal(12,2) DEFAULT NULL,
+  `payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other') DEFAULT NULL,
+  `receipt_number` varchar(50) DEFAULT NULL,
+  `status` enum('Pending','Completed','Failed','Reversed') DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `processed_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -5785,18 +5834,18 @@ CREATE TABLE `fee_structures` (
 --
 
 INSERT INTO `fee_structures` (`id`, `fee_name`, `fee_type`, `amount`, `program_id`, `program_name`, `academic_year`, `semester`, `level`, `is_mandatory`, `due_date`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Admission Fee', '', 150000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(2, 'Registration Fee', 'Registration', 100000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(3, 'Tuition Fee - Year 1', 'Tuition', 800000.00, NULL, NULL, '2026', NULL, 'Year 1', 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(4, 'Tuition Fee - Year 2', 'Tuition', 850000.00, NULL, NULL, '2026', NULL, 'Year 2', 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(5, 'Tuition Fee - Year 3', 'Tuition', 900000.00, NULL, NULL, '2026', NULL, 'Year 3', 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(6, 'Development Fee', '', 200000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(7, 'Uniform Fee', '', 150000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(8, 'Books & Materials Fee', '', 100000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(9, 'Transport Fee', '', 300000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(10, 'Meals Fee', '', 250000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(11, 'Hostel Fee', '', 400000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57'),
-(12, 'Other Fees', 'Other', 50000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:33:57', '2026-07-22 14:33:57');
+(1, 'Admission Fee', '', 150000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(2, 'Registration Fee', 'Registration', 100000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(3, 'Tuition Fee - Year 1', 'Tuition', 800000.00, NULL, NULL, '2026', NULL, 'Year 1', 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(4, 'Tuition Fee - Year 2', 'Tuition', 850000.00, NULL, NULL, '2026', NULL, 'Year 2', 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(5, 'Tuition Fee - Year 3', 'Tuition', 900000.00, NULL, NULL, '2026', NULL, 'Year 3', 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(6, 'Development Fee', '', 200000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(7, 'Uniform Fee', '', 150000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(8, 'Books & Materials Fee', '', 100000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(9, 'Transport Fee', '', 300000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(10, 'Meals Fee', '', 250000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(11, 'Hostel Fee', '', 400000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58'),
+(12, 'Other Fees', 'Other', 50000.00, NULL, NULL, '2026', NULL, NULL, 1, NULL, 1, '2026-07-22 14:25:58', '2026-07-22 14:25:58');
 
 -- --------------------------------------------------------
 
@@ -6861,6 +6910,22 @@ CREATE TABLE `ict_asset_categories` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `ict_asset_categories`
+--
+
+INSERT INTO `ict_asset_categories` (`id`, `category_name`, `description`, `parent_id`, `created_at`, `updated_at`) VALUES
+(1, 'Desktop Computers', 'Desktop workstations and PCs', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(2, 'Laptops', 'Portable notebook computers', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(3, 'Servers', 'Physical and virtual server systems', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(4, 'Printers', 'All printer types including multi-function', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(5, 'Scanners', 'Document and photo scanners', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(6, 'Projectors', 'Multimedia projectors and displays', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(7, 'Network Equipment', 'Routers, switches, access points', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(8, 'UPS Systems', 'Uninterruptible power supplies', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(9, 'Software', 'Licensed software packages', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(10, 'Accessories', 'Peripherals and accessories', NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21');
+
 -- --------------------------------------------------------
 
 --
@@ -6953,6 +7018,22 @@ CREATE TABLE `ict_device_categories` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ict_device_categories`
+--
+
+INSERT INTO `ict_device_categories` (`id`, `category_name`, `device_type`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Desktop Computers', 'computer', 'Desktop workstations', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(2, 'Laptops', 'computer', 'Portable computers', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(3, 'Network Printers', 'printer', 'Network-connected printers', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(4, 'Scanners', 'scanner', 'Document scanners', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(5, 'Projectors', 'projector', 'Multimedia projectors', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(6, 'Network Switches', 'network', 'Managed and unmanaged switches', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(7, 'Routers', 'network', 'Network routers', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(8, 'Access Points', 'network', 'Wireless access points', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(9, 'Servers', 'server', 'Server systems', '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(10, 'UPS', 'ups', 'Power backup units', '2026-06-26 19:25:21', '2026-06-26 19:25:21');
 
 -- --------------------------------------------------------
 
@@ -7328,6 +7409,22 @@ CREATE TABLE `ict_system_settings` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ict_system_settings`
+--
+
+INSERT INTO `ict_system_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `is_encrypted`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'session_timeout_minutes', '30', 'security', 'User session timeout in minutes', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(2, 'max_login_attempts', '5', 'security', 'Maximum failed login attempts before lockout', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(3, 'lockout_duration_minutes', '15', 'security', 'Account lockout duration in minutes', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(4, 'password_min_length', '8', 'security', 'Minimum password length', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(5, 'backup_retention_days', '30', 'backup', 'Days to retain backups', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(6, 'auto_backup_enabled', 'true', 'backup', 'Enable automatic scheduled backups', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(7, 'backup_time', '02:00', 'backup', 'Scheduled backup time', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(8, 'system_health_interval', '5', 'monitoring', 'System health check interval in minutes', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(9, 'notify_critical_alerts', 'true', 'alerts', 'Send notifications for critical alerts', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21'),
+(10, 'maintenance_mode', 'false', 'system', 'System maintenance mode flag', 0, NULL, '2026-06-26 19:25:21', '2026-06-26 19:25:21');
 
 -- --------------------------------------------------------
 
@@ -8062,6 +8159,16 @@ CREATE TABLE `it_support_tickets` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `it_support_tickets`
+--
+
+INSERT INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requester_email`, `requester_type`, `issue_type`, `priority`, `description`, `status`, `assigned_to`, `resolution_notes`, `resolved_at`, `created_at`, `updated_at`) VALUES
+(1, 'TKT-2024-001', 'John Mugisha', 'jmugisha@student.isnm.ac.ug', 'student', 'software', 'medium', 'Unable to access SPSS software on Lab A computers', 'open', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(2, 'TKT-2024-002', 'Dr. Emily Achieng', 'eachieng@isnm.ac.ug', 'staff', 'hardware', 'high', 'Projector in Lab B not displaying properly', 'in_progress', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(3, 'TKT-2024-003', 'Peter Kato', 'pkato@student.isnm.ac.ug', 'student', 'account', 'low', 'Forgot password for student portal', 'open', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(4, 'TKT-2024-004', 'Ms. Ruth Akello', 'rakello@isnm.ac.ug', 'staff', 'network', 'critical', 'WiFi connection dropping frequently in Lab A', 'open', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56');
+
 -- --------------------------------------------------------
 
 --
@@ -8187,6 +8294,15 @@ CREATE TABLE `lab_bookings` (
   `semester` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `lab_bookings`
+--
+
+INSERT INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructor_name`, `instructor_email`, `booking_date`, `time_slot`, `number_of_students`, `purpose`, `special_requirements`, `status`, `approved_by`, `lab_assigned`, `created_at`, `updated_at`, `lab_room_id`, `user_id`, `semester`) VALUES
+(1, 'BK-2024-001', 'Introduction to Nursing Informatics', 'Dr. Sarah Johnson', 'sjohnson@isnm.ac.ug', '2024-06-10', '09:00 AM - 11:00 AM', 25, 'Practical session on electronic health records', NULL, 'confirmed', NULL, 'Lab A', '2026-06-14 18:38:55', '2026-06-14 18:38:55', NULL, NULL, NULL),
+(2, 'BK-2024-002', 'Research Methods', 'Prof. Michael Okonkwo', 'mokonkwo@isnm.ac.ug', '2024-06-10', '02:00 PM - 04:00 PM', 30, 'Data analysis using SPSS', NULL, 'pending', NULL, 'Lab B', '2026-06-14 18:38:55', '2026-06-14 18:38:55', NULL, NULL, NULL),
+(3, 'BK-2024-003', 'Computer Literacy', 'Ms. Grace Namukasa', 'gnamukasa@isnm.ac.ug', '2024-06-11', '09:00 AM - 11:00 AM', 20, 'Basic computer skills training', NULL, 'confirmed', NULL, 'Lab A', '2026-06-14 18:38:55', '2026-06-14 18:38:55', NULL, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -8253,6 +8369,17 @@ CREATE TABLE `lab_computers` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lab_computers`
+--
+
+INSERT INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `lab_name`, `location`, `status`, `ip_address`, `mac_address`, `specifications`, `os_installed`, `operating_system`, `last_maintenance`, `next_maintenance`, `issues_reported`, `assigned_to`, `purchase_date`, `warranty_expiry`, `created_at`, `updated_at`) VALUES
+(1, 'LAB-A-001', 'Computer Lab A - Station 1', NULL, 'Lab A - Floor 1', 'online', '192.168.1.101', 'AA:BB:CC:DD:EE:01', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', NULL, '2024-05-01', '2024-08-01', NULL, NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
+(2, 'LAB-A-002', 'Computer Lab A - Station 2', NULL, 'Lab A - Floor 1', 'online', '192.168.1.102', 'AA:BB:CC:DD:EE:02', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', NULL, '2024-05-01', '2024-08-01', NULL, NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
+(3, 'LAB-A-003', 'Computer Lab A - Station 3', NULL, 'Lab A - Floor 1', 'offline', '192.168.1.103', 'AA:BB:CC:DD:EE:03', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', NULL, '2024-05-01', '2024-08-01', 'Hardware issue - PSU replacement needed', NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
+(4, 'LAB-B-001', 'Computer Lab B - Station 1', NULL, 'Lab B - Floor 2', 'online', '192.168.2.101', 'BB:CC:DD:EE:FF:01', 'Intel i7, 16GB RAM, 512GB SSD', 'Windows 11 Pro', NULL, '2024-05-15', '2024-08-15', NULL, NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
+(5, 'LAB-B-002', 'Computer Lab B - Station 2', NULL, 'Lab B - Floor 2', 'maintenance', '192.168.2.102', 'BB:CC:DD:EE:FF:02', 'Intel i7, 16GB RAM, 512GB SSD', 'Windows 11 Pro', NULL, '2024-05-15', '2024-08-15', 'OS reinstallation in progress', NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55');
 
 -- --------------------------------------------------------
 
@@ -8350,17 +8477,25 @@ CREATE TABLE `lab_equipment` (
 
 CREATE TABLE `lab_equipment_checkout` (
   `id` int(11) NOT NULL,
-  `equipment_id` int(11) DEFAULT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `checked_out_by` int(11) DEFAULT NULL,
-  `checkout_date` datetime DEFAULT current_timestamp(),
-  `expected_return_date` datetime DEFAULT NULL,
-  `actual_return_date` datetime DEFAULT NULL,
-  `quantity` int(11) DEFAULT 1,
+  `equipment_id` int(11) NOT NULL,
+  `checked_out_to` varchar(200) NOT NULL,
+  `borrower_type` enum('student','staff','lecturer') DEFAULT 'student',
+  `borrower_id` int(11) DEFAULT NULL,
+  `checkout_date` datetime NOT NULL,
+  `expected_return` datetime DEFAULT NULL,
+  `actual_return` datetime DEFAULT NULL,
   `purpose` text DEFAULT NULL,
-  `status` varchar(50) DEFAULT 'checked_out',
+  `condition_at_checkout` varchar(200) DEFAULT NULL,
+  `condition_at_return` varchar(200) DEFAULT NULL,
+  `checked_out_by` int(11) DEFAULT NULL,
+  `status` enum('checked_out','returned','overdue','lost','damaged') DEFAULT 'checked_out',
   `notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `actual_return_date` datetime DEFAULT NULL,
+  `expected_return_date` datetime DEFAULT NULL,
+  `quantity` int(11) DEFAULT 1,
+  `student_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -8553,13 +8688,27 @@ CREATE TABLE `lab_printing_jobs` (
 
 CREATE TABLE `lab_rooms` (
   `id` int(11) NOT NULL,
-  `room_name` varchar(200) NOT NULL,
-  `location` varchar(200) DEFAULT '',
-  `capacity` int(11) DEFAULT 0,
-  `status` varchar(50) DEFAULT 'active',
+  `room_name` varchar(100) NOT NULL,
+  `room_code` varchar(20) NOT NULL,
+  `capacity` int(11) NOT NULL DEFAULT 0,
+  `computer_count` int(11) NOT NULL DEFAULT 0,
+  `location` varchar(200) DEFAULT NULL,
+  `status` enum('active','inactive','maintenance') DEFAULT 'active',
   `description` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `lab_rooms`
+--
+
+INSERT INTO `lab_rooms` (`id`, `room_name`, `room_code`, `capacity`, `computer_count`, `location`, `status`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Computer Lab A', 'LAB-A', 40, 40, 'Main Building, Ground Floor', 'active', NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(2, 'Computer Lab B', 'LAB-B', 30, 30, 'Main Building, Ground Floor', 'active', NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(3, 'Computer Lab C', 'LAB-C', 25, 25, 'Main Building, First Floor', 'active', NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(4, 'Computer Lab D', 'LAB-D', 20, 20, 'Main Building, First Floor', 'active', NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(5, 'Skills Lab', 'SKILLS-1', 15, 15, 'Clinical Building', 'active', NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42');
 
 -- --------------------------------------------------------
 
@@ -8660,6 +8809,16 @@ CREATE TABLE `lab_usage_stats` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lab_usage_stats`
+--
+
+INSERT INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `total_users`, `peak_concurrent_users`, `average_session_duration`, `computers_used`, `computers_available`, `notes`, `created_at`) VALUES
+(1, 'Lab A', '2024-06-05', 8, 45, 25, 90, 22, 25, NULL, '2026-06-14 18:38:56'),
+(2, 'Lab B', '2024-06-05', 6, 35, 20, 85, 18, 20, NULL, '2026-06-14 18:38:56'),
+(3, 'Lab A', '2024-06-06', 10, 55, 28, 95, 24, 25, NULL, '2026-06-14 18:38:56'),
+(4, 'Lab B', '2024-06-06', 7, 40, 22, 80, 19, 20, NULL, '2026-06-14 18:38:56');
 
 -- --------------------------------------------------------
 
@@ -10943,6 +11102,16 @@ CREATE TABLE `maintenance_logs` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `maintenance_logs`
+--
+
+INSERT INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `description`, `performed_by`, `cost`, `parts_replaced`, `status`, `scheduled_date`, `completed_date`, `created_at`, `updated_at`) VALUES
+(1, 'LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, NULL, 'scheduled', '2024-06-12', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(2, 'LAB-B-002', 'routine', 'Operating system reinstallation and updates', 'IT Technician - Sarah', 0.00, NULL, 'in_progress', '2024-06-10', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(3, 'LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, NULL, 'scheduled', '2024-06-12', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(4, 'LAB-B-002', 'routine', 'Operating system reinstallation and updates', 'IT Technician - Sarah', 0.00, NULL, 'in_progress', '2024-06-10', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05');
+
 -- --------------------------------------------------------
 
 --
@@ -11726,6 +11895,24 @@ CREATE TABLE `network_devices` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `network_devices`
+--
+
+INSERT INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`, `mac_address`, `location`, `status`, `firmware_version`, `last_check`, `uptime_hours`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'Main Router', 'router', '192.168.0.1', '00:11:22:33:44:55', 'Server Room', 'online', 'v2.1.0', NULL, 720, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(2, 'Lab A Switch', 'switch', '192.168.1.1', '00:11:22:33:44:56', 'Lab A - Floor 1', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(3, 'Lab B Switch', 'switch', '192.168.2.1', '00:11:22:33:44:57', 'Lab B - Floor 2', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(4, 'WiFi Access Point A', 'access_point', '192.168.0.10', '00:11:22:33:44:58', 'Lab A - Floor 1', 'online', 'v3.2.1', NULL, 240, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(5, 'WiFi Access Point B', 'access_point', '192.168.0.11', '00:11:22:33:44:59', 'Lab B - Floor 2', 'offline', 'v3.2.1', NULL, 0, 'Needs repair', '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(6, 'Firewall', 'firewall', '192.168.0.2', '00:11:22:33:44:60', 'Server Room', 'online', 'v4.0.0', NULL, 720, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(7, 'Main Router', 'router', '192.168.0.1', '00:11:22:33:44:55', 'Server Room', 'online', 'v2.1.0', NULL, 720, NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(8, 'Lab A Switch', 'switch', '192.168.1.1', '00:11:22:33:44:56', 'Lab A - Floor 1', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(9, 'Lab B Switch', 'switch', '192.168.2.1', '00:11:22:33:44:57', 'Lab B - Floor 2', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(10, 'WiFi Access Point A', 'access_point', '192.168.0.10', '00:11:22:33:44:58', 'Lab A - Floor 1', 'online', 'v3.2.1', NULL, 240, NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(11, 'WiFi Access Point B', 'access_point', '192.168.0.11', '00:11:22:33:44:59', 'Lab B - Floor 2', 'offline', 'v3.2.1', NULL, 0, 'Needs repair', '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(12, 'Firewall', 'firewall', '192.168.0.2', '00:11:22:33:44:60', 'Server Room', 'online', 'v4.0.0', NULL, 720, NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05');
+
 -- --------------------------------------------------------
 
 --
@@ -12209,13 +12396,13 @@ CREATE TABLE `password_changes` (
 --
 
 CREATE TABLE `password_resets` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED NOT NULL,
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
   `token` varchar(255) NOT NULL,
   `expires_at` datetime NOT NULL,
   `used_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -12582,7 +12769,7 @@ CREATE TABLE `payment_providers` (
   `test_merchant_id` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `payment_providers`
@@ -12790,7 +12977,7 @@ CREATE TABLE `payment_transactions` (
   `reconciled_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -13267,7 +13454,7 @@ CREATE TABLE `payroll_details` (
   `payment_status` enum('pending','paid','failed') DEFAULT 'pending',
   `status` varchar(20) DEFAULT 'calculated',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -13598,17 +13785,19 @@ CREATE TABLE `payroll_runs` (
   `created_by` int(11) DEFAULT NULL,
   `approved_by` int(11) DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `employee_count` int(11) DEFAULT 0,
+  `processed_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `payroll_runs`
 --
 
-INSERT INTO `payroll_runs` (`id`, `period`, `start_date`, `end_date`, `run_date`, `description`, `total_gross`, `total_paye`, `total_nssf`, `total_deductions`, `total_net`, `status`, `created_by`, `approved_by`, `approved_at`, `created_at`) VALUES
-(1, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-02 08:09:39'),
-(2, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-03 04:37:04'),
-(3, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-03 05:16:23');
+INSERT INTO `payroll_runs` (`id`, `period`, `start_date`, `end_date`, `run_date`, `description`, `total_gross`, `total_paye`, `total_nssf`, `total_deductions`, `total_net`, `status`, `created_by`, `approved_by`, `approved_at`, `created_at`, `employee_count`, `processed_by`) VALUES
+(1, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-02 08:09:39', 0, NULL),
+(2, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-03 04:37:04', 0, NULL),
+(3, 'January 2025', '2025-01-01', '2025-01-31', NULL, 'January 2025 Salary Payment', 59200000.00, 0.00, 0.00, 13024000.00, 46176000.00, 'approved', NULL, NULL, NULL, '2026-07-03 05:16:23', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -13629,7 +13818,7 @@ CREATE TABLE `payroll_settings` (
 
 INSERT INTO `payroll_settings` (`id`, `setting_key`, `setting_value`, `updated_at`) VALUES
 (1, 'currency', 'PHP', '2026-06-28 05:57:22'),
-(2, 'currency_symbol', 'â‚±', '2026-06-28 05:57:22'),
+(2, 'currency_symbol', 'Ã¢â€šÂ±', '2026-06-28 05:57:22'),
 (3, 'tax_rate', '0', '2026-06-28 05:57:22'),
 (4, 'sss_rate', '0.045', '2026-06-28 05:57:22'),
 (5, 'philhealth_rate', '0.0225', '2026-06-28 05:57:22'),
@@ -13891,6 +14080,18 @@ CREATE TABLE `printing_charges` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `printing_charges`
+--
+
+INSERT INTO `printing_charges` (`id`, `print_type`, `paper_size`, `charge_per_page`, `description`, `is_active`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'bw', 'A4', 100.00, 'Black & White A4 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(2, 'color', 'A4', 500.00, 'Colour A4 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(3, 'photocopy', 'A4', 50.00, 'Photocopy A4 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(4, 'bw', 'A3', 200.00, 'Black & White A3 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(5, 'color', 'A3', 1000.00, 'Colour A3 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42'),
+(6, 'photocopy', 'A3', 100.00, 'Photocopy A3 per page', 1, NULL, '2026-06-26 19:08:42', '2026-06-26 19:08:42');
+
 -- --------------------------------------------------------
 
 --
@@ -14086,14 +14287,17 @@ CREATE TABLE `push_subscriptions` (
 CREATE TABLE `quality_assurance` (
   `id` int(11) NOT NULL,
   `review_title` varchar(300) DEFAULT NULL,
+  `review_type` varchar(200) DEFAULT NULL,
   `department` varchar(200) DEFAULT NULL,
-  `review_area` varchar(200) DEFAULT NULL,
+  `reviewer` varchar(200) DEFAULT NULL,
+  `score` decimal(5,2) DEFAULT NULL,
   `findings` text DEFAULT NULL,
   `recommendations` text DEFAULT NULL,
-  `reviewed_by` int(11) DEFAULT NULL,
+  `status` enum('draft','completed','reviewed') DEFAULT 'draft',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `review_area` varchar(200) DEFAULT NULL,
   `review_date` date DEFAULT NULL,
-  `status` enum('Draft','Pending','Pass','Fail','Needs Improvement','Completed','Reviewed') DEFAULT 'Draft',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `reviewed_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -15437,6 +15641,22 @@ CREATE TABLE `software_inventory` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `software_inventory`
+--
+
+INSERT INTO `software_inventory` (`id`, `software_name`, `version`, `license_key`, `license_type`, `license_expiry`, `installation_count`, `update_available`, `latest_version`, `download_url`, `category`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'Microsoft Office 365', '2024', NULL, 'educational', '2025-12-31', 50, 0, '2024', NULL, 'office', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(2, 'SPSS Statistics', '29.0', NULL, 'commercial', '2024-12-31', 25, 1, '30.0', NULL, 'development', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(3, 'Windows 11 Pro', '23H2', NULL, 'educational', '2026-06-30', 50, 0, '23H2', NULL, 'os', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(4, 'Adobe Creative Cloud', '2024', NULL, 'educational', '2024-08-31', 15, 1, '2024.1', NULL, 'design', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(5, 'Malwarebytes Antivirus', '5.0', NULL, 'commercial', '2025-01-15', 50, 0, '5.0', NULL, 'antivirus', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
+(6, 'Microsoft Office 365', '2024', NULL, 'educational', '2025-12-31', 50, 0, '2024', NULL, 'office', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(7, 'SPSS Statistics', '29.0', NULL, 'commercial', '2024-12-31', 25, 1, '30.0', NULL, 'development', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(8, 'Windows 11 Pro', '23H2', NULL, 'educational', '2026-06-30', 50, 0, '23H2', NULL, 'os', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(9, 'Adobe Creative Cloud', '2024', NULL, 'educational', '2024-08-31', 15, 1, '2024.1', NULL, 'design', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
+(10, 'Malwarebytes Antivirus', '5.0', NULL, 'commercial', '2025-01-15', 50, 0, '5.0', NULL, 'antivirus', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05');
 
 -- --------------------------------------------------------
 
@@ -17428,28 +17648,29 @@ CREATE TABLE `staff_training` (
   `status` varchar(50) DEFAULT 'Planned',
   `certificate_path` varchar(500) DEFAULT NULL,
   `cost` decimal(15,2) DEFAULT 0.00,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `staff_trainings`
--- (See below for the actual view)
+-- Table structure for table `staff_trainings`
 --
+
 CREATE TABLE `staff_trainings` (
-`id` int(11)
-,`staff_id` int(11)
-,`training_name` varchar(200)
-,`training_type` varchar(100)
-,`provider` varchar(200)
-,`start_date` date
-,`end_date` date
-,`status` varchar(50)
-,`certificate_path` varchar(500)
-,`cost` decimal(15,2)
-,`created_at` timestamp
-);
+  `id` int(11) DEFAULT NULL,
+  `staff_id` int(11) DEFAULT NULL,
+  `training_name` varchar(200) DEFAULT NULL,
+  `training_type` varchar(100) DEFAULT NULL,
+  `provider` varchar(200) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `certificate_path` varchar(500) DEFAULT NULL,
+  `cost` decimal(15,2) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -17483,7 +17704,7 @@ CREATE TABLE `store_categories` (
   `icon` varchar(50) DEFAULT 'fas fa-box',
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `store_categories`
@@ -17521,7 +17742,7 @@ CREATE TABLE `store_inventory` (
   `supplier` varchar(200) DEFAULT NULL,
   `status` enum('active','inactive','discontinued') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `store_inventory`
@@ -17604,17 +17825,17 @@ INSERT INTO `store_inventory` (`id`, `category_id`, `item_name`, `item_code`, `d
 
 CREATE TABLE `store_inventory_transactions` (
   `id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `transaction_type` varchar(50) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `quantity_before` int(11) DEFAULT NULL,
-  `quantity_after` int(11) DEFAULT NULL,
+  `item_id` int(11) DEFAULT 0,
+  `transaction_type` varchar(50) DEFAULT '',
+  `quantity` decimal(14,2) DEFAULT 0.00,
+  `quantity_before` decimal(14,2) DEFAULT NULL,
+  `quantity_after` decimal(14,2) DEFAULT NULL,
   `reason` text DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `reference_type` varchar(50) DEFAULT NULL,
   `reference_id` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -17731,7 +17952,7 @@ CREATE TABLE `store_request_items` (
   `expiry_date` date DEFAULT NULL,
   `status` enum('pending','fulfilled','partial') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `store_request_items`
@@ -17835,7 +18056,9 @@ CREATE TABLE `students` (
   `mobile_number` varchar(20) DEFAULT NULL,
   `program` varchar(100) DEFAULT NULL,
   `course` varchar(100) DEFAULT NULL,
+  `course_codes` text DEFAULT NULL,
   `current_year` int(11) DEFAULT NULL,
+  `year_of_study` int(11) DEFAULT NULL,
   `year` int(11) DEFAULT NULL,
   `level` varchar(50) DEFAULT NULL,
   `set_name` varchar(50) DEFAULT NULL,
@@ -17845,11 +18068,17 @@ CREATE TABLE `students` (
   `gender` enum('Male','Female','Other') DEFAULT 'Other',
   `nationality` varchar(100) DEFAULT NULL,
   `address` text DEFAULT NULL,
+  `district` varchar(100) DEFAULT NULL,
   `emergency_contact_name` varchar(100) DEFAULT NULL,
   `emergency_contact_phone` varchar(20) DEFAULT NULL,
   `emergency_contact_email` varchar(100) DEFAULT NULL,
+  `sponsor` varchar(200) DEFAULT NULL,
+  `marital_status` varchar(20) DEFAULT NULL,
+  `religion` varchar(50) DEFAULT NULL,
+  `student_category` varchar(50) DEFAULT NULL,
   `guardian_name` varchar(200) DEFAULT NULL,
   `guardian_phone` varchar(20) DEFAULT NULL,
+  `guardian_email` varchar(100) DEFAULT NULL,
   `profile_picture` varchar(500) DEFAULT NULL,
   `passport_photo` varchar(500) DEFAULT NULL,
   `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') DEFAULT 'Active',
@@ -17860,6 +18089,8 @@ CREATE TABLE `students` (
   `is_first_login` tinyint(1) DEFAULT 1,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `intake_year` varchar(10) DEFAULT NULL,
+  `intake_period` varchar(20) DEFAULT NULL,
   `academic_year` varchar(20) DEFAULT NULL,
   `registration_status` enum('Pending','Registered','Completed') DEFAULT 'Pending',
   `admission_date` date DEFAULT NULL,
@@ -17887,166 +18118,179 @@ CREATE TABLE `students` (
   `hostel_required` tinyint(1) DEFAULT 0,
   `transport_required` tinyint(1) DEFAULT 0,
   `notes` text DEFAULT NULL,
-  `bus_request_status` enum('none','pending','accepted','rejected') NOT NULL DEFAULT 'none',
-  `bus_request_date` datetime DEFAULT NULL
+  `bus_request_date` datetime DEFAULT NULL,
+  `bus_request_status` enum('none','pending','accepted','rejected') NOT NULL DEFAULT 'none'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`id`, `student_number`, `registration_number`, `national_student_id_number`, `index_number`, `first_name`, `surname`, `other_name`, `full_name`, `email`, `password`, `phone`, `mobile_number`, `program`, `course`, `current_year`, `year`, `level`, `set_name`, `current_semester`, `intake_date`, `date_of_birth`, `gender`, `nationality`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `emergency_contact_email`, `guardian_name`, `guardian_phone`, `profile_picture`, `passport_photo`, `status`, `last_login`, `locked_until`, `login_attempts`, `password_changed`, `is_first_login`, `created_at`, `updated_at`, `academic_year`, `registration_status`, `admission_date`, `graduation_date`, `transfer_date`, `transfer_reason`, `suspension_reason`, `suspended_at`, `activated_at`, `archived_at`, `stream`, `class_name`, `admission_number`, `national_id`, `county`, `sub_county`, `village`, `medical_conditions`, `blood_group`, `allergies`, `disability`, `previous_school`, `previous_qualification`, `guardian_relationship`, `hostel_required`, `transport_required`, `notes`, `bus_request_status`, `bus_request_date`) VALUES
-(1, 'ISNM/0001/25', NULL, NULL, 'UACE/CNM/0001', 'Mary', 'Muwonge', NULL, 'Sarah Ssenyonjo', 'student1@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774571227', '+256-774571227', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(2, 'ISNM/0002/25', NULL, NULL, 'UACE/CNM/0002', 'Peace', 'Nakamya', NULL, 'Jane Ochieng', 'student2@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776779291', '+256-776779291', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(3, 'ISNM/0003/25', NULL, NULL, 'UACE/CNM/0003', 'Moses', 'Okello', NULL, 'David Nanteza', 'student3@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781279895', '+256-781279895', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(4, 'ISNM/0004/25', NULL, NULL, 'UACE/CNM/0004', 'Ruth', 'Sserwadda', NULL, 'Mary Ssenyonjo', 'student4@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781236556', '+256-781236556', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(5, 'ISNM/0005/25', NULL, NULL, 'UACE/CNM/0005', 'Jane', 'Muwonge', NULL, 'John Okello', 'student5@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775043713', '+256-775043713', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(6, 'ISNM/0006/25', NULL, NULL, 'UACE/CNM/0006', 'Esther', 'Nabirye', NULL, 'Mary Ochieng', 'student6@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784260559', '+256-784260559', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(7, 'ISNM/0007/25', NULL, NULL, 'UACE/CNM/0007', 'Peace', 'Nabirye', NULL, 'Joy Nabirye', 'student7@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703988337', '+256-703988337', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(8, 'ISNM/0008/25', NULL, NULL, 'UACE/CNM/0008', 'Faith', 'Namukwaya', NULL, 'Sarah Ssenyonjo', 'student8@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703728063', '+256-703728063', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(9, 'ISNM/0009/25', NULL, NULL, 'UACE/CNM/0009', 'Esther', 'Nakamya', NULL, 'John Okello', 'student9@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782284500', '+256-782284500', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(10, 'ISNM/0010/25', NULL, NULL, 'UACE/CNM/0010', 'David', 'Kintu', NULL, 'Alice Nanteza', 'student10@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785019393', '+256-785019393', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(11, 'ISNM/0011/25', NULL, NULL, 'UACE/CNM/0011', 'Joy', 'Wasswa', NULL, 'Esther Nakato', 'student11@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788356144', '+256-788356144', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 1, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(12, 'ISNM/0012/25', NULL, NULL, 'UACE/CNM/0012', 'Esther', 'Lubega', NULL, 'Faith Sserwadda', 'student12@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777122632', '+256-777122632', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(13, 'ISNM/0013/25', NULL, NULL, 'UACE/CNM/0013', 'John', 'Wasswa', NULL, 'Faith Nakamya', 'student13@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778607555', '+256-778607555', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(14, 'ISNM/0014/25', NULL, NULL, 'UACE/CNM/0014', 'Peter', 'Mukasa', NULL, 'David Nanteza', 'student14@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772111880', '+256-772111880', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(15, 'ISNM/0015/25', NULL, NULL, 'UACE/CNM/0015', 'Samuel', 'Wasswa', NULL, 'Mary Kizza', 'student15@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780170078', '+256-780170078', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(16, 'ISNM/0016/25', NULL, NULL, 'UACE/CNM/0016', 'Samuel', 'Kizza', NULL, 'David Ochieng', 'student16@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785312802', '+256-785312802', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(17, 'ISNM/0017/25', NULL, NULL, 'UACE/CNM/0017', 'Samuel', 'Lubega', NULL, 'Jane Nakato', 'student17@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774130995', '+256-774130995', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(18, 'ISNM/0018/25', NULL, NULL, 'UACE/CNM/0018', 'Esther', 'Ochieng', NULL, 'Grace Nakato', 'student18@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707727624', '+256-707727624', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(19, 'ISNM/0019/25', NULL, NULL, 'UACE/CNM/0019', 'Mary', 'Muwonge', NULL, 'Grace Nabirye', 'student19@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708314660', '+256-708314660', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(20, 'ISNM/0020/25', NULL, NULL, 'UACE/CNM/0020', 'Peter', 'Nanteza', NULL, 'Ruth Kintu', 'student20@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781502155', '+256-781502155', 'Certificate in Midwifery', 'Certificate in Midwifery', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(21, 'ISNM/0021/25', NULL, NULL, 'UACE/CNN/0021', 'Mary', 'Namukwaya', NULL, 'Sarah Muwonge', 'student21@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782204948', '+256-782204948', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(22, 'ISNM/0022/25', NULL, NULL, 'UACE/CNN/0022', 'Ruth', 'Kizza', NULL, 'Moses Nakamya', 'student22@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700903908', '+256-700903908', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(23, 'ISNM/0023/25', NULL, NULL, 'UACE/CNN/0023', 'Ruth', 'Ochieng', NULL, 'Joy Nakato', 'student23@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709011142', '+256-709011142', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(24, 'ISNM/0024/25', NULL, NULL, 'UACE/CNN/0024', 'Mary', 'Nabirye', NULL, 'John Okello', 'student24@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782412749', '+256-782412749', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(25, 'ISNM/0025/25', NULL, NULL, 'UACE/CNN/0025', 'Samuel', 'Sserwadda', NULL, 'Joy Nanteza', 'student25@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772757319', '+256-772757319', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(26, 'ISNM/0026/25', NULL, NULL, 'UACE/CNN/0026', 'Grace', 'Ssenyonjo', NULL, 'Sarah Mukasa', 'student26@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781924183', '+256-781924183', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(27, 'ISNM/0027/25', NULL, NULL, 'UACE/CNN/0027', 'Ruth', 'Mukasa', NULL, 'David Nakamya', 'student27@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789578199', '+256-789578199', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(28, 'ISNM/0028/25', NULL, NULL, 'UACE/CNN/0028', 'Moses', 'Ochieng', NULL, 'Esther Ssenyonjo', 'student28@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784557465', '+256-784557465', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(29, 'ISNM/0029/25', NULL, NULL, 'UACE/CNN/0029', 'David', 'Ochieng', NULL, 'Peter Muwonge', 'student29@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784068713', '+256-784068713', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(30, 'ISNM/0030/25', NULL, NULL, 'UACE/CNN/0030', 'John', 'Namukwaya', NULL, 'Peace Kizza', 'student30@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789042037', '+256-789042037', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(31, 'ISNM/0031/25', NULL, NULL, 'UACE/CNN/0031', 'Moses', 'Nabirye', NULL, 'Ruth Nakato', 'student31@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774563401', '+256-774563401', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(32, 'ISNM/0032/25', NULL, NULL, 'UACE/CNN/0032', 'Esther', 'Nanteza', NULL, 'Faith Namukwaya', 'student32@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708761693', '+256-708761693', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(33, 'ISNM/0033/25', NULL, NULL, 'UACE/CNN/0033', 'Mary', 'Ochieng', NULL, 'Samuel Mukasa', 'student33@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787886390', '+256-787886390', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(34, 'ISNM/0034/25', NULL, NULL, 'UACE/CNN/0034', 'Peter', 'Okello', NULL, 'Esther Kintu', 'student34@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706063539', '+256-706063539', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(35, 'ISNM/0035/25', NULL, NULL, 'UACE/CNN/0035', 'Peter', 'Mukasa', NULL, 'John Kintu', 'student35@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707425760', '+256-707425760', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(36, 'ISNM/0036/25', NULL, NULL, 'UACE/CNN/0036', 'Moses', 'Namukwaya', NULL, 'Moses Kintu', 'student36@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789443939', '+256-789443939', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(37, 'ISNM/0037/25', NULL, NULL, 'UACE/CNN/0037', 'Mary', 'Ssenyonjo', NULL, 'Peter Kintu', 'student37@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786637356', '+256-786637356', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(38, 'ISNM/0038/25', NULL, NULL, 'UACE/CNN/0038', 'Grace', 'Kizza', NULL, 'Ruth Nabirye', 'student38@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779129500', '+256-779129500', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(39, 'ISNM/0039/25', NULL, NULL, 'UACE/CNN/0039', 'Esther', 'Nabirye', NULL, 'Sarah Ssenyonjo', 'student39@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775114752', '+256-775114752', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(40, 'ISNM/0040/25', NULL, NULL, 'UACE/CNN/0040', 'Alice', 'Kizza', NULL, 'Mary Okello', 'student40@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772095035', '+256-772095035', 'Certificate in Nursing', 'Certificate in Nursing', 1, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(41, 'ISNM/0041/24', NULL, NULL, 'UACE/DNM/0041', 'Joy', 'Ssenyonjo', NULL, 'Esther Nakamya', 'student41@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778993733', '+256-778993733', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(42, 'ISNM/0042/24', NULL, NULL, 'UACE/DNM/0042', 'Sarah', 'Ssenyonjo', NULL, 'Ruth Nakamya', 'student42@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702057084', '+256-702057084', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(43, 'ISNM/0043/24', NULL, NULL, 'UACE/DNM/0043', 'David', 'Wasswa', NULL, 'Jane Nakamya', 'student43@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789414023', '+256-789414023', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(44, 'ISNM/0044/24', NULL, NULL, 'UACE/DNM/0044', 'David', 'Lubega', NULL, 'John Mukasa', 'student44@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771067107', '+256-771067107', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(45, 'ISNM/0045/24', NULL, NULL, 'UACE/DNM/0045', 'Samuel', 'Ochieng', NULL, 'Samuel Sserwadda', 'student45@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778896965', '+256-778896965', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(46, 'ISNM/0046/24', NULL, NULL, 'UACE/DNM/0046', 'Peter', 'Mukasa', NULL, 'Grace Sserwadda', 'student46@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787898635', '+256-787898635', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(47, 'ISNM/0047/24', NULL, NULL, 'UACE/DNM/0047', 'Sarah', 'Muwonge', NULL, 'Moses Nabirye', 'student47@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774581010', '+256-774581010', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(48, 'ISNM/0048/24', NULL, NULL, 'UACE/DNM/0048', 'Peace', 'Nanteza', NULL, 'Joy Wasswa', 'student48@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770178473', '+256-770178473', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(49, 'ISNM/0049/24', NULL, NULL, 'UACE/DNM/0049', 'Peter', 'Wasswa', NULL, 'Samuel Kintu', 'student49@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704546145', '+256-704546145', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(50, 'ISNM/0050/24', NULL, NULL, 'UACE/DNM/0050', 'Samuel', 'Nakato', NULL, 'David Nanteza', 'student50@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772195098', '+256-772195098', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(51, 'ISNM/0051/24', NULL, NULL, 'UACE/DNM/0051', 'Ruth', 'Sserwadda', NULL, 'Esther Kizza', 'student51@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784744390', '+256-784744390', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(52, 'ISNM/0052/24', NULL, NULL, 'UACE/DNM/0052', 'Peace', 'Lubega', NULL, 'Jane Sserwadda', 'student52@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784913420', '+256-784913420', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(53, 'ISNM/0053/24', NULL, NULL, 'UACE/DNM/0053', 'Joy', 'Ochieng', NULL, 'Samuel Wasswa', 'student53@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704965732', '+256-704965732', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(54, 'ISNM/0054/24', NULL, NULL, 'UACE/DNM/0054', 'Alice', 'Ssenyonjo', NULL, 'Jane Kintu', 'student54@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783688931', '+256-783688931', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(55, 'ISNM/0055/24', NULL, NULL, 'UACE/DNM/0055', 'Esther', 'Namukwaya', NULL, 'Jane Namukwaya', 'student55@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786236264', '+256-786236264', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(56, 'ISNM/0056/24', NULL, NULL, 'UACE/DNM/0056', 'Ruth', 'Wasswa', NULL, 'Samuel Kintu', 'student56@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703507071', '+256-703507071', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(57, 'ISNM/0057/24', NULL, NULL, 'UACE/DNM/0057', 'Peter', 'Kintu', NULL, 'David Sserwadda', 'student57@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771885879', '+256-771885879', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(58, 'ISNM/0058/24', NULL, NULL, 'UACE/DNM/0058', 'Peter', 'Mukasa', NULL, 'David Kintu', 'student58@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773974868', '+256-773974868', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(59, 'ISNM/0059/24', NULL, NULL, 'UACE/DNM/0059', 'John', 'Namukwaya', NULL, 'Alice Ochieng', 'student59@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709375762', '+256-709375762', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(60, 'ISNM/0060/24', NULL, NULL, 'UACE/DNM/0060', 'Joy', 'Namukwaya', NULL, 'Joy Ssenyonjo', 'student60@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782151802', '+256-782151802', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(61, 'ISNM/0061/24', NULL, NULL, 'UACE/DNM/0061', 'Grace', 'Namukwaya', NULL, 'Jane Nakato', 'student61@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770184003', '+256-770184003', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(62, 'ISNM/0062/24', NULL, NULL, 'UACE/DNM/0062', 'David', 'Nakato', NULL, 'Peter Nakamya', 'student62@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708222949', '+256-708222949', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(63, 'ISNM/0063/24', NULL, NULL, 'UACE/DNM/0063', 'Jane', 'Nakamya', NULL, 'Sarah Nanteza', 'student63@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705229417', '+256-705229417', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(64, 'ISNM/0064/24', NULL, NULL, 'UACE/DNM/0064', 'Moses', 'Nanteza', NULL, 'Grace Ochieng', 'student64@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775654586', '+256-775654586', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(65, 'ISNM/0065/24', NULL, NULL, 'UACE/DNM/0065', 'Esther', 'Wasswa', NULL, 'Mary Kizza', 'student65@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781748308', '+256-781748308', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(66, 'ISNM/0066/24', NULL, NULL, 'UACE/DNM/0066', 'Sarah', 'Ssenyonjo', NULL, 'Alice Kizza', 'student66@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700988607', '+256-700988607', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(67, 'ISNM/0067/24', NULL, NULL, 'UACE/DNM/0067', 'Faith', 'Mukasa', NULL, 'Esther Lubega', 'student67@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770387594', '+256-770387594', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(68, 'ISNM/0068/24', NULL, NULL, 'UACE/DNM/0068', 'Jane', 'Muwonge', NULL, 'John Mukasa', 'student68@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771188826', '+256-771188826', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(69, 'ISNM/0069/24', NULL, NULL, 'UACE/DNM/0069', 'Samuel', 'Okello', NULL, 'Ruth Ochieng', 'student69@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783249504', '+256-783249504', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(70, 'ISNM/0070/24', NULL, NULL, 'UACE/DNM/0070', 'Peace', 'Wasswa', NULL, 'Peter Kintu', 'student70@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707752690', '+256-707752690', 'Diploma in Nursing', 'Diploma in Nursing', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(71, 'ISNM/0071/24', NULL, NULL, 'UACE/DMM/0071', 'David', 'Muwonge', NULL, 'Alice Lubega', 'student71@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780560207', '+256-780560207', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(72, 'ISNM/0072/24', NULL, NULL, 'UACE/DMM/0072', 'Joy', 'Lubega', NULL, 'Faith Wasswa', 'student72@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781327322', '+256-781327322', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(73, 'ISNM/0073/24', NULL, NULL, 'UACE/DMM/0073', 'Peace', 'Okello', NULL, 'Mary Sserwadda', 'student73@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777382056', '+256-777382056', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(74, 'ISNM/0074/24', NULL, NULL, 'UACE/DMM/0074', 'Grace', 'Namukwaya', NULL, 'Peace Sserwadda', 'student74@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774208337', '+256-774208337', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(75, 'ISNM/0075/24', NULL, NULL, 'UACE/DMM/0075', 'Esther', 'Sserwadda', NULL, 'Samuel Nakamya', 'student75@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774107687', '+256-774107687', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(76, 'ISNM/0076/24', NULL, NULL, 'UACE/DMM/0076', 'Faith', 'Nakamya', NULL, 'Faith Muwonge', 'student76@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786791936', '+256-786791936', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(77, 'ISNM/0077/24', NULL, NULL, 'UACE/DMM/0077', 'Mary', 'Ssenyonjo', NULL, 'David Kizza', 'student77@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780318876', '+256-780318876', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL);
-INSERT INTO `students` (`id`, `student_number`, `registration_number`, `national_student_id_number`, `index_number`, `first_name`, `surname`, `other_name`, `full_name`, `email`, `password`, `phone`, `mobile_number`, `program`, `course`, `current_year`, `year`, `level`, `set_name`, `current_semester`, `intake_date`, `date_of_birth`, `gender`, `nationality`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `emergency_contact_email`, `guardian_name`, `guardian_phone`, `profile_picture`, `passport_photo`, `status`, `last_login`, `locked_until`, `login_attempts`, `password_changed`, `is_first_login`, `created_at`, `updated_at`, `academic_year`, `registration_status`, `admission_date`, `graduation_date`, `transfer_date`, `transfer_reason`, `suspension_reason`, `suspended_at`, `activated_at`, `archived_at`, `stream`, `class_name`, `admission_number`, `national_id`, `county`, `sub_county`, `village`, `medical_conditions`, `blood_group`, `allergies`, `disability`, `previous_school`, `previous_qualification`, `guardian_relationship`, `hostel_required`, `transport_required`, `notes`, `bus_request_status`, `bus_request_date`) VALUES
-(78, 'ISNM/0078/24', NULL, NULL, 'UACE/DMM/0078', 'Esther', 'Sserwadda', NULL, 'John Kizza', 'student78@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702962891', '+256-702962891', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(79, 'ISNM/0079/24', NULL, NULL, 'UACE/DMM/0079', 'Mary', 'Kintu', NULL, 'Esther Kintu', 'student79@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704378691', '+256-704378691', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(80, 'ISNM/0080/24', NULL, NULL, 'UACE/DMM/0080', 'John', 'Ochieng', NULL, 'Peter Ssenyonjo', 'student80@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770329121', '+256-770329121', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(81, 'ISNM/0081/24', NULL, NULL, 'UACE/DMM/0081', 'Faith', 'Namukwaya', NULL, 'Mary Ochieng', 'student81@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780482903', '+256-780482903', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(82, 'ISNM/0082/24', NULL, NULL, 'UACE/DMM/0082', 'Alice', 'Kintu', NULL, 'Peace Nakato', 'student82@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775910832', '+256-775910832', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(83, 'ISNM/0083/24', NULL, NULL, 'UACE/DMM/0083', 'Peace', 'Muwonge', NULL, 'Peter Kizza', 'student83@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779177049', '+256-779177049', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(84, 'ISNM/0084/24', NULL, NULL, 'UACE/DMM/0084', 'Mary', 'Sserwadda', NULL, 'Faith Wasswa', 'student84@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782343559', '+256-782343559', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(85, 'ISNM/0085/24', NULL, NULL, 'UACE/DMM/0085', 'Peace', 'Sserwadda', NULL, 'Mary Muwonge', 'student85@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700702837', '+256-700702837', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(86, 'ISNM/0086/24', NULL, NULL, 'UACE/DMM/0086', 'Moses', 'Nabirye', NULL, 'Ruth Namukwaya', 'student86@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705633283', '+256-705633283', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(87, 'ISNM/0087/24', NULL, NULL, 'UACE/DMM/0087', 'Grace', 'Nabirye', NULL, 'Mary Muwonge', 'student87@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709698010', '+256-709698010', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(88, 'ISNM/0088/24', NULL, NULL, 'UACE/DMM/0088', 'Alice', 'Nabirye', NULL, 'Grace Namukwaya', 'student88@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774207258', '+256-774207258', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(89, 'ISNM/0089/24', NULL, NULL, 'UACE/DMM/0089', 'Alice', 'Namukwaya', NULL, 'Alice Muwonge', 'student89@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779644139', '+256-779644139', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(90, 'ISNM/0090/24', NULL, NULL, 'UACE/DMM/0090', 'Faith', 'Nakato', NULL, 'David Nakato', 'student90@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-701964811', '+256-701964811', 'Diploma in Midwifery', 'Diploma in Midwifery', 2, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(91, 'ISNM/0091/23', NULL, NULL, 'UACE/DNE/0091', 'Peter', 'Kintu', NULL, 'Sarah Nanteza', 'student91@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707456515', '+256-707456515', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(92, 'ISNM/0092/23', NULL, NULL, 'UACE/DNE/0092', 'Sarah', 'Ssenyonjo', NULL, 'Jane Nanteza', 'student92@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703110553', '+256-703110553', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(93, 'ISNM/0093/23', NULL, NULL, 'UACE/DNE/0093', 'John', 'Namukwaya', NULL, 'Peace Okello', 'student93@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706268467', '+256-706268467', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(94, 'ISNM/0094/23', NULL, NULL, 'UACE/DNE/0094', 'Grace', 'Ssenyonjo', NULL, 'Grace Ssenyonjo', 'student94@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707729037', '+256-707729037', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(95, 'ISNM/0095/23', NULL, NULL, 'UACE/DNE/0095', 'Ruth', 'Muwonge', NULL, 'Peter Wasswa', 'student95@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702229232', '+256-702229232', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(96, 'ISNM/0096/23', NULL, NULL, 'UACE/DNE/0096', 'Samuel', 'Nabirye', NULL, 'David Muwonge', 'student96@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775787748', '+256-775787748', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(97, 'ISNM/0097/23', NULL, NULL, 'UACE/DNE/0097', 'Esther', 'Kizza', NULL, 'Sarah Okello', 'student97@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709144794', '+256-709144794', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(98, 'ISNM/0098/23', NULL, NULL, 'UACE/DNE/0098', 'Alice', 'Namukwaya', NULL, 'Jane Mukasa', 'student98@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770803830', '+256-770803830', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(99, 'ISNM/0099/23', NULL, NULL, 'UACE/DNE/0099', 'Joy', 'Kintu', NULL, 'Grace Lubega', 'student99@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778936284', '+256-778936284', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(100, 'ISNM/0100/23', NULL, NULL, 'UACE/DNE/0100', 'Moses', 'Namukwaya', NULL, 'John Namukwaya', 'student100@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777276039', '+256-777276039', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(101, 'ISNM/0101/23', NULL, NULL, 'UACE/DNE/0101', 'Mary', 'Nakamya', NULL, 'Peace Lubega', 'student101@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778611329', '+256-778611329', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(102, 'ISNM/0102/23', NULL, NULL, 'UACE/DNE/0102', 'Peace', 'Okello', NULL, 'Esther Nabirye', 'student102@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789652358', '+256-789652358', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(103, 'ISNM/0103/23', NULL, NULL, 'UACE/DNE/0103', 'Peace', 'Nanteza', NULL, 'Jane Nabirye', 'student103@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774669700', '+256-774669700', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(104, 'ISNM/0104/23', NULL, NULL, 'UACE/DNE/0104', 'Sarah', 'Nakato', NULL, 'Joy Wasswa', 'student104@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706474214', '+256-706474214', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(105, 'ISNM/0105/23', NULL, NULL, 'UACE/DNE/0105', 'Ruth', 'Namukwaya', NULL, 'Samuel Ssenyonjo', 'student105@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785793679', '+256-785793679', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(106, 'ISNM/0106/23', NULL, NULL, 'UACE/DNE/0106', 'Peter', 'Lubega', NULL, 'Mary Ochieng', 'student106@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787326480', '+256-787326480', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(107, 'ISNM/0107/23', NULL, NULL, 'UACE/DNE/0107', 'Peace', 'Nanteza', NULL, 'Sarah Ochieng', 'student107@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708782505', '+256-708782505', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(108, 'ISNM/0108/23', NULL, NULL, 'UACE/DNE/0108', 'Peace', 'Wasswa', NULL, 'Grace Wasswa', 'student108@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773306947', '+256-773306947', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(109, 'ISNM/0109/23', NULL, NULL, 'UACE/DNE/0109', 'Mary', 'Okello', NULL, 'Joy Ochieng', 'student109@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788873342', '+256-788873342', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(110, 'ISNM/0110/23', NULL, NULL, 'UACE/DNE/0110', 'David', 'Ssenyonjo', NULL, 'Sarah Nakato', 'student110@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774319221', '+256-774319221', 'Diploma in Nursing Education', 'Diploma in Nursing Education', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(111, 'ISNM/0111/23', NULL, NULL, 'UACE/BNM/0111', 'Faith', 'Kizza', NULL, 'David Okello', 'student111@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770352439', '+256-770352439', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(112, 'ISNM/0112/23', NULL, NULL, 'UACE/BNM/0112', 'Esther', 'Wasswa', NULL, 'Jane Kintu', 'student112@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787234563', '+256-787234563', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(113, 'ISNM/0113/23', NULL, NULL, 'UACE/BNM/0113', 'John', 'Mukasa', NULL, 'Peace Namukwaya', 'student113@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788968397', '+256-788968397', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(114, 'ISNM/0114/23', NULL, NULL, 'UACE/BNM/0114', 'Joy', 'Lubega', NULL, 'David Wasswa', 'student114@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770111618', '+256-770111618', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(115, 'ISNM/0115/23', NULL, NULL, 'UACE/BNM/0115', 'Esther', 'Muwonge', NULL, 'Alice Muwonge', 'student115@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773868815', '+256-773868815', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(116, 'ISNM/0116/23', NULL, NULL, 'UACE/BNM/0116', 'Alice', 'Nakato', NULL, 'Sarah Kizza', 'student116@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703897961', '+256-703897961', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(117, 'ISNM/0117/23', NULL, NULL, 'UACE/BNM/0117', 'Esther', 'Kizza', NULL, 'David Okello', 'student117@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782735922', '+256-782735922', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(118, 'ISNM/0118/23', NULL, NULL, 'UACE/BNM/0118', 'Ruth', 'Kintu', NULL, 'Sarah Nabirye', 'student118@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779544120', '+256-779544120', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(119, 'ISNM/0119/23', NULL, NULL, 'UACE/BNM/0119', 'Ruth', 'Nakato', NULL, 'Faith Ssenyonjo', 'student119@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788750458', '+256-788750458', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(120, 'ISNM/0120/23', NULL, NULL, 'UACE/BNM/0120', 'John', 'Ssenyonjo', NULL, 'Jane Nakamya', 'student120@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708298256', '+256-708298256', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(121, 'ISNM/0121/23', NULL, NULL, 'UACE/BNM/0121', 'Mary', 'Kizza', NULL, 'Samuel Lubega', 'student121@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776638003', '+256-776638003', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(122, 'ISNM/0122/23', NULL, NULL, 'UACE/BNM/0122', 'Samuel', 'Mukasa', NULL, 'Grace Kizza', 'student122@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702398474', '+256-702398474', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(123, 'ISNM/0123/23', NULL, NULL, 'UACE/BNM/0123', 'Sarah', 'Kintu', NULL, 'David Namukwaya', 'student123@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773040163', '+256-773040163', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(124, 'ISNM/0124/23', NULL, NULL, 'UACE/BNM/0124', 'Mary', 'Lubega', NULL, 'Alice Muwonge', 'student124@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776200061', '+256-776200061', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(125, 'ISNM/0125/23', NULL, NULL, 'UACE/BNM/0125', 'Esther', 'Muwonge', NULL, 'Ruth Nabirye', 'student125@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783854961', '+256-783854961', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(126, 'ISNM/0126/23', NULL, NULL, 'UACE/BNM/0126', 'Jane', 'Okello', NULL, 'Peter Namukwaya', 'student126@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780195603', '+256-780195603', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(127, 'ISNM/0127/23', NULL, NULL, 'UACE/BNM/0127', 'John', 'Wasswa', NULL, 'John Nabirye', 'student127@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700147629', '+256-700147629', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(128, 'ISNM/0128/23', NULL, NULL, 'UACE/BNM/0128', 'Esther', 'Nakamya', NULL, 'Peace Nanteza', 'student128@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703247691', '+256-703247691', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(129, 'ISNM/0129/23', NULL, NULL, 'UACE/BNM/0129', 'Sarah', 'Namukwaya', NULL, 'John Nakato', 'student129@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705370294', '+256-705370294', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(130, 'ISNM/0130/23', NULL, NULL, 'UACE/BNM/0130', 'Ruth', 'Namukwaya', NULL, 'Peter Nanteza', 'student130@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773191526', '+256-773191526', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(131, 'ISNM/0131/23', NULL, NULL, 'UACE/BNM/0131', 'John', 'Ochieng', NULL, 'Jane Ochieng', 'student131@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779818316', '+256-779818316', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(132, 'ISNM/0132/23', NULL, NULL, 'UACE/BNM/0132', 'Mary', 'Mukasa', NULL, 'Sarah Kintu', 'student132@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789279968', '+256-789279968', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(133, 'ISNM/0133/23', NULL, NULL, 'UACE/BNM/0133', 'Sarah', 'Namukwaya', NULL, 'Moses Ssenyonjo', 'student133@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776894125', '+256-776894125', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(134, 'ISNM/0134/23', NULL, NULL, 'UACE/BNM/0134', 'Peter', 'Ochieng', NULL, 'John Okello', 'student134@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788814668', '+256-788814668', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(135, 'ISNM/0135/23', NULL, NULL, 'UACE/BNM/0135', 'Samuel', 'Kintu', NULL, 'Sarah Mukasa', 'student135@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787082209', '+256-787082209', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(136, 'ISNM/0136/23', NULL, NULL, 'UACE/BNM/0136', 'Sarah', 'Kizza', NULL, 'Alice Kizza', 'student136@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772069777', '+256-772069777', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(137, 'ISNM/0137/23', NULL, NULL, 'UACE/BNM/0137', 'Ruth', 'Wasswa', NULL, 'Sarah Nakato', 'student137@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776502037', '+256-776502037', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(138, 'ISNM/0138/23', NULL, NULL, 'UACE/BNM/0138', 'Faith', 'Wasswa', NULL, 'Ruth Lubega', 'student138@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771525324', '+256-771525324', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(139, 'ISNM/0139/23', NULL, NULL, 'UACE/BNM/0139', 'Grace', 'Sserwadda', NULL, 'David Lubega', 'student139@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789051629', '+256-789051629', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(140, 'ISNM/0140/23', NULL, NULL, 'UACE/BNM/0140', 'Moses', 'Nabirye', NULL, 'Mary Kintu', 'student140@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708857305', '+256-708857305', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(141, 'ISNM/0141/23', NULL, NULL, 'UACE/BNM/0141', 'Sarah', 'Sserwadda', NULL, 'Esther Nakato', 'student141@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702819948', '+256-702819948', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(142, 'ISNM/0142/23', NULL, NULL, 'UACE/BNM/0142', 'John', 'Ssenyonjo', NULL, 'Ruth Muwonge', 'student142@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707780517', '+256-707780517', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(143, 'ISNM/0143/23', NULL, NULL, 'UACE/BNM/0143', 'Faith', 'Okello', NULL, 'Ruth Okello', 'student143@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709800177', '+256-709800177', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(144, 'ISNM/0144/23', NULL, NULL, 'UACE/BNM/0144', 'Esther', 'Wasswa', NULL, 'Jane Nabirye', 'student144@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777854116', '+256-777854116', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(145, 'ISNM/0145/23', NULL, NULL, 'UACE/BNM/0145', 'Sarah', 'Kintu', NULL, 'Peter Muwonge', 'student145@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783672096', '+256-783672096', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(146, 'ISNM/0146/23', NULL, NULL, 'UACE/BNM/0146', 'Mary', 'Ssenyonjo', NULL, 'David Kizza', 'student146@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789642933', '+256-789642933', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(147, 'ISNM/0147/23', NULL, NULL, 'UACE/BNM/0147', 'Sarah', 'Okello', NULL, 'Sarah Sserwadda', 'student147@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789421624', '+256-789421624', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(148, 'ISNM/0148/23', NULL, NULL, 'UACE/BNM/0148', 'Ruth', 'Ochieng', NULL, 'Peace Nanteza', 'student148@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708379498', '+256-708379498', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(149, 'ISNM/0149/23', NULL, NULL, 'UACE/BNM/0149', 'Peter', 'Nanteza', NULL, 'Esther Nanteza', 'student149@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787109143', '+256-787109143', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL),
-(150, 'ISNM/0150/23', NULL, NULL, 'UACE/BNM/0150', 'Mary', 'Lubega', NULL, 'Ruth Nakamya', 'student150@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779197463', '+256-779197463', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', 3, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-14 16:54:47', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, 'none', NULL);
+INSERT INTO `students` (`id`, `student_number`, `registration_number`, `national_student_id_number`, `index_number`, `first_name`, `surname`, `other_name`, `full_name`, `email`, `password`, `phone`, `mobile_number`, `program`, `course`, `course_codes`, `current_year`, `year_of_study`, `year`, `level`, `set_name`, `current_semester`, `intake_date`, `date_of_birth`, `gender`, `nationality`, `address`, `district`, `emergency_contact_name`, `emergency_contact_phone`, `emergency_contact_email`, `sponsor`, `marital_status`, `religion`, `student_category`, `guardian_name`, `guardian_phone`, `guardian_email`, `profile_picture`, `passport_photo`, `status`, `last_login`, `locked_until`, `login_attempts`, `password_changed`, `is_first_login`, `created_at`, `updated_at`, `intake_year`, `intake_period`, `academic_year`, `registration_status`, `admission_date`, `graduation_date`, `transfer_date`, `transfer_reason`, `suspension_reason`, `suspended_at`, `activated_at`, `archived_at`, `stream`, `class_name`, `admission_number`, `national_id`, `county`, `sub_county`, `village`, `medical_conditions`, `blood_group`, `allergies`, `disability`, `previous_school`, `previous_qualification`, `guardian_relationship`, `hostel_required`, `transport_required`, `notes`, `bus_request_date`, `bus_request_status`) VALUES
+(1, 'ISNM/0001/25', NULL, NULL, 'UACE/CNM/0001', 'Mary', 'Muwonge', NULL, 'Sarah Ssenyonjo', 'student1@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774571227', '+256-774571227', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(2, 'ISNM/0002/25', NULL, NULL, 'UACE/CNM/0002', 'Peace', 'Nakamya', NULL, 'Jane Ochieng', 'student2@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776779291', '+256-776779291', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(3, 'ISNM/0003/25', NULL, NULL, 'UACE/CNM/0003', 'Moses', 'Okello', NULL, 'David Nanteza', 'student3@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781279895', '+256-781279895', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(4, 'ISNM/0004/25', NULL, NULL, 'UACE/CNM/0004', 'Ruth', 'Sserwadda', NULL, 'Mary Ssenyonjo', 'student4@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781236556', '+256-781236556', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(5, 'ISNM/0005/25', NULL, NULL, 'UACE/CNM/0005', 'Jane', 'Muwonge', NULL, 'John Okello', 'student5@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775043713', '+256-775043713', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(6, 'ISNM/0006/25', NULL, NULL, 'UACE/CNM/0006', 'Esther', 'Nabirye', NULL, 'Mary Ochieng', 'student6@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784260559', '+256-784260559', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(7, 'ISNM/0007/25', NULL, NULL, 'UACE/CNM/0007', 'Peace', 'Nabirye', NULL, 'Joy Nabirye', 'student7@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703988337', '+256-703988337', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(8, 'ISNM/0008/25', NULL, NULL, 'UACE/CNM/0008', 'Faith', 'Namukwaya', NULL, 'Sarah Ssenyonjo', 'student8@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703728063', '+256-703728063', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(9, 'ISNM/0009/25', NULL, NULL, 'UACE/CNM/0009', 'Esther', 'Nakamya', NULL, 'John Okello', 'student9@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782284500', '+256-782284500', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(10, 'ISNM/0010/25', NULL, NULL, 'UACE/CNM/0010', 'David', 'Kintu', NULL, 'Alice Nanteza', 'student10@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785019393', '+256-785019393', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(11, 'ISNM/0011/25', NULL, NULL, 'UACE/CNM/0011', 'Joy', 'Wasswa', NULL, 'Esther Nakato', 'student11@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788356144', '+256-788356144', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 1, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(12, 'ISNM/0012/25', NULL, NULL, 'UACE/CNM/0012', 'Esther', 'Lubega', NULL, 'Faith Sserwadda', 'student12@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777122632', '+256-777122632', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(13, 'ISNM/0013/25', NULL, NULL, 'UACE/CNM/0013', 'John', 'Wasswa', NULL, 'Faith Nakamya', 'student13@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778607555', '+256-778607555', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(14, 'ISNM/0014/25', NULL, NULL, 'UACE/CNM/0014', 'Peter', 'Mukasa', NULL, 'David Nanteza', 'student14@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772111880', '+256-772111880', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(15, 'ISNM/0015/25', NULL, NULL, 'UACE/CNM/0015', 'Samuel', 'Wasswa', NULL, 'Mary Kizza', 'student15@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780170078', '+256-780170078', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(16, 'ISNM/0016/25', NULL, NULL, 'UACE/CNM/0016', 'Samuel', 'Kizza', NULL, 'David Ochieng', 'student16@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785312802', '+256-785312802', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(17, 'ISNM/0017/25', NULL, NULL, 'UACE/CNM/0017', 'Samuel', 'Lubega', NULL, 'Jane Nakato', 'student17@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774130995', '+256-774130995', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(18, 'ISNM/0018/25', NULL, NULL, 'UACE/CNM/0018', 'Esther', 'Ochieng', NULL, 'Grace Nakato', 'student18@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707727624', '+256-707727624', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(19, 'ISNM/0019/25', NULL, NULL, 'UACE/CNM/0019', 'Mary', 'Muwonge', NULL, 'Grace Nabirye', 'student19@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708314660', '+256-708314660', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(20, 'ISNM/0020/25', NULL, NULL, 'UACE/CNM/0020', 'Peter', 'Nanteza', NULL, 'Ruth Kintu', 'student20@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781502155', '+256-781502155', 'Certificate in Midwifery', 'Certificate in Midwifery', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(21, 'ISNM/0021/25', NULL, NULL, 'UACE/CNN/0021', 'Mary', 'Namukwaya', NULL, 'Sarah Muwonge', 'student21@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782204948', '+256-782204948', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(22, 'ISNM/0022/25', NULL, NULL, 'UACE/CNN/0022', 'Ruth', 'Kizza', NULL, 'Moses Nakamya', 'student22@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700903908', '+256-700903908', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(23, 'ISNM/0023/25', NULL, NULL, 'UACE/CNN/0023', 'Ruth', 'Ochieng', NULL, 'Joy Nakato', 'student23@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709011142', '+256-709011142', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(24, 'ISNM/0024/25', NULL, NULL, 'UACE/CNN/0024', 'Mary', 'Nabirye', NULL, 'John Okello', 'student24@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782412749', '+256-782412749', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(25, 'ISNM/0025/25', NULL, NULL, 'UACE/CNN/0025', 'Samuel', 'Sserwadda', NULL, 'Joy Nanteza', 'student25@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772757319', '+256-772757319', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(26, 'ISNM/0026/25', NULL, NULL, 'UACE/CNN/0026', 'Grace', 'Ssenyonjo', NULL, 'Sarah Mukasa', 'student26@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781924183', '+256-781924183', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(27, 'ISNM/0027/25', NULL, NULL, 'UACE/CNN/0027', 'Ruth', 'Mukasa', NULL, 'David Nakamya', 'student27@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789578199', '+256-789578199', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(28, 'ISNM/0028/25', NULL, NULL, 'UACE/CNN/0028', 'Moses', 'Ochieng', NULL, 'Esther Ssenyonjo', 'student28@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784557465', '+256-784557465', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(29, 'ISNM/0029/25', NULL, NULL, 'UACE/CNN/0029', 'David', 'Ochieng', NULL, 'Peter Muwonge', 'student29@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784068713', '+256-784068713', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(30, 'ISNM/0030/25', NULL, NULL, 'UACE/CNN/0030', 'John', 'Namukwaya', NULL, 'Peace Kizza', 'student30@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789042037', '+256-789042037', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(31, 'ISNM/0031/25', NULL, NULL, 'UACE/CNN/0031', 'Moses', 'Nabirye', NULL, 'Ruth Nakato', 'student31@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774563401', '+256-774563401', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(32, 'ISNM/0032/25', NULL, NULL, 'UACE/CNN/0032', 'Esther', 'Nanteza', NULL, 'Faith Namukwaya', 'student32@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708761693', '+256-708761693', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(33, 'ISNM/0033/25', NULL, NULL, 'UACE/CNN/0033', 'Mary', 'Ochieng', NULL, 'Samuel Mukasa', 'student33@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787886390', '+256-787886390', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(34, 'ISNM/0034/25', NULL, NULL, 'UACE/CNN/0034', 'Peter', 'Okello', NULL, 'Esther Kintu', 'student34@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706063539', '+256-706063539', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(35, 'ISNM/0035/25', NULL, NULL, 'UACE/CNN/0035', 'Peter', 'Mukasa', NULL, 'John Kintu', 'student35@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707425760', '+256-707425760', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(36, 'ISNM/0036/25', NULL, NULL, 'UACE/CNN/0036', 'Moses', 'Namukwaya', NULL, 'Moses Kintu', 'student36@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789443939', '+256-789443939', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(37, 'ISNM/0037/25', NULL, NULL, 'UACE/CNN/0037', 'Mary', 'Ssenyonjo', NULL, 'Peter Kintu', 'student37@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786637356', '+256-786637356', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(38, 'ISNM/0038/25', NULL, NULL, 'UACE/CNN/0038', 'Grace', 'Kizza', NULL, 'Ruth Nabirye', 'student38@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779129500', '+256-779129500', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(39, 'ISNM/0039/25', NULL, NULL, 'UACE/CNN/0039', 'Esther', 'Nabirye', NULL, 'Sarah Ssenyonjo', 'student39@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775114752', '+256-775114752', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(40, 'ISNM/0040/25', NULL, NULL, 'UACE/CNN/0040', 'Alice', 'Kizza', NULL, 'Mary Okello', 'student40@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772095035', '+256-772095035', 'Certificate in Nursing', 'Certificate in Nursing', NULL, 1, NULL, 1, 'Certificate', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(41, 'ISNM/0041/24', NULL, NULL, 'UACE/DNM/0041', 'Joy', 'Ssenyonjo', NULL, 'Esther Nakamya', 'student41@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778993733', '+256-778993733', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(42, 'ISNM/0042/24', NULL, NULL, 'UACE/DNM/0042', 'Sarah', 'Ssenyonjo', NULL, 'Ruth Nakamya', 'student42@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702057084', '+256-702057084', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(43, 'ISNM/0043/24', NULL, NULL, 'UACE/DNM/0043', 'David', 'Wasswa', NULL, 'Jane Nakamya', 'student43@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789414023', '+256-789414023', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(44, 'ISNM/0044/24', NULL, NULL, 'UACE/DNM/0044', 'David', 'Lubega', NULL, 'John Mukasa', 'student44@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771067107', '+256-771067107', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(45, 'ISNM/0045/24', NULL, NULL, 'UACE/DNM/0045', 'Samuel', 'Ochieng', NULL, 'Samuel Sserwadda', 'student45@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778896965', '+256-778896965', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(46, 'ISNM/0046/24', NULL, NULL, 'UACE/DNM/0046', 'Peter', 'Mukasa', NULL, 'Grace Sserwadda', 'student46@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787898635', '+256-787898635', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(47, 'ISNM/0047/24', NULL, NULL, 'UACE/DNM/0047', 'Sarah', 'Muwonge', NULL, 'Moses Nabirye', 'student47@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774581010', '+256-774581010', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(48, 'ISNM/0048/24', NULL, NULL, 'UACE/DNM/0048', 'Peace', 'Nanteza', NULL, 'Joy Wasswa', 'student48@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770178473', '+256-770178473', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(49, 'ISNM/0049/24', NULL, NULL, 'UACE/DNM/0049', 'Peter', 'Wasswa', NULL, 'Samuel Kintu', 'student49@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704546145', '+256-704546145', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(50, 'ISNM/0050/24', NULL, NULL, 'UACE/DNM/0050', 'Samuel', 'Nakato', NULL, 'David Nanteza', 'student50@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772195098', '+256-772195098', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(51, 'ISNM/0051/24', NULL, NULL, 'UACE/DNM/0051', 'Ruth', 'Sserwadda', NULL, 'Esther Kizza', 'student51@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784744390', '+256-784744390', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(52, 'ISNM/0052/24', NULL, NULL, 'UACE/DNM/0052', 'Peace', 'Lubega', NULL, 'Jane Sserwadda', 'student52@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-784913420', '+256-784913420', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(53, 'ISNM/0053/24', NULL, NULL, 'UACE/DNM/0053', 'Joy', 'Ochieng', NULL, 'Samuel Wasswa', 'student53@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704965732', '+256-704965732', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(54, 'ISNM/0054/24', NULL, NULL, 'UACE/DNM/0054', 'Alice', 'Ssenyonjo', NULL, 'Jane Kintu', 'student54@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783688931', '+256-783688931', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(55, 'ISNM/0055/24', NULL, NULL, 'UACE/DNM/0055', 'Esther', 'Namukwaya', NULL, 'Jane Namukwaya', 'student55@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786236264', '+256-786236264', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(56, 'ISNM/0056/24', NULL, NULL, 'UACE/DNM/0056', 'Ruth', 'Wasswa', NULL, 'Samuel Kintu', 'student56@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703507071', '+256-703507071', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(57, 'ISNM/0057/24', NULL, NULL, 'UACE/DNM/0057', 'Peter', 'Kintu', NULL, 'David Sserwadda', 'student57@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771885879', '+256-771885879', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(58, 'ISNM/0058/24', NULL, NULL, 'UACE/DNM/0058', 'Peter', 'Mukasa', NULL, 'David Kintu', 'student58@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773974868', '+256-773974868', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(59, 'ISNM/0059/24', NULL, NULL, 'UACE/DNM/0059', 'John', 'Namukwaya', NULL, 'Alice Ochieng', 'student59@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709375762', '+256-709375762', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(60, 'ISNM/0060/24', NULL, NULL, 'UACE/DNM/0060', 'Joy', 'Namukwaya', NULL, 'Joy Ssenyonjo', 'student60@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782151802', '+256-782151802', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(61, 'ISNM/0061/24', NULL, NULL, 'UACE/DNM/0061', 'Grace', 'Namukwaya', NULL, 'Jane Nakato', 'student61@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770184003', '+256-770184003', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(62, 'ISNM/0062/24', NULL, NULL, 'UACE/DNM/0062', 'David', 'Nakato', NULL, 'Peter Nakamya', 'student62@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708222949', '+256-708222949', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(63, 'ISNM/0063/24', NULL, NULL, 'UACE/DNM/0063', 'Jane', 'Nakamya', NULL, 'Sarah Nanteza', 'student63@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705229417', '+256-705229417', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(64, 'ISNM/0064/24', NULL, NULL, 'UACE/DNM/0064', 'Moses', 'Nanteza', NULL, 'Grace Ochieng', 'student64@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775654586', '+256-775654586', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(65, 'ISNM/0065/24', NULL, NULL, 'UACE/DNM/0065', 'Esther', 'Wasswa', NULL, 'Mary Kizza', 'student65@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781748308', '+256-781748308', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(66, 'ISNM/0066/24', NULL, NULL, 'UACE/DNM/0066', 'Sarah', 'Ssenyonjo', NULL, 'Alice Kizza', 'student66@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700988607', '+256-700988607', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(67, 'ISNM/0067/24', NULL, NULL, 'UACE/DNM/0067', 'Faith', 'Mukasa', NULL, 'Esther Lubega', 'student67@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770387594', '+256-770387594', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(68, 'ISNM/0068/24', NULL, NULL, 'UACE/DNM/0068', 'Jane', 'Muwonge', NULL, 'John Mukasa', 'student68@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771188826', '+256-771188826', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(69, 'ISNM/0069/24', NULL, NULL, 'UACE/DNM/0069', 'Samuel', 'Okello', NULL, 'Ruth Ochieng', 'student69@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783249504', '+256-783249504', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(70, 'ISNM/0070/24', NULL, NULL, 'UACE/DNM/0070', 'Peace', 'Wasswa', NULL, 'Peter Kintu', 'student70@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707752690', '+256-707752690', 'Diploma in Nursing', 'Diploma in Nursing', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none');
+INSERT INTO `students` (`id`, `student_number`, `registration_number`, `national_student_id_number`, `index_number`, `first_name`, `surname`, `other_name`, `full_name`, `email`, `password`, `phone`, `mobile_number`, `program`, `course`, `course_codes`, `current_year`, `year_of_study`, `year`, `level`, `set_name`, `current_semester`, `intake_date`, `date_of_birth`, `gender`, `nationality`, `address`, `district`, `emergency_contact_name`, `emergency_contact_phone`, `emergency_contact_email`, `sponsor`, `marital_status`, `religion`, `student_category`, `guardian_name`, `guardian_phone`, `guardian_email`, `profile_picture`, `passport_photo`, `status`, `last_login`, `locked_until`, `login_attempts`, `password_changed`, `is_first_login`, `created_at`, `updated_at`, `intake_year`, `intake_period`, `academic_year`, `registration_status`, `admission_date`, `graduation_date`, `transfer_date`, `transfer_reason`, `suspension_reason`, `suspended_at`, `activated_at`, `archived_at`, `stream`, `class_name`, `admission_number`, `national_id`, `county`, `sub_county`, `village`, `medical_conditions`, `blood_group`, `allergies`, `disability`, `previous_school`, `previous_qualification`, `guardian_relationship`, `hostel_required`, `transport_required`, `notes`, `bus_request_date`, `bus_request_status`) VALUES
+(71, 'ISNM/0071/24', NULL, NULL, 'UACE/DMM/0071', 'David', 'Muwonge', NULL, 'Alice Lubega', 'student71@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780560207', '+256-780560207', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(72, 'ISNM/0072/24', NULL, NULL, 'UACE/DMM/0072', 'Joy', 'Lubega', NULL, 'Faith Wasswa', 'student72@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-781327322', '+256-781327322', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(73, 'ISNM/0073/24', NULL, NULL, 'UACE/DMM/0073', 'Peace', 'Okello', NULL, 'Mary Sserwadda', 'student73@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777382056', '+256-777382056', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(74, 'ISNM/0074/24', NULL, NULL, 'UACE/DMM/0074', 'Grace', 'Namukwaya', NULL, 'Peace Sserwadda', 'student74@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774208337', '+256-774208337', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(75, 'ISNM/0075/24', NULL, NULL, 'UACE/DMM/0075', 'Esther', 'Sserwadda', NULL, 'Samuel Nakamya', 'student75@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774107687', '+256-774107687', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(76, 'ISNM/0076/24', NULL, NULL, 'UACE/DMM/0076', 'Faith', 'Nakamya', NULL, 'Faith Muwonge', 'student76@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-786791936', '+256-786791936', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(77, 'ISNM/0077/24', NULL, NULL, 'UACE/DMM/0077', 'Mary', 'Ssenyonjo', NULL, 'David Kizza', 'student77@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780318876', '+256-780318876', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(78, 'ISNM/0078/24', NULL, NULL, 'UACE/DMM/0078', 'Esther', 'Sserwadda', NULL, 'John Kizza', 'student78@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702962891', '+256-702962891', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(79, 'ISNM/0079/24', NULL, NULL, 'UACE/DMM/0079', 'Mary', 'Kintu', NULL, 'Esther Kintu', 'student79@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-704378691', '+256-704378691', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(80, 'ISNM/0080/24', NULL, NULL, 'UACE/DMM/0080', 'John', 'Ochieng', NULL, 'Peter Ssenyonjo', 'student80@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770329121', '+256-770329121', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(81, 'ISNM/0081/24', NULL, NULL, 'UACE/DMM/0081', 'Faith', 'Namukwaya', NULL, 'Mary Ochieng', 'student81@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780482903', '+256-780482903', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(82, 'ISNM/0082/24', NULL, NULL, 'UACE/DMM/0082', 'Alice', 'Kintu', NULL, 'Peace Nakato', 'student82@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775910832', '+256-775910832', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(83, 'ISNM/0083/24', NULL, NULL, 'UACE/DMM/0083', 'Peace', 'Muwonge', NULL, 'Peter Kizza', 'student83@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779177049', '+256-779177049', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(84, 'ISNM/0084/24', NULL, NULL, 'UACE/DMM/0084', 'Mary', 'Sserwadda', NULL, 'Faith Wasswa', 'student84@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782343559', '+256-782343559', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(85, 'ISNM/0085/24', NULL, NULL, 'UACE/DMM/0085', 'Peace', 'Sserwadda', NULL, 'Mary Muwonge', 'student85@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700702837', '+256-700702837', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(86, 'ISNM/0086/24', NULL, NULL, 'UACE/DMM/0086', 'Moses', 'Nabirye', NULL, 'Ruth Namukwaya', 'student86@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705633283', '+256-705633283', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(87, 'ISNM/0087/24', NULL, NULL, 'UACE/DMM/0087', 'Grace', 'Nabirye', NULL, 'Mary Muwonge', 'student87@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709698010', '+256-709698010', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(88, 'ISNM/0088/24', NULL, NULL, 'UACE/DMM/0088', 'Alice', 'Nabirye', NULL, 'Grace Namukwaya', 'student88@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774207258', '+256-774207258', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(89, 'ISNM/0089/24', NULL, NULL, 'UACE/DMM/0089', 'Alice', 'Namukwaya', NULL, 'Alice Muwonge', 'student89@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779644139', '+256-779644139', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(90, 'ISNM/0090/24', NULL, NULL, 'UACE/DMM/0090', 'Faith', 'Nakato', NULL, 'David Nakato', 'student90@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-701964811', '+256-701964811', 'Diploma in Midwifery', 'Diploma in Midwifery', NULL, 2, NULL, 2, 'Diploma', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(91, 'ISNM/0091/23', NULL, NULL, 'UACE/DNE/0091', 'Peter', 'Kintu', NULL, 'Sarah Nanteza', 'student91@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707456515', '+256-707456515', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(92, 'ISNM/0092/23', NULL, NULL, 'UACE/DNE/0092', 'Sarah', 'Ssenyonjo', NULL, 'Jane Nanteza', 'student92@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703110553', '+256-703110553', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(93, 'ISNM/0093/23', NULL, NULL, 'UACE/DNE/0093', 'John', 'Namukwaya', NULL, 'Peace Okello', 'student93@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706268467', '+256-706268467', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(94, 'ISNM/0094/23', NULL, NULL, 'UACE/DNE/0094', 'Grace', 'Ssenyonjo', NULL, 'Grace Ssenyonjo', 'student94@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707729037', '+256-707729037', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(95, 'ISNM/0095/23', NULL, NULL, 'UACE/DNE/0095', 'Ruth', 'Muwonge', NULL, 'Peter Wasswa', 'student95@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702229232', '+256-702229232', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(96, 'ISNM/0096/23', NULL, NULL, 'UACE/DNE/0096', 'Samuel', 'Nabirye', NULL, 'David Muwonge', 'student96@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-775787748', '+256-775787748', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(97, 'ISNM/0097/23', NULL, NULL, 'UACE/DNE/0097', 'Esther', 'Kizza', NULL, 'Sarah Okello', 'student97@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709144794', '+256-709144794', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(98, 'ISNM/0098/23', NULL, NULL, 'UACE/DNE/0098', 'Alice', 'Namukwaya', NULL, 'Jane Mukasa', 'student98@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770803830', '+256-770803830', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(99, 'ISNM/0099/23', NULL, NULL, 'UACE/DNE/0099', 'Joy', 'Kintu', NULL, 'Grace Lubega', 'student99@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778936284', '+256-778936284', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(100, 'ISNM/0100/23', NULL, NULL, 'UACE/DNE/0100', 'Moses', 'Namukwaya', NULL, 'John Namukwaya', 'student100@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777276039', '+256-777276039', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(101, 'ISNM/0101/23', NULL, NULL, 'UACE/DNE/0101', 'Mary', 'Nakamya', NULL, 'Peace Lubega', 'student101@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-778611329', '+256-778611329', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(102, 'ISNM/0102/23', NULL, NULL, 'UACE/DNE/0102', 'Peace', 'Okello', NULL, 'Esther Nabirye', 'student102@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789652358', '+256-789652358', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(103, 'ISNM/0103/23', NULL, NULL, 'UACE/DNE/0103', 'Peace', 'Nanteza', NULL, 'Jane Nabirye', 'student103@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774669700', '+256-774669700', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(104, 'ISNM/0104/23', NULL, NULL, 'UACE/DNE/0104', 'Sarah', 'Nakato', NULL, 'Joy Wasswa', 'student104@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-706474214', '+256-706474214', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(105, 'ISNM/0105/23', NULL, NULL, 'UACE/DNE/0105', 'Ruth', 'Namukwaya', NULL, 'Samuel Ssenyonjo', 'student105@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-785793679', '+256-785793679', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(106, 'ISNM/0106/23', NULL, NULL, 'UACE/DNE/0106', 'Peter', 'Lubega', NULL, 'Mary Ochieng', 'student106@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787326480', '+256-787326480', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(107, 'ISNM/0107/23', NULL, NULL, 'UACE/DNE/0107', 'Peace', 'Nanteza', NULL, 'Sarah Ochieng', 'student107@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708782505', '+256-708782505', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(108, 'ISNM/0108/23', NULL, NULL, 'UACE/DNE/0108', 'Peace', 'Wasswa', NULL, 'Grace Wasswa', 'student108@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773306947', '+256-773306947', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(109, 'ISNM/0109/23', NULL, NULL, 'UACE/DNE/0109', 'Mary', 'Okello', NULL, 'Joy Ochieng', 'student109@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788873342', '+256-788873342', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(110, 'ISNM/0110/23', NULL, NULL, 'UACE/DNE/0110', 'David', 'Ssenyonjo', NULL, 'Sarah Nakato', 'student110@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-774319221', '+256-774319221', 'Diploma in Nursing Education', 'Diploma in Nursing Education', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(111, 'ISNM/0111/23', NULL, NULL, 'UACE/BNM/0111', 'Faith', 'Kizza', NULL, 'David Okello', 'student111@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770352439', '+256-770352439', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(112, 'ISNM/0112/23', NULL, NULL, 'UACE/BNM/0112', 'Esther', 'Wasswa', NULL, 'Jane Kintu', 'student112@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787234563', '+256-787234563', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(113, 'ISNM/0113/23', NULL, NULL, 'UACE/BNM/0113', 'John', 'Mukasa', NULL, 'Peace Namukwaya', 'student113@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788968397', '+256-788968397', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(114, 'ISNM/0114/23', NULL, NULL, 'UACE/BNM/0114', 'Joy', 'Lubega', NULL, 'David Wasswa', 'student114@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-770111618', '+256-770111618', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(115, 'ISNM/0115/23', NULL, NULL, 'UACE/BNM/0115', 'Esther', 'Muwonge', NULL, 'Alice Muwonge', 'student115@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773868815', '+256-773868815', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(116, 'ISNM/0116/23', NULL, NULL, 'UACE/BNM/0116', 'Alice', 'Nakato', NULL, 'Sarah Kizza', 'student116@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703897961', '+256-703897961', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(117, 'ISNM/0117/23', NULL, NULL, 'UACE/BNM/0117', 'Esther', 'Kizza', NULL, 'David Okello', 'student117@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-782735922', '+256-782735922', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(118, 'ISNM/0118/23', NULL, NULL, 'UACE/BNM/0118', 'Ruth', 'Kintu', NULL, 'Sarah Nabirye', 'student118@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779544120', '+256-779544120', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(119, 'ISNM/0119/23', NULL, NULL, 'UACE/BNM/0119', 'Ruth', 'Nakato', NULL, 'Faith Ssenyonjo', 'student119@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788750458', '+256-788750458', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(120, 'ISNM/0120/23', NULL, NULL, 'UACE/BNM/0120', 'John', 'Ssenyonjo', NULL, 'Jane Nakamya', 'student120@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708298256', '+256-708298256', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(121, 'ISNM/0121/23', NULL, NULL, 'UACE/BNM/0121', 'Mary', 'Kizza', NULL, 'Samuel Lubega', 'student121@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776638003', '+256-776638003', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(122, 'ISNM/0122/23', NULL, NULL, 'UACE/BNM/0122', 'Samuel', 'Mukasa', NULL, 'Grace Kizza', 'student122@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702398474', '+256-702398474', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(123, 'ISNM/0123/23', NULL, NULL, 'UACE/BNM/0123', 'Sarah', 'Kintu', NULL, 'David Namukwaya', 'student123@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773040163', '+256-773040163', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(124, 'ISNM/0124/23', NULL, NULL, 'UACE/BNM/0124', 'Mary', 'Lubega', NULL, 'Alice Muwonge', 'student124@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776200061', '+256-776200061', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(125, 'ISNM/0125/23', NULL, NULL, 'UACE/BNM/0125', 'Esther', 'Muwonge', NULL, 'Ruth Nabirye', 'student125@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783854961', '+256-783854961', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(126, 'ISNM/0126/23', NULL, NULL, 'UACE/BNM/0126', 'Jane', 'Okello', NULL, 'Peter Namukwaya', 'student126@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-780195603', '+256-780195603', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(127, 'ISNM/0127/23', NULL, NULL, 'UACE/BNM/0127', 'John', 'Wasswa', NULL, 'John Nabirye', 'student127@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-700147629', '+256-700147629', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(128, 'ISNM/0128/23', NULL, NULL, 'UACE/BNM/0128', 'Esther', 'Nakamya', NULL, 'Peace Nanteza', 'student128@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-703247691', '+256-703247691', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(129, 'ISNM/0129/23', NULL, NULL, 'UACE/BNM/0129', 'Sarah', 'Namukwaya', NULL, 'John Nakato', 'student129@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-705370294', '+256-705370294', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(130, 'ISNM/0130/23', NULL, NULL, 'UACE/BNM/0130', 'Ruth', 'Namukwaya', NULL, 'Peter Nanteza', 'student130@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-773191526', '+256-773191526', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(131, 'ISNM/0131/23', NULL, NULL, 'UACE/BNM/0131', 'John', 'Ochieng', NULL, 'Jane Ochieng', 'student131@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779818316', '+256-779818316', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(132, 'ISNM/0132/23', NULL, NULL, 'UACE/BNM/0132', 'Mary', 'Mukasa', NULL, 'Sarah Kintu', 'student132@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789279968', '+256-789279968', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(133, 'ISNM/0133/23', NULL, NULL, 'UACE/BNM/0133', 'Sarah', 'Namukwaya', NULL, 'Moses Ssenyonjo', 'student133@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776894125', '+256-776894125', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(134, 'ISNM/0134/23', NULL, NULL, 'UACE/BNM/0134', 'Peter', 'Ochieng', NULL, 'John Okello', 'student134@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-788814668', '+256-788814668', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(135, 'ISNM/0135/23', NULL, NULL, 'UACE/BNM/0135', 'Samuel', 'Kintu', NULL, 'Sarah Mukasa', 'student135@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787082209', '+256-787082209', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(136, 'ISNM/0136/23', NULL, NULL, 'UACE/BNM/0136', 'Sarah', 'Kizza', NULL, 'Alice Kizza', 'student136@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-772069777', '+256-772069777', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(137, 'ISNM/0137/23', NULL, NULL, 'UACE/BNM/0137', 'Ruth', 'Wasswa', NULL, 'Sarah Nakato', 'student137@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-776502037', '+256-776502037', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(138, 'ISNM/0138/23', NULL, NULL, 'UACE/BNM/0138', 'Faith', 'Wasswa', NULL, 'Ruth Lubega', 'student138@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-771525324', '+256-771525324', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(139, 'ISNM/0139/23', NULL, NULL, 'UACE/BNM/0139', 'Grace', 'Sserwadda', NULL, 'David Lubega', 'student139@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789051629', '+256-789051629', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none');
+INSERT INTO `students` (`id`, `student_number`, `registration_number`, `national_student_id_number`, `index_number`, `first_name`, `surname`, `other_name`, `full_name`, `email`, `password`, `phone`, `mobile_number`, `program`, `course`, `course_codes`, `current_year`, `year_of_study`, `year`, `level`, `set_name`, `current_semester`, `intake_date`, `date_of_birth`, `gender`, `nationality`, `address`, `district`, `emergency_contact_name`, `emergency_contact_phone`, `emergency_contact_email`, `sponsor`, `marital_status`, `religion`, `student_category`, `guardian_name`, `guardian_phone`, `guardian_email`, `profile_picture`, `passport_photo`, `status`, `last_login`, `locked_until`, `login_attempts`, `password_changed`, `is_first_login`, `created_at`, `updated_at`, `intake_year`, `intake_period`, `academic_year`, `registration_status`, `admission_date`, `graduation_date`, `transfer_date`, `transfer_reason`, `suspension_reason`, `suspended_at`, `activated_at`, `archived_at`, `stream`, `class_name`, `admission_number`, `national_id`, `county`, `sub_county`, `village`, `medical_conditions`, `blood_group`, `allergies`, `disability`, `previous_school`, `previous_qualification`, `guardian_relationship`, `hostel_required`, `transport_required`, `notes`, `bus_request_date`, `bus_request_status`) VALUES
+(140, 'ISNM/0140/23', NULL, NULL, 'UACE/BNM/0140', 'Moses', 'Nabirye', NULL, 'Mary Kintu', 'student140@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708857305', '+256-708857305', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(141, 'ISNM/0141/23', NULL, NULL, 'UACE/BNM/0141', 'Sarah', 'Sserwadda', NULL, 'Esther Nakato', 'student141@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-702819948', '+256-702819948', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(142, 'ISNM/0142/23', NULL, NULL, 'UACE/BNM/0142', 'John', 'Ssenyonjo', NULL, 'Ruth Muwonge', 'student142@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-707780517', '+256-707780517', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(143, 'ISNM/0143/23', NULL, NULL, 'UACE/BNM/0143', 'Faith', 'Okello', NULL, 'Ruth Okello', 'student143@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-709800177', '+256-709800177', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(144, 'ISNM/0144/23', NULL, NULL, 'UACE/BNM/0144', 'Esther', 'Wasswa', NULL, 'Jane Nabirye', 'student144@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-777854116', '+256-777854116', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Kamuli', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(145, 'ISNM/0145/23', NULL, NULL, 'UACE/BNM/0145', 'Sarah', 'Kintu', NULL, 'Peter Muwonge', 'student145@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-783672096', '+256-783672096', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(146, 'ISNM/0146/23', NULL, NULL, 'UACE/BNM/0146', 'Mary', 'Ssenyonjo', NULL, 'David Kizza', 'student146@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789642933', '+256-789642933', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Iganga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(147, 'ISNM/0147/23', NULL, NULL, 'UACE/BNM/0147', 'Sarah', 'Okello', NULL, 'Sarah Sserwadda', 'student147@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-789421624', '+256-789421624', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(148, 'ISNM/0148/23', NULL, NULL, 'UACE/BNM/0148', 'Ruth', 'Ochieng', NULL, 'Peace Nanteza', 'student148@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-708379498', '+256-708379498', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Mayuge', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(149, 'ISNM/0149/23', NULL, NULL, 'UACE/BNM/0149', 'Peter', 'Nanteza', NULL, 'Esther Nanteza', 'student149@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-787109143', '+256-787109143', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Female', 'Ugandan', 'Bugiri', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(150, 'ISNM/0150/23', NULL, NULL, 'UACE/BNM/0150', 'Mary', 'Lubega', NULL, 'Ruth Nakamya', 'student150@isnm.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+256-779197463', '+256-779197463', 'Bachelor of Science in Nursing', 'Bachelor of Science in Nursing', NULL, 3, NULL, 3, 'Degree', NULL, NULL, NULL, NULL, 'Male', 'Ugandan', 'Jinja', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 0, 1, '2026-07-03 04:51:13', '2026-07-16 19:52:40', NULL, 'July', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(151, 'STU202600001', 'REG-2026-001', NULL, 'CM-2026-001', 'John', 'Okello', 'James', 'John James Okello', 'john.okello@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000001', '0770000001', 'Bachelor of Science in Nursing (Comprehensive)', 'BSc Nursing', NULL, 1, NULL, 1, 'Year 1', '1', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:40', '2026-07-16 19:52:40', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(152, 'STU202600002', 'REG-2026-002', NULL, 'MID-2026-001', 'Grace', 'Nambi', '', 'Grace Nambi', 'grace.nambi@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000002', '0770000002', 'Bachelor of Science in Midwifery', 'BSc Midwifery', NULL, 1, NULL, 1, 'Year 1', '2', NULL, '2026-01-15', NULL, 'Female', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:40', '2026-07-16 19:52:40', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(153, 'STU202600003', 'REG-2026-003', NULL, 'DIP-2026-001', 'Samuel', 'Mugisha', 'Peter', 'Samuel Peter Mugisha', 'samuel.mugisha@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000003', '0770000003', 'Diploma in Nursing/Midwifery', 'Dip Nursing', NULL, 1, NULL, 1, 'Year 1', '3', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:40', '2026-07-16 19:52:40', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(154, 'STU202600001', 'REG-2026-001', NULL, 'CM-2026-001', 'John', 'Okello', 'James', 'John James Okello', 'john.okello@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000001', '0770000001', 'Bachelor of Science in Nursing (Comprehensive)', 'BSc Nursing', NULL, 1, NULL, 1, 'Year 1', '1', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:51', '2026-07-16 19:52:51', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(155, 'STU202600002', 'REG-2026-002', NULL, 'MID-2026-001', 'Grace', 'Nambi', '', 'Grace Nambi', 'grace.nambi@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000002', '0770000002', 'Bachelor of Science in Midwifery', 'BSc Midwifery', NULL, 1, NULL, 1, 'Year 1', '2', NULL, '2026-01-15', NULL, 'Female', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:51', '2026-07-16 19:52:51', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(156, 'STU202600003', 'REG-2026-003', NULL, 'DIP-2026-001', 'Samuel', 'Mugisha', 'Peter', 'Samuel Peter Mugisha', 'samuel.mugisha@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000003', '0770000003', 'Diploma in Nursing/Midwifery', 'Dip Nursing', NULL, 1, NULL, 1, 'Year 1', '3', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:52:51', '2026-07-16 19:52:51', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(157, 'STU202600001', 'REG-2026-001', NULL, 'CM-2026-001', 'John', 'Okello', 'James', 'John James Okello', 'john.okello@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000001', '0770000001', 'Bachelor of Science in Nursing (Comprehensive)', 'BSc Nursing', NULL, 1, NULL, 1, 'Year 1', '1', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:02', '2026-07-16 19:53:02', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(158, 'STU202600002', 'REG-2026-002', NULL, 'MID-2026-001', 'Grace', 'Nambi', '', 'Grace Nambi', 'grace.nambi@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000002', '0770000002', 'Bachelor of Science in Midwifery', 'BSc Midwifery', NULL, 1, NULL, 1, 'Year 1', '2', NULL, '2026-01-15', NULL, 'Female', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:02', '2026-07-16 19:53:02', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(159, 'STU202600003', 'REG-2026-003', NULL, 'DIP-2026-001', 'Samuel', 'Mugisha', 'Peter', 'Samuel Peter Mugisha', 'samuel.mugisha@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000003', '0770000003', 'Diploma in Nursing/Midwifery', 'Dip Nursing', NULL, 1, NULL, 1, 'Year 1', '3', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:02', '2026-07-16 19:53:02', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(160, 'STU202600001', 'REG-2026-001', NULL, 'CM-2026-001', 'John', 'Okello', 'James', 'John James Okello', 'john.okello@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000001', '0770000001', 'Bachelor of Science in Nursing (Comprehensive)', 'BSc Nursing', NULL, 1, NULL, 1, 'Year 1', '1', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:14', '2026-07-16 19:53:14', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(161, 'STU202600002', 'REG-2026-002', NULL, 'MID-2026-001', 'Grace', 'Nambi', '', 'Grace Nambi', 'grace.nambi@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000002', '0770000002', 'Bachelor of Science in Midwifery', 'BSc Midwifery', NULL, 1, NULL, 1, 'Year 1', '2', NULL, '2026-01-15', NULL, 'Female', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:14', '2026-07-16 19:53:14', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none'),
+(162, 'STU202600003', 'REG-2026-003', NULL, 'DIP-2026-001', 'Samuel', 'Mugisha', 'Peter', 'Samuel Peter Mugisha', 'samuel.mugisha@student.isnm.ac.ug', '$2y$10$HxVkw2ihQPBwiK/fXa9Lqezmnw8KmKVSOMVGXfUynT09hDxYbadQe', '0770000003', '0770000003', 'Diploma in Nursing/Midwifery', 'Dip Nursing', NULL, 1, NULL, 1, 'Year 1', '3', NULL, '2026-01-15', NULL, 'Male', 'Ugandan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 0, 1, 0, '2026-07-16 19:53:14', '2026-07-16 19:53:14', '2026', 'January', NULL, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, 'none');
 
 --
 -- Triggers `students`
@@ -18160,15 +18404,187 @@ CREATE TABLE `student_academic_profiles` (
   `gpa` decimal(4,2) DEFAULT NULL,
   `remarks` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `student_id` int(11) NOT NULL,
+  `current_program` varchar(200) DEFAULT NULL,
+  `current_year` int(11) DEFAULT 1,
+  `current_semester` varchar(20) DEFAULT NULL,
+  `cumulative_gpa` decimal(5,2) DEFAULT NULL,
+  `total_credits` int(11) DEFAULT 0,
+  `earned_credits` int(11) DEFAULT 0,
+  `academic_standing` enum('Good Standing','Probation','Suspended','Dismissed') DEFAULT 'Good Standing',
+  `advisor_name` varchar(200) DEFAULT NULL,
+  `advisor_email` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_academic_profiles`
 --
 
-INSERT INTO `student_academic_profiles` (`id`, `student_number`, `full_name`, `program`, `academic_year`, `semester`, `status`, `gpa`, `remarks`, `created_at`, `updated_at`) VALUES
-(1, 'STU202644246', 'Daniel Kizza', 'Diploma in Nursing', '2026', NULL, 'Active', NULL, NULL, '2026-07-05 17:36:37', '2026-07-05 17:36:37');
+INSERT INTO `student_academic_profiles` (`id`, `student_number`, `full_name`, `program`, `academic_year`, `semester`, `status`, `gpa`, `remarks`, `created_at`, `updated_at`, `student_id`, `current_program`, `current_year`, `current_semester`, `cumulative_gpa`, `total_credits`, `earned_credits`, `academic_standing`, `advisor_name`, `advisor_email`) VALUES
+(1, 'STU202644246', 'Daniel Kizza', 'Diploma in Nursing', '2026', NULL, 'Active', NULL, NULL, '2026-07-05 17:36:37', '2026-07-05 17:36:37', 0, NULL, 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(2, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 1, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(3, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 2, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(4, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 3, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(5, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 4, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(6, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 5, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(7, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 6, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(8, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 7, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(9, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 8, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(10, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 9, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(11, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 10, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(12, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 11, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(13, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 12, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(14, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 13, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(15, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 14, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(16, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 15, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(17, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 16, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(18, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 17, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(19, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 18, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(20, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 19, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(21, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 20, 'Certificate in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(22, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 21, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(23, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 22, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(24, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 23, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(25, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 24, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(26, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 25, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(27, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 26, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(28, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 27, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(29, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 28, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(30, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 29, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(31, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 30, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(32, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 31, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(33, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 32, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(34, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 33, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(35, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 34, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(36, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 35, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(37, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 36, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(38, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 37, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(39, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 38, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(40, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 39, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(41, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 40, 'Certificate in Nursing', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(42, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 41, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(43, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 42, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(44, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 43, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(45, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 44, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(46, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 45, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(47, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 46, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(48, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 47, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(49, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 48, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(50, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 49, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(51, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 50, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(52, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 51, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(53, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 52, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(54, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 53, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(55, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 54, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(56, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 55, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(57, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 56, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(58, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 57, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(59, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 58, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(60, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 59, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(61, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 60, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(62, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 61, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(63, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 62, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(64, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 63, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(65, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 64, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(66, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 65, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(67, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 66, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(68, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 67, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(69, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 68, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(70, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 69, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(71, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 70, 'Diploma in Nursing', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(72, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 71, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(73, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 72, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(74, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 73, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(75, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 74, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(76, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 75, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(77, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 76, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(78, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 77, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(79, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 78, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(80, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 79, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(81, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 80, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(82, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 81, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(83, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 82, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(84, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 83, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(85, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 84, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(86, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 85, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(87, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 86, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(88, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 87, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(89, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 88, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(90, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 89, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(91, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 90, 'Diploma in Midwifery', 2, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(92, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 91, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(93, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 92, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(94, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 93, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(95, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 94, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(96, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 95, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(97, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 96, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(98, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 97, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(99, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 98, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(100, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 99, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(101, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 100, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(102, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 101, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(103, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 102, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(104, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 103, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(105, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 104, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(106, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 105, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(107, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 106, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(108, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 107, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(109, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 108, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(110, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 109, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(111, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 110, 'Diploma in Nursing Education', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(112, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 111, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(113, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 112, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(114, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 113, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(115, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 114, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(116, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 115, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(117, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 116, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(118, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 117, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(119, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 118, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(120, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 119, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(121, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 120, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(122, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 121, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(123, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 122, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(124, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 123, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(125, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 124, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(126, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 125, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(127, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 126, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(128, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 127, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(129, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 128, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(130, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 129, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(131, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 130, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(132, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 131, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(133, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 132, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(134, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 133, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(135, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 134, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(136, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 135, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(137, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 136, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(138, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 137, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(139, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 138, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(140, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 139, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(141, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 140, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(142, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 141, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(143, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 142, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(144, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 143, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(145, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 144, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(146, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 145, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(147, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 146, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(148, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 147, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(149, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 148, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(150, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 149, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(151, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 150, 'Bachelor of Science in Nursing', 3, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(152, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 151, 'Bachelor of Science in Nursing (Comprehensive)', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(153, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 152, 'Bachelor of Science in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(154, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 153, 'Diploma in Nursing/Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(155, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 154, 'Bachelor of Science in Nursing (Comprehensive)', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(156, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 155, 'Bachelor of Science in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(157, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 156, 'Diploma in Nursing/Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(158, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 157, 'Bachelor of Science in Nursing (Comprehensive)', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(159, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 158, 'Bachelor of Science in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(160, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 159, 'Diploma in Nursing/Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(161, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 160, 'Bachelor of Science in Nursing (Comprehensive)', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(162, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 161, 'Bachelor of Science in Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL),
+(163, '', '', NULL, NULL, NULL, 'Active', NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45', 162, 'Diploma in Nursing/Midwifery', 1, NULL, NULL, 0, 0, 'Good Standing', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -18649,15 +19065,21 @@ CREATE TABLE `student_activities` (
 --
 
 CREATE TABLE `student_admissions` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `admission_date` date NOT NULL,
-  `program` varchar(200) DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `application_number` varchar(50) DEFAULT NULL,
+  `applicant_name` varchar(300) NOT NULL,
+  `program` varchar(200) DEFAULT '',
   `academic_year` varchar(20) DEFAULT NULL,
+  `admission_status` varchar(50) DEFAULT 'Applied',
+  `application_date` date DEFAULT NULL,
+  `decided_by` int(11) DEFAULT 0,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `admission_date` date NOT NULL,
   `admission_type` varchar(50) DEFAULT 'regular',
   `status` varchar(30) DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `student_id` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -18730,7 +19152,13 @@ CREATE TABLE `student_applications` (
   `unmeb_certificate` varchar(500) DEFAULT NULL,
   `enrolment_certificate` varchar(500) DEFAULT NULL,
   `practicing_license_doc` varchar(500) DEFAULT NULL,
-  `academic_transcript` varchar(500) DEFAULT NULL
+  `academic_transcript` varchar(500) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `applicant_name` varchar(300) NOT NULL,
+  `application_date` date DEFAULT NULL,
+  `application_number` varchar(50) DEFAULT NULL,
+  `application_status` varchar(50) DEFAULT 'Applied',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -18896,6 +19324,174 @@ CREATE TABLE `student_attendance_profiles` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `student_attendance_profiles`
+--
+
+INSERT INTO `student_attendance_profiles` (`id`, `student_id`, `academic_year`, `semester`, `total_days`, `days_present`, `days_absent`, `days_excused`, `attendance_rate`, `created_at`, `updated_at`) VALUES
+(1, 1, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(2, 2, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(3, 3, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(4, 4, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(5, 5, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(6, 6, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(7, 7, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(8, 8, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(9, 9, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(10, 10, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(11, 11, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(12, 12, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(13, 13, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(14, 14, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(15, 15, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(16, 16, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(17, 17, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(18, 18, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(19, 19, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(20, 20, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(21, 21, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(22, 22, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(23, 23, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(24, 24, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(25, 25, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(26, 26, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(27, 27, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(28, 28, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(29, 29, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(30, 30, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(31, 31, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(32, 32, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(33, 33, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(34, 34, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(35, 35, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(36, 36, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(37, 37, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(38, 38, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(39, 39, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(40, 40, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(41, 41, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(42, 42, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(43, 43, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(44, 44, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(45, 45, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(46, 46, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(47, 47, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(48, 48, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(49, 49, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(50, 50, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(51, 51, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(52, 52, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(53, 53, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(54, 54, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(55, 55, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(56, 56, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(57, 57, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(58, 58, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(59, 59, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(60, 60, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(61, 61, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(62, 62, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(63, 63, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(64, 64, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(65, 65, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(66, 66, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(67, 67, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(68, 68, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(69, 69, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(70, 70, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(71, 71, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(72, 72, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(73, 73, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(74, 74, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(75, 75, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(76, 76, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(77, 77, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(78, 78, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(79, 79, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(80, 80, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(81, 81, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(82, 82, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(83, 83, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(84, 84, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(85, 85, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(86, 86, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(87, 87, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(88, 88, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(89, 89, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(90, 90, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(91, 91, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(92, 92, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(93, 93, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(94, 94, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(95, 95, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(96, 96, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(97, 97, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(98, 98, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(99, 99, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(100, 100, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(101, 101, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(102, 102, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(103, 103, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(104, 104, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(105, 105, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(106, 106, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(107, 107, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(108, 108, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(109, 109, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(110, 110, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(111, 111, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(112, 112, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(113, 113, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(114, 114, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(115, 115, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(116, 116, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(117, 117, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(118, 118, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(119, 119, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(120, 120, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(121, 121, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(122, 122, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(123, 123, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(124, 124, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(125, 125, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(126, 126, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(127, 127, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(128, 128, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(129, 129, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(130, 130, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(131, 131, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(132, 132, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(133, 133, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(134, 134, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(135, 135, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(136, 136, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(137, 137, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(138, 138, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(139, 139, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(140, 140, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(141, 141, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(142, 142, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(143, 143, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(144, 144, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(145, 145, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(146, 146, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(147, 147, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(148, 148, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(149, 149, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(150, 150, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(151, 151, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(152, 152, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(153, 153, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(154, 154, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(155, 155, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(156, 156, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(157, 157, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(158, 158, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(159, 159, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(160, 160, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(161, 161, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(162, 162, '2026', 'Semester 2', 0, 0, 0, 0, 0.00, '2026-07-22 14:33:45', '2026-07-22 14:33:45');
 
 -- --------------------------------------------------------
 
@@ -19065,7 +19661,10 @@ CREATE TABLE `student_competencies` (
   `assessed_by` int(11) DEFAULT NULL,
   `assessment_date` date DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `date_assessed` date DEFAULT NULL,
+  `proficiency` enum('Not Attempted','Beginner','Intermediate','Competent','Expert') NOT NULL DEFAULT 'Not Attempted',
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -19085,7 +19684,9 @@ CREATE TABLE `student_counseling_sessions` (
   `counselor_id` int(11) DEFAULT NULL,
   `status` varchar(50) DEFAULT 'Scheduled',
   `follow_up_date` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `counselor_name` varchar(200) DEFAULT NULL,
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -19594,22 +20195,22 @@ INSERT INTO `student_course_registrations` (`id`, `student_id`, `course_id`, `ac
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `student_dashboard_view`
--- (See below for the actual view)
+-- Table structure for table `student_dashboard_view`
 --
+
 CREATE TABLE `student_dashboard_view` (
-`id` int(11)
-,`student_number` varchar(50)
-,`full_name` varchar(302)
-,`course` varchar(100)
-,`year` int(11)
-,`set_name` varchar(50)
-,`email` varchar(100)
-,`profile_picture` varchar(500)
-,`current_gpa` decimal(3,2)
-,`fee_balance` decimal(32,2)
-,`attendance_rate` decimal(31,5)
-);
+  `id` int(11) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `full_name` varchar(302) DEFAULT NULL,
+  `course` varchar(100) DEFAULT NULL,
+  `year` int(11) DEFAULT NULL,
+  `set_name` varchar(50) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `profile_picture` varchar(500) DEFAULT NULL,
+  `current_gpa` decimal(3,2) DEFAULT NULL,
+  `fee_balance` decimal(32,2) DEFAULT NULL,
+  `attendance_rate` decimal(31,5) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -19681,7 +20282,10 @@ CREATE TABLE `student_documents` (
   `verified_by` int(11) DEFAULT NULL,
   `verified_at` timestamp NULL DEFAULT NULL,
   `document_status` enum('Active','Deleted') NOT NULL DEFAULT 'Active',
-  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `student_id` int(11) NOT NULL,
+  `status` enum('Active','Archived','Deleted') DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -19990,15 +20594,26 @@ INSERT INTO `student_fee_tracking` (`id`, `student_id`, `fee_type`, `amount`, `a
 
 CREATE TABLE `student_finance` (
   `id` int(11) NOT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `transaction_type` varchar(50) DEFAULT NULL,
+  `student_id` int(11) NOT NULL,
+  `tuition_fee` decimal(14,2) DEFAULT 0.00,
+  `amount_paid` decimal(14,2) DEFAULT 0.00,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `payment_status` enum('pending','partial','paid','overdue') DEFAULT 'pending',
+  `semester` varchar(50) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `receipt_number` varchar(100) DEFAULT NULL,
+  `received_by` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `amount` decimal(15,2) DEFAULT 0.00,
   `balance` decimal(15,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `reference_number` varchar(100) DEFAULT NULL,
   `status` varchar(50) DEFAULT 'Pending',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `transaction_type` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -20013,12 +20628,184 @@ CREATE TABLE `student_financial_profiles` (
   `total_fees` decimal(14,2) DEFAULT 0.00,
   `total_paid` decimal(14,2) DEFAULT 0.00,
   `balance` decimal(14,2) DEFAULT 0.00,
+  `scholarship_amount` decimal(14,2) DEFAULT 0.00,
+  `fee_status` enum('unpaid','partial','paid','overdue') DEFAULT 'unpaid',
+  `last_payment_date` date DEFAULT NULL,
+  `next_due_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `status` enum('pending','partial','paid','overdue') DEFAULT 'pending',
   `academic_year` varchar(20) DEFAULT NULL,
-  `semester` varchar(20) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `semester` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `student_financial_profiles`
+--
+
+INSERT INTO `student_financial_profiles` (`id`, `student_id`, `total_fees`, `total_paid`, `balance`, `scholarship_amount`, `fee_status`, `last_payment_date`, `next_due_date`, `created_at`, `updated_at`, `status`, `academic_year`, `semester`) VALUES
+(1, 1, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(2, 2, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(3, 3, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(4, 4, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(5, 5, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(6, 6, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(7, 7, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(8, 8, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(9, 9, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(10, 10, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(11, 11, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(12, 12, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(13, 13, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(14, 14, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(15, 15, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(16, 16, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(17, 17, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(18, 18, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(19, 19, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(20, 20, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(21, 21, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(22, 22, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(23, 23, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(24, 24, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(25, 25, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(26, 26, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(27, 27, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(28, 28, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(29, 29, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(30, 30, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(31, 31, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(32, 32, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(33, 33, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(34, 34, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(35, 35, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(36, 36, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(37, 37, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(38, 38, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(39, 39, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(40, 40, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(41, 41, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(42, 42, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(43, 43, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(44, 44, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(45, 45, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(46, 46, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(47, 47, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(48, 48, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(49, 49, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(50, 50, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(51, 51, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(52, 52, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(53, 53, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(54, 54, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(55, 55, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(56, 56, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(57, 57, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(58, 58, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(59, 59, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(60, 60, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(61, 61, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(62, 62, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(63, 63, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(64, 64, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(65, 65, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(66, 66, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(67, 67, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(68, 68, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(69, 69, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(70, 70, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(71, 71, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(72, 72, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(73, 73, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(74, 74, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(75, 75, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(76, 76, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(77, 77, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(78, 78, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(79, 79, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(80, 80, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(81, 81, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(82, 82, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(83, 83, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(84, 84, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(85, 85, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(86, 86, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(87, 87, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(88, 88, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(89, 89, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(90, 90, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(91, 91, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(92, 92, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(93, 93, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(94, 94, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(95, 95, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(96, 96, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(97, 97, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(98, 98, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(99, 99, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(100, 100, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(101, 101, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(102, 102, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(103, 103, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(104, 104, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(105, 105, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(106, 106, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(107, 107, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(108, 108, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(109, 109, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(110, 110, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(111, 111, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(112, 112, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(113, 113, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(114, 114, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(115, 115, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(116, 116, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(117, 117, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(118, 118, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(119, 119, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(120, 120, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(121, 121, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(122, 122, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(123, 123, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(124, 124, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(125, 125, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(126, 126, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(127, 127, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(128, 128, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(129, 129, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(130, 130, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(131, 131, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(132, 132, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(133, 133, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(134, 134, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(135, 135, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(136, 136, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(137, 137, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(138, 138, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(139, 139, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(140, 140, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(141, 141, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(142, 142, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(143, 143, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(144, 144, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(145, 145, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(146, 146, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(147, 147, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(148, 148, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(149, 149, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(150, 150, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(151, 151, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(152, 152, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(153, 153, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(154, 154, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(155, 155, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(156, 156, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(157, 157, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(158, 158, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(159, 159, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(160, 160, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(161, 161, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL),
+(162, 162, 0.00, 0.00, 0.00, 0.00, 'unpaid', NULL, NULL, '2026-07-22 14:30:05', '2026-07-22 14:30:05', 'pending', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -20046,12 +20833,14 @@ CREATE TABLE `student_guardian` (
 CREATE TABLE `student_health_incidents` (
   `id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
-  `incident_type` varchar(100) NOT NULL,
-  `description` text NOT NULL,
-  `severity` enum('low','medium','high','critical') NOT NULL DEFAULT 'low',
+  `incident_type` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `severity` enum('low','medium','high','critical') DEFAULT 'medium',
   `action_taken` text DEFAULT NULL,
-  `recorded_by` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `reported_by` int(11) DEFAULT NULL,
+  `incident_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `recorded_by` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -20099,11 +20888,22 @@ CREATE TABLE `student_id_cards` (
   `id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `card_number` varchar(50) NOT NULL,
-  `card_type` varchar(50) DEFAULT 'student',
-  `status` varchar(50) DEFAULT 'active',
-  `issued_date` date DEFAULT NULL,
+  `registration_number` varchar(50) DEFAULT NULL,
+  `program` varchar(200) DEFAULT NULL,
+  `intake` varchar(50) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
   `expiry_date` date DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `photo_path` varchar(500) DEFAULT NULL,
+  `qr_code` text DEFAULT NULL,
+  `barcode` varchar(200) DEFAULT NULL,
+  `status` enum('active','expired','lost','damaged','replaced') DEFAULT 'active',
+  `issued_by` int(11) DEFAULT NULL,
+  `issued_date` timestamp NULL DEFAULT current_timestamp(),
+  `last_print_date` timestamp NULL DEFAULT NULL,
+  `print_count` int(11) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `card_type` varchar(50) DEFAULT 'student'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -20330,6 +21130,174 @@ CREATE TABLE `student_library_profiles` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `student_library_profiles`
+--
+
+INSERT INTO `student_library_profiles` (`id`, `student_id`, `library_card_number`, `total_borrowed`, `currently_borrowed`, `overdue_books`, `fines_amount`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(2, 2, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(3, 3, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(4, 4, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(5, 5, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(6, 6, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(7, 7, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(8, 8, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(9, 9, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(10, 10, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(11, 11, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(12, 12, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(13, 13, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(14, 14, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(15, 15, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(16, 16, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(17, 17, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(18, 18, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(19, 19, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(20, 20, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(21, 21, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(22, 22, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(23, 23, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(24, 24, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(25, 25, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(26, 26, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(27, 27, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(28, 28, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(29, 29, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(30, 30, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(31, 31, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(32, 32, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(33, 33, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(34, 34, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(35, 35, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(36, 36, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(37, 37, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(38, 38, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(39, 39, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(40, 40, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(41, 41, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(42, 42, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(43, 43, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(44, 44, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(45, 45, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(46, 46, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(47, 47, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(48, 48, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(49, 49, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(50, 50, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(51, 51, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(52, 52, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(53, 53, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(54, 54, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(55, 55, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(56, 56, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(57, 57, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(58, 58, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(59, 59, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(60, 60, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(61, 61, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(62, 62, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(63, 63, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(64, 64, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(65, 65, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(66, 66, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(67, 67, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(68, 68, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(69, 69, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(70, 70, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(71, 71, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(72, 72, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(73, 73, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(74, 74, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(75, 75, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(76, 76, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(77, 77, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(78, 78, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(79, 79, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(80, 80, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(81, 81, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(82, 82, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(83, 83, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(84, 84, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(85, 85, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(86, 86, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(87, 87, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(88, 88, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(89, 89, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(90, 90, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(91, 91, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(92, 92, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(93, 93, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(94, 94, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(95, 95, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(96, 96, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(97, 97, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(98, 98, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(99, 99, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(100, 100, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(101, 101, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(102, 102, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(103, 103, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(104, 104, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(105, 105, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(106, 106, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(107, 107, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(108, 108, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(109, 109, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(110, 110, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(111, 111, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(112, 112, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(113, 113, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(114, 114, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(115, 115, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(116, 116, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(117, 117, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(118, 118, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(119, 119, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(120, 120, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(121, 121, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(122, 122, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(123, 123, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(124, 124, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(125, 125, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(126, 126, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(127, 127, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(128, 128, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(129, 129, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(130, 130, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(131, 131, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(132, 132, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(133, 133, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(134, 134, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(135, 135, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(136, 136, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(137, 137, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(138, 138, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(139, 139, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(140, 140, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(141, 141, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(142, 142, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(143, 143, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(144, 144, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(145, 145, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(146, 146, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(147, 147, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(148, 148, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(149, 149, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(150, 150, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(151, 151, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(152, 152, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(153, 153, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(154, 154, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(155, 155, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(156, 156, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(157, 157, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(158, 158, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(159, 159, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(160, 160, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(161, 161, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(162, 162, NULL, 0, 0, 0, 0.00, 'Active', '2026-07-22 14:33:45', '2026-07-22 14:33:45');
+
 -- --------------------------------------------------------
 
 --
@@ -20363,30 +21331,32 @@ CREATE TABLE `student_logbook` (
 
 CREATE TABLE `student_login_attempts` (
   `id` int(11) NOT NULL,
-  `student_id` int(11) NOT NULL,
-  `ip_address` varchar(50) DEFAULT '',
+  `student_number` varchar(50) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `attempted_at` datetime DEFAULT current_timestamp(),
   `success` tinyint(1) DEFAULT 0,
-  `attempted_at` timestamp NULL DEFAULT current_timestamp()
+  `student_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `student_login_view`
--- (See below for the actual view)
+-- Table structure for table `student_login_view`
 --
+
 CREATE TABLE `student_login_view` (
-`id` int(11)
-,`student_number` varchar(50)
-,`full_name` varchar(302)
-,`email` varchar(100)
-,`password` varchar(255)
-,`course` varchar(100)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
-,`last_login` timestamp
-,`login_attempts` int(11)
-,`is_first_login` tinyint(1)
-);
+  `id` int(11) DEFAULT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `full_name` varchar(302) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `course` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') DEFAULT NULL,
+  `last_login` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `login_attempts` int(11) DEFAULT NULL,
+  `is_first_login` tinyint(1) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -20416,12 +21386,189 @@ CREATE TABLE `student_medical_profiles` (
   `id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `blood_group` varchar(10) DEFAULT NULL,
+  `height_cm` decimal(5,1) DEFAULT NULL,
+  `weight_kg` decimal(5,1) DEFAULT NULL,
   `medical_conditions` text DEFAULT NULL,
   `allergies` text DEFAULT NULL,
+  `medications` text DEFAULT NULL,
+  `emergency_medical_notes` text DEFAULT NULL,
   `disability` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `disability_details` text DEFAULT NULL,
+  `insurance_provider` varchar(200) DEFAULT NULL,
+  `insurance_number` varchar(100) DEFAULT NULL,
+  `last_checkup_date` date DEFAULT NULL,
+  `medical_form_path` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `student_medical_profiles`
+--
+
+INSERT INTO `student_medical_profiles` (`id`, `student_id`, `blood_group`, `height_cm`, `weight_kg`, `medical_conditions`, `allergies`, `medications`, `emergency_medical_notes`, `disability`, `disability_details`, `insurance_provider`, `insurance_number`, `last_checkup_date`, `medical_form_path`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(2, 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(3, 3, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(4, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(5, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(6, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(7, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(8, 8, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(9, 9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(10, 10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(11, 11, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(12, 12, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(13, 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(14, 14, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(15, 15, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(16, 16, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(17, 17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(18, 18, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(19, 19, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(20, 20, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(21, 21, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(22, 22, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(23, 23, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(24, 24, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(25, 25, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(26, 26, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(27, 27, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(28, 28, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(29, 29, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(30, 30, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(31, 31, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(32, 32, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(33, 33, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(34, 34, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(35, 35, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(36, 36, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(37, 37, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(38, 38, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(39, 39, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(40, 40, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(41, 41, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(42, 42, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(43, 43, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(44, 44, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(45, 45, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(46, 46, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(47, 47, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(48, 48, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(49, 49, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(50, 50, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(51, 51, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(52, 52, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(53, 53, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(54, 54, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(55, 55, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(56, 56, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(57, 57, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(58, 58, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(59, 59, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(60, 60, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(61, 61, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(62, 62, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(63, 63, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(64, 64, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(65, 65, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(66, 66, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(67, 67, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(68, 68, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(69, 69, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(70, 70, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(71, 71, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(72, 72, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(73, 73, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(74, 74, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(75, 75, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(76, 76, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(77, 77, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(78, 78, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(79, 79, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(80, 80, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(81, 81, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(82, 82, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(83, 83, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(84, 84, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(85, 85, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(86, 86, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(87, 87, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(88, 88, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(89, 89, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(90, 90, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(91, 91, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(92, 92, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(93, 93, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(94, 94, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(95, 95, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(96, 96, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(97, 97, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(98, 98, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(99, 99, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(100, 100, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(101, 101, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(102, 102, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(103, 103, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(104, 104, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(105, 105, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(106, 106, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(107, 107, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(108, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(109, 109, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(110, 110, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(111, 111, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(112, 112, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(113, 113, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(114, 114, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(115, 115, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(116, 116, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(117, 117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(118, 118, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(119, 119, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(120, 120, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(121, 121, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(122, 122, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(123, 123, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(124, 124, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(125, 125, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(126, 126, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(127, 127, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(128, 128, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(129, 129, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(130, 130, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(131, 131, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(132, 132, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(133, 133, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(134, 134, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(135, 135, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(136, 136, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(137, 137, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(138, 138, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(139, 139, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(140, 140, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(141, 141, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(142, 142, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(143, 143, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(144, 144, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(145, 145, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(146, 146, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(147, 147, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(148, 148, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(149, 149, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(150, 150, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(151, 151, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(152, 152, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(153, 153, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(154, 154, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(155, 155, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(156, 156, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(157, 157, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(158, 158, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(159, 159, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(160, 160, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(161, 161, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45'),
+(162, 162, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-07-22 14:33:45', '2026-07-22 14:33:45');
 
 -- --------------------------------------------------------
 
@@ -20742,7 +21889,7 @@ CREATE TABLE `student_requirements_status` (
   `submission_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -20902,7 +22049,11 @@ CREATE TABLE `student_warnings` (
   `acknowledged_at` datetime DEFAULT NULL,
   `status` enum('Active','Expired','Appealed','Revoked') DEFAULT 'Active',
   `appeal_notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `issued_date` date DEFAULT NULL,
+  `reason` text NOT NULL,
+  `resolution` text DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -21682,16 +22833,24 @@ CREATE TABLE `ura_reports` (
 --
 
 CREATE TABLE `users` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `email` varchar(200) DEFAULT NULL,
-  `role` varchar(50) DEFAULT 'staff',
-  `status` varchar(30) DEFAULT 'active',
-  `staff_id` int(10) UNSIGNED DEFAULT NULL,
-  `last_login` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `first_name` varchar(100) DEFAULT NULL,
+  `last_name` varchar(100) DEFAULT NULL,
+  `full_name` varchar(200) DEFAULT NULL,
+  `role` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `status` enum('active','inactive','suspended') DEFAULT 'active',
+  `last_login` timestamp NULL DEFAULT NULL,
+  `login_attempts` int(11) DEFAULT 0,
+  `locked_until` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `staff_id` int(10) UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -21858,7 +23017,7 @@ CREATE TABLE `v_payment_summary` (
   `payment_date` date DEFAULT NULL,
   `status` enum('Pending','Completed','Failed','Reversed') DEFAULT NULL,
   `received_by` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -21874,7 +23033,7 @@ CREATE TABLE `v_requirements_overview` (
   `verified_count` decimal(23,0) DEFAULT NULL,
   `pending_count` decimal(23,0) DEFAULT NULL,
   `completion_percentage` decimal(28,1) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -21910,7 +23069,7 @@ CREATE TABLE `v_student_summary` (
   `fee_balance` decimal(14,2) DEFAULT NULL,
   `fee_status` enum('pending','partial','paid','overdue') DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -22069,6 +23228,7 @@ ALTER TABLE `academic_programs`
 ALTER TABLE `academic_records`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_academic_record` (`student_id`,`academic_year`,`semester`,`course_code`),
+  ADD KEY `idx_ar_student` (`student_id`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_academic_year` (`academic_year`),
   ADD KEY `idx_academic_student` (`student_id`);
@@ -22378,6 +23538,8 @@ ALTER TABLE `appraisal_ratings`
 --
 ALTER TABLE `approval_actions`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_aa_request` (`request_id`),
+  ADD KEY `idx_aa_action_by` (`action_by`),
   ADD KEY `idx_request` (`request_id`);
 
 --
@@ -22385,6 +23547,10 @@ ALTER TABLE `approval_actions`
 --
 ALTER TABLE `approval_requests`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ar_status` (`status`),
+  ADD KEY `idx_ar_requester` (`requester_id`),
+  ADD KEY `idx_ar_workflow` (`workflow_id`),
+  ADD KEY `idx_ar_ref` (`reference_type`,`reference_id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_ref` (`reference_type`,`reference_id`),
   ADD KEY `idx_requester` (`requester_id`);
@@ -22395,6 +23561,7 @@ ALTER TABLE `approval_requests`
 ALTER TABLE `approval_stages`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_workflow_stage_order` (`workflow_id`,`stage_order`),
+  ADD KEY `idx_as_workflow` (`workflow_id`),
   ADD KEY `idx_workflow` (`workflow_id`);
 
 --
@@ -22417,6 +23584,7 @@ ALTER TABLE `assessments`
 --
 ALTER TABLE `assessment_scores`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_asc_student` (`student_id`),
   ADD KEY `idx_score_assessment` (`assessment_id`),
   ADD KEY `idx_score_student` (`student_id`);
 
@@ -23150,7 +24318,12 @@ ALTER TABLE `compliance_tracking`
 -- Indexes for table `computer_repairs`
 --
 ALTER TABLE `computer_repairs`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `repair_number` (`repair_number`),
+  ADD KEY `computer_id` (`computer_id`),
+  ADD KEY `equipment_id` (`equipment_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `priority` (`priority`);
 
 --
 -- Indexes for table `contact_directory`
@@ -23242,6 +24415,8 @@ ALTER TABLE `course_evaluations`
 --
 ALTER TABLE `course_prerequisites`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_course_prereq` (`course_code`,`prerequisite_code`),
+  ADD KEY `idx_course` (`course_code`),
   ADD KEY `idx_cp_course` (`course_code`);
 
 --
@@ -23249,10 +24424,10 @@ ALTER TABLE `course_prerequisites`
 --
 ALTER TABLE `course_registrations`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_cr_student` (`student_id`),
   ADD KEY `student_id` (`student_id`),
   ADD KEY `course_id` (`course_id`),
   ADD KEY `status` (`status`),
-  ADD KEY `idx_cr_student` (`student_id`),
   ADD KEY `idx_cr_course_student` (`course_id`,`student_id`);
 
 --
@@ -23567,7 +24742,8 @@ ALTER TABLE `examination_records`
 -- Indexes for table `examination_results`
 --
 ALTER TABLE `examination_results`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_er_student` (`student_id`);
 
 --
 -- Indexes for table `exams`
@@ -23992,6 +25168,275 @@ ALTER TABLE `hr_users`
   ADD UNIQUE KEY `uk_email` (`email`);
 
 --
+-- Indexes for table `ict_assets`
+--
+ALTER TABLE `ict_assets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `asset_number` (`asset_number`),
+  ADD KEY `asset_type` (`asset_type`),
+  ADD KEY `current_status` (`current_status`),
+  ADD KEY `assigned_staff_id` (`assigned_staff_id`),
+  ADD KEY `warranty_expiry` (`warranty_expiry`);
+
+--
+-- Indexes for table `ict_asset_assignments`
+--
+ALTER TABLE `ict_asset_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `asset_id` (`asset_id`),
+  ADD KEY `assigned_to_staff_id` (`assigned_to_staff_id`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `ict_asset_categories`
+--
+ALTER TABLE `ict_asset_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_name` (`category_name`),
+  ADD KEY `parent_id` (`parent_id`);
+
+--
+-- Indexes for table `ict_asset_maintenance`
+--
+ALTER TABLE `ict_asset_maintenance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `asset_id` (`asset_id`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `ict_asset_warranty`
+--
+ALTER TABLE `ict_asset_warranty`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `asset_id` (`asset_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `end_date` (`end_date`);
+
+--
+-- Indexes for table `ict_audit_logs`
+--
+ALTER TABLE `ict_audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `action` (`action`),
+  ADD KEY `resource_type` (`resource_type`),
+  ADD KEY `created_at` (`created_at`);
+
+--
+-- Indexes for table `ict_backup_logs`
+--
+ALTER TABLE `ict_backup_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `backup_id` (`backup_id`),
+  ADD KEY `logged_at` (`logged_at`);
+
+--
+-- Indexes for table `ict_device_categories`
+--
+ALTER TABLE `ict_device_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_name` (`category_name`);
+
+--
+-- Indexes for table `ict_failed_logins`
+--
+ALTER TABLE `ict_failed_logins`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `username` (`username`),
+  ADD KEY `ip_address` (`ip_address`),
+  ADD KEY `attempted_at` (`attempted_at`);
+
+--
+-- Indexes for table `ict_incidents`
+--
+ALTER TABLE `ict_incidents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_severity` (`severity`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_date` (`date_reported`);
+
+--
+-- Indexes for table `ict_login_sessions`
+--
+ALTER TABLE `ict_login_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `login_at` (`login_at`);
+
+--
+-- Indexes for table `ict_maintenance_requests`
+--
+ALTER TABLE `ict_maintenance_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`);
+
+--
+-- Indexes for table `ict_module_permissions`
+--
+ALTER TABLE `ict_module_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `module_role` (`module_name`,`role_keyword`);
+
+--
+-- Indexes for table `ict_network_devices`
+--
+ALTER TABLE `ict_network_devices`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`device_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `ict_network_logs`
+--
+ALTER TABLE `ict_network_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `device_id` (`device_id`),
+  ADD KEY `log_type` (`log_type`),
+  ADD KEY `severity` (`severity`),
+  ADD KEY `logged_at` (`logged_at`);
+
+--
+-- Indexes for table `ict_reports`
+--
+ALTER TABLE `ict_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`report_type`),
+  ADD KEY `idx_date` (`created_at`);
+
+--
+-- Indexes for table `ict_security_logs`
+--
+ALTER TABLE `ict_security_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `event_type` (`event_type`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `created_at` (`created_at`),
+  ADD KEY `ip_address` (`ip_address`);
+
+--
+-- Indexes for table `ict_servers`
+--
+ALTER TABLE `ict_servers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `server_name` (`server_name`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `ict_software_inventory`
+--
+ALTER TABLE `ict_software_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `ict_software_licenses`
+--
+ALTER TABLE `ict_software_licenses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_software` (`software_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `ict_support_tickets`
+--
+ALTER TABLE `ict_support_tickets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_ticket_number` (`ticket_number`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_reported_by` (`reported_by`);
+
+--
+-- Indexes for table `ict_system_alerts`
+--
+ALTER TABLE `ict_system_alerts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `alert_type` (`alert_type`),
+  ADD KEY `severity` (`severity`),
+  ADD KEY `status` (`status`),
+  ADD KEY `created_at` (`created_at`);
+
+--
+-- Indexes for table `ict_system_backups`
+--
+ALTER TABLE `ict_system_backups`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `backup_type` (`backup_type`),
+  ADD KEY `status` (`status`),
+  ADD KEY `started_at` (`started_at`);
+
+--
+-- Indexes for table `ict_system_health`
+--
+ALTER TABLE `ict_system_health`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `check_type` (`check_type`),
+  ADD KEY `status` (`status`),
+  ADD KEY `checked_at` (`checked_at`);
+
+--
+-- Indexes for table `ict_system_notifications`
+--
+ALTER TABLE `ict_system_notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `notification_type` (`notification_type`),
+  ADD KEY `is_read` (`is_read`),
+  ADD KEY `created_at` (`created_at`);
+
+--
+-- Indexes for table `ict_system_settings`
+--
+ALTER TABLE `ict_system_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `setting_group` (`setting_group`);
+
+--
+-- Indexes for table `ict_ticket_assignments`
+--
+ALTER TABLE `ict_ticket_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ticket` (`ticket_id`),
+  ADD KEY `idx_assigned` (`assigned_to`);
+
+--
+-- Indexes for table `ict_ticket_comments`
+--
+ALTER TABLE `ict_ticket_comments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ticket` (`ticket_id`);
+
+--
+-- Indexes for table `ict_wifi_devices`
+--
+ALTER TABLE `ict_wifi_devices`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `id_card_print_history`
+--
+ALTER TABLE `id_card_print_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `card_id` (`card_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `printed_by` (`printed_by`),
+  ADD KEY `print_date` (`print_date`);
+
+--
+-- Indexes for table `id_card_replacements`
+--
+ALTER TABLE `id_card_replacements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `original_card_id` (`original_card_id`),
+  ADD KEY `new_card_id` (`new_card_id`),
+  ADD KEY `status` (`status`);
+
+--
 -- Indexes for table `igangaschoolofl_students_db.bank_accounts`
 --
 ALTER TABLE `igangaschoolofl_students_db.bank_accounts`
@@ -24209,7 +25654,8 @@ ALTER TABLE `it_infrastructure`
 ALTER TABLE `it_support_tickets`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_ist_status` (`status`),
-  ADD KEY `idx_ist_priority` (`priority`);
+  ADD KEY `idx_ist_priority` (`priority`),
+  ADD KEY `idx_ist_status_priority` (`status`,`priority`);
 
 --
 -- Indexes for table `job_applications`
@@ -24232,10 +25678,26 @@ ALTER TABLE `job_vacancies`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `lab_asset_assignments`
+--
+ALTER TABLE `lab_asset_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `asset_type` (`asset_type`,`asset_id`),
+  ADD KEY `assigned_to_type` (`assigned_to_type`,`assigned_to_id`),
+  ADD KEY `lab_room_id` (`lab_room_id`),
+  ADD KEY `status` (`status`);
+
+--
 -- Indexes for table `lab_attendance`
 --
 ALTER TABLE `lab_attendance`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_bookings`
+--
+ALTER TABLE `lab_bookings`
+  ADD KEY `idx_lb_date_status` (`booking_date`,`status`);
 
 --
 -- Indexes for table `lab_checkouts`
@@ -24248,6 +25710,17 @@ ALTER TABLE `lab_checkouts`
 --
 ALTER TABLE `lab_chemical_inventory`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_computer_assignments`
+--
+ALTER TABLE `lab_computer_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `computer_id` (`computer_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `staff_id` (`staff_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `assigned_date` (`assigned_date`);
 
 --
 -- Indexes for table `lab_consumables`
@@ -24272,7 +25745,11 @@ ALTER TABLE `lab_equipment`
 --
 ALTER TABLE `lab_equipment_checkout`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_lec_equipment` (`equipment_id`);
+  ADD KEY `idx_lec_equipment` (`equipment_id`),
+  ADD KEY `equipment_id` (`equipment_id`),
+  ADD KEY `borrower_id` (`borrower_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `expected_return` (`expected_return`);
 
 --
 -- Indexes for table `lab_equipment_checkouts`
@@ -24311,6 +25788,12 @@ ALTER TABLE `lab_inventory`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `lab_inventory_items`
+--
+ALTER TABLE `lab_inventory_items`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `lab_practical_sessions`
 --
 ALTER TABLE `lab_practical_sessions`
@@ -24326,7 +25809,9 @@ ALTER TABLE `lab_printing_jobs`
 -- Indexes for table `lab_rooms`
 --
 ALTER TABLE `lab_rooms`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `room_code` (`room_code`),
+  ADD KEY `status` (`status`);
 
 --
 -- Indexes for table `lab_safety_records`
@@ -24656,6 +26141,12 @@ ALTER TABLE `national_exam_results`
   ADD KEY `idx_student` (`student_id`);
 
 --
+-- Indexes for table `network_devices`
+--
+ALTER TABLE `network_devices`
+  ADD KEY `idx_nd_type_status` (`device_type`,`status`);
+
+--
 -- Indexes for table `news`
 --
 ALTER TABLE `news`
@@ -24827,6 +26318,8 @@ ALTER TABLE `password_changes`
 --
 ALTER TABLE `password_resets`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pr_user` (`user_id`),
+  ADD KEY `idx_pr_token` (`token`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `token` (`token`);
 
@@ -24869,6 +26362,18 @@ ALTER TABLE `payment_gateway_settings`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `setting_key` (`setting_key`),
   ADD KEY `idx_settings_group` (`setting_group`);
+
+--
+-- Indexes for table `payment_history`
+--
+ALTER TABLE `payment_history`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_ph_ref` (`payment_reference`),
+  ADD KEY `idx_ph_student` (`student_id`),
+  ADD KEY `idx_ph_date` (`payment_date`),
+  ADD KEY `idx_ph_fee_type` (`fee_type`),
+  ADD KEY `idx_ph_status` (`status`),
+  ADD KEY `idx_ph_year` (`academic_year`);
 
 --
 -- Indexes for table `payment_methods`
@@ -25022,7 +26527,9 @@ ALTER TABLE `payroll_deduction_types`
 -- Indexes for table `payroll_details`
 --
 ALTER TABLE `payroll_details`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pd_run` (`payroll_run_id`),
+  ADD KEY `idx_pd_staff` (`staff_id`);
 
 --
 -- Indexes for table `payroll_employees`
@@ -25189,6 +26696,23 @@ ALTER TABLE `principal_notices`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `printing_charges`
+--
+ALTER TABLE `printing_charges`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `print_type_paper` (`print_type`,`paper_size`);
+
+--
+-- Indexes for table `printing_jobs`
+--
+ALTER TABLE `printing_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `job_number` (`job_number`),
+  ADD KEY `requester_id` (`requester_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Indexes for table `procurement_requests`
 --
 ALTER TABLE `procurement_requests`
@@ -25346,6 +26870,12 @@ ALTER TABLE `reminders`
 -- Indexes for table `request_tracking`
 --
 ALTER TABLE `request_tracking`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `requirement_categories`
+--
+ALTER TABLE `requirement_categories`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -25629,6 +27159,15 @@ ALTER TABLE `sms_logs`
   ADD KEY `idx_sent_at` (`sent_at`);
 
 --
+-- Indexes for table `software_installations`
+--
+ALTER TABLE `software_installations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `software_id` (`software_id`),
+  ADD KEY `computer_id` (`computer_id`),
+  ADD KEY `lab_room_id` (`lab_room_id`);
+
+--
 -- Indexes for table `sponsorships`
 --
 ALTER TABLE `sponsorships`
@@ -25868,6 +27407,8 @@ ALTER TABLE `staff_tasks`
 --
 ALTER TABLE `staff_training`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_status` (`status`),
   ADD KEY `idx_training_staff` (`staff_id`);
 
 --
@@ -25888,6 +27429,8 @@ ALTER TABLE `store_categories`
 --
 ALTER TABLE `store_inventory`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_si_status` (`status`),
+  ADD KEY `idx_si_category` (`category_id`),
   ADD KEY `idx_inventory_category` (`category_id`);
 
 --
@@ -25895,6 +27438,7 @@ ALTER TABLE `store_inventory`
 --
 ALTER TABLE `store_inventory_transactions`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sit_item` (`item_id`),
   ADD KEY `idx_trans_item` (`item_id`);
 
 --
@@ -25926,6 +27470,9 @@ ALTER TABLE `store_order_items`
 ALTER TABLE `store_requests`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_request_number` (`request_number`),
+  ADD KEY `idx_sr_status` (`status`),
+  ADD KEY `idx_sr_by` (`requested_by`),
+  ADD KEY `idx_sr_number` (`request_number`),
   ADD KEY `idx_store_status` (`status`),
   ADD KEY `idx_store_urgency` (`urgency`),
   ADD KEY `idx_approval` (`approval_request_id`);
@@ -25935,6 +27482,7 @@ ALTER TABLE `store_requests`
 --
 ALTER TABLE `store_request_items`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sri_request` (`request_id`),
   ADD KEY `idx_ri_request` (`request_id`),
   ADD KEY `idx_request_id` (`request_id`);
 
@@ -25967,7 +27515,18 @@ ALTER TABLE `students`
   ADD UNIQUE KEY `uniq_admission_number` (`admission_number`),
   ADD KEY `idx_stu_email` (`email`),
   ADD KEY `idx_stu_status` (`status`),
-  ADD KEY `idx_stu_surname` (`surname`);
+  ADD KEY `idx_stu_index_number` (`index_number`),
+  ADD KEY `idx_stu_registration_number` (`registration_number`),
+  ADD KEY `idx_stu_national_id` (`national_student_id_number`),
+  ADD KEY `idx_stu_phone` (`phone`),
+  ADD KEY `idx_stu_program` (`program`),
+  ADD KEY `idx_stu_surname` (`surname`),
+  ADD KEY `idx_stu_district` (`district`),
+  ADD KEY `idx_stu_guardian` (`guardian_name`),
+  ADD KEY `idx_stu_religion` (`religion`),
+  ADD KEY `idx_stu_stream` (`stream`),
+  ADD KEY `idx_stu_class` (`class_name`),
+  ADD KEY `idx_stu_fullname` (`full_name`(100));
 
 --
 -- Indexes for table `students_trash`
@@ -25991,6 +27550,16 @@ ALTER TABLE `student_academic_records`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `student_accounts`
+--
+ALTER TABLE `student_accounts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_sa_student` (`student_id`),
+  ADD UNIQUE KEY `uniq_sa_username` (`username`),
+  ADD KEY `idx_sa_student` (`student_id`),
+  ADD KEY `idx_sa_username` (`username`);
+
+--
 -- Indexes for table `student_activities`
 --
 ALTER TABLE `student_activities`
@@ -26002,6 +27571,7 @@ ALTER TABLE `student_activities`
 --
 ALTER TABLE `student_admissions`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sa_app_number` (`application_number`),
   ADD KEY `student_id` (`student_id`),
   ADD KEY `idx_sa_student` (`student_id`);
 
@@ -26026,6 +27596,7 @@ ALTER TABLE `student_appeals`
 --
 ALTER TABLE `student_applications`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sapp_number` (`application_number`),
   ADD KEY `status` (`status`),
   ADD KEY `program` (`program`),
   ADD KEY `email` (`email`);
@@ -26043,6 +27614,14 @@ ALTER TABLE `student_application_requirements`
 --
 ALTER TABLE `student_attendance`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_attendance_profiles`
+--
+ALTER TABLE `student_attendance_profiles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_sap2_student_year_sem` (`student_id`,`academic_year`,`semester`),
+  ADD KEY `idx_sap2_student` (`student_id`);
 
 --
 -- Indexes for table `student_audit_log`
@@ -26075,13 +27654,16 @@ ALTER TABLE `student_competencies`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student` (`student_id`),
   ADD KEY `idx_placement` (`placement_id`),
-  ADD KEY `idx_skill` (`skill_name`);
+  ADD KEY `idx_skill` (`skill_name`),
+  ADD KEY `idx_sc_student` (`student_id`),
+  ADD KEY `idx_sc_category` (`skill_category`);
 
 --
 -- Indexes for table `student_counseling_sessions`
 --
 ALTER TABLE `student_counseling_sessions`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_scs_student` (`student_id`);
 
 --
 -- Indexes for table `student_course_registrations`
@@ -26163,7 +27745,9 @@ ALTER TABLE `student_fee_tracking`
 --
 ALTER TABLE `student_finance`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sf_student` (`student_id`);
+  ADD KEY `idx_sf_student` (`student_id`),
+  ADD KEY `idx_sf_status` (`payment_status`),
+  ADD KEY `idx_sf_year` (`academic_year`);
 
 --
 -- Indexes for table `student_financial_profiles`
@@ -26171,8 +27755,8 @@ ALTER TABLE `student_finance`
 ALTER TABLE `student_financial_profiles`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_sfp_student` (`student_id`),
-  ADD KEY `idx_sfp_student` (`student_id`),
-  ADD KEY `idx_sfp_status` (`status`);
+  ADD KEY `idx_sfp_status` (`status`),
+  ADD KEY `idx_sfp_student` (`student_id`);
 
 --
 -- Indexes for table `student_guardian`
@@ -26186,6 +27770,7 @@ ALTER TABLE `student_guardian`
 --
 ALTER TABLE `student_health_incidents`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_shi_student` (`student_id`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_severity` (`severity`),
   ADD KEY `idx_incident_type` (`incident_type`);
@@ -26208,7 +27793,11 @@ ALTER TABLE `student_hostel_allocations`
 --
 ALTER TABLE `student_id_cards`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sic_student` (`student_id`);
+  ADD UNIQUE KEY `card_number` (`card_number`),
+  ADD KEY `idx_sic_student` (`student_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `expiry_date` (`expiry_date`);
 
 --
 -- Indexes for table `student_invoices`
@@ -26226,6 +27815,14 @@ ALTER TABLE `student_library_borrowing`
   ADD KEY `idx_lb_due` (`due_date`);
 
 --
+-- Indexes for table `student_library_profiles`
+--
+ALTER TABLE `student_library_profiles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_slp_student` (`student_id`),
+  ADD KEY `idx_slp_student` (`student_id`);
+
+--
 -- Indexes for table `student_logbook`
 --
 ALTER TABLE `student_logbook`
@@ -26239,14 +27836,25 @@ ALTER TABLE `student_logbook`
 --
 ALTER TABLE `student_login_attempts`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_number` (`student_number`),
+  ADD KEY `idx_attempted_at` (`attempted_at`),
   ADD KEY `idx_sla_student` (`student_id`);
+
+--
+-- Indexes for table `student_medical`
+--
+ALTER TABLE `student_medical`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sm_student` (`student_id`);
 
 --
 -- Indexes for table `student_medical_profiles`
 --
 ALTER TABLE `student_medical_profiles`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_smp_student` (`student_id`);
+  ADD UNIQUE KEY `uniq_smp_student` (`student_id`),
+  ADD UNIQUE KEY `uk_smp_student` (`student_id`),
+  ADD KEY `idx_smp_student` (`student_id`);
 
 --
 -- Indexes for table `student_medications`
@@ -26343,7 +27951,8 @@ ALTER TABLE `student_requirements`
 ALTER TABLE `student_requirements_status`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_srs_student_req` (`student_id`,`requirement_id`),
-  ADD KEY `idx_srs_student` (`student_id`);
+  ADD KEY `idx_srs_student` (`student_id`),
+  ADD KEY `idx_srs_requirement` (`requirement_id`);
 
 --
 -- Indexes for table `student_semester_gpa`
@@ -26386,7 +27995,9 @@ ALTER TABLE `student_warnings`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student` (`student_id`),
   ADD KEY `idx_type` (`warning_type`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_sw_student` (`student_id`),
+  ADD KEY `idx_sw_status` (`status`);
 
 --
 -- Indexes for table `student_welfare_cases`
@@ -26611,7 +28222,11 @@ ALTER TABLE `ura_reports`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD UNIQUE KEY `uniq_users_username` (`username`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `idx_users_email` (`email`),
+  ADD KEY `idx_users_role` (`role`),
+  ADD KEY `idx_users_status` (`status`);
 
 --
 -- Indexes for table `user_sessions`
@@ -26864,7 +28479,7 @@ ALTER TABLE `admission_reports_cache`
 -- AUTO_INCREMENT for table `admission_requirements`
 --
 ALTER TABLE `admission_requirements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `advanced_reports`
@@ -26990,7 +28605,7 @@ ALTER TABLE `appraisal_ratings`
 -- AUTO_INCREMENT for table `approval_actions`
 --
 ALTER TABLE `approval_actions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `approval_requests`
@@ -27002,13 +28617,13 @@ ALTER TABLE `approval_requests`
 -- AUTO_INCREMENT for table `approval_stages`
 --
 ALTER TABLE `approval_stages`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=198;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=198;
 
 --
 -- AUTO_INCREMENT for table `approval_workflows`
 --
 ALTER TABLE `approval_workflows`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
 
 --
 -- AUTO_INCREMENT for table `assessments`
@@ -27314,7 +28929,7 @@ ALTER TABLE `bursar_tax_records`
 -- AUTO_INCREMENT for table `bursar_users`
 --
 ALTER TABLE `bursar_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `bursar_vat_reports`
@@ -28277,33 +29892,9 @@ ALTER TABLE `guild_feedback`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `health_incidents`
---
-ALTER TABLE `health_incidents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel`
---
-ALTER TABLE `hostel`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel_activities`
---
-ALTER TABLE `hostel_activities`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `hostel_allocations`
 --
 ALTER TABLE `hostel_allocations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel_assignments`
---
-ALTER TABLE `hostel_assignments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28313,171 +29904,15 @@ ALTER TABLE `hostel_blocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `hostel_clearance`
---
-ALTER TABLE `hostel_clearance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel_inspections`
---
-ALTER TABLE `hostel_inspections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel_maintenance_requests`
---
-ALTER TABLE `hostel_maintenance_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hostel_management`
---
-ALTER TABLE `hostel_management`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `hostel_rooms`
 --
 ALTER TABLE `hostel_rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
--- AUTO_INCREMENT for table `hr_activity_log`
---
-ALTER TABLE `hr_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_activity_logs`
---
-ALTER TABLE `hr_activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_announcements`
---
-ALTER TABLE `hr_announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_dashboard_cache`
---
-ALTER TABLE `hr_dashboard_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_reports`
---
-ALTER TABLE `hr_reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_settings`
---
-ALTER TABLE `hr_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hr_users`
---
-ALTER TABLE `hr_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.bank_accounts`
---
-ALTER TABLE `igangaschoolofl_students_db.bank_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.fee_structure`
---
-ALTER TABLE `igangaschoolofl_students_db.fee_structure`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.journal_entries`
---
-ALTER TABLE `igangaschoolofl_students_db.journal_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.journal_entry_lines`
---
-ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.notifications`
---
-ALTER TABLE `igangaschoolofl_students_db.notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.scholarships`
---
-ALTER TABLE `igangaschoolofl_students_db.scholarships`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschoolofl_students_db.student_scholarships`
---
-ALTER TABLE `igangaschoolofl_students_db.student_scholarships`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.bank_accounts`
---
-ALTER TABLE `igangaschool_students.bank_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.fee_structure`
---
-ALTER TABLE `igangaschool_students.fee_structure`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.journal_entries`
---
-ALTER TABLE `igangaschool_students.journal_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.journal_entry_lines`
---
-ALTER TABLE `igangaschool_students.journal_entry_lines`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.notifications`
---
-ALTER TABLE `igangaschool_students.notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.scholarships`
---
-ALTER TABLE `igangaschool_students.scholarships`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `igangaschool_students.student_scholarships`
---
-ALTER TABLE `igangaschool_students.student_scholarships`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `improvement_tracking`
 --
 ALTER TABLE `improvement_tracking`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `incident_reports`
---
-ALTER TABLE `incident_reports`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28487,22 +29922,10 @@ ALTER TABLE `income_tax_rates`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `institutional_alerts`
---
-ALTER TABLE `institutional_alerts`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
 -- AUTO_INCREMENT for table `institutional_kpis`
 --
 ALTER TABLE `institutional_kpis`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `institutional_risks`
---
-ALTER TABLE `institutional_risks`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `intakes`
@@ -28511,105 +29934,9 @@ ALTER TABLE `intakes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `intake_plans`
---
-ALTER TABLE `intake_plans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `interview_schedules`
---
-ALTER TABLE `interview_schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `interview_scheduling`
---
-ALTER TABLE `interview_scheduling`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `interview_scores`
---
-ALTER TABLE `interview_scores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `inventory`
---
-ALTER TABLE `inventory`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `inventory_items`
---
-ALTER TABLE `inventory_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `inventory_reports`
---
-ALTER TABLE `inventory_reports`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `inventory_transactions`
---
-ALTER TABLE `inventory_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `invoice_records`
---
-ALTER TABLE `invoice_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `it_infrastructure`
---
-ALTER TABLE `it_infrastructure`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `it_support_tickets`
---
-ALTER TABLE `it_support_tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `job_applications`
---
-ALTER TABLE `job_applications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `job_offers`
---
-ALTER TABLE `job_offers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `job_vacancies`
---
-ALTER TABLE `job_vacancies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `lab_attendance`
 --
 ALTER TABLE `lab_attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_checkouts`
---
-ALTER TABLE `lab_checkouts`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_chemical_inventory`
---
-ALTER TABLE `lab_chemical_inventory`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28617,12 +29944,6 @@ ALTER TABLE `lab_chemical_inventory`
 --
 ALTER TABLE `lab_consumables`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_demonstrations`
---
-ALTER TABLE `lab_demonstrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `lab_equipment`
@@ -28643,33 +29964,15 @@ ALTER TABLE `lab_equipment_checkouts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `lab_equipment_maintenance`
---
-ALTER TABLE `lab_equipment_maintenance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_experiments`
---
-ALTER TABLE `lab_experiments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_id_card_requests`
---
-ALTER TABLE `lab_id_card_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `lab_incidents`
 --
 ALTER TABLE `lab_incidents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `lab_inventory`
+-- AUTO_INCREMENT for table `lab_inventory_items`
 --
-ALTER TABLE `lab_inventory`
+ALTER TABLE `lab_inventory_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28679,28 +29982,10 @@ ALTER TABLE `lab_practical_sessions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `lab_printing_jobs`
---
-ALTER TABLE `lab_printing_jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `lab_rooms`
 --
 ALTER TABLE `lab_rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_safety_records`
---
-ALTER TABLE `lab_safety_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lab_sessions`
---
-ALTER TABLE `lab_sessions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `lab_skills_demonstrations`
@@ -28709,64 +29994,10 @@ ALTER TABLE `lab_skills_demonstrations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `lab_skills_sessions`
---
-ALTER TABLE `lab_skills_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `late_payment_settings`
 --
 ALTER TABLE `late_payment_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `leaves`
---
-ALTER TABLE `leaves`
-  MODIFY `s_no` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `leave_balance`
---
-ALTER TABLE `leave_balance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `leave_balances`
---
-ALTER TABLE `leave_balances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1639;
-
---
--- AUTO_INCREMENT for table `leave_requests`
---
-ALTER TABLE `leave_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `leave_types`
---
-ALTER TABLE `leave_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
-
---
--- AUTO_INCREMENT for table `lecturer_counseling`
---
-ALTER TABLE `lecturer_counseling`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lecturer_grades`
---
-ALTER TABLE `lecturer_grades`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `lecture_schedule`
---
-ALTER TABLE `lecture_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `lesson_plans`
@@ -28793,45 +30024,9 @@ ALTER TABLE `library_borrowing`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
 
 --
--- AUTO_INCREMENT for table `library_clearance`
---
-ALTER TABLE `library_clearance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `library_digital_resources`
---
-ALTER TABLE `library_digital_resources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `library_fines`
 --
 ALTER TABLE `library_fines`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `library_management`
---
-ALTER TABLE `library_management`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `library_members`
---
-ALTER TABLE `library_members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `library_transactions`
---
-ALTER TABLE `library_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `maintenance_requests`
---
-ALTER TABLE `maintenance_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -28839,12 +30034,6 @@ ALTER TABLE `maintenance_requests`
 --
 ALTER TABLE `marks`
   MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `meal_tracking`
---
-ALTER TABLE `meal_tracking`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `medicine_stock`
@@ -28883,130 +30072,16 @@ ALTER TABLE `meeting_minutes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `menu_groups`
---
-ALTER TABLE `menu_groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
-
---
--- AUTO_INCREMENT for table `menu_items`
---
-ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `menu_roles`
---
-ALTER TABLE `menu_roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
-
---
--- AUTO_INCREMENT for table `menu_role_groups`
---
-ALTER TABLE `menu_role_groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
-
---
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `midwifery_antenatal_care`
---
-ALTER TABLE `midwifery_antenatal_care`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_clinical_placements`
---
-ALTER TABLE `midwifery_clinical_placements`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_family_planning`
---
-ALTER TABLE `midwifery_family_planning`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_labor_delivery`
---
-ALTER TABLE `midwifery_labor_delivery`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_postnatal_care`
---
-ALTER TABLE `midwifery_postnatal_care`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_skills_training`
---
-ALTER TABLE `midwifery_skills_training`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `midwifery_students`
---
-ALTER TABLE `midwifery_students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `module_audit_log`
---
-ALTER TABLE `module_audit_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `module_departments`
---
-ALTER TABLE `module_departments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
-
---
 -- AUTO_INCREMENT for table `module_permissions`
 --
 ALTER TABLE `module_permissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `national_exam_results`
---
-ALTER TABLE `national_exam_results`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `news`
---
-ALTER TABLE `news`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `news_categories`
---
-ALTER TABLE `news_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
-
---
--- AUTO_INCREMENT for table `news_images`
---
-ALTER TABLE `news_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `news_subscribers`
---
-ALTER TABLE `news_subscribers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `news_views`
---
-ALTER TABLE `news_views`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `notes`
@@ -29033,106 +30108,16 @@ ALTER TABLE `notification_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `notification_reads`
---
-ALTER TABLE `notification_reads`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `nursing_clinical_logbook`
---
-ALTER TABLE `nursing_clinical_logbook`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `nursing_clinical_placements`
---
-ALTER TABLE `nursing_clinical_placements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `nursing_practical_assessment`
---
-ALTER TABLE `nursing_practical_assessment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `nursing_skills_training`
---
-ALTER TABLE `nursing_skills_training`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `nursing_students`
---
-ALTER TABLE `nursing_students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `official_duties`
---
-ALTER TABLE `official_duties`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `official_letters`
 --
 ALTER TABLE `official_letters`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `onboarding_checklist`
---
-ALTER TABLE `onboarding_checklist`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `onboarding_completions`
---
-ALTER TABLE `onboarding_completions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `onboarding_tasks`
---
-ALTER TABLE `onboarding_tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `pages`
---
-ALTER TABLE `pages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `parent_meetings`
---
-ALTER TABLE `parent_meetings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `partnerships`
---
-ALTER TABLE `partnerships`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `partner_schools`
---
-ALTER TABLE `partner_schools`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `password_changes`
---
-ALTER TABLE `password_changes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `payments`
@@ -29165,16 +30150,16 @@ ALTER TABLE `payment_gateway_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
--- AUTO_INCREMENT for table `payment_methods`
+-- AUTO_INCREMENT for table `payment_history`
 --
-ALTER TABLE `payment_methods`
+ALTER TABLE `payment_history`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `payment_providers`
 --
 ALTER TABLE `payment_providers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `payment_receipts`
@@ -29189,21 +30174,9 @@ ALTER TABLE `payment_reconciliation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `payment_records`
---
-ALTER TABLE `payment_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `payment_refunds`
 --
 ALTER TABLE `payment_refunds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payment_routes`
---
-ALTER TABLE `payment_routes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -29225,81 +30198,9 @@ ALTER TABLE `payment_webhook_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `payroll_allowances`
---
-ALTER TABLE `payroll_allowances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
-
---
--- AUTO_INCREMENT for table `payroll_allowance_types`
---
-ALTER TABLE `payroll_allowance_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
 -- AUTO_INCREMENT for table `payroll_approvals`
 --
 ALTER TABLE `payroll_approvals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_approval_history`
---
-ALTER TABLE `payroll_approval_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_audit_logs`
---
-ALTER TABLE `payroll_audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_bonus`
---
-ALTER TABLE `payroll_bonus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_bonuses`
---
-ALTER TABLE `payroll_bonuses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_deductions`
---
-ALTER TABLE `payroll_deductions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=157;
-
---
--- AUTO_INCREMENT for table `payroll_deduction_types`
---
-ALTER TABLE `payroll_deduction_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `payroll_details`
---
-ALTER TABLE `payroll_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_employees`
---
-ALTER TABLE `payroll_employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
-
---
--- AUTO_INCREMENT for table `payroll_employee_allowances`
---
-ALTER TABLE `payroll_employee_allowances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_employee_deductions`
---
-ALTER TABLE `payroll_employee_deductions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -29309,64 +30210,10 @@ ALTER TABLE `payroll_history`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `payroll_items`
---
-ALTER TABLE `payroll_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_loans`
---
-ALTER TABLE `payroll_loans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_overtime`
---
-ALTER TABLE `payroll_overtime`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_payments`
---
-ALTER TABLE `payroll_payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_payslips`
---
-ALTER TABLE `payroll_payslips`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_periods`
---
-ALTER TABLE `payroll_periods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
-
---
 -- AUTO_INCREMENT for table `payroll_records`
 --
 ALTER TABLE `payroll_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_reports`
---
-ALTER TABLE `payroll_reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `payroll_runs`
---
-ALTER TABLE `payroll_runs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `payroll_settings`
---
-ALTER TABLE `payroll_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `payslips`
@@ -29375,52 +30222,10 @@ ALTER TABLE `payslips`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `penalty_config`
---
-ALTER TABLE `penalty_config`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `penalty_configurations`
 --
 ALTER TABLE `penalty_configurations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `pending_students`
---
-ALTER TABLE `pending_students`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `performance_indicators`
---
-ALTER TABLE `performance_indicators`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `performance_metrics`
---
-ALTER TABLE `performance_metrics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `performance_reviews`
---
-ALTER TABLE `performance_reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `permissions`
---
-ALTER TABLE `permissions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `portal_messages`
---
-ALTER TABLE `portal_messages`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `principal_notices`
@@ -29435,22 +30240,10 @@ ALTER TABLE `procurement_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `professional_licenses`
---
-ALTER TABLE `professional_licenses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `programs`
 --
 ALTER TABLE `programs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
-
---
--- AUTO_INCREMENT for table `promotion_recommendations`
---
-ALTER TABLE `promotion_recommendations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `proof_of_payments`
@@ -29477,69 +30270,9 @@ ALTER TABLE `quality_assurance_reviews`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `quality_standards`
---
-ALTER TABLE `quality_standards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `real_time_updates`
---
-ALTER TABLE `real_time_updates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `receipt_templates`
---
-ALTER TABLE `receipt_templates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `recruitment`
---
-ALTER TABLE `recruitment`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `recruitment_applications`
---
-ALTER TABLE `recruitment_applications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `recruitment_jobs`
---
-ALTER TABLE `recruitment_jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `recycle_bin`
---
-ALTER TABLE `recycle_bin`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `registrar_academic_calendar`
---
-ALTER TABLE `registrar_academic_calendar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `registrar_academic_records`
---
-ALTER TABLE `registrar_academic_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `registrar_certificates`
 --
 ALTER TABLE `registrar_certificates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `registrar_graduation`
---
-ALTER TABLE `registrar_graduation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -29547,18 +30280,6 @@ ALTER TABLE `registrar_graduation`
 --
 ALTER TABLE `registrar_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `registrar_student_registration`
---
-ALTER TABLE `registrar_student_registration`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `registrar_transcripts`
---
-ALTER TABLE `registrar_transcripts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `registrar_transcript_requests`
@@ -29579,51 +30300,15 @@ ALTER TABLE `request_tracking`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `requirement_categories`
+--
+ALTER TABLE `requirement_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `requirement_history`
 --
 ALTER TABLE `requirement_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `research_conferences`
---
-ALTER TABLE `research_conferences`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `research_projects`
---
-ALTER TABLE `research_projects`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `research_publications`
---
-ALTER TABLE `research_publications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `research_supervisions`
---
-ALTER TABLE `research_supervisions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `result_approvals`
---
-ALTER TABLE `result_approvals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `result_publication`
---
-ALTER TABLE `result_publication`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `result_publications`
---
-ALTER TABLE `result_publications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -29633,99 +30318,9 @@ ALTER TABLE `risk_register`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
-
---
--- AUTO_INCREMENT for table `role_permissions`
---
-ALTER TABLE `role_permissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `room_assignments`
---
-ALTER TABLE `room_assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `room_inspections`
---
-ALTER TABLE `room_inspections`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `route_schedules`
---
-ALTER TABLE `route_schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `salary_components`
 --
 ALTER TABLE `salary_components`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `salary_structures`
---
-ALTER TABLE `salary_structures`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `scholarships`
---
-ALTER TABLE `scholarships`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_announcements`
---
-ALTER TABLE `secretary_announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_appointments`
---
-ALTER TABLE `secretary_appointments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_contacts`
---
-ALTER TABLE `secretary_contacts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_correspondence`
---
-ALTER TABLE `secretary_correspondence`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_documents`
---
-ALTER TABLE `secretary_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_meetings`
---
-ALTER TABLE `secretary_meetings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `secretary_meeting_action_items`
---
-ALTER TABLE `secretary_meeting_action_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_meeting_agenda`
---
-ALTER TABLE `secretary_meeting_agenda`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -29735,88 +30330,10 @@ ALTER TABLE `secretary_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `secretary_official_documents`
---
-ALTER TABLE `secretary_official_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `secretary_requests`
---
-ALTER TABLE `secretary_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `security_access_logs`
---
-ALTER TABLE `security_access_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `security_emergency_contacts`
---
-ALTER TABLE `security_emergency_contacts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `security_equipment`
---
-ALTER TABLE `security_equipment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `security_incidents`
---
-ALTER TABLE `security_incidents`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `security_patrols`
---
-ALTER TABLE `security_patrols`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `security_visitors`
---
-ALTER TABLE `security_visitors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `semesters`
---
-ALTER TABLE `semesters`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
 -- AUTO_INCREMENT for table `settings`
 --
 ALTER TABLE `settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sickbay_medicine_stock`
---
-ALTER TABLE `sickbay_medicine_stock`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sickbay_medicine_transactions`
---
-ALTER TABLE `sickbay_medicine_transactions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sickbay_settings`
---
-ALTER TABLE `sickbay_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT for table `sickbay_visits`
---
-ALTER TABLE `sickbay_visits`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sickness_directory`
@@ -29825,100 +30342,10 @@ ALTER TABLE `sickness_directory`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
--- AUTO_INCREMENT for table `skills_laboratory`
---
-ALTER TABLE `skills_laboratory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sms_logs`
---
-ALTER TABLE `sms_logs`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `sponsorships`
 --
 ALTER TABLE `sponsorships`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sports_events`
---
-ALTER TABLE `sports_events`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sports_teams`
---
-ALTER TABLE `sports_teams`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff`
---
-ALTER TABLE `staff`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
-
---
--- AUTO_INCREMENT for table `staff_activity_log`
---
-ALTER TABLE `staff_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=747;
-
---
--- AUTO_INCREMENT for table `staff_appraisals`
---
-ALTER TABLE `staff_appraisals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_attendance`
---
-ALTER TABLE `staff_attendance`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `staff_audit_logs`
---
-ALTER TABLE `staff_audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_communications`
---
-ALTER TABLE `staff_communications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_contracts`
---
-ALTER TABLE `staff_contracts`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_departments`
---
-ALTER TABLE `staff_departments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT for table `staff_disciplinary`
---
-ALTER TABLE `staff_disciplinary`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_documents`
---
-ALTER TABLE `staff_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_inbox`
---
-ALTER TABLE `staff_inbox`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `staff_leave`
@@ -29927,82 +30354,10 @@ ALTER TABLE `staff_leave`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `staff_leave_requests`
---
-ALTER TABLE `staff_leave_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_licenses`
---
-ALTER TABLE `staff_licenses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_login_sessions`
---
-ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=470;
-
---
--- AUTO_INCREMENT for table `staff_messages`
---
-ALTER TABLE `staff_messages`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_notifications`
---
-ALTER TABLE `staff_notifications`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `staff_notification_prefs`
---
-ALTER TABLE `staff_notification_prefs`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_notification_reads`
---
-ALTER TABLE `staff_notification_reads`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `staff_onboarding`
---
-ALTER TABLE `staff_onboarding`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `staff_profiles`
 --
 ALTER TABLE `staff_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `staff_promotions`
---
-ALTER TABLE `staff_promotions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_recruitment`
---
-ALTER TABLE `staff_recruitment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_resignations`
---
-ALTER TABLE `staff_resignations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_roles`
---
-ALTER TABLE `staff_roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `staff_salaries`
@@ -30017,69 +30372,9 @@ ALTER TABLE `staff_tasks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `staff_training`
---
-ALTER TABLE `staff_training`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_work_history`
---
-ALTER TABLE `staff_work_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_categories`
---
-ALTER TABLE `store_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `store_inventory`
---
-ALTER TABLE `store_inventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
-
---
 -- AUTO_INCREMENT for table `store_inventory_transactions`
 --
 ALTER TABLE `store_inventory_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_items`
---
-ALTER TABLE `store_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_orders`
---
-ALTER TABLE `store_orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_order_items`
---
-ALTER TABLE `store_order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_requests`
---
-ALTER TABLE `store_requests`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `store_request_items`
---
-ALTER TABLE `store_request_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
-
---
--- AUTO_INCREMENT for table `store_requisitions`
---
-ALTER TABLE `store_requisitions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30098,7 +30393,7 @@ ALTER TABLE `strategic_plans`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=164;
 
 --
 -- AUTO_INCREMENT for table `students_trash`
@@ -30110,7 +30405,7 @@ ALTER TABLE `students_trash`
 -- AUTO_INCREMENT for table `student_academic_profiles`
 --
 ALTER TABLE `student_academic_profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
 
 --
 -- AUTO_INCREMENT for table `student_academic_records`
@@ -30119,16 +30414,16 @@ ALTER TABLE `student_academic_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=401;
 
 --
--- AUTO_INCREMENT for table `student_activities`
+-- AUTO_INCREMENT for table `student_accounts`
 --
-ALTER TABLE `student_activities`
+ALTER TABLE `student_accounts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `student_admissions`
 --
 ALTER TABLE `student_admissions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `student_admission_tracking`
@@ -30143,52 +30438,16 @@ ALTER TABLE `student_appeals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_applications`
---
-ALTER TABLE `student_applications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_application_requirements`
---
-ALTER TABLE `student_application_requirements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
--- AUTO_INCREMENT for table `student_audit_log`
+-- AUTO_INCREMENT for table `student_attendance_profiles`
 --
-ALTER TABLE `student_audit_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
-
---
--- AUTO_INCREMENT for table `student_clinical_logbook_entries`
---
-ALTER TABLE `student_clinical_logbook_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_clinical_placements`
---
-ALTER TABLE `student_clinical_placements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_competencies`
---
-ALTER TABLE `student_competencies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_counseling_sessions`
---
-ALTER TABLE `student_counseling_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `student_attendance_profiles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `student_course_registrations`
@@ -30215,21 +30474,9 @@ ALTER TABLE `student_documents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_document_uploads`
---
-ALTER TABLE `student_document_uploads`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `student_downloads`
 --
 ALTER TABLE `student_downloads`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_emergency_contacts`
---
-ALTER TABLE `student_emergency_contacts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30237,12 +30484,6 @@ ALTER TABLE `student_emergency_contacts`
 --
 ALTER TABLE `student_fees`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_fee_accounts`
---
-ALTER TABLE `student_fee_accounts`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `student_fee_assignments`
@@ -30266,24 +30507,12 @@ ALTER TABLE `student_finance`
 -- AUTO_INCREMENT for table `student_financial_profiles`
 --
 ALTER TABLE `student_financial_profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_guardian`
---
-ALTER TABLE `student_guardian`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `student_health_incidents`
 --
 ALTER TABLE `student_health_incidents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_health_records`
---
-ALTER TABLE `student_health_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30305,16 +30534,10 @@ ALTER TABLE `student_invoices`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
 
 --
--- AUTO_INCREMENT for table `student_library_borrowing`
+-- AUTO_INCREMENT for table `student_library_profiles`
 --
-ALTER TABLE `student_library_borrowing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_logbook`
---
-ALTER TABLE `student_logbook`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `student_library_profiles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `student_login_attempts`
@@ -30323,16 +30546,16 @@ ALTER TABLE `student_login_attempts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_medical_profiles`
+-- AUTO_INCREMENT for table `student_medical`
 --
-ALTER TABLE `student_medical_profiles`
+ALTER TABLE `student_medical`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_medications`
+-- AUTO_INCREMENT for table `student_medical_profiles`
 --
-ALTER TABLE `student_medications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `student_medical_profiles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `student_messages`
@@ -30353,12 +30576,6 @@ ALTER TABLE `student_password_resets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_payment_transactions`
---
-ALTER TABLE `student_payment_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `student_penalties`
 --
 ALTER TABLE `student_penalties`
@@ -30371,45 +30588,9 @@ ALTER TABLE `student_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_profile_comments`
---
-ALTER TABLE `student_profile_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
-
---
--- AUTO_INCREMENT for table `student_program_enrollment`
---
-ALTER TABLE `student_program_enrollment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_progression`
---
-ALTER TABLE `student_progression`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_referrals`
---
-ALTER TABLE `student_referrals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `student_requests`
 --
 ALTER TABLE `student_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_requirements`
---
-ALTER TABLE `student_requirements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_requirements_status`
---
-ALTER TABLE `student_requirements_status`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30437,28 +30618,10 @@ ALTER TABLE `student_timetables`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `student_transcripts`
---
-ALTER TABLE `student_transcripts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_warnings`
---
-ALTER TABLE `student_warnings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `student_welfare_cases`
 --
 ALTER TABLE `student_welfare_cases`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `subjects`
---
-ALTER TABLE `subjects`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subscription_deductions`
@@ -30485,63 +30648,9 @@ ALTER TABLE `syllabus`
   MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `system_logs`
---
-ALTER TABLE `system_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `system_modules`
 --
 ALTER TABLE `system_modules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `system_settings`
---
-ALTER TABLE `system_settings`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `task_assignments`
---
-ALTER TABLE `task_assignments`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teachers`
---
-ALTER TABLE `teachers`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teacher_guardian`
---
-ALTER TABLE `teacher_guardian`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teaching_announcements`
---
-ALTER TABLE `teaching_announcements`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teaching_assessments`
---
-ALTER TABLE `teaching_assessments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teaching_quality_reviews`
---
-ALTER TABLE `teaching_quality_reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teaching_resources`
---
-ALTER TABLE `teaching_resources`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30551,28 +30660,10 @@ ALTER TABLE `timetable`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
--- AUTO_INCREMENT for table `timetables`
---
-ALTER TABLE `timetables`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `time_table`
 --
 ALTER TABLE `time_table`
   MODIFY `s_no` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `trainings`
---
-ALTER TABLE `trainings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `training_needs_assessment`
---
-ALTER TABLE `training_needs_assessment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `transcripts`
@@ -30587,54 +30678,6 @@ ALTER TABLE `transcript_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `transcript_templates`
---
-ALTER TABLE `transcript_templates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `transport_drivers`
---
-ALTER TABLE `transport_drivers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transport_fuel_log`
---
-ALTER TABLE `transport_fuel_log`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transport_routes`
---
-ALTER TABLE `transport_routes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `transport_student_assignments`
---
-ALTER TABLE `transport_student_assignments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `transport_trips`
---
-ALTER TABLE `transport_trips`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `transport_vehicles`
---
-ALTER TABLE `transport_vehicles`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `trip_logs`
---
-ALTER TABLE `trip_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `ura_reports`
 --
 ALTER TABLE `ura_reports`
@@ -30644,30 +30687,12 @@ ALTER TABLE `ura_reports`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `vehicles`
---
-ALTER TABLE `vehicles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `vehicle_maintenance`
---
-ALTER TABLE `vehicle_maintenance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `visitor_logs`
---
-ALTER TABLE `visitor_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -30677,70 +30702,10 @@ ALTER TABLE `volunteer_applications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `warning_letters`
---
-ALTER TABLE `warning_letters`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `website_announcements`
 --
 ALTER TABLE `website_announcements`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `website_submission_logs`
---
-ALTER TABLE `website_submission_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `welfare_actions`
---
-ALTER TABLE `welfare_actions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `welfare_cases`
---
-ALTER TABLE `welfare_cases`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
--- --------------------------------------------------------
-
---
--- Structure for view `fee_payments`
---
-DROP TABLE IF EXISTS `fee_payments`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `fee_payments`  AS SELECT `igangaschool_students`.`payments`.`id` AS `id`, `igangaschool_students`.`payments`.`student_id` AS `student_id`, `igangaschool_students`.`payments`.`invoice_id` AS `fee_account_id`, `igangaschool_students`.`payments`.`amount_received` AS `amount_paid`, `igangaschool_students`.`payments`.`payment_method` AS `payment_method`, `igangaschool_students`.`payments`.`payment_reference` AS `receipt_number`, `igangaschool_students`.`payments`.`status` AS `status`, `igangaschool_students`.`payments`.`payment_date` AS `payment_date`, `igangaschool_students`.`payments`.`notes` AS `notes`, `igangaschool_students`.`payments`.`received_by` AS `processed_by`, `igangaschool_students`.`payments`.`created_at` AS `created_at`, `igangaschool_students`.`payments`.`updated_at` AS `updated_at` FROM `igangaschool_students`.`payments` ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `staff_trainings`
---
-DROP TABLE IF EXISTS `staff_trainings`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `staff_trainings`  AS SELECT `staff_training`.`id` AS `id`, `staff_training`.`staff_id` AS `staff_id`, `staff_training`.`training_name` AS `training_name`, `staff_training`.`training_type` AS `training_type`, `staff_training`.`provider` AS `provider`, `staff_training`.`start_date` AS `start_date`, `staff_training`.`end_date` AS `end_date`, `staff_training`.`status` AS `status`, `staff_training`.`certificate_path` AS `certificate_path`, `staff_training`.`cost` AS `cost`, `staff_training`.`created_at` AS `created_at` FROM `staff_training` ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `student_dashboard_view`
---
-DROP TABLE IF EXISTS `student_dashboard_view`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where `student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`) group by `student_academic_records`.`student_id`) `sa` on(`s`.`id` = `sa`.`student_id`)) left join (select `student_attendance`.`student_id` AS `student_id`,sum(case when `student_attendance`.`status` = 'Present' then 1 else 0 end) * 100.0 / count(0) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on(`s`.`id` = `sa2`.`student_id`)) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where `student_fees`.`status` in ('Unpaid','Partially Paid','Overdue') group by `student_fees`.`student_id`) `sf` on(`s`.`id` = `sf`.`student_id`)) WHERE `s`.`status` = 'Active' ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `student_login_view`
---
-DROP TABLE IF EXISTS `student_login_view`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`igangaschool`@`localhost` SQL SECURITY DEFINER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE `students`.`status` = 'Active' ;
 
 --
 -- Constraints for dumped tables
@@ -30779,19 +30744,6 @@ ALTER TABLE `applicant_requirement_status`
   ADD CONSTRAINT `applicant_requirement_status_ibfk_2` FOREIGN KEY (`requirement_id`) REFERENCES `admission_requirements` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `appointment_letters`
---
-ALTER TABLE `appointment_letters`
-  ADD CONSTRAINT `appointment_letters_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `assessments`
---
-ALTER TABLE `assessments`
-  ADD CONSTRAINT `fk_assessments_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_assessments_creator` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
 -- Constraints for table `cms_content_blocks`
 --
 ALTER TABLE `cms_content_blocks`
@@ -30804,115 +30756,16 @@ ALTER TABLE `cms_gallery_images`
   ADD CONSTRAINT `fk_gallery_cat` FOREIGN KEY (`category_id`) REFERENCES `cms_gallery_categories` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `contract_renewal_reminders`
---
-ALTER TABLE `contract_renewal_reminders`
-  ADD CONSTRAINT `contract_renewal_reminders_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `employment_contracts` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `exit_interviews`
---
-ALTER TABLE `exit_interviews`
-  ADD CONSTRAINT `exit_interviews_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `hostel_maintenance_requests`
---
-ALTER TABLE `hostel_maintenance_requests`
-  ADD CONSTRAINT `fk_hmr_assigned` FOREIGN KEY (`assigned_to`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_hmr_requested` FOREIGN KEY (`requested_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `interview_schedules`
---
-ALTER TABLE `interview_schedules`
-  ADD CONSTRAINT `interview_schedules_ibfk_1` FOREIGN KEY (`vacancy_id`) REFERENCES `job_vacancies` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `interview_scores`
---
-ALTER TABLE `interview_scores`
-  ADD CONSTRAINT `interview_scores_ibfk_1` FOREIGN KEY (`interview_id`) REFERENCES `interview_schedules` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `module_audit_log`
---
-ALTER TABLE `module_audit_log`
-  ADD CONSTRAINT `module_audit_log_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `system_modules` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `onboarding_tasks`
---
-ALTER TABLE `onboarding_tasks`
-  ADD CONSTRAINT `onboarding_tasks_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `promotion_recommendations`
---
-ALTER TABLE `promotion_recommendations`
-  ADD CONSTRAINT `promotion_recommendations_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `requirement_history`
 --
 ALTER TABLE `requirement_history`
   ADD CONSTRAINT `requirement_history_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `route_schedules`
---
-ALTER TABLE `route_schedules`
-  ADD CONSTRAINT `fk_rs_driver` FOREIGN KEY (`driver_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_rs_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
 -- Constraints for table `staff`
 --
 ALTER TABLE `staff`
   ADD CONSTRAINT `staff_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `staff_roles` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `staff_documents`
---
-ALTER TABLE `staff_documents`
-  ADD CONSTRAINT `staff_documents_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `staff_work_history`
---
-ALTER TABLE `staff_work_history`
-  ADD CONSTRAINT `staff_work_history_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `store_inventory`
---
-ALTER TABLE `store_inventory`
-  ADD CONSTRAINT `fk_si_category` FOREIGN KEY (`category_id`) REFERENCES `store_categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `store_inventory_transactions`
---
-ALTER TABLE `store_inventory_transactions`
-  ADD CONSTRAINT `fk_sit_item` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `store_order_items`
---
-ALTER TABLE `store_order_items`
-  ADD CONSTRAINT `fk_soi_item` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_soi_order` FOREIGN KEY (`order_id`) REFERENCES `store_orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `store_request_items`
---
-ALTER TABLE `store_request_items`
-  ADD CONSTRAINT `fk_sri_request` FOREIGN KEY (`request_id`) REFERENCES `store_requests` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `student_activities`
---
-ALTER TABLE `student_activities`
-  ADD CONSTRAINT `fk_sa_created` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student_admission_tracking`
@@ -30931,6 +30784,12 @@ ALTER TABLE `student_clinical_logbook_entries`
 --
 ALTER TABLE `student_clinical_placements`
   ADD CONSTRAINT `student_clinical_placements_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_competencies`
+--
+ALTER TABLE `student_competencies`
+  ADD CONSTRAINT `student_competencies_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `student_documents`
@@ -30952,30 +30811,10 @@ ALTER TABLE `student_payment_transactions`
   ADD CONSTRAINT `student_payment_transactions_ibfk_2` FOREIGN KEY (`fee_id`) REFERENCES `student_fee_tracking` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `teaching_resources`
+-- Constraints for table `student_warnings`
 --
-ALTER TABLE `teaching_resources`
-  ADD CONSTRAINT `fk_tr_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_tr_uploader` FOREIGN KEY (`uploaded_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `training_needs_assessment`
---
-ALTER TABLE `training_needs_assessment`
-  ADD CONSTRAINT `training_needs_assessment_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `trip_logs`
---
-ALTER TABLE `trip_logs`
-  ADD CONSTRAINT `fk_trip_driver` FOREIGN KEY (`driver_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_trip_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `warning_letters`
---
-ALTER TABLE `warning_letters`
-  ADD CONSTRAINT `warning_letters_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
+ALTER TABLE `student_warnings`
+  ADD CONSTRAINT `student_warnings_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

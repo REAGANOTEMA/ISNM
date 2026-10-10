@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../config/database.php';
 
 $conn = getStudentsConnection();
@@ -9,7 +9,7 @@ if (!$conn) {
     exit();
 }
 
-// ── Security middleware for legacy assets/ endpoints ──
+// â”€â”€ Security middleware for legacy assets/ endpoints â”€â”€
 // Provides basic session authentication and CSRF protection.
 // GET requests for data fetching are allowed with just session auth.
 // POST/DELETE/UPDATE requests require CSRF token.
@@ -58,7 +58,7 @@ if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
     }
 }
 
-// ── Role helpers for legacy assets/ endpoints ──
+// â”€â”€ Role helpers for legacy assets/ endpoints â”€â”€
 if (!function_exists('isnm_current_actor_role')) {
     function isnm_current_actor_role() {
         $uid = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
@@ -70,8 +70,8 @@ if (!function_exists('isnm_current_actor_role')) {
             return '';
         }
         $stmt = $staffConn->prepare('SELECT LOWER(sr.role_name) AS role_name
-                FROM `igangaschool_staffs`.`staff` s
-                INNER JOIN `igangaschool_staffs`.`staff_roles` sr ON s.role_id = sr.id
+                FROM `igangaschool_system`.`staff` s
+                INNER JOIN `igangaschool_system`.`staff_roles` sr ON s.role_id = sr.id
                 WHERE s.id = ? LIMIT 1');
         if (!$stmt) {
             return '';

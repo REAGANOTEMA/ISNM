@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','principal','deputy','secretary','matron','warden','head']);
 $staffDb = $ctx['staff'];
@@ -17,7 +17,7 @@ if (file_exists($profileSettingsFile)) {
     }
 }
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
 $flashMsg = $_SESSION['flash_msg'] ?? null;
 $flashType = $_SESSION['flash_type'] ?? 'success';

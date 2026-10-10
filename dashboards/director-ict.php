@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/department_approval_request.php';
@@ -20,7 +20,7 @@ $user_name = $user['full_name'] ?? 'ICT Director';
 $user_role = $_SESSION['role'] ?? '';
 $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) { error_log('director-ict context: ' . $e->getMessage()); }
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
 
 function ict_mailto($email) {
     return $email ? '<a href="mailto:'.htmlspecialchars($email).'" title="Send email"><i class="fas fa-envelope text-primary"></i></a>' : '-';
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
     $year = 1;
     $level = 'Year 1';
-    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
     if ($staff_conn) $staff_conn->begin_transaction();
     try {
@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'search_students') {
     header('Content-Type: application/json');
     $q = trim($_POST['search'] ?? '');
-    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
     if (!$students_conn || strlen($q) < 2) { echo json_encode(['success' => true, 'students' => []]); exit; }
     $like = '%' . $q . '%';
     $stmt = $students_conn->prepare("SELECT id, student_number, registration_number, first_name, surname, full_name, email, phone, program, level, status FROM `$studentsDb`.`students` WHERE (full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR email LIKE ? OR phone LIKE ?) ORDER BY full_name LIMIT 50");
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'get_student_details') {
     header('Content-Type: application/json');
     $studentId = (int)($_POST['student_id'] ?? 0);
-    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+    $studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
     if (!$studentId || !$students_conn) { echo json_encode(['success' => false, 'message' => 'Invalid student ID.']); exit; }
 
     $result = ['student' => null, 'profile' => null];
@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// â”€â”€ STATS â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ STATS Ã¢â€â‚¬Ã¢â€â‚¬
 $total_staff   = ict_q($staff_conn, "SELECT COUNT(*) FROM staff WHERE status='Active'");
 $total_students = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
 $active_servers  = ict_q($ict, "SELECT COUNT(*) FROM ict_servers WHERE status='online'");
@@ -222,7 +222,7 @@ $closed_tickets  = ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE st
 $today_backups   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_backups WHERE DATE(created_at)=CURDATE()");
 $active_alerts   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_alerts WHERE status='active'");
 $wifi_active     = ict_q($ict, "SELECT COUNT(*) FROM ict_wifi_devices WHERE status='online'");
-$ict_db = defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschool_ict';
+$ict_db = defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschool_system';
 $db_size_mb      = 0;
 $size_row = ict_fetch_one($ict, "SELECT ROUND(SUM(data_length+index_length)/1024/1024,2) as size_mb FROM information_schema.TABLES WHERE TABLE_SCHEMA='$ict_db'");
 if ($size_row) $db_size_mb = $size_row['size_mb'];
@@ -233,7 +233,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// â”€â”€ DATA â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ DATA Ã¢â€â‚¬Ã¢â€â‚¬
 $assets       = ict_fetch($ict, "SELECT a.*, c.category_name FROM ict_assets a LEFT JOIN ict_asset_categories c ON a.category_id=c.id ORDER BY a.created_at DESC LIMIT 30");
 $asset_cats   = ict_fetch($ict, "SELECT * FROM ict_asset_categories ORDER BY category_name");
 $servers      = ict_fetch($ict, "SELECT * FROM ict_servers ORDER BY server_name");
@@ -253,7 +253,7 @@ $network_logs = ict_fetch($ict, "SELECT * FROM ict_network_logs ORDER BY logged_
 $assignments  = ict_fetch($ict, "SELECT a.*, ast.asset_number, ast.asset_name FROM ict_asset_assignments a LEFT JOIN ict_assets ast ON a.asset_id=ast.id WHERE a.status='active' ORDER BY a.assignment_date DESC LIMIT 20");
 $maintenance  = ict_fetch($ict, "SELECT m.*, a.asset_number, a.asset_name FROM ict_asset_maintenance m LEFT JOIN ict_assets a ON m.asset_id=a.id ORDER BY m.created_at DESC LIMIT 20");
 
-// â”€â”€ User & Access â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ User & Access Ã¢â€â‚¬Ã¢â€â‚¬
 $staff_accounts  = ict_fetch($staff_conn, "SELECT s.id, s.full_name, s.email, sr.role_name AS role, s.status, s.last_login FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
 $staff_count     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff");
 $student_count   = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
@@ -263,9 +263,9 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/director_website_panel.php';
 $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()");
-// â”€â”€ Module Permissions â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Module Permissions Ã¢â€â‚¬Ã¢â€â‚¬
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");
-// â”€â”€ Approvals â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Approvals Ã¢â€â‚¬Ã¢â€â‚¬
 $pending_tickets = ict_fetch($ict, "SELECT * FROM it_support_tickets WHERE status IN ('open','in_progress') ORDER BY FIELD(priority,'critical','high','medium','low'), created_at DESC LIMIT 15");
 $pending_approval_requests = [];
 if ($staff_conn) {
@@ -281,7 +281,7 @@ if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'overview';
 $ictIcon = 'fa-laptop-code';
 $ictRole = 'Director ICT';
-$ictSubtitle = 'Information & Communication Technology â€“ System Administration & Infrastructure Oversight';
+$ictSubtitle = 'Information & Communication Technology Ã¢â‚¬â€œ System Administration & Infrastructure Oversight';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -328,12 +328,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 
 
-/* â”€â”€ Content â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Content Ã¢â€â‚¬Ã¢â€â‚¬ */
 .ict-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
 @media (max-width: 768px) { .ict-content { margin-left: 0; } }
 
 
-/* â”€â”€ Monitor Cards â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Monitor Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
 .monitor-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-radius:10px; padding:14px 12px; color:#e2e8f0; text-align:center; transition:transform .2s,box-shadow .2s; }
 .monitor-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.3); }
 .monitor-card h3 { font-size:24px; font-weight:800; margin:0; background:linear-gradient(135deg,#fff,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
@@ -341,7 +341,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .monitor-card .progress { height:4px; margin-top:8px; border-radius:10px; background:#334155; }
 .monitor-card .progress-bar { border-radius:10px; }
 
-/* â”€â”€ Tables â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Tables Ã¢â€â‚¬Ã¢â€â‚¬ */
 .ict-table { font-size: 12px; margin-bottom: 0; }
 .ict-table thead th { background: #f8fafc; font-weight: 600; color: var(--ict-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--ict-border); }
 .ict-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -360,7 +360,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<!-- â•â•â• TOP BAR â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TOP BAR Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 
 <div class="ict-content">
 <div class="d-flex justify-content-end mb-2 no-print">
@@ -480,7 +480,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                             <div style="max-height:250px;overflow-y:auto">
                             <?php if (empty($assignments)): ?><div class="text-muted small">No active assignments</div>
                             <?php else: foreach ($assignments as $as): ?>
-                            <div class="py-1 border-bottom small"><strong><?= htmlspecialchars($as['asset_name'] ?? $as['asset_number']) ?></strong> â†’ Staff #<?= $as['assigned_to_staff_id'] ?: 'Dept' ?>
+                            <div class="py-1 border-bottom small"><strong><?= htmlspecialchars($as['asset_name'] ?? $as['asset_number']) ?></strong> Ã¢â€ â€™ Staff #<?= $as['assigned_to_staff_id'] ?: 'Dept' ?>
                             <span class="badge bg-<?= $as['status']==='active'?'success':'secondary' ?> float-end"><?= $as['status'] ?></span></div>
                             <?php endforeach; endif; ?>
                             </div>
@@ -704,9 +704,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         </div>
                         <div class="mb-2"><label class="form-label">Target Database</label>
                             <select name="target_database" class="form-select">
-                                <option value="igangaschool_ict">ICT Database</option>
-                                <option value="igangaschool_staffs">Staff Database</option>
-                                <option value="igangaschool_students">Students Database</option>
+                                <option value="igangaschool_system">ICT Database</option>
+                                <option value="igangaschool_system">Staff Database</option>
+                                <option value="igangaschool_system">Students Database</option>
                                 <option value="igangaschool_website">Website Database</option>
                                 <option value="all">All Databases</option>
                             </select>
@@ -1514,7 +1514,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 </div></div>
 
-<!-- jQuery & Bootstrap already loaded in dashboard_head.php â€” do NOT re-add here -->
+<!-- jQuery & Bootstrap already loaded in dashboard_head.php Ã¢â‚¬â€ do NOT re-add here -->
 <script>
 const ICT_HANDLER = '../handlers/ict_handler.php';
 const CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
@@ -1764,7 +1764,7 @@ function escHtml(str) {
 }
 </script>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AJAX MODULE LOADING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

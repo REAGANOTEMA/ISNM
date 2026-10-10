@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Director of Admissions � Complete Dashboard
+ * Director of Admissions ï¿½ Complete Dashboard
  * Tabs: Applications | Requirements | Enrolled Students
  */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
@@ -16,7 +16,7 @@ $user = $ctx['user'];
 $userId = (int)($user['id'] ?? 0);
 $userRole = $_SESSION['role'] ?? '';
 $userName = $user['full_name'] ?? 'Director of Admissions';
-$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 $uploadDir = __DIR__ . '/../uploads/admissions/';
 if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
 if (!$conn) die('Database connection failed.');

@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * HR Manager Dashboard â€” Complete 13-Module Interface
+ * HR Manager Dashboard Ã¢â‚¬â€ Complete 13-Module Interface
  * Modules: Staff Records, Recruitment, Attendance, Payroll Support,
  * Performance, Training, Disciplinary, Contracts, Communication,
  * Reports, RBAC, Self-Service, Integration
@@ -31,7 +31,7 @@ $isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
 // --- Auto-create HR tables if they don't exist ---
 if ($staff_conn) {
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $hrMigrate = [
         "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`leave_types` (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -252,7 +252,7 @@ if ($staff_conn) {
     }
 }
 
-// â”€â”€ Handle POST actions â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Handle POST actions Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         die('Invalid CSRF token');
@@ -436,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     }
 }
 
-// â”€â”€ Data fetching â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Data fetching Ã¢â€â‚¬Ã¢â€â‚¬
 $stats = hrGetStats($staff_conn);
 $staffList = []; $roles = []; $departments = []; $leaveReqs = []; $leaveTypes = [];
 $vacancies = []; $applications = []; $attendanceToday = []; $disciplinaryCases = [];
@@ -943,7 +943,7 @@ function rejectHRRequest(id){var reason=prompt('Reason for rejection:');if(reaso
 document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION['csrf_token'])?>';document.querySelectorAll('form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});
 function editStaff(id) {
     fetch('hr-manager.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_staff&id='+id+'&csrf_token=<?=htmlspecialchars($_SESSION['csrf_token'])?>'})
-    .then(r=>r.json()).then(d=>{if(d&&d.id){alert('Editing staff #'+id+' â€” use the form below.');window.location='hr-manager.php?page=staff&sub=view&id='+id;}});
+    .then(r=>r.json()).then(d=>{if(d&&d.id){alert('Editing staff #'+id+' Ã¢â‚¬â€ use the form below.');window.location='hr-manager.php?page=staff&sub=view&id='+id;}});
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

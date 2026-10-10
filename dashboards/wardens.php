@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -9,7 +9,7 @@ $stuConn = $ctx['students'];
 $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
@@ -995,7 +995,7 @@ function updateDateTime() {
 updateDateTime();
 setInterval(updateDateTime, 60000);
 
-// Navigation � delegate to universal section switcher
+// Navigation ï¿½ delegate to universal section switcher
 document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();

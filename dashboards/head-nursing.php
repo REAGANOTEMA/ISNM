@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -11,9 +11,9 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Nursing';
 $user_id = (int)($user['id'] ?? 0);
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
-// â”€â”€ POST Handlers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ POST Handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if (!verifyCsrfToken()) { die('Invalid CSRF token'); }
     $action = $_POST['action'] ?? '';
@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     }
 }
 
-// â”€â”€ Page routing â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Page routing Ã¢â€â‚¬Ã¢â€â‚¬
 $pageToSection = [
     'home'       => 'overview',
     'overview'   => 'overview',
@@ -718,7 +718,7 @@ endswitch; ?>
 
 </div>
 
-<!-- â•â•â• ADD STUDENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD STUDENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="addStudentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -769,7 +769,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• EDIT STUDENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â EDIT STUDENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="editStudentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -826,7 +826,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• ADD PLACEMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD PLACEMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="addPlacementModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -874,7 +874,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• EDIT PLACEMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â EDIT PLACEMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="editPlacementModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -914,7 +914,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• ADD ASSESSMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD ASSESSMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="addAssessmentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -978,7 +978,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• EDIT ASSESSMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â EDIT ASSESSMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade" id="editAssessmentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1026,7 +1026,7 @@ endswitch; ?>
     </div>
 </div>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AJAX MODULE LOADING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

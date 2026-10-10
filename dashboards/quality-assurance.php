@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
@@ -6,7 +6,7 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 
 if ($conn) {
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`quality_assurance` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         department VARCHAR(200) DEFAULT '',

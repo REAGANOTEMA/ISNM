@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/config_enhanced.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
@@ -35,7 +35,7 @@ $user_name = $user['full_name'] ?? ($_SESSION['full_name'] ?? 'Director General'
 
 // --- Auto-create tables used by DG dashboard ---
 if ($conn) {
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $dgMigrate = [
         "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_activity_log` (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -170,7 +170,7 @@ $pending_apps        = $overview['pending_applications'];
 $loader = new StudentDataLoader();
 $excel_files_summary = $loader->getExcelFileSummary();
 
-// â”€â”€ Dashboard stats cache â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Dashboard stats cache Ã¢â€â‚¬Ã¢â€â‚¬
 $dg_cache_key = 'dg_dashboard_stats';
 $dg_use_cache  = function_exists('getCacheData') && function_exists('setCacheData');
 $dg_cached     = $dg_use_cache ? getCacheData($dg_cache_key) : null;
@@ -314,7 +314,7 @@ try {
     }
 } catch (Exception $e) { error_log('director-general context: ' . $e->getMessage()); }
 
-// â”€â”€ DG page routing â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ DG page routing Ã¢â€â‚¬Ã¢â€â‚¬
 // Map ?page=xxx to internal section names
 $dgPageToSection = [
     'home'          => 'home',
@@ -384,14 +384,14 @@ $dgPageToSection = [
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
 
-// â”€â”€ CEO vs DG branding â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ CEO vs DG branding Ã¢â€â‚¬Ã¢â€â‚¬
 $isCEO      = (stripos($user_role, 'ceo') !== false) || (($_GET['dg_role'] ?? '') === 'ceo');
 $dgRole     = $isCEO ? 'CEO' : 'Director General';
 $dgIcon     = $isCEO ? 'fa-chart-line' : 'fa-crown';
 $dgSubtitle = $isCEO ? 'Executive Oversight &amp; Strategy &bull; Iganga School of Nursing &amp; Midwifery' : 'Full Institution Oversight &bull; Iganga School of Nursing &amp; Midwifery';
 $dgRoutePrefix = $isCEO ? '/ceo' : '/director';
 
-// â”€â”€ Reusable page toolbar (breadcrumb, back, search, export) â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Reusable page toolbar (breadcrumb, back, search, export) Ã¢â€â‚¬Ã¢â€â‚¬
 function dgToolbar(string $title, string $icon, string $badgeText = '', string $badgeClass = 'bg-primary'): void {
     $sectionLabels = [
         'executive'=>'Executive Overview','departments'=>'Department Monitoring',
@@ -418,11 +418,11 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
         <nav style="font-size:12px;color:#64748b;flex:1;">
             <a href="#executive" style="color:#3b82f6;text-decoration:none;" onclick="switchToSection('executive');return false;">Dashboard</a>
-            <span style="margin:0 4px;">â€º</span>
+            <span style="margin:0 4px;">Ã¢â‚¬Âº</span>
             <span style="color:#0f172a;font-weight:600;"><?= htmlspecialchars($label) ?></span>
         </nav>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <input type="search" placeholder="Search this pageâ€¦" class="dg-page-search" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;width:180px;outline:none;" oninput="dgFilterTable(this.value)">
+            <input type="search" placeholder="Search this pageÃ¢â‚¬Â¦" class="dg-page-search" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;width:180px;outline:none;" oninput="dgFilterTable(this.value)">
             <button onclick="window.print()" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;"><i class="fas fa-print me-1"></i>Print</button>
             <button onclick="dgExportCSV()" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;"><i class="fas fa-download me-1"></i>Export</button>
             <?php if ($badgeText): ?>
@@ -433,7 +433,7 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
     <?php
 }
 
-// â”€â”€ Global search handler â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Global search handler Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'global_stu_search') {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid token']); exit;
@@ -455,10 +455,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// ── AJAX handler for Director Requirements section ──
+// â”€â”€ AJAX handler for Director Requirements section â”€â”€
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $ajax_action = $_GET['ajax'];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -522,7 +522,7 @@ if (isset($_GET['ajax'])) {
     echo json_encode(['success' => false, 'message' => 'Unknown AJAX action']); exit;
 }
 
-// â”€â”€ News Management POST handlers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ News Management POST handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
@@ -658,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
     }
 }
 
-// ── Events Management POST handlers ──
+// â”€â”€ Events Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['ev_error'] = 'Invalid security token. Please try again.';
@@ -743,7 +743,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_event_action'])) {
     }
 }
 
-// ── Testimonials Management POST handlers ──
+// â”€â”€ Testimonials Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['tm_error'] = 'Invalid security token. Please try again.';
@@ -828,7 +828,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_testimonial_action
     }
 }
 
-// ── FAQ Management POST handlers ──
+// â”€â”€ FAQ Management POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['faq_error'] = 'Invalid security token. Please try again.';
@@ -916,7 +916,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_faq_action'])) {
     }
 }
 
-// ── Website Settings POST handler ──
+// â”€â”€ Website Settings POST handler â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_settings_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['ws_error'] = 'Invalid security token. Please try again.';
@@ -1037,7 +1037,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     header('Location: director-general.php'); exit;
 }
 
-// â”€â”€ CRUD POST handlers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ CRUD POST handlers Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
         $_SESSION['error'] = 'Invalid security token. Please try again.';
@@ -1221,7 +1221,7 @@ body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; col
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
 .page-content { padding: 0 !important; }
 
-/* â”€â”€ Content â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Content Ã¢â€â‚¬Ã¢â€â‚¬ */
 .dg-content {
   padding: 20px 24px 32px;
   margin-left: var(--erp-sidebar-width);
@@ -1249,7 +1249,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   .dg-content { padding: 12px 14px 20px; margin-left: 0; width: 100%; }
 }
 
-/* â”€â”€ KPI Cards â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ KPI Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
 .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 500px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -1285,7 +1285,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
 .kpi-pr { border-left-color: #8b5cf6; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
 
-/* â”€â”€ Analytics Row â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Analytics Row Ã¢â€â‚¬Ã¢â€â‚¬ */
 .analytics-strip {
   background: var(--dg-card-bg);
   border-radius: 10px;
@@ -1303,7 +1303,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .analytics-strip .ax-title { font-size: 9px; font-weight: 700; color: var(--dg-text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
 .analytics-strip .ax canvas { max-height: 60px; }
 
-/* â”€â”€ Section Cards â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Section Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
 .section-card {
   background: var(--dg-card-bg);
   border-radius: 10px;
@@ -1334,7 +1334,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .section-title i { font-size: 15px; }
 .section-subtitle { font-size: 11px; color: var(--dg-text-muted); margin: 0; }
 
-/* â”€â”€ Stat blocks (for financial, attendance) â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Stat blocks (for financial, attendance) Ã¢â€â‚¬Ã¢â€â‚¬ */
 .stat-block {
   padding: 10px 8px;
   border-radius: 8px;
@@ -1345,7 +1345,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .stat-block .stat-val { font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
 .stat-block .stat-lbl { font-size: 10px; font-weight: 500; margin-top: 1px; }
 
-/* â”€â”€ Tables â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Tables Ã¢â€â‚¬Ã¢â€â‚¬ */
 .dg-table { font-size: 12px; margin-bottom: 0; }
 .dg-table thead th { background: #f8fafc; font-weight: 600; color: var(--dg-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--dg-border); }
 .dg-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -1354,7 +1354,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .table-scroll::-webkit-scrollbar { width: 4px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* â”€â”€ Activity timeline â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Activity timeline Ã¢â€â‚¬Ã¢â€â‚¬ */
 .activity-timeline { list-style: none; padding: 0; margin: 0; }
 .activity-timeline li {
   display: flex;
@@ -1375,7 +1375,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   margin-top: 1px;
 }
 
-/* â”€â”€ Pending submissions â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Pending submissions Ã¢â€â‚¬Ã¢â€â‚¬ */
 .submission-item {
   display: flex;
   align-items: center;
@@ -1398,7 +1398,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .submission-detail { font-size: 11px; color: var(--dg-text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .submission-time { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
 
-/* â”€â”€ Director performance â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Director performance Ã¢â€â‚¬Ã¢â€â‚¬ */
 .dir-card {
   background: #fafbfc;
   border: 1px solid var(--dg-border);
@@ -1412,10 +1412,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .dir-card .dir-role { font-size: 10px; color: var(--dg-text-muted); margin-bottom: 8px; }
 .metric-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-/* â”€â”€ Badges â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Badges Ã¢â€â‚¬Ã¢â€â‚¬ */
 .badge-soft { font-weight: 500; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 
-/* â”€â”€ Section Visibility â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Section Visibility Ã¢â€â‚¬Ã¢â€â‚¬ */
 .dashboard-section { display: none; }
 .dashboard-section.active { display: block; }
 .section-tab.active { background: #1e3a8a !important; color: #fff !important; }
@@ -1425,13 +1425,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   .section-tab { white-space: nowrap; font-size: 11px !important; padding: 5px 10px !important; }
 }
 
-/* â”€â”€ Modals â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Modals Ã¢â€â‚¬Ã¢â€â‚¬ */
 .modern-modal .modal-content { border: none; border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); }
 .modern-modal .modal-header { border: none; padding: 14px 18px; border-radius: 14px 14px 0 0; }
 .modern-modal .modal-body { padding: 16px 18px; }
 .modern-modal .modal-footer { border: none; padding: 12px 18px; }
 
-/* â”€â”€ Animations â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Animations Ã¢â€â‚¬Ã¢â€â‚¬ */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.15); } 50% { box-shadow: 0 0 0 8px rgba(59,130,246,0.05); } }
@@ -1441,7 +1441,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .quick-chevron { transition: transform .25s ease; }
 .quick-chevron.rotated { transform: rotate(180deg); }
 
-/* â”€â”€ Responsive â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Responsive Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media (max-width: 1200px) { .analytics-strip { grid-template-columns: 1fr 1fr; } .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
@@ -1455,7 +1455,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 }
 @media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
 
-/* â”€â”€ Print â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Print Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media print {
   body { background:#fff !important; font-size:10pt; }
   .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
@@ -1481,7 +1481,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<!-- â•â•â• MAIN CONTENT AREA â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MAIN CONTENT AREA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="dg-content">
 <div class="ent-content-area ent-animate">
 
@@ -1508,7 +1508,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <?php renderGlobalSearchBar($conn, $studentsConn); ?>
 
-<!-- â•â•â• DYNAMIC PAGE LOADING â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â DYNAMIC PAGE LOADING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <?php
 $dgNewsList = [];
 $allStaffList = [];
@@ -1917,10 +1917,10 @@ if ($conn) {
           $best = $perfData['actual'][0]; $worst = end($perfData['actual']);
           $avg = round(array_sum($perfData['actual'])/count($perfData['actual']), 1);
         ?>
-        <div class="mb-2 p-2 rounded" style="background:#f0fdf4;"><strong style="color:#166534;">âœ“ Avg Score:</strong> <span class="float-end fw-bold"><?= $avg ?>%</span></div>
-        <div class="mb-2 p-2 rounded" style="background:#fef2f2;"><strong style="color:#dc2626;">âš  Needs Focus:</strong> <span class="float-end"><?= $perfData['courses'][array_key_last($perfData['courses'])] ?? 'N/A' ?> (<?= $worst ?>%)</span></div>
-        <div class="mb-2 p-2 rounded" style="background:#eff6ff;"><strong style="color:#2563eb;">â˜… Top Performer:</strong> <span class="float-end"><?= $perfData['courses'][0] ?? 'N/A' ?> (<?= $best ?>%)</span></div>
-        <div class="p-2 rounded" style="background:#fffbeb;"><strong style="color:#d97706;">ðŸ“ˆ Predicted Improvement:</strong> <span class="float-end fw-bold"><?= round(array_sum($perfData['predicted'])/count($perfData['predicted']) - $avg, 1) ?>%</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#f0fdf4;"><strong style="color:#166534;">Ã¢Å“â€œ Avg Score:</strong> <span class="float-end fw-bold"><?= $avg ?>%</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#fef2f2;"><strong style="color:#dc2626;">Ã¢Å¡Â  Needs Focus:</strong> <span class="float-end"><?= $perfData['courses'][array_key_last($perfData['courses'])] ?? 'N/A' ?> (<?= $worst ?>%)</span></div>
+        <div class="mb-2 p-2 rounded" style="background:#eff6ff;"><strong style="color:#2563eb;">Ã¢Ëœâ€¦ Top Performer:</strong> <span class="float-end"><?= $perfData['courses'][0] ?? 'N/A' ?> (<?= $best ?>%)</span></div>
+        <div class="p-2 rounded" style="background:#fffbeb;"><strong style="color:#d97706;">Ã°Å¸â€œË† Predicted Improvement:</strong> <span class="float-end fw-bold"><?= round(array_sum($perfData['predicted'])/count($perfData['predicted']) - $avg, 1) ?>%</span></div>
         <?php else: ?>
         <div class="text-muted text-center py-4"><i class="fas fa-database fa-2x mb-2"></i><p>No exam data available yet.</p></div>
         <?php endif; ?>
@@ -2880,7 +2880,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><?= (int)($r['staff_count'] ?? 0) ?></td>
             <td><small><?= htmlspecialchars($r['dashboard_path'] ?? '-') ?></small></td>
             <td><?= (int)($r['role_level'] ?? 99) ?></td>
-            <td><?= ($r['is_executive'] ?? 0) ? 'âœ…' : '' ?></td>
+            <td><?= ($r['is_executive'] ?? 0) ? 'Ã¢Å“â€¦' : '' ?></td>
             <td>
               <button class="btn btn-sm btn-outline-primary" onclick="editRole(<?= htmlspecialchars(json_encode($r)) ?>)"><i class="fas fa-edit"></i></button>
             </td>
@@ -3166,7 +3166,7 @@ document.addEventListener('DOMContentLoaded', function() {
   else document.addEventListener('DOMContentLoaded', initChevrons);
 })();
 
-// â”€â”€ DG page helpers â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ DG page helpers Ã¢â€â‚¬Ã¢â€â‚¬
 function dgFilterTable(query) {
     var q = query.toLowerCase().trim();
     document.querySelectorAll('.dashboard-section.active .dg-table tbody tr').forEach(function(row) {
@@ -3223,7 +3223,7 @@ function dgExportCSV() {
 <div id="director-requirements" class="content-section dashboard-section active" data-section="director-requirements">
   <?php
     $conn_dg = $conn;
-    $staff_db_dg = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db_dg = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $user_id_dg = (int)($user['id'] ?? 0);
     $user_name_dg = $user['full_name'] ?? 'Director';
   ?>
@@ -3288,7 +3288,7 @@ endswitch; ?>
 </div><!-- /ent-content-area -->
 </div><!-- /dg-content -->
 
-<!-- â•â•â• SEND ANNOUNCEMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SEND ANNOUNCEMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -3299,7 +3299,7 @@ endswitch; ?>
       </div>
       <div class="modal-body">
         <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Title *</label><input type="text" name="ann_title" class="form-control" required placeholder="e.g., Staff Meeting Tomorrow"></div>
-        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Message *</label><textarea name="ann_body" class="form-control" rows="4" required style="border-radius:8px;" placeholder="Write your announcement hereâ€¦"></textarea></div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Message *</label><textarea name="ann_body" class="form-control" rows="4" required style="border-radius:8px;" placeholder="Write your announcement hereÃ¢â‚¬Â¦"></textarea></div>
         <div class="row g-3">
           <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Target</label><select name="ann_target" class="form-select" style="border-radius:8px;"><option value="All">All</option><option value="Nursing">Nursing</option><option value="Midwifery">Midwifery</option><option value="Staff">Staff</option></select></div>
           <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Priority</label><select name="ann_priority" class="form-select" style="border-radius:8px;"><option value="Normal">Normal</option><option value="High">High</option><option value="Urgent">Urgent</option></select></div>
@@ -3313,7 +3313,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- â•â•â• ADD DEPARTMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD DEPARTMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="addDeptModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -3338,7 +3338,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- â•â•â• ADD STAFF MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD STAFF MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="addStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -3367,7 +3367,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- â•â•â• EDIT STAFF MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â EDIT STAFF MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="editStaffModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
@@ -3397,7 +3397,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- â•â•â• ADD NEW STUDENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ADD NEW STUDENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="addStudentModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content" id="addStudentForm">
@@ -3431,7 +3431,7 @@ endswitch; ?>
 
 <?php echo displayStudentProfileModal('student_profile_modal'); ?>
 
-<!-- â•â•â• NEWS MANAGEMENT MODAL â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â NEWS MANAGEMENT MODAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="modal fade modern-modal" id="newsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <form method="POST" enctype="multipart/form-data" class="modal-content">
@@ -3478,7 +3478,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ──── EVENTS MANAGEMENT MODAL ──── -->
+<!-- â”€â”€â”€â”€ EVENTS MANAGEMENT MODAL â”€â”€â”€â”€ -->
 <div class="modal fade modern-modal" id="eventModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content">
@@ -3530,7 +3530,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ──── TESTIMONIALS MANAGEMENT MODAL ──── -->
+<!-- â”€â”€â”€â”€ TESTIMONIALS MANAGEMENT MODAL â”€â”€â”€â”€ -->
 <div class="modal fade modern-modal" id="testimonialModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content">
@@ -3575,7 +3575,7 @@ endswitch; ?>
   </div>
 </div>
 
-<!-- ──── FAQ MANAGEMENT MODAL ──── -->
+<!-- â”€â”€â”€â”€ FAQ MANAGEMENT MODAL â”€â”€â”€â”€ -->
 <div class="modal fade modern-modal" id="faqModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form method="POST" class="modal-content">
@@ -3620,7 +3620,7 @@ endswitch; ?>
 </div>
 
 <script>
-// â•â•â• CSRF token auto-inject for all forms â•â•â•
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CSRF token auto-inject for all forms Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 (function(){
   document.addEventListener('DOMContentLoaded', function(){
     var token = window.CSRF_TOKEN || document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -3636,7 +3636,7 @@ endswitch; ?>
 })();
 </script>
 <script>
-// â•â•â• NEWS MANAGEMENT â•â•â•
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â NEWS MANAGEMENT Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 var dgNewsData = <?= json_encode($dgNewsList, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
 function dgShowNewsModal() {
@@ -3830,7 +3830,7 @@ function sendMessage(id){
 }
 function printProfile(){ window.print(); }
 
-// â•â•â• STAFF MESSAGING â•â•â•
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â STAFF MESSAGING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 function showMessagingTab(tab, btn) {
   document.querySelectorAll('.msg-tab-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
@@ -3926,14 +3926,14 @@ function sendBroadcast(e){
 }
 </script>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AJAX MODULE LOADING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
     <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
   </div>
 </div>
-<!-- Universal section switcher is provided by dashboard_footer.php — no local override needed -->
+<!-- Universal section switcher is provided by dashboard_footer.php â€” no local override needed -->
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'Hostel Management';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
@@ -6,7 +6,7 @@ $conn = $ctx['staff'];
 $conn2 = $ctx['students'] ?? null;
 
 $hdb_init = $conn2 ?: $conn;
-$hprefix_init = ($hdb_init === $conn && !$conn2) ? 'igangaschool_students.' : '';
+$hprefix_init = ($hdb_init === $conn && !$conn2) ? 'igangaschool_system.' : '';
 if ($hdb_init) {
     @$hdb_init->query("CREATE TABLE IF NOT EXISTS `{$hprefix_init}`hostel_rooms (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -48,9 +48,9 @@ if ($hdb_init) {
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];
 
-// hostel_rooms and hostel are in students_db — use $conn2 when available
+// hostel_rooms and hostel are in students_db â€” use $conn2 when available
 $hdb = $conn2 ?: $conn;
-$hprefix = ($hdb === $conn && !$conn2) ? 'igangaschool_students.' : '';
+$hprefix = ($hdb === $conn && !$conn2) ? 'igangaschool_system.' : '';
 
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 

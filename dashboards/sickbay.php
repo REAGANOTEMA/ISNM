@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -9,9 +9,9 @@ $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Sickbay Staff';
 $user_role = $user['role'] ?? 'Sickbay';
 $user_id = (int)($user['id'] ?? 0);
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
-// ─── Ensure tables exist ───
+// â”€â”€â”€ Ensure tables exist â”€â”€â”€
 if ($staff_conn) {
     @$staff_conn->query("CREATE TABLE IF NOT EXISTS sickness_directory (id INT AUTO_INCREMENT PRIMARY KEY, sickness_code VARCHAR(50) DEFAULT '', sickness_name VARCHAR(200) DEFAULT '', category VARCHAR(100) DEFAULT '', common_symptoms TEXT, description TEXT, is_contagious TINYINT(1) DEFAULT 0, typical_treatment TEXT, status VARCHAR(50) DEFAULT 'Active', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     @$staff_conn->query("CREATE TABLE IF NOT EXISTS daily_sick_records (id INT AUTO_INCREMENT PRIMARY KEY, record_number VARCHAR(50) DEFAULT '', student_id INT DEFAULT 0, student_name VARCHAR(200) DEFAULT '', student_number VARCHAR(50) DEFAULT '', program VARCHAR(200) DEFAULT '', year_of_study INT DEFAULT 0, sickness_id INT DEFAULT NULL, sickness_name VARCHAR(200) DEFAULT '', temperature VARCHAR(20) DEFAULT '', blood_pressure VARCHAR(20) DEFAULT '', symptoms TEXT, diagnosis TEXT, treatment_given TEXT, medicines_prescribed TEXT, severity VARCHAR(50) DEFAULT '', status VARCHAR(50) DEFAULT '', referred_to VARCHAR(200) DEFAULT '', attended_by VARCHAR(200) DEFAULT '', visit_date DATE DEFAULT NULL, visit_time TIME DEFAULT NULL, follow_up_date DATE DEFAULT NULL, notes TEXT, is_deleted TINYINT(1) DEFAULT 0, deleted_at DATETIME DEFAULT NULL, created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -761,7 +761,7 @@ $pageTitle = 'Sickbay Management System';?>
     switch($md['status']){case'In Stock':$msc='bg-success';break;case'Low Stock':$msc='bg-warning text-dark';break;case'Out of Stock':$msc='bg-danger';break;case'Expired':$msc='bg-secondary';break;default:$msc='bg-secondary';}
     $mcs=$md['status']==='Out of Stock'?'stock-critical':($md['status']==='Low Stock'?'stock-warning':($md['status']==='Expired'?'stock-critical':''));
 ?>
-<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'ï¿½'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
+<tr class="<?=$mcs?>"><td><strong><small><?=htmlspecialchars($md['medicine_name'])?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($md['dosage']??'')?></small></td><td><strong><?=(int)$md['quantity']?></strong></td><td><small><?=htmlspecialchars($md['unit']??'units')?></small></td><td><span class="badge <?=$msc?>"><?=htmlspecialchars($md['status']??'In Stock')?></span></td><td><small><?=$md['expiry_date']?date('d M Y',strtotime($md['expiry_date'])):'Ã¯Â¿Â½'?></small></td><td><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_medicine"><input type="hidden" name="id" value="<?=$md['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form><button class="btn btn-sm btn-outline-info" onclick="viewTransactions(<?=$md['id']?>,'<?=htmlspecialchars($md['medicine_name'],ENT_QUOTES)?>')"><i class="fas fa-history"></i></button></td></tr>
 <?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- RECYCLE BIN -->
 <div class="sickbay-section <?=$active_section==='recycle-bin'?'active':''?>" id="sec-recycle-bin">
 <div class="health-card"><h2><i class="fas fa-trash-restore me-2 text-secondary"></i>Recycle Bin</h2>

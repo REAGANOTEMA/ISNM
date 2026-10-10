@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -8,7 +8,7 @@ $auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
 if (stripos($userRole, 'Senior') !== false) {
     session_write_close();
@@ -32,7 +32,7 @@ if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS teaching_announcements (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT NOT NULL, title VARCHAR(200) NOT NULL DEFAULT '', content TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', is_published TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_lecturer (lecturer_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// ── POST handlers ──
+// â”€â”€ POST handlers â”€â”€
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
 
-    // ── Add assessment ──
+    // â”€â”€ Add assessment â”€â”€
     if ($action === 'add_assessment' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_assessments (lecturer_id, student_id, course_name, assessment_type, title, total_marks, marks_obtained, assessment_date, comments) VALUES (?,?,?,?,?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Update assessment ──
+    // â”€â”€ Update assessment â”€â”€
     if ($action === 'update_assessment' && $conn) {
         $stmt = $conn->prepare("UPDATE teaching_assessments SET course_name=?, assessment_type=?, title=?, total_marks=?, marks_obtained=?, assessment_date=?, comments=? WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Delete assessment ──
+    // â”€â”€ Delete assessment â”€â”€
     if ($action === 'delete_assessment' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_assessments WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Add resource ──
+    // â”€â”€ Add resource â”€â”€
     if ($action === 'add_resource' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id, title, resource_type, file_path, url, description, course_name) VALUES (?,?,?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Delete resource ──
+    // â”€â”€ Delete resource â”€â”€
     if ($action === 'delete_resource' && $conn) {
         $stmt = $conn->prepare("DELETE FROM teaching_resources WHERE id=? AND lecturer_id=?");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ── Add announcement ──
+    // â”€â”€ Add announcement â”€â”€
     if ($action === 'add_announcement' && $conn) {
         $stmt = $conn->prepare("INSERT INTO teaching_announcements (lecturer_id, title, content, target_audience, is_published) VALUES (?,?,?,?,?)");
         if (!$stmt) { echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]); exit; }
@@ -1392,7 +1392,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </div><!-- /content-area -->
 </div><!-- /lec-content -->
 
-<!-- ═══ AJAX MODULE LOADING ═══ -->
+<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

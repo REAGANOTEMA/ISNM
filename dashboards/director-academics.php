@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
@@ -35,7 +35,7 @@ $p = $_GET['page'] ?? '';
 if ($p && !isset($_GET['section'])) $_GET['section'] = $acadPageMap[$p] ?? $p;
 $section = $_GET['section'] ?? 'overview';
 
-// â”€â”€ Executive Stats â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Executive Stats Ã¢â€â‚¬Ã¢â€â‚¬
 $total_students    = $students_conn ? sc($students_conn,"SELECT COUNT(*)c FROM students") : 0;
 $active_students   = $students_conn ? sc($students_conn,"SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
 $total_lecturers   = sc($conn,"SELECT COUNT(*)c FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%'");
@@ -52,7 +52,7 @@ if($r){ $row=$r->fetch_assoc(); $avg_gpa=round((float)($row['avg']??0),2); }
 $avg_attendance = 0;
 if($students_conn){ $r=$students_conn->query("SELECT ROUND(AVG(rate)*100,1) avg FROM (SELECT COUNT(*) total,SUM(CASE WHEN status='Present' THEN 1 ELSE 0 END)/COUNT(*) rate FROM student_attendance GROUP BY student_id) t"); if($r){$w=$r->fetch_assoc();$avg_attendance=round((float)($w['avg']??0),1);} }
 
-// â”€â”€ Master Data â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Master Data Ã¢â€â‚¬Ã¢â€â‚¬
 $programs = []; $r=$conn->query("SELECT * FROM academic_programs ORDER BY program_name");
 if($r) while($row=$r->fetch_assoc()) $programs[]=$row;
 
@@ -65,7 +65,7 @@ if($r) while($row=$r->fetch_assoc()) $exams[]=$row;
 $lecturers = []; $r=$conn->query("SELECT id,full_name,position,department,email,phone FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' OR position LIKE '%Head%' ORDER BY full_name");
 if($r) while($row=$r->fetch_assoc()) $lecturers[]=$row;
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
 $course_assignments = []; $r=$conn->query("SELECT ca.*,s.full_name lecturer_name,cc.course_title FROM course_assignments ca LEFT JOIN staff s ON ca.lecturer_id=s.id LEFT JOIN academic_course_catalog cc ON ca.course_code=cc.course_code ORDER BY s.full_name");
 if($r) while($row=$r->fetch_assoc()) $course_assignments[]=$row;
@@ -94,7 +94,7 @@ $enrollment_by_prog = []; if($students_conn){ $r=$students_conn->query("SELECT p
 
 $user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = ".intval($user_id)); if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 
-// â”€â”€ Program Enrollment Stats â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Program Enrollment Stats Ã¢â€â‚¬Ã¢â€â‚¬
 function enrollmentStats($conn, $students_conn, $program_name) {
   if (!$students_conn) return 0;
   $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE program=? AND status='Active'");
@@ -107,7 +107,7 @@ function enrollmentStats($conn, $students_conn, $program_name) {
   return $row ? intval($row['c']) : 0;
 }
 
-// â”€â”€ Report generation â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Report generation Ã¢â€â‚¬Ã¢â€â‚¬
 $report = $_GET['report'] ?? '';
 if ($report) {
     header('Content-Type: text/html; charset=utf-8');
@@ -192,7 +192,7 @@ if ($report) {
     echo '</body></html>'; exit;
 }
 
-// â”€â”€ AJAX â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ AJAX Ã¢â€â‚¬Ã¢â€â‚¬
 $ajax = $_GET['ajax'] ?? '';
 $ajaxSid = intval($_GET['student_id'] ?? 0);
 $ajaxAction = $_GET['action'] ?? '';
@@ -208,7 +208,7 @@ if ($ajax && $ajaxSid > 0) {
     echo json_encode([]); exit;
 }
 
-// â”€â”€ POST â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ POST Ã¢â€â‚¬Ã¢â€â‚¬
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken()) { $_SESSION['error'] = 'Invalid security token.'; header('Location: director-academics.php'); exit; }
     $action = $_POST['action'] ?? '';
@@ -402,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: director-academics.php?section=$section"); exit;
 }
 
-// â”€â”€ Section Nav Builder â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Section Nav Builder Ã¢â€â‚¬Ã¢â€â‚¬
 $navSections = [
   ['id'=>'overview','icon'=>'fa-tachometer-alt','label'=>'Overview'],
   ['id'=>'analytics','icon'=>'fa-chart-pie','label'=>'Analytics'],
@@ -427,7 +427,7 @@ $navSections = [
 function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';return "<a href=\"?section=$id\" class=\"acad-nav-item $act\" data-section=\"$id\"><i class=\"fas $icon\"></i><span>$label</span></a>";}
 $acadIcon = 'fa-graduation-cap';
 $acadRole = 'Director Academics';
-$acadSubtitle = 'Academic Programs Oversight â€“ Curriculum, Exams & Quality Assurance';
+$acadSubtitle = 'Academic Programs Oversight Ã¢â‚¬â€œ Curriculum, Exams & Quality Assurance';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -449,7 +449,7 @@ body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; col
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
 .page-content { padding: 0 !important; }
 
-/* â”€â”€ Top Bar â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Top Bar Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 @media (max-width: 768px) {
     .acad-content { margin-left: 0; padding: 12px; }
@@ -481,11 +481,11 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 
 
-/* â”€â”€ Content â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Content Ã¢â€â‚¬Ã¢â€â‚¬ */
 .acad-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
 @media (max-width: 768px) { .acad-content { margin-left: 0; } }
 
-/* â”€â”€ KPI Cards â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ KPI Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -513,7 +513,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
 .kpi-pr { border-left-color: #7c3aed; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
 
-/* â”€â”€ Section Cards â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Section Cards Ã¢â€â‚¬Ã¢â€â‚¬ */
 .section-card {
   background: var(--acad-card-bg);
   border-radius: 10px;
@@ -529,7 +529,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .section-title i { font-size: 15px; }
 .section-subtitle { font-size: 11px; color: var(--acad-text-muted); margin: 0; }
 
-/* â”€â”€ Tables â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Tables Ã¢â€â‚¬Ã¢â€â‚¬ */
 .acad-table { font-size: 12px; margin-bottom: 0; }
 .acad-table thead th { background: #f8fafc; font-weight: 600; color: var(--acad-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--acad-border); }
 .acad-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -538,13 +538,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .table-scroll::-webkit-scrollbar { width: 4px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* â”€â”€ Animations â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Animations Ã¢â€â‚¬Ã¢â€â‚¬ */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 .an-fade { animation: fadeInUp 0.5s ease forwards; }
 .an-slide { animation: slideIn 0.4s ease forwards; }
 
-/* â”€â”€ Responsive â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Responsive Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
@@ -557,7 +557,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 }
 @media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
 
-/* â”€â”€ Print â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Print Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media print {
   body { background:#fff !important; font-size:10pt; }
   .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
@@ -572,7 +572,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   .table-scroll { max-height:none !important; overflow:visible !important; }
 }
 
-/* â”€â”€ Section visibility â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Section visibility Ã¢â€â‚¬Ã¢â€â‚¬ */
 .dashboard-section:not(.active) { display:none; }
 </style>
 </head>
@@ -581,14 +581,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<!-- â•â•â• TOP BAR â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TOP BAR Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 
 <div class="acad-content">
 <div style="text-align:right;margin-bottom:8px" class="no-print"><button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i> Print</button></div>
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="section-card">
-      <div class="section-header"><h3 class="section-title"><i class="fas fa-sitemap text-info"></i>Your Position in Hierarchy</h3><span class="section-subtitle">Level 3 â€“ Reports to Director General</span></div>
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-sitemap text-info"></i>Your Position in Hierarchy</h3><span class="section-subtitle">Level 3 Ã¢â‚¬â€œ Reports to Director General</span></div>
       <?= renderHierarchyChart($conn) ?>
     </div>
     <div class="section-card">
@@ -643,7 +643,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• ANALYTICS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ANALYTICS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="analytics-section" class="content-section <?= $section==='analytics'?'active':'' ?> dashboard-section" data-section="analytics">
                 <h2><i class="fas fa-chart-pie me-2"></i>Academic Analytics</h2>
                 <div class="row g-3">
@@ -688,7 +688,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• PROGRAMS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PROGRAMS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="programs-section" class="content-section <?= $section==='programs'?'active':'' ?> dashboard-section" data-section="programs">
                 <h2><i class="fas fa-book me-2"></i>Program Management</h2>
                 <?php if (!empty($programs)): ?>
@@ -712,7 +712,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <?php else: echo '<div class="empty-state"><i class="fas fa-book"></i><p>No programs configured yet.</p></div>'; endif; ?>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• COURSES â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â COURSES Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="courses-section" class="content-section <?= $section==='courses'?'active':'' ?> dashboard-section" data-section="courses">
                 <h2><i class="fas fa-layer-group me-2"></i>Courses & Modules</h2>
                 <?php if(!empty($courses_catalog)): ?>
@@ -731,7 +731,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <?php else: echo '<div class="empty-state"><i class="fas fa-layer-group"></i><p>No courses in catalog.</p></div>'; endif; ?>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• ENROLLMENT â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ENROLLMENT Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="enrollment-section" class="content-section <?= $section==='enrollment'?'active':'' ?> dashboard-section" data-section="enrollment">
                 <h2><i class="fas fa-users me-2"></i>Enrollment Statistics</h2>
                 <div class="row g-3">
@@ -762,7 +762,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• CURRICULUM â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CURRICULUM Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="curriculum-section" class="content-section <?= $section==='curriculum'?'active':'' ?> dashboard-section" data-section="curriculum">
                 <h2><i class="fas fa-sitemap me-2"></i>Curriculum Management</h2>
                 <div class="row g-3">
@@ -817,7 +817,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• EXAMS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â EXAMS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="exams-section" class="content-section <?= $section==='exams'?'active':'' ?> dashboard-section" data-section="exams">
                 <h2><i class="fas fa-clipboard-list me-2"></i>Examination Centre</h2>
                 <div class="mb-3 d-flex flex-wrap gap-2">
@@ -847,7 +847,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• RESULTS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â RESULTS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="results-section" class="content-section <?= $section==='results'?'active':'' ?> dashboard-section" data-section="results">
                 <h2><i class="fas fa-star me-2"></i>Results Management</h2>
                 <?php if(!empty($academic_records)): ?>
@@ -869,7 +869,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <?php else: echo '<div class="empty-state"><i class="fas fa-star"></i><p>No results recorded yet.</p></div>'; endif; ?>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• APPROVALS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â APPROVALS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="approvals-section" class="content-section <?= $section==='approvals'?'active':'' ?> dashboard-section" data-section="approvals">
                 <h2><i class="fas fa-check-double me-2"></i>Results Approval Center</h2>
                 <div class="row g-3">
@@ -904,7 +904,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• TRANSCRIPTS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TRANSCRIPTS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="transcripts-section" class="content-section <?= $section==='transcripts'?'active':'' ?> dashboard-section" data-section="transcripts">
                 <h2><i class="fas fa-file-alt me-2"></i>Transcript Management</h2>
                 <div class="row g-3">
@@ -941,7 +941,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• ATTENDANCE â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ATTENDANCE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="attendance-section" class="content-section <?= $section==='attendance'?'active':'' ?> dashboard-section" data-section="attendance">
                 <h2><i class="fas fa-calendar-check me-2"></i>Student Attendance</h2>
                 <div class="row g-3">
@@ -977,7 +977,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• CLINICAL â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CLINICAL Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="clinical-section" class="content-section <?= $section==='clinical'?'active':'' ?> dashboard-section" data-section="clinical">
                 <h2><i class="fas fa-heartbeat me-2"></i>Clinical Training Programs</h2>
                 <?php if(!empty($clinical)): ?>
@@ -995,7 +995,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <?php else: echo '<div class="empty-state"><i class="fas fa-heartbeat"></i><p>No clinical training records.</p></div>'; endif; ?>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• LECTURERS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â LECTURERS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
                 <section id="lecturers-section" class="content-section <?= $section==='lecturers'?'active':'' ?> dashboard-section" data-section="lecturers">
                 <h2><i class="fas fa-chalkboard-teacher me-2"></i>Lecturer Management <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print"></i> Print</button></h2>
                 <div class="row g-3">
@@ -1049,7 +1049,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• TIMETABLE â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TIMETABLE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="timetable-section" class="content-section <?= $section==='timetable'?'active':'' ?> dashboard-section" data-section="timetable">
                 <h2><i class="fas fa-clock me-2"></i>Timetable Management</h2>
                 <div class="row g-3">
@@ -1092,7 +1092,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• QUALITY â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â QUALITY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="quality-section" class="content-section <?= $section==='quality'?'active':'' ?> dashboard-section" data-section="quality">
                 <h2><i class="fas fa-shield-alt me-2"></i>Quality Assurance & Accreditation</h2>
                 <div class="row g-3">
@@ -1128,7 +1128,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• REPORTS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â REPORTS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="reports-section" class="content-section <?= $section==='reports'?'active':'' ?> dashboard-section" data-section="reports">
                 <h2><i class="fas fa-chart-bar me-2"></i>Academic Reports</h2>
                 <div class="reports-grid">
@@ -1143,7 +1143,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• DUTIES â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â DUTIES Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="duties-section" class="content-section <?= $section==='duties'?'active':'' ?> dashboard-section" data-section="duties">
                 <h2><i class="fas fa-tasks me-2"></i>Official Duties</h2>
                 <?php
@@ -1158,7 +1158,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 ?>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• ACTIVITY â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ACTIVITY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="activity-section" class="content-section <?= $section==='activity'?'active':'' ?> dashboard-section" data-section="activity">
                 <h2><i class="fas fa-history me-2"></i>Recent Activities</h2>
                 <div class="activities-list">
@@ -1176,7 +1176,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• WEBSITE SUBMISSIONS â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â WEBSITE SUBMISSIONS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
             <section id="submissions-section" class="content-section <?= $section==='submissions'?'active':'' ?> dashboard-section" data-section="submissions">
                 <div class="section-card">
                     <div class="section-header">
@@ -1204,13 +1204,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 </div>
 </div>
-<!-- â•â•â•â•â•â•â•â•â•â•â• MODALS â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODALS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 
     <!-- Create Exam Modal -->
     <div class="modal fade" id="createExamModal" tabindex="-1"><div class="modal-dialog"><form method="POST" class="modal-content"><input type="hidden" name="action" value="create_exam">
         <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-plus me-2"></i>Create Exam</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body"><div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Course</label><select name="course_code" class="form-select" required><option value="">Select Course</option><?php foreach($courses_catalog as $c): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> â€“ <?= htmlspecialchars($c['course_title']) ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-6"><label class="form-label">Course</label><select name="course_code" class="form-select" required><option value="">Select Course</option><?php foreach($courses_catalog as $c): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> Ã¢â‚¬â€œ <?= htmlspecialchars($c['course_title']) ?></option><?php endforeach; ?></select></div>
             <div class="col-md-6"><label class="form-label">Exam Type</label><select name="exam_type" class="form-select"><option>Mid Semester</option><option>End of Semester</option><option>Supplementary</option><option>Practical</option></select></div>
             <div class="col-md-6"><label class="form-label">Program</label><select name="program_code" class="form-select"><option value="">All Programs</option><?php foreach($programs as $p): ?><option value="<?= htmlspecialchars($p['program_code']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?></select></div>
             <div class="col-md-6"><label class="form-label">Date</label><input type="date" name="exam_date" class="form-control" required></div>
@@ -1225,7 +1225,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     <div class="modal fade" id="enterMarksModal" tabindex="-1"><div class="modal-dialog modal-lg"><form method="POST" class="modal-content"><input type="hidden" name="action" value="enter_marks">
         <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Enter Exam Marks</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body"><div class="row g-3">
-            <div class="col-md-4"><label class="form-label">Exam</label><select name="exam_number" class="form-select" required><option value="">Select Exam</option><?php foreach($exams as $e): ?><option value="<?= htmlspecialchars($e['exam_number']) ?>"><?= htmlspecialchars($e['exam_number']) ?> â€“ <?= htmlspecialchars($e['course_code']) ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-4"><label class="form-label">Exam</label><select name="exam_number" class="form-select" required><option value="">Select Exam</option><?php foreach($exams as $e): ?><option value="<?= htmlspecialchars($e['exam_number']) ?>"><?= htmlspecialchars($e['exam_number']) ?> Ã¢â‚¬â€œ <?= htmlspecialchars($e['course_code']) ?></option><?php endforeach; ?></select></div>
             <div class="col-md-4"><label class="form-label">Student</label><select name="student_id" class="form-select" required><option value="">Select Student</option><?php if($students_conn){$r=$students_conn->query("SELECT id,full_name,student_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");if($r)while($row=$r->fetch_assoc()):?><option value="<?=$row['id']?>"><?=htmlspecialchars($row['full_name']?:$row['student_number'])?></option><?php endwhile;} ?></select></div>
             <div class="col-md-4"><label class="form-label">Course Code</label><input type="text" name="course_code" class="form-control" required></div>
             <div class="col-md-4"><label class="form-label">Course Name</label><input type="text" name="course_name" class="form-control"></div>
@@ -1266,7 +1266,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     </form></div></div>
 
     <script>
-    // â”€â”€ Modal Fns â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Modal Fns Ã¢â€â‚¬Ã¢â€â‚¬
     function openExamModal(){ new bootstrap.Modal(document.getElementById('createExamModal')).show(); }
     function openEnterMarksModal(){ new bootstrap.Modal(document.getElementById('enterMarksModal')).show(); }
     function approveResult(en){ document.getElementById('approveExamNumber').value=en; new bootstrap.Modal(document.getElementById('approveResultModal')).show(); }
@@ -1278,7 +1278,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         new bootstrap.Modal(document.getElementById('editMarksModal')).show();
     }
 
-    // â”€â”€ Student Profile â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Student Profile Ã¢â€â‚¬Ã¢â€â‚¬
     function viewStudentProfile(id) {
         const modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
         document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading...</p></div>';
@@ -1322,13 +1322,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         w.document.close();
     }
 
-    // â”€â”€ Table Filters â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Table Filters Ã¢â€â‚¬Ã¢â€â‚¬
     function filterTable(inputId, tableId){
         const q = document.getElementById(inputId)?.value?.toLowerCase()||'';
         document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{ r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
     }
 
-    // â”€â”€ Course Assignment â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Course Assignment Ã¢â€â‚¬Ã¢â€â‚¬
     function assignCourse(lid, name){
         const f = document.createElement('form'); f.method='POST'; f.className='d-inline';
         f.innerHTML = '<input name="action" value="assign_lecturer"><input name="lecturer_id" value="'+lid+'">' +
@@ -1338,12 +1338,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         document.body.appendChild(f); f.submit();
     }
 
-    // â”€â”€ Report Helper â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Report Helper Ã¢â€â‚¬Ã¢â€â‚¬
     function generateReport(report, params){
         window.open('director-academics.php?report='+report+'&'+params,'_blank');
     }
 
-    // â”€â”€ Hash Routing (sidebar #anchor support) â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Hash Routing (sidebar #anchor support) Ã¢â€â‚¬Ã¢â€â‚¬
     (function(){
         var h = window.location.hash.replace('#','');
         if(h && window.location.search.indexOf('section=')===-1){
@@ -1356,7 +1356,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     });
     </script>
 
-<!-- â•â•â• AJAX MODULE LOADING â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AJAX MODULE LOADING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
     <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>

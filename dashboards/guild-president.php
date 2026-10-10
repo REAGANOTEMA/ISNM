@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['guild president']);
@@ -10,9 +10,9 @@ $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'User';
 $user_role = $user['role'] ?? '';
-$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
-// â”€â”€ Page routing â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Page routing Ã¢â€â‚¬Ã¢â€â‚¬
 $pageToSection = [
     'home'          => 'overview',
     'overview'      => 'overview',
@@ -39,7 +39,7 @@ if ($studentsDb) {
     if ($r) while ($row = $r->fetch_assoc()) $programs[] = $row['program'];
 }
 
-// â”€â”€ Data for sections â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Data for sections Ã¢â€â‚¬Ã¢â€â‚¬
 $welfareCases = []; $welfareOpen = 0; $welfareResolved = 0; $counselingSessions = [];
 $upcomingEvents = []; $sportsEvents = []; $studentDiscipline = []; $disciplineOpen = 0;
 if ($staffDb) {
@@ -49,19 +49,19 @@ if ($staffDb) {
     if ($r) $welfareOpen = (int)$r->fetch_assoc()['c'];
     $r = $staffDb->query("SELECT COUNT(*) c FROM welfare_cases WHERE status IN ('resolved','closed')");
     if ($r) $welfareResolved = (int)$r->fetch_assoc()['c'];
-    $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschool_students.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
+    $r = $staffDb->query("SELECT cs.*, s.full_name as student_name FROM counseling_sessions cs LEFT JOIN igangaschool_system.students s ON cs.student_id=s.id ORDER BY cs.session_date DESC LIMIT 10");
     if ($r) $counselingSessions = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT * FROM calendar_events WHERE event_date >= CURDATE() AND is_active=1 ORDER BY event_date ASC LIMIT 10");
     if ($r) $upcomingEvents = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT * FROM sports_events WHERE event_date >= NOW() ORDER BY event_date ASC LIMIT 10");
     if ($r) $sportsEvents = isnm_fetch_all($r);
-    $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschool_students.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
+    $r = $staffDb->query("SELECT sd.*, s.full_name as student_name FROM student_discipline_records sd LEFT JOIN igangaschool_system.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 15");
     if ($r) $studentDiscipline = isnm_fetch_all($r);
     $r = $staffDb->query("SELECT COUNT(*) c FROM student_discipline_records WHERE status IN ('Pending','Open','Under Investigation')");
     if ($r) $disciplineOpen = (int)$r->fetch_assoc()['c'];
 }
 
-// ── CSRF helpers ──
+// â”€â”€ CSRF helpers â”€â”€
 function gp_csrf_token() {
     if (session_status() !== PHP_SESSION_ACTIVE) session_start();
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -73,7 +73,7 @@ function gp_verify_csrf() {
     return hash_equals($_SESSION['csrf_token'] ?? '', $token);
 }
 
-// ── AJAX POST handlers ──
+// â”€â”€ AJAX POST handlers â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // ── Welfare: Create case ──
+    // â”€â”€ Welfare: Create case â”€â”€
     if ($action === 'create_welfare') {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $studentId = (int)($_POST['student_id'] ?? 0);
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         exit;
     }
 
-    // ── Welfare: Update status ──
+    // â”€â”€ Welfare: Update status â”€â”€
     if ($action === 'update_welfare') {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $caseId   = (int)($_POST['case_id'] ?? 0);
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         exit;
     }
 
-    // ── Feedback: Submit suggestion ──
+    // â”€â”€ Feedback: Submit suggestion â”€â”€
     if ($action === 'submit_feedback') {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $category = trim($_POST['category'] ?? 'General');
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         exit;
     }
 
-    // ── Events: Create guild event ──
+    // â”€â”€ Events: Create guild event â”€â”€
     if ($action === 'create_event') {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $title     = trim($_POST['title'] ?? '');
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staffDb) {
         exit;
     }
 
-    // ── Events: Delete event ──
+    // â”€â”€ Events: Delete event â”€â”€
     if ($action === 'delete_event') {
         if (!gp_verify_csrf()) { echo json_encode(['success'=>false,'message'=>'Invalid CSRF']); exit; }
         $eventId = (int)($_POST['event_id'] ?? 0);

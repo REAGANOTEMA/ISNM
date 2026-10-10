@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 $pageTitle = 'Recruitment';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal']);
 $conn = $ctx['staff'];
 if ($conn) {
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`staff_recruitment` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         position_title VARCHAR(200) NOT NULL,

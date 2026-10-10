@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['director','secretary','ict','it','principal']);
 $staffConn = $ctx['staff'];
@@ -13,7 +13,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$students_db}`.`announcements` (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(300) NOT NULL, body TEXT NOT NULL, target_audience VARCHAR(100) DEFAULT 'All', priority VARCHAR(50) DEFAULT 'Normal', posted_by INT DEFAULT 0, is_active TINYINT(1) DEFAULT 1, expires_at DATE DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -53,7 +53,7 @@ if ($conn) {
         $params[] = $filterPriority;
     }
     $ws = implode(' AND ', $where);
-    $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschool_staffs.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
+    $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschool_system.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
     if (!$stmt) {
         $stmt = $conn->prepare("SELECT a.* FROM announcements a WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
     }

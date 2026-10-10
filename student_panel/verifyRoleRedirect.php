@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -24,7 +24,7 @@ ini_set('log_errors', 1);
     $isStudent = $isStudentSession;
     $studentsConn = getStudentsConnection();
     if ($studentsConn) {
-        $sql = 'SELECT id FROM `igangaschool_students`.`students` WHERE id = ? LIMIT 1';
+        $sql = 'SELECT id FROM `igangaschool_system`.`students` WHERE id = ? LIMIT 1';
         $stmt = mysqli_prepare($studentsConn, $sql);
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "i", $userId);

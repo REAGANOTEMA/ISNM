@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Universal student lookup â€” searches igangaschool_students
+ * Universal student lookup Ã¢â‚¬â€ searches igangaschool_system
  * and falls back to Excel data files in students_data/
  */
 
@@ -9,7 +9,7 @@ if (!function_exists('findStudents')) {
         $results = [];
         $term = trim($term);
 
-        // â”€â”€ 1. Search students DB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Ã¢â€â‚¬Ã¢â€â‚¬ 1. Search students DB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         try {
             $conn = getStudentsConnection();
             if ($conn) {
@@ -58,7 +58,7 @@ if (!function_exists('findStudents')) {
             error_log('findStudents DB: ' . $e->getMessage());
         }
 
-        // â”€â”€ 2. Supplement from Excel files if DB returned nothing â”€
+        // Ã¢â€â‚¬Ã¢â€â‚¬ 2. Supplement from Excel files if DB returned nothing Ã¢â€â‚¬
         if (empty($results)) {
             try {
                 $loaderFile = __DIR__ . '/../views/student_data_loader.php';

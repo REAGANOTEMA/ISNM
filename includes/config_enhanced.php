@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // ISNM Enhanced Configuration with Multi-Database Support
 // Credentials are loaded from config/database.php and .env.
 
@@ -27,7 +27,7 @@ ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
 // Set timezone
 date_default_timezone_set('Africa/Kampala');
 
-// Initialize database connections — only test in debug mode or via health-check
+// Initialize database connections â€” only test in debug mode or via health-check
 if (defined('APP_DEBUG') && APP_DEBUG) {
     try {
         $connection_tests = DatabaseConnection::testAllConnections();
@@ -77,7 +77,7 @@ if (!function_exists('escapeString')) {
     }
 }
 
-// Safe execute wrapper — logs errors and returns false on failure
+// Safe execute wrapper â€” logs errors and returns false on failure
 if (!function_exists('dbExecute')) {
     function dbExecute($stmt) {
         if ($stmt->execute()) return true;
@@ -97,7 +97,7 @@ if (!function_exists('getDatabaseConnection')) {
             case 'website':
                 return DatabaseConnection::getWebsiteConnection();
             case 'ict':
-                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('igangaschool_ict');
+                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('igangaschool_system');
             default:
                 throw new Exception("Unknown database: {$database}");
         }

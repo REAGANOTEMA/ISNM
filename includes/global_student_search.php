@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Centralized Global Student Search — ISNM
+ * Centralized Global Student Search â€” ISNM
  *
  * Single AJAX endpoint that ALL dashboards can use to search for students
  * across multiple databases and tables.
@@ -11,8 +11,8 @@
  *   renderGlobalSearchBar();     // Reusable HTML search bar
  *
  * Accepts: GET
- *   q     — search term (min 2 chars)
- *   limit — max results (default 20, max 100)
+ *   q     â€” search term (min 2 chars)
+ *   limit â€” max results (default 20, max 100)
  *
  * Returns JSON:
  *   {success: bool, results: [...], count: int}
@@ -23,12 +23,12 @@ if (!function_exists('handleGlobalStudentSearch')) {
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        /* ── Ensure database connections are available ── */
+        /* â”€â”€ Ensure database connections are available â”€â”€ */
         if (!function_exists('getStudentsConnection')) {
             require_once __DIR__ . '/../config/database.php';
         }
 
-        /* ── Parse GET parameters ── */
+        /* â”€â”€ Parse GET parameters â”€â”€ */
         $q     = trim($_GET['q'] ?? '');
         $limit = min(max((int) ($_GET['limit'] ?? 20), 1), 100);
 
@@ -45,7 +45,7 @@ if (!function_exists('handleGlobalStudentSearch')) {
         $results = [];
         $seen    = [];
 
-        /* ── Dedup key helper ── */
+        /* â”€â”€ Dedup key helper â”€â”€ */
         $dedupKey = static function (string $studentNumber, string $fullName, string $email): string {
             if ($studentNumber !== '') {
                 return 'sn:' . strtolower($studentNumber);
@@ -53,7 +53,7 @@ if (!function_exists('handleGlobalStudentSearch')) {
             return 'ne:' . strtolower(trim($fullName)) . '|' . strtolower(trim($email));
         };
 
-        /* ── Normalise result row ── */
+        /* â”€â”€ Normalise result row â”€â”€ */
         $normalise = static function (array $row, string $source): array {
             $fn   = trim($row['first_name'] ?? '');
             $sn   = trim($row['surname'] ?? $row['last_name'] ?? '');
@@ -73,9 +73,9 @@ if (!function_exists('handleGlobalStudentSearch')) {
             ];
         };
 
-        /* ═══════════════════════════════════════════════════
-         * 1. Search: igangaschool_students.students
-         * ═══════════════════════════════════════════════════ */
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         * 1. Search: igangaschool_system.students
+         * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         $stuConn = function_exists('getStudentsConnection') ? getStudentsConnection() : null;
         if ($stuConn) {
             $like = '%' . $q . '%';
@@ -108,15 +108,15 @@ if (!function_exists('handleGlobalStudentSearch')) {
                         }
                     }
                 } else {
-                    error_log('global_student_search: students query failed — ' . ($stmt->error ?? ''));
+                    error_log('global_student_search: students query failed â€” ' . ($stmt->error ?? ''));
                 }
                 $stmt->close();
             }
         }
 
-        /* ═══════════════════════════════════════════════════
-         * 2. Search: igangaschool_staffs.student_admission_tracking
-         * ═══════════════════════════════════════════════════ */
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         * 2. Search: igangaschool_system.student_admission_tracking
+         * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         $staffConn = function_exists('getStaffConnection') ? getStaffConnection() : null;
         if ($staffConn) {
             $like = '%' . $q . '%';
@@ -143,14 +143,14 @@ if (!function_exists('handleGlobalStudentSearch')) {
                         }
                     }
                 } else {
-                    error_log('global_student_search: admission_tracking query failed — ' . ($stmt->error ?? ''));
+                    error_log('global_student_search: admission_tracking query failed â€” ' . ($stmt->error ?? ''));
                 }
                 $stmt->close();
             }
 
-            /* ═══════════════════════════════════════════════════
-             * 3. Search: igangaschool_staffs.applicants
-             * ═══════════════════════════════════════════════════ */
+            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+             * 3. Search: igangaschool_system.applicants
+             * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
             $sql = "SELECT id, application_number, full_name, email, phone,
                            program_id, status
                     FROM applicants
@@ -174,13 +174,13 @@ if (!function_exists('handleGlobalStudentSearch')) {
                         }
                     }
                 } else {
-                    error_log('global_student_search: applicants query failed — ' . ($stmt->error ?? ''));
+                    error_log('global_student_search: applicants query failed â€” ' . ($stmt->error ?? ''));
                 }
                 $stmt->close();
             }
         }
 
-        /* ── Trim to limit and respond ── */
+        /* â”€â”€ Trim to limit and respond â”€â”€ */
         $results = array_slice($results, 0, $limit);
 
         echo json_encode([

@@ -1,14 +1,16 @@
-<?php
+﻿<?php
 /**
  * ISNM Complete Database Setup Script
- * Creates all databases and tables from scratch.
+ * Creates the two databases and imports the schema + data from the
+ * privilege-safe dump files in sql/system and sql/website.
  * Access via: http://localhost/ISNM/database/setup_all_databases.php
  *
  * Steps:
  *   1. Test MySQL connection
- *   2. Create all 4 databases
- *   3. Create tables (from master_migration.sql + ICT extras)
- *   4. Seed essential data (roles, admin users, defaults)
+ *   2. Create the two databases
+ *   3. Import sql/system/igangaschool_system.sql   -> igangaschool_system
+ *   4. Import sql/website/igangaschool_website.sql -> igangaschool_website
+ *   5. Seed essential data (only if tables are empty)
  */
 
 session_start();
@@ -22,42 +24,25 @@ if (!in_array($remoteAddr, $allowedHosts)) {
 
 require_once __DIR__ . '/../config/database.php';
 
-// ── Load .env manually if not already loaded ──
-if (!defined('STUDENTS_DB_HOST')) {
-    $envPath = __DIR__ . '/../.env';
-    if (is_file($envPath)) {
-        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#') continue;
-            [$k, $v] = array_pad(explode('=', $line, 2), 2, '');
-            $k = trim($k);
-            $v = trim($v);
-            if ($k !== '' && !defined($k)) {
-                putenv("$k=$v");
-                $_ENV[$k] = $v;
-            }
-        }
-    }
-}
-
 function envVal($key, $default = '') {
     $v = getenv($key);
-    return ($v === false) ? $default : $v;
+    if ($v === false && isset($_ENV[$key])) {
+        $v = $_ENV[$key];
+    }
+    return ($v === false || $v === null) ? $default : $v;
 }
 
 // ── Config ──
-$host = envVal('STUDENTS_DB_HOST', 'localhost');
-$port = (int) envVal('STUDENTS_DB_PORT', 3306);
-$user = envVal('STUDENTS_DB_USER', 'root');
-$pass = envVal('STUDENTS_DB_PASS', '');
+$host = envVal('SYSTEM_DB_HOST', envVal('DB_HOST', 'localhost'));
+$port = (int) envVal('SYSTEM_DB_PORT', envVal('DB_PORT', 3306));
+$user = envVal('SYSTEM_DB_USER', 'root');
+$pass = envVal('SYSTEM_DB_PASS', '');
 $charset = envVal('DB_CHARSET', 'utf8mb4');
 
+// Two production databases and the dump file that fills each one.
 $databases = [
-    'igangaschool_staffs',
-    'igangaschool_students',
-    'igangaschool_website',
-    'igangaschool_ict',
+    'igangaschool_system'  => __DIR__ . '/../sql/system/igangaschool_system.sql',
+    'igangaschool_website' => __DIR__ . '/../sql/website/igangaschool_website.sql',
 ];
 
 // ── Helpers ──
@@ -76,78 +61,116 @@ function createDB($conn, $dbName, &$log) {
     return false;
 }
 
-function runSQLFileAgainstDB($conn, $dbName, $sqlContent, &$log) {
+/**
+ * Split a dump into individual statements, honouring DELIMITER directives
+ * (needed for triggers / procedures) and ignoring semicolons inside
+ * quoted strings and backtick identifiers.
+ */
+function splitSqlStatements($sql) {
+    $sql = ltrim($sql, "\xEF\xBB\xBF");
+    $statements = [];
+    $delimiter = ';';
+    $buffer = '';
+    $len = strlen($sql);
+    $i = 0;
+    $inString = false;
+    $stringChar = '';
+
+    while ($i < $len) {
+        // DELIMITER directive only valid at the start of a line.
+        if (!$inString && trim($buffer) === '' && ($i === 0 || $sql[$i - 1] === "\n")) {
+            if (preg_match('/^\s*DELIMITER\s+(\S+)/i', substr($sql, $i, 32), $m)) {
+                $delimiter = $m[1];
+                $nl = strpos($sql, "\n", $i);
+                if ($nl === false) {
+                    break;
+                }
+                $i = $nl + 1;
+                continue;
+            }
+        }
+
+        $ch = $sql[$i];
+        if ($inString) {
+            $buffer .= $ch;
+            if ($ch === '\\' && $stringChar !== '`' && $i + 1 < $len) {
+                $buffer .= $sql[$i + 1];
+                $i += 2;
+                continue;
+            }
+            if ($ch === $stringChar) {
+                $inString = false;
+            }
+        } else {
+            if ($ch === "'" || $ch === '"' || $ch === '`') {
+                $inString = true;
+                $stringChar = $ch;
+                $buffer .= $ch;
+            } elseif (substr($sql, $i, strlen($delimiter)) === $delimiter) {
+                if (trim($buffer) !== '') {
+                    $statements[] = trim($buffer);
+                }
+                $buffer = '';
+                $i += strlen($delimiter);
+                continue;
+            } else {
+                $buffer .= $ch;
+            }
+        }
+        $i++;
+    }
+    if (trim($buffer) !== '') {
+        $statements[] = trim($buffer);
+    }
+    return $statements;
+}
+
+function importDump($conn, $dbName, $file, &$log, &$stats) {
+    if (!is_file($file)) {
+        addLog($log, "Dump not found: " . basename($file), 'danger');
+        return 0;
+    }
     $safe = $conn->real_escape_string($dbName);
     if (!$conn->select_db($safe)) {
         addLog($log, "Cannot select database '$dbName': " . $conn->error, 'danger');
         return 0;
     }
+
+    $sql = file_get_contents($file);
+    if ($sql === false) {
+        addLog($log, "Could not read " . basename($file), 'danger');
+        return 0;
+    }
+
     $conn->query("SET FOREIGN_KEY_CHECKS=0");
     $conn->query("SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO'");
 
-    // Split by statement boundaries, ignoring DELIMITER blocks
-    $statements = splitSQL($sqlContent);
+    $statements = splitSqlStatements($sql);
     $ok = 0;
     $fail = 0;
     foreach ($statements as $stmt) {
-        $stmt = trim($stmt);
-        if ($stmt === '' || $stmt[0] === '-' || stripos($stmt, 'DELIMITER') === 0) continue;
-        if (stripos($stmt, 'CREATE DEFINER') !== false) continue; // skip stored procedures
-        if (stripos($stmt, 'INSERT INTO') === 0) continue; // skip seed data from dumps
-        if (stripos($stmt, 'SET ') === 0 && stripos($stmt, 'SET SQL_MODE') !== false) continue;
-        if (stripos($stmt, 'START TRANSACTION') !== false) continue;
-        if (stripos($stmt, 'COMMIT') !== false) continue;
-        if (preg_match('/^\/\*!/', $stmt)) continue;
-
-        $trimmed = rtrim($stmt, ';');
-        if ($trimmed === '') continue;
-
-        if ($conn->query($trimmed)) {
+        // Skip pure comment / empty fragments.
+        if ($stmt === '' || preg_match('/^(--|#)/', $stmt)) {
+            continue;
+        }
+        if ($conn->query($stmt)) {
             $ok++;
         } else {
             $fail++;
+            if ($fail <= 5) {
+                addLog($log, "  ! " . substr($stmt, 0, 120) . " ... => " . $conn->error, 'warning');
+            }
         }
     }
+
     $conn->query("SET FOREIGN_KEY_CHECKS=1");
-    addLog($log, "Applied to '$dbName': $ok statements OK, $fail failed.", $fail > 0 ? 'warning' : 'success');
+    $stats['tables_ok'] += $ok;
+    $stats['tables_fail'] += $fail;
+    addLog($log, "Imported '" . basename($file) . "' into '$dbName': $ok statements OK, $fail failed.", $fail > 0 ? 'warning' : 'success');
     return $ok;
 }
 
-function splitSQL($content) {
-    // Remove BOM
-    $content = ltrim($content, "\xEF\xBB\xBF");
-    $stmts = [];
-    $current = '';
-    $inString = false;
-    $stringChar = '';
-    $len = strlen($content);
-    for ($i = 0; $i < $len; $i++) {
-        $ch = $content[$i];
-        if ($inString) {
-            $current .= $ch;
-            if ($ch === $stringChar && ($i === 0 || $content[$i - 1] !== '\\')) {
-                $inString = false;
-            }
-        } else {
-            if ($ch === '\'' || $ch === '"') {
-                $inString = true;
-                $stringChar = $ch;
-                $current .= $ch;
-            } elseif ($ch === ';') {
-                $stmts[] = $current . ';';
-                $current = '';
-            } else {
-                $current .= $ch;
-            }
-        }
-    }
-    if (trim($current) !== '') {
-        $stmts[] = $current;
-    }
-    return $stmts;
-}
-
-// ── Seed data functions ──
+// ── Seed data functions (run only when tables are empty) ──
 
 function seedStaffRoles($conn, &$log) {
     $count = 0;
@@ -326,19 +349,6 @@ function seedGradeScales($conn, &$log) {
     addLog($log, "Grade scales: $added scales inserted.", 'success');
 }
 
-function seedFeeStructure($conn, &$log) {
-    $check = $conn->query("SELECT COUNT(*) AS cnt FROM fee_structures");
-    if (!$check) {
-        addLog($log, "fee_structures table not found, skipping fee seed.", 'info');
-        return;
-    }
-    if ($check->fetch_assoc()['cnt'] > 0) {
-        addLog($log, "Fee structures: Already seeded (skipped).", 'info');
-        return;
-    }
-    addLog($log, "Fee structures: No default seed data (configure manually).", 'info');
-}
-
 function seedRegistrarSettings($conn, &$log) {
     $check = $conn->query("SELECT COUNT(*) AS cnt FROM registrar_settings");
     if (!$check) {
@@ -434,7 +444,6 @@ function seedStaffDepartments($conn, &$log) {
 }
 
 function seedWebsiteCMS($conn, &$log) {
-    // Seed minimal CMS settings
     $check = $conn->query("SELECT COUNT(*) AS cnt FROM cms_settings");
     if (!$check) {
         addLog($log, "cms_settings table not found, skipping.", 'info');
@@ -462,9 +471,9 @@ function seedWebsiteCMS($conn, &$log) {
     addLog($log, "CMS settings: $added settings inserted.", 'success');
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  MAIN EXECUTION
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 
 $step = isset($_GET['step']) ? (int) $_GET['step'] : 0;
 $log = [];
@@ -488,121 +497,42 @@ if ($step >= 1) {
 if ($step >= 2 && $conn) {
     // Step 2: Create databases
     addLog($log, "--- Creating databases ---", 'info');
-    foreach ($databases as $db) {
-        if (createDB($conn, $db, $stats)) {
+    foreach (array_keys($databases) as $db) {
+        if (createDB($conn, $db, $log)) {
             $stats['databases']++;
         }
     }
 }
 
 if ($step >= 3 && $conn) {
-    // Step 3: Create tables from master_migration.sql
-    addLog($log, "--- Running master_migration.sql ---", 'info');
-    $migrationFile = __DIR__ . '/../master_migration.sql';
-    if (!is_file($migrationFile)) {
-        addLog($log, "master_migration.sql not found at: $migrationFile", 'danger');
-    } else {
-        $sql = file_get_contents($migrationFile);
-        if ($sql === false) {
-            addLog($log, "Could not read master_migration.sql", 'danger');
-        } else {
-            // Parse sections by comments
-            $staffSql = extractSection($sql, 'SECTION 1: igangaschool_staffs', 'SECTION 2: igangaschool_students');
-            $studentSql = extractSection($sql, 'SECTION 2: igangaschool_students', 'SECTION 3: igangaschool_website');
-            $websiteSql = extractSection($sql, 'SECTION 3: igangaschool_website', 'END OF MIGRATION');
-
-            if ($staffSql) {
-                addLog($log, "-- Applying staff tables --", 'info');
-                $n = runSQLFileAgainstDB($conn, 'igangaschool_staffs', $staffSql, $log);
-                $stats['tables_ok'] += $n;
-            }
-            if ($studentSql) {
-                addLog($log, "-- Applying student tables --", 'info');
-                $n = runSQLFileAgainstDB($conn, 'igangaschool_students', $studentSql, $log);
-                $stats['tables_ok'] += $n;
-            }
-            if ($websiteSql) {
-                addLog($log, "-- Applying website tables --", 'info');
-                $n = runSQLFileAgainstDB($conn, 'igangaschool_website', $websiteSql, $log);
-                $stats['tables_ok'] += $n;
-            }
-        }
-    }
-
-    // Run ICT-specific SQL from sql/ict/
-    $ictSqlFile = __DIR__ . '/../sql/ict/igangaschool_ict.sql';
-    if (is_file($ictSqlFile)) {
-        addLog($log, "-- Applying ICT tables --", 'info');
-        $ictSql = file_get_contents($ictSqlFile);
-        if ($ictSql) {
-            $n = runSQLFileAgainstDB($conn, 'igangaschool_ict', $ictSql, $log);
-            $stats['tables_ok'] += $n;
-        }
-    } else {
-        // Fallback: apply staff tables to ICT as base
-        addLog($log, "-- Applying base tables to ICT database --", 'info');
-        if ($staffSql) {
-            $n = runSQLFileAgainstDB($conn, 'igangaschool_ict', $staffSql, $log);
-            $stats['tables_ok'] += $n;
-        }
-    }
-
-    // Also run migration_additions.sql if it exists
-    $additionsFile = __DIR__ . '/../migration_additions.sql';
-    if (is_file($additionsFile)) {
-        addLog($log, "-- Running migration_additions.sql on all databases --", 'info');
-        $addSql = file_get_contents($additionsFile);
-        if ($addSql) {
-            foreach ($databases as $db) {
-                runSQLFileAgainstDB($conn, $db, $addSql, $log);
-            }
-        }
+    // Step 3: Import the schema + data dumps
+    addLog($log, "--- Importing database dumps ---", 'info');
+    foreach ($databases as $db => $file) {
+        importDump($conn, $db, $file, $log, $stats);
     }
 }
 
 if ($step >= 4 && $conn) {
-    // Step 4: Seed essential data
+    // Step 4: Seed essential data (skips when tables already populated)
     addLog($log, "--- Seeding essential data ---", 'info');
 
-    // Staff DB seeds
-    if ($conn->select_db('igangaschool_staffs')) {
+    if ($conn->select_db('igangaschool_system')) {
         seedStaffRoles($conn, $log);
         seedAdminStaff($conn, $log);
         seedLeaveTypes($conn, $log);
         seedAcademicCalendar($conn, $log);
+        seedAcademicPrograms($conn, $log);
         seedGradeScales($conn, $log);
         seedRegistrarSettings($conn, $log);
         seedGpaSettings($conn, $log);
         seedStaffDepartments($conn, $log);
     }
 
-    // Students DB seeds
-    if ($conn->select_db('igangaschool_students')) {
-        seedAcademicPrograms($conn, $log);
-        seedAcademicCalendar($conn, $log);
-    }
-
-    // Website DB seeds
     if ($conn->select_db('igangaschool_website')) {
         seedWebsiteCMS($conn, $log);
     }
 
-    // ICT DB seeds
-    if ($conn->select_db('igangaschool_ict')) {
-        seedStaffRoles($conn, $log);
-        seedStaffDepartments($conn, $log);
-    }
-
     addLog($log, "--- Setup complete! ---", 'success');
-}
-
-function extractSection($sql, $startMarker, $endMarker) {
-    $startPos = stripos($sql, $startMarker);
-    $endPos = stripos($sql, $endMarker);
-    if ($startPos === false) return null;
-    if ($endPos === false) $endPos = strlen($sql);
-    if ($endPos <= $startPos) return substr($sql, $startPos);
-    return substr($sql, $startPos, $endPos - $startPos);
 }
 
 ?>
@@ -659,7 +589,7 @@ function extractSection($sql, $startMarker, $endMarker) {
             <i class="bi bi-hdd-stack"></i> 2. Create DBs
         </span>
         <span class="step-badge <?= $step >= 3 ? ($step > 3 ? 'done' : 'active') : 'pending' ?>">
-            <i class="bi bi-table"></i> 3. Create Tables
+            <i class="bi bi-table"></i> 3. Import Dumps
         </span>
         <span class="step-badge <?= $step >= 4 ? 'done' : 'pending' ?>">
             <i class="bi bi-seedling"></i> 4. Seed Data
@@ -672,12 +602,10 @@ function extractSection($sql, $startMarker, $endMarker) {
             <i class="bi bi-info-circle"></i> Ready to Initialize
         </div>
         <div class="log-body">
-            <p>This script will set up all 4 ISNM databases from scratch:</p>
+            <p>This script will set up the two ISNM databases from scratch:</p>
             <ul>
-                <li><span class="badge bg-primary badge-db">igangaschool_staffs</span> &mdash; Staff, HR, academics, payroll, approvals</li>
-                <li><span class="badge bg-success badge-db">igangaschool_students</span> &mdash; Students, admissions, fees, hostels</li>
+                <li><span class="badge bg-primary badge-db">igangaschool_system</span> &mdash; Students, staff, HR, academics, finance, payroll, approvals, ICT</li>
                 <li><span class="badge bg-info badge-db">igangaschool_website</span> &mdash; Public website, CMS, donations</li>
-                <li><span class="badge bg-warning badge-db">igangaschool_ict</span> &mdash; ICT assets, lab management</li>
             </ul>
 
             <div class="alert alert-light border mt-3 mb-3">
@@ -693,8 +621,9 @@ function extractSection($sql, $startMarker, $endMarker) {
 
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle"></i>
-                <strong>Warning:</strong> This will create databases and tables. Existing data will NOT be deleted
-                (all CREATE statements use IF NOT EXISTS). Safe to run multiple times.
+                <strong>Warning:</strong> This will create databases and import the schema + data from
+                <code>sql/system/</code> and <code>sql/website/</code>. Existing tables are re-created
+                (dumps use <code>DROP TABLE IF EXISTS</code>). Make a backup first if you have live data.
             </div>
 
             <p class="text-muted small mb-3">Default admin login after setup:<br>
@@ -704,7 +633,7 @@ function extractSection($sql, $startMarker, $endMarker) {
         </div>
     </div>
     <div class="actions-bar">
-        <a href="?step=1" class="btn btn-primary btn-setup" onclick="return confirm('Begin database setup?')">
+        <a href="?step=1" class="btn btn-primary btn-setup" onclick="return confirm('Begin database setup? This will recreate tables.')">
             <i class="bi bi-play-fill"></i> Run Full Setup (All Steps)
         </a>
         <a href="?step=1" class="btn btn-outline-secondary btn-setup">
@@ -759,7 +688,7 @@ function extractSection($sql, $startMarker, $endMarker) {
             <a href="?step=2" class="btn btn-primary btn-setup"><i class="bi bi-hdd-stack"></i> Step 2: Create Databases</a>
         <?php endif; ?>
         <?php if ($step === 2): ?>
-            <a href="?step=3" class="btn btn-primary btn-setup"><i class="bi bi-table"></i> Step 3: Create Tables</a>
+            <a href="?step=3" class="btn btn-primary btn-setup"><i class="bi bi-table"></i> Step 3: Import Dumps</a>
         <?php endif; ?>
         <?php if ($step === 3): ?>
             <a href="?step=4" class="btn btn-success btn-setup"><i class="bi bi-seedling"></i> Step 4: Seed Data</a>

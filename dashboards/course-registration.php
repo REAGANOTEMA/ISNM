@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'academics', 'secretary']);
 $user = $ctx['user'];
@@ -7,12 +7,12 @@ $studentsConn = $ctx['students'];
 $conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Course Registration';
 
-// ─── Ensure tables exist ───
+// â”€â”€â”€ Ensure tables exist â”€â”€â”€
 if ($conn) {
     @$conn->query("CREATE TABLE IF NOT EXISTS course_registrations (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, student_number VARCHAR(50) DEFAULT '', course_code VARCHAR(50) DEFAULT '', course_name VARCHAR(200) DEFAULT '', semester VARCHAR(100) DEFAULT '', academic_year VARCHAR(20) DEFAULT '', status VARCHAR(50) DEFAULT 'Registered', grade VARCHAR(10) DEFAULT '', marks DECIMAL(8,2) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_student (student_id), KEY idx_student_num (student_number)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-// ── AJAX CRUD Handler ──
+// â”€â”€ AJAX CRUD Handler â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
     header('Content-Type: application/json');
     $action = $_POST['ajax_action'] ?? $_GET['ajax'] ?? '';
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_GET['ajax'])) {
         case 'search':
             $q = '%' . trim($_POST['q'] ?? '') . '%';
             $registrations = [];
-            $stmt = $conn->prepare("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschool_staffs.academic_course_catalog cc ON cr.course_code=cc.course_code WHERE cr.student_number LIKE ? OR cr.course_name LIKE ? OR s.first_name LIKE ? OR s.surname LIKE ? ORDER BY cr.created_at DESC LIMIT 50");
+            $stmt = $conn->prepare("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschool_system.academic_course_catalog cc ON cr.course_code=cc.course_code WHERE cr.student_number LIKE ? OR cr.course_name LIKE ? OR s.first_name LIKE ? OR s.surname LIKE ? ORDER BY cr.created_at DESC LIMIT 50");
             if ($stmt) { $stmt->bind_param('ssss', $q, $q, $q, $q); $stmt->execute(); $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) $registrations[] = $row; $stmt->close(); }
             echo json_encode(['success' => true, 'data' => $registrations]);
             exit;
@@ -86,7 +86,7 @@ if ($conn) {
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Registered'"); if ($qr) $pending = (int)$qr->fetch_assoc()['c'];
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Completed'"); if ($qr) $completed = (int)$qr->fetch_assoc()['c'];
     $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)"); if ($qr) $thisSemester = (int)$qr->fetch_assoc()['c'];
-    $r = $conn->query("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschool_staffs.academic_course_catalog cc ON cr.course_code=cc.course_code ORDER BY cr.created_at DESC LIMIT 50");
+    $r = $conn->query("SELECT cr.*, CONCAT(s.first_name,' ',s.surname) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN igangaschool_system.academic_course_catalog cc ON cr.course_code=cc.course_code ORDER BY cr.created_at DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $registrations[] = $row;
 }
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

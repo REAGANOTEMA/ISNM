@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Student Bank Statement / Financial Statement Printer
  * Called from bursar dashboard to print per-student statements
@@ -10,7 +10,7 @@ $ctx = bootstrapStaffDashboard(['bursar', 'school bursar', 'finance', 'director 
 $stuConn = $ctx['students'];
 $staffConn = $ctx['staff'];
 $user = $ctx['user'];
-$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
+$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
 
 $studentId = (int)($_GET['student_id'] ?? $_POST['student_id'] ?? 0);
 $format = $_GET['format'] ?? 'print'; // print or pdf

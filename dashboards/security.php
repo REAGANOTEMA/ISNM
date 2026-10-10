@@ -1,4 +1,4 @@
-<?php
+ï»¿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
@@ -9,7 +9,7 @@ $user = $ctx['user'];
 $user_id = (int) ($user['id'] ?? 0);
 
 if ($conn) {
-    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+    $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`security_incidents` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         incident_type VARCHAR(100) NOT NULL,
@@ -327,7 +327,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     <?php break;
 
     // -----------------------------------------------
-    // INCIDENTS — Full CRUD
+    // INCIDENTS â€” Full CRUD
     // -----------------------------------------------
     case 'incidents': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -378,7 +378,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     <?php break;
 
     // -----------------------------------------------
-    // PATROLS — Full CRUD
+    // PATROLS â€” Full CRUD
     // -----------------------------------------------
     case 'patrol': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -403,7 +403,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     $patrolName = $pat['guard_name'] ?? ('Guard #' . ($pat['guard_id'] ?? '?'));
                     $patrolDate = !empty($pat['patrol_date']) ? date('d M Y', strtotime($pat['patrol_date'])) : '-';
                     $patrolStart = !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-';
-                    $patrolEnd = !empty($pat['end_time']) ? date('g:i A', strtotime($pat['end_time'])) : '—';
+                    $patrolEnd = !empty($pat['end_time']) ? date('g:i A', strtotime($pat['end_time'])) : 'â€”';
                 ?>
                 <tr>
                     <td><strong>#<?= (int)$pat['id'] ?></strong></td>
@@ -432,7 +432,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
     <?php break;
 
     // -----------------------------------------------
-    // VISITORS — Full CRUD
+    // VISITORS â€” Full CRUD
     // -----------------------------------------------
     case 'visitors': ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -463,7 +463,7 @@ $csrf_field = '<input type="hidden" name="csrf_token" value="' . htmlspecialchar
                     <td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td>
                     <td><small><?= !empty($v['visit_date']) ? date('d M Y', strtotime($v['visit_date'])) : '-' ?></small></td>
                     <td><small><?= !empty($v['actual_arrival']) ? date('g:i A', strtotime($v['actual_arrival'])) : '-' ?></small></td>
-                    <td><small><?= !empty($v['actual_departure']) ? date('g:i A', strtotime($v['actual_departure'])) : '—' ?></small></td>
+                    <td><small><?= !empty($v['actual_departure']) ? date('g:i A', strtotime($v['actual_departure'])) : 'â€”' ?></small></td>
                     <td><span class="badge bg-<?= $vStBadge ?>"><?= htmlspecialchars($v['status']) ?></span></td>
                     <td>
                         <?php if ($v['status'] !== 'Checked Out'): ?>
@@ -558,7 +558,7 @@ endswitch; ?>
 </div>
 
 <!-- ---------------------------------------------------------------
-     MODALS — INCIDENTS
+     MODALS â€” INCIDENTS
      --------------------------------------------------------------- -->
 
 <!-- Add Incident -->
@@ -607,7 +607,7 @@ endswitch; ?>
 </form></div></div></div>
 
 <!-- ---------------------------------------------------------------
-     MODALS — PATROLS
+     MODALS â€” PATROLS
      --------------------------------------------------------------- -->
 
 <!-- Add Patrol -->
@@ -639,7 +639,7 @@ endswitch; ?>
 <div class="modal-body">
     <input type="hidden" name="action" value="update_patrol">
     <input type="hidden" name="id" id="editPatrolId">
-    <p class="text-muted mb-2"><strong>Patrol #<span id="editPatrolIdDisplay"></span></strong> — <span id="editPatrolArea"></span></p>
+    <p class="text-muted mb-2"><strong>Patrol #<span id="editPatrolIdDisplay"></span></strong> â€” <span id="editPatrolArea"></span></p>
     <div class="mb-3"><label class="form-label">End Time</label><input type="datetime-local" class="form-control" name="end_time" id="editPatrolEndTime"></div>
     <div class="mb-3"><label class="form-label">Status *</label><select class="form-select" name="status" id="editPatrolStatus" required><option value="In Progress">In Progress</option><option value="Active">Active</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div>
     <div class="mb-3"><label class="form-label">Findings</label><textarea class="form-control" name="findings" id="editPatrolFindings" rows="3" placeholder="Patrol findings..."></textarea></div>
@@ -648,7 +648,7 @@ endswitch; ?>
 </form></div></div></div>
 
 <!-- ---------------------------------------------------------------
-     MODALS — VISITORS
+     MODALS â€” VISITORS
      --------------------------------------------------------------- -->
 
 <!-- Add Visitor (Check In) -->

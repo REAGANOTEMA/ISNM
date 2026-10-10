@@ -2,6 +2,13 @@
 /**
  * ISNM database configuration.
  * Production credentials are loaded from .env and should not be committed.
+ *
+ * The system uses exactly TWO databases:
+ *   - igangaschool_system  (all ERP tables: students, staff, finance, ICT, payroll, ...)
+ *   - igangaschool_website (public website content)
+ *
+ * STUDENTS_*/STAFF_*/ICT_*/PAYROLL_* constants are kept as aliases of the
+ * system database for backward compatibility.
  */
 
 if (!function_exists('isnm_env')) {
@@ -53,7 +60,7 @@ if (!function_exists('isnm_load_env')) {
 
 isnm_load_env(__DIR__ . '/../.env');
 // If no .env found, try .env.production as fallback (deployed on hosting)
-if (empty($_ENV['DB_HOST']) && is_file(__DIR__ . '/../.env.production')) {
+if (empty($_ENV['SYSTEM_DB_HOST']) && empty($_ENV['DB_HOST']) && is_file(__DIR__ . '/../.env.production')) {
     isnm_load_env(__DIR__ . '/../.env.production');
 }
 // Load .env.local if it exists (local dev override)
@@ -83,52 +90,36 @@ if (!defined('APP_ENV')) {
 }
 
 if (!defined('DB_HOST')) {
-    define('DB_HOST', isnm_env('DB_HOST', isnm_env('STUDENTS_DB_HOST', 'localhost')));
+    define('DB_HOST', isnm_env('DB_HOST', isnm_env('SYSTEM_DB_HOST', 'localhost')));
 }
 if (!defined('DB_PORT')) {
-    define('DB_PORT', (int) isnm_env('DB_PORT', isnm_env('STUDENTS_DB_PORT', 3306)));
+    define('DB_PORT', (int) isnm_env('DB_PORT', isnm_env('SYSTEM_DB_PORT', 3306)));
 }
 if (!defined('DB_CHARSET')) {
     define('DB_CHARSET', isnm_env('DB_CHARSET', 'utf8mb4'));
 }
-if (!defined('STUDENTS_DB_HOST')) {
-    define('STUDENTS_DB_HOST', isnm_env('STUDENTS_DB_HOST', DB_HOST));
+
+// ── System database (igangaschool_system) ──
+if (!defined('SYSTEM_DB_HOST')) {
+    define('SYSTEM_DB_HOST', isnm_env('SYSTEM_DB_HOST', DB_HOST));
 }
-if (!defined('STUDENTS_DB_PORT')) {
-    define('STUDENTS_DB_PORT', (int) isnm_env('STUDENTS_DB_PORT', DB_PORT));
+if (!defined('SYSTEM_DB_PORT')) {
+    define('SYSTEM_DB_PORT', (int) isnm_env('SYSTEM_DB_PORT', DB_PORT));
 }
-if (!defined('STUDENTS_DB_NAME')) {
-    define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschool_students'));
+if (!defined('SYSTEM_DB_NAME')) {
+    define('SYSTEM_DB_NAME', isnm_env('SYSTEM_DB_NAME', 'igangaschool_system'));
 }
-if (!defined('STUDENTS_DB_USER')) {
-    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', STUDENTS_DB_NAME));
+if (!defined('SYSTEM_DB_USER')) {
+    define('SYSTEM_DB_USER', isnm_env('SYSTEM_DB_USER', SYSTEM_DB_NAME));
 }
-if (!defined('STUDENTS_DB_PASS')) {
-    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', '3i%yHc00=cP^ZXwF'));
+if (!defined('SYSTEM_DB_PASS')) {
+    define('SYSTEM_DB_PASS', isnm_env('SYSTEM_DB_PASS', 'gNfXJDpigN%[u@,f'));
 }
-if (!defined('STUDENTS_DB_CHARSET')) {
-    define('STUDENTS_DB_CHARSET', isnm_env('STUDENTS_DB_CHARSET', DB_CHARSET));
+if (!defined('SYSTEM_DB_CHARSET')) {
+    define('SYSTEM_DB_CHARSET', isnm_env('SYSTEM_DB_CHARSET', DB_CHARSET));
 }
 
-if (!defined('STAFF_DB_HOST')) {
-    define('STAFF_DB_HOST', isnm_env('STAFF_DB_HOST', DB_HOST));
-}
-if (!defined('STAFF_DB_PORT')) {
-    define('STAFF_DB_PORT', (int) isnm_env('STAFF_DB_PORT', DB_PORT));
-}
-if (!defined('STAFF_DB_NAME')) {
-    define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschool_staffs'));
-}
-if (!defined('STAFF_DB_USER')) {
-    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', STAFF_DB_NAME));
-}
-if (!defined('STAFF_DB_PASS')) {
-    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', '?e=8Dc^D_1Aq9UQd'));
-}
-if (!defined('STAFF_DB_CHARSET')) {
-    define('STAFF_DB_CHARSET', isnm_env('STAFF_DB_CHARSET', DB_CHARSET));
-}
-
+// ── Website database (igangaschool_website) ──
 if (!defined('WEBSITE_DB_HOST')) {
     define('WEBSITE_DB_HOST', isnm_env('WEBSITE_DB_HOST', DB_HOST));
 }
@@ -142,30 +133,41 @@ if (!defined('WEBSITE_DB_USER')) {
     define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', WEBSITE_DB_NAME));
 }
 if (!defined('WEBSITE_DB_PASS')) {
-    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', 'tCB0WPn+5l)4!_rY'));
+    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', '0OTG!R$F0,ad$F{['));
 }
 if (!defined('WEBSITE_DB_CHARSET')) {
     define('WEBSITE_DB_CHARSET', isnm_env('WEBSITE_DB_CHARSET', DB_CHARSET));
 }
 
-if (!defined('ICT_DB_HOST')) {
-    define('ICT_DB_HOST', isnm_env('ICT_DB_HOST', DB_HOST));
-}
-if (!defined('ICT_DB_PORT')) {
-    define('ICT_DB_PORT', (int) isnm_env('ICT_DB_PORT', DB_PORT));
-}
-if (!defined('ICT_DB_NAME')) {
-    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschool_ict'));
-}
-if (!defined('ICT_DB_USER')) {
-    define('ICT_DB_USER', isnm_env('ICT_DB_USER', ICT_DB_NAME));
-}
-if (!defined('ICT_DB_PASS')) {
-    define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', 'R_@CPx%OifDKqGSy'));
-}
-if (!defined('ICT_DB_CHARSET')) {
-    define('ICT_DB_CHARSET', isnm_env('ICT_DB_CHARSET', DB_CHARSET));
-}
+// ── Backward-compatibility aliases ──
+// All legacy "department" databases now live inside igangaschool_system.
+if (!defined('STUDENTS_DB_HOST')) define('STUDENTS_DB_HOST', SYSTEM_DB_HOST);
+if (!defined('STUDENTS_DB_PORT')) define('STUDENTS_DB_PORT', SYSTEM_DB_PORT);
+if (!defined('STUDENTS_DB_NAME')) define('STUDENTS_DB_NAME', SYSTEM_DB_NAME);
+if (!defined('STUDENTS_DB_USER')) define('STUDENTS_DB_USER', SYSTEM_DB_USER);
+if (!defined('STUDENTS_DB_PASS')) define('STUDENTS_DB_PASS', SYSTEM_DB_PASS);
+if (!defined('STUDENTS_DB_CHARSET')) define('STUDENTS_DB_CHARSET', SYSTEM_DB_CHARSET);
+
+if (!defined('STAFF_DB_HOST')) define('STAFF_DB_HOST', SYSTEM_DB_HOST);
+if (!defined('STAFF_DB_PORT')) define('STAFF_DB_PORT', SYSTEM_DB_PORT);
+if (!defined('STAFF_DB_NAME')) define('STAFF_DB_NAME', SYSTEM_DB_NAME);
+if (!defined('STAFF_DB_USER')) define('STAFF_DB_USER', SYSTEM_DB_USER);
+if (!defined('STAFF_DB_PASS')) define('STAFF_DB_PASS', SYSTEM_DB_PASS);
+if (!defined('STAFF_DB_CHARSET')) define('STAFF_DB_CHARSET', SYSTEM_DB_CHARSET);
+
+if (!defined('ICT_DB_HOST')) define('ICT_DB_HOST', SYSTEM_DB_HOST);
+if (!defined('ICT_DB_PORT')) define('ICT_DB_PORT', SYSTEM_DB_PORT);
+if (!defined('ICT_DB_NAME')) define('ICT_DB_NAME', SYSTEM_DB_NAME);
+if (!defined('ICT_DB_USER')) define('ICT_DB_USER', SYSTEM_DB_USER);
+if (!defined('ICT_DB_PASS')) define('ICT_DB_PASS', SYSTEM_DB_PASS);
+if (!defined('ICT_DB_CHARSET')) define('ICT_DB_CHARSET', SYSTEM_DB_CHARSET);
+
+if (!defined('PAYROLL_DB_HOST')) define('PAYROLL_DB_HOST', SYSTEM_DB_HOST);
+if (!defined('PAYROLL_DB_PORT')) define('PAYROLL_DB_PORT', SYSTEM_DB_PORT);
+if (!defined('PAYROLL_DB_NAME')) define('PAYROLL_DB_NAME', SYSTEM_DB_NAME);
+if (!defined('PAYROLL_DB_USER')) define('PAYROLL_DB_USER', SYSTEM_DB_USER);
+if (!defined('PAYROLL_DB_PASS')) define('PAYROLL_DB_PASS', SYSTEM_DB_PASS);
+if (!defined('PAYROLL_DB_CHARSET')) define('PAYROLL_DB_CHARSET', SYSTEM_DB_CHARSET);
 
 // Push notification VAPID key (empty = push notifications disabled)
 if (!defined('VAPID_PUBLIC_KEY')) {
@@ -174,7 +176,7 @@ if (!defined('VAPID_PUBLIC_KEY')) {
 
 if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
-        // Connection cache â€” singleton per database
+        // Connection cache — singleton per database
         static $connections = [];
         $cacheKey = $db;
         if (isset($connections[$cacheKey]) && $connections[$cacheKey] instanceof mysqli) {
@@ -193,14 +195,16 @@ if (!function_exists('isnm_mysqli_connect')) {
         // No hardcoded passwords are used. Set DB_IGANGA_*_USER / DB_IGANGA_*_PASS in
         // .env.production (kept out of version control) to connect as the hosting user.
         $hostingCreds = [
-            'igangaschool_students'       => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER',       'igangaschool_students'), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS',       '3i%yHc00=cP^ZXwF')],
-            'igangaschool_staffs'         => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',          'igangaschool_staffs'),   'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',          '?e=8Dc^D_1Aq9UQd')],
-            'igangaschool_website'        => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER',         'igangaschool_website'),  'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS',         'tCB0WPn+5l)4!_rY')],
-            'igangaschool_ict'            => ['user' => isnm_env('DB_IGANGA_ICT_USER',             'igangaschool_ict'),      'pass' => isnm_env('DB_IGANGA_ICT_PASS',             'R_@CPx%OifDKqGSy')],
-            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER',     'igangaschool_students'), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS',     '3i%yHc00=cP^ZXwF')],
-            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',       'igangaschool_staffs'),   'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',       '?e=8Dc^D_1Aq9UQd')],
-            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER',      'igangaschool_website'),  'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS',      'tCB0WPn+5l)4!_rY')],
-            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',          'igangaschool_ict'),      'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',          'R_@CPx%OifDKqGSy')],
+            'igangaschool_system'  => ['user' => isnm_env('DB_IGANGA_SYSTEM_USER',  'igangaschool_system'),  'pass' => isnm_env('DB_IGANGA_SYSTEM_PASS',  'gNfXJDpigN%[u@,f')],
+            'igangaschool_website' => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER', 'igangaschool_website'), 'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS', '0OTG!R$F0,ad$F{[')],
+            // Legacy aliases -> system database
+            'igangaschool_students' => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER', 'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS', 'gNfXJDpigN%[u@,f')],
+            'igangaschool_staffs'   => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',   'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',   'gNfXJDpigN%[u@,f')],
+            'igangaschool_ict'      => ['user' => isnm_env('DB_IGANGA_ICT_USER',      'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_ICT_PASS',      'gNfXJDpigN%[u@,f')],
+            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER', 'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS', 'gNfXJDpigN%[u@,f')],
+            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',   'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',   'gNfXJDpigN%[u@,f')],
+            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',      'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',      'gNfXJDpigN%[u@,f')],
+            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER', 'igangaschool_website'), 'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS', '0OTG!R$F0,ad$F{[')],
         ];
 
         $credSet = [];
@@ -215,7 +219,7 @@ if (!function_exists('isnm_mysqli_connect')) {
             $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
         }
         // 4. Root fallbacks (local dev) — always try as final fallback
-        $rootPass = isnm_env('STUDENTS_DB_PASS', isnm_env('DB_PASS', ''));
+        $rootPass = isnm_env('SYSTEM_DB_PASS', isnm_env('DB_PASS', ''));
         if (!empty($rootPass) && $rootPass !== $pass) {
             $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
         }
@@ -266,28 +270,34 @@ if (!function_exists('isnm_mysqli_connect')) {
     }
 }
 
-if (!defined('PAYROLL_DB_HOST')) {
-    define('PAYROLL_DB_HOST', isnm_env('PAYROLL_DB_HOST', STAFF_DB_HOST));
+if (!function_exists('getSystemConnection')) {
+    function getSystemConnection() {
+        return isnm_mysqli_connect('System', SYSTEM_DB_HOST, SYSTEM_DB_USER, SYSTEM_DB_PASS, SYSTEM_DB_NAME, SYSTEM_DB_PORT, SYSTEM_DB_CHARSET);
+    }
 }
-if (!defined('PAYROLL_DB_PORT')) {
-    define('PAYROLL_DB_PORT', (int) isnm_env('PAYROLL_DB_PORT', STAFF_DB_PORT));
+
+if (!function_exists('getWebsiteConnection')) {
+    function getWebsiteConnection() {
+        return isnm_mysqli_connect('Website', WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT, WEBSITE_DB_CHARSET);
+    }
 }
-if (!defined('PAYROLL_DB_NAME')) {
-    define('PAYROLL_DB_NAME', isnm_env('PAYROLL_DB_NAME', STAFF_DB_NAME));
+
+// —— Backward-compatibility connection functions for legacy callers ——
+if (!function_exists('getStudentsConnection')) {
+    function getStudentsConnection() {
+        return getSystemConnection();
+    }
 }
-if (!defined('PAYROLL_DB_USER')) {
-    define('PAYROLL_DB_USER', isnm_env('PAYROLL_DB_USER', STAFF_DB_USER));
-}
-if (!defined('PAYROLL_DB_PASS')) {
-    define('PAYROLL_DB_PASS', isnm_env('PAYROLL_DB_PASS', STAFF_DB_PASS));
-}
-if (!defined('PAYROLL_DB_CHARSET')) {
-    define('PAYROLL_DB_CHARSET', isnm_env('PAYROLL_DB_CHARSET', STAFF_DB_CHARSET));
+
+if (!function_exists('getStaffConnection')) {
+    function getStaffConnection() {
+        return getSystemConnection();
+    }
 }
 
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
-        return isnm_mysqli_connect('ICT', ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT, ICT_DB_CHARSET);
+        return getSystemConnection();
     }
 }
 
@@ -299,44 +309,28 @@ if (!function_exists('getPayrollDBName')) {
 
 if (!function_exists('getPayrollConnection')) {
     function getPayrollConnection() {
-        return isnm_mysqli_connect('Payroll', PAYROLL_DB_HOST, PAYROLL_DB_USER, PAYROLL_DB_PASS, PAYROLL_DB_NAME, PAYROLL_DB_PORT, PAYROLL_DB_CHARSET);
-    }
-}
-
-if (!function_exists('getStudentsConnection')) {
-    function getStudentsConnection() {
-        return isnm_mysqli_connect('Students', STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT, STUDENTS_DB_CHARSET);
-    }
-}
-
-if (!function_exists('getStaffConnection')) {
-    function getStaffConnection() {
-        return isnm_mysqli_connect('Staff', STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT, STAFF_DB_CHARSET);
-    }
-}
-
-if (!function_exists('getWebsiteConnection')) {
-    function getWebsiteConnection() {
-        return isnm_mysqli_connect('Website', WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT, WEBSITE_DB_CHARSET);
+        return getSystemConnection();
     }
 }
 
 if (!function_exists('getDatabaseConnection')) {
     function getDatabaseConnection($database) {
         $map = [
-            'staffs'   => 'getStaffConnection',
-            'students' => 'getStudentsConnection',
+            'staffs'   => 'getSystemConnection',
+            'students' => 'getSystemConnection',
+            'system'   => 'getSystemConnection',
             'website'  => 'getWebsiteConnection',
-            'ict'      => 'getICTConnection',
+            'ict'      => 'getSystemConnection',
+            'payroll'  => 'getSystemConnection',
         ];
-        $func = $map[$database] ?? 'getStaffConnection';
+        $func = $map[$database] ?? 'getSystemConnection';
         return function_exists($func) ? $func() : null;
     }
 }
 
 if (!function_exists('getConnection')) {
     function getConnection() {
-        return getStudentsConnection();
+        return getSystemConnection();
     }
 }
 

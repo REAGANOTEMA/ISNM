@@ -1,6 +1,6 @@
 <?php
 // ISNM Unified Database Connection System
-// Connects to all four databases: staffs_db, students_db, website_db, ict
+// Connects to two databases: igangaschool_system + igangaschool_website
 
 class DatabaseConnection {
     private static $connections = [];
@@ -11,10 +11,12 @@ class DatabaseConnection {
         if (self::$dbMap === null) {
             require_once __DIR__ . '/../config/database.php';
             $map = [
-                'staffs'   => STAFF_DB_NAME,
-                'students' => STUDENTS_DB_NAME,
+                'staffs'   => SYSTEM_DB_NAME,
+                'students' => SYSTEM_DB_NAME,
+                'system'   => SYSTEM_DB_NAME,
                 'website'  => WEBSITE_DB_NAME,
-                'ict'      => ICT_DB_NAME,
+                'ict'      => SYSTEM_DB_NAME,
+                'payroll'  => SYSTEM_DB_NAME,
             ];
             // Reverse mappings for production name compatibility
             foreach ($map as $short => $actual) {
@@ -28,19 +30,12 @@ class DatabaseConnection {
     private static function getConfigs() {
         if (self::$configs === null) {
             require_once __DIR__ . '/../config/database.php';
-            $staffCfg = [
-                'host' => STAFF_DB_HOST,
-                'username' => STAFF_DB_USER,
-                'password' => STAFF_DB_PASS,
-                'port' => STAFF_DB_PORT,
-                'charset' => STAFF_DB_CHARSET,
-            ];
-            $studentsCfg = [
-                'host' => STUDENTS_DB_HOST,
-                'username' => STUDENTS_DB_USER,
-                'password' => STUDENTS_DB_PASS,
-                'port' => STUDENTS_DB_PORT,
-                'charset' => STUDENTS_DB_CHARSET,
+            $systemCfg = [
+                'host' => SYSTEM_DB_HOST,
+                'username' => SYSTEM_DB_USER,
+                'password' => SYSTEM_DB_PASS,
+                'port' => SYSTEM_DB_PORT,
+                'charset' => SYSTEM_DB_CHARSET,
             ];
             $websiteCfg = [
                 'host' => WEBSITE_DB_HOST,
@@ -49,23 +44,15 @@ class DatabaseConnection {
                 'port' => WEBSITE_DB_PORT,
                 'charset' => WEBSITE_DB_CHARSET,
             ];
-            $ictCfg = [
-                'host' => ICT_DB_HOST,
-                'username' => ICT_DB_USER,
-                'password' => ICT_DB_PASS,
-                'port' => ICT_DB_PORT,
-                'charset' => ICT_DB_CHARSET,
-            ];
             self::$configs = [
-                STAFF_DB_NAME    => $staffCfg,
-                STUDENTS_DB_NAME => $studentsCfg,
-                WEBSITE_DB_NAME  => $websiteCfg,
-                ICT_DB_NAME      => $ictCfg,
+                SYSTEM_DB_NAME    => $systemCfg,
+                WEBSITE_DB_NAME   => $websiteCfg,
                 // Production name aliases for backward compat
-                'igangaschool_staffs'   => $staffCfg,
-                'igangaschool_students' => $studentsCfg,
+                'igangaschool_system'   => $systemCfg,
                 'igangaschool_website'  => $websiteCfg,
-                'igangaschool_ict'      => $ictCfg,
+                'igangaschool_staffs'   => $systemCfg,
+                'igangaschool_students' => $systemCfg,
+                'igangaschool_ict'      => $systemCfg,
             ];
         }
         return self::$configs;
@@ -83,7 +70,7 @@ class DatabaseConnection {
             $oldLevel = error_reporting(0);
 
             $configs = self::getConfigs();
-            $cfg = $configs[$database] ?? $configs['igangaschool_students'];
+            $cfg = $configs[$database] ?? $configs['igangaschool_system'];
             
             $username = $cfg['username'];
             $password = $cfg['password'];
@@ -92,14 +79,12 @@ class DatabaseConnection {
             $hosts = array_values(array_unique(array_filter([$cfg['host'], 'localhost', '127.0.0.1'])));
             $ports = array_values(array_unique(array_filter([$port, 3306])));
 
-            $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
+$isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
 
-            // Hardcoded hosting credentials â€” always try first, no .env dependency
+            // Hardcoded hosting credentials — always try first, no .env dependency
             $hostingCreds = [
-                'igangaschool_students' => ['user' => 'igangaschool_students', 'pass' => '3i%yHc00=cP^ZXwF'],
-                'igangaschool_staffs'   => ['user' => 'igangaschool_staffs',   'pass' => '?e=8Dc^D_1Aq9UQd'],
-                'igangaschool_website'  => ['user' => 'igangaschool_website',  'pass' => 'tCB0WPn+5l)4!_rY'],
-                'igangaschool_ict'      => ['user' => 'igangaschool_ict',      'pass' => 'R_@CPx%OifDKqGSy'],
+                'igangaschool_system'  => ['user' => 'igangaschool_system',  'pass' => 'gNfXJDpigN%[u@,f'],
+                'igangaschool_website' => ['user' => 'igangaschool_website', 'pass' => '0OTG!R$F0,ad$F{['],
             ];
 
             $credSet = [];
@@ -111,7 +96,7 @@ class DatabaseConnection {
             $credSet[] = ['user' => $username, 'pass' => $password];
             // 3. Root fallbacks (local dev) - always try as final fallback
             {
-                $rootPass = getenv('STUDENTS_DB_PASS') ?: (getenv('DB_PASS') ?: '');
+                $rootPass = getenv('SYSTEM_DB_PASS') ?: (getenv('DB_PASS') ?: '');
                 if (!empty($rootPass) && $rootPass !== $password) {
                     $credSet[] = ['user' => 'root', 'pass' => $rootPass];
                 }
@@ -155,12 +140,16 @@ class DatabaseConnection {
         return self::$connections[$database];
     }
 
+    public static function getSystemConnection() {
+        return self::getConnection('system');
+    }
+
     public static function getStaffConnection() {
-        return self::getConnection('staffs');
+        return self::getConnection('system');
     }
 
     public static function getStudentsConnection() {
-        return self::getConnection('students');
+        return self::getConnection('system');
     }
 
     public static function getWebsiteConnection() {
@@ -168,7 +157,7 @@ class DatabaseConnection {
     }
 
     public static function getICTConnection() {
-        return self::getConnection('ict');
+        return self::getConnection('system');
     }
 
     public static function closeConnection($database) {
@@ -212,12 +201,11 @@ class DatabaseConnection {
         }
         return $results;
     }
-
     public static function getConnectionInfo($database) {
         $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $configs = self::getConfigs();
-        $cfg = $configs[$database] ?? $configs['igangaschool_students'];
+        $cfg = $configs[$database] ?? $configs['igangaschool_system'];
         return [
             'host' => $cfg['host'],
             'database' => $database,

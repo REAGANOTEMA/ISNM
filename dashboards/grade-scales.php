@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['academics', 'registrar', 'director', 'principal', 'head', 'lecturer']);
 $conn = $ctx['staff'];
@@ -11,7 +11,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grade_scales` (id INT AUTO_INCREMENT PRIMARY KEY, grade_letter VARCHAR(5) NOT NULL, grade_point DECIMAL(4,2) DEFAULT 0.00, min_percentage DECIMAL(5,2) DEFAULT 0.00, max_percentage DECIMAL(5,2) DEFAULT 100.00, remark VARCHAR(200) DEFAULT '', created_by INT DEFAULT 0, status VARCHAR(50) DEFAULT 'Active', UNIQUE KEY uq_grade (grade_letter)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

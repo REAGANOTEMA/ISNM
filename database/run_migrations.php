@@ -49,9 +49,11 @@ function addIndex($conn, $dbName, $table, $indexName, $columns) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// STUDENTS DATABASE
+// SYSTEM DATABASE (students + staff + ict all live here now)
+// NOTE: $stu / $staff / $ict all return the SAME shared connection.
+// Do NOT close any of them until the end of the script.
 // ══════════════════════════════════════════════════════════════
-$stu = getStudentsConnection();
+$stu = getSystemConnection();
 if ($stu) {
     addTable($stu, 'students', "CREATE TABLE `student_login_attempts` (
         `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -623,14 +625,12 @@ if ($stu) {
             $results['students'][] = 'payment_providers: SEEDED with ' . count($providers) . ' providers';
         }
     }
-
-    $stu->close();
 }
 
 // ══════════════════════════════════════════════════════════════
-// STAFFS DATABASE
+// STAFFS DATABASE (same system DB)
 // ══════════════════════════════════════════════════════════════
-$staff = getStaffConnection();
+$staff = getSystemConnection();
 if ($staff) {
     addTable($staff, 'staffs', "CREATE TABLE IF NOT EXISTS `password_changes` (
         `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -880,8 +880,6 @@ if ($staff) {
         PRIMARY KEY (`id`),
         UNIQUE KEY `uk_staff_profile` (`staff_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'staff_profiles');
-
-    $staff->close();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1026,9 +1024,9 @@ if ($web) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ICT DATABASE
+// ICT DATABASE (same system DB)
 // ══════════════════════════════════════════════════════════════
-$ict = getICTConnection();
+$ict = getSystemConnection();
 if ($ict) {
     addTable($ict, 'ict', "CREATE TABLE IF NOT EXISTS `ict_assets` (
         `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -1982,8 +1980,6 @@ if ($ict) {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
         UNIQUE KEY `uk_slug` (`slug`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", 'pages');
-
-    $ict->close();
 }
 
 echo json_encode([

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
 $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
@@ -8,7 +8,7 @@ $user = $ctx['user'];
 generateCsrfToken();
 $flash = getFlashMessages();
 
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
 
 if ($conn) {
     $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_curriculum_development` (id INT AUTO_INCREMENT PRIMARY KEY, program_code VARCHAR(50) NOT NULL, revision_number INT DEFAULT 1, academic_year VARCHAR(20) DEFAULT NULL, description TEXT, status VARCHAR(50) DEFAULT 'Draft', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_program (program_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");

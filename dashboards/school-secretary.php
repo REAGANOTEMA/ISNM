@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
@@ -10,8 +10,8 @@ $students_conn = $ctx['students'] ?? null;
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'School Secretary';
-$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_students';
-$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_staffs';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschool_system';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschool_system';
 $website_conn = $ctx['website'] ?? null;
 
 $migrations = [
@@ -2265,14 +2265,14 @@ function publishDocument(id,status){if(!confirm('Set this document to '+status+'
 function deleteDocument(id){if(!confirm('Delete this document permanently?'))return;ajax('delete_official_document','POST',{id}).then(d=>{if(d.success){showMsg(d.message);loadDocuments()}else showMsg(d.message,'danger')})}
 if(document.getElementById('docBody')){loadDocuments();ajax('get_document_stats','GET').then(d=>{if(d.success){var s=d.stats;var el=document.querySelector('.section-card .row.g-2.mb-3');if(el&&s){var info='<div class="col-12"><small class="text-muted">Total: '+s.total+' | ';if(s.by_status){info+=Object.entries(s.by_status).map(function(e){return e[0]+': '+e[1]}).join(' | ')}info+='</small></div>';el.insertAdjacentHTML('beforebegin','<div class="row g-2 mb-2">'+info+'</div>')}}})}
 
-/* ── Requirements Checklist ── */
+/* â”€â”€ Requirements Checklist â”€â”€ */
 function loadStudentRequirements(){
     var q=document.getElementById('reqSearchInput')?.value||'';
     if(!q){document.getElementById('reqChecklistBody').innerHTML='<div class="alert alert-info">Enter a student number to search</div>';return}
     ajax('search_students','GET',{search:q,page:1}).then(d=>{
         if(!d.success||!d.students.length){document.getElementById('reqChecklistBody').innerHTML='<div class="alert alert-warning">No students found</div>';return}
         var s=d.students[0];
-        document.getElementById('reqChecklistResult').innerHTML='<div class="alert alert-info"><strong>'+esc(s.full_name)+'</strong> (#'+esc(s.student_number||'')+') — '+esc(s.program||'')+'</div>';
+        document.getElementById('reqChecklistResult').innerHTML='<div class="alert alert-info"><strong>'+esc(s.full_name)+'</strong> (#'+esc(s.student_number||'')+') â€” '+esc(s.program||'')+'</div>';
         ajax('get_student_app_requirements','GET',{student_number:s.student_number}).then(r=>{
             if(!r.success)return;
             var reqs=r.requirements;
@@ -2298,7 +2298,7 @@ function loadStudentRequirements(){
 function toggleStudentReq(id,checked){ajax('clear_student_requirement','POST',{req_id:id,cleared:checked?1:0}).then(d=>{if(!d.success)showMsg(d.message,'danger');else loadStudentRequirements()})}
 function initStudentReqs(num,name){ajax('bulk_init_student_requirements','POST',{student_number:num,student_name:name}).then(d=>{if(d.success){showMsg(d.message);loadStudentRequirements()}else showMsg(d.message,'danger')})}
 
-/* ── Store Items ── */
+/* â”€â”€ Store Items â”€â”€ */
 function loadStoreItems(){
     var cat=document.getElementById('storeCatFilter')?.value||'';
     var q=document.getElementById('storeSearchInput')?.value||'';
@@ -2334,7 +2334,7 @@ function saveStoreItem(e){e.preventDefault();var fd=new FormData(document.getEle
 function deleteStoreItem(id){if(!confirm('Delete this item?'))return;ajax('delete_store_item','POST',{item_id:id}).then(d=>{if(d.success){showMsg(d.message);loadStoreItems()}else showMsg(d.message,'danger')})}
 if(document.getElementById('storeItemsBody'))loadStoreItems();
 
-/* ── Food Store ── */
+/* â”€â”€ Food Store â”€â”€ */
 function loadFoodStore(){
     ajax('get_store_items','GET',{category:'Food Store'}).then(d=>{
         if(!d.success)return;
@@ -2348,7 +2348,7 @@ function loadFoodStore(){
 }
 if(document.getElementById('foodStoreBody'))loadFoodStore();
 
-/* ── Requisitions (Matron) ── */
+/* â”€â”€ Requisitions (Matron) â”€â”€ */
 function loadRequisitions(){
     var st=document.getElementById('reqStatusFilter')?.value||'';
     ajax('get_requisitions','GET',{status:st}).then(d=>{
@@ -2384,7 +2384,7 @@ function saveRequisition(e){e.preventDefault();var fd=new FormData(document.getE
 function updateReqStatus(id,status){if(!confirm('Set status to '+status+'?'))return;ajax('update_requisition_status','POST',{req_id:id,new_status:status}).then(d=>{if(d.success){showMsg(d.message);loadRequisitions()}else showMsg(d.message,'danger')})}
 if(document.getElementById('requisitionBody'))loadRequisitions();
 
-/* ── Director Requirements Portal ── */
+/* â”€â”€ Director Requirements Portal â”€â”€ */
 function loadDirectorRequirements(){
     var q=document.getElementById('dirReqSearch')?.value||'';
     var cat=document.getElementById('dirReqCategory')?.value||'';

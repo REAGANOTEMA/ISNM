@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -33,8 +33,8 @@ ini_set('log_errors', 1);
     $staffConn = getStaffConnection();
     if ($staffConn) {
         $sql = 'SELECT LOWER(sr.role_name) AS role_name
-                FROM `igangaschool_staffs`.`staff` s
-                INNER JOIN `igangaschool_staffs`.`staff_roles` sr ON s.role_id = sr.id
+                FROM `igangaschool_system`.`staff` s
+                INNER JOIN `igangaschool_system`.`staff_roles` sr ON s.role_id = sr.id
                 WHERE s.id = ? LIMIT 1';
         $stmt = mysqli_prepare($staffConn, $sql);
         if ($stmt) {

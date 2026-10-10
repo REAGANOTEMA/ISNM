@@ -19,7 +19,7 @@ $roleId = 10;
 $position = 'School Bursar';
 $department = 'Finance';
 
-$conn = getStaffConnection();
+$conn = getSystemConnection();
 if (!$conn) {
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);
     exit;
