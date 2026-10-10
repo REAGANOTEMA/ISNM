@@ -3,13 +3,14 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 10, 2026 at 09:14 AM
+-- Generation Time: Oct 10, 2026 at 10:20 AM
 -- Server version: 10.11.19-MariaDB
 -- PHP Version: 8.4.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -24,22 +25,22 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
     IF cnt = 0 THEN
-        SET @s = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
         PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END IF;
 END$$
 
-CREATE PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
     ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
 END$$
 
-CREATE PROCEDURE `get_dashboard_statistics` (IN `p_user_id` INT, IN `p_role` VARCHAR(100))   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `get_dashboard_statistics` (IN `p_user_id` INT, IN `p_role` VARCHAR(100))   BEGIN
     SELECT
         (SELECT COUNT(*) FROM igangaschool_system.staff WHERE status='Active') AS total_staff,
         (SELECT COUNT(*) FROM igangaschool_system.students WHERE status='Active') AS total_students,
@@ -49,7 +50,7 @@ CREATE PROCEDURE `get_dashboard_statistics` (IN `p_user_id` INT, IN `p_role` VAR
         0 AS total_expenses;
 END$$
 
-CREATE PROCEDURE `get_staff_performance_summary` (IN `p_user_id` INT)   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `get_staff_performance_summary` (IN `p_user_id` INT)   BEGIN
     SELECT s.id, s.full_name, sr.role_name, s.department, s.status,
            0 AS performance_score, 'Good' AS rating
     FROM staff s
@@ -59,7 +60,7 @@ CREATE PROCEDURE `get_staff_performance_summary` (IN `p_user_id` INT)   BEGIN
     LIMIT 20;
 END$$
 
-CREATE PROCEDURE `MigratePayroll` ()   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `MigratePayroll` ()   BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='total_paye') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `total_paye` DECIMAL(15,2) DEFAULT 0.00 AFTER `total_gross`;
     END IF;
@@ -69,7 +70,7 @@ CREATE PROCEDURE `MigratePayroll` ()   BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_runs' AND COLUMN_NAME='run_date') THEN
         ALTER TABLE `payroll_runs` ADD COLUMN `run_date` DATE DEFAULT NULL AFTER `end_date`;
     END IF;
-    
+
     ALTER TABLE `payroll_runs` MODIFY COLUMN `status` ENUM('draft','approved','processed','paid','completed','processing') DEFAULT 'draft';
 
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='housing_allowance') THEN
@@ -78,7 +79,8 @@ CREATE PROCEDURE `MigratePayroll` ()   BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='transport_allowance') THEN
         ALTER TABLE `payroll_details` ADD COLUMN `transport_allowance` DECIMAL(12,2) DEFAULT 0.00 AFTER `housing_allowance`;
     END IF;
-    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='`status`') THEN
+
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='payroll_details' AND COLUMN_NAME='status') THEN
         ALTER TABLE `payroll_details` ADD COLUMN `status` VARCHAR(20) DEFAULT 'calculated' AFTER `payment_status`;
     END IF;
 
@@ -111,7 +113,7 @@ CREATE PROCEDURE `MigratePayroll` ()   BEGIN
     ALTER TABLE `payroll_approvals` MODIFY COLUMN `level` ENUM('HR','PayrollOfficer','Bursar','DirectorFinance','CEO') NOT NULL;
 END$$
 
-CREATE PROCEDURE `sp_school_statistics` ()   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `sp_school_statistics` ()   BEGIN
     SELECT
         (SELECT COUNT(*) FROM students WHERE status = 'Active') AS active_students,
         (SELECT COUNT(*) FROM students WHERE status != 'deleted') AS total_students,
@@ -124,7 +126,7 @@ CREATE PROCEDURE `sp_school_statistics` ()   BEGIN
         (SELECT COUNT(DISTINCT student_id) FROM student_requirements_status WHERE status IN ('Not Submitted','Pending')) AS students_reqs_pending;
 END$$
 
-CREATE PROCEDURE `sp_student_dashboard_summary` (IN `p_student_id` INT)   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `sp_student_dashboard_summary` (IN `p_student_id` INT)   BEGIN
     SELECT
         s.id,
         s.student_number,
@@ -149,7 +151,7 @@ CREATE PROCEDURE `sp_student_dashboard_summary` (IN `p_student_id` INT)   BEGIN
     WHERE s.id = p_student_id;
 END$$
 
-CREATE PROCEDURE `sp_student_fee_status` (IN `p_student_id` INT, IN `p_academic_year` VARCHAR(20))   BEGIN
+CREATE DEFINER=`igangaschool`@`localhost` PROCEDURE `sp_student_fee_status` (IN `p_student_id` INT, IN `p_academic_year` VARCHAR(20))   BEGIN
     SELECT
         s.student_number,
         s.full_name,
@@ -7516,31 +7518,237 @@ CREATE TABLE `id_card_replacements` (
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.bank_accounts`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.bank_accounts` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `bank_name` varchar(200) DEFAULT NULL,
+  `account_number` varchar(50) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.fee_structure`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.fee_structure` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `fee_type` varchar(100) DEFAULT NULL,
+  `total_amount` decimal(15,2) DEFAULT 0.00,
+  `amount_paid` decimal(15,2) DEFAULT 0.00,
+  `balance` decimal(15,2) DEFAULT 0.00,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.journal_entries`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.journal_entries` (
+  `id` int(11) NOT NULL,
+  `entry_date` date NOT NULL,
+  `description` text DEFAULT NULL,
+  `reference_number` varchar(100) DEFAULT NULL,
+  `total_debit` decimal(15,2) DEFAULT 0.00,
+  `total_credit` decimal(15,2) DEFAULT 0.00,
+  `status` varchar(50) DEFAULT 'Draft',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.journal_entry_lines`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.journal_entry_lines` (
+  `id` int(11) NOT NULL,
+  `entry_id` int(11) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `debit` decimal(15,2) DEFAULT 0.00,
+  `credit` decimal(15,2) DEFAULT 0.00,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.notifications`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.notifications` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Table structure for table `igangaschoolofl_students_db.scholarships`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.scholarships` (
+  `id` int(11) NOT NULL,
+  `scholarship_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT 0.00,
+  `eligibility` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
+--
+-- Table structure for table `igangaschoolofl_students_db.student_scholarships`
+--
+
+CREATE TABLE `igangaschoolofl_students_db.student_scholarships` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `scholarship_id` int(11) DEFAULT NULL,
+  `awarded_date` date DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT 0.00,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.bank_accounts`
+--
+
+CREATE TABLE `igangaschool_students.bank_accounts` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `bank_name` varchar(200) DEFAULT NULL,
+  `account_number` varchar(50) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.fee_structure`
+--
+
+CREATE TABLE `igangaschool_students.fee_structure` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `fee_type` varchar(100) DEFAULT NULL,
+  `total_amount` decimal(15,2) DEFAULT 0.00,
+  `amount_paid` decimal(15,2) DEFAULT 0.00,
+  `balance` decimal(15,2) DEFAULT 0.00,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.journal_entries`
+--
+
+CREATE TABLE `igangaschool_students.journal_entries` (
+  `id` int(11) NOT NULL,
+  `entry_date` date NOT NULL,
+  `description` text DEFAULT NULL,
+  `reference_number` varchar(100) DEFAULT NULL,
+  `total_debit` decimal(15,2) DEFAULT 0.00,
+  `total_credit` decimal(15,2) DEFAULT 0.00,
+  `status` varchar(50) DEFAULT 'Draft',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.journal_entry_lines`
+--
+
+CREATE TABLE `igangaschool_students.journal_entry_lines` (
+  `id` int(11) NOT NULL,
+  `entry_id` int(11) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `debit` decimal(15,2) DEFAULT 0.00,
+  `credit` decimal(15,2) DEFAULT 0.00,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.notifications`
+--
+
+CREATE TABLE `igangaschool_students.notifications` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.scholarships`
+--
+
+CREATE TABLE `igangaschool_students.scholarships` (
+  `id` int(11) NOT NULL,
+  `scholarship_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT 0.00,
+  `eligibility` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschool_students.student_scholarships`
+--
+
+CREATE TABLE `igangaschool_students.student_scholarships` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `scholarship_id` int(11) DEFAULT NULL,
+  `awarded_date` date DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT 0.00,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -25221,6 +25429,100 @@ ALTER TABLE `id_card_replacements`
   ADD KEY `original_card_id` (`original_card_id`),
   ADD KEY `new_card_id` (`new_card_id`),
   ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.bank_accounts`
+--
+ALTER TABLE `igangaschoolofl_students_db.bank_accounts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ba_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.fee_structure`
+--
+ALTER TABLE `igangaschoolofl_students_db.fee_structure`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_fs_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.journal_entries`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.journal_entry_lines`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_jel_entry` (`entry_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.notifications`
+--
+ALTER TABLE `igangaschoolofl_students_db.notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_user` (`user_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.scholarships`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.student_scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.student_scholarships`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ss_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschool_students.bank_accounts`
+--
+ALTER TABLE `igangaschool_students.bank_accounts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ba_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschool_students.fee_structure`
+--
+ALTER TABLE `igangaschool_students.fee_structure`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_fs_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschool_students.journal_entries`
+--
+ALTER TABLE `igangaschool_students.journal_entries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschool_students.journal_entry_lines`
+--
+ALTER TABLE `igangaschool_students.journal_entry_lines`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_jel_entry` (`entry_id`);
+
+--
+-- Indexes for table `igangaschool_students.notifications`
+--
+ALTER TABLE `igangaschool_students.notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_user` (`user_id`);
+
+--
+-- Indexes for table `igangaschool_students.scholarships`
+--
+ALTER TABLE `igangaschool_students.scholarships`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschool_students.student_scholarships`
+--
+ALTER TABLE `igangaschool_students.student_scholarships`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ss_student` (`student_id`);
 
 --
 -- Indexes for table `improvement_tracking`
