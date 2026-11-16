@@ -27,7 +27,7 @@ try {
     <section class="hero-section">
       <div class="hero-background">
         <div class="hero-slide active">
-          <img src="images/hero1.jpg" alt="ISNM Hero" class="hero-bg">
+          <img src="images/hero1.jpg" alt="ISNM Hero" class="hero-bg" fetchpriority="high" decoding="async">
         </div>
         <div class="hero-slide"><img src="images/hero2.jpg" alt="ISNM Campus" class="hero-bg" loading="lazy" decoding="async">
         </div>
