@@ -32,7 +32,9 @@ $status = htmlspecialchars($student['status'] ?: '');
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Profile - <?= $name ?></title>
+<link rel="icon" type="image/png" href="images/school-logo.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/premium-global.css?v=1">
 <style>
   body { font-family: 'Segoe UI',system-ui,sans-serif; padding: 30px; background: #fff; }
   .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1a237e; padding-bottom: 20px; }
@@ -50,9 +52,10 @@ $status = htmlspecialchars($student['status'] ?: '');
 <body>
 <div class="no-print mb-3"><button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print</button> <button class="btn btn-secondary" onclick="window.close()">Close</button></div>
 <div class="header">
-  <img src="images/school-logo.png" alt="ISNM">
+  <img src="images/school-logo.png" alt="ISNM Logo" style="height:80px;width:auto;object-fit:contain;">
   <h2>Iganga School of Nursing and Midwifery</h2>
-  <p>Student Profile Record</p>
+  <p style="margin:4px 0 0;font-weight:600;color:#3E2723;">Student Profile Record</p>
+  <p style="margin:2px 0 0;font-size:12px;color:#666;">P.O. Box 418, Iganga, Uganda</p>
 </div>
 <div class="section">
   <h5>Personal Information</h5>

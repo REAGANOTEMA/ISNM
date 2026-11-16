@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Use enhanced configuration with multi-database support
 require_once 'includes/config_enhanced.php';
 include_once 'includes/functions.php';
@@ -29,38 +29,27 @@ try {
         <div class="hero-slide active">
           <img src="images/hero1.jpg" alt="ISNM Hero" class="hero-bg">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero2.jpg" alt="ISNM Campus" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero2.jpg" alt="ISNM Campus" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero3.jpg" alt="Learning Facilities" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero3.jpg" alt="Learning Facilities" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero4.jpg" alt="Medical Training" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero4.jpg" alt="Medical Training" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero5.jpg" alt="Nursing Students" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero5.jpg" alt="Nursing Students" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero6.jpg" alt="Healthcare Education" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero6.jpg" alt="Healthcare Education" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/hero7.jpg" alt="Medical Excellence" class="hero-bg">
+        <div class="hero-slide"><img src="images/hero7.jpg" alt="Medical Excellence" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/graduates-hero2.jpg" alt="Graduates" class="hero-bg">
+        <div class="hero-slide"><img src="images/graduates-hero2.jpg" alt="Graduates" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/graduates-hero3.jpg" alt="Graduation Ceremony" class="hero-bg">
+        <div class="hero-slide"><img src="images/graduates-hero3.jpg" alt="Graduation Ceremony" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/graduates-hero4.jpg" alt="Hero Graduates" class="hero-bg">
+        <div class="hero-slide"><img src="images/graduates-hero4.jpg" alt="Hero Graduates" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/students-hero.jpg" alt="Students" class="hero-bg">
+        <div class="hero-slide"><img src="images/students-hero.jpg" alt="Students" class="hero-bg" loading="lazy" decoding="async">
         </div>
-        <div class="hero-slide">
-          <img src="images/diploma-graduates-on-gown-use-it-for-hero.jpg" alt="Diploma Graduates" class="hero-bg">
+        <div class="hero-slide"><img src="images/diploma-graduates-on-gown-use-it-for-hero.jpg" alt="Diploma Graduates" class="hero-bg" loading="lazy" decoding="async">
         </div>
       </div>
       
@@ -186,7 +175,7 @@ try {
                 <i class="fas fa-user-nurse"></i>
               </div>
               <h3>Certificate in Nursing</h3>
-              <p>2½ years comprehensive nursing program with theoretical and practical training</p>
+              <p>2Â½ years comprehensive nursing program with theoretical and practical training</p>
               <ul class="program-features">
                 <li>Clinical practice at major hospitals</li>
                 <li>Skills laboratory training</li>
@@ -204,7 +193,7 @@ try {
                 <i class="fas fa-baby"></i>
               </div>
               <h3>Certificate in Midwifery</h3>
-              <p>2½ years specialized midwifery program with hands-on delivery experience</p>
+              <p>2Â½ years specialized midwifery program with hands-on delivery experience</p>
               <ul class="program-features">
                 <li>Maternal health training</li>
                 <li>Delivery room practice</li>
@@ -222,7 +211,7 @@ try {
                 <i class="fas fa-user-md"></i>
               </div>
               <h3>Diploma in Nursing - Extension</h3>
-              <p>1½ years program for enrolled nurses seeking diploma qualification</p>
+              <p>1Â½ years program for enrolled nurses seeking diploma qualification</p>
               <ul class="program-features">
                 <li>Advanced nursing concepts</li>
                 <li>Leadership training</li>
@@ -240,7 +229,7 @@ try {
                 <i class="fas fa-stethoscope"></i>
               </div>
               <h3>Diploma in Midwifery - Extension</h3>
-              <p>1½ years advanced program for enrolled midwives</p>
+              <p>1Â½ years advanced program for enrolled midwives</p>
               <ul class="program-features">
                 <li>Advanced midwifery skills</li>
                 <li>High-risk pregnancy management</li>
@@ -313,7 +302,7 @@ try {
       </div>
     </section>
 
-    <!-- Why Choose ISNM Section — Premium 3D -->
+    <!-- Why Choose ISNM Section â€” Premium 3D -->
     <section class="why-choose-section py-5">
       <div class="container" style="position:relative;z-index:1;">
         <div class="row">
@@ -632,3 +621,4 @@ try {
   </script>
 
   <?php include('shared/_footer.php'); ?>
+

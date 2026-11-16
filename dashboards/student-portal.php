@@ -223,6 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $studentsDb) {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/mobile-fixes.css?v=1">
+<link rel="stylesheet" href="../css/premium-global.css?v=1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1d29}

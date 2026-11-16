@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/config_enhanced.php';
 include_once __DIR__ . '/../includes/functions.php';
 ?>
@@ -66,6 +66,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="stylesheet" href="css/polish.css?v=2" />
   <link rel="stylesheet" href="css/mobile-fixes.css?v=2" />
   <link rel="stylesheet" href="css/premium-enhancement.css?v=3" />
+  <link rel="stylesheet" href="css/premium-global.css?v=1" />
 </head>
 
 <body>
