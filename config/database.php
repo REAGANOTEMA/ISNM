@@ -213,18 +213,8 @@ if (!function_exists('isnm_mysqli_connect')) {
         if (isset($hostingCreds[$db]) && $hostingCreds[$db]['user'] !== '' && $hostingCreds[$db]['pass'] !== '') {
             $credSet[] = $hostingCreds[$db] + ['db' => $db];
         }
-        // 2. Provided credentials
+        // 2. Configured credentials — no root or empty-password fallback.
         $credSet[] = ['user' => $user, 'pass' => $pass, 'db' => $db];
-        // 3. DB-name-as-user (cPanel pattern) if different
-        if ($user !== $db) {
-            $credSet[] = ['user' => $db, 'pass' => $pass, 'db' => $db];
-        }
-        // 4. Root fallbacks (local dev) — always try as final fallback
-        $rootPass = isnm_env('SYSTEM_DB_PASS', isnm_env('DB_PASS', ''));
-        if (!empty($rootPass) && $rootPass !== $pass) {
-            $credSet[] = ['user' => 'root', 'pass' => $rootPass, 'db' => $db];
-        }
-        $credSet[] = ['user' => 'root', 'pass' => '', 'db' => $db];
 
         // Deduplicate
         $seen = [];

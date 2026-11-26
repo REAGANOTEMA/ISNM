@@ -79,8 +79,6 @@ class DatabaseConnection {
             $hosts = array_values(array_unique(array_filter([$cfg['host'], 'localhost', '127.0.0.1'])));
             $ports = array_values(array_unique(array_filter([$port, 3306])));
 
-$isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
-
             // Hosting credentials are supplied only through environment variables.
             $hostingCreds = [
                 'igangaschool_system'  => ['user' => getenv('DB_IGANGA_SYSTEM_USER')  ?: '', 'pass' => getenv('DB_IGANGA_SYSTEM_PASS')  ?: ''],
@@ -92,16 +90,8 @@ $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
             if (!empty($hostingCreds[$database]['user']) && !empty($hostingCreds[$database]['pass'])) {
                 $credSet[] = $hostingCreds[$database];
             }
-            // 2. Provided credentials
+            // 2. Configured credentials — no root or empty-password fallback.
             $credSet[] = ['user' => $username, 'pass' => $password];
-            // 3. Root fallbacks (local dev) - always try as final fallback
-            {
-                $rootPass = getenv('SYSTEM_DB_PASS') ?: (getenv('DB_PASS') ?: '');
-                if (!empty($rootPass) && $rootPass !== $password) {
-                    $credSet[] = ['user' => 'root', 'pass' => $rootPass];
-                }
-                $credSet[] = ['user' => 'root', 'pass' => ''];
-            }
 
             // Deduplicate
             $seen = [];
