@@ -8,6 +8,15 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/error_handler.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.cookie_path', SESSION_COOKIE_PATH);
+    session_start();
+}
+
 class FormRouter {
     private $conn;
     private $type;
@@ -19,26 +28,31 @@ class FormRouter {
             'recipients' => 'admissions', // Director Admissions
             'table' => 'applications',
             'notification_type' => 'application_received',
+            'columns' => ['student_id', 'applicant_name', 'email', 'phone', 'program', 'intake', 'academic_year', 'application_type', 'notes'],
         ],
         'contact' => [
             'recipients' => 'directorgeneral', // Director General
             'table' => 'contact_submissions',
             'notification_type' => 'contact_message',
+            'columns' => ['first_name', 'last_name', 'email', 'phone', 'subject', 'message'],
         ],
         'feedback' => [
             'recipients' => 'directorgeneral,director_academics', // Multiple recipients
             'table' => 'feedback_submissions',
             'notification_type' => 'feedback_received',
+            'columns' => ['name', 'email', 'rating', 'subject', 'feedback', 'category'],
         ],
         'complaint' => [
             'recipients' => 'directorgeneral,director_academics',
             'table' => 'complaint_submissions',
             'notification_type' => 'complaint_received',
+            'columns' => ['complainant_name', 'complainant_email', 'complainant_phone', 'subject', 'description', 'department', 'severity'],
         ],
         'volunteer' => [
             'recipients' => 'directorgeneral',
             'table' => 'volunteer_applications',
             'notification_type' => 'volunteer_applied',
+            'columns' => ['first_name', 'surname', 'email', 'phone', 'skills', 'availability', 'motivation', 'experience'],
         ],
     ];
     
@@ -65,7 +79,7 @@ class FormRouter {
         
         try {
             // Store submission
-            $submissionId = $this->storeSubmission($route['table'], $data);
+            $submissionId = $this->storeSubmission($route, $data);
             
             if (!$submissionId) {
                 return ['success' => false, 'message' => 'Failed to store submission'];
@@ -91,25 +105,54 @@ class FormRouter {
     /**
      * Store form submission
      */
-    private function storeSubmission($table, $data) {
-        // Sanitize data
-        $sanitized = array_map(function($val) {
-            return $this->conn->real_escape_string($val);
-        }, $data);
-        
-        // Build insert query
-        $columns = implode(', ', array_keys($sanitized));
-        $values = "'" . implode("', '", array_values($sanitized)) . "'";
-        $values .= ", NOW()"; // Add timestamp
-        
-        $sql = "INSERT INTO `$table` ($columns, created_at) VALUES ($values)";
-        
-        if ($this->conn->query($sql)) {
-            return $this->conn->insert_id;
+    private function storeSubmission(array $route, $data) {
+        $table = $route['table'];
+        $allowed = $route['columns'] ?? [];
+        if (!$allowed || count($data) > count($allowed)) {
+            error_log('FormRouter rejected submission with unexpected fields');
+            return false;
         }
-        
-        error_log("Insert error: " . $this->conn->error);
-        return false;
+
+        $columns = [];
+        $values = [];
+        $types = '';
+        foreach ($allowed as $column) {
+            if (!array_key_exists($column, $data)) {
+                continue;
+            }
+            $value = $data[$column];
+            if (is_array($value) || is_object($value)) {
+                return false;
+            }
+            $value = is_scalar($value) ? (string)$value : '';
+            if (strlen($value) > 10000) {
+                return false;
+            }
+            $columns[] = $column;
+            $values[] = $value;
+            $types .= is_numeric($value) && ctype_digit($value) ? 'i' : 's';
+        }
+        if (!$columns) {
+            return false;
+        }
+
+        $quoted = array_map(function ($c) { return '`' . $c . '`'; }, $columns);
+        $marks = implode(', ', array_fill(0, count($columns), '?'));
+        $sql = "INSERT INTO `$table` (" . implode(', ', $quoted) . ", created_at) VALUES ($marks, NOW())";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            error_log('FormRouter prepare failed: ' . $this->conn->error);
+            return false;
+        }
+        $stmt->bind_param($types, ...$values);
+        if (!$stmt->execute()) {
+            error_log('FormRouter insert failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+        $insertId = $this->conn->insert_id;
+        $stmt->close();
+        return $insertId;
     }
     
     /**
@@ -235,8 +278,21 @@ class NotificationManager {
     }
     
     public function markAsRead($notificationId) {
-        $staffId = $_SESSION['user_id'] ?? 0;
-        if (!$staffId) return false;
+        $staffId = (int)($_SESSION['user_id'] ?? 0);
+        $notificationId = (int)$notificationId;
+        if (!$staffId || !$notificationId) return false;
+
+        $ownerCheck = $this->conn->prepare(
+            "SELECT id FROM staff_notifications WHERE id = ? AND (staff_id = ? OR staff_id IS NULL OR staff_id = 0) LIMIT 1"
+        );
+        if (!$ownerCheck) return false;
+        $ownerCheck->bind_param('ii', $notificationId, $staffId);
+        if (!$ownerCheck->execute() || !$ownerCheck->get_result()->fetch_row()) {
+            $ownerCheck->close();
+            return false;
+        }
+        $ownerCheck->close();
+
         $stmt = $this->conn->prepare(
             "INSERT IGNORE INTO staff_notification_reads (staff_id, notification_id, read_at) VALUES (?, ?, NOW())"
         );
@@ -252,21 +308,27 @@ class NotificationManager {
     }
     
     public function markAllAsRead($staffId) {
-        $unread = $this->conn->query(
+        $staffId = (int)$staffId;
+        if (!$staffId) return false;
+        $stmt = $this->conn->prepare(
             "SELECT n.id FROM staff_notifications n 
-             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = $staffId
-             WHERE n.staff_id = $staffId AND r.id IS NULL"
+             LEFT JOIN staff_notification_reads r ON n.id = r.notification_id AND r.staff_id = ?
+             WHERE n.staff_id = ? AND r.id IS NULL"
         );
-        if (!$unread) return false;
+        if (!$stmt) return false;
+        $stmt->bind_param('ii', $staffId, $staffId);
+        if (!$stmt->execute()) { $stmt->close(); return false; }
+        $unread = $stmt->get_result();
         $ok = true;
         while ($row = $unread->fetch_assoc()) {
-            $stmt = $this->conn->prepare("INSERT IGNORE INTO staff_notification_reads (staff_id, notification_id, read_at) VALUES (?, ?, NOW())");
-            if ($stmt) {
-                $stmt->bind_param('ii', $staffId, $row['id']);
-                if (!$stmt->execute()) $ok = false;
-                $stmt->close();
+            $insert = $this->conn->prepare("INSERT IGNORE INTO staff_notification_reads (staff_id, notification_id, read_at) VALUES (?, ?, NOW())");
+            if ($insert) {
+                $insert->bind_param('ii', $staffId, $row['id']);
+                if (!$insert->execute()) $ok = false;
+                $insert->close();
             }
         }
+        $stmt->close();
         return $ok;
     }
     

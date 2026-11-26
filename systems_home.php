@@ -449,19 +449,19 @@
         <div class="info-section">
             <h2>📚 Documentation & Resources</h2>
             <div class="quick-links">
-                <a href="SYSTEMS_SETUP_GUIDE.php" class="quick-link">
+                <a href="database/setup_all_databases.php" class="quick-link">
                     <i class="fas fa-book"></i>
                     Setup Guide
                 </a>
-                <a href="README_FINANCIAL_HR_SYSTEMS.md" class="quick-link">
+                <a href="README.md" class="quick-link">
                     <i class="fas fa-file-alt"></i>
                     Complete Guide
                 </a>
-                <a href="COMPLETE_DELIVERY_SUMMARY.md" class="quick-link">
+                <a href="AUDIT_REPORT.md" class="quick-link">
                     <i class="fas fa-clipboard-list"></i>
-                    Delivery Summary
+                    Audit Report
                 </a>
-                <a href="#" onclick="alert('Admin panel coming soon!'); return false;" class="quick-link">
+                <a href="admin_panel/dashboard.php" class="quick-link">
                     <i class="fas fa-users-cog"></i>
                     Admin Panel
                 </a>

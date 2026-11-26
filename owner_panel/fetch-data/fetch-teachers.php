@@ -1,5 +1,6 @@
 <?php
  include("../../assets/config.php");
+ require_once __DIR__ . '/require_owner.php';
  $sql="select * from teachers";
  $result=mysqli_query($conn,$sql);
  if(mysqli_num_rows($result)>0){

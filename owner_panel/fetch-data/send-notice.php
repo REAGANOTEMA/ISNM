@@ -1,5 +1,6 @@
 <?php
-include("../../assets/config.php");
+ include("../../assets/config.php");
+ require_once __DIR__ . '/require_owner.php';
 
 // Assuming form is submitted via POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

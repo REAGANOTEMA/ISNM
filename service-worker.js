@@ -4,11 +4,14 @@
  */
 
 const CACHE_VERSION = 'isnm-v4';
+const SW_SCOPE = self.registration.scope;
 const STATIC_ASSETS = [
-  '/css/responsive.css',
-  '/css/style.css',
-  '/js/app.js',
-  '/manifest.json',
+  new URL('css/isnm-design-system.css', SW_SCOPE).href,
+  new URL('css/isnm-style.css', SW_SCOPE).href,
+  new URL('css/responsive.css', SW_SCOPE).href,
+  new URL('shared/style.css', SW_SCOPE).href,
+  new URL('shared/app.js', SW_SCOPE).href,
+  new URL('manifest.json', SW_SCOPE).href,
 ];
 
 const DYNAMIC_CACHE = 'isnm-dynamic-v4';

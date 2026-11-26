@@ -131,6 +131,21 @@ include_once __DIR__ . '/../includes/functions.php';
             <i class="fas fa-graduation-cap"></i> Programs
           </a>
         </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="exploreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-compass"></i> Explore
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exploreDropdown">
+            <li><a class="dropdown-item" href="gallery.php"><i class="fas fa-images"></i> Gallery</a></li>
+            <li><a class="dropdown-item" href="events.php"><i class="fas fa-calendar-day"></i> Events</a></li>
+            <li><a class="dropdown-item" href="student-life.php"><i class="fas fa-user-graduate"></i> Student Life</a></li>
+            <li><a class="dropdown-item" href="facilities.php"><i class="fas fa-building"></i> Facilities</a></li>
+            <li><a class="dropdown-item" href="clinical-training.php"><i class="fas fa-stethoscope"></i> Clinical Training</a></li>
+            <li><a class="dropdown-item" href="partnerships.php"><i class="fas fa-handshake"></i> Partnerships</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="resources.php"><i class="fas fa-download"></i> Resources</a></li>
+          </ul>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="news.php">
             <i class="fas fa-newspaper"></i> News

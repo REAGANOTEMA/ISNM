@@ -1,35 +1,36 @@
 <?php
-include("config.php"); // Include your database connection file
+require 'config.php';
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+header('Content-Type: application/json');
+
+// Bus-request approval is a state change: POST + CSRF (enforced by assets/config.php)
+// and an explicit administrative role check are required.
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Method not allowed']);
+    exit;
 }
 
-// Check if the 'id' parameter is set in the URL
-if(isset($_GET['id'])) {
-    $id = intval($_GET['id'] ?? 0);
-
-    // Update query
-    $sql = "UPDATE students SET bus_request_status = 'accepted', bus_request_date = NOW() WHERE id = ?";
-
-    // Prepare the statement
-    $stmt = mysqli_prepare($conn, $sql);
-
-    // Bind the 'id' parameter
-    mysqli_stmt_bind_param($stmt, "i", $id);
-
-    // Execute the statement
-    if(mysqli_stmt_execute($stmt)) {
-        header("Location: ../buses.php");
-        exit;
-    } else {
-        echo "Error updating record: " . mysqli_error($conn);
-    }
-
-    // Close the statement and connection
-    mysqli_stmt_close($stmt);
-    mysqli_close($conn);
-} else {
-    echo "ID parameter is missing";
+if (function_exists('isnm_require_admin_role')) {
+    isnm_require_admin_role();
 }
-?>
+
+$id = (int)($_POST['id'] ?? 0);
+if ($id <= 0) {
+    echo json_encode(['status' => 'ERROR', 'message' => 'Valid student ID required']);
+    exit;
+}
+
+$stmt = $conn->prepare("UPDATE students SET bus_request_status = 'accepted', bus_request_date = NOW() WHERE id = ? AND bus_request_status = 'pending'");
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Database error']);
+    exit;
+}
+$stmt->bind_param('i', $id);
+$updated = $stmt->execute() && $stmt->affected_rows > 0;
+$stmt->close();
+
+echo json_encode($updated
+    ? ['status' => 'success', 'message' => 'Bus request accepted']
+    : ['status' => 'ERROR', 'message' => 'Pending request not found']);

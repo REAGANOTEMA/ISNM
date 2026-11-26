@@ -12,26 +12,27 @@ ini_set('log_errors', 1);
         // fall through; authentication via session guards
     }
 
-    $userId = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
-    $isStudentSession = ($_SESSION['type'] ?? '') === 'student' || ($_SESSION['role'] ?? '') === 'student';
+    $userId = (int)($_SESSION['uid'] ?? $_SESSION['user_id'] ?? 0);
 
     if (!$userId) {
         header("Location: ../student-login.php");
         exit();
     }
 
-    // Modern sessions already carry type=student; verify against the students table.
-    $isStudent = $isStudentSession;
+    // The database is the only authority for student identity. Session role
+    // flags are never sufficient: a forged session must not grant access.
+    $isStudent = false;
     $studentsConn = getStudentsConnection();
     if ($studentsConn) {
-        $sql = 'SELECT id FROM `igangaschool_system`.`students` WHERE id = ? LIMIT 1';
+        $sql = 'SELECT id FROM `igangaschool_system`.`students` WHERE id = ? AND status <> \'deleted\' LIMIT 1';
         $stmt = mysqli_prepare($studentsConn, $sql);
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "i", $userId);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            if ($result && mysqli_num_rows($result) > 0) {
-                $isStudent = true;
+            if (mysqli_stmt_execute($stmt)) {
+                $result = mysqli_stmt_get_result($stmt);
+                if ($result && mysqli_num_rows($result) > 0) {
+                    $isStudent = true;
+                }
             }
             mysqli_stmt_close($stmt);
         }

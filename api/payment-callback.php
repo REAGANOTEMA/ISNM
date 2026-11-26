@@ -48,12 +48,12 @@ $gateway = PaymentGateway::getInstance();
 $startTime = microtime(true);
 
 /* ── Log the raw inbound request ───────────────────────────── */
-logCallbackRequest($provider, $rawBody, $headers, $_SERVER['REMOTE_ADDR'] ?? '');
+$callbackId = logCallbackRequest($provider, $rawBody, $headers, $_SERVER['REMOTE_ADDR'] ?? '');
 
 /* ── Validate provider exists and is active ────────────────── */
 $providerInstance = $gateway->getProvider($provider);
 if (!$providerInstance) {
-    logCallbackError($provider, 'Provider not found or inactive.');
+    logCallbackError($provider, $callbackId, 'Provider not found or inactive.');
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Provider "' . $provider . '" not recognized.']);
     exit;
@@ -68,14 +68,17 @@ $signature = $headers['X-Hub-Signature-256']
     ?? $headers['x-paypal-signature']
     ?? '';
 
-if (!empty($signature)) {
-    $sigValid = $providerInstance->verifyWebhookSignature($rawBody, $signature);
-    if (!$sigValid) {
-        logCallbackError($provider, 'Invalid webhook signature.');
-        http_response_code(401);
-        echo json_encode(['status' => 'error', 'message' => 'Invalid signature.']);
-        exit;
-    }
+if (empty($signature)) {
+    logCallbackError($provider, $callbackId, 'Missing webhook signature.');
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Signature required.']);
+    exit;
+}
+if (!$providerInstance->verifyWebhookSignature($rawBody, $signature)) {
+    logCallbackError($provider, $callbackId, 'Invalid webhook signature.');
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid signature.']);
+    exit;
 }
 
 /* ── Process the webhook ───────────────────────────────────── */
@@ -87,7 +90,7 @@ if ($result['success']) {
     $reference = $result['reference'] ?? '';
     $status    = $result['status'] ?? 'unknown';
 
-    logCallbackSuccess($provider, $reference, $status, $elapsed);
+    logCallbackSuccess($provider, $callbackId, $reference, $status, $elapsed);
 
     /* ── Generate receipt on successful payment ──────────── */
     if ($status === 'successful' && !empty($reference)) {
@@ -110,7 +113,7 @@ if ($result['success']) {
         'ref'     => $reference ?? '',
     ]);
 } else {
-    logCallbackError($provider, $result['message'] ?? 'Processing failed');
+    logCallbackError($provider, $callbackId, $result['message'] ?? 'Processing failed');
 
     http_response_code(400);
     echo json_encode([
@@ -160,35 +163,39 @@ function getTransactionIdByRef(string $reference): ?int {
 /**
  * Log the raw inbound callback request.
  */
-function logCallbackRequest(string $provider, string $rawBody, array $headers, string $ip): void {
+function logCallbackRequest(string $provider, string $rawBody, array $headers, string $ip): ?int {
     $conn = PaymentGatewayDB::getConnection();
-    if (!$conn) return;
+    if (!$conn) return null;
 
     $stmt = $conn->prepare("INSERT INTO payment_callbacks
         (provider_key, callback_type, request_method, request_headers, request_body, request_ip)
         VALUES (?, 'callback', 'POST', ?, ?, ?)");
-    if (!$stmt) return;
+    if (!$stmt) return null;
 
     $hdrs = json_encode($headers);
     $body = mb_substr($rawBody, 0, 65000);
     $stmt->bind_param('ssss', $provider, $hdrs, $body, $ip);
     $stmt->execute();
+    $id = (int)$conn->insert_id;
     $stmt->close();
+    return $id ?: null;
 }
 
 /**
  * Log a successful callback processing.
  */
-function logCallbackSuccess(string $provider, string $reference, string $status, int $elapsedMs): void {
+function logCallbackSuccess(string $provider, ?int $callbackId, string $reference, string $status, int $elapsedMs): void {
     $conn = PaymentGatewayDB::getConnection();
     if (!$conn) return;
 
-    $stmt = $conn->prepare("UPDATE payment_callbacks SET processed = 1, processed_at = NOW(), response_code = 200
-        WHERE provider_key = ? AND processed = 0 ORDER BY id DESC LIMIT 1");
-    if (!$stmt) return;
-    $stmt->bind_param('s', $provider);
-    $stmt->execute();
-    $stmt->close();
+    if ($callbackId) {
+        $stmt = $conn->prepare("UPDATE payment_callbacks SET processed = 1, processed_at = NOW(), response_code = 200 WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param('i', $callbackId);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
 
     error_log("[PaymentCallback][{$provider}] OK ref={$reference} status={$status} time={$elapsedMs}ms");
 }
@@ -196,13 +203,12 @@ function logCallbackSuccess(string $provider, string $reference, string $status,
 /**
  * Log a callback processing error.
  */
-function logCallbackError(string $provider, string $error): void {
+function logCallbackError(string $provider, ?int $callbackId, string $error): void {
     $conn = PaymentGatewayDB::getConnection();
-    if ($conn) {
-        $stmt = $conn->prepare("UPDATE payment_callbacks SET processing_error = ?, response_code = 400
-            WHERE provider_key = ? AND processed = 0 ORDER BY id DESC LIMIT 1");
+    if ($conn && $callbackId) {
+        $stmt = $conn->prepare("UPDATE payment_callbacks SET processing_error = ?, response_code = 400 WHERE id = ?");
         if ($stmt) {
-            $stmt->bind_param('ss', $error, $provider);
+            $stmt->bind_param('si', $error, $callbackId);
             $stmt->execute();
             $stmt->close();
         }

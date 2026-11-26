@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/require_admin.php';
 $conn = getStudentsConnection();
 if ($conn) {
     $result = $conn->query("SELECT DISTINCT program_name FROM programs WHERE is_active = 1 ORDER BY program_name");

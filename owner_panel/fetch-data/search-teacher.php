@@ -1,5 +1,6 @@
 <?php
  include("../../assets/config.php");
+ require_once __DIR__ . '/require_owner.php';
 
 // Assuming you've already sanitized the search term
 $search = $_POST['search'] ?? '';

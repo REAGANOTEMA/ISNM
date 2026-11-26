@@ -50,6 +50,52 @@ function addLog(&$log, $msg, $cls = 'info') {
     $log[] = ['msg' => $msg, 'cls' => $cls];
 }
 
+function tableColumns($conn, $table) {
+    $columns = [];
+    $result = $conn->query("SHOW COLUMNS FROM `$table`");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $columns[$row['Field']] = true;
+        }
+    }
+    return $columns;
+}
+
+function insertSeedRows($conn, $table, array $rows, &$log) {
+    $available = tableColumns($conn, $table);
+    if (!$available) {
+        addLog($log, "$table: table or columns unavailable, skipped.", 'warning');
+        return 0;
+    }
+    $added = 0;
+    foreach ($rows as $row) {
+        $filtered = array_intersect_key($row, $available);
+        if (!$filtered) {
+            continue;
+        }
+        $columns = array_keys($filtered);
+        $quoted = array_map(function ($column) { return '`' . $column . '`'; }, $columns);
+        $marks = implode(',', array_fill(0, count($columns), '?'));
+        $stmt = $conn->prepare('INSERT IGNORE INTO `' . $table . '` (' . implode(',', $quoted) . ') VALUES (' . $marks . ')');
+        if (!$stmt) {
+            addLog($log, "$table prepare failed: " . $conn->error, 'warning');
+            break;
+        }
+        $types = '';
+        $values = [];
+        foreach ($filtered as $value) {
+            if (is_int($value)) { $types .= 'i'; }
+            elseif (is_float($value)) { $types .= 'd'; }
+            else { $types .= 's'; }
+            $values[] = $value;
+        }
+        $stmt->bind_param($types, ...$values);
+        if ($stmt->execute()) { $added += $stmt->affected_rows; }
+        $stmt->close();
+    }
+    return $added;
+}
+
 function createDB($conn, $dbName, &$log) {
     $safe = $conn->real_escape_string($dbName);
     $res = $conn->query("CREATE DATABASE IF NOT EXISTS `$safe` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
@@ -234,13 +280,14 @@ function seedAdminStaff($conn, &$log) {
         return;
     }
 
-    $adminPass = password_hash('admin123', PASSWORD_DEFAULT);
+    $bootstrapPassword = envVal('ISNM_BOOTSTRAP_PASSWORD', 'ISNM@ChangeMe2026!');
+    $adminPass = password_hash($bootstrapPassword, PASSWORD_DEFAULT);
     $accounts = [
         ['DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', $adminPass, 1, 'Director General', 'Executive'],
         ['SYSADM-001', 'System Administrator', 'admin@igangaschoolofnursingandmidwifery.ac.ug', $adminPass, 25, 'System Administrator', 'ICT'],
     ];
 
-    $stmt = $conn->prepare("INSERT IGNORE INTO staff (staff_id, full_name, email, password, role_id, position, department, is_active, status, hire_date, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'Active', CURDATE(), 0, 1)");
+    $stmt = $conn->prepare("INSERT IGNORE INTO staff (staff_id, full_name, email, password, role_id, position, department, is_active, status, hire_date, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'Active', CURDATE(), 1, 0)");
     if (!$stmt) {
         addLog($log, "staff: " . $conn->error, 'danger');
         return;
@@ -250,7 +297,7 @@ function seedAdminStaff($conn, &$log) {
         $stmt->execute();
     }
     $stmt->close();
-    addLog($log, "Admin staff seeded (Director General, SysAdmin). Password: admin123", 'success');
+    addLog($log, "Admin staff seeded (Director General, SysAdmin). They must change the bootstrap password at first login.", 'success');
 }
 
 function seedLeaveTypes($conn, &$log) {
@@ -271,14 +318,15 @@ function seedLeaveTypes($conn, &$log) {
         ['Pilgrimage Leave', 14, 'Religious pilgrimage leave'],
     ];
 
-    $stmt = $conn->prepare("INSERT IGNORE INTO leave_types (type_name, days_allowed, description, status) VALUES (?, ?, ?, 'Active')");
-    $added = 0;
+    $rows = [];
     foreach ($types as $t) {
-        $stmt->bind_param('sis', $t[0], $t[1], $t[2]);
-        $stmt->execute();
-        $added += $stmt->affected_rows;
+        $rows[] = [
+            'type_name' => $t[0], 'leave_type_name' => $t[0],
+            'days_per_year' => $t[1], 'default_days' => $t[1],
+            'description' => $t[2], 'is_active' => 1,
+        ];
     }
-    $stmt->close();
+    $added = insertSeedRows($conn, 'leave_types', $rows, $log);
     addLog($log, "Leave types: $added types inserted.", 'success');
 }
 
@@ -290,9 +338,12 @@ function seedAcademicCalendar($conn, &$log) {
     }
 
     $year = date('Y');
-    $conn->query("INSERT IGNORE INTO academic_calendar (academic_year, semester, start_date, end_date, is_current, status) VALUES ('$year', 'First Semester', '$year-02-01', '$year-06-30', 1, 'Active')");
-    $conn->query("INSERT IGNORE INTO academic_calendar (academic_year, semester, start_date, end_date, is_current, status) VALUES ('$year', 'Second Semester', '$year-07-01', '$year-12-31', 0, 'Active')");
-    addLog($log, "Academic calendar: Default $year semesters created.", 'success');
+    $rows = [
+        ['academic_year' => $year, 'start_date' => "$year-02-01", 'end_date' => "$year-06-30", 'is_current' => 1, 'status' => 'Active'],
+        ['academic_year' => $year, 'start_date' => "$year-07-01", 'end_date' => "$year-12-31", 'is_current' => 0, 'status' => 'Active'],
+    ];
+    $added = insertSeedRows($conn, 'academic_calendar', $rows, $log);
+    addLog($log, "Academic calendar: $added default periods created.", 'success');
 }
 
 function seedAcademicPrograms($conn, &$log) {
@@ -338,14 +389,15 @@ function seedGradeScales($conn, &$log) {
         ['F', 0.0, 0.00, 39.99, 'Fail'],
     ];
 
-    $stmt = $conn->prepare("INSERT IGNORE INTO grade_scales (grade_letter, grade_point, min_percentage, max_percentage, remark, status) VALUES (?, ?, ?, ?, ?, 'Active')");
-    $added = 0;
+    $rows = [];
     foreach ($grades as $g) {
-        $stmt->bind_param('sddds', $g[0], $g[1], $g[2], $g[3], $g[4]);
-        $stmt->execute();
-        $added += $stmt->affected_rows;
+        $rows[] = [
+            'grade_letter' => $g[0], 'grade_point' => $g[1],
+            'min_percentage' => $g[2], 'max_percentage' => $g[3],
+            'remark' => $g[4], 'status' => 'Active',
+        ];
     }
-    $stmt->close();
+    $added = insertSeedRows($conn, 'grade_scales', $rows, $log);
     addLog($log, "Grade scales: $added scales inserted.", 'success');
 }
 
@@ -621,14 +673,17 @@ if ($step >= 4 && $conn) {
 
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle"></i>
-                <strong>Warning:</strong> This will create databases and import the schema + data from
-                <code>sql/system/</code> and <code>sql/website/</code>. Existing tables are re-created
-                (dumps use <code>DROP TABLE IF EXISTS</code>). Make a backup first if you have live data.
+                 <strong>Warning:</strong> This will create missing databases and import the schema + data from
+                 <code>sql/system/</code> and <code>sql/website/</code>. The system dump uses
+                 <code>CREATE TABLE IF NOT EXISTS</code>-safe statements, while the website dump contains
+                 a few <code>DROP TABLE IF EXISTS</code> statements used to convert legacy tables into views.
+                 Make a backup before running against a database with live data.
             </div>
 
-            <p class="text-muted small mb-3">Default admin login after setup:<br>
-                Email: <code>directorgeneral@igangaschoolofnursingandmidwifery.ac.ug</code><br>
-                Password: <code>admin123</code>
+            <p class="text-muted small mb-3">After setup, sign in as
+                <code>directorgeneral@igangaschoolofnursingandmidwifery.ac.ug</code> using the
+                <code>ISNM_BOOTSTRAP_PASSWORD</code> value configured in <code>.env</code>.
+                Password change is enforced at first login.
             </p>
         </div>
     </div>

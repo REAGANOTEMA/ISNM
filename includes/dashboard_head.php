@@ -243,7 +243,9 @@ window.onerror = function(msg, url) {
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
   var meta = document.createElement('meta'); meta.name = 'push-sw-registered'; meta.content = '1'; document.head.appendChild(meta);
 
-  navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(function(reg) {
+  var swPath = (location.pathname.indexOf('/ISNM/') === 0 ? '/ISNM/' : '/') + 'service-worker.js';
+  var swScope = location.pathname.indexOf('/ISNM/') === 0 ? '/ISNM/' : '/';
+  navigator.serviceWorker.register(swPath, { scope: swScope }).then(function(reg) {
       function subscribeUser() {
         reg.pushManager.subscribe({
           userVisibleOnly: true,

@@ -251,7 +251,7 @@ try {
                 âœ“ Setup Completed Successfully!
             </div>
             <div class="actions">
-                <a href="bursar_login.php" class="btn btn-primary">Go to Login</a>
+                <a href="staff-login.php?position=Bursar" class="btn btn-primary">Go to Login</a>
             </div>
         <?php else: ?>
             <div class="status error">
@@ -259,7 +259,7 @@ try {
             </div>
             <div class="actions">
                 <a href="#" onclick="location.reload();" class="btn btn-primary">Retry</a>
-                <a href="bursar_login.php" class="btn btn-secondary">Skip</a>
+                <a href="staff-login.php?position=Bursar" class="btn btn-secondary">Skip</a>
             </div>
         <?php endif; ?>
     </div>

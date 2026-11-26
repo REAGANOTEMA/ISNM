@@ -1,26 +1,34 @@
 <?php
-include('../../assets/config.php');
+require('../../assets/config.php');
 
-$input = file_get_contents("php://input");
+header('Content-Type: application/json');
 
-$data = json_decode($input, true);
-
-if (isset($data['id'])) {
-    $id = $data['id'];
-
-    $stmt = $conn->prepare("UPDATE students SET request='pending', request_date=CURRENT_DATE, request_time=CURRENT_TIME WHERE id = ?");
-    
-    $stmt->bind_param('s', $id);
-
-    if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Request updated successfully"]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Error updating request"]);
-    }
-
-    $stmt->close();
-
-} else {
-    echo json_encode(["status" => "error", "message" => "ID not found"]);
+// Students may only update their own transport request.
+$sessionId = (int)($_SESSION['student_id'] ?? $_SESSION['uid'] ?? $_SESSION['user_id'] ?? 0);
+if (!$sessionId || (strtolower($_SESSION['type'] ?? $_SESSION['role'] ?? '') !== 'student')) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Student authentication required']);
+    exit;
 }
-?>
+
+$input = json_decode(file_get_contents('php://input'), true);
+$requestedId = (int)($input['id'] ?? 0);
+if ($requestedId && $requestedId !== $sessionId) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'You may only update your own request']);
+    exit;
+}
+
+$stmt = $conn->prepare("UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE id = ?");
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Database error']);
+    exit;
+}
+$stmt->bind_param('i', $sessionId);
+$success = $stmt->execute();
+$stmt->close();
+
+echo json_encode($success
+    ? ['status' => 'success', 'message' => 'Request updated successfully']
+    : ['status' => 'error', 'message' => 'Error updating request']);

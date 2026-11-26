@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/student_helpers.php';
 require_once __DIR__ . '/../core/CMS.php';
 
 if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
-    header('Location: ../staff-login.php');
+    header('Location: ../../staff-login.php');
     exit();
 }
 
@@ -28,7 +28,7 @@ if (!$hasAccess) {
     $hasAccess = !empty($editablePages);
 }
 if (!$hasAccess) {
-    echo '<!DOCTYPE html><html><head><title>Access Denied</title></head><body><h1>Access Denied</h1><p>You do not have permission to access the CMS.</p><a href="../dashboards/' . strtolower(str_replace(' ', '-', $userRole)) . '.php">Return to Dashboard</a></body></html>';
+    echo '<!DOCTYPE html><html><head><title>Access Denied</title></head><body><h1>Access Denied</h1><p>You do not have permission to access the CMS.</p><a href="../../staff-portal.php">Return to Staff Portal</a></body></html>';
     exit();
 }
 
@@ -39,11 +39,44 @@ $message = $_SESSION['cms_message'] ?? null;
 $messageType = $_SESSION['cms_message_type'] ?? 'success';
 unset($_SESSION['cms_message'], $_SESSION['cms_message_type']);
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrfToken = $_SESSION['csrf_token'];
+
+function cmsCan($rbac, $role, $permission, $slug = null): bool {
+    if ($rbac->can($role, 'manage_all')) return true;
+    if ($slug) {
+        $editable = $rbac->getEditablePages($role);
+        if (in_array('*', $editable, true) || in_array($slug, $editable, true)) return true;
+        if ($rbac->can($role, 'edit_' . $slug, $slug, 'page')) return true;
+    }
+    return $rbac->can($role, $permission);
+}
+
+function cmsSafeRedirect($target): string {
+    if (!is_string($target) || $target === '' || $target[0] !== '?' || strpos($target, '//') === 0) {
+        return '?page=dashboard';
+    }
+    return $target;
+}
+
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($postedToken) || !hash_equals($csrfToken, $postedToken)) {
+        http_response_code(403);
+        exit('Invalid security token. Please refresh the page and try again.');
+    }
     $postAction = $_POST['action'] ?? '';
 
     if ($postAction === 'save_page') {
+        $slug = preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['slug'] ?? '')));
+        if (!cmsCan($rbac, $userRole, 'edit_homepage', $slug)) {
+            http_response_code(403);
+            exit('You do not have permission to edit this page.');
+        }
+        $needsApproval = $rbac->requiresApproval($userRole, 'edit_homepage');
         $pageData = [
             'id' => (int)($_POST['page_id'] ?? 0),
             'slug' => trim($_POST['slug'] ?? ''),
@@ -61,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'og_description' => trim($_POST['og_description'] ?? ''),
             'og_image' => trim($_POST['og_image'] ?? ''),
             'canonical_url' => trim($_POST['canonical_url'] ?? ''),
-            'is_published' => isset($_POST['is_published']) ? 1 : 0,
+            'is_published' => (!$needsApproval && isset($_POST['is_published'])) ? 1 : 0,
             'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
             'sort_order' => (int)($_POST['sort_order'] ?? 0),
             'updated_by' => $userId,
@@ -74,6 +107,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'save_block') {
+        $blockPageId = (int)($_POST['page_id'] ?? 0);
+        $blockPage = $blockPageId ? $cms->getPageById($blockPageId) : null;
+        if (!cmsCan($rbac, $userRole, 'edit_homepage', $blockPage['slug'] ?? null)) {
+            http_response_code(403);
+            exit('You do not have permission to edit this content.');
+        }
         $blockData = [
             'id' => (int)($_POST['block_id'] ?? 0),
             'page_id' => (int)($_POST['page_id'] ?? 0),
@@ -97,18 +136,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'save_setting') {
-        $key = trim($_POST['setting_key'] ?? '');
-        $value = $_POST['setting_value'] ?? '';
-        if ($key) {
-            $cms->updateSetting($key, $value);
-            $_SESSION['cms_message'] = 'Setting updated.';
-            $_SESSION['cms_message_type'] = 'success';
+        if (!cmsCan($rbac, $userRole, 'manage_website_settings')) {
+            http_response_code(403);
+            exit('You do not have permission to change site settings.');
         }
+        $updated = 0;
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'setting_') !== 0 || !is_string($value)) continue;
+            $settingKey = substr($key, 8);
+            if ($settingKey === '' || !preg_match('/^[a-zA-Z0-9_-]+$/', $settingKey)) continue;
+            if ($cms->updateSetting($settingKey, $value)) $updated++;
+        }
+        $_SESSION['cms_message'] = $updated ? "$updated settings updated." : 'No settings were updated.';
+        $_SESSION['cms_message_type'] = $updated ? 'success' : 'warning';
         header('Location: ?page=settings');
         exit();
     }
 
     if ($postAction === 'delete_item') {
+        if (!cmsCan($rbac, $userRole, 'manage_all')) {
+            http_response_code(403);
+            exit('You do not have permission to delete content.');
+        }
         $type = $_POST['item_type'] ?? '';
         $id = (int)($_POST['item_id'] ?? 0);
         if ($type === 'block' && $id) {
@@ -116,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['cms_message'] = 'Block deleted.';
             $_SESSION['cms_message_type'] = 'success';
         }
-        header('Location: ' . ($_POST['redirect'] ?? '?page=dashboard'));
+        header('Location: ' . cmsSafeRedirect($_POST['redirect'] ?? '?page=dashboard'));
         exit();
     }
 }
@@ -247,6 +296,7 @@ $auditEntries = $audit->getEntries([], 20);
                 <a href="?page=pages" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Pages</a>
             </div>
             <form method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="action" value="save_page">
                 <input type="hidden" name="page_id" value="<?= $editPage['id'] ?? 0 ?>">
                 <div class="row g-4">
@@ -358,6 +408,7 @@ $auditEntries = $audit->getEntries([], 20);
                 <h2><i class="fas fa-cog me-2"></i>Site Settings</h2>
             </div>
             <form method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="action" value="save_setting">
                 <?php
                 $groups = ['general' => 'General', 'contact' => 'Contact Information', 'seo' => 'SEO', 'social' => 'Social Media', 'homepage' => 'Homepage', 'footer' => 'Footer'];

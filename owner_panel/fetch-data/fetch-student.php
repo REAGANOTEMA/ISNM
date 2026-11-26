@@ -1,5 +1,6 @@
 <?php
  include("../../assets/config.php");
+ require_once __DIR__ . '/require_owner.php';
  $sql = "SELECT id, first_name, surname, other_name, full_name, student_number, course, year, status FROM students WHERE status != 'deleted' ORDER BY first_name, surname ASC";
  $result = $conn->query($sql);
  $count = 1;

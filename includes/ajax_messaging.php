@@ -119,7 +119,7 @@ switch ($action) {
 
     // â”€â”€ Get inbox messages â”€â”€
     case 'inbox':
-        $rid    = (int)($_POST['recipient_id'] ?? $user_id);
+        $rid    = $user_id;
         $offset = max(0, (int)($_POST['offset'] ?? 0));
         $limit  = min(100, max(1, (int)($_POST['limit'] ?? 50)));
 
@@ -151,7 +151,7 @@ switch ($action) {
 
     // â"€â"€ Get sent messages â"€â"€
     case 'sent':
-        $sid    = (int)($_POST['sender_id'] ?? $user_id);
+        $sid    = $user_id;
         $offset = max(0, (int)($_POST['offset'] ?? 0));
         $limit  = min(100, max(1, (int)($_POST['limit'] ?? 50)));
 
@@ -184,7 +184,7 @@ switch ($action) {
     // â”€â”€ Mark message as read â”€â”€
     case 'read':
         $msg_id = (int)($_POST['message_id'] ?? 0);
-        $uid    = (int)($_POST['user_id'] ?? $user_id);
+        $uid    = $user_id;
 
         if ($msg_id <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid message ID.']);
@@ -207,7 +207,7 @@ switch ($action) {
     // â”€â”€ Soft delete message â”€â”€
     case 'delete':
         $msg_id = (int)($_POST['message_id'] ?? 0);
-        $uid    = (int)($_POST['user_id'] ?? $user_id);
+        $uid    = $user_id;
         $box    = $_POST['box'] ?? 'inbox';
 
         if ($msg_id <= 0) {
@@ -234,7 +234,7 @@ switch ($action) {
 
     // â”€â”€ Unread count â”€â”€
     case 'unread_count':
-        $uid = (int)($_POST['user_id'] ?? $user_id);
+        $uid = $user_id;
         $r = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
         $count = 0;
         if ($r) {
@@ -285,7 +285,7 @@ switch ($action) {
 
     // â”€â”€ Search messages â”€â”€
     case 'search':
-        $uid   = (int)($_POST['user_id'] ?? $user_id);
+        $uid   = $user_id;
         $query = trim($_POST['query'] ?? '');
 
         if (empty($query)) {

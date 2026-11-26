@@ -81,15 +81,15 @@ class DatabaseConnection {
 
 $isLocalHost = in_array($cfg['host'] ?? '', ['localhost', '127.0.0.1', '::1']);
 
-            // Hardcoded hosting credentials — always try first, no .env dependency
+            // Hosting credentials are supplied only through environment variables.
             $hostingCreds = [
-                'igangaschool_system'  => ['user' => 'igangaschool_system',  'pass' => 'gNfXJDpigN%[u@,f'],
-                'igangaschool_website' => ['user' => 'igangaschool_website', 'pass' => '0OTG!R$F0,ad$F{['],
+                'igangaschool_system'  => ['user' => getenv('DB_IGANGA_SYSTEM_USER')  ?: '', 'pass' => getenv('DB_IGANGA_SYSTEM_PASS')  ?: ''],
+                'igangaschool_website' => ['user' => getenv('DB_IGANGA_WEBSITE_USER') ?: '', 'pass' => getenv('DB_IGANGA_WEBSITE_PASS') ?: ''],
             ];
 
             $credSet = [];
-            // 1. Hosting creds first (if we know them)
-            if (isset($hostingCreds[$database])) {
+            // 1. Hosting creds first (only when fully supplied via environment)
+            if (!empty($hostingCreds[$database]['user']) && !empty($hostingCreds[$database]['pass'])) {
                 $credSet[] = $hostingCreds[$database];
             }
             // 2. Provided credentials

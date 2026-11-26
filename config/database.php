@@ -113,7 +113,7 @@ if (!defined('SYSTEM_DB_USER')) {
     define('SYSTEM_DB_USER', isnm_env('SYSTEM_DB_USER', SYSTEM_DB_NAME));
 }
 if (!defined('SYSTEM_DB_PASS')) {
-    define('SYSTEM_DB_PASS', isnm_env('SYSTEM_DB_PASS', 'gNfXJDpigN%[u@,f'));
+    define('SYSTEM_DB_PASS', isnm_env('SYSTEM_DB_PASS', ''));
 }
 if (!defined('SYSTEM_DB_CHARSET')) {
     define('SYSTEM_DB_CHARSET', isnm_env('SYSTEM_DB_CHARSET', DB_CHARSET));
@@ -133,7 +133,7 @@ if (!defined('WEBSITE_DB_USER')) {
     define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', WEBSITE_DB_NAME));
 }
 if (!defined('WEBSITE_DB_PASS')) {
-    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', '0OTG!R$F0,ad$F{['));
+    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', ''));
 }
 if (!defined('WEBSITE_DB_CHARSET')) {
     define('WEBSITE_DB_CHARSET', isnm_env('WEBSITE_DB_CHARSET', DB_CHARSET));
@@ -192,19 +192,20 @@ if (!function_exists('isnm_mysqli_connect')) {
         $oldLevel = error_reporting(0);
 
         // Hosting credentials are loaded ONLY from environment variables / .env.
-        // No hardcoded passwords are used. Set DB_IGANGA_*_USER / DB_IGANGA_*_PASS in
-        // .env.production (kept out of version control) to connect as the hosting user.
+        // No passwords are stored in source. Set DB_IGANGA_*_USER / DB_IGANGA_*_PASS
+        // in an untracked .env.production (or the deployment environment) to connect
+        // as the hosting user. Every entry below is empty unless explicitly configured.
         $hostingCreds = [
-            'igangaschool_system'  => ['user' => isnm_env('DB_IGANGA_SYSTEM_USER',  'igangaschool_system'),  'pass' => isnm_env('DB_IGANGA_SYSTEM_PASS',  'gNfXJDpigN%[u@,f')],
-            'igangaschool_website' => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER', 'igangaschool_website'), 'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS', '0OTG!R$F0,ad$F{[')],
+            'igangaschool_system'  => ['user' => isnm_env('DB_IGANGA_SYSTEM_USER',  ''), 'pass' => isnm_env('DB_IGANGA_SYSTEM_PASS',  '')],
+            'igangaschool_website' => ['user' => isnm_env('DB_IGANGA_WEBSITE_USER', ''), 'pass' => isnm_env('DB_IGANGA_WEBSITE_PASS', '')],
             // Legacy aliases -> system database
-            'igangaschool_students' => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER', 'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS', 'gNfXJDpigN%[u@,f')],
-            'igangaschool_staffs'   => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',   'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',   'gNfXJDpigN%[u@,f')],
-            'igangaschool_ict'      => ['user' => isnm_env('DB_IGANGA_ICT_USER',      'igangaschool_system'), 'pass' => isnm_env('DB_IGANGA_ICT_PASS',      'gNfXJDpigN%[u@,f')],
-            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER', 'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS', 'gNfXJDpigN%[u@,f')],
-            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',   'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',   'gNfXJDpigN%[u@,f')],
-            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',      'igangaschool_system'), 'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',      'gNfXJDpigN%[u@,f')],
-            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER', 'igangaschool_website'), 'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS', '0OTG!R$F0,ad$F{[')],
+            'igangaschool_students' => ['user' => isnm_env('DB_IGANGA_STUDENTS_USER', ''), 'pass' => isnm_env('DB_IGANGA_STUDENTS_PASS', '')],
+            'igangaschool_staffs'   => ['user' => isnm_env('DB_IGANGA_STAFFS_USER',   ''), 'pass' => isnm_env('DB_IGANGA_STAFFS_PASS',   '')],
+            'igangaschool_ict'      => ['user' => isnm_env('DB_IGANGA_ICT_USER',      ''), 'pass' => isnm_env('DB_IGANGA_ICT_PASS',      '')],
+            'igangaschoolofl_students_db' => ['user' => isnm_env('DB_IGANGAOFL_STUDENTS_USER', ''), 'pass' => isnm_env('DB_IGANGAOFL_STUDENTS_PASS', '')],
+            'igangaschoolofl_staffs_db'   => ['user' => isnm_env('DB_IGANGAOFL_STAFFS_USER',   ''), 'pass' => isnm_env('DB_IGANGAOFL_STAFFS_PASS',   '')],
+            'igangaschoolofl_ict'         => ['user' => isnm_env('DB_IGANGAOFL_ICT_USER',      ''), 'pass' => isnm_env('DB_IGANGAOFL_ICT_PASS',      '')],
+            'igangaschoolofl_website_db'  => ['user' => isnm_env('DB_IGANGAOFL_WEBSITE_USER', ''), 'pass' => isnm_env('DB_IGANGAOFL_WEBSITE_PASS', '')],
         ];
 
         $credSet = [];

@@ -225,6 +225,15 @@ class PaymentService {
             return true;
         }
 
+        if ($amount > 0 && abs((float)$txn['amount'] - $amount) > 0.01) {
+            error_log("Webhook amount mismatch for {$transactionRef}");
+            return false;
+        }
+
+        if (!in_array($status, ['successful', 'failed', 'cancelled', 'pending'], true)) {
+            return false;
+        }
+
         if (!empty($providerRef) && empty($txn['provider_transaction_id'])) {
             $stmt3 = $conn->prepare("UPDATE payment_transactions SET provider_transaction_id = ? WHERE transaction_ref = ?");
             $stmt3->bind_param("ss", $providerRef, $transactionRef);
@@ -256,6 +265,15 @@ class PaymentService {
         $invoiceId = (int)($txn['reference_id'] ?? 0);
         if ($invoiceId <= 0) return;
 
+        $check = $conn->prepare("SELECT id FROM payments WHERE transaction_ref = ? LIMIT 1");
+        if ($check) {
+            $check->bind_param('s', $txn['transaction_ref']);
+            $check->execute();
+            $exists = $check->get_result()->fetch_row();
+            $check->close();
+            if ($exists) return;
+        }
+
         $stmt = $conn->prepare("
             INSERT INTO payments (
                 payment_reference, student_id, amount_received, invoice_id,
@@ -263,10 +281,11 @@ class PaymentService {
             ) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'Completed')
         ");
         $method = $this->getProviderDisplayName($txn['provider_key']);
+        $received = (float)($txn['amount'] ?? 0);
         $stmt->bind_param("sidsss",
             $txn['transaction_ref'],
             $txn['student_id'],
-            $txn['net_amount'],
+            $received,
             $invoiceId,
             $method,
             $txn['provider_transaction_id']

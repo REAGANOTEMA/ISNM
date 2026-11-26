@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/fetch-data/verfyRoleRedirect.php'; ?>
 <!DOCTYPE html>
 <html>
 <head>
