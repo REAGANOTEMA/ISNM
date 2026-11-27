@@ -3,15 +3,24 @@
  * Bursar Account Setup Script
  * Creates the bursar staff account for login.
  * 
- * Usage: GET /database/setup_bursar.php
+ * Usage: POST /database/setup_bursar.php with ISNM_BURSAR_PASSWORD set in the environment.
  * Safe to run multiple times (idempotent).
  */
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    echo json_encode(['success' => false, 'error' => 'POST required']);
+    exit;
+}
+
 $email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-$password = 'bursar@isnm';
+$password = isnm_env('ISNM_BURSAR_PASSWORD', '');
+if ($password === '') {
+    echo json_encode(['success' => false, 'error' => 'ISNM_BURSAR_PASSWORD is not configured']);
+    exit;
+}
 $hash = password_hash($password, PASSWORD_DEFAULT);
 $fullName = 'School Bursar';
 $staffId = 'BUR-001';
@@ -163,7 +172,6 @@ if ($verify) {
 echo json_encode([
     'success' => true,
     'email' => $email,
-    'password' => $password,
     'role_id' => $roleId,
     'dashboard' => 'dashboards/school-bursar.php',
     'details' => $results

@@ -39,47 +39,50 @@ $message = $_SESSION['cms_message'] ?? null;
 $messageType = $_SESSION['cms_message_type'] ?? 'success';
 unset($_SESSION['cms_message'], $_SESSION['cms_message_type']);
 
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['csrf_token'];
+$csrfToken = CMS::csrfToken();
 
-function cmsCan($rbac, $role, $permission, $slug = null): bool {
-    if ($rbac->can($role, 'manage_all')) return true;
-    if ($slug) {
-        $editable = $rbac->getEditablePages($role);
-        if (in_array('*', $editable, true) || in_array($slug, $editable, true)) return true;
-        if ($rbac->can($role, 'edit_' . $slug, $slug, 'page')) return true;
-    }
-    return $rbac->can($role, $permission);
+function cmsCan($rbac, $role, $action, $permission = null, $slug = null, $contentType = null): bool {
+    return $rbac->canPerform($role, $action, $permission, $slug, $contentType);
 }
 
 function cmsSafeRedirect($target): string {
-    if (!is_string($target) || $target === '' || $target[0] !== '?' || strpos($target, '//') === 0) {
-        return '?page=dashboard';
-    }
-    return $target;
+    return CMS::safeRedirect($target);
 }
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postedToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (empty($postedToken) || !hash_equals($csrfToken, $postedToken)) {
+    if (!CMS::verifyCsrfToken($postedToken)) {
         http_response_code(403);
         exit('Invalid security token. Please refresh the page and try again.');
     }
     $postAction = $_POST['action'] ?? '';
 
     if ($postAction === 'save_page') {
-        $slug = preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['slug'] ?? '')));
-        if (!cmsCan($rbac, $userRole, 'edit_homepage', $slug)) {
+        $pageId = (int)($_POST['page_id'] ?? 0);
+        $existingPage = $pageId ? $cms->getPageById($pageId) : null;
+        $slug = (string)preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['slug'] ?? '')));
+        if ($slug === '') {
+            http_response_code(400);
+            exit('A valid page slug is required.');
+        }
+        $slugs = array_values(array_unique(array_filter([$slug, $existingPage['slug'] ?? null], 'is_string')));
+        $writeAction = $existingPage ? 'edit' : 'create';
+        $allowed = true;
+        $needsApproval = false;
+        $canPublish = true;
+        foreach ($slugs as $candidateSlug) {
+            if (!cmsCan($rbac, $userRole, $writeAction, null, $candidateSlug, 'page')) $allowed = false;
+            if ($rbac->requiresApproval($userRole, 'edit_homepage', $candidateSlug, 'page')) $needsApproval = true;
+            if (!cmsCan($rbac, $userRole, 'publish', null, $candidateSlug, 'page')) $canPublish = false;
+        }
+        if (!$allowed) {
             http_response_code(403);
             exit('You do not have permission to edit this page.');
         }
-        $needsApproval = $rbac->requiresApproval($userRole, 'edit_homepage');
         $pageData = [
-            'id' => (int)($_POST['page_id'] ?? 0),
-            'slug' => trim($_POST['slug'] ?? ''),
+            'id' => $pageId,
+            'slug' => $slug,
             'title' => trim($_POST['title'] ?? ''),
             'subtitle' => trim($_POST['subtitle'] ?? ''),
             'page_type' => $_POST['page_type'] ?? 'static',
@@ -94,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'og_description' => trim($_POST['og_description'] ?? ''),
             'og_image' => trim($_POST['og_image'] ?? ''),
             'canonical_url' => trim($_POST['canonical_url'] ?? ''),
-            'is_published' => (!$needsApproval && isset($_POST['is_published'])) ? 1 : 0,
+            'is_published' => (isset($_POST['is_published']) && !$needsApproval && $canPublish) ? 1 : 0,
             'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
             'sort_order' => (int)($_POST['sort_order'] ?? 0),
             'updated_by' => $userId,
@@ -107,15 +110,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'save_block') {
-        $blockPageId = (int)($_POST['page_id'] ?? 0);
-        $blockPage = $blockPageId ? $cms->getPageById($blockPageId) : null;
-        if (!cmsCan($rbac, $userRole, 'edit_homepage', $blockPage['slug'] ?? null)) {
+        $blockId = (int)($_POST['block_id'] ?? 0);
+        $existingBlock = $blockId ? $cms->getBlock($blockId) : null;
+        $postedPageId = (int)($_POST['page_id'] ?? 0);
+        $pageIds = array_values(array_unique(array_filter([$postedPageId, (int)($existingBlock['page_id'] ?? 0)])));
+        if (empty($pageIds)) {
+            http_response_code(400);
+            exit('A valid page is required.');
+        }
+        $slugs = [];
+        foreach ($pageIds as $candidateId) {
+            $candidatePage = $cms->getPageById($candidateId);
+            if (!$candidatePage || empty($candidatePage['slug'])) {
+                http_response_code(400);
+                exit('A valid page is required.');
+            }
+            $slugs[] = $candidatePage['slug'];
+        }
+        $slugs = array_values(array_unique($slugs));
+        $writeAction = $existingBlock ? 'edit' : 'create';
+        $allowed = true;
+        $needsApproval = false;
+        $canPublish = true;
+        foreach ($slugs as $candidateSlug) {
+            if (!cmsCan($rbac, $userRole, $writeAction, null, $candidateSlug, 'content_block')) $allowed = false;
+            if ($rbac->requiresApproval($userRole, 'edit_homepage', $candidateSlug, 'content_block')) $needsApproval = true;
+            if (!cmsCan($rbac, $userRole, 'publish', null, $candidateSlug, 'content_block')) $canPublish = false;
+        }
+        if (!$allowed) {
             http_response_code(403);
             exit('You do not have permission to edit this content.');
         }
         $blockData = [
-            'id' => (int)($_POST['block_id'] ?? 0),
-            'page_id' => (int)($_POST['page_id'] ?? 0),
+            'id' => $blockId,
+            'page_id' => $postedPageId ?: (int)($existingBlock['page_id'] ?? 0),
             'block_key' => trim($_POST['block_key'] ?? ''),
             'block_type' => $_POST['block_type'] ?? 'text',
             'title' => trim($_POST['block_title'] ?? ''),
@@ -126,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'background_style' => trim($_POST['background_style'] ?? ''),
             'text_color' => trim($_POST['text_color'] ?? ''),
             'sort_order' => (int)($_POST['sort_order'] ?? 0),
-            'is_published' => isset($_POST['is_published']) ? 1 : 0,
+            'is_published' => (isset($_POST['is_published']) && !$needsApproval && $canPublish) ? 1 : 0,
         ];
         $savedId = $cms->saveBlock($blockData, $userId);
         $_SESSION['cms_message'] = $savedId ? 'Content block saved.' : 'Failed to save block.';
@@ -136,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'save_setting') {
-        if (!cmsCan($rbac, $userRole, 'manage_website_settings')) {
+        if (!cmsCan($rbac, $userRole, 'edit', 'manage_website_settings', null, 'setting')) {
             http_response_code(403);
             exit('You do not have permission to change site settings.');
         }
@@ -154,18 +182,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'delete_item') {
-        if (!cmsCan($rbac, $userRole, 'manage_all')) {
+        $type = $_POST['item_type'] ?? '';
+        $id = (int)($_POST['item_id'] ?? 0);
+        if ($type !== 'block' || $id <= 0) {
+            http_response_code(400);
+            exit('Invalid item.');
+        }
+        $block = $cms->getBlock($id);
+        if (!$block) {
+            http_response_code(404);
+            exit('Item not found.');
+        }
+        $blockPage = $cms->getPageById((int)$block['page_id']);
+        if (!cmsCan($rbac, $userRole, 'delete', null, $blockPage['slug'] ?? null, 'content_block')) {
             http_response_code(403);
             exit('You do not have permission to delete content.');
         }
-        $type = $_POST['item_type'] ?? '';
-        $id = (int)($_POST['item_id'] ?? 0);
-        if ($type === 'block' && $id) {
-            $cms->deleteBlock($id, $userId);
-            $_SESSION['cms_message'] = 'Block deleted.';
-            $_SESSION['cms_message_type'] = 'success';
-        }
-        header('Location: ' . cmsSafeRedirect($_POST['redirect'] ?? '?page=dashboard'));
+        $cms->deleteBlock($id, $userId);
+        $_SESSION['cms_message'] = 'Block deleted.';
+        $_SESSION['cms_message_type'] = 'success';
+        header('Location: ' . cmsSafeRedirect($_POST['redirect'] ?? 'index.php'));
         exit();
     }
 }

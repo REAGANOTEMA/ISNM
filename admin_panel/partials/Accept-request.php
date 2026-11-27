@@ -3,11 +3,17 @@ require 'config.php';
 
 header('Content-Type: application/json');
 
-// Bus-request approval is a state change: POST + CSRF (enforced by assets/config.php)
-// and an explicit administrative role check are required.
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     http_response_code(405);
     echo json_encode(['status' => 'ERROR', 'message' => 'Method not allowed']);
+    exit;
+}
+
+$csrfToken = $_POST['csrf_token'] ?? '';
+$sessionToken = $_SESSION['csrf_token'] ?? '';
+if ($csrfToken === '' || $sessionToken === '' || !hash_equals($sessionToken, $csrfToken)) {
+    http_response_code(403);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Invalid security token']);
     exit;
 }
 
@@ -15,8 +21,9 @@ if (function_exists('isnm_require_admin_role')) {
     isnm_require_admin_role();
 }
 
-$id = (int)($_POST['id'] ?? 0);
+$id = (int) ($_POST['id'] ?? 0);
 if ($id <= 0) {
+    http_response_code(400);
     echo json_encode(['status' => 'ERROR', 'message' => 'Valid student ID required']);
     exit;
 }

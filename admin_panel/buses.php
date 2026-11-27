@@ -153,7 +153,7 @@
 <?php $csrfToken = htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>
 <script type="text/javascript">
    var CSRF_TOKEN = '<?= $csrfToken ?>';
-   $(document).ready(function(){
+   function loadBusRequests() {
     $.ajax({
         url: "partials/bus-requests.php",
         method: "post",
@@ -170,7 +170,10 @@
             $("#request-accept").html(data);
         }
     });
-});
+   }
+   $(document).ready(function(){
+    loadBusRequests();
+   });
 
    
    document.getElementById("search").addEventListener("keyup", function() {

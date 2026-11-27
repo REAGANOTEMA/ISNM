@@ -33,12 +33,15 @@ class RBAC {
         }
     }
 
+    public function isSuperAdmin(string $role): bool {
+        return in_array($role, ['Director General', 'CEO', 'System Administrator'], true);
+    }
+
     /**
      * Check if a role has a specific permission
      */
     public function can(string $role, string $permission, string $pageSlug = null, string $contentType = null): bool {
-        // Director General has all permissions
-        if ($role === 'Director General' || $role === 'CEO') return true;
+        if ($this->isSuperAdmin($role)) return true;
 
         if (empty($this->permissions[$role])) return false;
 
@@ -57,6 +60,21 @@ class RBAC {
         return false;
     }
 
+    public function canPerform(string $role, string $action, ?string $permission = null, ?string $pageSlug = null, ?string $contentType = null): bool {
+        if ($this->isSuperAdmin($role)) return true;
+        if (!in_array($action, ['create', 'edit', 'delete', 'publish', 'approve'], true)) return false;
+        if (empty($this->permissions[$role])) return false;
+
+        $flag = 'can_' . $action;
+        foreach ($this->permissions[$role] as $perm) {
+            if ($permission !== null && $perm['permission'] !== $permission) continue;
+            if ($pageSlug !== null && !empty($perm['page_slug']) && $perm['page_slug'] !== $pageSlug) continue;
+            if ($contentType !== null && !empty($perm['content_type']) && $perm['content_type'] !== $contentType) continue;
+            if (!empty($perm[$flag])) return true;
+        }
+        return false;
+    }
+
     /**
      * Get all permissions for a role
      */
@@ -68,7 +86,7 @@ class RBAC {
      * Get pages a role can edit
      */
     public function getEditablePages(string $role): array {
-        if ($role === 'Director General' || $role === 'CEO') {
+        if ($this->isSuperAdmin($role)) {
             return ['*']; // All pages
         }
         $pages = [];
@@ -86,7 +104,7 @@ class RBAC {
      * Get content types a role can manage
      */
     public function getManageableContentTypes(string $role): array {
-        if ($role === 'Director General' || $role === 'CEO') {
+        if ($this->isSuperAdmin($role)) {
             return ['*'];
         }
         $types = [];
@@ -103,13 +121,14 @@ class RBAC {
     /**
      * Check if role requires approval before publishing
      */
-    public function requiresApproval(string $role, string $permission): bool {
-        if ($role === 'Director General') return false;
+    public function requiresApproval(string $role, string $permission, ?string $pageSlug = null, ?string $contentType = null): bool {
+        if ($this->isSuperAdmin($role)) return false;
         if (empty($this->permissions[$role])) return true;
         foreach ($this->permissions[$role] as $perm) {
-            if ($perm['permission'] === $permission) {
-                return !empty($perm['requires_approval']);
-            }
+            if ($perm['permission'] !== $permission) continue;
+            if ($pageSlug !== null && !empty($perm['page_slug']) && $perm['page_slug'] !== $pageSlug) continue;
+            if ($contentType !== null && !empty($perm['content_type']) && $perm['content_type'] !== $contentType) continue;
+            return !empty($perm['requires_approval']);
         }
         return true;
     }

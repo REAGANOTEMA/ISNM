@@ -90,7 +90,7 @@ class DatabaseConnection {
             if (!empty($hostingCreds[$database]['user']) && !empty($hostingCreds[$database]['pass'])) {
                 $credSet[] = $hostingCreds[$database];
             }
-            // 2. Configured credentials — no root or empty-password fallback.
+            // 2. Configured credentials from env/config; never fall back to hardcoded secrets.
             $credSet[] = ['user' => $username, 'pass' => $password];
 
             // Deduplicate

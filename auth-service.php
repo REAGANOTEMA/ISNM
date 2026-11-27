@@ -1114,10 +1114,13 @@ class AuthenticationService {
         if (empty($firstName) || empty($surname))
             return ['success' => false, 'message' => 'Please provide a valid full name with at least two names.'];
 
+        $tempPassword = 'Stu' . strtoupper(bin2hex(random_bytes(3)));
+        $passwordHash = password_hash($tempPassword, PASSWORD_DEFAULT);
+
         try {
-            $s = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,full_name,phone,email,program,level,set_name,intake_year,intake_period,status,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,'',?,?,?,?,?,?,?,?,'Active',TRUE,FALSE,NOW(),NOW())");
+            $s = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,full_name,phone,email,program,level,set_name,intake_year,intake_period,status,password,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,'',?,?,?,?,?,?,?,?,'Active',?,TRUE,FALSE,NOW(),NOW())");
             if (!$s) return ['success' => false, 'message' => 'Failed to prepare student account creation.'];
-            $s->bind_param('ssssssssssss', $index, $index, $firstName, $surname, $fullName, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod);
+            $s->bind_param('sssssssssssss', $index, $index, $firstName, $surname, $fullName, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod, $passwordHash);
             if (!$s->execute()) {
                 $error = $s->error;
                 error_log('createStudentAccount execute failed: ' . $error);
@@ -1125,7 +1128,7 @@ class AuthenticationService {
                 return ['success' => false, 'message' => 'Failed to create student account: ' . $error];
             }
             $s->close();
-            return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level]];
+            return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level, 'temporary_password' => $tempPassword]];
         } catch (\Throwable $e) {
             error_log('createStudentAccount error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to create student account. Please try again or contact an administrator.'];

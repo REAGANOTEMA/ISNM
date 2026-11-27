@@ -20,7 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $action = $_POST['action'] ?? '';
-$user_id = (int)$_SESSION['user_id'];
+$user_id = (int) ($_SESSION['user_id'] ?? 0);
+if ($user_id <= 0) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized. Please log in.']);
+    exit;
+}
 
 // CSRF only for write actions (send, read, delete) — skip for read-only
 $writeActions = ['send', 'read', 'delete'];
@@ -43,17 +48,12 @@ switch ($action) {
 
     // â”€â”€ Send a new message â”€â”€
     case 'send':
-        $sender_id    = (int)($_POST['sender_id'] ?? $user_id);
-        $recipient_id = (int)($_POST['recipient_id'] ?? 0);
+        $sender_id    = $user_id;
+        $recipient_id = (int) ($_POST['recipient_id'] ?? 0);
         $subject      = trim($_POST['subject'] ?? '');
         $message      = trim($_POST['message'] ?? '');
         $priority     = $_POST['priority'] ?? 'Normal';
-        $parent_id    = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
-
-        if ($sender_id !== $user_id) {
-            echo json_encode(['success' => false, 'error' => 'Sender identity mismatch.']);
-            exit;
-        }
+        $parent_id    = !empty($_POST['parent_id']) ? (int) $_POST['parent_id'] : 0;
         if ($recipient_id <= 0) {
             echo json_encode(['success' => false, 'error' => 'Please select a recipient.']);
             exit;

@@ -823,7 +823,11 @@ function handleCreateStudent() {
             if ($nid && function_exists('notifyAllStaff')) notifyAllStaff($nid);
         }
     }
-    $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
+    $message = $res['message'];
+    if ($res['success'] && !empty($res['data']['temporary_password'])) {
+        $message .= ' Login ID: ' . $res['data']['index_number'] . '. Temporary password: ' . $res['data']['temporary_password'];
+    }
+    $_SESSION[$res['success'] ? 'success' : 'error'] = $message;
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
     $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';

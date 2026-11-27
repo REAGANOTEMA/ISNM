@@ -369,17 +369,12 @@
                     </ul>
                     
                     <div class="credentials bursar">
-                        <strong>Demo Credentials:</strong>
-                        Email: <code>bursar@igangaschoolofnursingandmidwifery.ac.ug</code><br>
-                        Password: <code>bursar@isnm</code>
+                        <strong>Access:</strong> Use your institutional staff account.
                     </div>
                     
                     <div class="btn-group">
                         <a href="staff-login.php" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <a href="bursar_setup.php" class="btn btn-outline">
-                            <i class="fas fa-cog"></i> Setup
                         </a>
                     </div>
                 </div>
@@ -405,17 +400,12 @@
                     </ul>
                     
                     <div class="credentials hr">
-                        <strong>Demo Credentials:</strong>
-                        Email: <code>hr@igangaschoolofnursingandmidwifery.ac.ug</code><br>
-                        Password: <code>Lovely2God</code>
+                        <strong>Access:</strong> Use your institutional staff account.
                     </div>
                     
                     <div class="btn-group">
                         <a href="staff-login.php" class="btn btn-secondary">
                             <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <a href="hr_setup.php" class="btn btn-outline">
-                            <i class="fas fa-cog"></i> Setup
                         </a>
                     </div>
                 </div>

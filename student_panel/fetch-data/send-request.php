@@ -1,25 +1,48 @@
 <?php
-require('../../assets/config.php');
+require '../../assets/config.php';
 
 header('Content-Type: application/json');
 
-// Students may only update their own transport request.
-$sessionId = (int)($_SESSION['student_id'] ?? $_SESSION['uid'] ?? $_SESSION['user_id'] ?? 0);
-if (!$sessionId || (strtolower($_SESSION['type'] ?? $_SESSION['role'] ?? '') !== 'student')) {
+$sessionId = (int) ($_SESSION['student_id'] ?? $_SESSION['uid'] ?? $_SESSION['user_id'] ?? 0);
+if ($sessionId <= 0) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Student authentication required']);
+    exit;
+}
+
+$studentsConn = function_exists('getStudentsConnection') ? getStudentsConnection() : null;
+if (!$studentsConn) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Database error']);
+    exit;
+}
+
+$studentStmt = $studentsConn->prepare('SELECT id FROM students WHERE id = ? AND (status IS NULL OR status <> \'deleted\') LIMIT 1');
+if (!$studentStmt) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Database error']);
+    exit;
+}
+$studentStmt->bind_param('i', $sessionId);
+$studentStmt->execute();
+$studentResult = $studentStmt->get_result();
+$studentExists = $studentResult && $studentResult->num_rows > 0;
+$studentStmt->close();
+if (!$studentExists) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'Student authentication required']);
     exit;
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$requestedId = (int)($input['id'] ?? 0);
-if ($requestedId && $requestedId !== $sessionId) {
+$requestedId = (int) (($input['id'] ?? $_POST['id'] ?? 0));
+if ($requestedId !== 0 && $requestedId !== $sessionId) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'You may only update your own request']);
     exit;
 }
 
-$stmt = $conn->prepare("UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE id = ?");
+$stmt = $studentsConn->prepare("UPDATE students SET bus_request_status = 'pending', bus_request_date = NOW() WHERE id = ?");
 if (!$stmt) {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Database error']);

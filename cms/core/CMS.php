@@ -23,6 +23,40 @@ class CMS {
         return self::$instance;
     }
 
+    public static function csrfToken(): string {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    public static function verifyCsrfToken($token): bool {
+        if (!is_string($token) || $token === '') return false;
+        return hash_equals(self::csrfToken(), $token);
+    }
+
+    public static function safeRedirect($target): string {
+        $fallback = 'index.php';
+        if (!is_string($target) || $target === '') return $fallback;
+        $target = trim($target);
+        if ($target === '' || preg_match('/[\x00-\x20\x7F\\\\]/', $target)) return $fallback;
+
+        if (strpos($target, '/') === 0 && strpos($target, '//') !== 0) {
+            return $target;
+        }
+
+        $parts = parse_url($target);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) return $fallback;
+        if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) return $fallback;
+
+        $requestHost = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
+        $requestHost = strtolower((string)parse_url('http://' . $requestHost, PHP_URL_HOST));
+        if ($requestHost === '' || strtolower($parts['host']) !== $requestHost) return $fallback;
+
+        return $target;
+    }
+
     private function __construct() {
         $this->db = $this->getDb();
         $this->rbac = RBAC::getInstance();

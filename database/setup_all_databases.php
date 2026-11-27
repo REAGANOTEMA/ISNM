@@ -32,11 +32,22 @@ function envVal($key, $default = '') {
     return ($v === false || $v === null) ? $default : $v;
 }
 
-// ── Config ──
+function requiredEnvVal($key) {
+    $v = envVal($key, '');
+    return $v === '' ? null : $v;
+}
+
+// �� Config ��
 $host = envVal('SYSTEM_DB_HOST', envVal('DB_HOST', 'localhost'));
 $port = (int) envVal('SYSTEM_DB_PORT', envVal('DB_PORT', 3306));
-$user = envVal('SYSTEM_DB_USER', 'root');
-$pass = envVal('SYSTEM_DB_PASS', '');
+$user = requiredEnvVal('SYSTEM_DB_USER');
+if ($user === null) {
+    $user = requiredEnvVal('DB_USER');
+}
+$pass = requiredEnvVal('SYSTEM_DB_PASS');
+if ($pass === null) {
+    $pass = requiredEnvVal('DB_PASS');
+}
 $charset = envVal('DB_CHARSET', 'utf8mb4');
 
 // Two production databases and the dump file that fills each one.
@@ -280,7 +291,11 @@ function seedAdminStaff($conn, &$log) {
         return;
     }
 
-    $bootstrapPassword = envVal('ISNM_BOOTSTRAP_PASSWORD', 'ISNM@ChangeMe2026!');
+    $bootstrapPassword = envVal('ISNM_BOOTSTRAP_PASSWORD', '');
+    if ($bootstrapPassword === '') {
+        addLog($log, 'ISNM_BOOTSTRAP_PASSWORD is not set; skipping bootstrap admin staff creation. Set it in .env and re-run seed.', 'warning');
+        return;
+    }
     $adminPass = password_hash($bootstrapPassword, PASSWORD_DEFAULT);
     $accounts = [
         ['DG-001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', $adminPass, 1, 'Director General', 'Executive'],
@@ -534,15 +549,20 @@ $conn = null;
 
 if ($step >= 1) {
     // Step 1: Test MySQL connection
-    addLog($log, "Testing MySQL connection to $host:$port as $user...", 'info');
-    mysqli_report(MYSQLI_REPORT_OFF);
-    $conn = @new mysqli($host, $user, $pass, null, $port);
-    if ($conn->connect_error) {
-        addLog($log, "Connection FAILED: " . $conn->connect_error, 'danger');
+    if ($user === null || $pass === null) {
+        addLog($log, 'Missing required DB credentials. Set SYSTEM_DB_USER/DB_USER and SYSTEM_DB_PASS/DB_PASS in .env before running setup.', 'danger');
         $step = 0;
     } else {
-        $conn->set_charset($charset);
-        addLog($log, "Connected to MySQL " . $conn->server_info . " successfully!", 'success');
+        addLog($log, "Testing MySQL connection to $host:$port as $user...", 'info');
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = @new mysqli($host, $user, $pass, null, $port);
+        if ($conn->connect_error) {
+            addLog($log, 'Connection FAILED: ' . $conn->connect_error, 'danger');
+            $step = 0;
+        } else {
+            $conn->set_charset($charset);
+            addLog($log, 'Connected to MySQL ' . $conn->server_info . ' successfully!', 'success');
+        }
     }
 }
 
@@ -665,8 +685,8 @@ if ($step >= 4 && $conn) {
                 <table class="table table-sm creds-table mb-0">
                     <tr><th>Host:</th><td><code><?= htmlspecialchars($host) ?></code></td></tr>
                     <tr><th>Port:</th><td><code><?= $port ?></code></td></tr>
-                    <tr><th>User:</th><td><code><?= htmlspecialchars($user) ?></code></td></tr>
-                    <tr><th>Password:</th><td><code><?= $pass !== '' ? '****' : '(empty)' ?></code></td></tr>
+                    <tr><th>User:</th><td><code><?= htmlspecialchars((string) $user) ?></code></td></tr>
+                    <tr><th>Password:</th><td><code><?= $pass !== null && $pass !== '' ? 'configured' : 'missing' ?></code></td></tr>
                     <tr><th>Charset:</th><td><code><?= htmlspecialchars($charset) ?></code></td></tr>
                 </table>
             </div>

@@ -213,34 +213,35 @@ function runSetup(&$output) {
     logMsg($output, "\n=== Seeding staff accounts ===");
     $staffSeeded = false; $staffCount = 0;
     if ($staffCreated) {
+        $seedPassword = isnm_env('ISNM_STAFF_SEED_PASSWORD', '');
         $staffData = [
-            ['directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', 'Director General',        'DorisJoy2026', 'Director General',   'DG-001',  'Director General',    'Executive'],
-            ['ceo@igangaschoolofnursingandmidwifery.ac.ug',              'Chief Executive Officer', 'Lovely2God',   'CEO',                'CEO-001', 'CEO',                 'Executive'],
-            ['directoracademic@igangaschoolofnursingandmidwifery.ac.ug', 'Director Academics',      'Stephen123',   'Director Academics', 'DA-001',  'Director Academics',  'Academic Affairs'],
-            ['finance@igangaschoolofnursingandmidwifery.ac.ug',          'Director Finance',         'DorisJoy2026', 'Director Finance',   'DF-001',  'Director Finance',    'Finance'],
-            ['principal@igangaschoolofnursingandmidwifery.ac.ug',        'School Principal',        'isnm2026',     'School Principal',   'PRIN-001','School Principal',    'Administration'],
-            ['dep-principal@igangaschoolofnursingandmidwifery.ac.ug',    'Deputy Principal',        'Isnm2026',     'Deputy Principal',   'DP-001',  'Deputy Principal',    'Administration'],
-            ['academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','Academic Registrar',      'Lovely2God',   'Academic Registrar', 'AR-001',  'Academic Registrar',  'Academic Registrar'],
-            ['hr-manager@igangaschoolofnursingandmidwifery.ac.ug',       'HR Manager',              'Alexis2026',   'HR Manager',         'HR-001',  'HR Manager',          'Human Resources'],
-            ['secretary@igangaschoolofnursingandmidwifery.ac.ug',        'School Secretary',        'Lovely2God',   'School Secretary',   'SEC-001', 'School Secretary',    'Administration'],
-            ['library@igangaschoolofnursingandmidwifery.ac.ug',          'School Librarian',        'isnm2026',     'School Librarian',   'LIB-001', 'School Librarian',    'Library'],
-            ['nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',      'Head of Nursing',         'isnm4life',    'Head of Nursing',    'NUR-001', 'Head of Nursing',     'Nursing'],
-            ['midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',    'Head of Midwifery',       'Life2save',    'Head of Midwifery',  'MID-001', 'Head of Midwifery',   'Midwifery'],
-            ['senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', 'Senior Lecturer',        'isnm2026',     'Senior Lecturer',    'SL-001',  'Senior Lecturer',     'Academic Affairs'],
-            ['lecturers@igangaschoolofnursingandmidwifery.ac.ug',        'Lecturer',                'Isnm4life',    'Lecturer',           'LEC-001', 'Lecturer',            'Academic Affairs'],
-            ['matron@igangaschoolofnursingandmidwifery.ac.ug',           'Matron',                  'Isnm2026',     'Matron',             'MAT-001', 'Matron',              'Student Welfare'],
-            ['warden@igangaschoolofnursingandmidwifery.ac.ug',           'Warden',                  'Lovely2God',   'Warden',             'WAR-001', 'Warden',              'Student Welfare'],
-            ['sickbay@igangaschoolofnursingandmidwifery.ac.ug',          'Sickbay Nurse',            'isnm2026',    'Sickbay Nurse',      'SKB-001', 'Sickbay Nurse',       'Student Welfare'],
-            ['drivers@igangaschoolofnursingandmidwifery.ac.ug',          'Driver',                   'isnm4life',   'Driver',             'DRV-001', 'Driver',              'Transport'],
-            ['security@igangaschoolofnursingandmidwifery.ac.ug',         'Security Officer',         'safty1st',   'Security Officer',   'SEC-001', 'Security Officer',    'Security'],
-            ['store@igangaschoolofnursingandmidwifery.ac.ug',            'Storekeeper',              'Isnm4life',   'Storekeeper',        'STO-001', 'Storekeeper',         'Store'],
-            ['guildpresident@igangaschoolofnursingandmidwifery.ac.ug',   'Guild President',          'isnm4life',   'Guild President',    'G-001',   'Guild President',     'Student Government'],
-            ['admissions@igangaschoolofnursingandmidwifery.ac.ug',      'Director Admissions',      '2268926931',   'Director Admissions', 'ADM-001', 'Director Admissions', 'Admissions'],
-            ['dannybict@igangaschoolofnursingandmidwifery.ac.ug',       'Director ICT',             'Lovely2God',   'Director ICT',       'ICT-001', 'Director ICT',        'ICT'],
-            ['skills-lab@igangaschoolofnursingandmidwifery.ac.ug',       'Skills Lab Manager',       'Lovely2God',   'Skills Lab Manager', 'SKL-001', 'Skills Lab Manager',  'Skills Laboratory'],
-            ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug',     'Computer Lab Manager',     'Techno123',    'Computer Lab Manager','CLB-001','Computer Lab Manager','ICT'],
-            ['events@igangaschoolofnursingandmidwifery.ac.ug',           'Events Coordinator',       'Eventful2026', 'Events Coordinator',  'EVT-001', 'Events Coordinator',  'Administration'],
-            ['alumni@igangaschoolofnursingandmidwifery.ac.ug',           'Alumni Relations Officer', 'Alumni2026',   'Alumni Relations Officer','ALU-001','Alumni Relations Officer','Administration'],
+            ['directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', 'Director General', $seedPassword, 'Director General',   'DG-001',  'Director General',    'Executive'],
+            ['ceo@igangaschoolofnursingandmidwifery.ac.ug',              'Chief Executive Officer', $seedPassword, 'CEO',                'CEO-001', 'CEO',                 'Executive'],
+            ['directoracademic@igangaschoolofnursingandmidwifery.ac.ug', 'Director Academics', $seedPassword, 'Director Academics', 'DA-001',  'Director Academics',  'Academic Affairs'],
+            ['finance@igangaschoolofnursingandmidwifery.ac.ug',          'Director Finance', $seedPassword, 'Director Finance',   'DF-001',  'Director Finance',    'Finance'],
+            ['principal@igangaschoolofnursingandmidwifery.ac.ug',        'School Principal', $seedPassword, 'School Principal',   'PRIN-001','School Principal',    'Administration'],
+            ['dep-principal@igangaschoolofnursingandmidwifery.ac.ug',    'Deputy Principal', $seedPassword, 'Deputy Principal',   'DP-001',  'Deputy Principal',    'Administration'],
+            ['academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','Academic Registrar', $seedPassword, 'Academic Registrar', 'AR-001',  'Academic Registrar',  'Academic Registrar'],
+            ['hr-manager@igangaschoolofnursingandmidwifery.ac.ug',       'HR Manager', $seedPassword, 'HR Manager',         'HR-001',  'HR Manager',          'Human Resources'],
+            ['secretary@igangaschoolofnursingandmidwifery.ac.ug',        'School Secretary', $seedPassword, 'School Secretary',   'SEC-001', 'School Secretary',    'Administration'],
+            ['library@igangaschoolofnursingandmidwifery.ac.ug',          'School Librarian', $seedPassword, 'School Librarian',   'LIB-001', 'School Librarian',    'Library'],
+            ['nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',      'Head of Nursing', $seedPassword, 'Head of Nursing',    'NUR-001', 'Head of Nursing',     'Nursing'],
+            ['midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',    'Head of Midwifery', $seedPassword, 'Head of Midwifery',  'MID-001', 'Head of Midwifery',   'Midwifery'],
+            ['senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', 'Senior Lecturer', $seedPassword, 'Senior Lecturer',    'SL-001',  'Senior Lecturer',     'Academic Affairs'],
+            ['lecturers@igangaschoolofnursingandmidwifery.ac.ug',        'Lecturer', $seedPassword, 'Lecturer',           'LEC-001', 'Lecturer',            'Academic Affairs'],
+            ['matron@igangaschoolofnursingandmidwifery.ac.ug',           'Matron', $seedPassword, 'Matron',             'MAT-001', 'Matron',              'Student Welfare'],
+            ['warden@igangaschoolofnursingandmidwifery.ac.ug',           'Warden', $seedPassword, 'Warden',             'WAR-001', 'Warden',              'Student Welfare'],
+            ['sickbay@igangaschoolofnursingandmidwifery.ac.ug',          'Sickbay Nurse', $seedPassword, 'Sickbay Nurse',      'SKB-001', 'Sickbay Nurse',       'Student Welfare'],
+            ['drivers@igangaschoolofnursingandmidwifery.ac.ug',          'Driver', $seedPassword, 'Driver',             'DRV-001', 'Driver',              'Transport'],
+            ['security@igangaschoolofnursingandmidwifery.ac.ug',         'Security Officer', $seedPassword, 'Security Officer',   'SEC-001', 'Security Officer',    'Security'],
+            ['store@igangaschoolofnursingandmidwifery.ac.ug',            'Storekeeper', $seedPassword, 'Storekeeper',        'STO-001', 'Storekeeper',         'Store'],
+            ['guildpresident@igangaschoolofnursingandmidwifery.ac.ug',   'Guild President', $seedPassword, 'Guild President',    'G-001',   'Guild President',     'Student Government'],
+            ['admissions@igangaschoolofnursingandmidwifery.ac.ug',      'Director Admissions', $seedPassword, 'Director Admissions', 'ADM-001', 'Director Admissions', 'Admissions'],
+            ['dannybict@igangaschoolofnursingandmidwifery.ac.ug',       'Director ICT', $seedPassword, 'Director ICT',       'ICT-001', 'Director ICT',        'ICT'],
+            ['skills-lab@igangaschoolofnursingandmidwifery.ac.ug',       'Skills Lab Manager', $seedPassword, 'Skills Lab Manager', 'SKL-001', 'Skills Lab Manager',  'Skills Laboratory'],
+            ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug',     'Computer Lab Manager', $seedPassword, 'Computer Lab Manager','CLB-001','Computer Lab Manager','ICT'],
+            ['events@igangaschoolofnursingandmidwifery.ac.ug',           'Events Coordinator', $seedPassword, 'Events Coordinator',  'EVT-001', 'Events Coordinator',  'Administration'],
+            ['alumni@igangaschoolofnursingandmidwifery.ac.ug',           'Alumni Relations Officer', $seedPassword, 'Alumni Relations Officer','ALU-001','Alumni Relations Officer','Administration'],
         ];
 
         $roleMap = [];
@@ -250,7 +251,9 @@ function runSetup(&$output) {
         }
 
         $ins = $staffConn->prepare("INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, is_first_login, password_changed, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', 0, 1, CURDATE())");
-        if ($ins) {
+        if ($seedPassword === '') {
+            logMsg($output, "  ! ISNM_STAFF_SEED_PASSWORD is not configured; skipping staff seeding");
+        } elseif ($ins) {
             foreach ($staffData as $s) {
                 $roleKey = strtolower(trim($s[3]));
                 $rid = $roleMap[$roleKey] ?? null;
@@ -982,27 +985,12 @@ $needsSetup = !$hasStaff || !$hasStaffRoles || $totalStaff === 0;
             $staffList = $staffConn->query("SELECT s.email, s.full_name, sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id = sr.id ORDER BY sr.role_level, s.full_name");
         ?>
         <table style="width:100%;border-collapse:collapse">
-            <thead><tr style="background:#f1f5f9"><th style="text-align:left;padding:6px 8px">Email</th><th style="text-align:left;padding:6px 8px">Name</th><th style="text-align:left;padding:6px 8px">Role</th><th style="text-align:left;padding:6px 8px">Password</th></tr></thead>
+            <thead><tr style="background:#f1f5f9"><th style="text-align:left;padding:6px 8px">Email</th><th style="text-align:left;padding:6px 8px">Name</th><th style="text-align:left;padding:6px 8px">Role</th></tr></thead>
             <tbody>
             <?php while ($s = $staffList->fetch_assoc()): ?>
             <tr><td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['email']) ?></td>
                 <td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['full_name']) ?></td>
-                <td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['role_name']) ?></td>
-                <td style="padding:4px 8px;border-top:1px solid #e2e8f0;font-family:monospace"><?php
-                    $pwMap = [
-                        'directorgeneral' => 'DorisJoy2026', 'ceo' => 'Lovely2God', 'directoracademic' => 'Stephen123',
-                        'finance' => 'DorisJoy2026', 'principal' => 'isnm2026', 'dep-principal' => 'Isnm2026',
-                        'academicregistrar' => 'Lovely2God', 'hr-manager' => 'Alexis2026', 'secretary' => 'Lovely2God',
-                        'library' => 'isnm2026', 'nursing-dep' => 'isnm4life', 'midwifery-dep' => 'Life2save',
-                        'senior-lecturers' => 'isnm2026', 'lecturers' => 'Isnm4life', 'matron' => 'Isnm2026',
-                        'warden' => 'Lovely2God', 'sickbay' => 'isnm2026', 'drivers' => 'isnm4life',
-                        'security' => 'safty1st', 'store' => 'Isnm4life', 'guildpresident' => 'isnm4life',
-                        'admissions' => '2268926931', 'dannybict' => 'Lovely2God', 'skills-lab' => 'Lovely2God',
-                        'computer-lab' => 'Techno123', 'events' => 'Eventful2026', 'alumni' => 'Alumni2026',
-                    ];
-                    $local = substr($s['email'], 0, strpos($s['email'], '@'));
-                    echo htmlspecialchars($pwMap[$local] ?? '—');
-                ?></td></tr>
+                <td style="padding:4px 8px;border-top:1px solid #e2e8f0"><?= htmlspecialchars($s['role_name']) ?></td></tr>
             <?php endwhile; ?>
             </tbody>
         </table>

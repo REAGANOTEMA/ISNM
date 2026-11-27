@@ -18,15 +18,26 @@ if ($result) {
     if (mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
             $displayName = $row['full_name'] ?: trim($row['first_name'] . ' ' . $row['other_name'] . ' ' . $row['surname']);
-            echo '<div class="alert alert-primary" role="alert">
-                    ' . htmlspecialchars($displayName) . ' - ' . htmlspecialchars($row['course'] ?? '') . ' Year ' . htmlspecialchars($row['year'] ?? '') . '  <br>
-                    <form method="POST" action="partials/Accept-request.php" style="display:inline">
+            echo '<div class="alert alert-primary" role="alert">'
+                . htmlspecialchars($displayName) . ' - ' . htmlspecialchars($row['course'] ?? '') . ' Year ' . htmlspecialchars($row['year'] ?? '') . '  <br>
+                    <form method="POST" action="partials/Accept-request.php" class="js-bus-accept-form" style="display:inline">
                         <input type="hidden" name="csrf_token" value="' . $csrf . '">
-                        <input type="hidden" name="id" value="' . (int)$row['id'] . '">
+                        <input type="hidden" name="id" value="' . (int) $row['id'] . '">
                         <button type="submit" class="btn btn-success">Accept Request</button>
                     </form>
                   </div>';
         }
+        echo '<script>
+        document.querySelectorAll(".js-bus-accept-form").forEach(function(form){
+            form.addEventListener("submit", function(e){
+                e.preventDefault();
+                fetch(form.action, {method:"POST", body:new FormData(form), credentials:"same-origin"})
+                    .then(function(r){return r.json();})
+                    .then(function(){ if (typeof window.loadBusRequests === "function") { window.loadBusRequests(); } else { location.reload(); } })
+                    .catch(function(){ form.submit(); });
+            });
+        });
+        </script>';
     } else {
         echo "No pending requests.";
     }

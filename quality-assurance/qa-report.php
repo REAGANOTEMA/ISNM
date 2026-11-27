@@ -96,7 +96,7 @@ class QualityAssurance {
         
         // Test password hashing
         $this->runTest('Password Security', function() {
-            $password = 'test123';
+            $password = bin2hex(random_bytes(8));
             $hashed = password_hash($password, PASSWORD_DEFAULT);
             return password_verify($password, $hashed);
         });

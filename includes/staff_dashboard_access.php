@@ -79,9 +79,8 @@ if (!function_exists('bootstrapStaffDashboard')) {
             $auth_service = new AuthenticationService();
         }
 
-        // Login is always ONE level above dashboards/ (at the project root)
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $loginPath = dirname($scriptName) !== '' && dirname($scriptName) !== '/' ? '../staff-login.php' : 'staff-login.php';
+        // Login always lives at the project root, regardless of which protected page includes this file.
+        $loginPath = rtrim(APP_BASE_PATH, '/') . '/staff-login.php';
 
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
             session_write_close();
@@ -161,7 +160,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
             $requestedPos = $_SESSION['logged_in_via_position'];
             if (!$auth_service->positionMatchesRole($requestedPos, $role) && !$auth_service->hasFullInstitutionAccess($role)) {
                 session_write_close();
-                header('Location: ../staff-login.php');
+                header('Location: ' . rtrim(APP_BASE_PATH, '/') . '/staff-login.php');
                 exit();
             }
             unset($_SESSION['logged_in_via_organogram']);
@@ -192,7 +191,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
             echo '.btn{display:inline-block;padding:10px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}</style></head>';
             echo '<body><div class="card"><h2>Database Connection Failed</h2>';
             echo '<p>The system is unable to connect to the staff database. Please try again in a few moments, or contact the system administrator.</p>';
-            echo '<a href="../staff-login.php" class="btn">Back to Login</a></div></body></html>';
+            echo '<a href="' . rtrim(APP_BASE_PATH, '/') . '/staff-login.php" class="btn">Back to Login</a></div></body></html>';
             exit;
         }
 

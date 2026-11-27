@@ -108,14 +108,18 @@ class FormRouter {
     private function storeSubmission(array $route, $data) {
         $table = $route['table'];
         $allowed = $route['columns'] ?? [];
-        if (!$allowed || count($data) > count($allowed)) {
-            error_log('FormRouter rejected submission with unexpected fields');
+        if (!is_array($data) || !$allowed || !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $table)) {
             return false;
         }
+        foreach ($allowed as $column) {
+            if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)) {
+                return false;
+            }
+        }
 
+        $data = array_intersect_key($data, array_flip($allowed));
         $columns = [];
         $values = [];
-        $types = '';
         foreach ($allowed as $column) {
             if (!array_key_exists($column, $data)) {
                 continue;
@@ -130,7 +134,6 @@ class FormRouter {
             }
             $columns[] = $column;
             $values[] = $value;
-            $types .= is_numeric($value) && ctype_digit($value) ? 'i' : 's';
         }
         if (!$columns) {
             return false;
@@ -144,7 +147,7 @@ class FormRouter {
             error_log('FormRouter prepare failed: ' . $this->conn->error);
             return false;
         }
-        $stmt->bind_param($types, ...$values);
+        $stmt->bind_param(str_repeat('s', count($values)), ...$values);
         if (!$stmt->execute()) {
             error_log('FormRouter insert failed: ' . $stmt->error);
             $stmt->close();
