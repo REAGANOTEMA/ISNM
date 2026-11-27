@@ -88,9 +88,11 @@ try {
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO donations (donor_name, donor_email, donor_phone, donor_address, amount, payment_method, purpose, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
         $stmt->bind_param('sssdssss', $donorName, $donorEmail, $donorPhone, $donorAddress, $amount, $paymentMethod, $purpose, $notes);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        if (!$stmt->execute()) throw new Exception('Could not record your donation: ' . $stmt->error);
         $donationId = $stmt->insert_id;
         $stmt->close();
+    } else {
+        throw new Exception('The website database is currently unavailable.');
     }
 
     $methodLabel = str_replace(['_', '-'], ' ', ucwords($paymentMethod, ' _-'));

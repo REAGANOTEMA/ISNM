@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $seqStmt->close();
         }
     }
-    $index_number = $seqPrefix . '/' . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+    $index_number = isnm_generate_student_index($students_conn, date('Y'));
 
     $snPrefix = 'ISNM/' . date('Y');
     $nextSnSeq = 1;
@@ -144,11 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
 
         if ($students_conn) {
-            $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+            $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, index_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
             $otherName = '';
             $intakeYear = (string)date('Y');
-            $s_ins->bind_param('ssssssssssssssssssssss',
-                $student_number, $reg_number, $firstName, $surname, $otherName, $full_name,
+            $s_ins->bind_param('sssssssssssssssssssssss',
+                $student_number, $index_number, $reg_number, $firstName, $surname, $otherName, $full_name,
                 $email, $phone, $program, $program,
                 $year, $level, $intakeYear, $intake, $dob,
                 $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password

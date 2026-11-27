@@ -798,8 +798,7 @@ function handleCreateStudent() {
         session_write_close();
         header('Location: staff-login.php'); exit();
     }
-    require_once __DIR__ . '/includes/auth_functions.php';
-    if (!function_exists('canCreateStudents') || !canCreateStudents()) {
+    if (!$auth_service->canCreateStudents($_SESSION['role'] ?? '')) {
         $_SESSION['error'] = 'Permission denied: your role is not allowed to create student accounts.';
         session_write_close();
         header('Location: staff-login.php'); exit();

@@ -261,13 +261,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
             $password_hash = password_hash($temp_password, PASSWORD_DEFAULT);
             $intake_year = date('Y');
             $intake_period = date('n') <= 6 ? 'January' : 'July';
-            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, surname, program, level, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)");
-            if ($stmt) { $stmt->bind_param('sssssisssss', $studentNum, $fullName, $fn, $ln, $program, $level, $ph, $em, $intake_year, $intake_period, $password_hash);
+            $index_number = isnm_generate_student_index($students, date('Y'));
+            $stmt = $students->prepare("INSERT INTO students (student_number, index_number, full_name, first_name, surname, program, level, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, 0, 1)");
+            if ($stmt) { $stmt->bind_param('ssssssisssss', $studentNum, $index_number, $fullName, $fn, $ln, $program, $level, $ph, $em, $intake_year, $intake_period, $password_hash);
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
                     if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); if (!$stmt2->execute()) { $formError = 'Database error: ' . ($stmt2->error ?? 'unknown'); error_log('$stmt2 execute failed: ' . ($stmt2->error ?? 'unknown')); }; $stmt2->close(); }
-                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Student $fullName registered (#$studentNum). Password: $temp_password"; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)"); }
+                    if ($formError) { $_SESSION['error'] = $formError; } else { $_SESSION['success'] = "Student $fullName registered (#$studentNum). Portal username: $index_number. Password: $temp_password"; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum / $index_number)"); }
                     $nid = createNotification('New Student Registered', "Student $fullName (#$studentNum) was registered.", 'academic-registrar.php?page=student-records', 'success', 'fas fa-user-graduate');
                     if ($nid) notifyAllStaff($nid);
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }

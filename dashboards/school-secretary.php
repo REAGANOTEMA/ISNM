@@ -248,6 +248,7 @@ if (isset($_REQUEST['ajax'])) {
             $app_number = 'APP-' . date('Y') . '-' . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
             $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
             $reg_number = 'REG' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $index_number = isnm_generate_student_index($students_conn, date('Y'));
             $temp_password = bin2hex(random_bytes(4));
             $hashed_password = password_hash($temp_password, PASSWORD_BCRYPT);
             $status = 'New Applicant';
@@ -279,9 +280,9 @@ if (isset($_REQUEST['ajax'])) {
                     $surname = count($parts) > 1 ? $parts[count($parts)-1] : $first_name;
                     $last_name = $parts[1] ?? $surname;
                     $year = 1; $level = 'Year 1';
-                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, index_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, nationality, emergency_contact_name, emergency_contact_phone, set_name, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
                     $intakeYear = (string)date('Y');
-                    $s_ins->bind_param('ssssssssssssssssssssssss', $student_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, $intakeYear, $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $set_name, $hashed_password);
+                    $s_ins->bind_param('sssssssssssssssssssssssss', $student_number, $index_number, $reg_number, $first_name, $surname, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, $intakeYear, $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, $nationality, $emergency_contact, $emergency_phone, $set_name, $hashed_password);
                     if (!$s_ins->execute()) { error_log('$s_ins execute failed: ' . ($s_ins->error ?? 'unknown')); };
                     $s_id = $students_conn->insert_id;
                     if ($s_id > 0) {
@@ -296,7 +297,8 @@ if (isset($_REQUEST['ajax'])) {
                 $response['message'] = 'Student registered successfully!';
                 $response['student_number'] = $student_number;
                 $response['reg_number'] = $reg_number;
-                $response['portal_username'] = $student_number;
+                $response['index_number'] = $index_number;
+                $response['portal_username'] = $index_number;
                 $response['portal_password'] = $temp_password;
                 $nid = createNotification('New Student Registered', "Student $full_name (#$student_number) registered.", 'school-secretary.php', 'success', 'fas fa-user-graduate');
                 if ($nid) notifyAllStaff($nid);

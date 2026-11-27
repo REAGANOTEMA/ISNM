@@ -64,10 +64,12 @@ try {
     $websiteDb = getWebsiteConnection();
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO volunteer_applications (first_name, last_name, email, phone, profession, experience, opportunity, availability, duration, skills, motivation, comments, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
-        $stmt->bind_param('ssssisssssss', $firstName, $lastName, $email, $phone, $profession, $experience, $opportunity, $availability, $duration, $skills, $motivation, $comments);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        $stmt->bind_param('ssssssssssss', $firstName, $lastName, $email, $phone, $profession, $experience, $opportunity, $availability, $duration, $skills, $motivation, $comments);
+        if (!$stmt->execute()) throw new Exception('Could not save your application: ' . $stmt->error);
         $submissionId = $stmt->insert_id;
         $stmt->close();
+    } else {
+        throw new Exception('The website database is currently unavailable.');
     }
 
     $fullName = $firstName . ' ' . $lastName;

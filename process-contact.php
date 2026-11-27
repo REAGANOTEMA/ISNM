@@ -56,11 +56,11 @@ try {
     if ($websiteDb) {
         $stmt = $websiteDb->prepare("INSERT INTO contact_submissions (first_name, last_name, email, phone, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'unread', NOW())");
         $stmt->bind_param('ssssss', $firstName, $lastName, $email, $phone, $subject, $message);
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        if (!$stmt->execute()) throw new Exception('Could not save your message: ' . $stmt->error);
         $submissionId = $stmt->insert_id;
         $stmt->close();
     } else {
-        $submissionId = null;
+        throw new Exception('The website database is currently unavailable.');
     }
 
     $fullName = $firstName . ' ' . $lastName;

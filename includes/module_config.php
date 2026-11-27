@@ -515,7 +515,7 @@ function getModuleConfig(): array {
                 ['title' => 'Student Announcements', 'route' => 'student-announcements.php',          'roles' => '*'],
                 ['title' => 'Student Management',   'route' => 'student-management.php',             'roles' => ['registrar','secretary','director','principal','deputy','head','lecturer']],
                 ['title' => 'Student Attendance',   'route' => 'student-attendance.php',             'roles' => ['registrar','secretary','lecturer','head']],
-                ['title' => 'Add Student',           'route' => 'student-add.php',                    'roles' => ['registrar','secretary','admissions']],
+                 ['title' => 'Add Student',           'route' => 'student-add.php',                    'roles' => ['registrar','secretary','admissions','ict','admin','ceo','principal','bursar']],
             ],
         ],
         [

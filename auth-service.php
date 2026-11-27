@@ -1064,7 +1064,7 @@ class AuthenticationService {
     }
 
     public function canCreateStudents($role) {
-        return in_array(strtolower(trim($role)), ['director general','hr manager','academic registrar','school principal','director academics','director ict','computer department','ict officer','school secretary','secretary','ceo','computer lab manager','bursar','school bursar'], true);
+        return isnm_student_creation_allowed($role);
     }
 
     public function createStudentAccount($studentData) {
@@ -1115,10 +1115,16 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Please provide a valid full name with at least two names.'];
 
         try {
-            $s = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,phone,email,program,level,set_name,intake_year,intake_period,status,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,'',?,?,?,?,?,?,?,'Active',TRUE,FALSE,NOW(),NOW())");
+            $s = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,full_name,phone,email,program,level,set_name,intake_year,intake_period,status,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,'',?,?,?,?,?,?,?,?,'Active',TRUE,FALSE,NOW(),NOW())");
             if (!$s) return ['success' => false, 'message' => 'Failed to prepare student account creation.'];
-            $s->bind_param('sssssssssss', $index, $index, $firstName, $surname, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod);
-            if (!$s->execute()) { error_log('$s execute failed: ' . ($s->error ?? 'unknown')); };
+            $s->bind_param('ssssssssssss', $index, $index, $firstName, $surname, $fullName, $phone, $email, $program, $level, $setName, $intakeYear, $intakePeriod);
+            if (!$s->execute()) {
+                $error = $s->error;
+                error_log('createStudentAccount execute failed: ' . $error);
+                $s->close();
+                return ['success' => false, 'message' => 'Failed to create student account: ' . $error];
+            }
+            $s->close();
             return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level]];
         } catch (\Throwable $e) {
             error_log('createStudentAccount error: ' . $e->getMessage());

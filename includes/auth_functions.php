@@ -227,23 +227,21 @@ function protectDashboard($required_role = null) {
     return true;
 }
 
-// Check if user can create students - CENTRALIZED PERMISSION CHECK
+// Check if user can create students - delegates to the canonical service policy
 function canCreateStudents() {
-    if (!isset($_SESSION['role'])) {
-        return false;
+    $role = $_SESSION['role'] ?? '';
+    if (function_exists('isnm_student_creation_allowed')) {
+        return isnm_student_creation_allowed($role);
     }
-    
-    $user_role = strtolower($_SESSION['role']);
-    
-    // Allowed roles for student creation
-    $allowed_roles = ['secretary', 'principal', 'accountant', 'school secretary', 'school principal', 'school bursar'];
-    
-    // Check if user is in allowed roles OR has 'director' in their role
-    if (in_array($user_role, $allowed_roles) || strpos($user_role, 'director') !== false) {
-        return true;
+    if (isset($GLOBALS['auth_service']) && $GLOBALS['auth_service'] instanceof AuthenticationService) {
+        return $GLOBALS['auth_service']->canCreateStudents($role);
     }
-    
-    return false;
+    static $service = null;
+    if ($service === null && file_exists(dirname(__DIR__) . '/auth-service.php')) {
+        require_once dirname(__DIR__) . '/auth-service.php';
+        $service = new AuthenticationService();
+    }
+    return $service ? $service->canCreateStudents($role) : false;
 }
 
 // hasPermission() function is already defined in functions.php

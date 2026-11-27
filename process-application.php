@@ -97,15 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('Unable to create upload directory.');
         }
 
-        $academicDocResult = handleFileUpload(
-            $_FILES['academicDocument'],
+        $academicDocResult = uploadFileIfPresent(
+            'academicDocument',
             ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
             5 * 1024 * 1024,
             $uploadDir
         );
 
-        $photoResult = handleFileUpload(
-            $_FILES['photo'],
+        $photoResult = uploadFileIfPresent(
+            'photo',
             ['jpg', 'jpeg', 'png', 'gif'],
             2 * 1024 * 1024,
             $uploadDir
@@ -259,7 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $docValues['practicing_license_doc'],
             $docValues['academic_transcript']
         );
-        if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
+        if (!$stmt) throw new Exception('Could not prepare your application. Please contact the admissions office.');
+        if (!$stmt->execute()) throw new Exception('Could not save your application: ' . $stmt->error);
         $applicationDbId = $stmt->insert_id;
         $stmt->close();
 

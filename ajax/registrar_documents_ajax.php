@@ -44,6 +44,11 @@ if ($action === 'lookup_student') {
 }
 
 if ($action === 'create_student') {
+    if (!isnm_student_creation_allowed($_SESSION['role'] ?? '')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Permission denied: your role cannot create student accounts']);
+        exit;
+    }
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         echo json_encode(['success' => false, 'error' => 'POST required']);
         exit;
@@ -74,8 +79,9 @@ if ($action === 'create_student') {
     $intake_year = date('Y');
     $intake_period = date('n') <= 6 ? 'January' : 'July';
     
-    $stmt = $students_conn->prepare("INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW())");
-    $stmt->bind_param("ssssssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em, $intake_year, $intake_period, $password_hash);
+    $index_number = isnm_generate_student_index($students_conn, (int) $intake_year);
+    $stmt = $students_conn->prepare("INSERT INTO students (student_number, index_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, intake_year, intake_period, status, password, is_first_login, password_changed, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0,1,NOW())");
+    $stmt->bind_param("sssssssssssssss", $snum, $index_number, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em, $intake_year, $intake_period, $password_hash);
     if ($stmt->execute()) {
         $id = $students_conn->insert_id;
         echo json_encode(['success' => true, 'student' => [
@@ -83,7 +89,7 @@ if ($action === 'create_student') {
             'full_name' => $full,
             'student_number' => $snum,
             'registration_number' => $reg,
-            'index_number' => $snum,
+            'index_number' => $index_number,
             'password' => $temp_password,
             'course' => $crs,
             'gender' => $gen,

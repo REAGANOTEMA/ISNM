@@ -359,6 +359,30 @@ if (!function_exists('executePrepared')) {
     }
 }
 
+if (!function_exists('isnm_student_creation_allowed')) {
+    /**
+     * Canonical policy: which staff roles may create student portal accounts.
+     * Admin, secretary, academic registrar and ICT roles are explicitly allowed.
+     */
+    function isnm_student_creation_allowed($role) {
+        $normalized = trim(preg_replace('/\s+/', ' ', strtolower(preg_replace('/[^a-z0-9]+/i', ' ', trim((string) $role)))));
+        if ($normalized === '') return false;
+        $allowed = [
+            'director general', 'chief executive officer', 'ceo',
+            'system administrator', 'system admin', 'admin', 'administrator',
+            'school secretary', 'secretary', 'academic registrar', 'registrar',
+            'director admissions', 'admissions officer', 'admissions clerk', 'admissions',
+            'director ict', 'ict officer', 'computer department', 'computer lab manager',
+            'school principal', 'principal', 'deputy principal',
+            'director academics', 'hr manager', 'school bursar', 'bursar',
+        ];
+        foreach ($allowed as $item) {
+            if ($normalized === $item || strpos($normalized, $item) !== false) return true;
+        }
+        return false;
+    }
+}
+
 if (!function_exists('validateIndexNumber')) {
     function validateIndexNumber($index_number) {
         if (empty($index_number)) return false;
@@ -371,15 +395,52 @@ if (!function_exists('studentExistsByIndexNumber')) {
         $conn = getStudentsConnection();
         if (!$conn) return false;
 
-        $stmt = $conn->prepare('SELECT id FROM students WHERE student_number = ? LIMIT 1');
+        $stmt = $conn->prepare('SELECT id FROM students WHERE index_number = ? OR student_number = ? LIMIT 1');
         if (!$stmt) return false;
-        $stmt->bind_param('s', $indexNumber);
+        $stmt->bind_param('ss', $indexNumber, $indexNumber);
         if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
         $result = $stmt->get_result();
         $exists = $result && $result->num_rows > 0;
         $stmt->close();
 
         return $exists;
+    }
+}
+
+if (!function_exists('isnm_generate_student_index')) {
+    /**
+     * Generate a unique student index number in the form ISNM/YYYY/NNNN.
+     * Used by every staff role that can create a student portal account.
+     */
+    function isnm_generate_student_index($conn = null, $year = null) {
+        $conn = $conn ?: getStudentsConnection();
+        $year = $year ?: date('Y');
+        $prefix = 'ISNM/' . $year . '/';
+        $next = 1;
+        if ($conn) {
+            $like = $prefix . '%';
+            $stmt = $conn->prepare('SELECT index_number FROM students WHERE index_number LIKE ?');
+            if ($stmt) {
+                $stmt->bind_param('s', $like);
+                if ($stmt->execute()) {
+                    $result = $stmt->get_result();
+                    if ($result) {
+                        while ($row = $result->fetch_assoc()) {
+                            $suffix = (int) substr((string) $row['index_number'], strlen($prefix));
+                            if ($suffix >= $next) $next = $suffix + 1;
+                        }
+                    }
+                }
+                $stmt->close();
+            }
+        }
+        $index = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+        $guard = 0;
+        while (studentExistsByIndexNumber($index) && $guard < 100) {
+            $index = $prefix . str_pad((string) (++$next), 4, '0', STR_PAD_LEFT);
+            $guard++;
+        }
+        return $index;
     }
 }
 

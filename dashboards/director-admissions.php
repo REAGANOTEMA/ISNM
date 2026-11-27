@@ -494,11 +494,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $track->close();
 
             if ($stuConn) {
-                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
+                $s_ins = $stuConn->prepare("INSERT IGNORE INTO `$studentsDb`.`students` (student_number, index_number, registration_number, first_name, surname, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, national_id, district, guardian_name, guardian_phone, status, password, is_first_login) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',?,0)");
                 $otherName = '';
                 $intakeYear = (string)date('Y');
-                $s_ins->bind_param('ssssssssssssssssssssss',
-                    $student_number, $reg_number, $firstName, $surname, $otherName, $full_name,
+                $s_ins->bind_param('sssssssssssssssssssssss',
+                    $student_number, $index_number, $reg_number, $firstName, $surname, $otherName, $full_name,
                     $email, $phone, $program, $program,
                     $year, $level, $intakeYear, $intake, $dob,
                     $gender, $address, $nationalId, $district, $nokName, $nokPhone, $hashed_password

@@ -1,8 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['registrar', 'admissions', 'admin']);
+$ctx = bootstrapStaffDashboard(['registrar', 'admissions', 'admin', 'secretary', 'ict', 'principal', 'bursar']);
 $staffDb = $ctx['staff'];
 $user_role = $_SESSION['role'] ?? '';
+if (!isnm_student_creation_allowed($user_role)) {
+    http_response_code(403);
+    require_once __DIR__ . '/../includes/student_dashboard_access_denied.php';
+    exit;
+}
 $pageTitle = 'Add Student';
 
 if (empty($_SESSION['csrf_token'])) {
@@ -117,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($action === 'add') {
             if (empty($index_number)) {
-                $index_number = 'IDX' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+                $index_number = isnm_generate_student_index($conn, date('Y'));
             }
             if (empty($student_number)) {
                 $student_number = 'STU' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
