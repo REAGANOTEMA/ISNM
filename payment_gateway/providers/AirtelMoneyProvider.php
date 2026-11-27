@@ -111,6 +111,8 @@ if ($status === 'TS' || $status === 'SUCCESSFUL' || $status === 'COMPLETED') $ma
             'provider_transaction_id' => $txnId,
             'status' => $mappedStatus,
             'raw_status' => $status,
+            'amount' => $payload['transaction']['amount'] ?? $payload['amount'] ?? null,
+            'currency' => $payload['transaction']['currency'] ?? $payload['currency'] ?? null,
             'message' => 'Airtel callback processed',
         ];
     }

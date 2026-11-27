@@ -26,6 +26,26 @@ class PaymentService {
         $this->loadProviders();
     }
 
+    private const STATUS_RANKS = [
+        'pending' => 0, 'processing' => 1, 'failed' => 2, 'cancelled' => 2,
+        'expired' => 2, 'successful' => 3, 'refunded' => 4,
+    ];
+
+    private static function statusRank(string $status): int {
+        return self::STATUS_RANKS[strtolower($status)] ?? 0;
+    }
+
+    private static function normalizeMoney($value): ?float {
+        if ($value === null || $value === '' || is_array($value) || !is_numeric($value)) return null;
+        return round((float) $value, 2);
+    }
+
+    private static function amountMatches(float $expected, ?float $paid, string $expectedCurrency, $paidCurrency): bool {
+        if ($paid === null || $paid <= 0) return false;
+        if ($paidCurrency !== null && strtoupper(trim((string) $paidCurrency)) !== strtoupper(trim($expectedCurrency))) return false;
+        return abs($expected - $paid) <= 0.01;
+    }
+
     private function getConnection(): ?mysqli {
         if ($this->conn !== null && $this->conn->ping()) {
             return $this->conn;
@@ -120,7 +140,7 @@ class PaymentService {
         $result = $gateway->initiatePayment($params);
 
         if ($result['success']) {
-            $this->recordTransaction($conn, [
+            if (!$this->recordTransaction($conn, [
                 'transaction_ref'     => $ref,
                 'provider_key'        => $providerKey,
                 'provider_txn_id'     => $result['provider_ref'] ?? '',
@@ -142,7 +162,9 @@ class PaymentService {
                 'initiated_by'        => $params['initiated_by'] ?? ($_SESSION['user_id'] ?? 0),
                 'ip_address'          => $_SERVER['REMOTE_ADDR'] ?? '',
                 'user_agent'          => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            ]);
+            ])) {
+                return ['success' => false, 'message' => 'Failed to record transaction.'];
+            }
 
             $result['transaction_ref'] = $ref;
             $result['fee_amount'] = $fee;
@@ -190,10 +212,16 @@ class PaymentService {
         if ($gatewayResult['success'] && isset($gatewayResult['status'])) {
             $newStatus = $gatewayResult['status'];
             if (in_array($newStatus, ['successful', 'failed', 'cancelled'])) {
-                $this->updateTransactionStatus($conn, $transactionRef, $newStatus, $gatewayResult['message'] ?? '');
-
-                if ($newStatus === 'successful') {
-                    $this->handleSuccessfulPayment($conn, $txn);
+                $gross = self::normalizeMoney($txn['amount'] ?? null);
+                $paid = self::normalizeMoney($gatewayResult['amount'] ?? null);
+                if ($newStatus === 'successful' && ($gross === null || !self::amountMatches($gross, $paid, (string) ($txn['currency'] ?? 'UGX'), $gatewayResult['currency'] ?? null))) {
+                    error_log('[PaymentService] amount mismatch for ' . $transactionRef . '; rejecting successful status');
+                    $gatewayResult['success'] = false;
+                    $gatewayResult['message'] = 'Paid amount does not match the expected amount.';
+                } elseif ($this->updateTransactionStatus($conn, $transactionRef, $newStatus, $gatewayResult['message'] ?? '')) {
+                    if ($newStatus === 'successful') {
+                        $this->handleSuccessfulPayment($conn, $txn);
+                    }
                 }
             }
         }
@@ -201,47 +229,69 @@ class PaymentService {
         return array_merge($gatewayResult, ['transaction_ref' => $transactionRef]);
     }
 
-    public function processWebhookResult(string $transactionRef, string $providerRef, string $status, string $message = '', float $amount = 0): bool {
+    public function processWebhookResult(string $transactionRef, string $providerRef, string $status, string $message = '', float $amount = 0, ?string $currency = null): bool {
         $conn = $this->getConnection();
         if (!$conn) return false;
 
-        $stmt = $conn->prepare("SELECT * FROM payment_transactions WHERE transaction_ref = ?");
+        $stmt = $conn->prepare("SELECT * FROM payment_transactions WHERE transaction_ref = ? LIMIT 1");
+        if (!$stmt) return false;
         $stmt->bind_param("s", $transactionRef);
-        if (!$stmt->execute()) return false;
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
         $txn = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        if (!$txn) {
-            $stmt2 = $conn->prepare("SELECT * FROM payment_transactions WHERE provider_transaction_id = ?");
+        if (!$txn && $providerRef !== '') {
+            $stmt2 = $conn->prepare("SELECT * FROM payment_transactions WHERE provider_transaction_id = ? LIMIT 1");
+            if (!$stmt2) return false;
             $stmt2->bind_param("s", $providerRef);
-            if (!$stmt2->execute()) return false;
+            if (!$stmt2->execute()) {
+                $stmt2->close();
+                return false;
+            }
             $txn = $stmt2->get_result()->fetch_assoc();
             $stmt2->close();
-            if (!$txn) return false;
-            $transactionRef = $txn['transaction_ref'];
         }
+        if (!$txn) return false;
+        $transactionRef = (string) $txn['transaction_ref'];
 
-        if (in_array($txn['status'], ['successful', 'refunded'])) {
+        $currentStatus = strtolower((string) $txn['status']);
+        if (in_array($currentStatus, ['successful', 'refunded'], true)) return true;
+
+        $status = strtolower(trim($status));
+        if (!in_array($status, ['successful', 'failed', 'cancelled', 'pending'], true)) {
+            error_log('[PaymentService] unsupported webhook status ' . $status . ' for ' . $transactionRef);
+            return false;
+        }
+        if (self::statusRank($status) < self::statusRank($currentStatus)) {
+            error_log('[PaymentService] ignored non-monotonic webhook transition ' . $currentStatus . ' -> ' . $status . ' for ' . $transactionRef);
             return true;
         }
 
-        if ($amount > 0 && abs((float)$txn['amount'] - $amount) > 0.01) {
-            error_log("Webhook amount mismatch for {$transactionRef}");
-            return false;
-        }
-
-        if (!in_array($status, ['successful', 'failed', 'cancelled', 'pending'], true)) {
-            return false;
+        if ($status === 'successful') {
+            $gross = self::normalizeMoney($txn['amount'] ?? null);
+            $paid = self::normalizeMoney($amount);
+            if ($gross === null || !self::amountMatches($gross, $paid, (string) ($txn['currency'] ?? 'UGX'), $currency)) {
+                error_log('[PaymentService] webhook amount mismatch for ' . $transactionRef . '; rejecting successful status');
+                return false;
+            }
         }
 
         if (!empty($providerRef) && empty($txn['provider_transaction_id'])) {
             $stmt3 = $conn->prepare("UPDATE payment_transactions SET provider_transaction_id = ? WHERE transaction_ref = ?");
+            if (!$stmt3) return false;
             $stmt3->bind_param("ss", $providerRef, $transactionRef);
-            $stmt3->execute();
+            $ok = $stmt3->execute();
+            if (!$ok) {
+                error_log('[PaymentService] failed to store provider reference for ' . $transactionRef);
+            }
             $stmt3->close();
+            if (!$ok) return false;
         }
 
-        $this->updateTransactionStatus($conn, $transactionRef, $status, $message);
+        if (!$this->updateTransactionStatus($conn, $transactionRef, $status, $message)) return false;
 
         if ($status === 'successful') {
             $this->handleSuccessfulPayment($conn, $txn);
@@ -268,7 +318,11 @@ class PaymentService {
         $check = $conn->prepare("SELECT id FROM payments WHERE transaction_ref = ? LIMIT 1");
         if ($check) {
             $check->bind_param('s', $txn['transaction_ref']);
-            $check->execute();
+            if (!$check->execute()) {
+                error_log('[PaymentService] failed to check existing payment for ' . $txn['transaction_ref']);
+                $check->close();
+                return;
+            }
             $exists = $check->get_result()->fetch_row();
             $check->close();
             if ($exists) return;
@@ -281,7 +335,11 @@ class PaymentService {
             ) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'Completed')
         ");
         $method = $this->getProviderDisplayName($txn['provider_key']);
-        $received = (float)($txn['amount'] ?? 0);
+        $received = self::normalizeMoney($txn['amount'] ?? null);
+        if ($received === null || !$stmt) {
+            if ($stmt) $stmt->close();
+            return;
+        }
         $stmt->bind_param("sidsss",
             $txn['transaction_ref'],
             $txn['student_id'],
@@ -298,7 +356,7 @@ class PaymentService {
         $stmt->close();
     }
 
-    private function recordTransaction(mysqli $conn, array $data): void {
+    private function recordTransaction(mysqli $conn, array $data): bool {
         $stmt = $conn->prepare("
             INSERT INTO payment_transactions (
                 transaction_ref, provider_key, provider_transaction_id,
@@ -311,7 +369,12 @@ class PaymentService {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
+        if (!$stmt) return false;
         $metadataJson = json_encode($data['metadata'] ?? []);
+        $gross = self::normalizeMoney($data['amount'] ?? null);
+        $fee = self::normalizeMoney($data['fee_amount'] ?? 0) ?? 0.0;
+        $net = self::normalizeMoney($data['net_amount'] ?? null) ?? round(($gross ?? 0) - $fee, 2);
+        if ($gross === null) return false;
 
         $stmt->bind_param("sssssiissssdsddssssss",
             $data['transaction_ref'],
@@ -325,10 +388,10 @@ class PaymentService {
             $data['payer_name'],
             $data['payer_phone'],
             $data['payer_email'],
-            $data['amount'],
+            $gross,
             $data['currency'],
-            $data['fee_amount'],
-            $data['net_amount'],
+            $fee,
+            $net,
             $data['status'],
             $data['status_message'],
             $metadataJson,
@@ -337,21 +400,65 @@ class PaymentService {
             $data['user_agent']
         );
 
-        $stmt->execute();
+        $ok = $stmt->execute();
+        if (!$ok) {
+            error_log('[PaymentService] failed to record transaction ' . $data['transaction_ref'] . ': ' . $stmt->error);
+        }
         $stmt->close();
+        return $ok;
     }
 
-    private function updateTransactionStatus(mysqli $conn, string $transactionRef, string $status, string $message = ''): void {
-        $callbackAt = ($status === 'successful' || $status === 'failed') ? date('Y-m-d H:i:s') : null;
+    private function updateTransactionStatus(mysqli $conn, string $transactionRef, string $status, string $message = ''): bool {
+        $status = strtolower(trim($status));
+        $rank = self::statusRank($status);
+        if ($rank === 0 && $status !== 'pending') {
+            error_log('[PaymentService] unsupported status ' . $status . ' for ' . $transactionRef);
+            return false;
+        }
 
+        $stmt = $conn->prepare("SELECT id, status FROM payment_transactions WHERE transaction_ref = ? LIMIT 1");
+        if (!$stmt) return false;
+        $stmt->bind_param('s', $transactionRef);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
+        $current = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$current) return false;
+
+        $currentStatus = strtolower((string) $current['status']);
+        if ($rank < self::statusRank($currentStatus)) {
+            error_log('[PaymentService] ignored non-monotonic transition ' . $currentStatus . ' -> ' . $status . ' for ' . $transactionRef);
+            return true;
+        }
+        if ($status === $currentStatus && $rank >= 3) return true;
+
+        $callbackAt = ($status === 'successful' || $status === 'failed') ? date('Y-m-d H:i:s') : null;
         $stmt = $conn->prepare("
             UPDATE payment_transactions
-            SET status = ?, status_message = ?, callback_received_at = COALESCE(?, callback_received_at)
-            WHERE transaction_ref = ?
+            SET status = ?, status_message = ?, callback_received_at = COALESCE(?, callback_received_at),
+                completed_at = IF(? = 'successful', COALESCE(completed_at, NOW()), completed_at),
+                verified_at = IF(? = 'successful', COALESCE(verified_at, NOW()), verified_at),
+                updated_at = NOW()
+            WHERE id = ? AND CASE status
+                WHEN 'refunded' THEN 4
+                WHEN 'successful' THEN 3
+                WHEN 'failed' THEN 2
+                WHEN 'cancelled' THEN 2
+                WHEN 'expired' THEN 2
+                WHEN 'processing' THEN 1
+                ELSE 0
+            END < ?
         ");
-        $stmt->bind_param("ssss", $status, $message, $callbackAt, $transactionRef);
-        $stmt->execute();
+        if (!$stmt) return false;
+        $stmt->bind_param("sssssii", $status, $message, $callbackAt, $status, $status, (int) $current['id'], $rank);
+        $ok = $stmt->execute();
+        if (!$ok) {
+            error_log('[PaymentService] failed to update status for ' . $transactionRef . ': ' . $stmt->error);
+        }
         $stmt->close();
+        return $ok;
     }
 
     public function recordCallback(string $transactionRef, string $providerKey, string $callbackType, string $requestMethod, string $headers, string $body, int $responseCode = 0, string $responseBody = ''): void {
@@ -367,9 +474,10 @@ class PaymentService {
             SELECT id, ?, ?, ?, ?, ?, ?, ?
             FROM payment_transactions WHERE transaction_ref = ?
         ");
-        $stmt->bind_param("ssssssis", $providerKey, $callbackType, $requestMethod, $headers, $body, $responseCode, $responseBody, $transactionRef);
-        $stmt->execute();
-        $stmt->close();
+        if (!$stmt || !$stmt->bind_param("ssssssis", $providerKey, $callbackType, $requestMethod, $headers, $body, $responseCode, $responseBody, $transactionRef) || !$stmt->execute()) {
+            error_log('[PaymentService] failed to record callback for ' . $transactionRef);
+        }
+        if ($stmt) $stmt->close();
     }
 
     public function logWebhookEvent(string $providerKey, string $eventType, string $payload, string $signature, ?bool $signatureValid, ?string $error): void {
@@ -381,9 +489,10 @@ class PaymentService {
             VALUES (?, ?, ?, ?, ?, ?)
         ");
         $sigValid = $signatureValid === null ? null : ($signatureValid ? 1 : 0);
-        $stmt->bind_param("ssssis", $providerKey, $eventType, $payload, $signature, $sigValid, $error);
-        $stmt->execute();
-        $stmt->close();
+        if (!$stmt || !$stmt->bind_param("ssssis", $providerKey, $eventType, $payload, $signature, $sigValid, $error) || !$stmt->execute()) {
+            error_log('[PaymentService] failed to log webhook event for ' . $providerKey);
+        }
+        if ($stmt) $stmt->close();
     }
 
     public function recordRefund(string $transactionRef, float $amount, string $reason, int $initiatedBy = 0): array {
@@ -421,11 +530,13 @@ class PaymentService {
         ");
         $status = $gatewayResult['success'] ? 'processing' : 'failed';
         $providerRefundId = $gatewayResult['refund_id'] ?? '';
-        $stmt2->bind_param("ssdssis", $refundRef, $providerRefundId, $amount, $reason, $status, $initiatedBy, $transactionRef);
-        $stmt2->execute();
-        $stmt2->close();
+        $recorded = $stmt2 && $stmt2->bind_param("ssdssis", $refundRef, $providerRefundId, $amount, $reason, $status, $initiatedBy, $transactionRef) && $stmt2->execute();
+        if (!$recorded) {
+            error_log('[PaymentService] failed to record refund ' . $refundRef);
+        }
+        if ($stmt2) $stmt2->close();
 
-        if ($gatewayResult['success']) {
+        if ($gatewayResult['success'] && $recorded) {
             $this->updateTransactionStatus($conn, $transactionRef, 'refunded', 'Refund initiated: ' . $refundRef);
         }
 

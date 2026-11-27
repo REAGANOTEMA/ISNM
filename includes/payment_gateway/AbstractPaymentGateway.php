@@ -38,8 +38,30 @@ abstract class AbstractPaymentGateway implements PaymentGatewayInterface {
         return $this->config['callback_url'] ?? "$scheme://$base{$path}/includes/payment_gateway/handlers/webhook_handler.php?provider={$this->providerKey}";
     }
 
+    protected function getWebhookSecretName(): string {
+        $normalized = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '_', $this->providerKey ?: $this->providerName) ?: '');
+        return 'PAYMENT_' . trim($normalized, '_') . '_WEBHOOK_SECRET';
+    }
+
     protected function getWebhookSecret(): string {
-        return $this->config['webhook_secret'] ?? '';
+        $name = $this->getWebhookSecretName();
+        $secret = function_exists('isnm_env') ? (string) isnm_env($name, '') : (string) getenv($name);
+        if ($secret === '') {
+            $secret = (string) ($this->config['webhook_secret'] ?? $this->config['hmac_secret'] ?? '');
+        }
+        return $secret;
+    }
+
+    public function verifyWebhookSignature(string $rawBody, string $signature): bool {
+        $secret = $this->getWebhookSecret();
+        if ($secret === '') {
+            error_log('[PaymentGateway][' . $this->providerKey . '] webhook secret not configured (' . $this->getWebhookSecretName() . '); rejecting callback');
+            return false;
+        }
+        $provided = trim($signature);
+        if ($provided === '') return false;
+        if (stripos($provided, 'sha256=') === 0) $provided = substr($provided, 7);
+        return hash_equals(hash_hmac('sha256', $rawBody, $secret), $provided);
     }
 
     protected function calculateFee(float $amount): float {

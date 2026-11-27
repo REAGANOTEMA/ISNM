@@ -114,7 +114,9 @@ class MtnMomoGateway extends AbstractPaymentGateway {
         $status = $payload['status'] ?? '';
         $externalId = $payload['externalId'] ?? '';
         $providerRef = $payload['financialTransactionId'] ?? $payload['transactionId'] ?? '';
-        $amount = (float)($payload['amount'] ?? 0);
+        $amountRaw = $payload['amount'] ?? 0;
+        $amount = is_array($amountRaw) ? (float) ($amountRaw['value'] ?? 0) : (float) $amountRaw;
+        $currency = is_array($amountRaw) ? ($amountRaw['currency'] ?? null) : null;
 
         $mappedStatus = strtolower($status) === 'successful' ? 'successful' : 'failed';
 
@@ -124,15 +126,13 @@ class MtnMomoGateway extends AbstractPaymentGateway {
             'provider_ref' => $providerRef,
             'status' => $mappedStatus,
             'amount' => $amount,
+            'currency' => $currency,
             'message' => "MTN callback: $status",
         ];
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        $secret = $this->getWebhookSecret();
-        if (empty($secret)) return true;
-        $expected = hash_hmac('sha256', $rawBody, $secret);
-        return hash_equals($expected, $signature);
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

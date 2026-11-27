@@ -1,128 +1,117 @@
 <?php
 $pageTitle = 'Student Life | Iganga School of Nursing and Midwifery';
-include('shared/_header.php');
+require_once 'includes/config_enhanced.php';
+include_once 'includes/functions.php';
+include_once 'shared/_header.php';
 
-$lifeCategories = [];
-$events = [];
+$studentActivities = [];
 try {
   $websiteDB = getDatabaseConnection('website');
   if ($websiteDB) {
-    $catResult = $websiteDB->query("SELECT id, name, slug, description, cover_image FROM cms_gallery_categories WHERE is_active = 1 AND slug IN ('campus-life','sports-activities','events') ORDER BY sort_order, name");
-    if ($catResult) {
-      $lifeCategories = isnm_fetch_all($catResult);
-    }
-    $eventResult = $websiteDB->query("SELECT id, title, short_description, event_date, location, event_type FROM cms_events WHERE is_published = 1 AND event_date >= CURDATE() ORDER BY event_date ASC LIMIT 6");
-    if ($eventResult) {
-      $events = isnm_fetch_all($eventResult);
+    $result = $websiteDB->query("SELECT title, short_description, event_date, location FROM cms_events WHERE is_published = 1 AND event_date >= CURDATE() ORDER BY event_date ASC LIMIT 6");
+    if ($result) {
+      $studentActivities = isnm_fetch_all($result);
     }
   }
 } catch (Throwable $e) {
   error_log('Student life page query failed: ' . $e->getMessage());
 }
 ?>
-
 <main>
-  <section class="page-header page-header-bg animate-on-scroll" style="background-image: url('images/hero5.jpg');">
-    <div class="decor-shape decor-shape-1"></div>
-    <div class="decor-shape decor-shape-2"></div>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 text-center">
-          <div class="tag tag-gold mb-3"><i class="fas fa-user-graduate"></i> Campus Experience</div>
-          <h1 class="page-title">Student Life</h1>
-          <p class="page-subtitle">Learning, service, and community beyond the classroom</p>
-        </div>
-      </div>
+  <section class="isnm-premium-hero" style="background-image: url('images/diploma-hostel.jpg');">
+    <div class="isnm-premium-hero-inner">
+      <span class="isnm-premium-eyebrow">Campus Experience</span>
+      <h1 class="isnm-premium-title">Life together, learning together.</h1>
+      <p class="isnm-premium-lead">A disciplined but welcoming community where students grow in skill, friendship, faith, and service.</p>
     </div>
   </section>
 
-  <nav aria-label="breadcrumb" class="container mt-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Student Life</li>
-    </ol>
+  <nav class="isnm-premium-crumbbar" aria-label="Breadcrumb">
+    <div class="container">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Student Life</li>
+      </ol>
+    </div>
   </nav>
 
-  <section class="py-5">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-lg-6">
-          <span class="tag tag-primary"><i class="fas fa-heart"></i> Our Community</span>
-          <h2 class="section-title">A place to learn and serve</h2>
-          <div class="section-divider"></div>
-          <p class="lead text-muted">
-            Student life at ISNM is shaped by clinical practice, academic events, and service to the community.
-            The collections and upcoming activities below are published directly from the school's records.
-          </p>
-          <a href="gallery.php" class="btn btn-primary">View the Gallery</a>
-          <a href="events.php" class="btn btn-outline-primary">See All Events</a>
+  <section class="isnm-premium-section">
+    <div class="isnm-premium-container isnm-premium-intro">
+      <div>
+        <span class="isnm-premium-kicker">Belonging at ISNM</span>
+        <h2 class="isnm-premium-heading">More than a place to study</h2>
+        <p class="isnm-premium-copy">Student life is shaped by early mornings in class, long hours in skills practice, shared meals, and the encouragement of a community that knows your name. The school supports students academically and personally so they can stay focused on the work ahead.</p>
+        <p class="isnm-premium-copy">Hostel information, welfare support, and student expectations are shared during orientation and through the student portal.</p>
+      </div>
+      <blockquote class="isnm-premium-quote">
+        A disciplined mind for health action is formed in daily habits, not in a single lesson.
+        <cite>ISNM Community</cite>
+      </blockquote>
+    </div>
+  </section>
+
+  <section class="isnm-premium-section isnm-premium-section--tint">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-kicker">Support &amp; community</span>
+      <h2 class="isnm-premium-heading">What student life includes</h2>
+      <div class="isnm-premium-grid">
+        <div class="isnm-premium-card"><span class="isnm-premium-card__icon"><i class="fas fa-bed" aria-hidden="true"></i></span><h3>Hostel &amp; welfare</h3><p>Arrangements for accommodation and student welfare are communicated by the school, with guidance on conduct, safety, and reporting concerns.</p></div>
+        <div class="isnm-premium-card"><span class="isnm-premium-card__icon"><i class="fas fa-book-open" aria-hidden="true"></i></span><h3>Academic support</h3><p>Revision sessions, skills practice, and access to learning spaces help students keep pace with demanding programme requirements.</p></div>
+        <div class="isnm-premium-card"><span class="isnm-premium-card__icon"><i class="fas fa-praying-hands" aria-hidden="true"></i></span><h3>Faith &amp; reflection</h3><p>The school's faith-informed values shape a culture of service, respect, and care for every patient and colleague.</p></div>
+        <div class="isnm-premium-card"><span class="isnm-premium-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span><h3>Clubs &amp; service</h3><p>Group activities, community outreach, and shared celebrations connect classroom learning with the wider community.</p></div>
+      </div>
+      <div class="isnm-premium-split" style="margin-top:3.5rem">
+        <div>
+          <div class="isnm-premium-image-frame"><img src="images/revision-library.jpg" alt="Students working together in the ISNM library" loading="lazy"></div>
+          <p class="isnm-premium-image-caption">Shared study in the library</p>
         </div>
-        <div class="col-lg-6">
-          <img src="images/students-hero.jpg" alt="ISNM students" class="img-fluid rounded-3 shadow">
+        <div>
+          <div class="isnm-premium-image-frame"><img src="images/students-in-class.jpg" alt="Students in class at ISNM" loading="lazy"></div>
+          <p class="isnm-premium-image-caption">Learning as a cohort</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="py-5 bg-light">
-    <div class="container">
-      <div class="text-center mb-5">
-        <span class="tag tag-primary"><i class="fas fa-images"></i> Published Collections</span>
-        <h2 class="section-title">Campus &amp; Activities</h2>
-        <div class="section-divider"></div>
+  <section class="isnm-premium-section">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-kicker">Student voice</span>
+      <h2 class="isnm-premium-heading">Where students grow</h2>
+      <div class="isnm-premium-stats">
+        <div class="isnm-premium-stats__item"><span class="isnm-premium-stats__value">6</span><span class="isnm-premium-stats__label">Practicum sites</span></div>
+        <div class="isnm-premium-stats__item"><span class="isnm-premium-stats__value">4</span><span class="isnm-premium-stats__label">Programmes</span></div>
+        <div class="isnm-premium-stats__item"><span class="isnm-premium-stats__value">15+</span><span class="isnm-premium-stats__label">Years of service</span></div>
+        <div class="isnm-premium-stats__item"><span class="isnm-premium-stats__value">3000+</span><span class="isnm-premium-stats__label">Alumni</span></div>
       </div>
-      <?php if (!empty($lifeCategories)): ?>
-        <div class="row g-4">
-          <?php foreach ($lifeCategories as $category): ?>
-            <div class="col-lg-4 col-md-6">
-              <div class="card h-100 shadow-sm border-0">
-                <?php if (!empty($category['cover_image'])): ?>
-                  <img src="<?= htmlspecialchars($category['cover_image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($category['name']) ?>" loading="lazy">
-                <?php endif; ?>
-                <div class="card-body">
-                  <h5 class="card-title"><?= htmlspecialchars($category['name']) ?></h5>
-                  <p class="card-text text-muted"><?= htmlspecialchars($category['description'] ?? 'Browse the published images in this collection.') ?></p>
-                  <a href="gallery.php" class="btn btn-sm btn-outline-primary">Open Gallery</a>
-                </div>
-              </div>
-            </div>
+      <?php if (!empty($studentActivities)): ?>
+        <div class="isnm-premium-grid">
+          <?php foreach ($studentActivities as $activity): ?>
+            <article class="isnm-premium-card">
+              <span class="isnm-premium-card__index"><?php echo htmlspecialchars(date('M j, Y', strtotime($activity['event_date'])), ENT_QUOTES, 'UTF-8'); ?></span>
+              <h3><?php echo htmlspecialchars($activity['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
+              <?php if (!empty($activity['short_description'])): ?><p><?php echo htmlspecialchars($activity['short_description'], ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
+              <?php if (!empty($activity['location'])): ?><p style="margin-top:0.75rem"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> <?php echo htmlspecialchars($activity['location'], ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
+            </article>
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <div class="alert alert-info">No student life collections have been published yet.</div>
+        <div class="isnm-premium-empty">No upcoming student activities are published yet. Browse the events page for the full calendar.</div>
       <?php endif; ?>
+      <div class="isnm-premium-actions"><a class="isnm-premium-btn isnm-premium-btn--primary" href="events.php"><i class="fas fa-calendar-day" aria-hidden="true"></i> See All Events</a></div>
     </div>
   </section>
 
-  <section class="py-5">
-    <div class="container">
-      <div class="text-center mb-5">
-        <span class="tag tag-primary"><i class="fas fa-calendar-day"></i> On the Calendar</span>
-        <h2 class="section-title">Upcoming Activities</h2>
-        <div class="section-divider"></div>
+  <section class="isnm-premium-cta">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-eyebrow">Join the community</span>
+      <h2 class="isnm-premium-heading">Start your ISNM journey</h2>
+      <p class="isnm-premium-copy">Find out how to apply, what life on campus looks like, and how we support students through to graduation.</p>
+      <div class="isnm-premium-actions">
+        <a class="isnm-premium-btn isnm-premium-btn--gold" href="application.php"><i class="fas fa-paper-plane" aria-hidden="true"></i> Apply Now</a>
+        <a class="isnm-premium-btn isnm-premium-btn--outline" href="admissions.php"><i class="fas fa-door-open" aria-hidden="true"></i> Admissions</a>
       </div>
-      <?php if (!empty($events)): ?>
-        <div class="row g-4">
-          <?php foreach ($events as $event): ?>
-            <div class="col-lg-4 col-md-6">
-              <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                  <span class="tag tag-gold mb-2"><?= htmlspecialchars(date('M j, Y', strtotime($event['event_date']))) ?></span>
-                  <h5 class="card-title"><?= htmlspecialchars($event['title']) ?></h5>
-                  <p class="card-text text-muted"><?= htmlspecialchars($event['short_description'] ?? '') ?></p>
-                  <?php if (!empty($event['location'])): ?>
-                    <p class="small text-muted mb-0"><i class="fas fa-map-marker-alt me-2"></i><?= htmlspecialchars($event['location']) ?></p>
-                  <?php endif; ?>
-                </div>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="alert alert-info">No upcoming student activities have been published yet.</div>
-      <?php endif; ?>
     </div>
   </section>
 </main>
 
-<?php include('shared/_footer.php'); ?>
+<?php include_once 'shared/_footer.php'; ?>

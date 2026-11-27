@@ -1,110 +1,116 @@
 <?php
 $pageTitle = 'Gallery | Iganga School of Nursing and Midwifery';
-include('shared/_header.php');
+require_once 'includes/config_enhanced.php';
+include_once 'includes/functions.php';
+include_once 'shared/_header.php';
 
-$categories = [];
-$images = [];
+$galleryImages = [];
 try {
   $websiteDB = getDatabaseConnection('website');
   if ($websiteDB) {
-    $catResult = $websiteDB->query("SELECT id, name, slug, description, cover_image FROM cms_gallery_categories WHERE is_active = 1 ORDER BY sort_order, name");
-    if ($catResult) {
-      $categories = isnm_fetch_all($catResult);
-    }
-    $imgResult = $websiteDB->query("SELECT gi.id, gi.title, gi.caption, gi.image_url, gi.thumbnail_url, gi.alt_text, gc.name AS category_name FROM cms_gallery_images gi LEFT JOIN cms_gallery_categories gc ON gc.id = gi.category_id ORDER BY gi.sort_order, gi.id DESC LIMIT 24");
-    if ($imgResult) {
-      $images = isnm_fetch_all($imgResult);
+    $result = $websiteDB->query("SELECT gi.title, gi.caption, gi.image_url, gi.thumbnail_url, gi.alt_text, gc.name AS category_name FROM cms_gallery_images gi LEFT JOIN cms_gallery_categories gc ON gc.id = gi.category_id ORDER BY gi.sort_order, gi.id DESC LIMIT 24");
+    if ($result) {
+      $galleryImages = isnm_fetch_all($result);
     }
   }
 } catch (Throwable $e) {
   error_log('Gallery page query failed: ' . $e->getMessage());
 }
 ?>
-
 <main>
-  <section class="page-header page-header-bg animate-on-scroll" style="background-image: url('images/students-hero.jpg');">
-    <div class="decor-shape decor-shape-1"></div>
-    <div class="decor-shape decor-shape-2"></div>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 text-center">
-          <div class="tag tag-gold mb-3"><i class="fas fa-images"></i> Life at ISNM</div>
-          <h1 class="page-title">Gallery</h1>
-          <p class="page-subtitle">Moments from our campus, clinical placements, and community activities</p>
-        </div>
-      </div>
+  <section class="isnm-premium-hero" style="background-image: url('images/students-hero.jpg');">
+    <div class="isnm-premium-hero-inner">
+      <span class="isnm-premium-eyebrow">Life at ISNM</span>
+      <h1 class="isnm-premium-title">The story, in pictures.</h1>
+      <p class="isnm-premium-lead">Classrooms, clinical practice, ceremony, and community: a visual record of the people who make ISNM what it is.</p>
     </div>
   </section>
 
-  <nav aria-label="breadcrumb" class="container mt-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Gallery</li>
-    </ol>
+  <nav class="isnm-premium-crumbbar" aria-label="Breadcrumb">
+    <div class="container">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Gallery</li>
+      </ol>
+    </div>
   </nav>
 
-  <section class="py-5">
-    <div class="container">
-      <div class="text-center mb-5">
-        <span class="tag tag-primary"><i class="fas fa-layer-group"></i> Collections</span>
-        <h2 class="section-title">Browse by Collection</h2>
-        <div class="section-divider"></div>
+  <section class="isnm-premium-section">
+    <div class="isnm-premium-container isnm-premium-intro">
+      <div>
+        <span class="isnm-premium-kicker">Our community</span>
+        <h2 class="isnm-premium-heading">Moments worth remembering</h2>
+        <p class="isnm-premium-copy">Every photograph here comes from school life in Iganga: students learning together, staff preparing the next generation of clinicians, and graduates stepping into service.</p>
+        <p class="isnm-premium-copy">Use the gallery to explore our learning environment before you visit. For a closer look, arrange a visit through the contact page.</p>
       </div>
-      <?php if (!empty($categories)): ?>
-        <div class="row g-4">
-          <?php foreach ($categories as $category): ?>
-            <div class="col-lg-4 col-md-6">
-              <div class="card h-100 shadow-sm border-0">
-                <?php if (!empty($category['cover_image'])): ?>
-                  <img src="<?= htmlspecialchars($category['cover_image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($category['name']) ?>" loading="lazy">
-                <?php endif; ?>
-                <div class="card-body">
-                  <h5 class="card-title"><?= htmlspecialchars($category['name']) ?></h5>
-                  <p class="card-text text-muted"><?= htmlspecialchars($category['description'] ?? 'Photos in this collection will appear here once published.') ?></p>
-                </div>
-              </div>
-            </div>
+      <blockquote class="isnm-premium-quote">
+        Learning is seen in the daily discipline of practice, not only in the final ceremony.
+        <cite>Student Life at ISNM</cite>
+      </blockquote>
+    </div>
+  </section>
+
+  <section class="isnm-premium-section isnm-premium-section--tint">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-kicker">Campus &amp; ceremony</span>
+      <h2 class="isnm-premium-heading">Through the year</h2>
+      <p class="isnm-premium-copy">A selection of scenes from the school, its facilities, and its celebrations.</p>
+      <div class="isnm-premium-gallery">
+        <figure><img src="images/students-in-class.jpg" alt="Nursing students attending class at ISNM" loading="lazy"><figcaption>Students in class</figcaption></figure>
+        <figure><img src="images/skills-lab-s.jpeg" alt="Practical work in the ISNM skills laboratory" loading="lazy"><figcaption>Skills laboratory practice</figcaption></figure>
+        <figure><img src="images/revision-library.jpg" alt="Students revising in the ISNM library" loading="lazy"><figcaption>Revision in the library</figcaption></figure>
+        <figure><img src="images/diploma-hostel.jpg" alt="Student hostel accommodation at ISNM" loading="lazy"><figcaption>Student hostel</figcaption></figure>
+        <figure><img src="images/school.JPG" alt="Iganga School of Nursing and Midwifery campus" loading="lazy"><figcaption>Our campus in Iganga</figcaption></figure>
+        <figure><img src="images/staffs-meeting1.JPG" alt="ISNM staff in a meeting" loading="lazy"><figcaption>Staff collaboration</figcaption></figure>
+        <figure><img src="images/certificates-graduates.jpg" alt="Graduates holding their certificates" loading="lazy"><figcaption>Graduation day</figcaption></figure>
+        <figure><img src="images/graduates1.jpg" alt="ISNM graduates together after ceremony" loading="lazy"><figcaption>New healthcare professionals</figcaption></figure>
+        <figure><img src="images/computer-students.jpeg" alt="Students using the computer laboratory" loading="lazy"><figcaption>Computer laboratory</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="isnm-premium-section">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-kicker">From our records</span>
+      <h2 class="isnm-premium-heading">Recently published photos</h2>
+      <?php if (!empty($galleryImages)): ?>
+        <div class="isnm-premium-gallery">
+          <?php foreach ($galleryImages as $image): ?>
+            <figure>
+              <img src="<?php echo htmlspecialchars($image['thumbnail_url'] ?: $image['image_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($image['alt_text'] ?: $image['title'] ?: 'ISNM gallery image', ENT_QUOTES, 'UTF-8'); ?>" loading="lazy">
+              <figcaption><?php echo htmlspecialchars($image['caption'] ?: $image['title'] ?: $image['category_name'] ?: 'ISNM community', ENT_QUOTES, 'UTF-8'); ?></figcaption>
+            </figure>
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <div class="alert alert-info">No gallery collections have been published yet.</div>
+        <div class="isnm-premium-empty">No additional photos have been published yet. Please check back as new collections are added.</div>
       <?php endif; ?>
     </div>
   </section>
 
-  <section class="py-5 bg-light">
-    <div class="container">
-      <div class="text-center mb-5">
-        <span class="tag tag-primary"><i class="fas fa-camera"></i> Published Photos</span>
-        <h2 class="section-title">Recent Images</h2>
-        <div class="section-divider"></div>
+  <section class="isnm-premium-section isnm-premium-section--tint">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-kicker">Explore further</span>
+      <h2 class="isnm-premium-heading">See the school in context</h2>
+      <div class="isnm-premium-grid">
+        <a class="isnm-premium-card" href="facilities.php"><span class="isnm-premium-card__icon"><i class="fas fa-building" aria-hidden="true"></i></span><h3>Facilities</h3><p>Tour the spaces where theory becomes practical skill.</p></a>
+        <a class="isnm-premium-card" href="student-life.php"><span class="isnm-premium-card__icon"><i class="fas fa-user-graduate" aria-hidden="true"></i></span><h3>Student Life</h3><p>Discover hostel, welfare, clubs, and community life.</p></a>
+        <a class="isnm-premium-card" href="events.php"><span class="isnm-premium-card__icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></span><h3>Events</h3><p>Find the ceremonies and gatherings that bring us together.</p></a>
       </div>
-      <?php if (!empty($images)): ?>
-        <div class="row g-4">
-          <?php foreach ($images as $image): ?>
-            <div class="col-lg-4 col-md-6">
-              <div class="card h-100 shadow-sm border-0">
-                <img src="<?= htmlspecialchars($image['thumbnail_url'] ?: $image['image_url']) ?>" class="card-img-top" alt="<?= htmlspecialchars($image['alt_text'] ?: $image['title'] ?: 'ISNM gallery image') ?>" loading="lazy">
-                <div class="card-body">
-                  <?php if (!empty($image['category_name'])): ?>
-                    <span class="tag tag-gold mb-2"><?= htmlspecialchars($image['category_name']) ?></span>
-                  <?php endif; ?>
-                  <?php if (!empty($image['title'])): ?>
-                    <h5 class="card-title"><?= htmlspecialchars($image['title']) ?></h5>
-                  <?php endif; ?>
-                  <?php if (!empty($image['caption'])): ?>
-                    <p class="card-text text-muted mb-0"><?= htmlspecialchars($image['caption']) ?></p>
-                  <?php endif; ?>
-                </div>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="alert alert-info">No gallery images have been published yet.</div>
-      <?php endif; ?>
+    </div>
+  </section>
+
+  <section class="isnm-premium-cta">
+    <div class="isnm-premium-container">
+      <span class="isnm-premium-eyebrow">Come and see for yourself</span>
+      <h2 class="isnm-premium-heading">Visit Iganga School of Nursing and Midwifery</h2>
+      <p class="isnm-premium-copy">A campus visit is the best way to meet our team and see our learning spaces. Arrange a time that works for you.</p>
+      <div class="isnm-premium-actions">
+        <a class="isnm-premium-btn isnm-premium-btn--gold" href="contact.php"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Plan a Visit</a>
+        <a class="isnm-premium-btn isnm-premium-btn--outline" href="admissions.php"><i class="fas fa-door-open" aria-hidden="true"></i> Admissions</a>
+      </div>
     </div>
   </section>
 </main>
 
-<?php include('shared/_footer.php'); ?>
+<?php include_once 'shared/_footer.php'; ?>

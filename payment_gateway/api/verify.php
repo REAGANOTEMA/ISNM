@@ -30,7 +30,11 @@ $gateway = GatewayManager::getInstance();
 $conn = getStudentsConnection();
 $stmt = $conn->prepare("SELECT provider_transaction_id FROM payment_transactions WHERE transaction_ref = ?");
 $stmt->bind_param('s', $txnRef);
-$stmt->execute();
+if (!$stmt->execute()) {
+    $stmt->close();
+    echo json_encode(['success' => false, 'message' => 'Database error']);
+    exit;
+}
 $result = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
@@ -39,7 +43,16 @@ $verifyResult = $gateway->verifyPayment($provider, $verifyRef);
 
 // Update our DB status if we got a definitive answer
 if ($verifyResult['success'] && ($verifyResult['status'] === 'successful' || $verifyResult['status'] === 'failed')) {
-    $gateway->updateTransactionStatus($txnRef, $verifyResult['status'], $verifyRef);
+    $updated = $gateway->updateTransactionStatus(
+        $txnRef,
+        $verifyResult['status'],
+        $verifyRef,
+        $verifyResult['amount'] ?? null,
+        $verifyResult['currency'] ?? null
+    );
+    if (!$updated) {
+        $verifyResult['message'] = 'Status update could not be applied.';
+    }
     $verifyResult['reference'] = $txnRef;
 }
 

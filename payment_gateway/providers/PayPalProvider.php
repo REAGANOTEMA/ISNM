@@ -157,6 +157,8 @@ if ($eventType === 'PAYMENT.CAPTURE.COMPLETED' || $eventType === 'CHECKOUT.ORDER
         elseif ($eventType === 'CHECKOUT.ORDER.CANCELLED') $mappedStatus = 'cancelled';
 
         $reference = $customId ?: $orderId;
+        $gross = $resource['purchase_units'][0]['amount']['value'] ?? $resource['amount']['value'] ?? null;
+        $currency = $resource['purchase_units'][0]['amount']['currency_code'] ?? $resource['amount']['currency_code'] ?? null;
 
         return [
             'success' => true,
@@ -164,7 +166,21 @@ if ($eventType === 'PAYMENT.CAPTURE.COMPLETED' || $eventType === 'CHECKOUT.ORDER
             'provider_transaction_id' => $orderId,
             'status' => $mappedStatus,
             'raw_status' => $eventType,
+            'amount' => $gross !== null ? (float) $gross : null,
+            'currency' => $currency !== null ? strtoupper((string) $currency) : null,
             'message' => 'PayPal webhook processed: ' . $eventType,
         ];
+    }
+
+    public function verifyWebhookSignature(string $rawBody, string $signature): bool {
+        $secret = $this->getWebhookSecret();
+        if ($secret === '') {
+            error_log('[PaymentGateway][paypal] webhook secret not configured (' . $this->getWebhookSecretName() . '); rejecting callback');
+            return false;
+        }
+        $provided = trim($signature);
+        if ($provided === '') return false;
+        $expected = hash_hmac('sha256', $rawBody, $secret, true);
+        return hash_equals(base64_encode($expected), $provided) || hash_equals(bin2hex($expected), $provided);
     }
 }

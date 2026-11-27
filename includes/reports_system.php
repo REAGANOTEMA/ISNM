@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/functions.php';
 
 if (!function_exists('getStudentReports')) {
     /**
@@ -308,7 +309,7 @@ if (!function_exists('exportReportCSV')) {
         }
 
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.csv"');
+        sendDownloadFilenameHeader($filename . '_' . date('Y-m-d') . '.csv', 'report.csv');
         header('Pragma: no-cache');
         header('Expires: 0');
 
@@ -318,13 +319,13 @@ if (!function_exists('exportReportCSV')) {
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
         if (!empty($headers)) {
-            fputcsv($output, $headers);
+            fputcsv($output, csvSafeRow($headers));
         } else {
-            fputcsv($output, array_keys($data[0]));
+            fputcsv($output, csvSafeRow(array_keys($data[0])));
         }
 
         foreach ($data as $row) {
-            fputcsv($output, $row);
+            fputcsv($output, csvSafeRow($row));
         }
 
         fclose($output);

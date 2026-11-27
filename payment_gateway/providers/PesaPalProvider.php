@@ -96,6 +96,8 @@ if (in_array($status, ['Completed', 'SUCCESS'])) $mappedStatus = 'successful';
             'provider_transaction_id' => $orderRef,
             'status' => $mappedStatus,
             'raw_status' => $status,
+            'amount' => $payload['amount'] ?? null,
+            'currency' => $payload['currency'] ?? null,
             'message' => 'PesaPal callback processed',
         ];
     }

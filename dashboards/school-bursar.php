@@ -10,6 +10,7 @@ require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/csrf_helper.php';
 require_once __DIR__ . '/../includes/payment_gateway.php';
 require_once __DIR__ . '/../includes/payroll_functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 
 $ctx = bootstrapStaffDashboard(['bursar', 'school bursar', 'finance', 'director finance', 'director general', 'ceo']);
@@ -53,19 +54,19 @@ if (isset($_GET['export']) && $_GET['export'] === 'stock_report' && $staffConn) 
     $result = $staffConn->query("SELECT item_name, category, quantity, unit, unit_cost, reorder_level, location, status FROM inventory_items ORDER BY category, item_name");
     if ($result && $result->num_rows > 0) {
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="stock_report_' . date('Y-m-d') . '.csv"');
+        sendDownloadFilenameHeader('stock_report_' . date('Y-m-d') . '.csv', 'stock_report.csv');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Item Name', 'Category', 'Quantity', 'Unit', 'Unit Cost', 'Total Value', 'Reorder Level', 'Status', 'Location']);
+        fputcsv($out, csvSafeRow(['Item Name', 'Category', 'Quantity', 'Unit', 'Unit Cost', 'Total Value', 'Reorder Level', 'Status', 'Location']));
         while ($row = $result->fetch_assoc()) {
             $qty = (int)($row['quantity'] ?? 0);
             $cost = (float)($row['unit_cost'] ?? 0);
             $reorder = (int)($row['reorder_level'] ?? 0);
             $computedStatus = $qty <= 0 ? 'Out of Stock' : ($qty <= $reorder ? 'Low Stock' : 'In Stock');
-            fputcsv($out, [
+            fputcsv($out, csvSafeRow([
                 $row['item_name'] ?? '', $row['category'] ?? '', $qty,
                 $row['unit'] ?? '', number_format($cost, 2), number_format($qty * $cost, 2),
                 $reorder, $computedStatus, $row['location'] ?? ''
-            ]);
+            ]));
         }
         fclose($out);
         exit;

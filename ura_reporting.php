@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/functions.php';
 
 class URAReporting {
 
@@ -72,9 +73,11 @@ class URAReporting {
         switch ($report_type) {
             case 'vat':
                 $report = self::generateVATReport($month, $year);
+                $tin = csvSafeValue($report['TIN']);
+                $period = csvSafeValue($report['reporting_period']);
                 $csv = "UGA-URA-VAT-RETURN\n";
                 $csv .= "TIN,Period,Gross Supply (UGX),Output VAT (UGX),Input VAT (UGX),Net VAT Due (UGX),Transaction Count\n";
-                $csv .= "{$report['TIN']},{$report['reporting_period']}," .
+                $csv .= "{$tin},{$period}," .
                         number_format($report['gross_amount'], 2) . "," .
                         number_format($report['vat_amount'], 2) . ",0.00," .
                         number_format($report['gross_amount'], 2) . "," .
@@ -82,21 +85,25 @@ class URAReporting {
                 break;
             case 'wht':
                 $report = self::generateWithholdingTaxReport($month, $year);
+                $tin = csvSafeValue($report['TIN']);
+                $period = csvSafeValue($report['reporting_period']);
                 $csv = "UGA-URA-WHT-RETURN\n";
                 $csv .= "TIN,Period,Total Gross Payments (UGX),WHT Rate (%),WHT Withheld (UGX),Total Withheld (UGX)\n";
-                $csv .= "{$report['TIN']},{$report['reporting_period']}," .
+                $csv .= "{$tin},{$period}," .
                         number_format($report['gross_amount'], 2) . ",6.00," .
                         number_format($report['wht_withheld'], 2) . "," .
                         number_format($report['total_withheld'], 2) . "\n";
                 break;
             case 'annual':
                 $report = self::generateAnnualReport($year);
+                $tin = csvSafeValue($report['TIN']);
+                $institution = csvSafeValue($report['institution']);
                 $csv = "UGA-URA-ANNUAL-RETURN\n";
                 $csv .= "TIN,,Institution,Description,Amount (UGX)\n";
-                $csv .= "{$report['TIN']},,{$report['institution']},Total Revenue," . number_format($report['total_revenue'], 2) . "\n";
-                $csv .= "{$report['TIN']},,{$report['institution']},VAT Collected," . number_format($report['total_vat_collected'], 2) . "\n";
-                $csv .= "{$report['TIN']},,{$report['institution']},WHT Collected," . number_format($report['total_wht_collected'], 2) . "\n";
-                $csv .= "{$report['TIN']},,{$report['institution']},Total Tax Remitted," . number_format($report['total_vat_collected'] + $report['total_wht_collected'], 2) . "\n";
+                $csv .= "{$tin},,{$institution},Total Revenue," . number_format($report['total_revenue'], 2) . "\n";
+                $csv .= "{$tin},,{$institution},VAT Collected," . number_format($report['total_vat_collected'], 2) . "\n";
+                $csv .= "{$tin},,{$institution},WHT Collected," . number_format($report['total_wht_collected'], 2) . "\n";
+                $csv .= "{$tin},,{$institution},Total Tax Remitted," . number_format($report['total_vat_collected'] + $report['total_wht_collected'], 2) . "\n";
                 break;
             default:
                 return "Invalid report type\n";
@@ -115,7 +122,7 @@ elseif ($type === 'wht') $prefix = 'URA_WHT';
 elseif ($type === 'annual') $prefix = 'URA_ANNUAL';
     $filename = $prefix . '_' . $year . str_pad($month,2,'0',STR_PAD_LEFT) . '_' . date('Ymd') . '.csv';
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    sendDownloadFilenameHeader($filename, 'ura_report.csv');
     echo URAReporting::generateCSVExport($type, $month, $year);
     exit;
 }

@@ -67,6 +67,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="stylesheet" href="css/mobile-fixes.css?v=2" />
   <link rel="stylesheet" href="css/premium-enhancement.css?v=3" />
   <link rel="stylesheet" href="css/premium-global.css?v=1" />
+  <link rel="stylesheet" href="css/premium-pages.css?v=1" />
 </head>
 
 <body>
@@ -129,6 +130,11 @@ include_once __DIR__ . '/../includes/functions.php';
         <li class="nav-item">
           <a class="nav-link" href="programs.php">
             <i class="fas fa-graduation-cap"></i> Programs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="admissions.php">
+            <i class="fas fa-door-open"></i> Admissions
           </a>
         </li>
         <li class="nav-item dropdown">

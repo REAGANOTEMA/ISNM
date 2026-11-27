@@ -99,12 +99,14 @@ class PesapalGateway extends AbstractPaymentGateway {
             'transaction_ref' => $payload['id'] ?? $payload['merchant_reference'] ?? '',
             'provider_ref' => $orderRef,
             'status' => $mappedStatus,
+            'amount' => $payload['amount'] ?? null,
+            'currency' => $payload['currency'] ?? null,
             'message' => "Pesapal callback: $status",
         ];
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        return true;
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

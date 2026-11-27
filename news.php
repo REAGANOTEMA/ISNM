@@ -4,6 +4,10 @@ require_once __DIR__ . '/auth-service.php';
 
 session_start();
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $user = null;
 $is_admin = false;
 
@@ -62,7 +66,14 @@ if (!empty($_SESSION['news_error'])) { $errors[] = $_SESSION['news_error']; unse
 
 // --- Handle Admin Actions ---
 if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+    $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (empty($csrfToken) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        if (($_POST['action'] ?? '') === 'upload_image') {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Invalid security token. Please refresh the page and try again.']);
+            exit;
+        }
         $_SESSION['news_error'] = 'Invalid security token. Please try again.';
         header('Location: news.php');
         exit;
@@ -521,9 +532,7 @@ include 'shared/_header.php';
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="newsForm">
-                    <?php if (function_exists('generateCSRFToken')): ?>
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>">
-                    <?php endif; ?>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" id="formAction" value="create">
                     <input type="hidden" name="news_id" id="newsId" value="0">
                     <div class="row g-3">
@@ -660,7 +669,7 @@ include 'shared/_header.php';
                                 <button class="btn btn-sm btn-outline-primary" onclick="editNews(<?= $article['id'] ?>)"><i class="fas fa-edit"></i></button>
                                 <?php if ($article['status'] !== 'published'): ?>
                                 <form method="POST" class="d-inline">
-                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="action" value="toggle_status">
                                     <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                     <input type="hidden" name="new_status" value="published">
@@ -669,7 +678,7 @@ include 'shared/_header.php';
                                 <?php endif; ?>
                                 <?php if ($article['status'] !== 'archived'): ?>
                                 <form method="POST" class="d-inline">
-                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="action" value="toggle_status">
                                     <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                     <input type="hidden" name="new_status" value="archived">
@@ -677,7 +686,7 @@ include 'shared/_header.php';
                                 </form>
                                 <?php endif; ?>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')">
-                                    <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                     <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
@@ -714,6 +723,7 @@ if (typeof jQuery === 'undefined') {
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
 <script>
 let newsData = <?= json_encode($newsList) ?>;
+let csrfToken = <?= json_encode($_SESSION['csrf_token']) ?>;
 
 function initSummernote() {
     var el = $('#summernote');
@@ -758,6 +768,7 @@ function uploadEditorImage(file) {
     var formData = new FormData();
     formData.append('file', file);
     formData.append('action', 'upload_image');
+    formData.append('csrf_token', csrfToken);
     $.ajax({
         url: 'news.php',
         method: 'POST',
@@ -767,6 +778,8 @@ function uploadEditorImage(file) {
         success: function(res) {
             if (res.url && typeof $.fn.summernote === 'function') {
                 $('#summernote').summernote('insertImage', res.url);
+            } else if (res.error) {
+                alert(res.error);
             }
         }
     });
@@ -842,6 +855,7 @@ $('#loadMoreBtn').on('click', function() {
 function deleteNews(id) {
     if (!confirm('Delete this news article?')) return;
     let form = $('<form method="POST">').append(
+        '<input type="hidden" name="csrf_token" value="' + csrfToken + '">',
         '<input type="hidden" name="action" value="delete">',
         '<input type="hidden" name="news_id" value="' + id + '">'
     );

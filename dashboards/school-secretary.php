@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 require_once __DIR__ . '/../includes/secretary_requirements_handler.php';
+require_once __DIR__ . '/../includes/functions.php';
 $ctx = bootstrapStaffDashboard(['school secretary', 'secretary']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
@@ -640,10 +641,10 @@ if (isset($_REQUEST['ajax'])) {
             if (!$stmt->execute()) { error_log('$stmt execute failed: ' . ($stmt->error ?? 'unknown')); };
             $result = $stmt->get_result();
             header('Content-Type: text/csv');
-            header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d') . '.csv"');
+            sendDownloadFilenameHeader('students_export_' . date('Y-m-d') . '.csv', 'students_export.csv');
             $output = fopen('php://output', 'w');
-            fputcsv($output, ['Application Number', 'Full Name', 'Email', 'Phone', 'Program', 'Intake', 'Status', 'DOB', 'Gender', 'Address', 'Guardian', 'Guardian Phone', 'Created']);
-            while ($row = $result->fetch_assoc()) { fputcsv($output, $row); }
+            fputcsv($output, csvSafeRow(['Application Number', 'Full Name', 'Email', 'Phone', 'Program', 'Intake', 'Status', 'DOB', 'Gender', 'Address', 'Guardian', 'Guardian Phone', 'Created']));
+            while ($row = $result->fetch_assoc()) { fputcsv($output, csvSafeRow($row)); }
             fclose($output);
             exit;
         case 'get_appointments':

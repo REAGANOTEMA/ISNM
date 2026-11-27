@@ -118,6 +118,9 @@ class AirtelMoneyGateway extends AbstractPaymentGateway {
         $status = $payload['transaction']['status'] ?? $payload['status'] ?? '';
         $externalId = $payload['transaction']['externalId'] ?? $payload['externalId'] ?? '';
         $providerRef = $payload['transaction']['id'] ?? $payload['transactionId'] ?? '';
+        $amountRaw = $payload['transaction']['amount'] ?? $payload['amount'] ?? null;
+        $amount = is_array($amountRaw) ? null : $amountRaw;
+        $currency = $payload['transaction']['currency'] ?? $payload['currency'] ?? null;
 
         $mappedStatus = strtolower($status) === 'successful' ? 'successful' : 'failed';
 
@@ -126,15 +129,14 @@ class AirtelMoneyGateway extends AbstractPaymentGateway {
             'transaction_ref' => $externalId,
             'provider_ref' => $providerRef,
             'status' => $mappedStatus,
+            'amount' => $amount,
+            'currency' => $currency,
             'message' => "Airtel callback: $status",
         ];
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        $secret = $this->getWebhookSecret();
-        if (empty($secret)) return true;
-        $expected = hash_hmac('sha256', $rawBody, $secret);
-        return hash_equals($expected, $signature);
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

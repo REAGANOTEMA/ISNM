@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/certificate_generator.php';
 require_once __DIR__ . '/includes/financial_functions.php';
+require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/document_settings.php';
 
 // ---------------------------------------------------------------------------
@@ -109,7 +110,7 @@ if ($action === 'download' && $studentId && $studentsDb) {
     $html = generateTranscriptHTML($student, $records, $type, $docSettings);
     $fname = 'transcript-' . ($student['student_number'] ?? $studentId) . '-' . date('Ymd') . '.html';
     header('Content-Type: text/html; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . $fname . '"');
+    sendDownloadFilenameHeader($fname, 'transcript.html');
     echo $html;
     exit;
 }

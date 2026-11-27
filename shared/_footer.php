@@ -33,7 +33,15 @@
             <li><a href="about.php"><i class="fas fa-info-circle"></i> About Us</a></li>
             <li><a href="programs.php"><i class="fas fa-graduation-cap"></i> Programs</a></li>
             <li><a href="history.php"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="admissions.php"><i class="fas fa-door-open"></i> Admissions</a></li>
             <li><a href="news.php"><i class="fas fa-newspaper"></i> News</a></li>
+            <li><a href="gallery.php"><i class="fas fa-images"></i> Gallery</a></li>
+            <li><a href="events.php"><i class="fas fa-calendar-day"></i> Events</a></li>
+            <li><a href="student-life.php"><i class="fas fa-user-graduate"></i> Student Life</a></li>
+            <li><a href="facilities.php"><i class="fas fa-building"></i> Facilities</a></li>
+            <li><a href="clinical-training.php"><i class="fas fa-stethoscope"></i> Clinical Training</a></li>
+            <li><a href="partnerships.php"><i class="fas fa-handshake"></i> Partnerships</a></li>
+            <li><a href="resources.php"><i class="fas fa-download"></i> Resources</a></li>
             <li><a href="application.php"><i class="fas fa-user-plus"></i> Apply</a></li>
             <li><a href="donation.php"><i class="fas fa-hand-holding-heart"></i> Donate</a></li>
             <li><a href="volunteer.php"><i class="fas fa-hands-helping"></i> Volunteer</a></li>

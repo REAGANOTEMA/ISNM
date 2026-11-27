@@ -117,10 +117,7 @@ class FlutterwaveGateway extends AbstractPaymentGateway {
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        $secret = $this->getWebhookSecret();
-        if (empty($secret)) return true;
-        $expected = hash_hmac('sha256', $rawBody, $secret);
-        return hash_equals($expected, $signature);
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

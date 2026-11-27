@@ -139,21 +139,24 @@ class PayPalGateway extends AbstractPaymentGateway {
             $status = 'failed';
         }
 
+        $resource = $payload['resource'] ?? [];
+        $gross = $resource['purchase_units'][0]['amount']['value'] ?? $resource['amount']['value'] ?? null;
+        $currency = $resource['purchase_units'][0]['amount']['currency_code'] ?? $resource['amount']['currency_code'] ?? null;
+
         return [
             'success' => true,
-            'transaction_ref' => $payload['resource']['custom_id'] ?? $txnId,
+            'transaction_ref' => $resource['custom_id'] ?? $txnId,
+            'provider_ref' => $txnId,
             'provider_transaction_id' => $txnId,
             'status' => $status,
+            'amount' => $gross,
+            'currency' => $currency,
             'message' => 'PayPal webhook processed: ' . $eventType,
         ];
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        if (!$this->isLive()) return true;
-        $webhookSecret = $this->getWebhookSecret();
-        if (empty($webhookSecret)) return true;
-        $expected = hash_hmac('sha256', $rawBody, $webhookSecret);
-        return hash_equals($expected, $signature);
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

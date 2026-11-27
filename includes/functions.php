@@ -8,6 +8,43 @@ if (!function_exists('sanitizeInput')) {
     }
 }
 
+if (!function_exists('csvSafeValue')) {
+    function csvSafeValue($value): string {
+        if ($value === null) return '';
+        if (is_bool($value)) return $value ? '1' : '0';
+        if (!is_scalar($value)) return '';
+        $value = (string)$value;
+        if ($value !== '' && strpos("=+-@\t\r", $value[0]) !== false) {
+            return "'" . $value;
+        }
+        return $value;
+    }
+}
+
+if (!function_exists('csvSafeRow')) {
+    function csvSafeRow(array $row): array {
+        return array_map('csvSafeValue', $row);
+    }
+}
+
+if (!function_exists('safeDownloadFilename')) {
+    function safeDownloadFilename(string $filename, string $fallback = 'download'): string {
+        $filename = str_replace('\\', '/', $filename);
+        $safe = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($filename));
+        if ($safe === '' || $safe === '.' || $safe === '..') {
+            $safe = preg_replace('/[^A-Za-z0-9._-]/', '_', $fallback);
+        }
+        if ($safe === '' || $safe === '.' || $safe === '..') $safe = 'download';
+        return substr($safe, 0, 180);
+    }
+}
+
+if (!function_exists('sendDownloadFilenameHeader')) {
+    function sendDownloadFilenameHeader(string $filename, string $fallback = 'download'): void {
+        header('Content-Disposition: attachment; filename="' . addcslashes(safeDownloadFilename($filename, $fallback), "\\\"") . '"');
+    }
+}
+
 // Validate email address
 if (!function_exists('validateEmail')) {
     function validateEmail($email) {

@@ -79,6 +79,19 @@ function renderExportTableScript() {
     ob_start();
     ?>
     <script>
+    if (!window.isnmCsvSafeCell) {
+        window.isnmCsvSafeCell = function(value) {
+            var s = String(value == null ? '' : value);
+            return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+        };
+    }
+    if (!window.isnmSafeDownloadName) {
+        window.isnmSafeDownloadName = function(name, fallback) {
+            var s = String(name == null ? '' : name).replace(/\\/g, '/').split('/').pop().replace(/[^A-Za-z0-9._-]/g, '_');
+            s = s.replace(/^\.+|\.+$/g, '');
+            return s || (fallback || 'export.csv');
+        };
+    }
     window.exportTableToCSV = function(tblId, filename) {
         tblId = tblId || null;
         filename = filename || 'export_<?= date('Ymd') ?>.csv';
@@ -91,13 +104,13 @@ function renderExportTableScript() {
             rows.forEach(function(row) {
                 var cols = row.querySelectorAll('td, th');
                 var vals = [];
-                cols.forEach(function(c) { vals.push('"' + (c.textContent || '').trim().replace(/"/g, '""') + '"'); });
+                cols.forEach(function(c) { vals.push('"' + window.isnmCsvSafeCell((c.textContent || '').trim()).replace(/"/g, '""') + '"'); });
                 csv.push(vals.join(','));
             });
         });
         var blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a'); link.href = URL.createObjectURL(blob);
-        link.download = filename; document.body.appendChild(link); link.click();
+        link.download = window.isnmSafeDownloadName(filename, 'export.csv'); document.body.appendChild(link); link.click();
         document.body.removeChild(link); URL.revokeObjectURL(link.href);
     };
     </script>

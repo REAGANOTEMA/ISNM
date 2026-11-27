@@ -140,8 +140,8 @@ class GatewayManager {
 
         $result = $provider->initiatePayment($reference, $amount, $currency, $payer, $description);
 
-        if ($result['success']) {
-            $this->recordTransaction($reference, $providerKey, $paymentData, $result);
+        if ($result['success'] && !$this->recordTransaction($reference, $providerKey, $paymentData, $result)) {
+            return ['success' => false, 'message' => 'Failed to record transaction.'];
         }
 
         $result['reference'] = $reference;
@@ -162,17 +162,30 @@ class GatewayManager {
     /**
      * Process an incoming callback from a provider.
      */
-    public function processCallback(string $providerKey, array $payload, array $headers = []): array {
+    public function processCallback(string $providerKey, array $payload, array $headers = [], ?string $rawBody = null): array {
         $provider = $this->getProvider($providerKey);
         if (!$provider) {
             return ['success' => false, 'message' => 'Unknown provider.'];
+        }
+
+        $body = $rawBody ?? json_encode($payload);
+        $signature = method_exists($provider, 'signatureFromHeaders') ? $provider->signatureFromHeaders($headers) : '';
+        if (!$provider->verifyWebhookSignature($body, $signature)) {
+            error_log('[GatewayManager][' . $providerKey . '] callback rejected: signature verification failed');
+            return ['success' => false, 'message' => 'Invalid webhook signature.'];
         }
 
         $this->logCallback($providerKey, $payload, $headers);
         $result = $provider->processCallback($payload, $headers);
 
         if (!empty($result['reference']) && !empty($result['status'])) {
-            $this->updateTransactionStatus($result['reference'], $result['status'], $result['provider_transaction_id'] ?? null);
+            $this->updateTransactionStatus(
+                (string) $result['reference'],
+                (string) $result['status'],
+                $result['provider_transaction_id'] ?? null,
+                $result['amount'] ?? null,
+                $result['currency'] ?? null
+            );
         }
 
         return $result;
@@ -181,9 +194,9 @@ class GatewayManager {
     /**
      * Record a new transaction in the database.
      */
-    private function recordTransaction(string $reference, string $providerKey, array $data, array $result): void {
+    private function recordTransaction(string $reference, string $providerKey, array $data, array $result): bool {
         $conn = $this->getDbConnection();
-        if (!$conn) return;
+        if (!$conn) return false;
 
         $stmt = $conn->prepare("INSERT INTO payment_transactions
             (transaction_ref, provider_key, provider_transaction_id, payment_type, student_id, staff_id,
@@ -191,7 +204,7 @@ class GatewayManager {
              initiated_by, ip_address, user_agent)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        if (!$stmt) return;
+        if (!$stmt) return false;
 
         $txnRef = $reference;
         $pKey = $providerKey;
@@ -211,43 +224,145 @@ class GatewayManager {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
-        $stmt->bind_param('sssiissssddssisss',
+        $ok = $stmt->bind_param('sssiissssddssisss',
             $txnRef, $pKey, $provTxn, $payType, $stuId, $staffId,
             $payerName, $payerPhone, $payerEmail, $amount, $currency, $fee,
             $status, $meta, $initiatedBy, $ip, $ua
-        );
-        $stmt->execute();
+        ) && $stmt->execute();
+        if (!$ok) {
+            error_log('[GatewayManager] failed to record transaction ' . $reference . ': ' . $stmt->error);
+        }
         $stmt->close();
+        return $ok;
+    }
+
+    private const STATUS_RANKS = [
+        'pending' => 0, 'processing' => 1, 'failed' => 2, 'cancelled' => 2,
+        'expired' => 2, 'successful' => 3, 'refunded' => 4,
+    ];
+
+    private static function statusRank(string $status): int {
+        return self::STATUS_RANKS[strtolower($status)] ?? 0;
+    }
+
+    private static function normalizeMoney($value): ?float {
+        if ($value === null || $value === '' || !is_numeric($value)) return null;
+        return round((float) $value, 2);
+    }
+
+    private static function amountMatches(float $expected, ?float $paid, string $expectedCurrency, $paidCurrency): bool {
+        if ($paid === null || $paid <= 0) return false;
+        if ($paidCurrency !== null && strtoupper(trim((string) $paidCurrency)) !== strtoupper(trim($expectedCurrency))) return false;
+        return abs($expected - $paid) <= 0.01;
     }
 
     /**
      * Update transaction status after callback/verification.
      */
-    public function updateTransactionStatus(string $reference, string $status, ?string $providerTxnId = null): void {
+    public function updateTransactionStatus(string $reference, string $status, ?string $providerTxnId = null, $paidAmount = null, $paidCurrency = null): bool {
         $conn = $this->getDbConnection();
-        if (!$conn) return;
+        if (!$conn || $reference === '') return false;
+
+        $status = strtolower(trim($status));
+        if (!array_key_exists($status, self::STATUS_RANKS)) {
+            error_log('[GatewayManager] unsupported status ' . $status . ' for ' . $reference);
+            return false;
+        }
+
+        $stmt = $conn->prepare("SELECT id, status, amount, currency FROM payment_transactions
+            WHERE transaction_ref = ? OR provider_transaction_id = ? LIMIT 1");
+        if (!$stmt) {
+            error_log('[GatewayManager] failed to load transaction ' . $reference . ': ' . $conn->error);
+            return false;
+        }
+        $stmt->bind_param('ss', $reference, $reference);
+        if (!$stmt->execute()) {
+            error_log('[GatewayManager] failed to load transaction ' . $reference . ': ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+        $txn = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$txn) {
+            error_log('[GatewayManager] transaction not found for status update: ' . $reference);
+            return false;
+        }
+
+        $current = strtolower((string) $txn['status']);
+        if (self::statusRank($status) < self::statusRank($current)) {
+            error_log('[GatewayManager] ignored non-monotonic transition ' . $current . ' -> ' . $status . ' for ' . $reference);
+            return true;
+        }
+        if ($status === $current && self::statusRank($status) >= 3) {
+            return true;
+        }
+
+        $gross = self::normalizeMoney($txn['amount'] ?? null);
+        if ($status === 'successful') {
+            $paid = self::normalizeMoney($paidAmount);
+            if ($gross === null || !self::amountMatches($gross, $paid, (string) ($txn['currency'] ?? 'UGX'), $paidCurrency)) {
+                error_log('[GatewayManager] amount mismatch for ' . $reference . '; rejecting successful status');
+                return false;
+            }
+        }
 
         $completedAt = ($status === 'successful') ? date('Y-m-d H:i:s') : null;
-        $verifiedAt = ($status === 'successful') ? date('Y-m-d H:i:s') : null;
+        $amountReceived = ($status === 'successful') ? $gross : null;
+        $id = (int) $txn['id'];
+        $rank = self::statusRank($status);
 
         if ($providerTxnId) {
             $stmt = $conn->prepare("UPDATE payment_transactions
                 SET status = ?, provider_transaction_id = IFNULL(provider_transaction_id, ?),
+                    amount_received = IFNULL(?, amount_received),
+                    completed_at = IFNULL(?, completed_at), verified_at = IFNULL(?, verified_at),
                     callback_received_at = NOW(), updated_at = NOW()
-                WHERE transaction_ref = ?");
-            $stmt->bind_param('sss', $status, $providerTxnId, $reference);
+                WHERE id = ? AND CASE status
+                    WHEN 'refunded' THEN 4
+                    WHEN 'successful' THEN 3
+                    WHEN 'failed' THEN 2
+                    WHEN 'cancelled' THEN 2
+                    WHEN 'expired' THEN 2
+                    WHEN 'processing' THEN 1
+                    ELSE 0
+                END < ?");
+            if ($stmt) {
+                $stmt->bind_param('sssssii', $status, $providerTxnId, $amountReceived, $completedAt, $completedAt, $id, $rank);
+            }
         } else {
             $stmt = $conn->prepare("UPDATE payment_transactions
-                SET status = ?, callback_received_at = NOW(), updated_at = NOW()
-                WHERE transaction_ref = ?");
-            $stmt->bind_param('ss', $status, $reference);
+                SET status = ?, amount_received = IFNULL(?, amount_received),
+                    completed_at = IFNULL(?, completed_at), verified_at = IFNULL(?, verified_at),
+                    callback_received_at = NOW(), updated_at = NOW()
+                WHERE id = ? AND CASE status
+                    WHEN 'refunded' THEN 4
+                    WHEN 'successful' THEN 3
+                    WHEN 'failed' THEN 2
+                    WHEN 'cancelled' THEN 2
+                    WHEN 'expired' THEN 2
+                    WHEN 'processing' THEN 1
+                    ELSE 0
+                END < ?");
+            if ($stmt) {
+                $stmt->bind_param('ssssii', $status, $amountReceived, $completedAt, $completedAt, $id, $rank);
+            }
         }
-        $stmt->execute();
+        if (!$stmt) {
+            error_log('[GatewayManager] failed to prepare status update for ' . $reference . ': ' . $conn->error);
+            return false;
+        }
+        $ok = $stmt->execute();
+        $changed = $stmt->affected_rows > 0;
+        if (!$ok) {
+            error_log('[GatewayManager] failed to update status for ' . $reference . ': ' . $stmt->error);
+        }
         $stmt->close();
 
-        if ($status === 'successful') {
+        if ($ok && $changed && $status === 'successful') {
             $this->updateProviderStats($reference);
         }
+        return $ok;
     }
 
     /**
@@ -263,9 +378,10 @@ class GatewayManager {
                 p.total_volume = p.total_volume + t.amount,
                 p.last_transaction_at = NOW()
             WHERE t.transaction_ref = ?");
-        $stmt->bind_param('s', $reference);
-        $stmt->execute();
-        $stmt->close();
+        if (!$stmt || !$stmt->bind_param('s', $reference) || !$stmt->execute()) {
+            error_log('[GatewayManager] failed to update provider stats for ' . $reference);
+        }
+        if ($stmt) $stmt->close();
     }
 
     /**
@@ -277,14 +393,14 @@ class GatewayManager {
 
         $stmt = $conn->prepare("INSERT INTO payment_callbacks
             (provider_key, callback_type, request_method, request_headers, request_body, request_ip)
-            VALUES (?, 'callback', 'POST', ?, ?, ?)");
-        $method = 'POST';
+            VALUES (?, 'webhook', 'POST', ?, ?, ?)");
         $hdrs = json_encode($headers);
         $body = json_encode($payload);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        $stmt->bind_param('ssss', $providerKey, $hdrs, $body, $ip);
-        $stmt->execute();
-        $stmt->close();
+        if (!$stmt || !$stmt->bind_param('ssss', $providerKey, $hdrs, $body, $ip) || !$stmt->execute()) {
+            error_log('[GatewayManager] failed to log callback for ' . $providerKey);
+        }
+        if ($stmt) $stmt->close();
     }
 
     /**

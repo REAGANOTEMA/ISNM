@@ -3,6 +3,9 @@ error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
   session_start();
+  if (empty($_SESSION['csrf_token'])) {
+      $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+  }
 
     use PHPMailer\PHPMailer\PHPMailer;
     use PHPMailer\PHPMailer\Exception;
@@ -15,7 +18,7 @@ ini_set('log_errors', 1);
     $response['message'] = '';
 
     $csrfSent = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrfSent)) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_SESSION['csrf_token']) || empty($csrfSent) || !hash_equals($_SESSION['csrf_token'], $csrfSent)) {
         $response['status'] = 'ERROR';
         $response['message'] = 'Invalid security token. Please refresh the page and try again.';
         echo json_encode($response);

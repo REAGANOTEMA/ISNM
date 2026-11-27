@@ -93,6 +93,8 @@ if ($status === 'successful') $mappedStatus = 'successful';
             'provider_transaction_id' => (string)$providerId,
             'status' => $mappedStatus,
             'raw_status' => $status,
+            'amount' => $payload['data']['amount'] ?? null,
+            'currency' => $payload['data']['currency'] ?? null,
             'message' => 'Flutterwave callback processed',
         ];
     }

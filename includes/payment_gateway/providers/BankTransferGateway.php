@@ -42,7 +42,7 @@ class BankTransferGateway extends AbstractPaymentGateway {
     }
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
-        return true;
+        return parent::verifyWebhookSignature($rawBody, $signature);
     }
 
     public function refundTransaction(string $providerTransactionId, float $amount, string $reason = ''): array {

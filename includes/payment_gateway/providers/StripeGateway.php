@@ -127,19 +127,21 @@ class StripeGateway extends AbstractPaymentGateway {
 
     public function verifyWebhookSignature(string $rawBody, string $signature): bool {
         $secret = $this->getWebhookSecret();
-        if (empty($secret)) return true;
-        $parts = explode(',', $signature);
+        if ($secret === '') {
+            error_log('[PaymentGateway][' . $this->providerKey . '] webhook secret not configured (' . $this->getWebhookSecretName() . '); rejecting callback');
+            return false;
+        }
         $timestamp = '';
         $v1Sig = '';
-        foreach ($parts as $part) {
-            $kv = explode('=', $part, 2);
-            if (count($kv) === 2) {
-                if ($kv[0] === 't') $timestamp = $kv[1];
-                if ($kv[0] === 'v1') $v1Sig = $kv[1];
-            }
+        foreach (explode(',', $signature) as $part) {
+            $kv = array_pad(explode('=', trim($part), 2), 2, '');
+            if ($kv[0] === 't') $timestamp = $kv[1];
+            if ($kv[0] === 'v1') $v1Sig = $kv[1];
         }
-        $signedPayload = "$timestamp.$rawBody";
-        $expected = hash_hmac('sha256', $signedPayload, $secret);
+        if ($timestamp === '' || $v1Sig === '' || !ctype_digit($timestamp) || abs(time() - (int) $timestamp) > 300) {
+            return false;
+        }
+        $expected = hash_hmac('sha256', $timestamp . '.' . $rawBody, $secret);
         return hash_equals($expected, $v1Sig);
     }
 

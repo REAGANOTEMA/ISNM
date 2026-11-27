@@ -108,6 +108,8 @@ if ($upperStatus === 'SUCCESSFUL' || $upperStatus === 'COMPLETED') $mappedStatus
             'provider_transaction_id' => $txnId,
             'status' => $mappedStatus,
             'raw_status' => $status,
+            'amount' => $payload['amount']['value'] ?? null,
+            'currency' => $payload['amount']['currency'] ?? null,
             'message' => 'MTN callback processed',
         ];
     }

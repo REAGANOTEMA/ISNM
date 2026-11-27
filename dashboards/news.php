@@ -993,6 +993,19 @@ function featureConfirm(form) {
     return true;
 }
 
+if (!window.isnmCsvSafeCell) {
+    window.isnmCsvSafeCell = function(value) {
+        var s = String(value == null ? '' : value);
+        return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+    };
+}
+if (!window.isnmSafeDownloadName) {
+    window.isnmSafeDownloadName = function(name, fallback) {
+        var s = String(name == null ? '' : name).replace(/\\/g, '/').split('/').pop().replace(/[^A-Za-z0-9._-]/g, '_');
+        s = s.replace(/^\.+|\.+$/g, '');
+        return s || (fallback || 'export.csv');
+    };
+}
 function exportCSV() {
     var rows = document.querySelectorAll('#newsTable tbody tr');
     if (!rows.length || (rows.length === 1 && rows[0].querySelector('td[colspan]'))) {
@@ -1004,19 +1017,19 @@ function exportCSV() {
         if (row.querySelector('td[colspan]')) return;
         var cells = row.querySelectorAll('td');
         if (cells.length < 7) return;
-        var id = cells[0].textContent.trim();
-        var title = '"' + (row.dataset.title || '').replace(/"/g, '""') + '"';
-        var category = '"' + (cells[2].textContent.trim()) + '"';
-        var status = cells[3].textContent.trim().split('\n')[0].trim();
-        var featured = row.dataset.featured === '1' ? 'Yes' : 'No';
-        var author = cells[5].textContent.trim();
-        var date = cells[6].textContent.trim().replace(/\n/g, ' ');
+        var id = window.isnmCsvSafeCell(cells[0].textContent.trim());
+        var title = '"' + window.isnmCsvSafeCell(row.dataset.title || '').replace(/"/g, '""') + '"';
+        var category = '"' + window.isnmCsvSafeCell(cells[2].textContent.trim()).replace(/"/g, '""') + '"';
+        var status = window.isnmCsvSafeCell(cells[3].textContent.trim().split('\n')[0].trim());
+        var featured = window.isnmCsvSafeCell(row.dataset.featured === '1' ? 'Yes' : 'No');
+        var author = window.isnmCsvSafeCell(cells[5].textContent.trim());
+        var date = window.isnmCsvSafeCell(cells[6].textContent.trim().replace(/\n/g, ' '));
         csv += id + ',' + title + ',' + category + ',' + status + ',' + featured + ',' + author + ',' + date + '\n';
     });
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     var link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'news_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.download = window.isnmSafeDownloadName('news_export_' + new Date().toISOString().slice(0, 10) + '.csv', 'news_export.csv');
     link.click();
 }
 

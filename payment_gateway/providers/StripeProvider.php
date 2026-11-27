@@ -76,17 +76,20 @@ if ($status === 'paid' || $status === 'no_payment_required') $mappedStatus = 'su
 
     public function processCallback(array $payload, array $headers = []): array {
         $type = $payload['type'] ?? '';
-        $status = $payload['data']['object']['payment_status'] ?? 'unknown';
-        $sessionId = $payload['data']['object']['id'] ?? '';
-        $reference = $payload['data']['object']['client_reference_id'] ?? $sessionId;
+        $object = $payload['data']['object'] ?? [];
+        $status = $object['payment_status'] ?? 'unknown';
+        $sessionId = $object['id'] ?? '';
+        $reference = $object['client_reference_id'] ?? $sessionId;
 
         if ($type === 'checkout.session.completed') {
-            $mappedStatus = 'successful';
+            $mappedStatus = in_array($status, ['paid', 'no_payment_required'], true) ? 'successful' : 'processing';
         } elseif ($type === 'checkout.session.expired') {
             $mappedStatus = 'expired';
         } else {
             $mappedStatus = 'processing';
         }
+
+        $gross = isset($object['amount_total']) ? (float) $object['amount_total'] / 100 : null;
 
         return [
             'success' => true,
@@ -94,7 +97,28 @@ if ($status === 'paid' || $status === 'no_payment_required') $mappedStatus = 'su
             'provider_transaction_id' => $sessionId,
             'status' => $mappedStatus,
             'raw_status' => $status,
+            'amount' => $gross,
+            'currency' => !empty($object['currency']) ? strtoupper((string) $object['currency']) : null,
             'message' => 'Stripe webhook processed: ' . $type,
         ];
+    }
+
+    public function verifyWebhookSignature(string $rawBody, string $signature): bool {
+        $secret = $this->getWebhookSecret();
+        if ($secret === '') {
+            error_log('[PaymentGateway][stripe] webhook secret not configured (' . $this->getWebhookSecretName() . '); rejecting callback');
+            return false;
+        }
+        $timestamp = '';
+        $provided = '';
+        foreach (explode(',', $signature) as $part) {
+            [$key, $value] = array_pad(explode('=', trim($part), 2), 2, '');
+            if ($key === 't') $timestamp = $value;
+            if ($key === 'v1') $provided = $value;
+        }
+        if ($timestamp === '' || $provided === '' || !ctype_digit($timestamp) || abs(time() - (int) $timestamp) > 300) {
+            return false;
+        }
+        return hash_equals(hash_hmac('sha256', $timestamp . '.' . $rawBody, $secret), $provided);
     }
 }

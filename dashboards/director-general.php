@@ -3173,19 +3173,32 @@ function dgFilterTable(query) {
         row.style.display = !q || row.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
     });
 }
+if (!window.isnmCsvSafeCell) {
+    window.isnmCsvSafeCell = function(value) {
+        var s = String(value == null ? '' : value);
+        return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+    };
+}
+if (!window.isnmSafeDownloadName) {
+    window.isnmSafeDownloadName = function(name, fallback) {
+        var s = String(name == null ? '' : name).replace(/\\/g, '/').split('/').pop().replace(/[^A-Za-z0-9._-]/g, '_');
+        s = s.replace(/^\.+|\.+$/g, '');
+        return s || (fallback || 'export.csv');
+    };
+}
 function dgExportCSV() {
     var table = document.querySelector('.dashboard-section.active .dg-table');
     if (!table) return;
     var rows = [].slice.call(table.querySelectorAll('tr'));
     var csv = rows.map(function(row) {
         return [].slice.call(row.querySelectorAll('th,td')).map(function(cell) {
-            return '"' + cell.textContent.trim().replace(/"/g, '""') + '"';
+            return '"' + window.isnmCsvSafeCell(cell.textContent.trim()).replace(/"/g, '""') + '"';
         }).join(',');
     }).join('\n');
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     var link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'director-export.csv';
+    link.download = window.isnmSafeDownloadName('director-export.csv', 'export.csv');
     link.click();
 }
 </script>

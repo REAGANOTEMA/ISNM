@@ -14,11 +14,14 @@ if (!$provider) {
     exit;
 }
 
-$payload = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-$headers = getallheaders();
+header('Content-Type: application/json; charset=utf-8');
+
+$rawBody = file_get_contents('php://input') ?: '';
+$payload = json_decode($rawBody, true) ?: $_POST;
+$headers = function_exists('getallheaders') ? getallheaders() : [];
 
 $gateway = GatewayManager::getInstance();
-$result = $gateway->processCallback($provider, $payload, $headers);
+$result = $gateway->processCallback($provider, $payload, $headers, $rawBody);
 
 if ($result['success']) {
     http_response_code(200);

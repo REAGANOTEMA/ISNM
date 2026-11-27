@@ -360,16 +360,16 @@ function handleExportStudents() {
     $result = $conn->query($sql);
     
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d') . '.csv"');
+    sendDownloadFilenameHeader('students_export_' . date('Y-m-d') . '.csv', 'students_export.csv');
     
     $output = fopen('php://output', 'w');
     
     // Header row
-    fputcsv($output, ['Student ID', 'First Name', 'Surname', 'Other Name', 'Date of Birth', 'Gender', 'Nationality', 'Phone', 'Email', 'Program', 'Level', 'Intake Year', 'Intake Period', 'Status', 'Guardian Name', 'Guardian Phone', 'Emergency Contact']);
+    fputcsv($output, csvSafeRow(['Student ID', 'First Name', 'Surname', 'Other Name', 'Date of Birth', 'Gender', 'Nationality', 'Phone', 'Email', 'Program', 'Level', 'Intake Year', 'Intake Period', 'Status', 'Guardian Name', 'Guardian Phone', 'Emergency Contact']));
     
     // Data rows
     while ($row = $result->fetch_assoc()) {
-        fputcsv($output, [
+        fputcsv($output, csvSafeRow([
             $row['student_id'],
             $row['first_name'],
             $row['surname'],
@@ -387,7 +387,7 @@ function handleExportStudents() {
             $row['guardian_name'],
             $row['guardian_phone'],
             $row['emergency_contact_name']
-        ]);
+        ]));
     }
     
     fclose($output);

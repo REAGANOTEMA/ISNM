@@ -55,7 +55,7 @@ try {
       
       <div class="hero-overlay"></div>
       
-      <div class="hero-content">
+      <div class="hero-content isnm-premium-home-hero">
         <div class="cinematic-title-wrapper">
           <div class="cinematic-title-track">
            <h1 class="cinematic-title">Training Healers. Saving Lives.</h1>
@@ -67,16 +67,16 @@ try {
           <p>"Chosen to Serve, Based on a disciplined mind for health action"</p>
         </div>
         
-        <div class="hero-stats">
-          <div class="stat-item stat-green">
+        <div class="hero-stats isnm-premium-home-stats">
+          <div class="stat-item stat-green isnm-premium-home-stat">
             <span class="stat-number">15+</span>
             <span class="stat-label">Years Excellence</span>
           </div>
-          <div class="stat-item stat-blue">
+          <div class="stat-item stat-blue isnm-premium-home-stat">
             <span class="stat-number">3000+</span>
             <span class="stat-label">Graduates</span>
           </div>
-          <div class="stat-item stat-chocolate">
+          <div class="stat-item stat-chocolate isnm-premium-home-stat">
             <span class="stat-number">100%</span>
             <span class="stat-label">Pass Rate</span>
           </div>
@@ -114,11 +114,11 @@ try {
     </section>
 
     <!-- Quick Stats Section -->
-    <section id="stats" class="stats-section py-5">
+    <section id="stats" class="stats-section py-5 isnm-premium-home-stat-strip">
       <div class="container">
         <div class="row text-center">
           <div class="col-md-3 col-6 mb-4 animate-on-scroll">
-            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="stat-card isnm-premium-stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
               <div class="stat-card-icon">
                 <i class="fas fa-users"></i>
               </div>
@@ -127,7 +127,7 @@ try {
             </div>
           </div>
           <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-1">
-            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="stat-card isnm-premium-stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
               <div class="stat-card-icon icon-green">
                 <i class="fas fa-graduation-cap"></i>
               </div>
@@ -136,7 +136,7 @@ try {
             </div>
           </div>
           <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-2">
-            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="stat-card isnm-premium-stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
               <div class="stat-card-icon icon-blue">
                 <i class="fas fa-hospital"></i>
               </div>
@@ -145,7 +145,7 @@ try {
             </div>
           </div>
           <div class="col-md-3 col-6 mb-4 animate-on-scroll animate-delay-3">
-            <div class="stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
+            <div class="stat-card isnm-premium-stat-card" onclick="window.location='about.php'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')window.location='about.php'">
               <div class="stat-card-icon icon-gold">
                 <i class="fas fa-award"></i>
               </div>
@@ -551,7 +551,7 @@ try {
     </section>
 
     <!-- Call to Action Section -->
-    <section class="cta-section py-5">
+    <section class="cta-section py-5 isnm-premium-home-cta">
       <div class="cta-bg-shapes">
         <div class="cta-shape cta-shape-1"></div>
         <div class="cta-shape cta-shape-2"></div>

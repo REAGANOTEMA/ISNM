@@ -2219,7 +2219,37 @@ function approvalActionModal(id,tbl,st){
     if(st==='escalated'){var dg=prompt('Escalate to (DG user ID):');if(!dg)return;fd.append('escalated_to',parseInt(dg)||0);}
     fetch('director-finance.php?ajax=submit_approval_action',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)location.reload();else alert('Failed: '+(d.error||'Unknown'));}).catch(function(){alert('Error');});
 }
-function exportTable(id){ var el=document.getElementById(id);if(!el)return; var csv=[];var rows=el.querySelectorAll('tr');rows.forEach(function(r){var cols=[];r.querySelectorAll('th,td').forEach(function(c){cols.push('"'+c.textContent.trim()+'"');});csv.push(cols.join(','));});var blob=new Blob([csv.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finance_report.csv';a.click(); }
+if (!window.isnmCsvSafeCell) {
+    window.isnmCsvSafeCell = function(value) {
+        var s = String(value == null ? '' : value);
+        return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+    };
+}
+if (!window.isnmSafeDownloadName) {
+    window.isnmSafeDownloadName = function(name, fallback) {
+        var s = String(name == null ? '' : name).replace(/\\/g, '/').split('/').pop().replace(/[^A-Za-z0-9._-]/g, '_');
+        s = s.replace(/^\.+|\.+$/g, '');
+        return s || (fallback || 'export.csv');
+    };
+}
+function exportTable(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var csv=[];
+    var rows=el.querySelectorAll('tr');
+    rows.forEach(function(r){
+        var cols=[];
+        r.querySelectorAll('th,td').forEach(function(c){
+            cols.push('"' + window.isnmCsvSafeCell(c.textContent.trim()).replace(/"/g, '""') + '"');
+        });
+        csv.push(cols.join(','));
+    });
+    var blob=new Blob([csv.join('\n')],{type:'text/csv'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=window.isnmSafeDownloadName('finance_report.csv', 'export.csv');
+    a.click();
+}
 </script>
 </div>
 <script>

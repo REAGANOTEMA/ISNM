@@ -3,6 +3,7 @@
  * Standardized Response handler for ISNM ERP.
  * Provides consistent JSON and HTML responses across all endpoints.
  */
+require_once __DIR__ . '/functions.php';
 if (class_exists('Response', false)) return;
 
 class Response {
@@ -76,7 +77,7 @@ class Response {
         $filename = $filename ?: basename($filePath);
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
-        header("Content-Disposition: attachment; filename=\"$filename\"");
+        sendDownloadFilenameHeader($filename, basename($filePath) ?: 'download');
         header('Content-Length: ' . filesize($filePath));
         header('Cache-Control: no-cache');
         readfile($filePath);

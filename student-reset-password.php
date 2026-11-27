@@ -4,10 +4,23 @@ require_once 'config/database.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $auth_service = new AuthenticationService();
 
-// Validate token from URL
 $token = $_GET['token'] ?? $_POST['token'] ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+        header('Location: student-reset-password.php?token=' . urlencode($token)); exit;
+    }
+}
+
+// Validate token from URL
 $validToken = false;
 $studentName = '';
 
@@ -132,6 +145,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;a
     <a href="student-forgot-password.php" class="back-link"><i class="fas fa-arrow-left me-1"></i>Request a new reset link</a>
     <?php else: ?>
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="reset_password">
         <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
         <div class="mb-3">

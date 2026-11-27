@@ -45,6 +45,48 @@ abstract class BaseProvider {
             : ($this->config['api_secret'] ?? '');
     }
 
+    protected function getWebhookSecretName(): string {
+        $normalized = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '_', $this->providerKey ?: $this->providerName) ?: '');
+        return 'PAYMENT_' . trim($normalized, '_') . '_WEBHOOK_SECRET';
+    }
+
+    protected function getWebhookSecret(): string {
+        $name = $this->getWebhookSecretName();
+        if (function_exists('isnm_env')) {
+            return (string) isnm_env($name, '');
+        }
+        $value = getenv($name);
+        return $value === false ? '' : (string) $value;
+    }
+
+    public function signatureFromHeaders(array $headers): string {
+        $names = ['x-hub-signature-256', 'x-signature', 'x-webhook-signature', 'x-stripe-signature', 'x-flutterwave-signature', 'x-paypal-signature'];
+        foreach ($headers as $name => $value) {
+            if (in_array(strtolower((string) $name), $names, true)) {
+                return is_array($value) ? implode(',', $value) : (string) $value;
+            }
+        }
+        foreach ($_SERVER as $name => $value) {
+            if (strpos((string) $name, 'HTTP_') !== 0) continue;
+            $header = strtolower(str_replace('_', '-', substr((string) $name, 5)));
+            if (in_array($header, $names, true)) return (string) $value;
+        }
+        return '';
+    }
+
+    public function verifyWebhookSignature(string $rawBody, string $signature): bool {
+        $secretName = $this->getWebhookSecretName();
+        $secret = $this->getWebhookSecret();
+        if ($secret === '') {
+            error_log('[PaymentGateway][' . $this->providerKey . '] webhook secret not configured (' . $secretName . '); rejecting callback');
+            return false;
+        }
+        $provided = trim($signature);
+        if ($provided === '') return false;
+        if (stripos($provided, 'sha256=') === 0) $provided = substr($provided, 7);
+        return hash_equals(hash_hmac('sha256', $rawBody, $secret), $provided);
+    }
+
     protected function calculateFee(float $amount): float {
         $feeType = $this->config['fee_type'] ?? ($this->config['transaction_fee_percent'] ?? 'none');
         $totalFee = 0.0;

@@ -4,10 +4,20 @@ require_once 'config/database.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $auth_service = new AuthenticationService();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'] ?? '';
+
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+        header('Location: student-forgot-password.php'); exit;
+    }
 
     if ($action === 'request_reset') {
         $identifier = trim($_POST['identifier'] ?? '');
@@ -123,6 +133,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;a
     <?php endif; ?>
 
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="request_reset">
         <div class="mb-3">
             <label class="form-label">Index Number / Student Number / Email</label>
